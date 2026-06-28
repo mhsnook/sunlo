@@ -71,12 +71,11 @@ function BrowsePage() {
 			{/* Go to language feed dropdown + auth buttons */}
 			<div className="flex flex-row items-center justify-around gap-4 @xl:justify-between">
 				<div className="flex flex-col items-center gap-3 @xl:flex-row">
-					<span className="text-muted-foreground">Go to feed:</span>
+					<span className="text-muted-foreground">Browse a language:</span>
 					<LanguagePicker
 						value=""
 						setValue={(lang) => {
-							if (lang)
-								void navigate({ to: '/learn/$lang/feed', params: { lang } })
+							if (lang) void navigate({ to: '/browse/$lang', params: { lang } })
 						}}
 						className="w-56"
 						placeholder="Select a language"
@@ -317,7 +316,7 @@ function LanguageCard({
 			</CardContent>
 			<CardFooter className="pt-0">
 				<Link
-					to="/learn/$lang/feed"
+					to="/browse/$lang"
 					params={{ lang }}
 					className={cn(buttonVariants({ variant: 'soft' }), 'w-full')}
 					data-testid="explore-language-link"
@@ -362,7 +361,7 @@ function LanguageListItem({
 					{phrases.toLocaleString()} phrases
 				</span>
 				<Link
-					to="/learn/$lang/feed"
+					to="/browse/$lang"
 					params={{ lang }}
 					className={buttonVariants({ variant: 'soft', size: 'sm' })}
 				>

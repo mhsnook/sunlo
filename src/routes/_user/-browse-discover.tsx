@@ -1,16 +1,17 @@
 // Non-route helper components for the language Browse / Discover page
 // (`/browse/$lang`). Kept beside the route file (prefixed `-` so the router
 // ignores it) to keep the route module itself focused on data + layout.
-import { type CSSProperties } from 'react'
+import { type CSSProperties, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { Check, Plus, Volume2 } from 'lucide-react'
+import { Check, ChevronDown, MessagesSquare, Plus, Volume2 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useDeckPids } from '@/features/deck/hooks'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
+import type { RequestTagSet } from '@/features/requests'
 import type { uuid } from '@/types/main'
 
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +19,7 @@ import { Loader } from '@/components/ui/loader'
 import { Button } from '@/components/ui/button'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import Flagged from '@/components/flagged'
 
 /** Small "✓ Added / + Add" status pill shown in the corner of set tiles. */
@@ -89,6 +91,75 @@ export function SetTile({
 				</span>
 			</div>
 		</Link>
+	)
+}
+
+/**
+ * A "set" assembled by tagging requests: every phrase answered under a given
+ * request tag. Unlike a playlist it has no detail page, so the tile expands
+ * in place to reveal its member phrases (each individually addable to a deck).
+ */
+export function TagSetTile({
+	tagSet,
+	lang,
+}: {
+	tagSet: RequestTagSet
+	lang: string
+}) {
+	const [open, setOpen] = useState(false)
+	const { data: deckPids } = useDeckPids(lang)
+
+	const inDeck = new Set(deckPids?.all ?? [])
+	const added =
+		tagSet.phraseIds.length > 0 &&
+		tagSet.phraseIds.every((pid) => inDeck.has(pid))
+
+	return (
+		<div
+			className="bg-card/50 rounded border"
+			data-testid="browse-tag-set-tile"
+			data-key={tagSet.slug}
+		>
+			<button
+				type="button"
+				onClick={() => setOpen((o) => !o)}
+				aria-expanded={open}
+				className="hover:border-primary flex w-full flex-col gap-1 rounded p-4 text-start transition-colors"
+			>
+				<div className="flex w-full items-start justify-between gap-2">
+					<div className="flex items-center gap-2">
+						<MessagesSquare className="text-muted-foreground size-4 shrink-0" />
+						<h3 className="font-semibold">{tagSet.label}</h3>
+						<Badge variant="secondary" size="sm">
+							Topic
+						</Badge>
+					</div>
+					<AddedPill added={added} />
+				</div>
+				<div className="text-muted-foreground flex w-full items-end justify-between gap-2 text-sm">
+					<p className="line-clamp-1">
+						{tagSet.description ?? 'Phrases from tagged requests'}
+					</p>
+					<span className="flex shrink-0 items-center gap-1">
+						{tagSet.phraseIds.length} card
+						{tagSet.phraseIds.length === 1 ? '' : 's'}
+						<ChevronDown
+							className={cn(
+								'size-4 transition-transform',
+								open && 'rotate-180'
+							)}
+						/>
+					</span>
+				</div>
+			</button>
+			{open ? (
+				<div className="flex flex-row flex-wrap gap-2 border-t p-3">
+					{tagSet.phraseIds.map((pid) => (
+						<PhraseTinyCard key={pid} pid={pid} className="m-0" />
+					))}
+				</div>
+			) : null}
+		</div>
 	)
 }
 

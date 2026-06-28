@@ -205,7 +205,8 @@ natural wrapper element to label.
 | `browse-sets-section`                    | data-testid | Browse `/browse/$lang`   | "Popular Sets" section                                                                                             |
 | `browse-cards-section`                   | data-testid | Browse `/browse/$lang`   | "New Cards" section                                                                                                |
 | `browse-requests-section`                | data-testid | Browse `/browse/$lang`   | "Active Discussions" section                                                                                       |
-| `browse-set-tile`                        | data-testid | Browse `/browse/$lang`   | One set tile (carries `data-key={playlist.id}`)                                                                    |
+| `browse-set-tile`                        | data-testid | Browse `/browse/$lang`   | One playlist set tile (carries `data-key={playlist.id}`)                                                           |
+| `browse-tag-set-tile`                    | data-testid | Browse `/browse/$lang`   | One request-tag set tile — expands inline to its phrases (carries `data-key={tag.slug}`)                           |
 | `browse-card-tile`                       | data-testid | Browse `/browse/$lang`   | One flashcard tile (carries `data-key={phrase.id}`)                                                                |
 
 ## Phrase Requests

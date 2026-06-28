@@ -18,9 +18,12 @@ import { useLanguagePhrases } from '@/features/phrases/hooks'
 import { useLanguageTags } from '@/features/languages/hooks'
 import { useLangPlaylists } from '@/features/playlists/hooks'
 import { phraseRequestsActive } from '@/features/requests/live'
+import { useRequestTagSets } from '@/features/requests'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
+	messageTagLinksCollection,
+	messageTagsCollection,
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
@@ -39,7 +42,7 @@ import {
 } from '@/components/ui/select'
 import { RequestItem } from '@/components/requests/request-list-item'
 
-import { NewCardTile, SetTile } from './-browse-discover'
+import { NewCardTile, SetTile, TagSetTile } from './-browse-discover'
 
 const TabSchema = z.enum(['all', 'cards', 'sets', 'requests'])
 
@@ -72,6 +75,9 @@ export const Route = createFileRoute('/_user/browse/$lang')({
 			phraseRequestsCollection.preload(),
 			commentsCollection.preload(),
 			commentPhraseLinksCollection.preload(),
+			// Request-tag "sets" join requests → their tag links → answer phrases.
+			messageTagsCollection.preload(),
+			messageTagLinksCollection.preload(),
 		]
 		if (context.auth.isAuth) {
 			preloads.push(
@@ -116,6 +122,7 @@ function BrowseLanguagePage() {
 	const { data: tags } = useLanguageTags(lang)
 	const { data: allPhrases } = useLanguagePhrases(lang)
 	const { data: playlists } = useLangPlaylists(lang)
+	const tagSets = useRequestTagSets(lang)
 	const { data: requests } = useLiveQuery(
 		(q) =>
 			q
@@ -159,6 +166,17 @@ function BrowseLanguagePage() {
 		[playlists, query]
 	)
 
+	const filteredTagSets = useMemo(
+		() =>
+			tagSets.filter(
+				(s) =>
+					!query ||
+					s.label.toLowerCase().includes(query) ||
+					(s.description?.toLowerCase().includes(query) ?? false)
+			),
+		[tagSets, query]
+	)
+
 	const filteredRequests = useMemo(
 		() =>
 			(requests ?? []).filter(
@@ -175,8 +193,18 @@ function BrowseLanguagePage() {
 	const showRequests = tab === 'all' || tab === 'requests'
 
 	const cardsLimit = tab === 'all' ? 4 : filteredPhrases.length
-	const setsLimit = tab === 'all' ? 4 : filteredPlaylists.length
 	const requestsLimit = tab === 'all' ? 3 : filteredRequests.length
+
+	// Playlists and request-tag sets share the "Popular Sets" grid. On the All
+	// tab they share a budget of 4 tiles, playlists first.
+	const setsBudget = tab === 'all' ? 4 : Infinity
+	const visiblePlaylists = filteredPlaylists.slice(0, setsBudget)
+	const visibleTagSets = filteredTagSets.slice(
+		0,
+		Math.max(0, setsBudget - visiblePlaylists.length)
+	)
+	const setsEmpty =
+		filteredPlaylists.length === 0 && filteredTagSets.length === 0
 
 	return (
 		<main
@@ -272,11 +300,14 @@ function BrowseLanguagePage() {
 						<Section
 							title="Popular Sets"
 							testid="browse-sets-section"
-							empty={filteredPlaylists.length === 0 && 'No sets to show yet.'}
+							empty={setsEmpty && 'No sets to show yet.'}
 						>
 							<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
-								{filteredPlaylists.slice(0, setsLimit).map((p) => (
+								{visiblePlaylists.map((p) => (
 									<SetTile key={p.id} playlist={p} lang={lang} />
+								))}
+								{visibleTagSets.map((s) => (
+									<TagSetTile key={s.slug} tagSet={s} lang={lang} />
 								))}
 							</div>
 						</Section>

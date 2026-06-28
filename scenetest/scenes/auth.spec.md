@@ -83,7 +83,7 @@ visitor:
 - scope [team.lang_full]
 - click explore-language-link
 - up
-- see deck-feed-page
+- see browse-lang-page
 
 # visitor sees login prompt on protected pages
 
