@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. It stays deliberately short: what exists, where it lives, and the rules that prevent real damage. Detailed guides live in `docs/` and load on demand via the mappings below.
 
 <!-- intent-skills:start -->
 
@@ -28,977 +28,101 @@ skills:
 
 <!-- intent-skills:end -->
 
-## Development Commands
+docs:
 
-### Setup
+- task: "Writing any mutation — persistence handlers, optimistic state, refetch decisions, forms, realtime sync, feed invalidation"
+  load: "docs/mutations.md"
+
+- task: "Writing or modifying tests — scene specs, DSL commands, actors, test IDs, runtime checks"
+  load: "docs/testing.md"
+
+- task: "Styling beyond copying an adjacent pattern — oklch color axes, semantic tokens, button variants, Base UI data attributes"
+  load: "docs/styling.md"
+
+- task: "Changing database schema, migrations, seeds, or RLS"
+  load: "docs/database.md"
+
+- task: "Deciding whether a PR targets main or next-<version>; cutting a release; version bumps; production builds"
+  load: "docs/deployment.md"
+
+## Commands
 
 ```bash
-# Install dependencies
 pnpm install
+cp .env.example .env    # populate from supabase outputs
+supabase start          # requires Docker Desktop + Supabase CLI
+supabase db reset       # apply migrations + seeds
 
-# Copy environment variables and populate with Supabase outputs
-cp .env.example .env
+pnpm dev                # dev server at http://127.0.0.1:5173
+pnpm check              # typecheck
+pnpm lint               # oxlint then eslint
+pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
+pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
 
-# Start Supabase (requires Docker Desktop and Supabase CLI)
-supabase start
-
-# Reset database with migrations and seeds
-supabase db reset
+pnpm run migrate        # create migration from local changes
+pnpm run types          # regenerate supabase TS types
+pnpm run seeds:schema   # regenerate base.sql — review the diff carefully
 ```
 
-**Build environment — `.env` must be populated before any production build.** `src/lib/supabase-client.ts` throws when `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are unset. A `vite build` with those vars missing does **not** error — instead the guard constant-folds to `if (true) throw`, the `createClient()` call below it becomes dead code, and the bundler silently tree-shakes out the **entire `@supabase/*` SDK (~640 KB)**. The build "succeeds" but ships without Supabase, and any bundle-size measurement is off by roughly a third. Always build with `.env` populated — dummy-but-truthy `VITE_*` values are enough, the build never connects — and sanity-check that large expected dependencies actually appear in `dist/` (e.g. `grep -l GoTrueClient dist/assets/*.js`). The same applies to any tooling that builds the app, including bundle analyzers.
+## Hard rules
 
-### Development
+- **Migrations only reach `main` via a `next-<version>` → `main` release merge.** Two questions before opening a PR: (1) branch created from `next-<version>`? → PR into it, no matter what you touched. (2) PR touches a migration file? → PR into it. Otherwise → `main`. Full strategy: `docs/deployment.md`.
+- **Never `vite build` without a populated `.env`.** Missing `VITE_SUPABASE_*` vars don't fail the build — they silently tree-shake the entire Supabase SDK (~640 KB) out of the bundle. Dummy-but-truthy values are fine; sanity-check with `grep -l GoTrueClient dist/assets/*.js`. Details: `docs/deployment.md`.
+- **`collection.utils.refetch()` is a full-table fetch.** Treat it like `useEffect`: a smell needing justification. Prefer `.select()` on the write / RPCs that return rows + `writeInsert`/`writeUpdate`/`writeDelete`. If you're about to add one, stop and check with the human first.
+- **New tests are scenetest markdown scenes** (`scenetest/scenes/*.spec.md`), never new `@playwright/test` specs — `e2e/` is deprecated (`transform` label). Navigate by clicking, not by reloading (`openTo` is for the entry point only).
+- **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically.
+- **Base UI, not Radix** for primitives: selected tabs get `data-active` (style with `data-[active]:`), not `data-state="active"`. Verify attribute names in `node_modules/@base-ui/react/esm/` types.
+- **Avoid `dark:` prefixes and opacity tints** (`bg-primary/10`) — the oklch color system auto-flips; use luminance steps (`bg-1-mlo-primary`). Full system: `docs/styling.md`.
 
-```bash
-# Start dev server (runs on http://127.0.0.1:5173)
-pnpm dev
+## Architecture
 
-# Type checking
-pnpm check
+Sunlo is a language-learning app: FSRS spaced-repetition flashcards, social features (friends, chat), user-generated phrases/playlists/translation requests, and an activity feed.
 
-# Linting (runs oxlint then eslint)
-pnpm lint
+**Stack**: React 19 + TypeScript + Vite + React Compiler · TanStack Router (file-based) · TanStack DB collections + TanStack Query · Supabase (Postgres/Auth/Realtime/Storage/RPC) · Zod · react-hook-form + zodResolver · ShadCN UI + Tailwind with `@container` queries · PNPM.
 
-# Format code
-pnpm format
-pnpm format:check
-```
+**Philosophy**: local-first (optimistic collection writes, live queries over postgres views, RPCs return full objects); RLS-backed privacy (worst case is a broken UI, never leaked data); container queries keep components portable.
 
-### Scenetest (preferred)
+**Data flow**: Supabase → collections (`src/features/<domain>/collections.ts`, Zod-validated) → live queries (`useLiveQuery`) → components. Collections fetch base tables only; joins and filtering happen in live queries. Public collections use `startSync: true`; user collections use `startSync: false`, rely on RLS to scope the fetch, and are cleared on logout. Routes preload with `collection.preload()` — `await Promise.all([...])` when the route needs data at first render, `void` for fire-and-forget background loads.
 
-**Always write new tests as scenetest specs** unless a specific limitation prevents it. Scenetest specs are readable markdown files that describe user journeys at a high level — they're easier to write, easier to review, and keep browser orchestration separate from state assertions.
+**Mutations**: persistence lives on the collection (`onInsert/onUpdate/onDelete`); components call `collection.insert/update/delete` and wire toasts to `tx.isPersisted.promise`. Throwing from the handler rolls back the optimistic state; return `{ refetch: false }` when the optimistic value already matches the server. The old `useMutation` + manual `writeInsert`-in-`onSuccess` pattern is deprecated (`transform` label). Worked examples and exceptions: `docs/mutations.md`.
 
-```bash
-# Run all scenetest specs
-pnpm scene
+## Feature Modules (`src/features/`)
 
-# Run a specific scene file
-pnpm scene scenetest/scenes/decks.spec.md
-```
+Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hooks.ts`, and a barrel `index.ts` (some add `live.ts`, `mutations.ts`, `store.ts`, `fsrs.ts`). Modules are deliberately wide where concepts are inseparable — `requests/` holds requests + comments + comment→phrase links + upvotes because a comment without a request is meaningless; don't split a wide module to satisfy a lint rule.
 
-Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requires the dev server (`pnpm dev`) and Supabase to be running locally. Config is in `scenetest/config.ts`.
+| Domain      | Schemas                                                   | Collections                                             | Key Hooks                                                          |
+| ----------- | --------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `profile`   | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                               | useAuth, useProfile                                                |
+| `languages` | Language, LangTag, LangSchema                             | languages, langTags                                     | useLanguageMeta, useLanguageTags                                   |
+| `phrases`   | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                             | useLanguagePhrases, usePhrase                                      |
+| `deck`      | DeckMeta, CardMeta                                        | decks, cards                                            | useDeckMeta, useDeckCards, useDeckPids                             |
+| `review`    | CardReview, DailyReviewState                              | cardReviews, reviewDays                                 | useReviewsToday, useReviewMutation                                 |
+| `requests`  | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes   | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
+| `social`    | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)     | useRelationFriends, useAllChats                                    |
+| `playlists` | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                    | useOnePlaylist, useLangPlaylists                                   |
+| `feed`      | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature) | useFeedLang                                                        |
 
-**Strong default: Markdown scenes + inline runtime checks.** Three authoring surfaces exist under `scenetest/scenes/` (see [reference](https://scenetest.msnook.xyz/reference/concurrent-and-classic.md)), but reach for them in this order:
+**Imports**: consumer code (routes, components) imports from the barrel (`@/features/deck`); cross-domain wiring imports specific files (`@/features/deck/collections`); intra-feature imports are relative (`./schemas`). Always use the `@/` alias otherwise.
 
-1. **Markdown scenes** (`.spec.md`) — the default for nearly every spec.
-2. **TypeScript scenes** — `scene()` from `@scenetest/scenes`. Same scene runtime, in TS, for custom setup/teardown or logic Markdown can't express.
-3. **Playwright specs** — `test()` from `@scenetest/scenes` (NOT raw `@playwright/test`). Sequential await-driven model with scenetest's actor handles and selectors. Only for multi-actor flows with timing-sensitive logic the scene runtime can't express.
+**Cross-domain hooks** (`src/hooks/`): `usePhrase()` (composite-phrase — full phrase split by known languages), `useCompositePids()` (recommended phrases + pid arrays), `useSmartSearch()` (trigram search RPC), `useLinks()` (nav routes + badges), `useDebounce`/`usePrevious`/`useIntersectionObserver`, `useFontPreference()`, `useIntro()` (localStorage intro-dialog state), `useIsMobile()`, `useRequireAuth()`.
 
-**Runtime checks** — scenetest's inline assertion functions `should()`, `failed()`, `serverCheck()` — live inside application code (components, mutation callbacks, effects) and report to the observer panel in dev. The Vite plugin strips them from production builds. They're a peer to scene specs, not a fallback. **Lean on them especially for mutation flows**: the scene asserts the user-visible outcome (`see toast-success`), while the inline check inside the mutation handler enforces the collection-state / client-server agreement that the old e2e tests were scraping from the DOM.
+**Cross-cutting lib** (`src/lib/`): `supabase-client.ts`, `query-client.ts`, `use-auth.ts` (AuthProvider — clears user collections on sign-out, preloads profile on sign-in), `collections/clear-user.ts`, `dayjs.ts`, `utils.ts`, `languages.ts`.
 
-**Do not write new `@playwright/test` specs.** The legacy `e2e/` directory is being decommissioned — see the `transform` label.
+## Routing (`src/routes/`)
 
-#### Writing Scene Specs
+TanStack Router, file-based: `_auth` = auth layout, `_user` = protected layout (auth required), `$lang` = dynamic 3-letter language code, dot notation nests paths (`$lang.review.go.tsx` → `/learn/$lang/review/go`), `.lazy` = lazy-loaded, `.index` = index route, `-`-prefixed files = co-located non-route components.
 
-Scene specs are markdown files in `scenetest/scenes/`. Each file contains one or more named scenes:
+Route context carries `{ auth, queryClient, titleBar?, appnav?, contextMenu? }` — use `beforeLoad`/`loader` to set page metadata, navbar title/icons, and nav links. Access auth via `Route.useRouteContext()` → `auth.isAuth, auth.userId, auth.userEmail, auth.userRole`.
 
-```markdown
-# scene title (human-readable description)
+## Conventions
 
-cleanup: supabase.from('table').delete().eq('uid', '[learner.key]').eq('lang', 'spa')
-
-learner:
-
-- login
-- openTo /learn
-- see decks-list-grid
-- click deck-link
-- up
-- seeToast toast-success
-```
-
-**DSL commands:**
-
-| Command    | Args           | Purpose                                                   |
-| ---------- | -------------- | --------------------------------------------------------- |
-| `openTo`   | path           | Navigate to URL                                           |
-| `see`      | selector       | Assert element is visible                                 |
-| `notSee`   | selector       | Assert element is NOT visible                             |
-| `seeText`  | text           | Assert text is visible                                    |
-| `seeToast` | selector       | Wait for toast to appear then disappear                   |
-| `click`    | selector       | Click element                                             |
-| `typeInto` | selector value | Type text into input                                      |
-| `up`       | (none)         | Wait for page to settle (async ops, animations)           |
-| `login`    | (none)         | Macro: navigates to /login, fills email/password, submits |
-
-**Selectors** resolve to `data-testid` attributes. For items inside lists, use space-separated selectors: `decks-list-grid hin deck-link` finds `[data-testid="deck-link"]` inside `[data-key="hin"]` inside `[data-testid="decks-list-grid"]`. See `scenetest/TEST_IDS.md` for the full registry.
-
-**Template variables:**
-
-- `[self.email]`, `[self.password]` — current actor's credentials
-- `[actor.key]` — actor's UUID (e.g., `[learner.key]`, `[friend.key]`)
-- `[team.lang]` — team's language code (e.g., `'kan'`)
-
-**Actors** (defined in `scenetest/actors/default.ts`):
-
-- `visitor` — not logged in
-- `new-user` — fresh account, needs onboarding
-- `learner` — main test user with decks and data
-- `friend` — secondary user for multi-actor flows
-- `learner2`, `learner3` — additional test users
-
-**Cleanup directives** run both before AND after the scene for idempotency. They execute Supabase JS expressions with the server client from `scenetest/config.ts`.
-
-**Custom macros** are defined in `scenetest/config.ts` via `defineMacro('name', [...steps])`. Use them as bare step names in specs.
-
-**Adding test IDs to components**: Use `data-testid` for unique elements, `data-key` for list items (on the item element, with `data-testid` on the container), and `data-name`+`data-key` for items without a wrapper. Register new IDs in `scenetest/TEST_IDS.md`.
-
-**Setup directives** run before the scene to pre-set state (e.g., `setup: supabase.from('user_deck').update(...)`). Use them when a scene requires non-default initial state.
-
-### Testing (Playwright — legacy, being removed)
-
-The `e2e/` directory is deprecated and slated for removal — see the `transform` label. Its `pnpm test` / `pnpm test:*` scripts have already been removed; the remaining specs run via `pnpm exec playwright test` directly. Don't add new specs here. Migrate existing ones to `scenetest/scenes/`.
-
-### Database Management
-
-```bash
-# Create migration from local changes
-pnpm run migrate
-
-# Regenerate TypeScript types from database schema
-pnpm run types
-
-# Regenerate base schema file (curate before committing!)
-pnpm run seeds:schema
-
-# Dump current seed data
-pnpm run seeds:data
-
-# Apply seeds
-pnpm run seeds:apply
-```
-
-**Important**: When regenerating `base.sql` and running the seeding script (`pnpm seeds:data`), be careful not to commit unintended deletions (like realtime table configurations). Always review the diff carefully.
-
-### Database Workflow
-
-1. Use Supabase Studio (http://localhost:54323) to modify schema/data
-2. When feature works, run `pnpm run migrate` to create migration
-3. Run `pnpm run seeds:schema` to update base.sql (review carefully!), update supabase types, run formatter
-4. Run `pnpm run types` to regenerate TypeScript types
-
-## Deployment Strategy
-
-We use **trunk-based development with a migration gate** — two deployment tracks, not two long-lived branches.
-
-### The two tracks
-
-| Track                                | Trigger                  | Risk profile                       | Ceremony                                      |
-| ------------------------------------ | ------------------------ | ---------------------------------- | --------------------------------------------- |
-| **Fast track** (UI-only)             | PR merges to `main`      | Low blast radius, reversible       | Deploy at will, drop a one-liner in changelog |
-| **Migration track** (schema changes) | PR into `next-<version>` | Expensive to reverse, needs review | Human review gate, batch release notes        |
-
-### The migration branch is named after the version it will ship
-
-The migration-track branch is **named after the version it lands as**, not a bare `next`:
-
-- `next-0.28` → lands the v0.28 version bump + changelog entry.
-- `next-0.28.1` → a patch release; include the patch segment in the branch name.
-
-The version comes from the current `package.json` `version` (today `0.27.0`) and the latest `CHANGELOG.md` heading (today `v0.27`) — the open migration branch is the **next** of those. Naming the branch this way means the branch, the version bump it carries, and the changelog section it will add all share one identifier, so the deployment log reads cleanly.
-
-**CI matches these by glob.** `.github/workflows/test.yaml` triggers on `next` and `next-*` (push) and `next`, `next-*`, `main` (PR base). The glob is load-bearing: Actions matches branch filters literally, so dropping `next-*` would silently skip _all_ CI on a `next-0.28` branch and on every PR targeting it. If you adopt a name the glob doesn't cover, update the workflow first.
-
-### Decision rule
-
-> **Two questions, in order:**
->
-> 1. **Was this branch created from `next-<version>`?**
->    - **Yes** → PR into the open `next-<version>` branch, regardless of what your own changes touch. The base branch already carries unreleased migrations waiting for the next release cut; merging your branch into `main` would smuggle those past the migration-track QA + CI gate.
->    - **No** → continue to question 2.
-> 2. **Does this PR touch a migration file?**
->    - **No** → merge to `main`, deploy when ready.
->    - **Yes** → PR into the open `next-<version>` branch, hold for review, merge `next-<version>` → `main` when the batch is ready.
-
-The point of the gate is that **migrations only ever reach `main` through a `next-<version>` → `main` release merge** — never as a side effect of a UI PR whose branch happened to start from `next-<version>`. If you're unsure where your branch started, `git merge-base HEAD origin/next-<version>` vs `git merge-base HEAD origin/main` will tell you.
-
-### Workflow
-
-1. **Feature without migration** → PR → merge to `main` → deploy → one-liner changelog entry (doesn't need to be same day)
-2. **Feature with migration** → PR into `next-<version>` → accumulates with other migration PRs → human reviews full picture → merge `next-<version>` into `main` → deploy → write proper release notes
-3. **Version bumps** → only when cutting a `next-<version>` → `main` release. Bump `package.json` and add the `v<version>` changelog heading to match the branch name. Tag these merges with `git tag` (e.g. `v0.28`).
-
-### Guidelines
-
-- **Don't let the `next-<version>` branch get stale.** If it's been open >2 weeks, either ship it or break the migrations into smaller pieces.
-- **Tag `next-<version>` → `main` merges** even informally — `git tag` is cheap and makes the deployment log reconstructable.
-- **Check the PR base before merging, not after.** Auto-created PRs (from the Claude Code UI, `gh pr create` without `--base`, etc.) default to the repo's default branch — usually `main`. If your branch was based on `next-<version>`, the PR will silently target the wrong branch until you change it. Check `base:` in the PR header.
-- **Changelog has two modes**: a running "Recent changes" section for fast-track items, and named/versioned release entries (`v0.28`) for migration-track batches.
-- **Ship UI, architect the database.** UI changes should flow fast; schema changes deserve ceremony.
-
-## Architecture Overview
-
-### Philosophy
-
-- **Local First Approach:** Get the most out of Tanstack DB. Use `collection.insert` when possible, prefer live queries to postgres views, always return full objects from RPCs.
-- **RLS-Backed:** Privacy is handled directly in the DB, so we must be very sure of our work on RLS, and then the client can do whatever it wants with the worst case being "broken component / error in UI" rather than leaked data.
-- **Container Queries:** We use tailwind's @container and container queries like `@lg:class-name` so that our components remain composable and portable.
-
-### Tech Stack
-
-- **Frontend**: React 19 + TypeScript 5.8+ + Vite + React Compiler
-- **Language**: Concise, functional TypeScript with latest ECMAScript features
-- **Routing**: TanStack Router (file-based)
-- **Data Management**: TanStack DB Collections + TanStack Query
-- **Backend**: Supabase (PostgreSQL + Auth + Realtime + Storage + RPC)
-- **Validation**: Zod schemas
-- **Forms**: react-hook-form with zodResolver
-- **UI**: ShadCN UI + Tailwind CSS
-- **Package Manager**: PNPM
-- **Linting**: oxlint (fast) + eslint (thorough)
-- **Git Hooks**: husky + lint-staged for pre-commit checks
-- **Dev Tools**: React Query Devtools + Router Devtools
-
-### Data Flow Pattern
-
-This app uses a **reactive collection-based architecture** instead of traditional REST or GraphQL patterns:
-
-```
-Supabase Database
-        ↓
-Collections (src/features/<domain>/collections.ts)
-        ↓
-Live Queries (useLiveQuery hooks)
-        ↓
-React Components
-```
-
-**Collections** are the single source of truth for all data. They're defined in each feature's `collections.ts` using `createCollection()` with Zod schemas for validation. Loading strategies:
-
-- Load **whole tables** for user collections (RLS filters automatically)
-- Use **on-demand** subsets in live queries for public data
-
-**Live Queries** subscribe to collections reactively. Any collection update automatically triggers component re-renders. Use the `useLiveQuery()` hook to create queries that can:
-
-- Join multiple collections
-- Filter with type-safe operators (`eq`, `gte`, `and`, etc.)
-- Select specific fields
-- Aggregate data
-
-Example:
-
-```typescript
-// From features/deck/hooks.ts
-export const useDeckCards = (lang: string) =>
-	useLiveQuery(
-		(q) =>
-			q
-				.from({ card: cardsCollection })
-				// ❌ incorrect: `.join(phraseFull, ...)
-				// ✅ correct: `.join({ phrase: phraseFull }, ...)`
-				.join({ phrase: phraseFull }, ({ card, phrase }) =>
-					eq(card.phrase_id, phrase.id)
-				)
-				.where(({ card }) => eq(card.lang, lang)),
-		[lang]
-	)
-```
-
-### Mutations Pattern
-
-**Standard:** define persistence on the collection itself via `onInsert / onUpdate / onDelete` handlers, then call `collection.insert / update / delete` from components. The optimistic update lands in the same tick; throwing from the handler rolls it back automatically. Attach success/error UX to the returned `Transaction.isPersisted.promise`.
-
-```typescript
-// features/<domain>/collections.ts — persistence lives here
-export const cardsCollection = createCollection(
-	queryCollectionOptions({
-		// ...id, queryKey, queryFn, getKey, schema...
-		onUpdate: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('user_card')
-						.update(m.changes)
-						.eq('id', m.original.id)
-						.throwOnError()
-				)
-			)
-			return { refetch: false } // optimistic value matches server; skip reload
-		},
-	})
-)
-
-// component — declare the optimistic intent, react to collection state
-const { data: card } = useMyCard(phrase.id)
-
-const setCardStatus = (status: CardStatus) => {
-	if (!card) return
-	const tx = cardsCollection.update(card.id, (draft) => {
-		draft.status = status
-	})
-	tx.isPersisted.promise.then(
-		() => toastSuccess(STATUS_TOAST_MESSAGES[status]),
-		(err) => {
-			toastError('Failed to update card status')
-			console.error('rolled back', err)
-		}
-	)
-}
-```
-
-The component subscribes to the collection via `useLiveQuery` (here through `useMyCard`), so the menu / button state reflects the optimistic value immediately and flips back if the server rejects.
-
-See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked example. See also the [TanStack DB optimistic-mutations skill](node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md) for `createOptimisticAction` (multi-collection atomic mutations) and `createPacedMutations` (auto-save / debounce / throttle).
-
-**Reasonable exceptions:**
-
-- **Realtime sync handlers** writing supabase channel events into a collection (`chatMessagesCollection.utils.writeInsert(...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
-- **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
-
-#### Don't refetch entire tables to sync — return the row and `writeInsert` / `writeUpdate` / `writeDelete`
-
-`collection.utils.refetch()` is **a full table fetch** (`queryCollectionOptions.queryFn` re-runs `.from('…').select()` for the whole table). After a single-row mutation, this is wildly disproportionate: a refetch of `phrase_request` to confirm one new request pulls every request in the system.
-
-The cheap alternative: make supabase or the RPC hand back the affected rows, and write them into the synced state directly.
-
-- For direct supabase writes, append `.select()` (or `.select().single()`) to `insert / update / delete` calls. The post-mutation row(s) come back in the response.
-- For RPCs, prefer ones that already `RETURN json_build_object(...)` with the affected rows (e.g. `create_comment_with_phrases`).
-- Inside a `createOptimisticAction.mutationFn`, call `collection.utils.writeInsert(parsed)` / `writeUpdate(parsed)` / `writeDelete(key)` with the server's returned row(s). The synced state is now correct without a full refetch, and the optimistic state drops cleanly when the action resolves.
-
-Treat `collection.utils.refetch()` like `useEffect`: a code smell that needs a justification. **If you're about to add one, stop and check with the human first.** Usually one of these is the right move instead: pass client-generated IDs to the server so optimistic === synced; use `.select()` to get the row back; or change the RPC to return what you need. Legitimate uses do exist (e.g. picking up cascade-deleted rows on a parent delete) but they're rare and should be commented at the call site.
-
-If you do call `refetch()` against a `startSync: false` user collection that's small (one-column-of-IDs tables like `*_upvote`), note that in a comment — it's much cheaper than refetching a public table, but still worth flagging.
-
-**Deprecated** — do not use for new code, and migrate when touching old code (tracked by the `transform` label):
-
-```typescript
-// ❌ useMutation calling supabase directly + manual local sync in onSuccess.
-// React Query routes onSuccess errors to onError, so a successful DB write
-// whose post-success sync throws surfaces as a misleading "Failed to X" toast.
-const mutation = useMutation({
-	mutationFn: async (values) => {
-		const { data } = await supabase
-			.from('phrase')
-			.insert(values)
-			.select()
-			.throwOnError()
-		return data[0]
-	},
-	onSuccess: (data) => {
-		phrasesCollection.utils.writeInsert(PhraseSchema.parse(data))
-		toast.success('Created!')
-	},
-	onError: (error) => {
-		toast.error('Failed to create')
-		console.log('Error', error)
-	},
-})
-```
-
-### Key Directories
-
-- `src/features/` - **Feature modules** (schemas, collections, hooks, and barrel files per domain)
-  - `profile/` - User profiles, identity, language preferences (`schemas.ts`, `collections.ts`, `hooks.ts`)
-  - `languages/` - Language metadata, tags, `LangSchema` (`schemas.ts`, `collections.ts`, `hooks.ts`)
-  - `phrases/` - Phrases, translations, search, provenance (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`)
-  - `deck/` - Decks, cards, deck mutations (`schemas.ts`, `collections.ts`, `hooks.ts`, `mutations.ts`)
-  - `review/` - Review sessions, FSRS algorithm, review store (`schemas.ts`, `collections.ts`, `hooks.ts`, `store.ts`, `fsrs.ts`)
-  - `requests/` - Phrase requests, comments on requests, upvotes for both, and the comment→phrase links that make up an answer thread. Deliberately one module — a comment without a request is meaningless (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`)
-  - `social/` - Friends, chat, public profiles, friend feed (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`, `public-profile.ts`)
-  - `playlists/` - Playlists & phrase links (`schemas.ts`, `collections.ts`, `hooks.ts`)
-  - `feed/` - Activity feed (`schemas.ts`, `hooks.ts`)
-- `src/lib/` - Cross-cutting utilities
-  - `collections/clear-user.ts` - Clears all user collections on logout
-  - `supabase-client.ts` - Supabase client setup
-  - `query-client.ts` - TanStack Query configuration
-  - `use-auth.ts` - Authentication state
-  - `dayjs.ts`, `utils.ts`, `languages.ts` - Cross-cutting utilities
-- `src/hooks/` - Cross-domain composite hooks and utilities
-  - `composite-phrase.ts` - `usePhrase()`: hydrates full phrase with translations split by user's known languages
-  - `composite-pids.ts` - `useCompositePids()`: computes top 8 recommended phrases and various phrase ID arrays for a language
-  - `use-smart-search.ts` - `useSmartSearch()`: server-side trigram similarity search via `search_phrases_smart` RPC with debounce and local collection hydration
-  - `links.ts` - `useLinks()`: returns route paths with navigation metadata and status badges for sidebar
-  - `use-debounce.ts` - `useDebounce()`, `usePrevious()`, `useIntersectionObserver()`: generic React utilities
-  - `use-font-preference.ts` - `useFontPreference()`: applies dyslexic/normal font to document body. Reads from profile when authenticated, falls back to localStorage (`sunlo-font-preference`) for first-paint before profile loads. Cleared on logout via `resetUiPrefs()` so a new user on the same device gets the standard default.
-  - `use-intro-seen.ts` - `useIntro()`: manages intro/training dialog state ('unseen'/'seen'/'affirmed') via localStorage. Used for onboarding, review intro, deck settings intro
-  - `use-mobile.tsx` - `useIsMobile()`: viewport width < 768px detection
-  - `use-require-auth.ts` - `useRequireAuth()`: wraps actions with auth check, shows toast and redirects if not authenticated
-- `src/routes/` - File-based routing structure
-  - `_auth.tsx` - Auth layout (login, signup)
-  - `_user.tsx` - Protected routes requiring authentication
-  - `_user/learn/$lang.*` - Language-specific learning features
-- `src/components/` - React components
-  - `ui/` - Base Radix UI primitives (button, dialog, etc.)
-  - `feed/` - Feed display components
-  - `cards/`, `requests/`, `playlists/` - Feature-specific components
-  - `fields/` - Reusable form field components
-- `supabase/schemas/` - Database schema definitions
-- `supabase/migrations/` - Database migrations
-- `supabase/seed-*.sql` - Various seed data files, loaded in alphabetical order
-
-### Feature Module Pattern
-
-The codebase uses a **"deep module" architecture** (inspired by Ousterhout's _A Philosophy of Software Design_). Each feature domain is a self-contained directory under `src/features/` containing its own schemas, collections, hooks, and a barrel file (`index.ts`) that exports the public API.
-
-**Module boundaries are intentionally wide where concepts are inseparable.** A `requests/` module holds requests, the comments that answer them, the comment→phrase links that form an answer, and upvotes on both — because a comment without a request is meaningless. `social/` holds friends + chat + feed for the same reason: they're all "things that happen between users." Don't split a wide module into narrower ones just to satisfy a "no cross-feature import" lint rule; if two concepts only exist together, they belong together. The rule against cross-feature `collections.ts` imports applies _between_ genuinely separate modules — not within one wide module just because it has many tables.
-
-**Directory structure per feature:**
-
-```
-src/features/<domain>/
-  schemas.ts      — Zod schemas and inferred types
-  collections.ts  — TanStack DB collections
-  hooks.ts        — React hooks (useLiveQuery, useMutation)
-  index.ts        — Barrel file (public API re-exports)
-  # Some features also have:
-  live.ts         — Live query definitions (phrases, social)
-  mutations.ts    — Mutation hooks (deck)
-  store.ts        — Zustand store (review)
-  fsrs.ts         — FSRS algorithm (review)
-```
-
-**Import conventions:**
-
-```typescript
-// ✅ Consumer code (routes, components) — import from the barrel
-import { useDeckMeta, type DeckMetaType } from '@/features/deck'
-import { useLanguagePhrases } from '@/features/phrases'
-
-// ✅ Cross-domain wiring (one feature importing from another) — import from specific files
-import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaSchema } from '@/features/deck/schemas'
-
-// ✅ Intra-feature imports — use relative paths
-import { CardReviewSchema } from './schemas'
-import { cardReviewsCollection } from './collections'
-```
-
-**Feature domains and what they contain:**
-
-| Domain      | Schemas                                                   | Collections                                           | Key Hooks                                                          |
-| ----------- | --------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
-| `profile`   | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                             | useAuth, useProfile                                                |
-| `languages` | Language, LangTag, LangSchema                             | languages, langTags                                   | useLanguageMeta, useLanguageTags                                   |
-| `phrases`   | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                           | useLanguagePhrases, usePhrase                                      |
-| `deck`      | DeckMeta, CardMeta                                        | decks, cards                                          | useDeckMeta, useDeckCards, useDeckPids                             |
-| `review`    | CardReview, DailyReviewState                              | cardReviews, reviewDays                               | useReviewsToday, useReviewMutation                                 |
-| `requests`  | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
-| `social`    | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)   | useRelationFriends, useAllChats                                    |
-| `playlists` | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                  | useOnePlaylist, useLangPlaylists                                   |
-| `feed`      | FeedActivity                                              | (uses React Query)                                    | useFeedLang                                                        |
-
-### Routing Conventions
-
-Routes use TanStack Router's file-based system:
-
-- `$lang` parameter = dynamic language code (e.g., "tam", "spa")
-- `_auth` prefix = auth layout (pages relating to auth workflows)
-- `_user` prefix = protected layout (auth required)
-- `.lazy` suffix = lazy-loaded route
-- `.index` suffix = index route
-
-Route context includes:
-
-```typescript
-interface MyRouterContext {
-	auth: AuthState
-	queryClient: QueryClient
-	titleBar?: TitleBar
-	appnav?: string[]
-	contextMenu?: string[]
-}
-```
-
-Use `beforeLoad` and `loader` hooks to:
-
-- Set page metadata (title, subtitle, etc.)
-- Define navbar title and icons
-- Pass links for app-nav and context menu
-- Directly pass second sidebar if required
-
-**Route files in `src/routes/_user/learn/`** (dot notation = nested paths):
-
-```
-index.tsx                        → /learn
-add-deck.tsx                     → /learn/add-deck
-archived.tsx                     → /learn/archived
-browse.tsx                       → /learn/browse (layout)
-browse.index.tsx                 → /learn/browse
-browse.charts.tsx                → /learn/browse/charts
-contributions.tsx                → /learn/contributions
-$lang.tsx                        → /learn/$lang (layout with loader)
-$lang.index.tsx                  → /learn/$lang (index redirect)
-$lang.feed.tsx                   → /learn/$lang/feed
-$lang.deck-settings.tsx          → /learn/$lang/deck-settings
-$lang.manage-deck.tsx            → /learn/$lang/manage-deck
-$lang.bulk-add.tsx               → /learn/$lang/bulk-add
-$lang.stats.tsx                  → /learn/$lang/stats
-$lang.phrases.$id.tsx            → /learn/$lang/phrases/:id
-$lang.phrases.new.tsx            → /learn/$lang/phrases/new
-$lang.playlists.tsx              → /learn/$lang/playlists (layout)
-$lang.playlists.index.tsx        → /learn/$lang/playlists
-$lang.playlists.$playlistId.tsx  → /learn/$lang/playlists/:playlistId
-$lang.playlists.new.tsx          → /learn/$lang/playlists/new
-$lang.requests.index.tsx         → /learn/$lang/requests
-$lang.requests.$id.tsx           → /learn/$lang/requests/:id
-$lang.requests.new.tsx           → /learn/$lang/requests/new
-$lang.contributions.tsx          → /learn/$lang/contributions
-$lang.review.tsx                 → /learn/$lang/review (layout)
-$lang.review.index.tsx           → /learn/$lang/review (setup page)
-$lang.review.go.tsx              → /learn/$lang/review/go (active session)
-$lang.review.preview.tsx         → /learn/$lang/review/preview
-```
-
-Files prefixed with `-` (e.g., `-deck-card.tsx`) are non-route components co-located with routes.
-
-### Authentication
-
-Auth state managed in `src/lib/use-auth.ts` via `AuthProvider`:
-
-- Listens to Supabase `onAuthStateChange` events
-- Clears user collections on sign-out
-- Preloads user profile on sign-in
-
-Access auth state:
-
-```typescript
-const { auth } = Route.useRouteContext()
-// auth.isAuth, auth.userId, auth.userEmail, auth.userRole
-```
-
-### Collection Types
-
-**Public collections** (`startSync: true`):
-
-- Phrases, playlists, requests, public profiles
-- Synced automatically for all users
-
-**User collections** (`startSync: false`):
-
-- Cards, decks, reviews, chat messages, friend summaries
-- Only synced when user is authenticated
-- Cleared on logout
-
-### Realtime Patterns
-
-For friend requests and chat messages, use `useEffect` to subscribe:
-
-```typescript
-useEffect(() => {
-	const channel = supabase
-		.channel('chat_messages')
-		.on(
-			'postgres_changes',
-			{
-				event: 'INSERT',
-				schema: 'public',
-				table: 'chat_message',
-			},
-			(payload) => {
-				chatMessagesCollection.utils.writeInsert(
-					ChatMessageSchema.parse(payload.new)
-				)
-			}
-		)
-		.subscribe()
-
-	return () => {
-		supabase.removeChannel(channel)
-	}
-}, [])
-```
-
-### Seed Data Conventions
-
-All seed data uses relative date calculations from `current_date`:
-
-```sql
-created_at = current_date - 4 + interval '2 minute' day_session = (current_date - 4 + interval '2 minute' - interval '4 hour')::date
-```
-
-This ensures seed data remains relevant (cards "created 4 days ago" are always 4 days old). When modifying seeds, maintain this pattern for dates.
-
-## Code Style & Conventions
-
-### Formatting
-
-- Use **tabs** instead of spaces
-- TS/JS/JSX/CSS/MD/JSON are formatted by **oxfmt**; prettier is only used for SQL. To format specific files, use `npx oxfmt path/to/file.ts` — never `npx prettier`, which applies wrong defaults (semicolons, double quotes, spaces) to non-SQL files.
-- The pre-commit hook runs oxfmt + oxlint --fix + eslint --fix on staged files via lint-staged, so the format step happens automatically. Run `pnpm format` by hand only when you want to format the whole tree.
-
-### Naming Conventions
-
-- **Variables**: camelCase (e.g., `userProfile`, `deckCards`)
-- **Zod schemas**: PascalCase (e.g., `PhraseFullSchema`, `DeckMetaSchema`)
-- **Database fields**: snake_case to match Postgres (e.g., `created_at`, `phrase_id`)
-- **Components**: PascalCase, files are kebab-case (e.g., `UserProfile` in `user-profile.tsx`)
-- **Hooks**: Feature hooks live in `features/<domain>/hooks.ts`; cross-cutting hooks in `src/hooks/` use `use-` prefix
-- **Language codes**: Use `lang` variable name for 3-letter codes
-- **Phrase IDs**: Use `pid` when passing phrase_id as prop or variable
-- **Type definitions**: Files with only TypeScript definitions use `*.d.ts` extension
-
-### TypeScript Conventions
-
-- Prefer `Array<SomeType>` over `SomeType[]` for readability at start of line
-- Auto-generated types from Supabase: `@/src/types/supabase.ts`
-- Utility types that wrap/combine Supabase types: `@/src/types/main.ts`
-- All IDs use `uuid` type (alias for `string` defined in `main.ts`)
-
-### Import Patterns
-
-```typescript
-// Feature public API (preferred for consumer code)
-import { useDeckMeta, type DeckMetaType } from '@/features/deck'
-import { useLanguagePhrases } from '@/features/phrases'
-
-// Feature internals (for cross-domain wiring)
-import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaSchema } from '@/features/deck/schemas'
-
-// Supabase client
-import supabase from '@/lib/supabase-client'
-
-// Components
-import { Button } from '@/components/ui/button'
-import UserProfile from '@/components/user-profile'
-
-// Lib functions
-import { todayString } from '@/lib/dayjs'
-```
-
-### Important Conventions
-
-- **Date handling**: Use `todayString()` helper which uses 4am cutoff (not midnight) for day boundaries. Use `dayjs` helpers like `ago()` for display.
-- **Path aliases**: Always use `@/` prefix for imports
-- **Type naming**: Zod schemas generate types with `Type` suffix (e.g., `PhraseFullSchema` → infer as `PhraseFullType`)
-- **Query keys**: Use array format matching collection IDs (e.g., `['public', 'phrase_full']`)
-- **Collection keys**: Define `getKey` to return each row's actual unique identifier. Most collections use `item.id`, but notable exceptions: `decksCollection` uses `item.lang`, profile collections use `item.uid`, upvote collections use the foreign key (e.g., `item.comment_id`), and `reviewDaysCollection`/`friendSummariesCollection` use composite template strings (e.g., `` `${item.day_session}--${item.lang}` ``). Always check the source table's unique constraint
-
-## Styling with Tailwind CSS
-
-### tailwind-oklch Color System
-
-This project uses the **tailwind-oklch** plugin for composable, auto-flipping OKLCH colors. Every color is built from three axes: **luminance contrast** (L), **chroma** (C), and **hue** (H).
-
-#### Shorthand syntax (preferred when setting all three axes)
-
-```
-{prop}-{L}-{C}-{H}
-```
-
-Examples:
-
-```typescript
-// Background: luminance 1, chroma mlo, hue primary
-className = 'bg-1-mlo-primary'
-
-// Text: luminance 6, chroma hi, hue info
-className = 'text-6-hi-info'
-
-// Border: luminance 4, chroma mid, hue danger
-className = 'border-4-mid-danger'
-
-// Works with variants:
-className = 'hover:bg-2-mlo-info'
-```
-
-**Always use the shorthand** when setting all three axes. Only use decomposed form (`bg-lc-* bg-c-* bg-h-*`) when overriding a single axis or using adjustment utilities.
-
-#### Luminance contrast scale (L)
-
-The 0–10 scale auto-flips between light and dark mode:
-
-| Value         | Light mode        | Dark mode         | Meaning          |
-| ------------- | ----------------- | ----------------- | ---------------- |
-| `0` / `base`  | 0.95 (near white) | 0.12 (near black) | Blends with page |
-| `1`           | 0.87              | 0.20              | Subtle tint      |
-| `5`           | 0.55              | 0.52              | Mid-contrast     |
-| `7`           | 0.39              | 0.68              | Prominent        |
-| `10` / `fore` | 0.15 (near black) | 0.92 (near white) | Maximum contrast |
-| `none`        | 1.0 (white)       | 0.0 (black)       | Beyond base      |
-| `full`        | 0.0 (black)       | 1.0 (white)       | Beyond fore      |
-
-#### Chroma stops (C)
-
-| Name  | Value | Use for                            |
-| ----- | ----- | ---------------------------------- |
-| `lo`  | 0.02  | Backgrounds, muted surfaces        |
-| `mlo` | 0.06  | Tinted backgrounds, subtle borders |
-| `mid` | 0.12  | Medium saturation                  |
-| `mhi` | 0.18  | Prominent accents                  |
-| `hi`  | 0.25  | Vivid, saturated colors            |
-
-#### Available hues (H)
-
-`primary` (300), `accent` (175), `neutral` (270), `success` (145), `warning` (55), `danger` (15), `info` (220)
-
-#### Adjustment utilities (single-axis overrides)
-
-Use these when you need to nudge ONE axis, inheriting the others from a parent or shorthand:
-
-```typescript
-// Adjust luminance: more contrast (+) or less contrast (-)
-className = 'bg-1-mlo-primary group-hover:bg-lc-up-1'
-
-// Override just the hue on a child element
-className = 'bg-h-accent'
-
-// Override just the chroma
-className = 'text-c-hi'
-```
-
-#### Semantic color tokens
-
-Defined in `globals.css`, these bridge the tailwind-oklch scale with traditional Tailwind tokens:
-
-| Token                                  | Definition                | Notes                                                                 |
-| -------------------------------------- | ------------------------- | --------------------------------------------------------------------- |
-| `primary`                              | L=5, C=hi, hue-primary    | Auto-flips via plugin                                                 |
-| `primary-foresoft`                     | L=7, C=hi, hue-primary    | Auto-flips; the "interactive purple" for links, soft buttons, borders |
-| `primary-foreground`                   | Fixed L=0.93              | Always near-white — for text ON primary surfaces only                 |
-| `accent` / `accent-foresoft`           | L=5/7, C=hi, hue-accent   | Auto-flips                                                            |
-| `accent-foreground`                    | L=fore, C=mlo, hue-accent | Auto-flips; used as body text (language names)                        |
-| `foreground`, `muted-foreground`, etc. | Static per-mode           | Defined in `:root` and `.dark` blocks                                 |
-
-#### When to use what
-
-- **Semantic tokens** (`text-primary`, `bg-card`, `border-border`): For UI primitives that use the same color everywhere
-- **Shorthand** (`bg-1-mlo-info`): For one-off colored elements — icon backgrounds, tinted surfaces, status indicators
-- **Decomposed** (`bg-lc-up-1`, `text-c-hi`): For hover/focus adjustments or overriding one axis of an inherited color
-- **Avoid `dark:` prefixes** — the oklch scale and semantic tokens auto-flip. Only use `dark:` for truly exceptional cases (e.g. marketing page with custom gradient backgrounds)
-- **Avoid opacity-based tints** (`bg-primary/10`) — use luminance steps instead (`bg-1-mlo-primary`) for consistent appearance across monitors
-
-### Styling Conventions
-
-- Use `cn()` function for conditional class name concatenation
-- Use **"start" and "end"** instead of "left" and "right" for RTL support
-- Use `@container` queries when relevant for component portability across different-sized containers
-- **Use standard Tailwind classes** instead of arbitrary values when a standard class exists (e.g. use `z-50` not `z-[50]`, `z-100` not `z-[100]`)
-- **Border radius**:
-  - Interactive elements (links, buttons, inputs): `rounded-2xl`
-  - Non-interactive elements (cards): `rounded`
-
-### Base UI Data Attributes
-
-This project uses `@base-ui/react` (NOT Radix) for low-level primitives. Base UI uses different data attributes than Radix:
-
-- **Tabs**: Selected tab gets `data-active` (use `data-[active]:` in Tailwind). NOT `data-selected` or `data-state="active"`.
-- **Select**: Similar pattern — check Base UI docs for the correct attribute names before styling.
-- Always verify the actual data attribute names in `node_modules/@base-ui/react/esm/` type definition files when creating or modifying UI components.
-
-### Component Styling Patterns
-
-```typescript
-// Links styled as buttons
-<Link to="/path" className={buttonVariants({ variant: "default" })}>Go</Link>
-
-// Links styled as links
-<Link to="/path" className="s-link">Go</Link>
-
-// Always use generic components for consistency
-<Input /> <Textarea /> <Button />
-```
-
-### Button Variants
-
-We use a deliberate set of button variants. Choose based on the action's role, not its visual weight:
-
-| Variant            | Role                                                                         | Example uses                                                                                              |
-| ------------------ | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `default`          | **Primary action** — the thing you most want the user to do                  | Save, Submit, Create account, Confirm                                                                     |
-| `neutral`          | **Paired counterpart** to default or red — cancel, go back, reset            | Cancel, Go back, Reset, Dismiss                                                                           |
-| `soft`             | **Optional initiation** — opens a flow the user may choose to start          | "Show translations", "Add to deck" (collapsible triggers, dialog openers that lead to a save/cancel pair) |
-| `ghost`            | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles                                    |
-| `red` / `red-soft` | **Destructive primary action** — paired with `neutral` for cancel            | Archive, Delete (confirmation dialogs)                                                                    |
-
-**Key principles:**
-
-- **Default + neutral** is the standard button pair for forms and confirmation dialogs
-- **Red + neutral** replaces default + neutral when the primary action is destructive
-- **Soft** is for _optionally initiating_ a secondary flow (e.g. opening a dialog that itself has default/neutral buttons inside). It sits between ghost and default in visual weight
-- **Ghost** is the workhorse for icon buttons and utility actions. Use it for anything that should be tappable but visually quiet
-- **Ghost → soft for active state**: When a ghost button has a toggle/active state (e.g. bookmark saved, filter active), switch to `soft` to indicate the active state:
-  ```typescript
-  variant={isActive ? 'soft' : 'ghost'}
-  ```
-
-## Component Conventions
-
-### UI Components
-
-- Base components from ShadCN UI (Radix UI + Tailwind) in `@/components/ui/`
-- Always use generic components like `<Input>`, `<Textarea>`, `<Button>` for visual consistency
-- Toasts: Use `toastSuccess()` and `toastError()` from `@/components/ui/sonner`
-
-### Data Fetching in Components
-
-- Use custom hooks like `useDeck()`, `useLanguage()` for reusable queries
-- Also fine to write `useLiveQuery` directly in components for one-off needs
-- Collection query functions usually only fetch the item itself (joins happen in live queries)
-
-## Database Conventions
-
-### Schema Patterns
-
-- **Primary keys**: Always UUID with `id uuid default gen_random_uuid() not null`
-- **Table names**: Singular (e.g., `phrase` not `phrases`)
-- **Timestamps**: Use `created_at timestamp with time zone default now() not null`
-- **User data**: Private tables use `uid` field with Row Level Security (RLS)
-
-### Row Level Security (RLS)
-
-- Never expose tables with `uid` field without RLS
-- RLS filters data automatically - can load whole tables for user collections
-- Create public views for shared data, carefully vet what's exposed
-- Use explicit `uid` checks in queries for faster query planning:
-  ```typescript
-  .eq('uid', userId!)
-  ```
-
-### User Data Management
-
-- **Profile data**: Attach to Profile table (username, avatar, preferred languages)
-- **User metadata**: Only use `user.user_metadata` for UI-critical fields (currently just `user_role`)
-- Always validate user owns data before mutations
-
-## TanStack DB Collection Patterns
-
-### Loading Strategies
-
-- **Whole table loading**: Use for user tables where RLS filters automatically
-- **On-demand loading**: Define subsets in live queries themselves for public data
-- Collections provide the base data, live queries handle joins and filtering
-
-### Collection Query Functions
-
-```typescript
-// Typical pattern - fetch base data only
-queryFn: async () => {
-	const { data } = await supabase.from('phrase').select('*')
-	return data?.map((p) => PhraseSchema.parse(p)) ?? []
-}
-```
-
-Joins happen in live queries, not in collection queryFn. This keeps collections focused and composable.
-
-### Collection Preloading
-
-Routes eagerly load collection data in `loader` functions using `.preload()`:
-
-```typescript
-// In $lang.tsx — await all preloads before rendering
-loader: async () => {
-	await Promise.all([
-		phrasesCollection.preload(),
-		cardsCollection.preload(),
-		publicProfilesCollection.preload(),
-	])
-}
-
-// In _user.tsx — fire-and-forget for non-critical data
-void decksCollection.preload()
-void friendSummariesCollection.preload()
-```
-
-Use `await Promise.all([...])` when the route needs the data before first render. Use `void` (fire-and-forget) for collections that can load in the background.
-
-## Forms & Mutation Patterns
-
-### Standard Form Pattern
-
-1. Define Zod schema for validation
-2. Create form with `useForm({ resolver: zodResolver(Schema) })`
-3. Create mutation with full typing
-4. Handle submit with `handleSubmit((data) => mutation.mutate(data))`
-5. Show error alert when `formState.errors` exists
-6. Toast on success/error
-
-### Mutation Best Practices
-
-- **Persistence lives on the collection** via `onInsert/onUpdate/onDelete` handlers; call sites use `collection.insert / update / delete` for optimistic local state
-- **Throw from the handler** to roll the optimistic state back; **return `{ refetch: false }`** from a `queryCollectionOptions` handler when the optimistic value already matches what the server confirmed (skip the post-handler full refetch)
-- **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
-- **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
-- For mutations whose server-side effect can't be predicted client-side, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
-
-See the "Mutations Pattern" section above for a worked example, and PR #623 / the `transform` label for the in-flight migration.
-
-## Testing Conventions
-
-### Scene navigation
-
-Navigate through the UI by clicking links and buttons, not by reloading the page. A full reload (e.g. `openTo` mid-scene) wipes the TanStack Router cache and forces a refetch of all data, which both slows the scene and hides cache-invalidation regressions. `openTo` is for the entry point only; after that, drive the actor through clicks.
-
-```markdown
-# ✅ Correct — preserves router cache
-
-learner:
-
-- openTo /learn
-- click app-nav-menu nav-link--feed
-
-# ❌ Wrong — full reload, refetches everything
-
-learner:
-
-- openTo /learn
-- openTo /learn/hin/feed
-```
-
-For legacy `@playwright/test` specs in `e2e/`, the equivalent rule was "never use `page.goto()`" — same principle.
-
-## Use UI Semantics for Test Selectors
-
-When writing tests, instead of using names or exacty display text for the user, use testids like "affirm-community-norms-button", and add them into the markup as a cue that will help devs understand the purpose and expectations for the page they're working with.
-
-```
-		// Dialog should close and we should see the welcome content
-		await expect(welcomeHeader).toBeVisible({ timeout: 5000 })
-
-		// ✅🙌 using UI semantics
-		await expect(page.getByTestId('sunlo-welcome-explainer')).toBeVisible()
-
-		// ❌🙅 using exact page text
-		await expect(page.getByText('What is Sunlo?')).toBeVisible()
-
-```
-
-## Additional Libraries
-
-- **@uidotdev/usehooks** - Additional React hooks beyond custom ones
-- **zustand** v5 - Lightweight state management (currently used in Review interface)
-- **dayjs** - Date manipulation (lighter alternative to moment.js)
-- **recharts** - Data visualization components
-- **sonner** - Toast notifications (`toastSuccess`, `toastError`, etc. from `@/components/ui/sonner`)
-- **lucide-react** - Icon library
-
-### Feed System
-
-The feed is the one feature that uses `useInfiniteQuery` instead of collections, due to cursor-based pagination:
-
-- **Query hooks**: `useFeedLang(lang)`, `useFilteredFeedLang(lang, filterType)`, `useFriendsFeedLang(lang)`, `usePopularFeedLang(lang)` — each has a filtered variant
-- **Cursor**: `created_at` timestamp, 20 items per page, popular feed also sorts by `popularity` descending
-- **Cache invalidation**: `useInvalidateFeed()` manually resets all feed query caches after mutations
-- **Feed types**: 'request', 'playlist', 'phrase'
-- **Client-side folding**: Removes child phrases from feed to avoid duplication (see `$lang.feed.tsx`)
-
-### View Transitions
-
-Enable smooth page transitions with CSS view transitions:
-
-```typescript
-const style = { viewTransitionName: 'main-area' } as CSSProperties
-```
-
-### Query Configuration
-
-Default query settings (from `query-client.ts`):
-
-- `staleTime`: 2 minutes
-- `gcTime`: 20 minutes
-- `refetchOnWindowFocus`: false
-- `refetchOnMount`: false
-
-Collections handle most caching, so these are relatively conservative.
-
-## Project Context
-
-Sunlo is a language learning app combining:
-
-- Spaced repetition flashcards (FSRS algorithm)
-- Social features (friends, chat, sharing)
-- User-generated content (phrases, playlists, translation requests)
-- Activity feed showing community contributions
-
-The architecture prioritizes real-time reactivity, type safety, and normalized data management using TanStack tools rather than traditional state management libraries.
+- **Naming**: camelCase variables; PascalCase Zod schemas (`PhraseFullSchema`) inferring types with a `Type` suffix (`PhraseFullType`); snake_case DB fields; PascalCase components in kebab-case files; `lang` for 3-letter codes, `pid` for phrase ids; type-only files use `.d.ts`.
+- **Types**: prefer `Array<SomeType>` over `SomeType[]`; ids are `uuid` (string alias in `src/types/main.ts`); generated DB types in `src/types/supabase.ts`.
+- **`getKey` must return the row's real unique id.** Most collections use `item.id`; exceptions: decks → `item.lang`, profiles → `item.uid`, upvotes → the foreign key, reviewDays/friendSummaries → composite strings. Check the source table's unique constraint.
+- **Query keys** mirror collection ids (`['public', 'phrase_full']`).
+- **Dates**: `todayString()` uses a 4am cutoff (not midnight); `ago()` and friends from `@/lib/dayjs`.
+- **UI**: always use the generic components (`<Input>`, `<Textarea>`, `<Button>`); toasts via `toastSuccess()`/`toastError()` from `@/components/ui/sonner`; `cn()` for conditional classes; `start`/`end` not `left`/`right` (RTL); `rounded-2xl` for interactive elements, `rounded` for cards; standard Tailwind classes over arbitrary values. oklch shorthand is `{prop}-{L}-{C}-{H}` (e.g. `bg-1-mlo-primary`) — full system and button-variant roles in `docs/styling.md`.
+- **DB**: singular table names, uuid primary keys, `created_at timestamptz default now()`, RLS on every `uid` table — never expose one without it. Workflow and seed conventions in `docs/database.md`.
+- **Test selectors**: use semantic `data-testid`s (`affirm-community-norms-button`), `data-key` for list items; register new ids in `scenetest/TEST_IDS.md`.
+- **Realtime**: subscribe in `useEffect`, parse the payload with the Zod schema, and `writeInsert` into the collection (see `docs/mutations.md`).
+- **Other libs**: zustand v5 (review store), dayjs, recharts, sonner, lucide-react, @uidotdev/usehooks.
