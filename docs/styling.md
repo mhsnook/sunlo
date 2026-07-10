@@ -134,6 +134,8 @@ We use a deliberate set of button variants. Choose based on the action's role, n
 | `soft`             | **Optional initiation** — opens a flow the user may choose to start          | "Show translations", "Add to deck" (collapsible triggers, dialog openers that lead to a save/cancel pair) |
 | `ghost`            | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles                                    |
 | `red` / `red-soft` | **Destructive primary action** — paired with `neutral` for cancel            | Archive, Delete (confirmation dialogs)                                                                    |
+| `badge-outline`    | **Tag/badge-shaped toggles**                                                 | Filter chips, tag pickers                                                                                 |
+| `dashed-w-full`    | **Full-width "add new" affordance**                                          | "Add another translation" rows                                                                            |
 
 **Key principles:**
 
