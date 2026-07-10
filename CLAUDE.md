@@ -78,7 +78,7 @@ pnpm run seeds:schema   # regenerate base.sql — review the diff carefully
 
 Sunlo is a language-learning app: FSRS spaced-repetition flashcards, social features (friends, chat), user-generated phrases/playlists/translation requests, and an activity feed.
 
-**Stack**: React 19 + TypeScript + Vite + React Compiler · TanStack Router (file-based) · TanStack DB collections + TanStack Query · Supabase (Postgres/Auth/Realtime/Storage/RPC) · Zod · react-hook-form + zodResolver · ShadCN UI + Tailwind with `@container` queries · PNPM.
+**Stack**: React 19 + TypeScript + Vite + React Compiler · TanStack Router (file-based) · TanStack DB collections + TanStack Query · Supabase (Postgres/Auth/Realtime/Storage/RPC) · Zod · TanStack Form (`useAppForm` from `src/components/form/`) · ShadCN UI + Tailwind with `@container` queries · PNPM.
 
 **Philosophy**: local-first (optimistic collection writes, live queries over postgres views, RPCs return full objects); RLS-backed privacy (worst case is a broken UI, never leaked data); container queries keep components portable.
 
@@ -90,39 +90,41 @@ Sunlo is a language-learning app: FSRS spaced-repetition flashcards, social feat
 
 Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hooks.ts`, and a barrel `index.ts` (some add `live.ts`, `mutations.ts`, `store.ts`, `fsrs.ts`). Modules are deliberately wide where concepts are inseparable — `requests/` holds requests + comments + comment→phrase links + upvotes because a comment without a request is meaningless; don't split a wide module to satisfy a lint rule.
 
-| Domain      | Schemas                                                   | Collections                                             | Key Hooks                                                          |
-| ----------- | --------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
-| `profile`   | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                               | useAuth, useProfile                                                |
-| `languages` | Language, LangTag, LangSchema                             | languages, langTags                                     | useLanguageMeta, useLanguageTags                                   |
-| `phrases`   | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                             | useLanguagePhrases, usePhrase                                      |
-| `deck`      | DeckMeta, CardMeta                                        | decks, cards                                            | useDeckMeta, useDeckCards, useDeckPids                             |
-| `review`    | CardReview, DailyReviewState                              | cardReviews, reviewDays                                 | useReviewsToday, useReviewMutation                                 |
-| `requests`  | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes   | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
-| `social`    | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)     | useRelationFriends, useAllChats                                    |
-| `playlists` | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                    | useOnePlaylist, useLangPlaylists                                   |
-| `feed`      | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature) | useFeedLang                                                        |
+| Domain          | Schemas                                                   | Collections                                                  | Key Hooks                                                          |
+| --------------- | --------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `profile`       | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                                    | useAuth, useProfile                                                |
+| `languages`     | Language, LangTag, LangSchema                             | languages, langTags                                          | useLanguageMeta, useLanguageTags                                   |
+| `phrases`       | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                                  | useLanguagePhrases, usePhrase                                      |
+| `deck`          | DeckMeta, CardMeta                                        | decks, cards                                                 | useDeckMeta, useDeckCards, useDeckPids                             |
+| `review`        | CardReview, DailyReviewState                              | cardReviews, reviewDays                                      | useReviewsToday, useReviewMutation                                 |
+| `requests`      | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes        | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
+| `social`        | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)          | useRelationFriends, useAllChats, useSocialRealtime                 |
+| `chat`          | ChatQuery, ChatTurn, ChatResultPhrase                     | (zustand store, no collection — prototype phrasebook search) | useChatStore, useChatTurns, useChatSearch                          |
+| `notifications` | Notification                                              | notifications                                                | useNotifications, useUnreadCount, useMarkAsRead                    |
+| `playlists`     | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                         | useOnePlaylist, useLangPlaylists                                   |
+| `feed`          | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature)      | useFeedLang                                                        |
 
 **Imports**: consumer code (routes, components) imports from the barrel (`@/features/deck`); cross-domain wiring imports specific files (`@/features/deck/collections`); intra-feature imports are relative (`./schemas`). Always use the `@/` alias otherwise.
 
-**Cross-domain hooks** (`src/hooks/`): `usePhrase()` (composite-phrase — full phrase split by known languages), `useCompositePids()` (recommended phrases + pid arrays), `useSmartSearch()` (trigram search RPC), `useLinks()` (nav routes + badges), `useDebounce`/`usePrevious`/`useIntersectionObserver`, `useFontPreference()`, `useIntro()` (localStorage intro-dialog state), `useIsMobile()`, `useRequireAuth()`.
+**Cross-domain hooks** (`src/hooks/`): `usePhrase()` (composite-phrase — full phrase split by known languages), `useCompositePids()` (recommended phrases + pid arrays), a search-hook family (`use-hybrid-search`, `use-local-search`, `use-semantic-search`, `use-trigram-search`, `use-merged-search` + `search-config.ts`), `useLinks()` (nav routes + badges), `useTitleBar()`, `useDebounce`, `useFontPreference()`, `useIntroSeen()`, `useIsMobile()`, `useRequireAuth()`.
 
-**Cross-cutting lib** (`src/lib/`): `supabase-client.ts`, `query-client.ts`, `use-auth.ts` (AuthProvider — clears user collections on sign-out, preloads profile on sign-in), `collections/clear-user.ts`, `dayjs.ts`, `utils.ts`, `languages.ts`.
+**Cross-cutting lib** (`src/lib/`): `supabase-client.ts`, `query-client.ts`, `use-auth.ts` + `auth-lifecycle.ts` (clears user collections on sign-out, preloads profile on sign-in), `collections/` (local-cache, safe-write), `dayjs.ts`, `utils.ts`, `languages.ts`, `flags.ts`, `ui-prefs.ts`.
 
 ## Routing (`src/routes/`)
 
 TanStack Router, file-based: `_auth` = auth layout, `_user` = protected layout (auth required), `$lang` = dynamic 3-letter language code, dot notation nests paths (`$lang.review.go.tsx` → `/learn/$lang/review/go`), `.lazy` = lazy-loaded, `.index` = index route, `-`-prefixed files = co-located non-route components.
 
-Route context carries `{ auth, queryClient, titleBar?, appnav?, contextMenu? }` — use `beforeLoad`/`loader` to set page metadata, navbar title/icons, and nav links. Access auth via `Route.useRouteContext()` → `auth.isAuth, auth.userId, auth.userEmail, auth.userRole`.
+Route context carries `{ auth, queryClient }` — access auth via `Route.useRouteContext()` → `auth.isAuth, auth.userId, auth.userEmail, auth.userRole`. Navbar title/icons are set with the `useTitleBar()` hook, not route context.
 
 ## Conventions
 
 - **Naming**: camelCase variables; PascalCase Zod schemas (`PhraseFullSchema`) inferring types with a `Type` suffix (`PhraseFullType`); snake_case DB fields; PascalCase components in kebab-case files; `lang` for 3-letter codes, `pid` for phrase ids; type-only files use `.d.ts`.
 - **Types**: prefer `Array<SomeType>` over `SomeType[]`; ids are `uuid` (string alias in `src/types/main.ts`); generated DB types in `src/types/supabase.ts`.
-- **`getKey` must return the row's real unique id.** Most collections use `item.id`; exceptions: decks → `item.lang`, profiles → `item.uid`, upvotes → the foreign key, reviewDays/friendSummaries → composite strings. Check the source table's unique constraint.
+- **`getKey` must return the row's real unique id.** Most collections use `item.id`, but not all (decks/languages → `item.lang`, profiles → `item.uid`, upvotes → the foreign key, link/composite-PK tables → composite strings) — always check the source table's unique constraint.
 - **Query keys** mirror collection ids (`['public', 'phrase_full']`).
-- **Dates**: `todayString()` uses a 4am cutoff (not midnight); `ago()` and friends from `@/lib/dayjs`.
+- **Dates**: `todayString()` (`@/lib/utils`) uses a 4am cutoff, not midnight — some people study after midnight; `ago()` and friends from `@/lib/dayjs`.
 - **UI**: always use the generic components (`<Input>`, `<Textarea>`, `<Button>`); toasts via `toastSuccess()`/`toastError()` from `@/components/ui/sonner`; `cn()` for conditional classes; `start`/`end` not `left`/`right` (RTL); `rounded-2xl` for interactive elements, `rounded` for cards; standard Tailwind classes over arbitrary values. oklch shorthand is `{prop}-{L}-{C}-{H}` (e.g. `bg-1-mlo-primary`) — full system and button-variant roles in `docs/styling.md`.
 - **DB**: singular table names, uuid primary keys, `created_at timestamptz default now()`, RLS on every `uid` table — never expose one without it. Workflow and seed conventions in `docs/database.md`.
 - **Test selectors**: use semantic `data-testid`s (`affirm-community-norms-button`), `data-key` for list items; register new ids in `scenetest/TEST_IDS.md`.
 - **Realtime**: subscribe in `useEffect`, parse the payload with the Zod schema, and `writeInsert` into the collection (see `docs/mutations.md`).
-- **Other libs**: zustand v5 (review store), dayjs, recharts, sonner, lucide-react, @uidotdev/usehooks.
+- **Other libs**: zustand v5 (review + chat stores), dayjs, recharts, sonner, lucide-react, ts-fsrs.

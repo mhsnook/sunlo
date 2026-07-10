@@ -93,12 +93,13 @@ const mutation = useMutation({
 
 ## Standard Form Pattern
 
-1. Define Zod schema for validation
-2. Create form with `useForm({ resolver: zodResolver(Schema) })`
-3. Create mutation with full typing
-4. Handle submit with `handleSubmit((data) => mutation.mutate(data))`
-5. Show error alert when `formState.errors` exists
-6. Toast on success/error
+Forms use **TanStack Form** through the app's composed hook — `useAppForm` from `src/components/form/form-hook.ts` (built with `createFormHook`). Do not import `useForm` from other form libraries; react-hook-form was removed.
+
+1. Define a Zod schema for validation and pass it to the form's `validators`
+2. Create the form with `useAppForm({ defaultValues, validators, onSubmit })`
+3. Build fields from the pre-wired components registered in `form-hook.ts` — `form.AppField` with `EmailInput` / `PasswordInput` / `TextInput` / `TextareaInput`, plus `FormAlert` and `SubmitButton` form components
+4. In `onSubmit`, call the collection mutation (`collection.insert/update`) and wire toasts to `tx.isPersisted.promise`
+5. Copy an existing form (e.g. `src/components/requests/request-form.tsx`, `src/components/login-card-body.tsx`) rather than wiring from scratch
 
 ### Mutation Best Practices
 

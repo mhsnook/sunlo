@@ -15,8 +15,11 @@ pnpm run seeds:schema
 # Dump current seed data
 pnpm run seeds:data
 
-# Apply seeds
-pnpm run seeds:apply
+# Reseed the local database
+pnpm run db-reseed
+
+# Regenerate schema + types + format in one step
+pnpm run db-schema
 ```
 
 **Important**: When regenerating `base.sql` and running the seeding script (`pnpm seeds:data`), be careful not to commit unintended deletions (like realtime table configurations). Always review the diff carefully.
