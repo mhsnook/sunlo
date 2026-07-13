@@ -18,6 +18,12 @@ the spine of sync itself — and in doing so, the wire stops carrying rows and
 starts carrying **signals**, which collapses the whole design onto one client
 verb: mark the row dirty, then recalculate.
 
+**Amendment (v2.1).** The write's own HTTP response is the ack — not the
+signal coming back around. That makes the write path a four-beat loop
+(optimistic → ack → server-side enhancement → convergence off the wire) where
+the wire has _zero correctness duties_ for your own writes, and the
+enhancement step can grow arbitrarily rich. §4 tells the whole story.
+
 ## The idea in three sentences
 
 1. **Every user has a projection**: the slice of the database they care about
@@ -28,9 +34,9 @@ verb: mark the row dirty, then recalculate.
    none of its weight — broadcasts a signal on every content change,
    addressed by `entity_lang` and `entity_id`.
 3. **Clients answer every signal with the same verb**: `markDirty(key)` — a
-   coalesced by-key refetch from the collection's read source. Confirmation
-   of your own writes, other people's edits, cascade deletes, and
-   server-computed columns are all the _same case_.
+   coalesced by-key refetch from the collection's read source. Other
+   people's edits, cascade deletes, server-computed columns, and the
+   enhanced aftermath of your own writes are all the _same case_.
 
 RLS stays the security kernel: worst case is a broken UI, never leaked data.
 Zod stays at the wire boundary. Live queries and components don't change —
@@ -174,7 +180,46 @@ could _consume_ the registry instead of maintaining parallel trigger sets —
 one spine, three projections of it — but that's consolidation, not a
 prerequisite.)
 
-## 4. One verb: mark dirty, then recalculate
+## 4. The four-beat loop, and the one verb
+
+**Your own writes** are a four-beat loop. The wire is only the last beat, and
+nothing waits on it:
+
+1. **Optimistic.** `collection.insert(row)` — the UI updates this tick.
+2. **Ack.** The framework writes the row to `write.to` and the HTTP response
+   is the confirmation: persisted, RLS passed. `isPersisted` resolves, the
+   toast fires, the returned row is written through as synced state. _Done
+   worrying._ A rejection throws here and rolls the optimistic state back.
+3. **Enhancement.** The server transforms at its leisure, entirely in
+   triggers and crons: the registry stamp, stats rollups, upvote counts,
+   trigram refresh, embeddings — arbitrary logic can accrete here precisely
+   because no client is waiting on it.
+4. **Convergence.** The change comes back down the wire like anyone else's
+   change (below), and your local copy picks up whatever beat 3 computed. If
+   it takes 300ms, nobody cares — beat 2 already answered.
+
+This is what lets more and more operations become plain CRUD-plus-trigger.
+An upvote today is an insert plus client-side count bookkeeping; in this
+loop it's _just the insert_ — a trigger (or rapid cron) recomputes the
+count, that update stamps the registry, and everyone converges, including
+you.
+
+**Everyone else's writes** — here's the walkthrough, concretely. Priya fixes
+a typo in a translation on a Hindi phrase you have on screen:
+
+1. Her app updates the row in `phrase_translation` (her beats 1–2).
+2. In that same transaction, the trigger updates the row's line in the
+   registry and shouts on `sync:lang:hin`:
+   `{ source_type: 'translation', source_id: '4f3a…', entity_id: '9c2e…', op: 'UPDATE' }`.
+   Note what the shout does _not_ contain: the new text.
+3. Your browser hears it. The app's single wire handler looks at
+   `source_type`, finds the collection that declared `signals: 'translation'`,
+   and — since the shout carried no data — puts `4f3a…` on a shortlist:
+   _stale, refetch soon_. That is the entirety of `markDirty`.
+4. ~100ms later the shortlist flushes as one ordinary select —
+   `from('phrase_translation').select().in('id', [...shortlist])` — the fresh
+   rows are written into the collection, live queries re-run, Priya's fix is
+   on your screen.
 
 The entire client wire handler:
 
@@ -186,32 +231,32 @@ projection.onSignal(({ source_type, source_id, op }) => {
 })
 ```
 
-`markDirty(key)` coalesces: N dirty keys inside the debounce window become one
-`select … where id in (…)` against `read.from`, written through as synced
-state. Look at what unified into this one path:
+Nobody "keeps track of what to update" — there is no plan to maintain. The
+shout names the row; the shortlist holds it for a beat; the refetch replaces
+the local copy by key. Idempotency falls out: refetching a row you already
+have overwrites it with itself, so duplicate shouts (lang topic + entity
+topic overlap, or your own write's echo arriving after beat 2 already wrote
+it) are harmless. And the same shortlist unifies every case that used to be
+special:
 
-- **Your own write's confirmation.** `insert()` lands optimistically, the
-  framework POSTs to `write.to`, your own signal comes back, the by-key fetch
-  returns the server row, synced state is written, the optimistic overlay
-  drops. No echo-matching, no `.select()` choreography, no `should()`
-  assertion — the recalculated row _is_ the server's answer.
-- **Everyone else's writes.** Same signal, same fetch. Chat previews,
-  request comment threads, new phrases in your language: off the wire.
 - **Cascade deletes.** The trigger fires per cascaded row; each child emits
-  its own DELETE signal. Today's "orphaned replies linger until the next
+  its own DELETE shout. Today's "orphaned replies linger until the next
   stale refetch" caveat in `commentsCollection.onDelete` stops existing.
 - **Server-computed columns.** `count_learners`, `avg_difficulty`,
-  `avg_stability` need no `derived` list: the recalculation reads
-  `phrase_meta`, so computed columns are simply _always right_ after any
-  recalc of that key.
-- **Reconnect catch-up.** After a socket gap, one query replaces per-table
-  reconciliation: `select … from content_registry where <my scopes> and
-updated_at > :last_seen` → a batch of dirty keys → the same coalesced
-  fetch. The registry table is the backstop the wire needs anyway; that's
-  why it's a table and not just triggers.
+  `avg_stability` need no special handling: the refetch reads `read.from` —
+  the view — so computed columns are simply _always right_ after any recalc
+  of that key.
+- **Reconnect catch-up.** Laptop slept through twenty shouts? On reconnect,
+  ask the registry one question — `where <my scopes> and updated_at >
+:last_seen` — and put everything it returns on the same shortlist through
+  the same flush. The registry's timestamp column is the whole recovery
+  story; that's why it's a table and not just triggers.
 
-The cost, stated plainly: every remote change is signal + one round trip,
-where v1's fat echoes carried the row. That's the trade — see flag 2.
+The cost, stated plainly: hearing a shout isn't having the data — each remote
+change costs the one extra select in step 4 (coalesced across everything
+shouted in the same window). v1's fatter echoes carried the row and skipped
+that fetch, at the price of per-table wire formats. See flag 2 for the
+middle path.
 
 At the component layer, nothing changes from today's best pattern:
 
@@ -295,11 +340,11 @@ entity, without subscribing to all of Tagalog.
    (pg_cron sweeping `phrase_stats` changes into coarse signals). Decide by
    watching, not up front.
 4. **Delivery is at-most-once and that's now okay.** v1 needed echo-timeout
-   fallbacks per pending write. v2's backstop is structural: any missed
-   signal is caught by the reconnect catch-up query (registry `updated_at >
-last_seen`) or, worst case, by the fetch-on-write-settle if a
-   transaction's signal never arrives. Idempotent by-key write-through makes
-   duplicate signals (lang topic + entity topic overlap) harmless.
+   fallbacks per pending write; v2.1 needs none — your own writes are
+   confirmed by the ack (beat 2), so a lost signal can only delay
+   _enhancement_, never correctness. Missed signals are caught structurally
+   by the reconnect catch-up query (registry `updated_at > last_seen`), and
+   idempotent by-key write-through makes duplicates harmless.
 5. **Prototype path without any of this:** `postgres_changes` supports
    `in`-filters, so `entity_lang=in.(hin,tgl)` and `entity_id=eq.{pid}`
    subscriptions against a registry table work _today_ — good enough to
@@ -310,6 +355,16 @@ last_seen`) or, worst case, by the fetch-on-write-settle if a
    made ("doesn't auto-update if a phrase's lang changes — which doesn't
    happen in practice"). If lang-editing ever becomes real, the phrase
    trigger must cascade restamps to its children's registry rows.
+7. **Fix the embed pipeline's auth-header gap independently.** Today the
+   embed trigger borrows the calling user's JWT to invoke the edge function,
+   so no-session writes (Studio, psql) silently skip vectorization. The fix
+   that fits the four-beat loop: stop pushing from the trigger. The
+   `vectorized_at` staleness machinery already exists — a pg_cron sweep that
+   selects stale rows (`source.updated_at > corpus.vectorized_at`, or
+   registry-driven once it exists) and calls the embed function with its own
+   credential makes embedding a self-healing beat-3 chore: Studio edits,
+   dropped pg_net calls, and backfills all converge on the next sweep. Worth
+   doing even if nothing else in this document ships.
 
 ## Relationship to PartyDB
 
