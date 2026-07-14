@@ -1,186 +1,171 @@
-# Content updates off the wire 🚧
+# The entity corpus is the read model 🚧
 
-**Status: proposed, not shipped.** v3 — v1/v2 in git history arrived here the
-long way. The rule of thumb, one line: **the ack carries the rows you
-changed; the wire carries the rows everyone else changed; both land in the
-collection the same way.**
+**Status: proposed, not shipped.** v4 — v1–v3 in git history. One line:
+**writes go to the normalized tables; reads come from a compiled entity
+corpus; the wire is that one table.**
 
-## The question this answers
+## The loop
 
-Can we stop hand-writing persistence choreography and stop loading the entire
-database into browser memory, using what we already have — RLS, Zod schemas,
-collections, and one new column?
+1. **Collections on the client**, as now.
+2. **Optimistic writes with immediate move-on** for most mutations.
+3. **Some writes hold for the ack** — including RPCs — and every write path
+   makes best effort to return the affected rows with the ack
+   (`.select()`, RPCs that `RETURN` rows: today's `docs/mutations.md`
+   advice, kept).
+4. **The server compiles the content tables into an entity corpus** —
+   `search_corpus`-style, maintained by synchronous in-transaction triggers
+   (no pg_net, no HTTP, no borrowed JWTs). Translations bundle with their
+   phrase. Comments bundle with their request. Tag links bundle into the
+   entity they tag. Every corpus row carries `entity_id`, `entity_type`,
+   `entity_lang` — the _owning_ entity's lang, so a Hindi phrase's English
+   translation travels in the Hindi slice.
+5. **Universal tables stay universal**: `languages`, tag names/descriptions
+   and other cross-language metadata are their own tiny collections with
+   their own low-volume realtime. They are not stuffed into the bundles.
+6. **The client watches one table.** Content subscriptions are slices of the
+   corpus — by `entity_lang` for the languages you study/browse, by
+   `entity_id` for the detail page you're on — delivered by tailing the WAL
+   (Supabase `postgres_changes` today). The corpus is all-public, so the
+   subscription logic is _slicing, not security_. Private data (chats,
+   notifications, decks, cards) stays on user-scoped subscriptions exactly
+   as it works today.
 
-Yes. The unlock is that this is three problems with one shared answer:
+The client never reads the normalized content tables. That's the move that
+makes everything else fall out: it's a read-model/write-model split, and
+`phrase_meta`, the `phrasesFull` live collection, and the search RPCs were
+already groping toward the read model — `phrasesFull` reimplements in the
+browser, at read time, the composition the corpus triggers do once at write
+time.
 
-- **Realtime subscription**: listen to "everything in Hindi" → filter
-  `postgres_changes` on a lang column.
-- **Predicate pushdown**: fetch only "everything in Hindi" → `WHERE` on a
-  lang column (the query-side work in tanstack-db PR #6:
-  `dedupeQueriesOn`, load-by-key, pushdown).
-- **Partition honesty**: a translation's own `lang` is the translation's
-  language; the partition it belongs to is its _phrase's_ lang → a stamped
-  `entity_lang` column.
-
-Same column, three masters. Once `entity_lang` is on the tables, each table
-multiplexes itself: full rows come down the wire, Zod-parse, upsert by key.
-No translation layer in between.
-
-## Schema: one column on three tables
-
-`phrase`, `phrase_request`, `phrase_playlist`, `lang_tag` already carry
-`lang` — they need nothing. Only the child tables need the stamp:
+## The read model
 
 ```sql
--- phrase_translation, request_comment, comment_phrase_link each get:
-alter table phrase_translation
-add column entity_lang text not null; -- the OWNING entity's lang
+create table entity_doc (
+	entity_type text not null, -- 'phrase' | 'request' | 'playlist'
+	entity_id uuid not null,
+	entity_lang text not null,
+	doc jsonb not null, -- the bundle: entity + bounded children
+	rev bigint not null default nextval('entity_doc_rev'), -- resume cursor
+	updated_at timestamptz not null default now(),
+	primary key (entity_type, entity_id)
+);
 
-create index on phrase_translation (entity_lang);
-
-create function stamp_translation_entity_lang () returns trigger as $$
-begin
-	select lang into new.entity_lang from phrase where id = new.phrase_id;
-	return new;
-end;
-$$ language plpgsql;
-
-create trigger stamp_entity_lang before insert on phrase_translation
-for each row execute function stamp_translation_entity_lang ();
+create index on entity_doc (entity_lang, rev);
 ```
 
-(`request_comment` and `comment_phrase_link` stamp from their
-`phrase_request`. Comment links need no special treatment after all.)
+- **Compiled by triggers** on the content tables — the `phrase_meta` /
+  `phrasesFull` composition, moved to write time. A translation edit
+  recompiles its phrase's doc in the same transaction.
+- **`rev` is the offset.** Reconnect catch-up is
+  `where entity_lang in (…) and rev > :last_seen` — exact and monotonic, no
+  timestamp ties. (Stolen from ElectricSQL's shape log; see below.)
+- **The embedding lives OFF this table.** A vector upsert is an UPDATE
+  event; on the watched table it would re-broadcast the doc plus ~8–16KB of
+  floats to every subscriber. `search_corpus` keeps the vectors, keyed to
+  `(entity_type, entity_id)`, and becomes a _consumer_ of the read model —
+  as does the trigram index. One compilation, three consumers (sync, trigram,
+  embeddings); the embed pipeline goes cron-over-staleness (`rev >
+vectorized_rev`), which also fixes today's borrowed-JWT/Studio-edit gap.
+- **Grain is mixed, deliberately.** Bounded children (translations, tag
+  links) bundle into the doc. Unbounded children (comments) are their own
+  corpus rows sharing `entity_id`/`entity_lang` — same slice, same wire —
+  because a document that rewrites wholesale on every comment to a hot
+  request pays WAL volume proportional to doc size, not delta size, and
+  realtime payloads have caps. `source_type` on the row (as in
+  `search_corpus` today) is what distinguishes the grains.
 
-Add the content tables to the realtime publication. They're public-read
-under RLS already; realtime respects the same policies.
-
-## Collections: declare, don't choreograph
+## The wire
 
 ```ts
-// features/phrases/collections.ts — the dream, still
-export const phraseTranslationsCollection = defineSyncedCollection({
-	id: 'phrase_translations',
-	schema: TranslationSchema,
-	getKey: (t: TranslationType) => t.id,
-	read: { from: 'phrase_translation' }, // queryFn with pushed-down predicates
-	write: { to: 'phrase_translation' }, // ack rows write through (see below)
-	wire: {
-		table: 'phrase_translation',
-		langColumn: 'entity_lang',
-		pinColumn: 'phrase_id', // detail-page pinning, per-entity
+// snapshot: an ordinary select, sliced
+const snapshot = supabase
+	.from('entity_doc')
+	.select()
+	.in('entity_lang', activeLangs)
+
+// live: tail the WAL on the same slice
+supabase.channel('sync:content').on(
+	'postgres_changes',
+	{
+		event: '*',
+		schema: 'public',
+		table: 'entity_doc',
+		filter: `entity_lang=in.(${activeLangs.join(',')})`,
 	},
-})
+	(payload) => {
+		if (payload.eventType === 'DELETE')
+			docs.utils.writeDelete(keyOf(payload.old)) // PK survives on deletes
+		else docs.utils.writeUpsert(EntityDocSchema.parse(payload.new))
+	}
+)
+
+// pinned detail page (any language): same handler, entity_id filter
+// catch-up after a gap: select … where rev > lastSeenRev — then resubscribe
 ```
 
-- **read** — the collection loads `WHERE entity_lang IN (active langs)`, not
-  the full table. PR #6's `dedupeQueriesOn(['entity_lang'])` serves narrower
-  live queries from that slice; load-by-key serves strays (a chat preview
-  from a language you don't study) as cache-first single-row fetches.
-- **write** — inserts/updates/deletes go to the base table with `.select()`
-  appended. The returned rows ARE the ack: they write through as synced
-  state, `isPersisted` resolves, optimistic overlay drops. This is
-  `docs/mutations.md`'s existing advice, made automatic instead of
-  hand-written per handler.
-- **wire** — generates the realtime bindings below. No handler code per
-  collection.
+Slices compose from session + route — the languages of my decks, the
+language I'm browsing, the entity I'm looking at — ref-counted with a grace
+period. Everything outside my slices reads as a cache-first snapshot
+(load-by-key), which is correct for a preview of a language I'm not in.
 
-## The wire: tables multiplex themselves
+## The client
 
-Subscribing to a language means one channel with one binding per wired
-collection — generated from the `wire` declarations, handled uniformly:
+Collections hold documents. `usePhrase(pid)` reads one doc — no live-query
+joins to assemble a phrase from three collections; `phrasesFull` retires.
+The tanstack-db work in PR #6 is the query-side of the same idea:
+`dedupeQueriesOn(['entity_lang'])` proves narrower live queries are covered
+by the slice; predicate pushdown makes the snapshot fetch `WHERE entity_lang
+in (…)` instead of the whole table; load-by-key serves strays. Writes are
+unchanged from steps 2–3 — the collection's write path targets the
+normalized tables/RPCs and the ack's returned rows settle `isPersisted`; the
+corpus doc arriving on the wire moments later is a harmless upsert-by-key.
 
-```ts
-// lib/sync/scopes.ts — the whole runtime, conceptually
-const langScope = (langs: Array<string>) =>
-	supabase.channel(`sync:lang`).on(
-		'postgres_changes',
-		{
-			event: '*',
-			schema: 'public',
-			table: wire.table,
-			filter: `${wire.langColumn}=in.(${langs.join(',')})`,
-		},
-		(payload) => {
-			if (payload.eventType === 'DELETE')
-				collection.utils.writeDelete(payload.old.id) // tolerate absent
-			else collection.utils.writeUpsert(schema.parse(payload.new))
-		}
-	)
-```
+## So… did we just reinvent ElectricSQL shapes?
 
-The payload is the **full row** — the same shape the queryFn fetches, parsed
-by the same Zod schema, upserted by the same key. Someone else's new
-translation arrives whole; no follow-up fetch. Your own write's echo arrives
-after the ack already wrote it; upsert-by-key makes that a harmless
-overwrite.
+Yes — split down the middle, and the split is instructive:
 
-Scopes compose from session + route, ref-counted with a grace period so
-lang-bouncing doesn't thrash:
+- **We built the half Electric doesn't have.** An Electric shape is a
+  single-table `WHERE` clause; there are no joins. Syncing
+  phrase+translations+tags through Electric means three shapes and
+  client-side reassembly. The corpus compilation _is_ the include-tree,
+  materialized in the database — it converts a multi-table sync problem into
+  the single-table problem every transport handles well.
+- **We're reinventing the half Electric does better.** Its shape log is
+  gapless, offset-addressed, resumable, CDN-friendly. Our tail is
+  at-most-once `postgres_changes` plus a `rev` catch-up query — same idea,
+  hand-rolled. Acceptable at our scale; not better.
+- **Same security posture.** Electric punts auth to a proxy in front of the
+  shape API; we punt it by making the read model all-public and keeping
+  private data on user-scoped channels. "Slicing, not security" is their
+  stance too.
 
-```ts
-projection.compose(() => [
-	langScope(myDeckLangs), // the languages I study — one in.() filter
-	route.lang && langScope([route.lang]), // the language I'm browsing
-	route.pid && pinScope('phrase', route.pid), // detail page, any language:
-	// per-collection pinColumn bindings — phrase_id=eq.{pid} on translations,
-	// tags; request_id=eq.{rid} on comments — same handler as above
-	auth.userId && userScope(auth.userId), // chats, notifications (exists today
-	// as useSocialRealtime — absorbed, not rewritten)
-])
-```
-
-## The residual: view-computed columns
-
-`phrase_meta`'s `count_learners` / `avg_difficulty` / `avg_stability` are the
-one thing a base-table row can't carry. When a `phrase` row arrives off the
-wire, patch its base columns immediately and schedule a coalesced by-key
-`select from phrase_meta where id in (…)` for the stats. This is the only
-"mark dirty and recalculate" left in the design, scoped to exactly one
-collection — not the universal verb v2 tried to make it.
-
-## Wasn't the corpus supposed to multiplex this?
-
-It can, and the idea got us here — but it loses on the details:
-
-1. Neither existing store can be watched: `search_corpus` is written async
-   via pg_net (lags; silently skips no-session writes like Studio edits) and
-   `search_text_index` is a matview, invisible to realtime. A multiplexer
-   would be a _third_, synchronous corpus-shaped table.
-2. Corpus rows are search documents. An UPDATE usefully carries new text,
-   but an INSERT of a row you've never seen lacks `added_by`/`created_at` —
-   someone else's new content still costs a fetch. Half off the wire.
-3. The decisive one: predicate pushdown needs `entity_lang` **on the source
-   tables** no matter what. Once it's there for the fetch path, the tables
-   filter their own realtime and the multiplexer has no job left.
-
-The corpus keeps its actual job (search), and gains from the same schema
-move: the trigram matview and embed pipeline can read `entity_lang` off the
-child tables instead of joining for it.
+Which yields the convergence worth writing down: **because the read model is
+one public table, Electric becomes trivially adoptable later as pure
+transport** — `entity_doc WHERE entity_lang = 'hin'` is exactly the shape
+Electric is good at. Build the corpus, and the transport (postgres_changes
+now; Electric or anything else when the per-subscriber-filter ceiling bites)
+is a swappable detail no app code sees.
 
 ## Flag for review
 
-1. **DELETE events ignore filters** and carry only the primary key. Mostly
-   moot — requests/playlists/translations soft-delete (those are UPDATEs) —
-   and the handler's "remove if present, else ignore" absorbs the rest.
-   Hard-deleted `comment_phrase_link` rows arrive unfiltered; tolerable
-   noise at our scale.
-2. **Filtered `postgres_changes` has a scale ceiling** (per-subscriber
-   checks). Fine now; if it's ever hit, the transport swaps to
-   broadcast-from-database triggers without touching collections, scopes, or
-   handlers — everything above the channel setup survives.
-3. **`entity_lang` is stamped, not live** — same trade `search_corpus`
-   already made. If phrase lang-editing ever becomes real, the phrase
-   trigger cascades restamps.
-4. **Framework surface in tanstack-db**: pushdown of the lang predicate into
-   `queryFn`, `dedupeQueriesOn` + load-by-key (PR #6), a `writeUpsert`
-   convenience, and scope-shaped pinning with ref-counts. The sunlo-side
-   `defineSyncedCollection`/`projection` wrappers are thin over these.
-5. **Fix the embed pipeline's auth gap regardless** (independent of all of
-   this): replace the borrowed-JWT pg_net push with a pg_cron sweep over the
-   existing `vectorized_at` staleness — self-healing for Studio edits,
-   dropped calls, and backfills.
-6. **Migration path is incremental.** Nothing here is all-or-nothing: wire
-   one collection (translations) behind the existing ones, prove the loop on
-   one screen, then convert table by table. Each converted collection
-   deletes its handlers and its full-table queryFn as it lands.
+1. **Write-time compilation cost.** The `jsonb_agg` composition runs per
+   write instead of per read — the right trade for a read-heavy app, but
+   it's the thing to benchmark if request comment-tails grow long. Mixed
+   grain (comments as own rows) is the pressure valve.
+2. **Payload caps.** Supabase realtime drops oversized events. Bundles must
+   stay bounded (hence mixed grain); a doc approaching the cap is a design
+   smell, not a config problem.
+3. **`postgres_changes` per-subscriber filtering** still costs the realtime
+   server per event per subscriber — but with no RLS on the hot path (public
+   table) the ceiling is far higher than filtered private tables, and the
+   Electric escape hatch above needs zero app-code change.
+4. **Doc schema versioning.** The bundle shape is now an API. A Zod
+   `EntityDocSchema` per entity_type, and a `doc_version` field so old
+   clients can detect docs they don't understand and fall back to refetch.
+5. **Deletes carry only the PK** (`entity_type`, `entity_id`) — sufficient
+   to remove the doc; soft-deletes (requests, playlists) are UPDATEs with
+   `deleted: true` compiled into the doc and filtered in live queries.
+6. **Backfill and drift.** One idempotent `recompile_entity(type, id)`
+   function used by the triggers, the initial backfill, and a periodic
+   drift-check sweep — the read model must be cheap to rebuild from scratch
+   or it will be feared.
