@@ -146,6 +146,38 @@ prescribe — a compiled multi-table read model — contributed by the corpus.
 Electric remains a possible snapshot/log transport underneath the same
 contract; nothing above the concierge would notice.
 
+## The four rings: full table accounting
+
+What a client is subscribed to at any moment: **site ∪ my langs ∪ the lang
+I'm browsing ∪ the thread on my screen ∪ me.** Every table in the schema
+gets exactly one ring, or is explicitly infra/query-surface.
+
+| Ring         | Tables                                                                                                                                                                                                                                                                   | Transport                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **Site**     | `language`, `tag`, `message_tag`, per-language stats (today's `meta_language` **matview → cron-refreshed table**, since matviews are invisible to realtime — same lesson as `search_text_index`; can absorb top-request/phrase/playlist-archived per lang)               | hoover whole tables + low-volume realtime                                          |
+| **Language** | primaries `phrase`, `phrase_request`, `phrase_playlist`, plus hangers that land on/with them: `phrase_translation`, `phrase_tag`, `phrase_relation`, `message` (1:1 with request, trigger-created), `message_tag_link`, `playlist_phrase_link`, rolled-up counts + stats | corpus slice by entity lang (lang-room)                                            |
+| **Thread**   | `request_comment`, `comment_phrase_link`, future comment threads on any entity — rows stamped `entity_type`/`entity_id`/`entity_lang`; excluded from the lang ring and from the search corpus (an uninformed comment doesn't skew the entity)                            | per-entity subscription, attached by the thread's route segment only               |
+| **User**     | the #723 list: decks, cards, reviews, daily state, upvotes ×3, friend actions, chat, notifications                                                                                                                                                                       | RLS-scoped `postgres_changes` (done/underway; one subscriber, no fan-out pressure) |
+
+**No ring, by design:** `admin_user`, `db_meta` (infra); `user_client_event`
+(write-only diagnostics — precedent for a future session-events log);
+`feed_activities` (a ranked query surface over primaries — stays a query);
+`search_corpus` / `search_text_index` (consumers of content, not sync
+sources); `*_plus` and `friend_summary` views (read shapes; the latter
+demotes to initial-snapshot-only under #723).
+
+**The one misfit:** `user_profile` / `public_profile` — public, not
+lang-partitioned, referenced by every ring (comment authors, feed cards,
+friends). Hoovered while small; eventual answer is author-snapshot fields in
+entity bundles + load-by-key.
+
+The thread ring refines the earlier "no pinning" rule without breaking it:
+realtime is still strictly a property of the route segment — the thread's
+route attaches the thread sub, which delivers comments and attachments. The
+lang-ring entity row carries `comment_count`, so lists stay honest without
+any thread sub. Everything viewed outside your rings remains an on-demand
+load-by-key snapshot.
+
 ## Rollout: split by data class, not by phase
 
 Every piece lands in its permanent home on the first try — no scaffolding
