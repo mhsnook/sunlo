@@ -13,6 +13,7 @@ import { NewCardsPreview } from '@/components/review/new-cards-preview'
 import {
 	cardReviewsCollection,
 	reviewDaysCollection,
+	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import { todayString } from '@/lib/utils'
 
@@ -27,6 +28,7 @@ export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 		await Promise.all([
 			reviewDaysCollection.preload(),
 			cardReviewsCollection.preload(),
+			reviewMilestonesCollection.preload(),
 		])
 		await ensureManifestCardsInCollection(params.lang, todayString())
 	},

@@ -5,6 +5,8 @@ import {
 	type CardReviewType,
 	DailyReviewStateSchema,
 	type DailyReviewStateType,
+	ReviewMilestoneSchema,
+	type ReviewMilestoneType,
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
@@ -46,5 +48,25 @@ export const reviewDaysCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: DailyReviewStateSchema,
+	})
+)
+
+export const reviewMilestonesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'review_milestones',
+		queryKey: ['user', 'review_milestone'],
+		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
+			console.log(`Loading reviewMilestonesCollection`)
+			const { data } = await supabase
+				.from('review_milestone')
+				.select()
+				.throwOnError()
+			return data?.map((item) => ReviewMilestoneSchema.parse(item)) ?? []
+		},
+		getKey: (item: ReviewMilestoneType) => item.id,
+		queryClient,
+		startSync: false,
+		schema: ReviewMilestoneSchema,
 	})
 )

@@ -15,6 +15,7 @@ import { publicProfilesCollection } from '@/features/profile/collections'
 import {
 	cardReviewsCollection,
 	reviewDaysCollection,
+	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import {
 	phrasePlaylistsCollection,
@@ -75,6 +76,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			preloads.push(
 				reviewDaysCollection.preload(),
 				cardReviewsCollection.preload(),
+				reviewMilestonesCollection.preload(),
 				cardsCollection.preload(),
 				decksCollection.preload(),
 				phraseRequestUpvotesCollection.preload()

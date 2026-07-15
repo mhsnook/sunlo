@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import {
 	cardReviewsCollection,
 	reviewDaysCollection,
+	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import {
 	parseManifestEntry,
@@ -41,6 +42,7 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		await Promise.all([
 			reviewDaysCollection.preload(),
 			cardReviewsCollection.preload(),
+			reviewMilestonesCollection.preload(),
 		])
 		await ensureManifestCardsInCollection(params.lang, todayString())
 	},

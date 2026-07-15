@@ -25,6 +25,9 @@ export const CardReviewSchema = z.object({
 
 export type CardReviewType = z.infer<typeof CardReviewSchema>
 
+// The immutable session row: written once at session creation, and the FK
+// target for user_card_review. Progress (`stage`) is no longer here — it lives
+// in the append-only review_milestone log (see ReviewMilestoneSchema).
 export const DailyReviewStateSchema = z.object({
 	created_at: z.string(),
 	day_session: z.string().length(10),
@@ -37,8 +40,21 @@ export const DailyReviewStateSchema = z.object({
 		.transform(
 			(arr): Array<ManifestEntry> | null => arr as Array<ManifestEntry> | null
 		),
-	stage: z.number().int().min(0).max(5).default(1),
 	uid: z.string().uuid(),
 })
 
 export type DailyReviewStateType = z.infer<typeof DailyReviewStateSchema>
+
+// Append-only progress log for a review session. Each stage transition is a new
+// row; the current stage is the `stage` of the latest milestone per session.
+export const ReviewMilestoneSchema = z.object({
+	id: z.string().uuid(),
+	uid: z.string().uuid(),
+	lang: LangSchema,
+	day_session: z.string().length(10),
+	created_at: z.string(),
+	event: z.enum(['session_started', 'stage_advanced', 'session_completed']),
+	stage: z.number().int().min(0).max(5).nullable(),
+})
+
+export type ReviewMilestoneType = z.infer<typeof ReviewMilestoneSchema>

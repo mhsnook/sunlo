@@ -1128,6 +1128,44 @@ export type Database = {
 					},
 				]
 			}
+			review_milestone: {
+				Row: {
+					created_at: string
+					day_session: string
+					event: string
+					id: string
+					lang: string
+					stage: number | null
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					day_session: string
+					event: string
+					id?: string
+					lang: string
+					stage?: number | null
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					day_session?: string
+					event?: string
+					id?: string
+					lang?: string
+					stage?: number | null
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'review_milestone_session_fkey'
+						columns: ['uid', 'lang', 'day_session']
+						isOneToOne: false
+						referencedRelation: 'user_deck_review_state'
+						referencedColumns: ['uid', 'lang', 'day_session']
+					},
+				]
+			}
 			search_corpus: {
 				Row: {
 					created_at: string
@@ -1541,7 +1579,6 @@ export type Database = {
 					day_session: string
 					lang: string
 					manifest: Json | null
-					stage: number
 					uid: string
 				}
 				Insert: {
@@ -1549,7 +1586,6 @@ export type Database = {
 					day_session: string
 					lang: string
 					manifest?: Json | null
-					stage?: number
 					uid?: string
 				}
 				Update: {
@@ -1557,7 +1593,6 @@ export type Database = {
 					day_session?: string
 					lang?: string
 					manifest?: Json | null
-					stage?: number
 					uid?: string
 				}
 				Relationships: [

@@ -10,15 +10,20 @@ import {
 	useReviewStage,
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
-import { cardReviewsCollection, reviewDaysCollection } from './collections'
+import {
+	cardReviewsCollection,
+	reviewDaysCollection,
+	reviewMilestonesCollection,
+} from './collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,
 	type CardReviewType,
-	DailyReviewStateSchema,
 	type DailyReviewStateType,
+	ReviewMilestoneSchema,
 } from './schemas'
+import { useUserId } from '@/lib/use-auth'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardDirectionType } from '@/features/deck/schemas'
 import { toManifestEntry, type ManifestEntry } from './manifest'
@@ -171,6 +176,32 @@ export function useNextValid(): number {
 		: getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
+/**
+ * The server-persisted stage for a session: the `stage` of the latest
+ * review_milestone. Replaces the old mutable `user_deck_review_state.stage` —
+ * progress is now an append-only log, so the newest milestone wins. Returns
+ * undefined when no milestone has landed yet (brand-new session), which lets
+ * callers fall back to the client-inferred stage.
+ */
+export function useReviewStageServer(
+	lang: string,
+	day_session: string
+): ReviewStages | undefined {
+	const { data } = useLiveQuery(
+		(q) =>
+			q
+				.from({ milestone: reviewMilestonesCollection })
+				.where(({ milestone }) =>
+					and(eq(milestone.lang, lang), eq(milestone.day_session, day_session))
+				)
+				.orderBy(({ milestone }) => milestone.created_at, 'desc')
+				.limit(1)
+				.findOne(),
+		[lang, day_session]
+	)
+	return (data?.stage ?? undefined) as ReviewStages | undefined
+}
+
 export function useReviewsToday(lang: string, day_session: string) {
 	const reviewsQuery = useLiveQuery(
 		(q) =>
@@ -184,10 +215,13 @@ export function useReviewsToday(lang: string, day_session: string) {
 		[lang, day_session]
 	)
 	const reviewDayQuery = useReviewDay(lang, day_session)
+	// Stage now folds out of the append-only milestone log, not the session row.
+	const stage = useReviewStageServer(lang, day_session)
 	return {
 		isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
 		data: {
 			...reviewDayQuery.data,
+			stage,
 			reviews: reviewsQuery.data,
 			reviewsMap: buildReviewsMap(reviewsQuery.data),
 		},
@@ -542,24 +576,33 @@ export const useOneCardReviews = (
 	)
 
 /**
- * Persist a stage transition to the server.
+ * Persist a stage transition to the server as an append-only milestone.
  * Call alongside the Zustand store action for responsive UI + durable state.
+ * The current stage is the newest milestone's — no in-place update, so two
+ * devices mid-session no longer clobber each other's whole-row state.
  */
 export function useUpdateReviewStage(lang: string, day_session: string) {
+	const userId = useUserId()
 	return useMutation({
 		mutationFn: async (stage: number) => {
 			const { data } = await supabase
-				.from('user_deck_review_state')
-				.update({ stage })
-				.eq('lang', lang)
-				.eq('day_session', day_session)
+				.from('review_milestone')
+				.insert({
+					uid: userId!,
+					lang,
+					day_session,
+					event: stage >= 5 ? 'session_completed' : 'stage_advanced',
+					stage,
+				})
 				.select()
 				.single()
 				.throwOnError()
 			return data
 		},
 		onSuccess: (data) => {
-			reviewDaysCollection.utils.writeUpdate(DailyReviewStateSchema.parse(data))
+			reviewMilestonesCollection.utils.writeInsert(
+				ReviewMilestoneSchema.parse(data)
+			)
 		},
 		onError: (error) => {
 			console.log('Error updating review stage:', error)

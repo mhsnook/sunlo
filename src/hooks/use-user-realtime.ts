@@ -12,8 +12,16 @@ import {
 } from '@/features/requests/collections'
 import { PhrasePlaylistUpvoteSchema } from '@/features/playlists/schemas'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
-import { CardReviewSchema } from '@/features/review/schemas'
-import { cardReviewsCollection } from '@/features/review/collections'
+import {
+	CardReviewSchema,
+	DailyReviewStateSchema,
+	ReviewMilestoneSchema,
+} from '@/features/review/schemas'
+import {
+	cardReviewsCollection,
+	reviewDaysCollection,
+	reviewMilestonesCollection,
+} from '@/features/review/collections'
 
 /**
  * Bind an upvote table to its collection. Upvotes toggle: INSERT when the
@@ -117,6 +125,29 @@ export const useUserRealtime = () => {
 						CardReviewSchema.parse(payload.new)
 					)
 			)
+
+		// Daily review state: the session row is immutable (manifest, written once
+		// at session creation), so INSERT is the only event — a session started on
+		// one device shows up on another.
+		channel = channel.on(
+			'postgres_changes',
+			{ event: 'INSERT', schema: 'public', table: 'user_deck_review_state' },
+			(payload) =>
+				reviewDaysCollection.utils.writeUpsert(
+					DailyReviewStateSchema.parse(payload.new)
+				)
+		)
+
+		// Review milestones: the append-only progress log. Each stage transition is
+		// a new row; the newest milestone's stage is the session's current stage.
+		channel = channel.on(
+			'postgres_changes',
+			{ event: 'INSERT', schema: 'public', table: 'review_milestone' },
+			(payload) =>
+				reviewMilestonesCollection.utils.writeUpsert(
+					ReviewMilestoneSchema.parse(payload.new)
+				)
+		)
 
 		channel.subscribe()
 
