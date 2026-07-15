@@ -145,6 +145,38 @@ prescribe — a compiled multi-table read model — contributed by the corpus.
 Electric remains a possible snapshot/log transport underneath the same
 contract; nothing above the concierge would notice.
 
+## Rollout: split by data class, not by phase
+
+Every piece lands in its permanent home on the first try — no scaffolding
+transport that later gets ripped out.
+
+1. **User-specific tables → Supabase realtime, now and permanently.** The
+   pressure that pushes public content toward DOs is fan-out: many
+   subscribers to one shared slice, each needing per-subscriber filtering.
+   Private rows have one subscriber — their owner's devices — so
+   RLS-scoped `postgres_changes` is the correct _final_ answer, not a
+   stopgap. `useSocialRealtime` / `useNotificationsRealtime` already do
+   this for chat, friend events, and notifications; extending the same
+   pattern to decks, cards, and reviews buys multi-device sync immediately
+   with zero new infrastructure.
+2. **Public content → corpus + lang-room DOs, from the start.** Build
+   `entity_doc` + triggers + `recompile_entity` + backfill; one wrangler
+   project with a room DO per language. The room tails the log once per
+   lang (poke → `rev > cursor`) and fans the identical payload to every
+   socket in the room — one upstream read per change, no per-subscriber
+   filtering anywhere. A client joins with its last-seen rev: small gap →
+   backlog as `apply`; big gap (or a fresh device) → `resnapshot` from the
+   snapshot worker. The two-verb client contract is unchanged; a room
+   speaks it instead of a concierge. Detail-page pinning starts coarse —
+   viewing one Tagalog phrase means joining the Tagalog room for the
+   duration; per-entity filters on room join are an optimization, not a
+   prerequisite.
+3. **The per-user concierge is the later refinement, not the foundation.**
+   It earns its way in for unified multi-device projection management,
+   folding private data onto the same socket, or write mediation/offline
+   queues — and it composes with rooms rather than replacing them: a
+   concierge joins rooms on the user's behalf.
+
 ## Flag for review
 
 1. **The runtime cost is smaller than it looks — Cloudflare is already in
@@ -155,12 +187,9 @@ contract; nothing above the concierge would notice.
    API we curl_ to _stateful tier holding user sockets_ — deploys,
    monitoring, and a JWT-refresh lifecycle on the socket. The
    consolidation payoff cuts the other way: one wrangler deploy can carry
-   the concierge DOs, the lang routers, the snapshot worker, and an embed
+   the room DOs, the snapshot worker, an eventual concierge, and an embed
    sweeper on a Worker cron — retiring the pg_net/borrowed-JWT push and
    putting the embed pipeline on the same platform as the model it calls.
-   Incremental path unchanged: prove the corpus + `rev` log first (v4's
-   client-direct wire works at prototype scale), then stand up the
-   concierge without changing the data model.
 2. **Write-time compilation cost.** `jsonb_agg` per write instead of per
    read — right trade for a read-heavy app; benchmark if request
    comment-tails grow long. Mixed grain is the pressure valve.
@@ -168,10 +197,11 @@ contract; nothing above the concierge would notice.
    compiler and every consumer. Zod `EntityDocSchema` per entity_type plus
    a `doc_version` field so old clients detect docs they don't understand
    and resnapshot.
-4. **Poke fan-out topology.** Trigger → router DO → user DOs is the
-   sketch; the router needs a subscription map (which users care about
-   which langs) that must itself survive DO eviction. Keep it rebuildable
-   from the concierges' `hello`s, not authoritative.
+4. **Poke fan-out topology.** Rooms-first keeps this simple: the trigger
+   pokes the lang's room DO, and the room's membership is just its own
+   sockets — no subscription map to maintain. A later concierge tier
+   reintroduces the map (which users joined which rooms); keep it
+   rebuildable from `hello`s, not authoritative.
 5. **Backfill and drift.** One idempotent `recompile_entity(type, id)`
    used by the triggers, the initial backfill, and a periodic drift sweep —
    the read model must stay cheap to rebuild from scratch or it will be
