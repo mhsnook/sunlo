@@ -147,13 +147,20 @@ contract; nothing above the concierge would notice.
 
 ## Flag for review
 
-1. **The real cost is the second runtime.** Workers + Durable Objects means
-   deploys, secrets, monitoring, and a JWT-refresh lifecycle on the socket
-   — sunlo is currently one Supabase and a static SPA. Everything else in
-   v5 is small; this is the line item to be sure about. The incremental
-   path: prove the corpus + `rev` log first (v4's client-direct wire works
-   against it at prototype scale), then stand up the concierge without
-   changing the data model.
+1. **The runtime cost is smaller than it looks — Cloudflare is already in
+   the stack.** Workers AI (BGE-M3) is load-bearing in the production
+   search path today: account, API token, billing all exist, called via
+   REST from the edge functions. What's actually new is a wrangler deploy
+   pipeline (no deployed Worker exists yet) and the shift from _stateless
+   API we curl_ to _stateful tier holding user sockets_ — deploys,
+   monitoring, and a JWT-refresh lifecycle on the socket. The
+   consolidation payoff cuts the other way: one wrangler deploy can carry
+   the concierge DOs, the lang routers, the snapshot worker, and an embed
+   sweeper on a Worker cron — retiring the pg_net/borrowed-JWT push and
+   putting the embed pipeline on the same platform as the model it calls.
+   Incremental path unchanged: prove the corpus + `rev` log first (v4's
+   client-direct wire works at prototype scale), then stand up the
+   concierge without changing the data model.
 2. **Write-time compilation cost.** `jsonb_agg` per write instead of per
    read — right trade for a read-heavy app; benchmark if request
    comment-tails grow long. Mixed grain is the pressure valve.
