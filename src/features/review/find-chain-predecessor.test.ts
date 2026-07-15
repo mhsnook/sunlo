@@ -22,7 +22,7 @@ function makeReview(
 		day_session: overrides.created_at.slice(0, 10),
 		lang: 'hin',
 		score: 3,
-		day_first_review: true,
+		stage: 1,
 		difficulty: 5,
 		review_time_retrievability: null,
 		stability: 3,
@@ -90,21 +90,21 @@ describe('findChainPredecessor', () => {
 		expect(pred?.direction).toBe('forward')
 	})
 
-	it('skips phase-3 rows (day_first_review=false)', () => {
-		// Even if a phase-3 row exists in an earlier session (shouldn't happen
-		// post-reclassify, but defensive), it shouldn't feed the scheduling
-		// chain. Only phase-1 rows do.
+	it('skips again-round rows (stage 3)', () => {
+		// Even if an again-round row exists in an earlier session (shouldn't
+		// happen normally, but defensive), it shouldn't feed the scheduling
+		// chain. Only scoring rows (stages 1–2) do.
 		const phase1 = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
 			created_at: '2025-06-01T08:00:00Z',
-			day_first_review: true,
+			stage: 1,
 		})
 		const phase3 = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
 			created_at: '2025-06-10T08:30:00Z',
-			day_first_review: false,
+			stage: 3,
 		})
 		const pred = findChainPredecessor(
 			[phase1, phase3],

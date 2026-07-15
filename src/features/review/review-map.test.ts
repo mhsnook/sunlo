@@ -30,7 +30,7 @@ function makeReview(
 		day_session: '2025-06-01',
 		lang: 'hin',
 		score: 3,
-		day_first_review: true,
+		stage: 1,
 		difficulty: 5,
 		review_time_retrievability: null,
 		stability: 3,
@@ -65,29 +65,29 @@ describe('buildReviewsMap', () => {
 	})
 
 	it('last review wins when multiple reviews exist for the same card', () => {
-		// In a single session a card may be reviewed in phase 1 (day_first_review=true)
-		// and again in phase 3 (day_first_review=false).  The array is ordered
-		// chronologically (ASC), so the phase-3 review — which comes last — wins.
+		// In a single session a card may be reviewed in the scoring pass (stage 1)
+		// and again in the again-round (stage 3).  The array is ordered
+		// chronologically (ASC), so the again-round review — which comes last — wins.
 		const phase1 = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
 			score: 1,
-			day_first_review: true,
+			stage: 1,
 			created_at: '2025-06-01T12:00:00Z',
 		})
 		const phase3 = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
 			score: 3,
-			day_first_review: false,
+			stage: 3,
 			created_at: '2025-06-01T12:30:00Z',
 		})
 
 		const map = buildReviewsMap([phase1, phase3])
 
 		const key = toManifestEntry(P1, 'forward')
-		expect(map[key]?.score).toBe(3) // phase-3 score wins
-		expect(map[key]?.day_first_review).toBe(false) // phase-3 review
+		expect(map[key]?.score).toBe(3) // again-round score wins
+		expect(map[key]?.stage).toBe(3) // again-round review
 	})
 
 	it('does not cross-contaminate between phrases or directions', () => {

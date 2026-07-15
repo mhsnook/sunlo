@@ -21,7 +21,7 @@ function mockReview(overrides: Partial<CardReviewType> = {}): CardReviewType {
 		phrase_id: '22222222-2222-4222-8222-222222222222',
 		direction: 'forward',
 		score: 3,
-		day_first_review: true,
+		stage: 1,
 		difficulty: 5.0,
 		stability: 10.0,
 		review_time_retrievability: 0.9,
@@ -507,20 +507,18 @@ describe('direction isolation', () => {
 // ---------------------------------------------------------------------------
 // During a review session, cards go through up to two phases:
 //
-// Phase 1 (day_first_review=true):
+// Phase 1 (stage 1–2, a scoring review):
 //   The first time you see each card today. FSRS is calculated normally,
 //   using the most recent PRIOR review (from a previous day) as the base.
 //   This is the review that matters for long-term scheduling.
 //
-// Phase 3 (day_first_review=false):
+// Phase 3 (stage 3, the again-round):
 //   Re-review of cards you scored Again in phase 1. These rows are
-//   tracking-only and never feed scheduling, so the mutation copies the
-//   same-session phase-1 review's FSRS values directly onto them — that's
-//   the meaningful snapshot of the card's state at that moment.
+//   tracking-only and never feed scheduling — they carry null FSRS columns.
 //
-// IMPORTANT: The onSuccess handler skips card sync for phase-3 reviews, and
-// useLatestReviewForPhrase filters to day_first_review=true. This ensures
-// the NEXT day's FSRS builds on the phase-1 values, not phase-3 rows.
+// IMPORTANT: The onSuccess handler skips card sync for again-round reviews, and
+// useLatestReviewForPhrase filters to the scoring stages (1–2). This ensures
+// the NEXT day's FSRS builds on the phase-1 values, not stage-3 rows.
 // See the scheduling tests below.
 //
 // The tests in this section verify `calculateFSRS` behavior when called
@@ -607,8 +605,8 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 	})
 
 	describe('scheduling uses phase-1 values (phase-3 excluded from chain)', () => {
-		// After the fix, useLatestReviewForPhrase filters to day_first_review=true,
-		// and onSuccess skips card sync for phase-3 reviews. This means next-day
+		// After the fix, useLatestReviewForPhrase filters to the scoring stages
+		// (1–2), and onSuccess skips card sync for stage-3 reviews. Next-day
 		// FSRS always builds on the phase-1 review, not the phase-3 re-review.
 		//
 		// A card scored Again in phase 1 but Good in phase 3 will be scheduled
@@ -627,7 +625,7 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 				currentTime: new Date('2025-06-01T12:30:00Z'),
 			})
 
-			// Next day: FSRS should build on the phase-1 review (day_first_review=true)
+			// Next day: FSRS should build on the phase-1 review (a scoring stage)
 			const nextDay = new Date('2025-06-02T12:00:00Z')
 
 			const scheduledFromPhase1 = calculateFSRS({
@@ -636,7 +634,7 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 					difficulty: phase1.difficulty,
 					stability: phase1.stability,
 					created_at: '2025-06-01T12:00:00Z',
-					day_first_review: true,
+					stage: 1,
 				}),
 				currentTime: nextDay,
 			})
@@ -649,7 +647,7 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 					difficulty: phase3.difficulty,
 					stability: phase3.stability,
 					created_at: '2025-06-01T12:30:00Z',
-					day_first_review: false,
+					stage: 3,
 				}),
 				currentTime: nextDay,
 			})
@@ -682,7 +680,7 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 					difficulty: phase1Again.difficulty,
 					stability: phase1Again.stability,
 					created_at: '2025-06-01T12:00:00Z',
-					day_first_review: true,
+					stage: 1,
 				}),
 				currentTime: nextDay,
 			})
@@ -694,7 +692,7 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 					difficulty: phase1Good.difficulty,
 					stability: phase1Good.stability,
 					created_at: '2025-06-01T12:00:00Z',
-					day_first_review: true,
+					stage: 1,
 				}),
 				currentTime: nextDay,
 			})

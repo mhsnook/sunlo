@@ -1335,7 +1335,7 @@ create table if not exists "public"."user_card_review" (
 	"day_session" "date" not null,
 	"lang" character varying not null,
 	"phrase_id" "uuid" not null,
-	"day_first_review" boolean default true not null,
+	"stage" smallint not null,
 	"direction" "public"."card_direction" default 'forward'::"public"."card_direction" not null,
 	constraint "user_card_review_difficulty_check" check (
 		(
@@ -1354,7 +1354,8 @@ create table if not exists "public"."user_card_review" (
 	),
 	constraint "user_card_review_score_check" check (("score" = any (array[1, 2, 3, 4]))),
 	constraint "user_card_review_stability_check" check (("stability" >= 0.0)),
-	constraint "user_card_review_stability_max_check" check (("stability" <= 36500.0))
+	constraint "user_card_review_stability_max_check" check (("stability" <= 36500.0)),
+	constraint "user_card_review_stage_check" check (("stage" = any (array[1, 2, 3])))
 );
 
 alter table "public"."user_card_review" owner to "postgres";
@@ -1369,6 +1370,8 @@ with
 			"rev"."stability"
 		from
 			"public"."user_card_review" "rev"
+		where
+			("rev"."stage" = any (array[1, 2]))
 		order by
 			"rev"."uid",
 			"rev"."phrase_id",
@@ -1970,11 +1973,13 @@ with
 						and ("rev"."uid" = "rev2"."uid")
 						and ("rev"."direction" = "rev2"."direction")
 						and ("rev"."created_at" < "rev2"."created_at")
+						and ("rev2"."stage" = any (array[1, 2]))
 					)
 				)
 			)
 		where
 			("rev2"."created_at" is null)
+			and ("rev"."stage" = any (array[1, 2]))
 	)
 select
 	"card"."lang",

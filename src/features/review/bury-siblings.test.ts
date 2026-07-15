@@ -31,7 +31,7 @@ function makeReview(
 		day_session: overrides.created_at.slice(0, 10),
 		lang: 'hin',
 		score: 3,
-		day_first_review: true,
+		stage: 1,
 		difficulty: 5,
 		review_time_retrievability: null,
 		stability: 3,
@@ -139,21 +139,21 @@ describe('decideBuryDirection — Rule 1 (reverse failed twice)', () => {
 				direction: 'reverse',
 				created_at: dayBefore(NOW, 5),
 				score: 3,
-				day_first_review: true,
+				stage: 1,
 			}),
 			makeReview({
 				phrase_id: P1,
 				direction: 'reverse',
 				created_at: dayBefore(NOW, 5),
 				score: 1,
-				day_first_review: false,
+				stage: 3,
 			}),
 			makeReview({
 				phrase_id: P1,
 				direction: 'reverse',
 				created_at: dayBefore(NOW, 5),
 				score: 1,
-				day_first_review: false,
+				stage: 3,
 			}),
 		]
 		// Identical FSRS state on both → Rule 2 ties to forward (bury reverse).

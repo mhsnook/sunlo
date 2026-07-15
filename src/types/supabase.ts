@@ -1316,7 +1316,6 @@ export type Database = {
 			user_card_review: {
 				Row: {
 					created_at: string
-					day_first_review: boolean
 					day_session: string
 					difficulty: number | null
 					direction: Database['public']['Enums']['card_direction']
@@ -1326,12 +1325,12 @@ export type Database = {
 					review_time_retrievability: number | null
 					score: number
 					stability: number | null
+					stage: number
 					uid: string
 					updated_at: string
 				}
 				Insert: {
 					created_at?: string
-					day_first_review?: boolean
 					day_session: string
 					difficulty?: number | null
 					direction?: Database['public']['Enums']['card_direction']
@@ -1341,12 +1340,12 @@ export type Database = {
 					review_time_retrievability?: number | null
 					score: number
 					stability?: number | null
+					stage: number
 					uid?: string
 					updated_at?: string
 				}
 				Update: {
 					created_at?: string
-					day_first_review?: boolean
 					day_session?: string
 					difficulty?: number | null
 					direction?: Database['public']['Enums']['card_direction']
@@ -1356,6 +1355,7 @@ export type Database = {
 					review_time_retrievability?: number | null
 					score?: number
 					stability?: number | null
+					stage?: number
 					uid?: string
 					updated_at?: string
 				}
