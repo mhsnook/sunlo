@@ -26,10 +26,11 @@ client's whole contract is `apply(changes)` or `resnapshot(scope)`.**
    are not stuffed into the bundles.
 6. **Each user has a concierge: a per-user Durable Object.** The client
    holds one socket to it and tells it a projection — the languages I
-   study, the language I'm browsing, the entity I'm looking at. The DO
-   watches the corpus on the user's behalf and, per change, decides what
-   comes down: a batch of updates, or the instruction to take a fresh
-   snapshot. To the client, sync "exists in the same cloud" as the data.
+   study, the language I'm browsing. The DO watches the corpus on the
+   user's behalf and, per change, decides what comes down: a batch of
+   updates, or the instruction to take a fresh snapshot. To the client,
+   sync "exists in the same cloud" as the data. Anything outside the
+   projection is an on-demand load-by-key snapshot, not a subscription.
 
 The client never reads the normalized content tables and never touches
 realtime plumbing. `phrase_meta`, the `phrasesFull` live collection, and the
@@ -167,10 +168,12 @@ transport that later gets ripped out.
    filtering anywhere. A client joins with its last-seen rev: small gap →
    backlog as `apply`; big gap (or a fresh device) → `resnapshot` from the
    snapshot worker. The two-verb client contract is unchanged; a room
-   speaks it instead of a concierge. Detail-page pinning starts coarse —
-   viewing one Tagalog phrase means joining the Tagalog room for the
-   duration; per-entity filters on room join are an optimization, not a
-   prerequisite.
+   speaks it instead of a concierge. And realtime-ness is a property of
+   the _route segment_, nothing finer: the `/$lang` layout attaches the
+   room, and anything viewed outside it — a chat preview, a modal peek at
+   a phrase from a language you don't study — is an on-demand load-by-key
+   snapshot, one row at a time, allowed to be messy and silly. No
+   per-entity subscriptions, no pinning machinery at all.
 3. **The per-user concierge is the later refinement, not the foundation.**
    It earns its way in for unified multi-device projection management,
    folding private data onto the same socket, or write mediation/offline
