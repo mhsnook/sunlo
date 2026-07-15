@@ -12,7 +12,7 @@ import type { uuid } from '@/types/main'
  * Branded so `Map<ManifestEntry, T>` rejects a bare `phrase_id` at compile
  * time. Pure compile-time construct — `ManifestEntry` IS a string at runtime.
  * Produce one via `toManifestEntry()`; strings coming from the DB are
- * widened to `Array<ManifestEntry>` by `DailyReviewStateSchema`.
+ * widened to `Array<ManifestEntry>` by `ReviewSessionSchema`.
  */
 declare const manifestEntryBrand: unique symbol
 export type ManifestEntry = string & { readonly [manifestEntryBrand]: true }

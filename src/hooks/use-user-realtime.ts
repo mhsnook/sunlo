@@ -14,12 +14,12 @@ import { PhrasePlaylistUpvoteSchema } from '@/features/playlists/schemas'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
 import {
 	CardReviewSchema,
-	DailyReviewStateSchema,
+	ReviewSessionSchema,
 	ReviewMilestoneSchema,
 } from '@/features/review/schemas'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
 
@@ -131,10 +131,10 @@ export const useUserRealtime = () => {
 		// one device shows up on another.
 		channel = channel.on(
 			'postgres_changes',
-			{ event: 'INSERT', schema: 'public', table: 'user_deck_review_state' },
+			{ event: 'INSERT', schema: 'public', table: 'user_review_session' },
 			(payload) =>
-				reviewDaysCollection.utils.writeUpsert(
-					DailyReviewStateSchema.parse(payload.new)
+				reviewSessionsCollection.utils.writeUpsert(
+					ReviewSessionSchema.parse(payload.new)
 				)
 		)
 
@@ -142,7 +142,7 @@ export const useUserRealtime = () => {
 		// a new row; the newest milestone's stage is the session's current stage.
 		channel = channel.on(
 			'postgres_changes',
-			{ event: 'INSERT', schema: 'public', table: 'review_milestone' },
+			{ event: 'INSERT', schema: 'public', table: 'user_review_milestone' },
 			(payload) =>
 				reviewMilestonesCollection.utils.writeUpsert(
 					ReviewMilestoneSchema.parse(payload.new)

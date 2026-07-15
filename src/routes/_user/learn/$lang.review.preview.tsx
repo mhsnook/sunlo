@@ -12,7 +12,7 @@ import { Loader } from '@/components/ui/loader'
 import { NewCardsPreview } from '@/components/review/new-cards-preview'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import { todayString } from '@/lib/utils'
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 	loader: async ({ context, params }) => {
 		if (!context.auth.isAuth) return
 		await Promise.all([
-			reviewDaysCollection.preload(),
+			reviewSessionsCollection.preload(),
 			cardReviewsCollection.preload(),
 			reviewMilestonesCollection.preload(),
 		])

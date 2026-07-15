@@ -12,7 +12,7 @@ import {
 import { PostgrestError } from '@supabase/supabase-js'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from './collections'
 import { cardsCollection } from '@/features/deck/collections'
@@ -20,7 +20,7 @@ import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,
 	type CardReviewType,
-	type DailyReviewStateType,
+	type ReviewSessionType,
 	ReviewMilestoneSchema,
 } from './schemas'
 import { useUserId } from '@/lib/use-auth'
@@ -178,7 +178,7 @@ export function useNextValid(): number {
 
 /**
  * The server-persisted stage for a session: the `stage` of the latest
- * review_milestone. Replaces the old mutable `user_deck_review_state.stage` —
+ * user_review_milestone. Replaces the old mutable `user_review_session.stage` —
  * progress is now an append-only log, so the newest milestone wins. Returns
  * undefined when no milestone has landed yet (brand-new session), which lets
  * callers fall back to the client-inferred stage.
@@ -254,11 +254,11 @@ export type ReviewStats = ReturnType<typeof useReviewsTodayStats>['data']
 export function useReviewDay(
 	lang: string,
 	day_session: string
-): UseLiveQueryResult<DailyReviewStateType> {
+): UseLiveQueryResult<ReviewSessionType> {
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ day: reviewDaysCollection })
+				.from({ day: reviewSessionsCollection })
 				.where(({ day }) =>
 					and(eq(day.day_session, day_session), eq(day.lang, lang))
 				)
@@ -280,7 +280,7 @@ export async function ensureManifestCardsInCollection(
 	lang: string,
 	day_session: string
 ) {
-	const reviewDay = reviewDaysCollection.toArray.find(
+	const reviewDay = reviewSessionsCollection.toArray.find(
 		(d) => d.lang === lang && d.day_session === day_session
 	)
 	if (!reviewDay?.manifest?.length) return
@@ -586,7 +586,7 @@ export function useUpdateReviewStage(lang: string, day_session: string) {
 	return useMutation({
 		mutationFn: async (stage: number) => {
 			const { data } = await supabase
-				.from('review_milestone')
+				.from('user_review_milestone')
 				.insert({
 					uid: userId!,
 					lang,

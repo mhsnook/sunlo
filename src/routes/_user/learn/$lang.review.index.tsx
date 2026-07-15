@@ -51,13 +51,13 @@ import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { CardMetaSchema } from '@/features/deck/schemas'
 import {
-	DailyReviewStateSchema,
+	ReviewSessionSchema,
 	ReviewMilestoneSchema,
 } from '@/features/review/schemas'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import { useIntro } from '@/hooks/use-intro-seen'
@@ -370,7 +370,7 @@ function ReviewPageContent() {
 			const freshCardEntries = [...forwardNew, ...reverseNew]
 
 			const { data: reviewDay } = await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.insert({
 					lang,
 					day_session: dayString,
@@ -395,7 +395,7 @@ function ReviewPageContent() {
 			let startedMilestone = null
 			try {
 				const { data } = await supabase
-					.from('review_milestone')
+					.from('user_review_milestone')
 					.insert({
 						uid: userId!,
 						lang,
@@ -438,8 +438,8 @@ function ReviewPageContent() {
 			data.newCards.forEach((c) => {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
 			})
-			reviewDaysCollection.utils.writeInsert(
-				DailyReviewStateSchema.parse(data.reviewDay)
+			reviewSessionsCollection.utils.writeInsert(
+				ReviewSessionSchema.parse(data.reviewDay)
 			)
 			if (data.startedMilestone)
 				reviewMilestonesCollection.utils.writeInsert(

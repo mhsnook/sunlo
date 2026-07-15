@@ -5,8 +5,8 @@
 export {
 	CardReviewSchema,
 	type CardReviewType,
-	DailyReviewStateSchema,
-	type DailyReviewStateType,
+	ReviewSessionSchema,
+	type ReviewSessionType,
 	ReviewMilestoneSchema,
 	type ReviewMilestoneType,
 } from './schemas'
@@ -14,7 +14,7 @@ export {
 // Collections
 export {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from './collections'
 

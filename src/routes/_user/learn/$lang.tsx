@@ -14,7 +14,7 @@ import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import {
@@ -74,7 +74,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 		]
 		if (context.auth.isAuth) {
 			preloads.push(
-				reviewDaysCollection.preload(),
+				reviewSessionsCollection.preload(),
 				cardReviewsCollection.preload(),
 				reviewMilestonesCollection.preload(),
 				cardsCollection.preload(),

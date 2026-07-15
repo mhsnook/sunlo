@@ -1128,7 +1128,7 @@ export type Database = {
 					},
 				]
 			}
-			review_milestone: {
+			user_review_milestone: {
 				Row: {
 					created_at: string
 					day_session: string
@@ -1158,10 +1158,10 @@ export type Database = {
 				}
 				Relationships: [
 					{
-						foreignKeyName: 'review_milestone_session_fkey'
+						foreignKeyName: 'user_review_milestone_session_fkey'
 						columns: ['uid', 'lang', 'day_session']
 						isOneToOne: false
-						referencedRelation: 'user_deck_review_state'
+						referencedRelation: 'user_review_session'
 						referencedColumns: ['uid', 'lang', 'day_session']
 					},
 				]
@@ -1458,7 +1458,7 @@ export type Database = {
 						foreignKeyName: 'user_card_review_uid_lang_day_session_fkey'
 						columns: ['uid', 'lang', 'day_session']
 						isOneToOne: false
-						referencedRelation: 'user_deck_review_state'
+						referencedRelation: 'user_review_session'
 						referencedColumns: ['uid', 'lang', 'day_session']
 					},
 				]
@@ -1573,7 +1573,7 @@ export type Database = {
 					},
 				]
 			}
-			user_deck_review_state: {
+			user_review_session: {
 				Row: {
 					created_at: string
 					day_session: string
@@ -1597,14 +1597,14 @@ export type Database = {
 				}
 				Relationships: [
 					{
-						foreignKeyName: 'user_deck_review_state_lang_uid_fkey'
+						foreignKeyName: 'user_review_session_lang_uid_fkey'
 						columns: ['lang', 'uid']
 						isOneToOne: false
 						referencedRelation: 'user_deck'
 						referencedColumns: ['lang', 'uid']
 					},
 					{
-						foreignKeyName: 'user_deck_review_state_lang_uid_fkey'
+						foreignKeyName: 'user_review_session_lang_uid_fkey'
 						columns: ['lang', 'uid']
 						isOneToOne: false
 						referencedRelation: 'user_deck_plus'

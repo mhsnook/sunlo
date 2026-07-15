@@ -2162,7 +2162,7 @@ order by
 
 alter table "public"."user_deck_plus" owner to "postgres";
 
-create table if not exists "public"."user_deck_review_state" (
+create table if not exists "public"."user_review_session" (
 	"lang" character varying not null,
 	"uid" "uuid" default "auth"."uid" () not null,
 	"day_session" "date" not null,
@@ -2170,9 +2170,9 @@ create table if not exists "public"."user_deck_review_state" (
 	"manifest" "jsonb"
 );
 
-alter table "public"."user_deck_review_state" owner to "postgres";
+alter table "public"."user_review_session" owner to "postgres";
 
-create table if not exists "public"."review_milestone" (
+create table if not exists "public"."user_review_milestone" (
 	"id" "uuid" default "gen_random_uuid" () not null,
 	"uid" "uuid" default "auth"."uid" () not null,
 	"lang" character varying not null,
@@ -2180,8 +2180,8 @@ create table if not exists "public"."review_milestone" (
 	"created_at" timestamp with time zone default "now" () not null,
 	"event" "text" not null,
 	"stage" smallint,
-	constraint "review_milestone_event_check" check (("event" = any (array['session_started'::"text", 'stage_advanced'::"text", 'session_completed'::"text"]))),
-	constraint "review_milestone_stage_check" check (
+	constraint "user_review_milestone_event_check" check (("event" = any (array['session_started'::"text", 'stage_advanced'::"text", 'session_completed'::"text"]))),
+	constraint "user_review_milestone_stage_check" check (
 		(
 			("stage" is null)
 			or (
@@ -2192,7 +2192,7 @@ create table if not exists "public"."review_milestone" (
 	)
 );
 
-alter table "public"."review_milestone" owner to "postgres";
+alter table "public"."user_review_milestone" owner to "postgres";
 
 alter table only "public"."admin_user"
 add constraint "admin_user_pkey" primary key ("uid");
@@ -2302,11 +2302,11 @@ add constraint "user_deck_card_membership_uuid_key" unique ("id");
 alter table only "public"."user_deck"
 add constraint "user_deck_pkey" primary key ("id");
 
-alter table only "public"."user_deck_review_state"
-add constraint "user_deck_review_state_pkey" primary key ("lang", "uid", "day_session");
+alter table only "public"."user_review_session"
+add constraint "user_review_session_pkey" primary key ("lang", "uid", "day_session");
 
-alter table only "public"."review_milestone"
-add constraint "review_milestone_pkey" primary key ("id");
+alter table only "public"."user_review_milestone"
+add constraint "user_review_milestone_pkey" primary key ("id");
 
 alter table only "public"."user_deck"
 add constraint "user_deck_uuid_key" unique ("id");
@@ -2339,7 +2339,7 @@ create unique index "idx_meta_language_lang" on "public"."meta_language" using "
 
 create index "idx_notification_uid_created" on "public"."notification" using "btree" ("uid", "created_at" desc);
 
-create index "idx_review_milestone_session_created" on "public"."review_milestone" using "btree" ("uid", "lang", "day_session", "created_at" desc);
+create index "idx_user_review_milestone_session_created" on "public"."user_review_milestone" using "btree" ("uid", "lang", "day_session", "created_at" desc);
 
 create index "idx_notification_uid_unread" on "public"."notification" using "btree" ("uid")
 where
@@ -2686,7 +2686,7 @@ alter table only "public"."user_card_review"
 add constraint "user_card_review_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
 alter table only "public"."user_card_review"
-add constraint "user_card_review_uid_lang_day_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_deck_review_state" ("uid", "lang", "day_session") on update cascade on delete set null;
+add constraint "user_card_review_uid_lang_day_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_review_session" ("uid", "lang", "day_session") on update cascade on delete set null;
 
 alter table only "public"."user_card"
 add constraint "user_card_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
@@ -2697,11 +2697,11 @@ add constraint "user_client_event_uid_fkey" foreign key ("uid") references "publ
 alter table only "public"."user_deck"
 add constraint "user_deck_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
 
-alter table only "public"."user_deck_review_state"
-add constraint "user_deck_review_state_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid") on update cascade on delete cascade;
+alter table only "public"."user_review_session"
+add constraint "user_review_session_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid") on update cascade on delete cascade;
 
-alter table only "public"."review_milestone"
-add constraint "review_milestone_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_deck_review_state" ("uid", "lang", "day_session") on update cascade on delete cascade;
+alter table only "public"."user_review_milestone"
+add constraint "user_review_milestone_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_review_session" ("uid", "lang", "day_session") on update cascade on delete cascade;
 
 alter table only "public"."user_deck"
 add constraint "user_deck_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
@@ -2810,7 +2810,7 @@ with
 		)
 	);
 
-create policy "Enable insert for authenticated users only" on "public"."user_deck_review_state" for insert to "authenticated"
+create policy "Enable insert for authenticated users only" on "public"."user_review_session" for insert to "authenticated"
 with
 	check (("uid" = "auth"."uid" ()));
 
@@ -2926,7 +2926,7 @@ with
 		)
 	);
 
-create policy "Enable users to update their own data" on "public"."user_deck_review_state"
+create policy "Enable users to update their own data" on "public"."user_review_session"
 for update
 	to "authenticated" using (("uid" = "auth"."uid" ()));
 
@@ -2991,7 +2991,7 @@ select
 		)
 	);
 
-create policy "Enable users to view their own data only" on "public"."user_deck_review_state" for
+create policy "Enable users to view their own data only" on "public"."user_review_session" for
 select
 	to "authenticated" using (
 		(
@@ -3163,11 +3163,11 @@ create policy "Users can update own notifications" on "public"."notification"
 for update
 	using (("uid" = "auth"."uid" ()));
 
-create policy "Enable insert for authenticated users only" on "public"."review_milestone" for insert to "authenticated"
+create policy "Enable insert for authenticated users only" on "public"."user_review_milestone" for insert to "authenticated"
 with
 	check (("uid" = "auth"."uid" ()));
 
-create policy "Enable users to view their own data only" on "public"."review_milestone" for
+create policy "Enable users to view their own data only" on "public"."user_review_milestone" for
 select
 	to "authenticated" using (("uid" = "auth"."uid" ()));
 
@@ -3283,9 +3283,9 @@ alter table "public"."user_client_event" enable row level security;
 
 alter table "public"."user_deck" enable row level security;
 
-alter table "public"."user_deck_review_state" enable row level security;
+alter table "public"."user_review_session" enable row level security;
 
-alter table "public"."review_milestone" enable row level security;
+alter table "public"."user_review_milestone" enable row level security;
 
 alter table "public"."user_profile" enable row level security;
 
@@ -3310,7 +3310,7 @@ alter publication "supabase_realtime"
 add table only "public"."user_card_review";
 
 alter publication "supabase_realtime"
-add table only "public"."user_deck_review_state";
+add table only "public"."user_review_session";
 
 alter publication "supabase_realtime"
 add table only "public"."phrase_request_upvote";
@@ -3322,7 +3322,7 @@ alter publication "supabase_realtime"
 add table only "public"."phrase_playlist_upvote";
 
 alter publication "supabase_realtime"
-add table only "public"."review_milestone";
+add table only "public"."user_review_milestone";
 
 revoke usage on schema "public"
 from
@@ -4898,11 +4898,11 @@ grant all on table "public"."notification" to "authenticated";
 
 grant all on table "public"."notification" to "service_role";
 
-grant all on table "public"."review_milestone" to "anon";
+grant all on table "public"."user_review_milestone" to "anon";
 
-grant all on table "public"."review_milestone" to "authenticated";
+grant all on table "public"."user_review_milestone" to "authenticated";
 
-grant all on table "public"."review_milestone" to "service_role";
+grant all on table "public"."user_review_milestone" to "service_role";
 
 grant all on table "public"."phrase_tag" to "anon";
 
@@ -4994,11 +4994,11 @@ grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
 
-grant all on table "public"."user_deck_review_state" to "anon";
+grant all on table "public"."user_review_session" to "anon";
 
-grant all on table "public"."user_deck_review_state" to "authenticated";
+grant all on table "public"."user_review_session" to "authenticated";
 
-grant all on table "public"."user_deck_review_state" to "service_role";
+grant all on table "public"."user_review_session" to "service_role";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";

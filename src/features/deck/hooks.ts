@@ -9,7 +9,7 @@ import type { CardReviewType } from '@/features/review/schemas'
 import { decksCollection, cardsCollection } from './collections'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 } from '@/features/review/collections'
 import { inLastWeek } from '@/lib/dayjs'
 import { mapArrays, sortDecksByActivity } from '@/lib/utils'
@@ -132,7 +132,7 @@ export const useDeckRoutineStats = (lang: string) => {
 	const query: UseLiveQueryResult<{ count: number }> = useLiveQuery(
 		(q) =>
 			q
-				.from({ day: reviewDaysCollection })
+				.from({ day: reviewSessionsCollection })
 				.where(({ day }) =>
 					and(eq(day.lang, lang), gte(day.day_session, mondayString))
 				)

@@ -7,7 +7,7 @@ import { useDeckPids } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 } from '@/features/review/collections'
 import { todayString } from '@/lib/utils'
 
@@ -59,7 +59,7 @@ export function useLangActiveDays(lang: string | undefined) {
 			!lang
 				? undefined
 				: q
-						.from({ day: reviewDaysCollection })
+						.from({ day: reviewSessionsCollection })
 						.where(({ day }) =>
 							and(eq(day.lang, lang), gte(day.day_session, startDate))
 						),

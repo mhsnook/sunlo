@@ -4260,10 +4260,10 @@ values
 	);
 
 --
--- user_deck_review_state (8 rows)
+-- user_review_session (8 rows)
 --
 insert into
-	"public"."user_deck_review_state" ("lang", "uid", "day_session", "created_at", "manifest", "stage")
+	"public"."user_review_session" ("lang", "uid", "day_session", "created_at", "manifest", "stage")
 values
 	(
 		'hin',

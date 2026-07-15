@@ -3,8 +3,8 @@ import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	CardReviewSchema,
 	type CardReviewType,
-	DailyReviewStateSchema,
-	type DailyReviewStateType,
+	ReviewSessionSchema,
+	type ReviewSessionType,
 	ReviewMilestoneSchema,
 	type ReviewMilestoneType,
 } from './schemas'
@@ -31,35 +31,35 @@ export const cardReviewsCollection = createCollection(
 	})
 )
 
-export const reviewDaysCollection = createCollection(
+export const reviewSessionsCollection = createCollection(
 	queryCollectionOptions({
-		id: 'review_days',
-		queryKey: ['user', 'daily_review_state'],
+		id: 'review_sessions',
+		queryKey: ['user', 'user_review_session'],
 		queryFn: async () => {
 			if (!(await supabase.auth.getSession()).data?.session) return []
-			console.log(`Loading reviewDaysCollection`)
+			console.log(`Loading reviewSessionsCollection`)
 			const { data } = await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.select()
 				.throwOnError()
-			return data?.map((item) => DailyReviewStateSchema.parse(item)) ?? []
+			return data?.map((item) => ReviewSessionSchema.parse(item)) ?? []
 		},
-		getKey: (item: DailyReviewStateType) => `${item.day_session}--${item.lang}`,
+		getKey: (item: ReviewSessionType) => `${item.day_session}--${item.lang}`,
 		queryClient,
 		startSync: false,
-		schema: DailyReviewStateSchema,
+		schema: ReviewSessionSchema,
 	})
 )
 
 export const reviewMilestonesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'review_milestones',
-		queryKey: ['user', 'review_milestone'],
+		queryKey: ['user', 'user_review_milestone'],
 		queryFn: async () => {
 			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading reviewMilestonesCollection`)
 			const { data } = await supabase
-				.from('review_milestone')
+				.from('user_review_milestone')
 				.select()
 				.throwOnError()
 			return data?.map((item) => ReviewMilestoneSchema.parse(item)) ?? []
