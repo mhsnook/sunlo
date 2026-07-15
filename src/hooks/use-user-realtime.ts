@@ -12,6 +12,8 @@ import {
 } from '@/features/requests/collections'
 import { PhrasePlaylistUpvoteSchema } from '@/features/playlists/schemas'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
+import { CardReviewSchema } from '@/features/review/schemas'
+import { cardReviewsCollection } from '@/features/review/collections'
 
 /**
  * Bind an upvote table to its collection. Upvotes toggle: INSERT when the
@@ -93,6 +95,28 @@ export const useUserRealtime = () => {
 				),
 			(key) => phrasePlaylistUpvotesCollection.utils.writeDelete(key)
 		)
+
+		// Reviews (#724 made this the easy case): an append-only INSERT stream,
+		// plus the rare correction UPDATE when a scoring-pass answer is amended.
+		// `writeUpsert` folds both, and makes our own optimistic ack-echo a no-op.
+		// Reviews are never deleted, so there's no DELETE binding.
+		channel = channel
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'user_card_review' },
+				(payload) =>
+					cardReviewsCollection.utils.writeUpsert(
+						CardReviewSchema.parse(payload.new)
+					)
+			)
+			.on(
+				'postgres_changes',
+				{ event: 'UPDATE', schema: 'public', table: 'user_card_review' },
+				(payload) =>
+					cardReviewsCollection.utils.writeUpsert(
+						CardReviewSchema.parse(payload.new)
+					)
+			)
 
 		channel.subscribe()
 
