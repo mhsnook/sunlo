@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.29 - Review `stage` Column, Append-Only Again-Round
+
+_15 July, 2026_
+
+### Refactors
+
+- **`stage` replaces `day_first_review` on `user_card_review`** (#724). Each review records the session stage it happened in — 1 = first pass, 2 = go-back pass, 3 = again-round — mirroring `user_deck_review_state.stage`. Scheduling relevance becomes the predicate `stage IN (1, 2)` rather than a flag, which lets `useReviewMutation` drop its `prevDataToday` insert-vs-update dance and its FSRS-copy hack. The again-round is now **append-only**: each 'again' tap is its own tracking row (null FSRS) instead of overwriting one row per card per day, so retries are counted rather than destroyed. Scoring-pass corrections still update in place (`updated_at` is the tell). New `isScoringReview()` predicate carries the `stage IN (1, 2)` test across the client hooks, `review-utils`, and `bury-siblings`.
+
+### Migrations
+
+- `20260715120000_add_stage_to_user_card_review.sql` — adds `stage smallint` (backfilled `day_first_review ? 1 : 3`, set `NOT NULL`, `1..3` check); flips the two server-side FSRS readers `user_card_plus` (latest scoring review per card) and `phrase_stats` (latest scoring review per learner) to `stage IN (1, 2)`, since append-only stage-3 rows now carry null FSRS; drops `day_first_review`.
+
 ## v0.28 - LanguagePicker, Sharing Redesign, Translations & Tags Split
 
 _6 June, 2026_
