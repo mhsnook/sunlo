@@ -1,13 +1,15 @@
-# The entity corpus is the read model 🚧
+# The read model and the concierge 🚧
 
-**Status: proposed, not shipped.** v4 — v1–v3 in git history. One line:
+**Status: proposed, not shipped.** v5 — v1–v4 in git history. Two lines now:
 **writes go to the normalized tables; reads come from a compiled entity
-corpus; the wire is that one table.**
+corpus.** And: **each user has a Durable Object directing their sync — the
+client's whole contract is `apply(changes)` or `resnapshot(scope)`.**
 
 ## The loop
 
 1. **Collections on the client**, as now.
-2. **Optimistic writes with immediate move-on** for most mutations.
+2. **Optimistic writes with immediate move-on** for most mutations, written
+   directly to Supabase — RLS stays the write kernel.
 3. **Some writes hold for the ack** — including RPCs — and every write path
    makes best effort to return the affected rows with the ack
    (`.select()`, RPCs that `RETURN` rows: today's `docs/mutations.md`
@@ -20,22 +22,20 @@ corpus; the wire is that one table.**
    `entity_lang` — the _owning_ entity's lang, so a Hindi phrase's English
    translation travels in the Hindi slice.
 5. **Universal tables stay universal**: `languages`, tag names/descriptions
-   and other cross-language metadata are their own tiny collections with
-   their own low-volume realtime. They are not stuffed into the bundles.
-6. **The client watches one table.** Content subscriptions are slices of the
-   corpus — by `entity_lang` for the languages you study/browse, by
-   `entity_id` for the detail page you're on — delivered by tailing the WAL
-   (Supabase `postgres_changes` today). The corpus is all-public, so the
-   subscription logic is _slicing, not security_. Private data (chats,
-   notifications, decks, cards) stays on user-scoped subscriptions exactly
-   as it works today.
+   and other cross-language metadata are their own tiny collections. They
+   are not stuffed into the bundles.
+6. **Each user has a concierge: a per-user Durable Object.** The client
+   holds one socket to it and tells it a projection — the languages I
+   study, the language I'm browsing, the entity I'm looking at. The DO
+   watches the corpus on the user's behalf and, per change, decides what
+   comes down: a batch of updates, or the instruction to take a fresh
+   snapshot. To the client, sync "exists in the same cloud" as the data.
 
-The client never reads the normalized content tables. That's the move that
-makes everything else fall out: it's a read-model/write-model split, and
-`phrase_meta`, the `phrasesFull` live collection, and the search RPCs were
-already groping toward the read model — `phrasesFull` reimplements in the
-browser, at read time, the composition the corpus triggers do once at write
-time.
+The client never reads the normalized content tables and never touches
+realtime plumbing. `phrase_meta`, the `phrasesFull` live collection, and the
+search RPCs were already groping toward the read model — `phrasesFull`
+reimplements in the browser, on every render, the composition the corpus
+triggers do once at write time.
 
 ## The read model
 
@@ -45,7 +45,7 @@ create table entity_doc (
 	entity_id uuid not null,
 	entity_lang text not null,
 	doc jsonb not null, -- the bundle: entity + bounded children
-	rev bigint not null default nextval('entity_doc_rev'), -- resume cursor
+	rev bigint not null default nextval('entity_doc_rev'), -- the log cursor
 	updated_at timestamptz not null default now(),
 	primary key (entity_type, entity_id)
 );
@@ -56,116 +56,120 @@ create index on entity_doc (entity_lang, rev);
 - **Compiled by triggers** on the content tables — the `phrase_meta` /
   `phrasesFull` composition, moved to write time. A translation edit
   recompiles its phrase's doc in the same transaction.
-- **`rev` is the offset.** Reconnect catch-up is
-  `where entity_lang in (…) and rev > :last_seen` — exact and monotonic, no
-  timestamp ties. (Stolen from ElectricSQL's shape log; see below.)
-- **The embedding lives OFF this table.** A vector upsert is an UPDATE
-  event; on the watched table it would re-broadcast the doc plus ~8–16KB of
-  floats to every subscriber. `search_corpus` keeps the vectors, keyed to
+- **`rev` makes the table a log as well as a store.** "What changed in
+  Hindi since rev 41210?" is one indexed query. Every consumer below —
+  concierge deltas, snapshot workers, drift sweeps, the embed pipeline —
+  is a reader of this log.
+- **The embedding lives OFF this table.** Vector churn shouldn't advance
+  the sync log. `search_corpus` keeps the vectors, keyed to
   `(entity_type, entity_id)`, and becomes a _consumer_ of the read model —
-  as does the trigram index. One compilation, three consumers (sync, trigram,
-  embeddings); the embed pipeline goes cron-over-staleness (`rev >
-vectorized_rev`), which also fixes today's borrowed-JWT/Studio-edit gap.
+  as does the trigram index. One compilation, three consumers; the embed
+  pipeline goes cron-over-staleness (`rev > vectorized_rev`), which also
+  fixes today's borrowed-JWT/Studio-edit gap.
 - **Grain is mixed, deliberately.** Bounded children (translations, tag
   links) bundle into the doc. Unbounded children (comments) are their own
-  corpus rows sharing `entity_id`/`entity_lang` — same slice, same wire —
+  corpus rows sharing `entity_id`/`entity_lang` — same slice, same log —
   because a document that rewrites wholesale on every comment to a hot
-  request pays WAL volume proportional to doc size, not delta size, and
-  realtime payloads have caps. `source_type` on the row (as in
-  `search_corpus` today) is what distinguishes the grains.
+  request pays WAL volume proportional to doc size, not delta size.
+  `source_type` distinguishes the grains, as in `search_corpus` today.
 
-## The wire
+## The concierge
 
-```ts
-// snapshot: an ordinary select, sliced
-const snapshot = supabase
-	.from('entity_doc')
-	.select()
-	.in('entity_lang', activeLangs)
+One Durable Object per user. It holds the user's sockets (all their
+devices), their projection, and a cursor per socket. Its downstream contract
+is two verbs; its upstream contract is three:
 
-// live: tail the WAL on the same slice
-supabase.channel('sync:content').on(
-	'postgres_changes',
-	{
-		event: '*',
-		schema: 'public',
-		table: 'entity_doc',
-		filter: `entity_lang=in.(${activeLangs.join(',')})`,
-	},
-	(payload) => {
-		if (payload.eventType === 'DELETE')
-			docs.utils.writeDelete(keyOf(payload.old)) // PK survives on deletes
-		else docs.utils.writeUpsert(EntityDocSchema.parse(payload.new))
-	}
-)
+```
+concierge → client
+  { type: 'apply', changes: [...docs and rows...] }
+  { type: 'resnapshot', scope: 'lang:hin', asOfRev: 41210 }
 
-// pinned detail page (any language): same handler, entity_id filter
-// catch-up after a gap: select … where rev > lastSeenRev — then resubscribe
+client → concierge
+  { type: 'hello', jwt, projection: [...scopes], cursors: {...} }
+  { type: 'projection', add: [...], remove: [...] }
+  { type: 'jwt', token } // refresh; the DO reads AS the user
 ```
 
-Slices compose from session + route — the languages of my decks, the
-language I'm browsing, the entity I'm looking at — ref-counted with a grace
-period. Everything outside my slices reads as a cache-first snapshot
-(load-by-key), which is correct for a preview of a language I'm not in.
+- **This is v2's registry manager, relocated to where it stops being
+  miserable.** The signal→data resolution still happens — but the "+1 round
+  trip" is DO→Postgres (same region, pooled, batched), not
+  browser→Postgres over hotel wifi. The DO reads the log and fetches the
+  affected docs in one indexed query, then pushes _data_. The client never
+  sees a signal, a shortlist, or a debounce window.
+- **Delta vs snapshot is a server-side judgment.** Fourteen rows behind →
+  `apply`. Three days behind, or a projection change adding a whole
+  language → `resnapshot`, and the client pulls the slice from a snapshot
+  worker that can cache per `(lang, rev)` — common-language snapshots are
+  shared across users and CDN-able.
+- **Security adds no trusted surface.** The DO's private reads (chats,
+  notifications, decks, cards — the user scope rides the same socket) use
+  the user's own JWT, so RLS applies to the DO exactly as to a browser.
+  Public corpus reads use anon. The concierge does slicing, never
+  security.
+- **Poke plumbing is content-free and loss-tolerant.** An after-commit
+  trigger pokes a per-lang router DO ("hin changed, rev 41211"), which
+  pokes the user DOs whose projections include that lang; each concierge
+  reads `rev > cursor` and decides. A lost poke delays convergence until
+  the next poke or heartbeat — never corrupts it, because the cursor query
+  is the source of truth, not the poke.
+- **Multi-device falls out**: two tabs and a phone are three sockets on one
+  concierge, per-socket cursors, one shared projection.
+- **Writes stay direct to Supabase for now** (steps 2–3). The concierge
+  _could_ mediate writes later — offline queues, batching, conflict
+  handling — that seam is the point of having it, but don't spend it yet.
 
 ## The client
 
-Collections hold documents. `usePhrase(pid)` reads one doc — no live-query
-joins to assemble a phrase from three collections; `phrasesFull` retires.
-The tanstack-db work in PR #6 is the query-side of the same idea:
-`dedupeQueriesOn(['entity_lang'])` proves narrower live queries are covered
-by the slice; predicate pushdown makes the snapshot fetch `WHERE entity_lang
-in (…)` instead of the whole table; load-by-key serves strays. Writes are
-unchanged from steps 2–3 — the collection's write path targets the
-normalized tables/RPCs and the ack's returned rows settle `isPersisted`; the
-corpus doc arriving on the wire moments later is a harmless upsert-by-key.
+Collections hold documents. `usePhrase(pid)` reads one doc — the
+`phrasesFull` client-side join retires. The handler for the entire sync
+protocol is ~30 lines: `apply` batches through
+`writeUpsert`/`writeDelete`; `resnapshot` re-runs the scope's fetch and
+swaps. supabase-realtime-js leaves the client bundle entirely. The
+tanstack-db work in PR #6 remains the query-side of the same idea:
+`dedupeQueriesOn(['entity_lang'])` serves narrower live queries from the
+slice, load-by-key serves strays as cache-first snapshots, and predicate
+pushdown keeps every fetch `WHERE`-scoped instead of full-table.
 
-## So… did we just reinvent ElectricSQL shapes?
+## What this is, said out loud
 
-Yes — split down the middle, and the split is instructive:
-
-- **We built the half Electric doesn't have.** An Electric shape is a
-  single-table `WHERE` clause; there are no joins. Syncing
-  phrase+translations+tags through Electric means three shapes and
-  client-side reassembly. The corpus compilation _is_ the include-tree,
-  materialized in the database — it converts a multi-table sync problem into
-  the single-table problem every transport handles well.
-- **We're reinventing the half Electric does better.** Its shape log is
-  gapless, offset-addressed, resumable, CDN-friendly. Our tail is
-  at-most-once `postgres_changes` plus a `rev` catch-up query — same idea,
-  hand-rolled. Acceptable at our scale; not better.
-- **Same security posture.** Electric punts auth to a proxy in front of the
-  shape API; we punt it by making the read model all-public and keeping
-  private data on user-scoped channels. "Slicing, not security" is their
-  stance too.
-
-Which yields the convergence worth writing down: **because the read model is
-one public table, Electric becomes trivially adoptable later as pure
-transport** — `entity_doc WHERE entity_lang = 'hin'` is exactly the shape
-Electric is good at. Build the corpus, and the transport (postgres_changes
-now; Electric or anything else when the per-subscriber-filter ceiling bites)
-is a swappable detail no app code sees.
+v4 asked "did we just reinvent ElectricSQL shapes?" — the corpus is the
+include-tree shapes lack, and the delivery half was hand-rolled
+`postgres_changes`. v5 answers the delivery half properly, and the honest
+name for the result is **PartyDB with Postgres as the system of record**:
+the per-user DO is the cookbook's server (recipes 5–6), per-lang router DOs
+are the parties/rooms, the corpus is the shape store, `rev` is the `?since`
+backlog cursor, and "slicing, not security" is the same posture — with RLS,
+not a `Viewer`, as the read-rule kernel underneath. Sunlo becomes the
+proving ground for the framework, with the one part PartyDB doesn't
+prescribe — a compiled multi-table read model — contributed by the corpus.
+Electric remains a possible snapshot/log transport underneath the same
+contract; nothing above the concierge would notice.
 
 ## Flag for review
 
-1. **Write-time compilation cost.** The `jsonb_agg` composition runs per
-   write instead of per read — the right trade for a read-heavy app, but
-   it's the thing to benchmark if request comment-tails grow long. Mixed
-   grain (comments as own rows) is the pressure valve.
-2. **Payload caps.** Supabase realtime drops oversized events. Bundles must
-   stay bounded (hence mixed grain); a doc approaching the cap is a design
-   smell, not a config problem.
-3. **`postgres_changes` per-subscriber filtering** still costs the realtime
-   server per event per subscriber — but with no RLS on the hot path (public
-   table) the ceiling is far higher than filtered private tables, and the
-   Electric escape hatch above needs zero app-code change.
-4. **Doc schema versioning.** The bundle shape is now an API. A Zod
-   `EntityDocSchema` per entity_type, and a `doc_version` field so old
-   clients can detect docs they don't understand and fall back to refetch.
-5. **Deletes carry only the PK** (`entity_type`, `entity_id`) — sufficient
-   to remove the doc; soft-deletes (requests, playlists) are UPDATEs with
-   `deleted: true` compiled into the doc and filtered in live queries.
-6. **Backfill and drift.** One idempotent `recompile_entity(type, id)`
-   function used by the triggers, the initial backfill, and a periodic
-   drift-check sweep — the read model must be cheap to rebuild from scratch
-   or it will be feared.
+1. **The real cost is the second runtime.** Workers + Durable Objects means
+   deploys, secrets, monitoring, and a JWT-refresh lifecycle on the socket
+   — sunlo is currently one Supabase and a static SPA. Everything else in
+   v5 is small; this is the line item to be sure about. The incremental
+   path: prove the corpus + `rev` log first (v4's client-direct wire works
+   against it at prototype scale), then stand up the concierge without
+   changing the data model.
+2. **Write-time compilation cost.** `jsonb_agg` per write instead of per
+   read — right trade for a read-heavy app; benchmark if request
+   comment-tails grow long. Mixed grain is the pressure valve.
+3. **Doc schema versioning.** The bundle shape is now an API between the
+   compiler and every consumer. Zod `EntityDocSchema` per entity_type plus
+   a `doc_version` field so old clients detect docs they don't understand
+   and resnapshot.
+4. **Poke fan-out topology.** Trigger → router DO → user DOs is the
+   sketch; the router needs a subscription map (which users care about
+   which langs) that must itself survive DO eviction. Keep it rebuildable
+   from the concierges' `hello`s, not authoritative.
+5. **Backfill and drift.** One idempotent `recompile_entity(type, id)`
+   used by the triggers, the initial backfill, and a periodic drift sweep —
+   the read model must stay cheap to rebuild from scratch or it will be
+   feared.
+6. **Cursor semantics at the edges.** Per-socket cursors must be advanced
+   only after the client acks an `apply` batch (or resnapshot completes),
+   or a dropped batch silently gaps the device until the next resnapshot.
+   Small protocol detail, easy to get wrong, worth a scene test of its own.
