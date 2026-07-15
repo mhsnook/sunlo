@@ -80,5 +80,5 @@ these examples, the user doesn't get direct feedback in the UI as to whether the
 has been taken, so we need to directly inspect either the mutation's return values or the contents
 of the database.
 
-- [ ] Reviews can be edited (without creating new reviews)
-- [ ] Second reviews get marked with new records but with the prev values and day_first_review=false
+- [ ] Scoring-pass reviews can be corrected in place (without creating new reviews)
+- [ ] Again-round reviews append a new record each tap, with `stage = 3` and NULL FSRS columns

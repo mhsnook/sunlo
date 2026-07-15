@@ -4346,7 +4346,7 @@ insert into
 		"day_session",
 		"lang",
 		"phrase_id",
-		"day_first_review",
+		"stage",
 		"direction"
 	)
 values
@@ -4362,7 +4362,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'1f6bac22-b32a-4b77-9857-d2de02b538de',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4377,7 +4377,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'12536684-0b35-4aff-80cd-f4ce56c866b6',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4392,7 +4392,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4407,7 +4407,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'24a18665-a343-4960-99fc-7e5ed54accb0',
-		true,
+		1,
 		'reverse'
 	),
 	(
@@ -4422,7 +4422,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'24a18665-a343-4960-99fc-7e5ed54accb0',
-		false,
+		3,
 		'reverse'
 	),
 	(
@@ -4437,7 +4437,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'295fbba3-892c-43f9-84ba-85cf15fd28a5',
-		true,
+		1,
 		'reverse'
 	),
 	(
@@ -4452,7 +4452,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4467,7 +4467,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'fa26ba78-a7a3-49f8-8516-034424477dec',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4482,7 +4482,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'93d5d050-e9af-4652-9c76-9dc2a232640a',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4497,7 +4497,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4512,7 +4512,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		false,
+		3,
 		'forward'
 	),
 	(
@@ -4527,7 +4527,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		false,
+		3,
 		'forward'
 	),
 	(
@@ -4542,7 +4542,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		false,
+		3,
 		'forward'
 	),
 	(
@@ -4557,7 +4557,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		true,
+		1,
 		'reverse'
 	),
 	(
@@ -4572,7 +4572,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		false,
+		3,
 		'reverse'
 	),
 	(
@@ -4587,7 +4587,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		false,
+		3,
 		'reverse'
 	),
 	(
@@ -4602,7 +4602,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4617,7 +4617,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4632,7 +4632,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
-		false,
+		3,
 		'forward'
 	),
 	(
@@ -4647,7 +4647,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		false,
+		3,
 		'forward'
 	),
 	(
@@ -4662,7 +4662,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		false,
+		3,
 		'forward'
 	),
 	(
@@ -4677,7 +4677,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4692,7 +4692,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4707,7 +4707,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'93d5d050-e9af-4652-9c76-9dc2a232640a',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4722,7 +4722,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'fa26ba78-a7a3-49f8-8516-034424477dec',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4737,7 +4737,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4752,7 +4752,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		true,
+		1,
 		'reverse'
 	),
 	(
@@ -4767,7 +4767,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4782,7 +4782,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4797,7 +4797,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4812,7 +4812,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'a00febfd-e6d6-40bc-a3b8-e31563410db8',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4827,7 +4827,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4842,7 +4842,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4857,7 +4857,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'49066ea2-e608-42ab-8817-1f20b0eada03',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4872,7 +4872,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4887,7 +4887,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'tam',
 		'44bcd224-b4b3-46ce-b260-2136712b0907',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4902,7 +4902,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'kan',
 		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4917,7 +4917,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'kan',
 		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4932,7 +4932,7 @@ values
 		(now() - interval '4 days' - interval '4 hours')::date,
 		'kan',
 		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4947,7 +4947,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'hin',
 		'235ce61c-be21-4697-815d-d5aa1a4ff121',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4962,7 +4962,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'hin',
 		'f1f5234e-0426-44f5-a007-b67329a70a81',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4977,7 +4977,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'hin',
 		'170f5fd4-58f8-4b05-aba4-23522f35800f',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -4992,7 +4992,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'hin',
 		'0e33be07-6d4a-4c99-8282-921038188cbf',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5007,7 +5007,7 @@ values
 		(now() - interval '3 days' - interval '4 hours')::date,
 		'hin',
 		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5022,7 +5022,7 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5037,7 +5037,7 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'fae20b24-42dc-4b9e-aebc-22afcdfc4689',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5052,7 +5052,7 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'48edc28c-1530-4549-b48c-f678033a6892',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5067,7 +5067,7 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'cc3847f3-b151-401e-80c9-4aef221c54b5',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5082,7 +5082,7 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5097,7 +5097,7 @@ values
 		(now() - interval '2 days' - interval '4 hours')::date,
 		'kan',
 		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5112,7 +5112,7 @@ values
 		(now() - interval '2 days' - interval '4 hours')::date,
 		'kan',
 		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5127,7 +5127,7 @@ values
 		(now() - interval '2 days' - interval '4 hours')::date,
 		'kan',
 		'aa110001-1111-4aaa-bbbb-cccccccccccc',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5142,7 +5142,7 @@ values
 		(now() - interval '2 days' - interval '4 hours')::date,
 		'kan',
 		'aa110002-2222-4aaa-bbbb-cccccccccccc',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5157,7 +5157,7 @@ values
 		(now() - interval '2 days' - interval '4 hours')::date,
 		'kan',
 		'aa110004-4444-4aaa-bbbb-cccccccccccc',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5172,7 +5172,7 @@ values
 		(now() - interval '2 days' - interval '4 hours')::date,
 		'kan',
 		'aa110008-8888-4aaa-bbbb-cccccccccccc',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5187,7 +5187,7 @@ values
 		(now() - interval '2 days' - interval '4 hours')::date,
 		'kan',
 		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5202,7 +5202,7 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'0e33be07-6d4a-4c99-8282-921038188cbf',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5217,7 +5217,7 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'48fe0624-f586-4812-a1a5-33c634995671',
-		true,
+		1,
 		'forward'
 	),
 	(
@@ -5232,6 +5232,6 @@ values
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		'hin',
 		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
-		true,
+		1,
 		'forward'
 	);

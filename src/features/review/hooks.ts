@@ -12,7 +12,7 @@ import {
 import { PostgrestError } from '@supabase/supabase-js'
 import { cardReviewsCollection, reviewDaysCollection } from './collections'
 import { cardsCollection } from '@/features/deck/collections'
-import { and, eq, lt, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,
 	type CardReviewType,
@@ -27,6 +27,7 @@ import {
 	findChainPredecessor,
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
+	isScoringReview,
 	type ReviewsMap,
 	type ReviewStages,
 } from './review-utils'
@@ -40,7 +41,7 @@ interface PostReviewInput {
 	direction: CardDirectionType
 	score: Score
 	day_session: string
-	day_first_review: boolean
+	stage: number
 	previousReview?: CardReviewType
 }
 
@@ -51,15 +52,16 @@ const postReview = async (submitData: PostReviewInput) => {
 		direction,
 		score,
 		day_session,
-		day_first_review,
+		stage,
 		previousReview,
 	} = submitData
 
-	// Calculate FSRS values client-side
-	const fsrs = calculateFSRS({
-		score,
-		previousReview,
-	})
+	// Calculate FSRS values client-side. Stage-3 (again-round) rows are
+	// tracking-only — they carry null FSRS columns and never feed scheduling —
+	// so only the scoring stages compute real values.
+	const fsrs = isScoringReview({ stage })
+		? calculateFSRS({ score, previousReview })
+		: { difficulty: null, stability: null, retrievability: null }
 
 	// Direct insert - CHECK constraints on table validate the values
 	const { data } = await supabase
@@ -70,7 +72,7 @@ const postReview = async (submitData: PostReviewInput) => {
 			direction,
 			score,
 			day_session,
-			day_first_review,
+			stage,
 			difficulty: fsrs.difficulty,
 			stability: fsrs.stability,
 			review_time_retrievability: fsrs.retrievability,
@@ -119,8 +121,8 @@ function mapToStats(
 	manifest: Array<ManifestEntry>,
 	allReviews: Array<CardReviewType> = []
 ) {
-	// First-try reviews: day_first_review=true reviews only
-	const firstTryReviews = allReviews.filter((r) => r.day_first_review === true)
+	// First-try reviews: scoring-pass reviews only (stages 1–2)
+	const firstTryReviews = allReviews.filter(isScoringReview)
 	// First-try success: recalled on first attempt (score > 1)
 	const firstTrySuccess = firstTryReviews.filter((r) => r.score > 1).length
 	const firstTryTotal = firstTryReviews.length
@@ -288,10 +290,10 @@ export function useOneReviewToday(
 }
 
 /**
- * Get the most recent phase-1 review for a phrase+direction (any day, not just today).
+ * Get the most recent scoring review for a phrase+direction (any day, not just today).
  * Used for FSRS calculations which need the previous difficulty/stability.
- * Filters to day_first_review=true so phase-3 re-reviews (which have throwaway
- * initial FSRS values) never feed into the scheduling chain.
+ * Filters to the scoring stages (1–2) so again-round re-reviews (which carry
+ * null FSRS values) never feed into the scheduling chain.
  */
 export function useLatestReviewForPhrase(
 	pid: uuid,
@@ -305,7 +307,7 @@ export function useLatestReviewForPhrase(
 					and(
 						eq(review.phrase_id, pid),
 						eq(review.direction, direction),
-						eq(review.day_first_review, true)
+						inArray(review.stage, [1, 2])
 					)
 				)
 				.orderBy(({ review }) => review.created_at, 'desc')
@@ -316,7 +318,7 @@ export function useLatestReviewForPhrase(
 }
 
 /**
- * The chain predecessor: the most recent phase-1 review from a session
+ * The chain predecessor: the most recent scoring review from a session
  * strictly earlier than `day_session`. Use this — not `useLatestReviewForPhrase`
  * — when you need "where was the card before today" for display (e.g. the
  * interval badges on each answer button). If today's row has already been
@@ -337,7 +339,7 @@ export function useChainPredecessorForPhrase(
 					and(
 						eq(review.phrase_id, pid),
 						eq(review.direction, direction),
-						eq(review.day_first_review, true),
+						inArray(review.stage, [1, 2]),
 						lt(review.day_session, day_session)
 					)
 				)
@@ -381,26 +383,29 @@ export function useReviewMutation(
 				stage,
 			})
 
-			// Stage 1-2: First pass through cards + skipped (day_first_review=true)
-			// - If same score as existing review, noop
-			// - If different score and review exists, update it
-			// - Otherwise insert new review
+			// Stages 1-2 (scoring pass): the first pass through the manifest plus
+			// the go-back pass for skipped cards. These are the reviews FSRS reads.
+			// - same score as the existing row → noop
+			// - different score on an existing row → correction, update in place
+			// - otherwise → insert a new scoring review at the current stage
 			if (stage < 3) {
 				if (prevDataToday?.score === score) {
 					return { action: 'noop', row: prevDataToday }
 				}
 				if (prevDataToday?.id) {
-					console.log(`Phase 1-2: Updating existing review`, {
+					console.log(`Scoring pass: correcting existing review`, {
 						prevDataToday,
 						score,
 					})
+					// Correction: the user went back and re-scored a card they already
+					// answered this session. Amend the existing row rather than append.
 					// `latestReview` (from useLatestReviewForPhrase) is the newest
-					// phase-1 row for this (pid, direction) — which IS prevDataToday
-					// whenever we're in this branch. Using it as previousReview
-					// would feed the row we're overwriting back into itself; using
-					// `undefined` wipes the prior chain and rewrites with brand-new-
-					// card values. Instead, look up the chain's predecessor — the
-					// newest phase-1 review from any strictly earlier session.
+					// scoring row for this (pid, direction) — which IS prevDataToday
+					// whenever we're in this branch. Using it as previousReview would
+					// feed the row we're overwriting back into itself; `undefined`
+					// wipes the prior chain and rewrites with brand-new-card values.
+					// Instead, look up the chain's predecessor — the newest scoring
+					// review from any strictly earlier session.
 					const chainPredecessor = findChainPredecessor(
 						cardReviewsCollection.toArray,
 						pid,
@@ -416,11 +421,12 @@ export function useReviewMutation(
 						}),
 					}
 				}
-				// First review for this card today
-				console.log(`Phase 1-2: Creating first review`, {
+				// First scoring review for this card today.
+				console.log(`Scoring pass: creating review`, {
 					pid,
 					direction,
 					score,
+					stage,
 				})
 				return {
 					action: 'insert',
@@ -430,66 +436,29 @@ export function useReviewMutation(
 						lang,
 						direction,
 						day_session,
-						day_first_review: true,
+						stage,
 						previousReview: latestReview,
 					}),
 				}
 			}
 
-			// Phase 3+: Re-review of "Again" cards (day_first_review=false).
-			// Phase-3 rows are tracking-only (never read for scheduling), so we
-			// copy the same-session phase-1 review's FSRS values directly onto
-			// them — that's the snapshot that actually reflects the card's
-			// state. `latestReview` is filtered to day_first_review=true and
-			// is by definition the same-session phase-1 here (you can't reach
-			// phase-3 without having done phase-1 today).
-			if (!latestReview) {
-				throw new Error(
-					'Phase-3 review requires a same-session phase-1 review to copy from'
-				)
-			}
-			const phase3Fsrs = {
-				difficulty: latestReview.difficulty,
-				stability: latestReview.stability,
-				review_time_retrievability: latestReview.review_time_retrievability,
-			}
-
-			if (prevDataToday?.day_first_review === false) {
-				console.log(`Phase 3: Updating existing phase-3 review`, {
-					prevDataToday,
-					score,
-				})
-				const { data } = await supabase
-					.from('user_card_review')
-					.update({
-						score,
-						...phase3Fsrs,
-						updated_at: new Date().toISOString(),
-					})
-					.eq('id', prevDataToday.id)
-					.select()
-					.single()
-					.throwOnError()
-				return { action: 'update', row: data }
-			}
-
-			// First phase-3 review for this card
-			console.log(`Phase 3: Creating phase-3 review`, { pid, direction, score })
-			const { data } = await supabase
-				.from('user_card_review')
-				.insert({
+			// Stage 3 (again-round): re-reviews of "Again" cards. Append-only —
+			// each tap becomes its own tracking row with null FSRS columns, so how
+			// many times a card was retried is counted rather than overwritten.
+			// There is no back button in this stage, so there are no corrections
+			// to amend; every tap inserts.
+			console.log(`Again-round: appending review`, { pid, direction, score })
+			return {
+				action: 'insert',
+				row: await postReview({
+					score: score as Score,
 					phrase_id: pid,
 					lang,
 					direction,
-					score,
 					day_session,
-					day_first_review: false,
-					...phase3Fsrs,
-				})
-				.select()
-				.single()
-				.throwOnError()
-			return { action: 'insert', row: data }
+					stage: 3,
+				}),
+			}
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
@@ -509,10 +478,10 @@ export function useReviewMutation(
 					)
 				}
 
-				// Only sync card scheduling state from phase-1 reviews.
-				// Phase-3 reviews are for tracking only — their FSRS values are
-				// throwaway initial values that would corrupt the scheduling chain.
-				if (data.row.day_first_review) {
+				// Only sync card scheduling state from scoring reviews (stages 1–2).
+				// Again-round rows are for tracking only — they carry null FSRS
+				// values that would corrupt the scheduling chain.
+				if (isScoringReview(data.row)) {
 					const existingCard = cardsCollection.toArray.find(
 						(c) =>
 							c.phrase_id === data.row.phrase_id &&

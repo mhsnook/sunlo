@@ -47,7 +47,7 @@ function mockReview(overrides: Partial<CardReviewType> = {}): CardReviewType {
 		phrase_id: '33333333-3333-4333-8333-333333333333',
 		direction: 'forward',
 		score: 3,
-		day_first_review: true,
+		stage: 1,
 		difficulty: null,
 		stability: null,
 		review_time_retrievability: null,

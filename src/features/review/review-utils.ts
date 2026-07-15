@@ -22,6 +22,18 @@ export type ReviewsMap = {
 	[key: ManifestEntry]: CardReviewType
 }
 
+/**
+ * A scoring review — one FSRS reads for scheduling. These are recorded in the
+ * session's first pass (stage 1) or the go-back pass (stage 2). Again-round
+ * re-reviews (stage 3) are tracking-only and never feed the scheduling chain.
+ * Replaces the old `day_first_review === true` predicate.
+ */
+export function isScoringReview(
+	review: Pick<CardReviewType, 'stage'>
+): boolean {
+	return review.stage === 1 || review.stage === 2
+}
+
 /** Build a ReviewsMap keyed by manifest entry (phrase_id:direction) */
 export function buildReviewsMap(reviews: Array<CardReviewType>): ReviewsMap {
 	const map: ReviewsMap = {}
@@ -43,7 +55,7 @@ export function firstTryReviewMap(
 ): Map<ManifestEntry, CardReviewType> {
 	return new Map(
 		reviews
-			.filter((r) => r.day_first_review === true)
+			.filter(isScoringReview)
 			.map((r) => [toManifestEntry(r.phrase_id, r.direction), r])
 	)
 }
@@ -92,7 +104,7 @@ export function findChainPredecessor(
 	for (const r of reviews) {
 		if (r.phrase_id !== pid) continue
 		if (r.direction !== direction) continue
-		if (!r.day_first_review) continue
+		if (!isScoringReview(r)) continue
 		if (r.day_session >= beforeSession) continue
 		// Pick the newest by session; tiebreak by created_at only if two
 		// phase-1 rows share a session (shouldn't happen post-reclassify).
@@ -117,7 +129,7 @@ export function getIndexOfNextAgainCard(
 		const indexChecking = (i + currentCardIndex + 1) % manifest.length
 		return reviewsMap[manifest[indexChecking]]?.score === 1
 	})
-	return index !== -1 ?
-			(index + currentCardIndex + 1) % manifest.length
-		:	manifest.length
+	return index !== -1
+		? (index + currentCardIndex + 1) % manifest.length
+		: manifest.length
 }

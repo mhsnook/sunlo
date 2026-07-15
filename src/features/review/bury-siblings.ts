@@ -35,6 +35,7 @@ import type { CardReviewType } from './schemas'
 import type { CardDirectionType } from '@/features/deck/schemas'
 import type { uuid } from '@/types/main'
 import { retrievability } from './fsrs'
+import { isScoringReview } from './review-utils'
 import { dateDiff } from '@/lib/utils'
 
 export interface BurySiblingCandidate {
@@ -86,7 +87,7 @@ function reverseFailedTwiceInARow(
 			(r) =>
 				r.phrase_id === phrase_id &&
 				r.direction === 'reverse' &&
-				r.day_first_review === true
+				isScoringReview(r)
 		)
 		.toSorted((a, b) =>
 			a.day_session === b.day_session

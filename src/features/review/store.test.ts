@@ -40,7 +40,7 @@ function stubReview(score: number): CardReviewType {
 		phrase_id: P1,
 		direction: 'forward',
 		score,
-		day_first_review: true,
+		stage: 1,
 		difficulty: 5,
 		review_time_retrievability: null,
 		stability: 3,

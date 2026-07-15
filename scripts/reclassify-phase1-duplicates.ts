@@ -1,4 +1,11 @@
 /**
+ * ⚠️ OBSOLETE as of #724 (the `stage` migration). This tool operates on the
+ * `day_first_review` column, which no longer exists — `user_card_review` now
+ * records a `stage` (1–2 = scoring, 3 = again-round) and reviews are
+ * append-only. The misclassification it repaired is a `day_first_review`-era
+ * concern. Do not run it against the post-#724 schema without first porting it
+ * to `stage`; the queries below will error on the dropped column.
+ *
  * Reclassify misclassified phase-1 duplicates as phase-3 re-reviews.
  *
  * Why this script exists

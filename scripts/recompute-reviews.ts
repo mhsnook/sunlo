@@ -1,4 +1,12 @@
 /**
+ * ⚠️ PREDATES #724 (the `stage` migration) and needs porting before use. It
+ * reads `day_first_review`, which has been dropped — reviews now carry a
+ * `stage` (1–2 = scoring, 3 = again-round). It also assumes the old copy-hack
+ * where again-round rows mirror the same-session scoring row's FSRS values;
+ * under #724 those rows are tracking-only and carry NULL FSRS. Port the
+ * predicates to `isScoringReview`/`stage` and null-out again-round rows before
+ * running against the post-#724 schema.
+ *
  * Recompute FSRS state for every review in the database.
  *
  * Why this script exists

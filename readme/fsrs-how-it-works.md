@@ -65,11 +65,13 @@ The client also maintains local copies of all the above in TanStack DB collectio
 
 A review session moves through stages:
 
-1. **First pass** — work through every card in the manifest. Score each one. `day_first_review = true` for these.
-2. **Unreviewed cards** — go back for any you skipped.
+1. **First pass** — work through every card in the manifest. Score each one. These rows record `stage = 1`.
+2. **Unreviewed cards** — go back for any you skipped. These are still scoring reviews (`stage = 2`).
 3. **Re-review prompt** — if you scored any card "Again" (score 1), you're asked if you want to re-review them.
-4. **Re-reviews** — re-do the "Again" cards. These get `day_first_review = false` and don't update FSRS state (the first-pass score is what counts for scheduling).
+4. **Re-reviews** — re-do the "Again" cards. These record `stage = 3`, carry NULL FSRS columns, and don't update FSRS state (the first-pass score is what counts for scheduling). Append-only: each tap is its own row.
 5. **Done.**
+
+FSRS reads only the scoring stages (`stage IN (1, 2)`); stage 3 is tracking-only. (This `stage` column replaced the old `day_first_review` boolean in #724.)
 
 Stage is tracked both in the Zustand store (for immediate UI response) and persisted to `user_deck_review_state.stage` on the server (so you can resume if you close the tab).
 

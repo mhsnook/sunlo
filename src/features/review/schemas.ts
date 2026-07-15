@@ -12,7 +12,11 @@ export const CardReviewSchema = z.object({
 	phrase_id: z.string().uuid(),
 	direction: CardDirectionSchema.default('forward'),
 	score: z.number(),
-	day_first_review: z.boolean(),
+	// Which session stage recorded this review, mirroring
+	// `user_deck_review_state.stage`: 1 = first pass, 2 = go-back pass,
+	// 3 = again-round re-review. FSRS reads only the scoring stages (1–2);
+	// stage-3 rows are tracking-only and carry null FSRS columns.
+	stage: z.number().int().min(1).max(3),
 	difficulty: z.number().nullable(),
 	review_time_retrievability: z.number().nullable(),
 	stability: z.number().nullable(),
