@@ -1,6 +1,7 @@
 # Convex Migration Plan
 
-Status: **draft — awaiting decisions on the four open questions in §2.**
+Status: **decided — the four questions in §2 are resolved; this is the
+working plan.**
 
 This document plans a full migration of Sunlo from Supabase
 (Postgres + PostgREST + Auth + Realtime + Storage + Edge Functions) to
@@ -20,28 +21,29 @@ A survey of `supabase/` and `src/` as of this branch:
 | Migrations        | 120 SQL files                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Tables            | 29 — `phrase`, `phrase_translation`, `phrase_tag`, `tag`, `phrase_relation`, `user_profile`, `user_deck`, `user_card`, `user_card_review`, `user_deck_review_state`, `phrase_request`, `request_comment`, `comment_phrase_link`, 3× upvote tables, `phrase_playlist`, `playlist_phrase_link`, `friend_request_action`, `chat_message`, `notification`, `language`, `search_corpus`, `user_client_event`, `admin_user`, `db_meta`, legacy `message`/`message_tag`/`message_tag_link` |
 | Views             | 9 — `feed_activities`, `friend_summary`, `meta_language`, `phrase_meta`, `phrase_stats`, `public_profile`, `search_text_index`, `user_card_plus`, `user_deck_plus`                                                                                                                                                                                                                                                                                                                  |
-| SQL functions     | ~45 — FSRS scheduler (plv8, 16 migrations), review insert/update RPCs, `create_comment_with_phrases`, `create_playlist_with_links`, `bulk_add_phrases`, `add_phrase_translation_card`, `fulfill_phrase_request`, upvote setters, friend-request validation, notification triggers, timestamp/count maintenance                                                                                                                                                                      |
+| SQL functions     | ~45 in the migration history — `create_comment_with_phrases`, `create_playlist_with_links`, `bulk_add_phrases`, `add_phrase_translation_card`, `fulfill_phrase_request`, upvote setters, friend-request validation, notification triggers, timestamp/count maintenance. The plv8 FSRS scheduler + review RPCs (16 migrations) are **legacy — no longer called**; the extension is disabled and scheduling moved fully client-side.                                                  |
 | Triggers          | 20 — notifications (`trg_notify_on_*`), upvote count denormalization, `updated_at` maintenance, auto-upvote-own-request, friend-request validation, search-corpus refresh via pg_net                                                                                                                                                                                                                                                                                                |
 | Edge functions    | 2 Deno — `search` (query embedding via Cloudflare Workers AI BGE-M3 + `search_by_query`/`search_by_anchors`), `embed-corpus-row` (trigger-driven embedding upsert into `search_corpus`)                                                                                                                                                                                                                                                                                             |
-| Extensions        | plv8 (FSRS), pgvector (semantic search), pg_trgm (fuzzy search), pg_net (async trigger → edge function), pg_cron (recounts)                                                                                                                                                                                                                                                                                                                                                         |
+| Extensions        | pgvector (semantic search), pg_trgm (fuzzy search), pg_net (async trigger → edge function), pg_cron (recounts). plv8 appears in the migration history but is disabled — nothing to migrate.                                                                                                                                                                                                                                                                                         |
 | Auth              | Supabase Auth: email/password signup, password login, reset-password email flow. No OAuth providers in use.                                                                                                                                                                                                                                                                                                                                                                         |
 | Storage           | One bucket (`avatars`) with RLS policies; client uses `getPublicUrl(path, { transform })` — Supabase image transforms                                                                                                                                                                                                                                                                                                                                                               |
 | Realtime          | 3 channels: `user-notifications`, `user-chats`, `friend-request-action-realtime`                                                                                                                                                                                                                                                                                                                                                                                                    |
 | RLS               | Every `uid` table; the app's stated privacy model ("worst case is a broken UI, never leaked data")                                                                                                                                                                                                                                                                                                                                                                                  |
 | Client data layer | 9 `collections.ts` files (TanStack DB `queryCollectionOptions` over PostgREST), live queries everywhere, optimistic mutations in collection handlers; feed uses `useInfiniteQuery` directly; chat search is a zustand prototype                                                                                                                                                                                                                                                     |
 
-One important de-risking fact: **the client already has a TypeScript port of
-the plv8 FSRS scheduler** (`src/features/review/fsrs.ts`) with parity tests
-(`fsrs.parity.test.ts`). The scariest-looking server logic is already
-written in the language Convex runs.
+One important de-risking fact: **FSRS scheduling already lives entirely on
+the client** (`src/features/review/fsrs.ts`, with parity tests against the
+old plv8 behavior). The plv8 extension is disabled; the client evaluates
+each day's workload on that day from the full loaded review history, so
+there is no server-side scheduler to migrate at all — review writes are
+plain inserts/updates to `user_card_review` / `user_deck_review_state`.
 
 ---
 
-## 2. Open decisions (keep vs. lose)
+## 2. Decisions (keep vs. lose)
 
-These four decisions change the shape of the plan. Each has a
-recommendation; the rest of this document assumes the recommended option
-and calls out where a different answer changes the work.
+These four decisions changed the shape of the plan. All four are now
+decided; the option tables are kept for the record of what was considered.
 
 ### Q1 — Frontend data layer: keep TanStack DB or go native Convex?
 
@@ -62,7 +64,7 @@ TanStack DB has shipped, prefer it over the `queryCollectionOptions +
 convexQuery` bridge; otherwise the bridge works today and a thin custom sync
 adapter over `client.onUpdate` is a fallback.
 
-**Decision: _open_**
+**Decision: A — keep TanStack DB, Convex-backed collections.**
 
 ### Q2 — Auth: what replaces Supabase Auth, and do existing accounts survive?
 
@@ -77,7 +79,7 @@ Route context reads `auth.isAuth / userId / userEmail / userRole`;
 | C. Clerk, keep users                         | Managed provider, polished UI, hash import supported. Adds a paid third-party dependency and an external user store.                                                                                                                                 |
 | D. Any of the above, fresh accounts          | Skip credential export; users get a one-time "set a new password" email or re-register. Only acceptable if the active user base is small.                                                                                                            |
 
-**Decision: _open_** (provider × whether credentials must survive)
+**Decision: A — Convex Auth, keeping existing users (bcrypt-hash import).**
 
 ### Q3 — Production data: how much history survives the cutover?
 
@@ -88,7 +90,7 @@ Route context reads `auth.isAuth / userId / userEmail / userRole`;
 | C. Core learning data only                        | Profiles, decks, cards, reviews, phrases. Drop chat history, notifications, feed backfill, client events. Smaller ETL, users lose social history.                                                                                                                                  |
 | D. Fresh start                                    | No production ETL; port seeds for dev. Plan becomes purely a code migration.                                                                                                                                                                                                       |
 
-**Decision: _open_**
+**Decision: A — everything, one-shot cutover.**
 
 ### Q4 — Search: what survives of the Postgres search stack?
 
@@ -104,7 +106,10 @@ two edge functions), client-side local search, and a hybrid merger
 | C. Full-text only              | Drop embeddings too. No Cloudflare dependency, cheapest, biggest capability loss (no "similar phrases" / anchor search).                                                                                                                                                                                                                                                                                                                                                       |
 | D. External search service     | Typesense/Meilisearch synced from Convex. Best fuzzy + semantic quality, one more service to run.                                                                                                                                                                                                                                                                                                                                                                              |
 
-**Decision: _open_**
+**Decision: B — drop trigram; Convex vector search becomes the main search
+path.** The trigram RPC and `use-trigram-search` are removed rather than
+ported; client-side local search stays as-is for already-loaded data. The
+fuzzy-recall loss is accepted.
 
 ---
 
@@ -167,7 +172,7 @@ Convex properties we lean on:
 
 | Today                                                                                                                                                             | Becomes                                                                                                                                                                                                                                                                                                   |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| plv8 FSRS (`record_review_and_schedule`, `insert/update_user_card_review`)                                                                                        | Convex mutations importing the existing `fsrs.ts` port; parity tests already exist and run against both                                                                                                                                                                                                   |
+| Review writes (`user_card_review`, `user_deck_review_state` — plain table writes; the plv8 FSRS RPCs are legacy and no longer called)                             | Plain Convex mutations (insert/update with auth checks). FSRS scheduling stays 100% client-side (`src/features/review/fsrs.ts`); the legacy plv8 functions are simply not migrated                                                                                                                        |
 | `create_comment_with_phrases`, `create_playlist_with_links`, `bulk_add_phrases`, `add_phrase_translation_card`, `fulfill_phrase_request`, `create_orphan_message` | One Convex mutation each — multi-row inserts in one transaction, returning the full objects (matches the existing "RPCs return rows" philosophy)                                                                                                                                                          |
 | Upvote setter RPCs + count-maintenance triggers                                                                                                                   | One mutation per entity that writes the upvote row **and** bumps the denormalized count in the same transaction; `recount_all_upvotes` + pg_cron → an internal mutation on a Convex cron                                                                                                                  |
 | `trg_notify_on_*` notification triggers                                                                                                                           | Notification inserts inside the source mutations (comment, translation, upvote, phrase-reference)                                                                                                                                                                                                         |
@@ -185,19 +190,20 @@ Convex properties we lean on:
   helpers.
 - Signup, login, forgot-password routes swap SDK calls; email delivery via
   Resend (or provider of choice) from a Convex action.
-- If keeping users: export `auth.users` (id, email, bcrypt hash,
-  email_confirmed_at), import via the chosen provider's migration path, and
-  map `auth.users.id` → profile `legacyId`.
+- Keeping users (Q2-A): export `auth.users` (id, email, bcrypt hash,
+  email_confirmed_at), import into Convex Auth's account tables, and map
+  `auth.users.id` → profile `legacyId`.
 
 ## 7. Search (per Q4), storage, realtime, feed
 
-- **Search**: per Q4-A — `searchCorpus` Convex table + vector index;
-  embedding action calling Cloudflare Workers AI (same BGE-M3 model, env
-  vars move to Convex); corpus upserts scheduled from the phrase/request/
-  playlist mutations via `ctx.scheduler.runAfter(0, ...)` (same eventual-
-  consistency shape as today's pg_net triggers); full-text index for typed
-  search; `use-semantic-search` / `use-trigram-search` / `use-hybrid-search`
-  keep their interfaces with swapped internals.
+- **Search**: per Q4-B — `searchCorpus` Convex table + vector index as the
+  main search path; embedding action calling Cloudflare Workers AI (same
+  BGE-M3 model, env vars move to Convex); corpus upserts scheduled from the
+  phrase/request/playlist mutations via `ctx.scheduler.runAfter(0, ...)`
+  (same eventual-consistency shape as today's pg_net triggers).
+  `use-semantic-search` keeps its interface with swapped internals;
+  `use-trigram-search` and `search_by_trigram` are deleted, and the hybrid
+  merger simplifies to semantic + client-side local search.
 - **Storage**: avatars → Convex file storage; upload flow returns a storage
   id stored on the profile. **Supabase image transforms are lost** — replace
   with client-side resize before upload (avatars only need one small size)
@@ -218,7 +224,8 @@ Convex properties we lean on:
    epoch ms, storage paths → re-uploaded Convex file ids.
 4. Import: `npx convex import` per table (or an import mutation for tables
    needing lookups).
-5. Verify: row counts + spot checks + FSRS-state parity sample.
+5. Verify: row counts + spot checks + a sampled user's review history
+   producing an identical client-side schedule before and after.
 6. Cut over: deploy the Convex build, auth users land via Q2 path.
 7. Keep the Supabase project paused-but-intact for a rollback window.
 
@@ -228,8 +235,10 @@ Convex properties we lean on:
   is the migration's acceptance gate and mostly survives untouched. The DSL's
   seed/reset hooks move from `supabase db reset` to a Convex seed script
   (`npx convex run seed` against a local deployment / `convex dev` backend).
-- Unit tests: `fsrs.parity.test.ts` gains a third target (the Convex
-  mutation via `convex-test`).
+- Unit tests: the FSRS suite (`fsrs.parity.test.ts` etc.) is untouched —
+  scheduling stays client-side. New `convex-test` coverage targets the
+  mutations that absorb trigger behavior (upvote counts, notifications,
+  friend-request validation).
 - Dev loop: `supabase start`/`db reset` → `npx convex dev` (+ seed);
   `pnpm run types` (supabase codegen) → deleted, Convex generates types
   automatically; `.env` → `VITE_CONVEX_URL` (and the tree-shaking build
@@ -248,7 +257,8 @@ Convex properties we lean on:
   warehouse if this matters later.)
 - **RLS as a backstop.** Access control becomes code-enforced convention;
   a forgotten filter is a data leak, not a broken UI.
-- **pg_trgm fuzzy matching** (Q4): Convex full-text is prefix/word-based.
+- **pg_trgm fuzzy matching** (Q4-B, accepted): trigram search is dropped
+  outright; vector search + client-side local search are the replacements.
 - **Supabase image transforms** on avatars.
 - **Postgres portability/self-host maturity**: Convex is open-source but
   realistically you're on their cloud; pricing is per-function-call/storage
@@ -260,7 +270,7 @@ Convex properties we lean on:
 - Realtime everywhere by default; the entire refetch/invalidation category
   of bugs and the `refetch()` hard rule disappear.
 - All server logic in typed TypeScript, in one language with the client,
-  transactional, unit-testable (`convex-test`) — no more plv8, triggers, or
+  transactional, unit-testable (`convex-test`) — no more SQL triggers or
   `pnpm run types` codegen.
 - End-to-end type safety from schema to component without a generation step.
 - Scheduled functions, crons, and actions replace pg_cron/pg_net/Deno
@@ -281,8 +291,9 @@ branch; scenetest green is the gate for each.
 3. **Write path** — mutations for every RPC + trigger behavior (upvotes,
    notifications, friend requests, comments/playlists/phrases, chat);
    optimistic handlers rewired; realtime channels deleted.
-4. **Review/FSRS** — review mutations using the existing TS port; deck
-   review state; parity tests against recorded plv8 fixtures.
+4. **Review writes** — plain mutations for `user_card_review` /
+   `user_deck_review_state` (FSRS scheduling stays client-side, so this
+   phase is small); verify a real review session end-to-end via scenetest.
 5. **Search & storage** — corpus table, embedding action, search queries,
    avatar storage + upload resize.
 6. **ETL & cutover** — export/transform/import scripts, dry-run against a
@@ -303,6 +314,10 @@ contained; 6 is scripting plus care.
   aggregation views (`phrase_stats`, `meta_language`, feed) must be
   denormalized counters or paginated, not full scans; this is design work in
   phase 2, flagged per view.
+- **Full review history on the client**: day-of scheduling depends on
+  loading a user's complete `user_card_review` history. The Convex query
+  backing that collection must read via a `by_uid` index and paginate for
+  heavy reviewers (years of history) rather than assume one fetch.
 - **ETL id rewriting** is the classic long-tail: two-pass import with strict
   Zod validation on every transformed row, and a dry run on a full prod
   snapshot before the real window.
