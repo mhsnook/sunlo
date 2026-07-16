@@ -18,7 +18,6 @@ import {
 import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
-	CardReviewSchema,
 	type CardReviewType,
 	type ReviewSessionType,
 	ReviewMilestoneSchema,
@@ -41,6 +40,7 @@ export type { ReviewStages, ReviewsMap }
 export { buildReviewsMap }
 
 interface PostReviewInput {
+	uid: uuid
 	phrase_id: uuid
 	lang: string
 	direction: CardDirectionType
@@ -50,75 +50,63 @@ interface PostReviewInput {
 	previousReview?: CardReviewType
 }
 
-const postReview = async (submitData: PostReviewInput) => {
-	const {
+// Build a full review row client-side (id + created_at included, so the
+// optimistic insert and its realtime echo share a key). Stage-3 (again-round)
+// rows are tracking-only — null FSRS, never scheduled.
+const buildReviewRow = (submitData: PostReviewInput): CardReviewType => {
+	const { uid, phrase_id, lang, direction, score, day_session, stage } =
+		submitData
+	const fsrs = isScoringReview({ stage })
+		? calculateFSRS({ score, previousReview: submitData.previousReview })
+		: { difficulty: null, stability: null, retrievability: null }
+
+	return {
+		id: crypto.randomUUID(),
+		created_at: new Date().toISOString(),
+		uid,
 		phrase_id,
 		lang,
 		direction,
 		score,
 		day_session,
 		stage,
-		previousReview,
-	} = submitData
-
-	// Calculate FSRS values client-side. Stage-3 (again-round) rows are
-	// tracking-only — they carry null FSRS columns and never feed scheduling —
-	// so only the scoring stages compute real values.
-	const fsrs = isScoringReview({ stage })
-		? calculateFSRS({ score, previousReview })
-		: { difficulty: null, stability: null, retrievability: null }
-
-	// Direct insert - CHECK constraints on table validate the values
-	const { data } = await supabase
-		.from('user_card_review')
-		.insert({
-			phrase_id,
-			lang,
-			direction,
-			score,
-			day_session,
-			stage,
-			difficulty: fsrs.difficulty,
-			stability: fsrs.stability,
-			review_time_retrievability: fsrs.retrievability,
-		})
-		.select()
-		.single()
-		.throwOnError()
-
-	return data
+		difficulty: fsrs.difficulty,
+		stability: fsrs.stability,
+		review_time_retrievability: fsrs.retrievability,
+		updated_at: null,
+	}
 }
 
-interface UpdateReviewInput {
-	review_id: uuid
-	score: Score
+// Append a new review as an optimistic collection action; the collection's
+// onInsert persists it. Resolves once the write lands (or throws on failure,
+// rolling the optimistic row back).
+const appendReview = async (row: CardReviewType): Promise<CardReviewType> => {
+	await cardReviewsCollection.insert(row).isPersisted.promise
+	return row
+}
+
+// A scoring-pass correction: amend the existing row in place. FSRS is
+// recomputed against the chain predecessor (not the row we're overwriting).
+const correctReview = async (
+	existing: CardReviewType,
+	score: Score,
 	previousReview?: CardReviewType
-}
-
-const updateReview = async (submitData: UpdateReviewInput) => {
-	const { review_id, score, previousReview } = submitData
-
-	// Calculate FSRS values client-side
-	const fsrs = calculateFSRS({
+): Promise<CardReviewType> => {
+	const fsrs = calculateFSRS({ score, previousReview })
+	const updated_at = new Date().toISOString()
+	await cardReviewsCollection.update(existing.id, (draft) => {
+		draft.score = score
+		draft.difficulty = fsrs.difficulty
+		draft.stability = fsrs.stability
+		draft.updated_at = updated_at
+	}).isPersisted.promise
+	return {
+		...existing,
 		score,
-		previousReview,
-	})
-
-	// Direct update - CHECK constraints on table validate the values
-	const { data } = await supabase
-		.from('user_card_review')
-		.update({
-			score,
-			difficulty: fsrs.difficulty,
-			stability: fsrs.stability,
-			updated_at: new Date().toISOString(),
-		})
-		.eq('id', review_id)
-		.select()
-		.single()
-		.throwOnError()
-
-	return data
+		difficulty: fsrs.difficulty,
+		stability: fsrs.stability,
+		updated_at,
+	}
 }
 
 function mapToStats(
@@ -397,6 +385,7 @@ export function useReviewMutation(
 ) {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
+	const userId = useUserId()
 	const { gotoIndex, gotoEnd } = useReviewActions()
 	const nextIndex = useNextValid()
 
@@ -448,11 +437,11 @@ export function useReviewMutation(
 					)
 					return {
 						action: 'update',
-						row: await updateReview({
-							score: score as Score,
-							review_id: prevDataToday.id,
-							previousReview: chainPredecessor,
-						}),
+						row: await correctReview(
+							prevDataToday,
+							score as Score,
+							chainPredecessor
+						),
 					}
 				}
 				// First scoring review for this card today.
@@ -464,15 +453,18 @@ export function useReviewMutation(
 				})
 				return {
 					action: 'insert',
-					row: await postReview({
-						score: score as Score,
-						phrase_id: pid,
-						lang,
-						direction,
-						day_session,
-						stage,
-						previousReview: latestReview,
-					}),
+					row: await appendReview(
+						buildReviewRow({
+							uid: userId!,
+							score: score as Score,
+							phrase_id: pid,
+							lang,
+							direction,
+							day_session,
+							stage,
+							previousReview: latestReview,
+						})
+					),
 				}
 			}
 
@@ -484,34 +476,26 @@ export function useReviewMutation(
 			console.log(`Again-round: appending review`, { pid, direction, score })
 			return {
 				action: 'insert',
-				row: await postReview({
-					score: score as Score,
-					phrase_id: pid,
-					lang,
-					direction,
-					day_session,
-					stage: 3,
-				}),
+				row: await appendReview(
+					buildReviewRow({
+						uid: userId!,
+						score: score as Score,
+						phrase_id: pid,
+						lang,
+						direction,
+						day_session,
+						stage: 3,
+					})
+				),
 			}
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
-			// The DB write has already succeeded. Any failure below is a local
-			// sync problem, not a review-posting problem — isolate it so a misleading
-			// "error posting your review" toast never fires, and so the slide
-			// transition always runs and the user isn't stuck on the same card.
+			// The review itself is already persisted + in the collection (the
+			// optimistic action did that). This only mirrors FSRS onto the local
+			// card. Isolate any failure so a misleading "error posting your review"
+			// toast never fires and the slide transition always runs.
 			try {
-				if (data.action === 'update') {
-					cardReviewsCollection.utils.writeUpdate(
-						CardReviewSchema.parse(data.row)
-					)
-				}
-				if (data.action === 'insert') {
-					cardReviewsCollection.utils.writeInsert(
-						CardReviewSchema.parse(data.row)
-					)
-				}
-
 				// Only sync card scheduling state from scoring reviews (stages 1–2).
 				// Again-round rows are for tracking only — they carry null FSRS
 				// values that would corrupt the scheduling chain.
