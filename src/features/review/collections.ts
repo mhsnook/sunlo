@@ -99,5 +99,14 @@ export const reviewMilestonesCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: ReviewMilestoneSchema,
+		// Append-only: the row (client-generated id + created_at) is built at the
+		// call site and just persisted here.
+		onInsert: async ({ transaction }) => {
+			await supabase
+				.from('user_review_milestone')
+				.insert(transaction.mutations.map((m) => m.modified))
+				.throwOnError()
+			return { refetch: false }
+		},
 	})
 )

@@ -45,20 +45,16 @@ import {
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { useUserId } from '@/lib/use-auth'
-import { useReviewsTodayStats } from '@/features/review/hooks'
+import { insertMilestone, useReviewsTodayStats } from '@/features/review/hooks'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { CardMetaSchema } from '@/features/deck/schemas'
-import {
-	ReviewSessionSchema,
-	ReviewMilestoneSchema,
-} from '@/features/review/schemas'
+import { ReviewSessionSchema } from '@/features/review/schemas'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import {
 	cardReviewsCollection,
 	reviewSessionsCollection,
-	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { ReviewIntro, ReviewCallout } from '@/components/intros'
@@ -389,28 +385,6 @@ function ReviewPageContent() {
 					`Error creating daily session: expected manifest of length ${manifestEntries.length} but got back a manifest ${Array.isArray(reviewDay?.manifest) ? 'with ' + reviewDay.manifest.length + 'entries' : 'of type "' + typeof reviewDay?.manifest}".`
 				)
 
-			// Open the append-only progress log with a session_started milestone
-			// (stage 1). Non-fatal: the session row is already committed, and a
-			// missing milestone just falls back to the client-inferred stage.
-			let startedMilestone = null
-			try {
-				const { data } = await supabase
-					.from('user_review_milestone')
-					.insert({
-						uid: userId!,
-						lang,
-						day_session: dayString,
-						event: 'session_started',
-						stage: 1,
-					})
-					.select()
-					.single()
-					.throwOnError()
-				startedMilestone = data
-			} catch (err) {
-				console.warn(`Could not record session_started milestone`, err)
-			}
-
 			return {
 				countCards: manifestEntries.length,
 				countCardsFresh: freshCards.length,
@@ -419,7 +393,6 @@ function ReviewPageContent() {
 				freshCardEntries,
 				newCards,
 				reviewDay,
-				startedMilestone,
 			}
 		},
 		onSettled: (data, error) => {
@@ -441,10 +414,15 @@ function ReviewPageContent() {
 			reviewSessionsCollection.utils.writeInsert(
 				ReviewSessionSchema.parse(data.reviewDay)
 			)
-			if (data.startedMilestone)
-				reviewMilestonesCollection.utils.writeInsert(
-					ReviewMilestoneSchema.parse(data.startedMilestone)
-				)
+			// Open the append-only progress log. The session row is already
+			// persisted, so the milestone's FK is satisfied. Fire-and-forget.
+			insertMilestone({
+				uid: userId!,
+				lang,
+				day_session: dayString,
+				event: 'session_started',
+				stage: 1,
+			})
 			initLocalReviewState(
 				lang,
 				dayString,

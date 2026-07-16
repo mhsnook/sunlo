@@ -1,5 +1,4 @@
 import { useMutation } from '@tanstack/react-query'
-import supabase from '@/lib/supabase-client'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { toastError } from '@/components/ui/sonner'
 import {
@@ -20,7 +19,7 @@ import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	type CardReviewType,
 	type ReviewSessionType,
-	ReviewMilestoneSchema,
+	type ReviewMilestoneType,
 } from './schemas'
 import { useUserId } from '@/lib/use-auth'
 import { calculateFSRS, type Score } from './fsrs'
@@ -560,38 +559,39 @@ export const useOneCardReviews = (
 	)
 
 /**
- * Persist a stage transition to the server as an append-only milestone.
- * Call alongside the Zustand store action for responsive UI + durable state.
- * The current stage is the newest milestone's — no in-place update, so two
- * devices mid-session no longer clobber each other's whole-row state.
+ * Append a review-session milestone as an optimistic collection action. The
+ * row (client-generated id + created_at) lands in the collection immediately —
+ * so `useReviewStageServer` reflects it at once — and the collection's onInsert
+ * persists it and owns any error.
+ */
+export function insertMilestone(input: {
+	uid: uuid
+	lang: string
+	day_session: string
+	event: ReviewMilestoneType['event']
+	stage: number
+}) {
+	reviewMilestonesCollection.insert({
+		id: crypto.randomUUID(),
+		created_at: new Date().toISOString(),
+		...input,
+	})
+}
+
+/**
+ * Record a stage transition — a new milestone, not an in-place update, so two
+ * devices mid-session no longer clobber each other. Fire-and-forget.
  */
 export function useUpdateReviewStage(lang: string, day_session: string) {
 	const userId = useUserId()
-	return useMutation({
-		mutationFn: async (stage: number) => {
-			const { data } = await supabase
-				.from('user_review_milestone')
-				.insert({
-					uid: userId!,
-					lang,
-					day_session,
-					event: stage >= 5 ? 'session_completed' : 'stage_advanced',
-					stage,
-				})
-				.select()
-				.single()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			reviewMilestonesCollection.utils.writeInsert(
-				ReviewMilestoneSchema.parse(data)
-			)
-		},
-		onError: (error) => {
-			console.log('Error updating review stage:', error)
-		},
-	})
+	return (stage: number) =>
+		insertMilestone({
+			uid: userId!,
+			lang,
+			day_session,
+			event: stage >= 5 ? 'session_completed' : 'stage_advanced',
+			stage,
+		})
 }
 
 /**
