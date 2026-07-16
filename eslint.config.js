@@ -7,7 +7,7 @@ import oxlint from 'eslint-plugin-oxlint'
 
 export default [
 	{
-		ignores: ['dist/', 'src-tauri/', 'scripts/'],
+		ignores: ['dist/', 'src-tauri/', 'scripts/', 'src/types/supabase.ts'],
 	},
 	{
 		files: ['src/**/*.{ts,tsx}'],
