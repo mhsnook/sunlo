@@ -48,7 +48,7 @@ test('review updates most_recent_review_at and count_reviews_7d together', async
 				.eq('uid', uid)
 				.eq('lang', lang)
 			await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.delete()
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -76,7 +76,7 @@ test('review updates most_recent_review_at and count_reviews_7d together', async
 		.see('flashcard')
 		.do(async (page) => {
 			const { data: session } = await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.select('manifest')
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -145,7 +145,7 @@ test('review updates most_recent_review_at and count_reviews_7d together', async
 				.eq('uid', uid)
 				.eq('lang', lang)
 			await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.delete()
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -180,7 +180,7 @@ test('deck with no reviews does not show a most-recent-review badge', async ({
 				.eq('uid', uid)
 				.eq('lang', lang)
 			await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.delete()
 				.eq('uid', uid)
 				.eq('lang', lang)

@@ -6,7 +6,7 @@
 // - only_reverse phrases only appear as reverse cards
 
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
-cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_review_session').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]').gte('created_at', '[testStart]')
 
 learner:

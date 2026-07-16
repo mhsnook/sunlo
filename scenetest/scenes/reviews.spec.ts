@@ -37,7 +37,7 @@ test('learner completes a review session', async ({ actor, team }) => {
 				.eq('uid', uid)
 				.eq('lang', lang)
 			await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.delete()
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -61,7 +61,7 @@ test('learner completes a review session', async ({ actor, team }) => {
 		.see('flashcard')
 		.do(async (page) => {
 			const { data: session } = await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.select('manifest')
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -92,7 +92,7 @@ test('learner completes a review session', async ({ actor, team }) => {
 				.eq('uid', uid)
 				.eq('lang', lang)
 			await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.delete()
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -123,7 +123,7 @@ test('learner completes stage 1 with mixed scores', async ({ actor, team }) => {
 				.eq('uid', uid)
 				.eq('lang', lang)
 			await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.delete()
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -147,7 +147,7 @@ test('learner completes stage 1 with mixed scores', async ({ actor, team }) => {
 		.see('flashcard')
 		.do(async (page) => {
 			const { data: session } = await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.select('manifest')
 				.eq('uid', uid)
 				.eq('lang', lang)
@@ -193,7 +193,7 @@ test('learner completes stage 1 with mixed scores', async ({ actor, team }) => {
 				.eq('uid', uid)
 				.eq('lang', lang)
 			await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.delete()
 				.eq('uid', uid)
 				.eq('lang', lang)

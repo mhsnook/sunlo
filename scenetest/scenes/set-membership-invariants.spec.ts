@@ -4,7 +4,7 @@
 // - every card.phrase_id points to a phrase we can load
 // - every card.status is one of {active, learned, skipped}
 // - every card.direction is one of {forward, reverse}
-// - every manifest entry in user_deck_review_state has a matching card row
+// - every manifest entry in user_review_session has a matching card row
 // - every comment_phrase_link.phrase_id resolves to a visible phrase
 // - every chat_message.phrase_id / request_id / playlist_id resolves
 //
@@ -105,7 +105,7 @@ test('walk common flows; core set-membership invariants hold', async ({
 
 			// 2. Every manifest entry for today corresponds to a card row.
 			const { data: state } = await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.select('manifest')
 				.eq('uid', uid)
 				.eq('lang', lang)
