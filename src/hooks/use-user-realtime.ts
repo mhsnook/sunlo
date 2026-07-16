@@ -23,16 +23,8 @@ import {
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
 
-/**
- * Bind an upvote table to its collection. Upvotes toggle: INSERT when the
- * user (or a server-side trigger/RPC on their behalf) likes something, DELETE
- * when they unlike. RLS scopes the stream to the subscriber's own rows, so no
- * `filter` is needed — this only ever syncs *your* upvotes across your devices
- * (public `upvote_count` aggregates are a separate, content-sync concern).
- *
- * DELETE payloads carry only the replica-identity columns (the composite PK),
- * which includes the FK we key on — a tolerant remove-if-present.
- */
+// DELETE payloads carry only the replica identity (the composite PK), which
+// includes the FK we key on.
 function bindUpvote(
 	channel: RealtimeChannel,
 	table: string,
@@ -56,13 +48,9 @@ function bindUpvote(
 		)
 }
 
-/**
- * Colocated realtime bindings for the user-specific tables (#723). Subscribed
- * once in the `_user` layout and torn down on sign-out (when `userId` clears).
- * Each event is Zod-parsed and folded straight into its collection, so server
- * side-effects (triggers, RPC writes, another device) arrive on their own and
- * we stop asking the server questions we can answer locally.
- */
+// Realtime for the user's own tables (#723): RLS scopes each stream to the
+// subscriber, so we fold events straight into their collections. Subscribed in
+// the `_user` layout, torn down on sign-out.
 export const useUserRealtime = () => {
 	const userId = useUserId()
 
@@ -104,10 +92,7 @@ export const useUserRealtime = () => {
 			(key) => phrasePlaylistUpvotesCollection.utils.writeDelete(key)
 		)
 
-		// Reviews (#724 made this the easy case): an append-only INSERT stream,
-		// plus the rare correction UPDATE when a scoring-pass answer is amended.
-		// `writeUpsert` folds both, and makes our own optimistic ack-echo a no-op.
-		// Reviews are never deleted, so there's no DELETE binding.
+		// Reviews: append-only INSERTs plus rare correction UPDATEs (#724).
 		channel = channel
 			.on(
 				'postgres_changes',
@@ -126,28 +111,24 @@ export const useUserRealtime = () => {
 					)
 			)
 
-		// Daily review state: the session row is immutable (manifest, written once
-		// at session creation), so INSERT is the only event — a session started on
-		// one device shows up on another.
-		channel = channel.on(
-			'postgres_changes',
-			{ event: 'INSERT', schema: 'public', table: 'user_review_session' },
-			(payload) =>
-				reviewSessionsCollection.utils.writeUpsert(
-					ReviewSessionSchema.parse(payload.new)
-				)
-		)
-
-		// Review milestones: the append-only progress log. Each stage transition is
-		// a new row; the newest milestone's stage is the session's current stage.
-		channel = channel.on(
-			'postgres_changes',
-			{ event: 'INSERT', schema: 'public', table: 'user_review_milestone' },
-			(payload) =>
-				reviewMilestonesCollection.utils.writeUpsert(
-					ReviewMilestoneSchema.parse(payload.new)
-				)
-		)
+		// Review session (immutable, INSERT-only) + its append-only milestone log.
+		channel = channel
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'user_review_session' },
+				(payload) =>
+					reviewSessionsCollection.utils.writeUpsert(
+						ReviewSessionSchema.parse(payload.new)
+					)
+			)
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'user_review_milestone' },
+				(payload) =>
+					reviewMilestonesCollection.utils.writeUpsert(
+						ReviewMilestoneSchema.parse(payload.new)
+					)
+			)
 
 		channel.subscribe()
 
