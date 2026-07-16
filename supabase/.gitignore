@@ -6,3 +6,6 @@
 # Seed backups (created by dump-new-seeds.ts --full)
 seeds.bak/
 seeds.bak2/
+
+# native-dev type generator (scripts/db-native.sh types)
+dev-native/.typegen/
