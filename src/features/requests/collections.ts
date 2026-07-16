@@ -89,6 +89,31 @@ export const phraseRequestUpvotesCollection = createCollection(
 		getKey: (item: PhraseRequestUpvoteType) => item.request_id,
 		queryClient,
 		schema: PhraseRequestUpvoteSchema,
+		// One-per-user enforced by the (request_id, uid) PK; upvote_count kept by
+		// a DB trigger. uid defaults to auth.uid().
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('phrase_request_upvote')
+						.insert({ request_id: m.modified.request_id })
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('phrase_request_upvote')
+						.delete()
+						.eq('request_id', m.original.request_id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
 	})
 )
 
@@ -201,6 +226,31 @@ export const commentUpvotesCollection = createCollection(
 		getKey: (item: CommentUpvoteType) => item.comment_id,
 		queryClient,
 		schema: CommentUpvoteSchema,
+		// One-per-user enforced by the (comment_id, uid) PK; upvote_count kept by
+		// a DB trigger. uid defaults to auth.uid().
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('comment_upvote')
+						.insert({ comment_id: m.modified.comment_id })
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('comment_upvote')
+						.delete()
+						.eq('comment_id', m.original.comment_id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
 	})
 )
 
