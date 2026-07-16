@@ -45,16 +45,16 @@ import {
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { useUserId } from '@/lib/use-auth'
-import { useReviewsTodayStats } from '@/features/review/hooks'
+import { insertMilestone, useReviewsTodayStats } from '@/features/review/hooks'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { CardMetaSchema } from '@/features/deck/schemas'
-import { DailyReviewStateSchema } from '@/features/review/schemas'
+import { ReviewSessionSchema } from '@/features/review/schemas'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 } from '@/features/review/collections'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { ReviewIntro, ReviewCallout } from '@/components/intros'
@@ -366,7 +366,7 @@ function ReviewPageContent() {
 			const freshCardEntries = [...forwardNew, ...reverseNew]
 
 			const { data: reviewDay } = await supabase
-				.from('user_deck_review_state')
+				.from('user_review_session')
 				.insert({
 					lang,
 					day_session: dayString,
@@ -411,9 +411,18 @@ function ReviewPageContent() {
 			data.newCards.forEach((c) => {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
 			})
-			reviewDaysCollection.utils.writeInsert(
-				DailyReviewStateSchema.parse(data.reviewDay)
+			reviewSessionsCollection.utils.writeInsert(
+				ReviewSessionSchema.parse(data.reviewDay)
 			)
+			// Open the append-only progress log. The session row is already
+			// persisted, so the milestone's FK is satisfied. Fire-and-forget.
+			insertMilestone({
+				uid: userId!,
+				lang,
+				day_session: dayString,
+				event: 'session_started',
+				stage: 1,
+			})
 			initLocalReviewState(
 				lang,
 				dayString,

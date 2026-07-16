@@ -1,5 +1,21 @@
 # Change Log
 
+## v0.30 - Realtime User Collections; Reviews & Upvotes as Collection Actions
+
+_16 July, 2026_
+
+### Refactors
+
+- **Realtime for user collections (#723).** New `useUserRealtime` hook (subscribed in `_user`, torn down on sign-out) streams RLS-scoped changes into the collections instead of refetching — reviews, upvotes, and review stage now sync across devices without a reload.
+- **Reviews and upvotes as collection actions (#723).** `cardReviewsCollection` and the three upvote collections own their persistence via `onInsert`/`onUpdate`/`onDelete`; call sites just `insert`/`update`/`delete` and await `tx.isPersisted`. Drops the `writeInsert` acks, `createOptimisticAction`, and the `set_*_upvote` RPCs. `upvote_count` is now server-owned (refreshes on next sync).
+- **Review-session progress split into an append-only log (#723).** `user_deck_review_state` → immutable `user_review_session` (manifest + FK anchor); mutable `stage` moves to a new append-only `user_review_milestone` log. Stops every stage tick re-broadcasting the whole manifest and the two-device last-write-wins. `data.stage` is unchanged for downstream consumers.
+
+### Migrations
+
+- `20260715130000_enable_realtime_for_user_tables.sql` — publishes the user tables (decks, cards, reviews, review state, upvotes) to `supabase_realtime`.
+- `20260715140000_split_review_state_into_milestones.sql` — renames `user_deck_review_state` → `user_review_session`, drops its `stage` column, adds the append-only `user_review_milestone` log (backfilled per session).
+- `20260715150000_drop_upvote_rpcs.sql` — drops the three `set_*_upvote` RPCs.
+
 ## v0.29 - Review `stage` Column, Append-Only Again-Round
 
 _15 July, 2026_

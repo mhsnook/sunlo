@@ -5,12 +5,18 @@
 export {
 	CardReviewSchema,
 	type CardReviewType,
-	DailyReviewStateSchema,
-	type DailyReviewStateType,
+	ReviewSessionSchema,
+	type ReviewSessionType,
+	ReviewMilestoneSchema,
+	type ReviewMilestoneType,
 } from './schemas'
 
 // Collections
-export { cardReviewsCollection, reviewDaysCollection } from './collections'
+export {
+	cardReviewsCollection,
+	reviewSessionsCollection,
+	reviewMilestonesCollection,
+} from './collections'
 
 // Pure utilities (no supabase dependency)
 export {

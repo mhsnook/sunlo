@@ -31,6 +31,7 @@ import { useDeckMeta } from '@/features/deck/hooks'
 import { useSocialRealtime } from '@/features/social'
 import { languagesCollection } from '@/features/languages/collections'
 import { useNotificationsRealtime } from '@/features/notifications/hooks'
+import { useUserRealtime } from '@/hooks/use-user-realtime'
 import { useFontPreference } from '@/hooks/use-font-preference'
 
 const UserSearchParams = z.object({
@@ -142,6 +143,8 @@ function UserLayout() {
 	// Subscribe to realtime friend-request, chat-message, and notification events
 	useSocialRealtime()
 	useNotificationsRealtime()
+	// Realtime for the user-specific tables (upvotes, deck, cards, reviews)
+	useUserRealtime()
 
 	return (
 		<div

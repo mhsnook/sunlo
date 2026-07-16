@@ -4260,73 +4260,136 @@ values
 	);
 
 --
--- user_deck_review_state (8 rows)
+-- user_review_session (8 rows)
 --
 insert into
-	"public"."user_deck_review_state" ("lang", "uid", "day_session", "created_at", "manifest", "stage")
+	"public"."user_review_session" ("lang", "uid", "day_session", "created_at", "manifest")
 values
 	(
 		'hin',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		(now() - interval '4 days' - interval '4 hours')::date,
 		now() - interval '4 days',
-		'["9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471","1395ae94-46d9-4a54-92f5-fb8b76db896b","43a760da-65af-400e-b3f0-fbed7a6b338e","0823546b-d240-4f14-9d51-8dfae5fcddc3","f1f5234e-0426-44f5-a007-b67329a70a81","8167b776-fc93-4e3f-b06e-5fa5818f2d3b","ded8028a-493f-438f-8b72-316c769a66b9","235ce61c-be21-4697-815d-d5aa1a4ff121","f6b69f3b-09b9-41a7-a9f2-255da0697015","90108f59-7968-457f-9744-2e3b44e980dd","170f5fd4-58f8-4b05-aba4-23522f35800f","ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30","fdd62764-2438-42bb-af7f-9eb378082899","fae20b24-42dc-4b9e-aebc-22afcdfc4689","f878e60f-9647-4728-a368-fc8681b0acbb"]',
-		1
+		'["9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471","1395ae94-46d9-4a54-92f5-fb8b76db896b","43a760da-65af-400e-b3f0-fbed7a6b338e","0823546b-d240-4f14-9d51-8dfae5fcddc3","f1f5234e-0426-44f5-a007-b67329a70a81","8167b776-fc93-4e3f-b06e-5fa5818f2d3b","ded8028a-493f-438f-8b72-316c769a66b9","235ce61c-be21-4697-815d-d5aa1a4ff121","f6b69f3b-09b9-41a7-a9f2-255da0697015","90108f59-7968-457f-9744-2e3b44e980dd","170f5fd4-58f8-4b05-aba4-23522f35800f","ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30","fdd62764-2438-42bb-af7f-9eb378082899","fae20b24-42dc-4b9e-aebc-22afcdfc4689","f878e60f-9647-4728-a368-fc8681b0acbb"]'
 	),
 	(
 		'tam',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		(now() - interval '3 days' - interval '4 hours')::date,
 		now() - interval '3 days',
-		'["fd535752-d602-4ab8-8656-9e11692f30fc","163d7f57-a76f-4e5b-9346-1de5cfeba7d8","93d5d050-e9af-4652-9c76-9dc2a232640a","fa26ba78-a7a3-49f8-8516-034424477dec","c3c81fa4-9c63-4569-b9b6-9c931ee3154f","ed70550e-da8a-44dc-8bfd-69965375b7f9","c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9","b2736292-1137-41db-a453-ad203726d8c5","a875f6e4-a8cc-4f68-baf3-ca2aea273568","a00febfd-e6d6-40bc-a3b8-e31563410db8","97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68","4b7b3741-16ce-4ce8-a9b8-70556451a8e5","49066ea2-e608-42ab-8817-1f20b0eada03","4677f15a-1cd9-40a3-876c-30662c5eec3f","44bcd224-b4b3-46ce-b260-2136712b0907"]',
-		1
+		'["fd535752-d602-4ab8-8656-9e11692f30fc","163d7f57-a76f-4e5b-9346-1de5cfeba7d8","93d5d050-e9af-4652-9c76-9dc2a232640a","fa26ba78-a7a3-49f8-8516-034424477dec","c3c81fa4-9c63-4569-b9b6-9c931ee3154f","ed70550e-da8a-44dc-8bfd-69965375b7f9","c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9","b2736292-1137-41db-a453-ad203726d8c5","a875f6e4-a8cc-4f68-baf3-ca2aea273568","a00febfd-e6d6-40bc-a3b8-e31563410db8","97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68","4b7b3741-16ce-4ce8-a9b8-70556451a8e5","49066ea2-e608-42ab-8817-1f20b0eada03","4677f15a-1cd9-40a3-876c-30662c5eec3f","44bcd224-b4b3-46ce-b260-2136712b0907"]'
 	),
 	(
 		'kan',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		(now() - interval '4 days' - interval '4 hours')::date,
 		now() - interval '4 days',
-		'["b9e3edac-de8b-4796-b436-a0cded08d2ae","c1cc1a36-1b77-41bf-9a05-6e7914d256e2","b7247f31-3758-47ea-bdf8-1c2a7ff161ed"]',
-		1
+		'["b9e3edac-de8b-4796-b436-a0cded08d2ae","c1cc1a36-1b77-41bf-9a05-6e7914d256e2","b7247f31-3758-47ea-bdf8-1c2a7ff161ed"]'
 	),
 	(
 		'hin',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		(now() - interval '3 days' - interval '4 hours')::date,
 		now() - interval '3 days',
-		'["235ce61c-be21-4697-815d-d5aa1a4ff121","f1f5234e-0426-44f5-a007-b67329a70a81","170f5fd4-58f8-4b05-aba4-23522f35800f","0e33be07-6d4a-4c99-8282-921038188cbf","7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb"]',
-		1
+		'["235ce61c-be21-4697-815d-d5aa1a4ff121","f1f5234e-0426-44f5-a007-b67329a70a81","170f5fd4-58f8-4b05-aba4-23522f35800f","0e33be07-6d4a-4c99-8282-921038188cbf","7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb"]'
 	),
 	(
 		'hin',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		now() - interval '32 hours',
-		'["9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471","fae20b24-42dc-4b9e-aebc-22afcdfc4689","48edc28c-1530-4549-b48c-f678033a6892","cc3847f3-b151-401e-80c9-4aef221c54b5","8167b776-fc93-4e3f-b06e-5fa5818f2d3b"]',
-		1
+		'["9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471","fae20b24-42dc-4b9e-aebc-22afcdfc4689","48edc28c-1530-4549-b48c-f678033a6892","cc3847f3-b151-401e-80c9-4aef221c54b5","8167b776-fc93-4e3f-b06e-5fa5818f2d3b"]'
 	),
 	(
 		'kan',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		(now() - interval '2 days' - interval '4 hours')::date,
 		now() - interval '2 days',
-		'["b9e3edac-de8b-4796-b436-a0cded08d2ae","c1cc1a36-1b77-41bf-9a05-6e7914d256e2","aa110001-1111-4aaa-bbbb-cccccccccccc","aa110002-2222-4aaa-bbbb-cccccccccccc"]',
-		1
+		'["b9e3edac-de8b-4796-b436-a0cded08d2ae","c1cc1a36-1b77-41bf-9a05-6e7914d256e2","aa110001-1111-4aaa-bbbb-cccccccccccc","aa110002-2222-4aaa-bbbb-cccccccccccc"]'
 	),
 	(
 		'kan',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		(now() - interval '2 days' - interval '4 hours')::date,
 		now() - interval '2 days',
-		'["aa110004-4444-4aaa-bbbb-cccccccccccc","aa110008-8888-4aaa-bbbb-cccccccccccc","b0fbbe1d-705e-4d93-a231-ac55263fcfee"]',
-		1
+		'["aa110004-4444-4aaa-bbbb-cccccccccccc","aa110008-8888-4aaa-bbbb-cccccccccccc","b0fbbe1d-705e-4d93-a231-ac55263fcfee"]'
 	),
 	(
 		'hin',
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
 		(now() - interval '32 hours' - interval '4 hours')::date,
 		now() - interval '32 hours',
-		'["0e33be07-6d4a-4c99-8282-921038188cbf","48fe0624-f586-4812-a1a5-33c634995671","7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb"]',
+		'["0e33be07-6d4a-4c99-8282-921038188cbf","48fe0624-f586-4812-a1a5-33c634995671","7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb"]'
+	);
+
+--
+-- user_review_milestone (8 rows) — session_started per seeded session
+--
+insert into
+	"public"."user_review_milestone" ("uid", "lang", "day_session", "created_at", "event", "stage")
+values
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'hin',
+		(now() - interval '4 days' - interval '4 hours')::date,
+		now() - interval '4 days',
+		'session_started',
+		1
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'tam',
+		(now() - interval '3 days' - interval '4 hours')::date,
+		now() - interval '3 days',
+		'session_started',
+		1
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'kan',
+		(now() - interval '4 days' - interval '4 hours')::date,
+		now() - interval '4 days',
+		'session_started',
+		1
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'hin',
+		(now() - interval '3 days' - interval '4 hours')::date,
+		now() - interval '3 days',
+		'session_started',
+		1
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'hin',
+		(now() - interval '32 hours' - interval '4 hours')::date,
+		now() - interval '32 hours',
+		'session_started',
+		1
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'kan',
+		(now() - interval '2 days' - interval '4 hours')::date,
+		now() - interval '2 days',
+		'session_started',
+		1
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'kan',
+		(now() - interval '2 days' - interval '4 hours')::date,
+		now() - interval '2 days',
+		'session_started',
+		1
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'hin',
+		(now() - interval '32 hours' - interval '4 hours')::date,
+		now() - interval '32 hours',
+		'session_started',
 		1
 	);
 

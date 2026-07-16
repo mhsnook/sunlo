@@ -33,7 +33,7 @@ export function WhenComplete() {
 	// When the user naturally finishes (no skip button), persist stage 5
 	useEffect(() => {
 		if (showWhich === 'c' && stats?.stage && stats.stage < 5) {
-			updateStage.mutate(5)
+			updateStage(5)
 		}
 	}, [showWhich, stats?.stage])
 
@@ -60,7 +60,7 @@ export function WhenComplete() {
 							size="lg"
 							onClick={() => {
 								actions.gotoReviewUnreviewed(stats.firstUnreviewedIndex)
-								updateStage.mutate(2)
+								updateStage(2)
 							}}
 						>
 							Review Skipped cards ({stats.unreviewed})
@@ -70,7 +70,7 @@ export function WhenComplete() {
 							variant="neutral"
 							onClick={() => {
 								actions.skipReviewUnreviewed()
-								updateStage.mutate(3)
+								updateStage(3)
 							}}
 						>
 							Skip step 2
@@ -89,7 +89,7 @@ export function WhenComplete() {
 							size="lg"
 							onClick={() => {
 								actions.gotoReviewAgains(stats.firstAgainIndex)
-								updateStage.mutate(4)
+								updateStage(4)
 							}}
 						>
 							Review cards ({stats.again})
@@ -120,7 +120,7 @@ export function WhenComplete() {
 							size="lg"
 							onClick={() => {
 								actions.skipReviewAgains()
-								updateStage.mutate(5)
+								updateStage(5)
 							}}
 						>
 							Skip step 3

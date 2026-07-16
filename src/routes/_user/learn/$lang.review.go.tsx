@@ -20,7 +20,8 @@ import { ReviewSingleCard } from '@/components/review/review-single-card'
 import { Button } from '@/components/ui/button'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
+	reviewMilestonesCollection,
 } from '@/features/review/collections'
 import {
 	parseManifestEntry,
@@ -39,8 +40,9 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	loader: async ({ context, params }) => {
 		if (!context.auth.isAuth) return
 		await Promise.all([
-			reviewDaysCollection.preload(),
+			reviewSessionsCollection.preload(),
 			cardReviewsCollection.preload(),
+			reviewMilestonesCollection.preload(),
 		])
 		await ensureManifestCardsInCollection(params.lang, todayString())
 	},

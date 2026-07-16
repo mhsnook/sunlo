@@ -1,8 +1,9 @@
+ 
 import { phrasesCollection } from './features/phrases/collections'
 import { cardsCollection, decksCollection } from './features/deck/collections'
 import {
 	cardReviewsCollection,
-	reviewDaysCollection,
+	reviewSessionsCollection,
 } from './features/review/collections'
 import { phraseRequestsCollection } from './features/requests/collections'
 import { phrasePlaylistsCollection } from './features/playlists/collections'
@@ -25,5 +26,5 @@ if (
 	// @ts-expect-error assigning to global window
 	window.__cardReviewsCollection = cardReviewsCollection
 	// @ts-expect-error assigning to global window
-	window.__reviewDaysCollection = reviewDaysCollection
+	window.__reviewSessionsCollection = reviewSessionsCollection
 }

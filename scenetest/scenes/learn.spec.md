@@ -1,7 +1,7 @@
 # learner navigates within a deck using app-nav
 
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
-cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_review_session').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
 
@@ -130,7 +130,7 @@ learner:
 # learner starts a review session
 
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
-cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_review_session').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]').gte('created_at', '[testStart]')
 
 learner:

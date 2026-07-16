@@ -102,133 +102,6 @@ create type "public"."notification_type" as enum('request_commented', 'comment_r
 
 alter type "public"."notification_type" owner to "postgres";
 
-create type "public"."translation_input" as ("lang" character(3), "text" "text");
-
-alter type "public"."translation_input" owner to "postgres";
-
-create type "public"."phrase_with_translations_input" as ("phrase_text" "text", "translations" "public"."translation_input" [], "only_reverse" boolean);
-
-alter type "public"."phrase_with_translations_input" owner to "postgres";
-
-create or replace function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text" default null::"text",
-	"translation_text_script" "text" default null::"text",
-	"create_card" boolean default true,
-	"phrase_only_reverse" boolean default false
-) returns "json" language "plpgsql" as $$
-DECLARE
-	new_phrase public.phrase;
-	new_translation public.phrase_translation;
-	new_card_forward public.user_card;
-	new_card_reverse public.user_card;
-BEGIN
-	-- Insert a new phrase with only_reverse flag
-	INSERT INTO public.phrase (text, lang, text_script, only_reverse)
-	VALUES (phrase_text, phrase_lang, phrase_text_script, phrase_only_reverse)
-	RETURNING * INTO new_phrase;
-
-	-- Insert the translation for the new phrase
-	INSERT INTO public.phrase_translation (phrase_id, text, lang, text_script)
-	VALUES (new_phrase.id, translation_text, translation_lang, translation_text_script)
-	RETURNING * INTO new_translation;
-
-	-- Create cards based on direction rules
-	IF create_card THEN
-		IF NOT phrase_only_reverse THEN
-			-- Create forward card for standard phrases
-			INSERT INTO public.user_card (phrase_id, status, lang, direction)
-			VALUES (new_phrase.id, 'active', phrase_lang, 'forward')
-			RETURNING * INTO new_card_forward;
-		END IF;
-
-		-- Always create reverse card
-		INSERT INTO public.user_card (phrase_id, status, lang, direction)
-		VALUES (new_phrase.id, 'active', phrase_lang, 'reverse')
-		RETURNING * INTO new_card_reverse;
-	END IF;
-
-	RETURN json_build_object(
-		'phrase', row_to_json(new_phrase),
-		'translation', row_to_json(new_translation),
-		'card', CASE
-			WHEN new_card_forward IS NOT NULL THEN row_to_json(new_card_forward)
-			ELSE row_to_json(new_card_reverse)
-		END,
-		'card_reverse', CASE
-			WHEN new_card_forward IS NOT NULL THEN row_to_json(new_card_reverse)
-			ELSE NULL
-		END
-	);
-END;
-$$;
-
-alter function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text",
-	"create_card" boolean,
-	"phrase_only_reverse" boolean
-) owner to "postgres";
-
-create or replace function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) returns "jsonb" language "plpgsql" as $$
-DECLARE
-    tag_name text;
-    v_tag_id uuid;
-    new_tag_record public.tag;
-    new_phrase_tag_record public.phrase_tag;
-    created_tags jsonb[] := '{}';
-    created_phrase_tags jsonb[] := '{}';
-BEGIN
-    FOREACH tag_name IN ARRAY p_tags
-    LOOP
-        -- Upsert tag and get its ID.
-        WITH new_tag AS (
-            INSERT INTO public.tag (name, lang, added_by)
-            VALUES (tag_name, p_lang, auth.uid())
-            ON CONFLICT (name, lang) DO NOTHING
-            RETURNING *
-        )
-        SELECT * INTO new_tag_record FROM new_tag; -- Only populated if a new tag was created
-
-        -- If a new tag was created, add it to our array and get its ID.
-        IF new_tag_record.id IS NOT NULL THEN
-            v_tag_id := new_tag_record.id;
-            created_tags := array_append(created_tags, to_jsonb(new_tag_record));
-        ELSE
-            -- If the insert did nothing (because the tag already existed), select the existing tag's ID.
-            SELECT id INTO v_tag_id FROM public.tag WHERE name = tag_name AND lang = p_lang;
-        END IF;
-
-        -- Associate tag with phrase
-        WITH new_pt AS (
-            INSERT INTO public.phrase_tag (phrase_id, tag_id, added_by)
-            VALUES (p_phrase_id, v_tag_id, auth.uid())
-            ON CONFLICT (phrase_id, tag_id) DO NOTHING
-            RETURNING *
-        )
-        SELECT * INTO new_phrase_tag_record FROM new_pt; -- Only populated if a new association was created
-
-        IF new_phrase_tag_record.phrase_id IS NOT NULL THEN
-            created_phrase_tags := array_append(created_phrase_tags, to_jsonb(new_phrase_tag_record));
-        END IF;
-    END LOOP;
-
-    RETURN jsonb_build_object(
-        'tags', created_tags,
-        'phrase_tags', created_phrase_tags
-    );
-END;
-$$;
-
-alter function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) owner to "postgres";
-
 create or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
   SELECT EXISTS (
     SELECT 1
@@ -254,45 +127,6 @@ END;
 $$;
 
 alter function "public"."auto_upvote_new_request" () owner to "postgres";
-
-create or replace function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") returns "jsonb" language "plpgsql" as $$
-declare
-    phrase_item public.phrase_with_translations_input;
-    new_phrase public.phrase;
-    new_translation public.phrase_translation;
-    new_phrases public.phrase[] := '{}';
-    new_translations public.phrase_translation[] := '{}';
-begin
-    foreach phrase_item in array p_phrases
-    loop
-        -- Insert the phrase with only_reverse flag
-        insert into public.phrase (lang, text, added_by, only_reverse)
-        values (p_lang, phrase_item.phrase_text, p_user_id, coalesce(phrase_item.only_reverse, false))
-        returning * into new_phrase;
-
-        new_phrases := array_append(new_phrases, new_phrase);
-
-        -- Insert all translations for the new phrase
-        if array_length(phrase_item.translations, 1) > 0 then
-            for i in 1..array_length(phrase_item.translations, 1)
-            loop
-                insert into public.phrase_translation (phrase_id, lang, text)
-                values (new_phrase.id, (phrase_item.translations[i]).lang, (phrase_item.translations[i]).text)
-                returning * into new_translation;
-
-                new_translations := array_append(new_translations, new_translation);
-            end loop;
-        end if;
-
-    end loop;
-    return jsonb_build_object(
-      'phrases', to_jsonb(new_phrases),
-      'translations', to_jsonb(new_translations)
-    );
-end;
-$$;
-
-alter function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") owner to "postgres";
 
 create or replace function "public"."bump_phrase_updated_at" () returns "trigger" language "plpgsql" as $$
 begin
@@ -356,6 +190,17 @@ END;
 $$;
 
 alter function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) owner to "postgres";
+
+create or replace function "public"."create_orphan_message" () returns "uuid" language "plpgsql" security definer as $$
+declare
+  new_id uuid;
+begin
+  insert into public.message default values returning id into new_id;
+  return new_id;
+end;
+$$;
+
+alter function "public"."create_orphan_message" () owner to "postgres";
 
 create or replace function "public"."create_playlist_with_links" (
 	"lang" "text",
@@ -1112,6 +957,15 @@ $$;
 
 alter function "public"."update_phrase_translation_updated_at" () owner to "postgres";
 
+create or replace function "public"."update_user_card_review_updated_at" () returns "trigger" language "plpgsql" as $$
+begin
+  NEW.updated_at = now();
+  return NEW;
+end;
+$$;
+
+alter function "public"."update_user_card_review_updated_at" () owner to "postgres";
+
 create or replace function "public"."update_user_deck_updated_at" () returns "trigger" language "plpgsql" as $$
 begin
   NEW.updated_at = now();
@@ -1301,7 +1155,8 @@ create table if not exists "public"."phrase_request" (
 	"prompt" "text" not null,
 	"upvote_count" integer default 0 not null,
 	"deleted" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" ()
+	"updated_at" timestamp with time zone default "now" (),
+	"message_id" "uuid" default "public"."create_orphan_message" () not null
 );
 
 alter table "public"."phrase_request" owner to "postgres";
@@ -1335,8 +1190,8 @@ create table if not exists "public"."user_card_review" (
 	"day_session" "date" not null,
 	"lang" character varying not null,
 	"phrase_id" "uuid" not null,
-	"stage" smallint not null,
 	"direction" "public"."card_direction" default 'forward'::"public"."card_direction" not null,
+	"stage" smallint not null,
 	constraint "user_card_review_difficulty_check" check (
 		(
 			("difficulty" >= 1.0)
@@ -1562,6 +1417,29 @@ create table if not exists "public"."language" ("name" "text" not null, "lang" c
 alter table "public"."language" owner to "postgres";
 
 comment on table "public"."language" is 'The languages that people are trying to learn';
+
+create table if not exists "public"."message" ("id" "uuid" default "gen_random_uuid" () not null, "created_at" timestamp with time zone default "now" () not null);
+
+alter table "public"."message" owner to "postgres";
+
+create table if not exists "public"."message_tag" (
+	"slug" "text" not null,
+	"label" "text" not null,
+	"description" "text",
+	"sort_order" integer default 0 not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"archived" boolean default false not null
+);
+
+alter table "public"."message_tag" owner to "postgres";
+
+create table if not exists "public"."message_tag_link" (
+	"message_id" "uuid" not null,
+	"tag_slug" "text" not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
+
+alter table "public"."message_tag_link" owner to "postgres";
 
 create table if not exists "public"."user_deck" (
 	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
@@ -1978,8 +1856,10 @@ with
 				)
 			)
 		where
-			("rev2"."created_at" is null)
-			and ("rev"."stage" = any (array[1, 2]))
+			(
+				("rev2"."created_at" is null)
+				and ("rev"."stage" = any (array[1, 2]))
+			)
 	)
 select
 	"card"."lang",
@@ -2162,16 +2042,37 @@ order by
 
 alter table "public"."user_deck_plus" owner to "postgres";
 
-create table if not exists "public"."user_deck_review_state" (
+create table if not exists "public"."user_review_milestone" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"lang" character varying not null,
+	"day_session" "date" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"event" "text" not null,
+	"stage" smallint,
+	constraint "user_review_milestone_event_check" check (("event" = any (array['session_started'::"text", 'stage_advanced'::"text", 'session_completed'::"text"]))),
+	constraint "user_review_milestone_stage_check" check (
+		(
+			("stage" is null)
+			or (
+				("stage" >= 0)
+				and ("stage" <= 5)
+			)
+		)
+	)
+);
+
+alter table "public"."user_review_milestone" owner to "postgres";
+
+create table if not exists "public"."user_review_session" (
 	"lang" character varying not null,
 	"uid" "uuid" default "auth"."uid" () not null,
 	"day_session" "date" not null,
 	"created_at" timestamp with time zone default "now" () not null,
-	"manifest" "jsonb",
-	"stage" smallint default 1 not null
+	"manifest" "jsonb"
 );
 
-alter table "public"."user_deck_review_state" owner to "postgres";
+alter table "public"."user_review_session" owner to "postgres";
 
 alter table only "public"."admin_user"
 add constraint "admin_user_pkey" primary key ("uid");
@@ -2214,6 +2115,15 @@ add constraint "language_code2_key" unique ("lang");
 
 alter table only "public"."language"
 add constraint "language_pkey" primary key ("lang");
+
+alter table only "public"."message"
+add constraint "message_pkey" primary key ("id");
+
+alter table only "public"."message_tag_link"
+add constraint "message_tag_link_pkey" primary key ("message_id", "tag_slug");
+
+alter table only "public"."message_tag"
+add constraint "message_tag_pkey" primary key ("slug");
 
 alter table only "public"."notification"
 add constraint "notification_pkey" primary key ("id");
@@ -2281,11 +2191,14 @@ add constraint "user_deck_card_membership_uuid_key" unique ("id");
 alter table only "public"."user_deck"
 add constraint "user_deck_pkey" primary key ("id");
 
-alter table only "public"."user_deck_review_state"
-add constraint "user_deck_review_state_pkey" primary key ("lang", "uid", "day_session");
-
 alter table only "public"."user_deck"
 add constraint "user_deck_uuid_key" unique ("id");
+
+alter table only "public"."user_review_milestone"
+add constraint "user_review_milestone_pkey" primary key ("id");
+
+alter table only "public"."user_review_session"
+add constraint "user_review_session_pkey" primary key ("lang", "uid", "day_session");
 
 create index "chat_message_playlist_id_idx" on "public"."chat_message" using "btree" ("playlist_id");
 
@@ -2322,6 +2235,10 @@ where
 create index "idx_upvote_comment" on "public"."comment_upvote" using "btree" ("comment_id");
 
 create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid");
+
+create index "idx_user_review_milestone_session_created" on "public"."user_review_milestone" using "btree" ("uid", "lang", "day_session", "created_at" desc);
+
+create index "message_tag_link_tag_slug_idx" on "public"."message_tag_link" using "btree" ("tag_slug");
 
 create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btree" ("uid");
 
@@ -2493,6 +2410,10 @@ create or replace trigger "trigger_validate_friend_request_action"
 before insert on "public"."friend_request_action" for each row
 execute function "public"."validate_friend_request_action" ();
 
+create or replace trigger "update_user_card_review_updated_at"
+before update on "public"."user_card_review" for each row
+execute function "public"."update_user_card_review_updated_at" ();
+
 create or replace trigger "update_user_deck_updated_at"
 before update on "public"."user_deck" for each row
 execute function "public"."update_user_deck_updated_at" ();
@@ -2548,6 +2469,12 @@ add constraint "friend_request_action_uid_less_fkey" foreign key ("uid_less") re
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_uid_more_fkey" foreign key ("uid_more") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
+alter table only "public"."message_tag_link"
+add constraint "message_tag_link_message_id_fkey" foreign key ("message_id") references "public"."message" ("id") on delete cascade;
+
+alter table only "public"."message_tag_link"
+add constraint "message_tag_link_tag_slug_fkey" foreign key ("tag_slug") references "public"."message_tag" ("slug") on delete cascade;
+
 alter table only "public"."notification"
 add constraint "notification_actor_uid_fkey" foreign key ("actor_uid") references "public"."user_profile" ("uid") on delete cascade;
 
@@ -2580,6 +2507,9 @@ add constraint "phrase_playlist_upvote_uid_fkey" foreign key ("uid") references 
 
 alter table only "public"."phrase_request"
 add constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade;
+
+alter table only "public"."phrase_request"
+add constraint "phrase_request_message_id_fkey" foreign key ("message_id") references "public"."message" ("id") on delete restrict;
 
 alter table only "public"."phrase_request"
 add constraint "phrase_request_requester_uid_fkey" foreign key ("requester_uid") references "public"."user_profile" ("uid") on delete cascade;
@@ -2660,7 +2590,7 @@ alter table only "public"."user_card_review"
 add constraint "user_card_review_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
 alter table only "public"."user_card_review"
-add constraint "user_card_review_uid_lang_day_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_deck_review_state" ("uid", "lang", "day_session") on update cascade on delete set null;
+add constraint "user_card_review_uid_lang_day_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_review_session" ("uid", "lang", "day_session") on update cascade on delete set null;
 
 alter table only "public"."user_card"
 add constraint "user_card_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
@@ -2671,13 +2601,40 @@ add constraint "user_client_event_uid_fkey" foreign key ("uid") references "publ
 alter table only "public"."user_deck"
 add constraint "user_deck_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
 
-alter table only "public"."user_deck_review_state"
-add constraint "user_deck_review_state_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid") on update cascade on delete cascade;
-
 alter table only "public"."user_deck"
 add constraint "user_deck_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
+alter table only "public"."user_review_milestone"
+add constraint "user_review_milestone_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_review_session" ("uid", "lang", "day_session") on update cascade on delete cascade;
+
+alter table only "public"."user_review_session"
+add constraint "user_review_session_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid") on update cascade on delete cascade;
+
+create policy "Admins can delete message tag links" on "public"."message_tag_link" for delete to "authenticated" using ("public"."is_admin" ());
+
+create policy "Admins can delete message tags" on "public"."message_tag" for delete to "authenticated" using ("public"."is_admin" ());
+
 create policy "Admins can delete phrase tags" on "public"."phrase_tag" for delete to "authenticated" using ("public"."is_admin" ());
+
+create policy "Admins can insert message tag links" on "public"."message_tag_link" for insert to "authenticated"
+with
+	check ("public"."is_admin" ());
+
+create policy "Admins can insert message tags" on "public"."message_tag" for insert to "authenticated"
+with
+	check ("public"."is_admin" ());
+
+create policy "Admins can update message tags" on "public"."message_tag"
+for update
+	to "authenticated" using ("public"."is_admin" ())
+with
+	check ("public"."is_admin" ());
+
+create policy "Admins can update messages" on "public"."message"
+for update
+	to "authenticated" using ("public"."is_admin" ())
+with
+	check ("public"."is_admin" ());
 
 create policy "Admins can update phrases" on "public"."phrase"
 for update
@@ -2781,7 +2738,11 @@ with
 		)
 	);
 
-create policy "Enable insert for authenticated users only" on "public"."user_deck_review_state" for insert to "authenticated"
+create policy "Enable insert for authenticated users only" on "public"."user_review_milestone" for insert to "authenticated"
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "Enable insert for authenticated users only" on "public"."user_review_session" for insert to "authenticated"
 with
 	check (("uid" = "auth"."uid" ()));
 
@@ -2812,6 +2773,18 @@ select
 	using (true);
 
 create policy "Enable read access for all users" on "public"."language" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."message" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."message_tag" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."message_tag_link" for
 select
 	using (true);
 
@@ -2897,7 +2870,7 @@ with
 		)
 	);
 
-create policy "Enable users to update their own data" on "public"."user_deck_review_state"
+create policy "Enable users to update their own data" on "public"."user_review_session"
 for update
 	to "authenticated" using (("uid" = "auth"."uid" ()));
 
@@ -2962,7 +2935,11 @@ select
 		)
 	);
 
-create policy "Enable users to view their own data only" on "public"."user_deck_review_state" for
+create policy "Enable users to view their own data only" on "public"."user_review_milestone" for
+select
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
+create policy "Enable users to view their own data only" on "public"."user_review_session" for
 select
 	to "authenticated" using (
 		(
@@ -3207,6 +3184,12 @@ alter table "public"."friend_request_action" enable row level security;
 
 alter table "public"."language" enable row level security;
 
+alter table "public"."message" enable row level security;
+
+alter table "public"."message_tag" enable row level security;
+
+alter table "public"."message_tag_link" enable row level security;
+
 alter table "public"."notification" enable row level security;
 
 alter table "public"."phrase" enable row level security;
@@ -3246,9 +3229,11 @@ alter table "public"."user_client_event" enable row level security;
 
 alter table "public"."user_deck" enable row level security;
 
-alter table "public"."user_deck_review_state" enable row level security;
-
 alter table "public"."user_profile" enable row level security;
+
+alter table "public"."user_review_milestone" enable row level security;
+
+alter table "public"."user_review_session" enable row level security;
 
 alter publication "supabase_realtime" owner to "postgres";
 
@@ -3256,10 +3241,34 @@ alter publication "supabase_realtime"
 add table only "public"."chat_message";
 
 alter publication "supabase_realtime"
+add table only "public"."comment_upvote";
+
+alter publication "supabase_realtime"
 add table only "public"."friend_request_action";
 
 alter publication "supabase_realtime"
 add table only "public"."notification";
+
+alter publication "supabase_realtime"
+add table only "public"."phrase_playlist_upvote";
+
+alter publication "supabase_realtime"
+add table only "public"."phrase_request_upvote";
+
+alter publication "supabase_realtime"
+add table only "public"."user_card";
+
+alter publication "supabase_realtime"
+add table only "public"."user_card_review";
+
+alter publication "supabase_realtime"
+add table only "public"."user_deck";
+
+alter publication "supabase_realtime"
+add table only "public"."user_review_milestone";
+
+alter publication "supabase_realtime"
+add table only "public"."user_review_session";
 
 revoke usage on schema "public"
 from
@@ -3591,45 +3600,6 @@ grant all on function "public"."vector" ("public"."vector", integer, boolean) to
 
 grant all on function "public"."vector" ("public"."vector", integer, boolean) to "service_role";
 
-grant all on function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text",
-	"create_card" boolean,
-	"phrase_only_reverse" boolean
-) to "anon";
-
-grant all on function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text",
-	"create_card" boolean,
-	"phrase_only_reverse" boolean
-) to "authenticated";
-
-grant all on function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text",
-	"create_card" boolean,
-	"phrase_only_reverse" boolean
-) to "service_role";
-
-grant all on function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) to "anon";
-
-grant all on function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) to "authenticated";
-
-grant all on function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) to "service_role";
-
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "authenticated";
@@ -3657,12 +3627,6 @@ grant all on function "public"."binary_quantize" ("public"."vector") to "anon";
 grant all on function "public"."binary_quantize" ("public"."vector") to "authenticated";
 
 grant all on function "public"."binary_quantize" ("public"."vector") to "service_role";
-
-grant all on function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") to "anon";
-
-grant all on function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") to "authenticated";
-
-grant all on function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") to "service_role";
 
 grant all on function "public"."bump_phrase_updated_at" () to "anon";
 
@@ -3699,6 +3663,12 @@ grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uu
 grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "authenticated";
 
 grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "service_role";
+
+grant all on function "public"."create_orphan_message" () to "anon";
+
+grant all on function "public"."create_orphan_message" () to "authenticated";
+
+grant all on function "public"."create_orphan_message" () to "service_role";
 
 grant all on function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") to "anon";
 
@@ -4477,6 +4447,12 @@ grant all on function "public"."update_phrase_translation_updated_at" () to "aut
 
 grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
 
+grant all on function "public"."update_user_card_review_updated_at" () to "anon";
+
+grant all on function "public"."update_user_card_review_updated_at" () to "authenticated";
+
+grant all on function "public"."update_user_card_review_updated_at" () to "service_role";
+
 grant all on function "public"."update_user_deck_updated_at" () to "anon";
 
 grant all on function "public"."update_user_deck_updated_at" () to "authenticated";
@@ -4817,6 +4793,24 @@ grant all on table "public"."language" to "authenticated";
 
 grant all on table "public"."language" to "service_role";
 
+grant all on table "public"."message" to "anon";
+
+grant all on table "public"."message" to "authenticated";
+
+grant all on table "public"."message" to "service_role";
+
+grant all on table "public"."message_tag" to "anon";
+
+grant all on table "public"."message_tag" to "authenticated";
+
+grant all on table "public"."message_tag" to "service_role";
+
+grant all on table "public"."message_tag_link" to "anon";
+
+grant all on table "public"."message_tag_link" to "authenticated";
+
+grant all on table "public"."message_tag_link" to "service_role";
+
 grant all on table "public"."user_deck" to "anon";
 
 grant all on table "public"."user_deck" to "authenticated";
@@ -4925,11 +4919,17 @@ grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
 
-grant all on table "public"."user_deck_review_state" to "anon";
+grant all on table "public"."user_review_milestone" to "anon";
 
-grant all on table "public"."user_deck_review_state" to "authenticated";
+grant all on table "public"."user_review_milestone" to "authenticated";
 
-grant all on table "public"."user_deck_review_state" to "service_role";
+grant all on table "public"."user_review_milestone" to "service_role";
+
+grant all on table "public"."user_review_session" to "anon";
+
+grant all on table "public"."user_review_session" to "authenticated";
+
+grant all on table "public"."user_review_session" to "service_role";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";

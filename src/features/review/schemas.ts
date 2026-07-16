@@ -13,19 +13,22 @@ export const CardReviewSchema = z.object({
 	direction: CardDirectionSchema.default('forward'),
 	score: z.number(),
 	// Which session stage recorded this review, mirroring
-	// `user_deck_review_state.stage`: 1 = first pass, 2 = go-back pass,
+	// `user_review_session.stage`: 1 = first pass, 2 = go-back pass,
 	// 3 = again-round re-review. FSRS reads only the scoring stages (1–2);
 	// stage-3 rows are tracking-only and carry null FSRS columns.
 	stage: z.number().int().min(1).max(3),
 	difficulty: z.number().nullable(),
 	review_time_retrievability: z.number().nullable(),
 	stability: z.number().nullable(),
-	updated_at: z.string().nullable(),
+	updated_at: z.string().optional(),
 })
 
 export type CardReviewType = z.infer<typeof CardReviewSchema>
 
-export const DailyReviewStateSchema = z.object({
+// The immutable session row: written once at session creation, and the FK
+// target for user_card_review. Progress (`stage`) is no longer here — it lives
+// in the append-only user_review_milestone log (see ReviewMilestoneSchema).
+export const ReviewSessionSchema = z.object({
 	created_at: z.string(),
 	day_session: z.string().length(10),
 	lang: LangSchema,
@@ -37,8 +40,21 @@ export const DailyReviewStateSchema = z.object({
 		.transform(
 			(arr): Array<ManifestEntry> | null => arr as Array<ManifestEntry> | null
 		),
-	stage: z.number().int().min(0).max(5).default(1),
 	uid: z.string().uuid(),
 })
 
-export type DailyReviewStateType = z.infer<typeof DailyReviewStateSchema>
+export type ReviewSessionType = z.infer<typeof ReviewSessionSchema>
+
+// Append-only progress log for a review session. Each stage transition is a new
+// row; the current stage is the `stage` of the latest milestone per session.
+export const ReviewMilestoneSchema = z.object({
+	id: z.string().uuid(),
+	uid: z.string().uuid(),
+	lang: LangSchema,
+	day_session: z.string().length(10),
+	created_at: z.string(),
+	event: z.enum(['session_started', 'stage_advanced', 'session_completed']),
+	stage: z.number().int().min(0).max(5).nullable(),
+})
+
+export type ReviewMilestoneType = z.infer<typeof ReviewMilestoneSchema>

@@ -369,6 +369,81 @@ export type Database = {
 				}
 				Relationships: []
 			}
+			message: {
+				Row: {
+					created_at: string
+					id: string
+				}
+				Insert: {
+					created_at?: string
+					id?: string
+				}
+				Update: {
+					created_at?: string
+					id?: string
+				}
+				Relationships: []
+			}
+			message_tag: {
+				Row: {
+					archived: boolean
+					created_at: string
+					description: string | null
+					label: string
+					slug: string
+					sort_order: number
+				}
+				Insert: {
+					archived?: boolean
+					created_at?: string
+					description?: string | null
+					label: string
+					slug: string
+					sort_order?: number
+				}
+				Update: {
+					archived?: boolean
+					created_at?: string
+					description?: string | null
+					label?: string
+					slug?: string
+					sort_order?: number
+				}
+				Relationships: []
+			}
+			message_tag_link: {
+				Row: {
+					created_at: string
+					message_id: string
+					tag_slug: string
+				}
+				Insert: {
+					created_at?: string
+					message_id: string
+					tag_slug: string
+				}
+				Update: {
+					created_at?: string
+					message_id?: string
+					tag_slug?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'message_tag_link_message_id_fkey'
+						columns: ['message_id']
+						isOneToOne: false
+						referencedRelation: 'message'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'message_tag_link_tag_slug_fkey'
+						columns: ['tag_slug']
+						isOneToOne: false
+						referencedRelation: 'message_tag'
+						referencedColumns: ['slug']
+					},
+				]
+			}
 			notification: {
 				Row: {
 					actor_uid: string
@@ -459,81 +534,6 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'user_profile'
 						referencedColumns: ['uid']
-					},
-				]
-			}
-			message: {
-				Row: {
-					created_at: string
-					id: string
-				}
-				Insert: {
-					created_at?: string
-					id?: string
-				}
-				Update: {
-					created_at?: string
-					id?: string
-				}
-				Relationships: []
-			}
-			message_tag: {
-				Row: {
-					archived: boolean
-					created_at: string
-					description: string | null
-					label: string
-					slug: string
-					sort_order: number
-				}
-				Insert: {
-					archived?: boolean
-					created_at?: string
-					description?: string | null
-					label: string
-					slug: string
-					sort_order?: number
-				}
-				Update: {
-					archived?: boolean
-					created_at?: string
-					description?: string | null
-					label?: string
-					slug?: string
-					sort_order?: number
-				}
-				Relationships: []
-			}
-			message_tag_link: {
-				Row: {
-					created_at: string
-					message_id: string
-					tag_slug: string
-				}
-				Insert: {
-					created_at?: string
-					message_id: string
-					tag_slug: string
-				}
-				Update: {
-					created_at?: string
-					message_id?: string
-					tag_slug?: string
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'message_tag_link_message_id_fkey'
-						columns: ['message_id']
-						isOneToOne: false
-						referencedRelation: 'message'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'message_tag_link_tag_slug_fkey'
-						columns: ['tag_slug']
-						isOneToOne: false
-						referencedRelation: 'message_tag'
-						referencedColumns: ['slug']
 					},
 				]
 			}
@@ -1420,7 +1420,7 @@ export type Database = {
 						foreignKeyName: 'user_card_review_uid_lang_day_session_fkey'
 						columns: ['uid', 'lang', 'day_session']
 						isOneToOne: false
-						referencedRelation: 'user_deck_review_state'
+						referencedRelation: 'user_review_session'
 						referencedColumns: ['uid', 'lang', 'day_session']
 					},
 				]
@@ -1535,48 +1535,6 @@ export type Database = {
 					},
 				]
 			}
-			user_deck_review_state: {
-				Row: {
-					created_at: string
-					day_session: string
-					lang: string
-					manifest: Json | null
-					stage: number
-					uid: string
-				}
-				Insert: {
-					created_at?: string
-					day_session: string
-					lang: string
-					manifest?: Json | null
-					stage?: number
-					uid?: string
-				}
-				Update: {
-					created_at?: string
-					day_session?: string
-					lang?: string
-					manifest?: Json | null
-					stage?: number
-					uid?: string
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'user_deck_review_state_lang_uid_fkey'
-						columns: ['lang', 'uid']
-						isOneToOne: false
-						referencedRelation: 'user_deck'
-						referencedColumns: ['lang', 'uid']
-					},
-					{
-						foreignKeyName: 'user_deck_review_state_lang_uid_fkey'
-						columns: ['lang', 'uid']
-						isOneToOne: false
-						referencedRelation: 'user_deck_plus'
-						referencedColumns: ['lang', 'uid']
-					},
-				]
-			}
 			user_profile: {
 				Row: {
 					avatar_path: string | null
@@ -1615,6 +1573,83 @@ export type Database = {
 					username?: string | null
 				}
 				Relationships: []
+			}
+			user_review_milestone: {
+				Row: {
+					created_at: string
+					day_session: string
+					event: string
+					id: string
+					lang: string
+					stage: number | null
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					day_session: string
+					event: string
+					id?: string
+					lang: string
+					stage?: number | null
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					day_session?: string
+					event?: string
+					id?: string
+					lang?: string
+					stage?: number | null
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'user_review_milestone_session_fkey'
+						columns: ['uid', 'lang', 'day_session']
+						isOneToOne: false
+						referencedRelation: 'user_review_session'
+						referencedColumns: ['uid', 'lang', 'day_session']
+					},
+				]
+			}
+			user_review_session: {
+				Row: {
+					created_at: string
+					day_session: string
+					lang: string
+					manifest: Json | null
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					day_session: string
+					lang: string
+					manifest?: Json | null
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					day_session?: string
+					lang?: string
+					manifest?: Json | null
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'user_review_session_lang_uid_fkey'
+						columns: ['lang', 'uid']
+						isOneToOne: false
+						referencedRelation: 'user_deck'
+						referencedColumns: ['lang', 'uid']
+					},
+					{
+						foreignKeyName: 'user_review_session_lang_uid_fkey'
+						columns: ['lang', 'uid']
+						isOneToOne: false
+						referencedRelation: 'user_deck_plus'
+						referencedColumns: ['lang', 'uid']
+					},
+				]
 			}
 		}
 		Views: {
@@ -1953,6 +1988,7 @@ export type Database = {
 				}
 				Returns: Json
 			}
+			create_orphan_message: { Args: never; Returns: string }
 			create_playlist_with_links: {
 				Args: {
 					cover_image_path?: string
@@ -2054,17 +2090,7 @@ export type Database = {
 				| 'change_suggested'
 		}
 		CompositeTypes: {
-			phrase_with_translations_input: {
-				phrase_text: string | null
-				translations:
-					| Database['public']['CompositeTypes']['translation_input'][]
-					| null
-				only_reverse: boolean | null
-			}
-			translation_input: {
-				lang: string | null
-				text: string | null
-			}
+			[_ in never]: never
 		}
 	}
 	storage: {

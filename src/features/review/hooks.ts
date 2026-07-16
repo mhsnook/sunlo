@@ -1,5 +1,4 @@
 import { useMutation } from '@tanstack/react-query'
-import supabase from '@/lib/supabase-client'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { toastError } from '@/components/ui/sonner'
 import {
@@ -10,15 +9,19 @@ import {
 	useReviewStage,
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
-import { cardReviewsCollection, reviewDaysCollection } from './collections'
+import {
+	cardReviewsCollection,
+	reviewSessionsCollection,
+	reviewMilestonesCollection,
+} from './collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
-	CardReviewSchema,
 	type CardReviewType,
-	DailyReviewStateSchema,
-	type DailyReviewStateType,
+	type ReviewSessionType,
+	type ReviewMilestoneType,
 } from './schemas'
+import { useUserId } from '@/lib/use-auth'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardDirectionType } from '@/features/deck/schemas'
 import { toManifestEntry, type ManifestEntry } from './manifest'
@@ -36,6 +39,7 @@ export type { ReviewStages, ReviewsMap }
 export { buildReviewsMap }
 
 interface PostReviewInput {
+	uid: uuid
 	phrase_id: uuid
 	lang: string
 	direction: CardDirectionType
@@ -45,75 +49,58 @@ interface PostReviewInput {
 	previousReview?: CardReviewType
 }
 
-const postReview = async (submitData: PostReviewInput) => {
-	const {
+// Build a full review row client-side (id + created_at included, so the
+// optimistic insert and its realtime echo share a key).
+const buildReviewRow = (submitData: PostReviewInput): CardReviewType => {
+	const { uid, phrase_id, lang, direction, score, day_session, stage } =
+		submitData
+	const fsrs = isScoringReview({ stage })
+		? calculateFSRS({ score, previousReview: submitData.previousReview })
+		: { difficulty: null, stability: null, retrievability: null }
+
+	return {
+		id: crypto.randomUUID(),
+		created_at: new Date().toISOString(),
+		uid,
 		phrase_id,
 		lang,
 		direction,
 		score,
 		day_session,
 		stage,
-		previousReview,
-	} = submitData
-
-	// Calculate FSRS values client-side. Stage-3 (again-round) rows are
-	// tracking-only — they carry null FSRS columns and never feed scheduling —
-	// so only the scoring stages compute real values.
-	const fsrs = isScoringReview({ stage })
-		? calculateFSRS({ score, previousReview })
-		: { difficulty: null, stability: null, retrievability: null }
-
-	// Direct insert - CHECK constraints on table validate the values
-	const { data } = await supabase
-		.from('user_card_review')
-		.insert({
-			phrase_id,
-			lang,
-			direction,
-			score,
-			day_session,
-			stage,
-			difficulty: fsrs.difficulty,
-			stability: fsrs.stability,
-			review_time_retrievability: fsrs.retrievability,
-		})
-		.select()
-		.single()
-		.throwOnError()
-
-	return data
+		difficulty: fsrs.difficulty,
+		stability: fsrs.stability,
+		review_time_retrievability: fsrs.retrievability,
+	}
 }
 
-interface UpdateReviewInput {
-	review_id: uuid
-	score: Score
+// Append a new review as an optimistic collection action; the collection's
+// onInsert persists it. Resolves once the write lands (or throws on failure,
+// rolling the optimistic row back).
+const appendReview = async (row: CardReviewType): Promise<CardReviewType> => {
+	await cardReviewsCollection.insert(row).isPersisted.promise
+	return row
+}
+
+// A scoring-pass correction: amend the existing row in place. FSRS is
+// recomputed against the chain predecessor (not the row we're overwriting).
+const correctReview = async (
+	existing: CardReviewType,
+	score: Score,
 	previousReview?: CardReviewType
-}
-
-const updateReview = async (submitData: UpdateReviewInput) => {
-	const { review_id, score, previousReview } = submitData
-
-	// Calculate FSRS values client-side
-	const fsrs = calculateFSRS({
+): Promise<CardReviewType> => {
+	const fsrs = calculateFSRS({ score, previousReview })
+	await cardReviewsCollection.update(existing.id, (draft) => {
+		draft.score = score
+		draft.difficulty = fsrs.difficulty
+		draft.stability = fsrs.stability
+	}).isPersisted.promise
+	return {
+		...existing,
 		score,
-		previousReview,
-	})
-
-	// Direct update - CHECK constraints on table validate the values
-	const { data } = await supabase
-		.from('user_card_review')
-		.update({
-			score,
-			difficulty: fsrs.difficulty,
-			stability: fsrs.stability,
-			updated_at: new Date().toISOString(),
-		})
-		.eq('id', review_id)
-		.select()
-		.single()
-		.throwOnError()
-
-	return data
+		difficulty: fsrs.difficulty,
+		stability: fsrs.stability,
+	}
 }
 
 function mapToStats(
@@ -171,6 +158,32 @@ export function useNextValid(): number {
 		: getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
+/**
+ * The server-persisted stage for a session: the `stage` of the latest
+ * user_review_milestone. Replaces the old mutable `user_review_session.stage` —
+ * progress is now an append-only log, so the newest milestone wins. Returns
+ * undefined when no milestone has landed yet (brand-new session), which lets
+ * callers fall back to the client-inferred stage.
+ */
+export function useReviewStageServer(
+	lang: string,
+	day_session: string
+): ReviewStages | undefined {
+	const { data } = useLiveQuery(
+		(q) =>
+			q
+				.from({ milestone: reviewMilestonesCollection })
+				.where(({ milestone }) =>
+					and(eq(milestone.lang, lang), eq(milestone.day_session, day_session))
+				)
+				.orderBy(({ milestone }) => milestone.created_at, 'desc')
+				.limit(1)
+				.findOne(),
+		[lang, day_session]
+	)
+	return (data?.stage ?? undefined) as ReviewStages | undefined
+}
+
 export function useReviewsToday(lang: string, day_session: string) {
 	const reviewsQuery = useLiveQuery(
 		(q) =>
@@ -184,10 +197,13 @@ export function useReviewsToday(lang: string, day_session: string) {
 		[lang, day_session]
 	)
 	const reviewDayQuery = useReviewDay(lang, day_session)
+	// Stage now folds out of the append-only milestone log, not the session row.
+	const stage = useReviewStageServer(lang, day_session)
 	return {
 		isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
 		data: {
 			...reviewDayQuery.data,
+			stage,
 			reviews: reviewsQuery.data,
 			reviewsMap: buildReviewsMap(reviewsQuery.data),
 		},
@@ -220,11 +236,11 @@ export type ReviewStats = ReturnType<typeof useReviewsTodayStats>['data']
 export function useReviewDay(
 	lang: string,
 	day_session: string
-): UseLiveQueryResult<DailyReviewStateType> {
+): UseLiveQueryResult<ReviewSessionType> {
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ day: reviewDaysCollection })
+				.from({ day: reviewSessionsCollection })
 				.where(({ day }) =>
 					and(eq(day.day_session, day_session), eq(day.lang, lang))
 				)
@@ -246,7 +262,7 @@ export async function ensureManifestCardsInCollection(
 	lang: string,
 	day_session: string
 ) {
-	const reviewDay = reviewDaysCollection.toArray.find(
+	const reviewDay = reviewSessionsCollection.toArray.find(
 		(d) => d.lang === lang && d.day_session === day_session
 	)
 	if (!reviewDay?.manifest?.length) return
@@ -363,6 +379,7 @@ export function useReviewMutation(
 ) {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
+	const userId = useUserId()
 	const { gotoIndex, gotoEnd } = useReviewActions()
 	const nextIndex = useNextValid()
 
@@ -414,11 +431,11 @@ export function useReviewMutation(
 					)
 					return {
 						action: 'update',
-						row: await updateReview({
-							score: score as Score,
-							review_id: prevDataToday.id,
-							previousReview: chainPredecessor,
-						}),
+						row: await correctReview(
+							prevDataToday,
+							score as Score,
+							chainPredecessor
+						),
 					}
 				}
 				// First scoring review for this card today.
@@ -430,15 +447,18 @@ export function useReviewMutation(
 				})
 				return {
 					action: 'insert',
-					row: await postReview({
-						score: score as Score,
-						phrase_id: pid,
-						lang,
-						direction,
-						day_session,
-						stage,
-						previousReview: latestReview,
-					}),
+					row: await appendReview(
+						buildReviewRow({
+							uid: userId!,
+							score: score as Score,
+							phrase_id: pid,
+							lang,
+							direction,
+							day_session,
+							stage,
+							previousReview: latestReview,
+						})
+					),
 				}
 			}
 
@@ -450,34 +470,26 @@ export function useReviewMutation(
 			console.log(`Again-round: appending review`, { pid, direction, score })
 			return {
 				action: 'insert',
-				row: await postReview({
-					score: score as Score,
-					phrase_id: pid,
-					lang,
-					direction,
-					day_session,
-					stage: 3,
-				}),
+				row: await appendReview(
+					buildReviewRow({
+						uid: userId!,
+						score: score as Score,
+						phrase_id: pid,
+						lang,
+						direction,
+						day_session,
+						stage: 3,
+					})
+				),
 			}
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
-			// The DB write has already succeeded. Any failure below is a local
-			// sync problem, not a review-posting problem — isolate it so a misleading
-			// "error posting your review" toast never fires, and so the slide
-			// transition always runs and the user isn't stuck on the same card.
+			// The review itself is already persisted + in the collection (the
+			// optimistic action did that). This only mirrors FSRS onto the local
+			// card. Isolate any failure so a misleading "error posting your review"
+			// toast never fires and the slide transition always runs.
 			try {
-				if (data.action === 'update') {
-					cardReviewsCollection.utils.writeUpdate(
-						CardReviewSchema.parse(data.row)
-					)
-				}
-				if (data.action === 'insert') {
-					cardReviewsCollection.utils.writeInsert(
-						CardReviewSchema.parse(data.row)
-					)
-				}
-
 				// Only sync card scheduling state from scoring reviews (stages 1–2).
 				// Again-round rows are for tracking only — they carry null FSRS
 				// values that would corrupt the scheduling chain.
@@ -542,29 +554,39 @@ export const useOneCardReviews = (
 	)
 
 /**
- * Persist a stage transition to the server.
- * Call alongside the Zustand store action for responsive UI + durable state.
+ * Append a review-session milestone as an optimistic collection action. The
+ * row (client-generated id + created_at) lands in the collection immediately —
+ * so `useReviewStageServer` reflects it at once — and the collection's onInsert
+ * persists it and owns any error.
+ */
+export function insertMilestone(input: {
+	uid: uuid
+	lang: string
+	day_session: string
+	event: ReviewMilestoneType['event']
+	stage: number
+}) {
+	reviewMilestonesCollection.insert({
+		id: crypto.randomUUID(),
+		created_at: new Date().toISOString(),
+		...input,
+	})
+}
+
+/**
+ * Record a stage transition — a new milestone, not an in-place update, so two
+ * devices mid-session no longer clobber each other. Fire-and-forget.
  */
 export function useUpdateReviewStage(lang: string, day_session: string) {
-	return useMutation({
-		mutationFn: async (stage: number) => {
-			const { data } = await supabase
-				.from('user_deck_review_state')
-				.update({ stage })
-				.eq('lang', lang)
-				.eq('day_session', day_session)
-				.select()
-				.single()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			reviewDaysCollection.utils.writeUpdate(DailyReviewStateSchema.parse(data))
-		},
-		onError: (error) => {
-			console.log('Error updating review stage:', error)
-		},
-	})
+	const userId = useUserId()
+	return (stage: number) =>
+		insertMilestone({
+			uid: userId!,
+			lang,
+			day_session,
+			event: stage >= 5 ? 'session_completed' : 'stage_advanced',
+			stage,
+		})
 }
 
 /**

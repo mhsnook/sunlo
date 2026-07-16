@@ -44,7 +44,6 @@ function stubReview(score: number): CardReviewType {
 		difficulty: 5,
 		review_time_retrievability: null,
 		stability: 3,
-		updated_at: null,
 	}
 }
 
