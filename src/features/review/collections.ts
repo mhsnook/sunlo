@@ -33,17 +33,15 @@ export const cardReviewsCollection = createCollection(
 		// on the table validate the values. updated_at null -> undefined lets the
 		// DB default (now()) fill a fresh row.
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('user_card_review')
-						.insert({
-							...m.modified,
-							updated_at: m.modified.updated_at ?? undefined,
-						})
-						.throwOnError()
+			await supabase
+				.from('user_card_review')
+				.insert(
+					transaction.mutations.map((m) => ({
+						...m.modified,
+						updated_at: m.modified.updated_at ?? undefined,
+					}))
 				)
-			)
+				.throwOnError()
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {

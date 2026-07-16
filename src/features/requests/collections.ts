@@ -92,26 +92,25 @@ export const phraseRequestUpvotesCollection = createCollection(
 		// One-per-user enforced by the (request_id, uid) PK; upvote_count kept by
 		// a DB trigger. uid defaults to auth.uid().
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('phrase_request_upvote')
-						.insert({ request_id: m.modified.request_id })
-						.throwOnError()
+			await supabase
+				.from('phrase_request_upvote')
+				.insert(
+					transaction.mutations.map((m) => ({
+						request_id: m.modified.request_id,
+					}))
 				)
-			)
+				.throwOnError()
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('phrase_request_upvote')
-						.delete()
-						.eq('request_id', m.original.request_id)
-						.throwOnError()
+			await supabase
+				.from('phrase_request_upvote')
+				.delete()
+				.in(
+					'request_id',
+					transaction.mutations.map((m) => m.original.request_id)
 				)
-			)
+				.throwOnError()
 			return { refetch: false }
 		},
 	})
@@ -229,26 +228,25 @@ export const commentUpvotesCollection = createCollection(
 		// One-per-user enforced by the (comment_id, uid) PK; upvote_count kept by
 		// a DB trigger. uid defaults to auth.uid().
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('comment_upvote')
-						.insert({ comment_id: m.modified.comment_id })
-						.throwOnError()
+			await supabase
+				.from('comment_upvote')
+				.insert(
+					transaction.mutations.map((m) => ({
+						comment_id: m.modified.comment_id,
+					}))
 				)
-			)
+				.throwOnError()
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('comment_upvote')
-						.delete()
-						.eq('comment_id', m.original.comment_id)
-						.throwOnError()
+			await supabase
+				.from('comment_upvote')
+				.delete()
+				.in(
+					'comment_id',
+					transaction.mutations.map((m) => m.original.comment_id)
 				)
-			)
+				.throwOnError()
 			return { refetch: false }
 		},
 	})

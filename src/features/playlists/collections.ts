@@ -73,26 +73,25 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 		// One-per-user enforced by the (playlist_id, uid) PK; upvote_count kept by
 		// a DB trigger. uid defaults to auth.uid().
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('phrase_playlist_upvote')
-						.insert({ playlist_id: m.modified.playlist_id })
-						.throwOnError()
+			await supabase
+				.from('phrase_playlist_upvote')
+				.insert(
+					transaction.mutations.map((m) => ({
+						playlist_id: m.modified.playlist_id,
+					}))
 				)
-			)
+				.throwOnError()
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('phrase_playlist_upvote')
-						.delete()
-						.eq('playlist_id', m.original.playlist_id)
-						.throwOnError()
+			await supabase
+				.from('phrase_playlist_upvote')
+				.delete()
+				.in(
+					'playlist_id',
+					transaction.mutations.map((m) => m.original.playlist_id)
 				)
-			)
+				.throwOnError()
 			return { refetch: false }
 		},
 	})
