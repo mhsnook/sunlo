@@ -50,8 +50,7 @@ interface PostReviewInput {
 }
 
 // Build a full review row client-side (id + created_at included, so the
-// optimistic insert and its realtime echo share a key). Stage-3 (again-round)
-// rows are tracking-only — null FSRS, never scheduled.
+// optimistic insert and its realtime echo share a key).
 const buildReviewRow = (submitData: PostReviewInput): CardReviewType => {
 	const { uid, phrase_id, lang, direction, score, day_session, stage } =
 		submitData
@@ -72,7 +71,6 @@ const buildReviewRow = (submitData: PostReviewInput): CardReviewType => {
 		difficulty: fsrs.difficulty,
 		stability: fsrs.stability,
 		review_time_retrievability: fsrs.retrievability,
-		updated_at: null,
 	}
 }
 
@@ -92,19 +90,16 @@ const correctReview = async (
 	previousReview?: CardReviewType
 ): Promise<CardReviewType> => {
 	const fsrs = calculateFSRS({ score, previousReview })
-	const updated_at = new Date().toISOString()
 	await cardReviewsCollection.update(existing.id, (draft) => {
 		draft.score = score
 		draft.difficulty = fsrs.difficulty
 		draft.stability = fsrs.stability
-		draft.updated_at = updated_at
 	}).isPersisted.promise
 	return {
 		...existing,
 		score,
 		difficulty: fsrs.difficulty,
 		stability: fsrs.stability,
-		updated_at,
 	}
 }
 

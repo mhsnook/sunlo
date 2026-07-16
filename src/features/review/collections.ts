@@ -30,17 +30,11 @@ export const cardReviewsCollection = createCollection(
 		schema: CardReviewSchema,
 		// FSRS values + the client-generated id are computed in the review hook
 		// and carried on the row; the handler just persists it. CHECK constraints
-		// on the table validate the values. updated_at null -> undefined lets the
-		// DB default (now()) fill a fresh row.
+		// validate the values.
 		onInsert: async ({ transaction }) => {
 			await supabase
 				.from('user_card_review')
-				.insert(
-					transaction.mutations.map((m) => ({
-						...m.modified,
-						updated_at: m.modified.updated_at ?? undefined,
-					}))
-				)
+				.insert(transaction.mutations.map((m) => m.modified))
 				.throwOnError()
 			return { refetch: false }
 		},
@@ -49,10 +43,7 @@ export const cardReviewsCollection = createCollection(
 				transaction.mutations.map((m) =>
 					supabase
 						.from('user_card_review')
-						.update({
-							...m.changes,
-							updated_at: m.changes.updated_at ?? undefined,
-						})
+						.update(m.changes)
 						.eq('id', m.original.id)
 						.throwOnError()
 				)

@@ -25,7 +25,6 @@ function mockReview(overrides: Partial<CardReviewType> = {}): CardReviewType {
 		difficulty: 5.0,
 		stability: 10.0,
 		review_time_retrievability: 0.9,
-		updated_at: null,
 		...overrides,
 	}
 }

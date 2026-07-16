@@ -957,6 +957,15 @@ $$;
 
 alter function "public"."update_phrase_translation_updated_at" () owner to "postgres";
 
+create or replace function "public"."update_user_card_review_updated_at" () returns "trigger" language "plpgsql" as $$
+begin
+  NEW.updated_at = now();
+  return NEW;
+end;
+$$;
+
+alter function "public"."update_user_card_review_updated_at" () owner to "postgres";
+
 create or replace function "public"."update_user_deck_updated_at" () returns "trigger" language "plpgsql" as $$
 begin
   NEW.updated_at = now();
@@ -2400,6 +2409,10 @@ execute function "public"."update_phrase_translation_updated_at" ();
 create or replace trigger "trigger_validate_friend_request_action"
 before insert on "public"."friend_request_action" for each row
 execute function "public"."validate_friend_request_action" ();
+
+create or replace trigger "update_user_card_review_updated_at"
+before update on "public"."user_card_review" for each row
+execute function "public"."update_user_card_review_updated_at" ();
 
 create or replace trigger "update_user_deck_updated_at"
 before update on "public"."user_deck" for each row
@@ -4433,6 +4446,12 @@ grant all on function "public"."update_phrase_translation_updated_at" () to "ano
 grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
 
 grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
+
+grant all on function "public"."update_user_card_review_updated_at" () to "anon";
+
+grant all on function "public"."update_user_card_review_updated_at" () to "authenticated";
+
+grant all on function "public"."update_user_card_review_updated_at" () to "service_role";
 
 grant all on function "public"."update_user_deck_updated_at" () to "anon";
 

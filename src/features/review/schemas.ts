@@ -20,7 +20,7 @@ export const CardReviewSchema = z.object({
 	difficulty: z.number().nullable(),
 	review_time_retrievability: z.number().nullable(),
 	stability: z.number().nullable(),
-	updated_at: z.string().nullable(),
+	updated_at: z.string().optional(),
 })
 
 export type CardReviewType = z.infer<typeof CardReviewSchema>
