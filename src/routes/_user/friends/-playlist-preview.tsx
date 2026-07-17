@@ -25,7 +25,7 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 	return (
 		<Link
 			to={'/learn/$lang/playlists/$playlistId'}
-			params={{ lang: playlist.lang, playlistId: id }}
+			params={{ lang: playlist.lang, playlistId: playlist.public_id }}
 		>
 			<div className="bg-card text-card-foreground @container relative z-10 flex flex-col gap-3 rounded-lg border py-0 shadow-sm">
 				<CardHeader className="border-b-3-mlo-primary mx-4 mb-0 border-b px-0 py-4">

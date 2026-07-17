@@ -54,7 +54,7 @@ export const PhraseTinyCard = ({
 		<Link
 			className={cn(`m-1 transition-all hover:-translate-y-px`, className)}
 			to="/learn/$lang/phrases/$id"
-			params={{ lang: phrase.lang, id: pid }}
+			params={{ lang: phrase.lang, id: phrase.public_id }}
 		>
 			<CardlikeFlashcard
 				className="flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2"

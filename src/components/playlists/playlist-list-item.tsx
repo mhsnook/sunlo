@@ -180,7 +180,7 @@ export function PlaylistItem({
 						<Link
 							key={phrase.id}
 							to="/learn/$lang/phrases/$id"
-							params={{ lang: phrase.lang, id: phrase.id }}
+							params={{ lang: phrase.lang, id: phrase.public_id }}
 							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
 						>
 							<span className="text-muted-foreground/50 w-6 text-end text-xs">

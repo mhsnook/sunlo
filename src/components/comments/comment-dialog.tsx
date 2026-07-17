@@ -14,6 +14,7 @@ import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
 import supabase from '@/lib/supabase-client'
+import { newPublicId } from '@/lib/public-id'
 import { useUserId } from '@/lib/use-auth'
 import { cn } from '@/lib/utils'
 import {
@@ -427,6 +428,11 @@ export const createComment = createOptimisticAction<CreateCommentInput>({
 		const now = new Date().toISOString()
 		commentsCollection.insert({
 			id: commentId,
+			// Placeholder: the comment is created server-side by the RPC below,
+			// which returns the authoritative public_id (via row_to_json) that
+			// writeInsert then swaps in. This value only has to satisfy the
+			// schema for the brief optimistic window.
+			public_id: newPublicId(),
 			request_id: requestId,
 			parent_comment_id: parentCommentId,
 			uid,

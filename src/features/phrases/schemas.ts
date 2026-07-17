@@ -42,6 +42,7 @@ export type TranslationType = z.infer<typeof TranslationSchema>
 // still ride from the `phrase_meta` view).
 export const PhraseSchema = z.object({
 	id: z.string().uuid(),
+	public_id: z.string(),
 	created_at: z.string(),
 	text: z.string(),
 	lang: LangSchema,

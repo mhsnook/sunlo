@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createOptimisticAction } from '@tanstack/db'
 
 import supabase from '@/lib/supabase-client'
+import { newPublicId } from '@/lib/public-id'
 import { MarkdownHint } from '@/components/comments/comment-dialog'
 import { useUserId } from '@/lib/use-auth'
 import { useInvalidateFeed } from '@/features/feed/hooks'
@@ -25,15 +26,17 @@ import type { uuid } from '@/types/main'
 
 type CreateInput = {
 	id: uuid
+	publicId: string
 	prompt: string
 	lang: string
 	userId: uuid
 }
 
 const createRequest = createOptimisticAction<CreateInput>({
-	onMutate: ({ id, prompt, lang, userId }) => {
+	onMutate: ({ id, publicId, prompt, lang, userId }) => {
 		phraseRequestsCollection.insert({
 			id,
+			public_id: publicId,
 			prompt,
 			lang,
 			requester_uid: userId,
@@ -45,14 +48,14 @@ const createRequest = createOptimisticAction<CreateInput>({
 		})
 		phraseRequestUpvotesCollection.insert({ request_id: id })
 	},
-	mutationFn: async ({ id, prompt, lang, userId }) => {
+	mutationFn: async ({ id, publicId, prompt, lang, userId }) => {
 		// .select() the inserted row back so we can drop the synced state
 		// into the collections directly — no full-table refetch. The DB's
 		// column DEFAULT on message_id creates the message row in the same
 		// transaction; pull that into messagesCollection too.
 		const { data } = await supabase
 			.from('phrase_request')
-			.insert({ id, prompt, lang, requester_uid: userId })
+			.insert({ id, public_id: publicId, prompt, lang, requester_uid: userId })
 			.select()
 			.single()
 			.throwOnError()
@@ -111,8 +114,10 @@ export function RequestForm({
 						messagesCollection.preload(),
 					])
 					const id = crypto.randomUUID()
+					const publicId = newPublicId()
 					const tx = createRequest({
 						id,
+						publicId,
 						prompt: value.prompt,
 						lang,
 						userId: userId!,

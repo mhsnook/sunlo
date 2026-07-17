@@ -23,7 +23,7 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 					uid={request.requester_uid}
 					action="posted a Request"
 					timeLinkTo="/learn/$lang/requests/$id"
-					timeLinkParams={{ lang: request.lang, id: request.id }}
+					timeLinkParams={{ lang: request.lang, id: request.public_id }}
 					timeValue={request.created_at}
 				/>
 				<div className="flex flex-col-reverse items-center gap-2 @md:flex-row">

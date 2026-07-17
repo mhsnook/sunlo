@@ -491,7 +491,7 @@ function RequestsYouCanHelp() {
 					<Link
 						key={request.id}
 						to="/learn/$lang/requests/$id"
-						params={{ lang: request.lang, id: request.id }}
+						params={{ lang: request.lang, id: request.public_id }}
 						className="hover:bg-muted/50 flex items-start gap-3 rounded-lg border p-4 transition-colors"
 					>
 						<LangBadge lang={request.lang} />

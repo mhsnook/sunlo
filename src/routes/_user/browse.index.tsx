@@ -403,7 +403,13 @@ function PopularRequestsSection() {
 function RequestCard({
 	request,
 }: {
-	request: { id: string; lang: string; prompt: string; upvote_count: number }
+	request: {
+		id: string
+		public_id: string
+		lang: string
+		prompt: string
+		upvote_count: number
+	}
 }) {
 	return (
 		<Card className="transition-shadow hover:shadow-md">
@@ -430,7 +436,7 @@ function RequestCard({
 				</span>
 				<Link
 					to="/learn/$lang/requests/$id"
-					params={{ lang: request.lang, id: request.id }}
+					params={{ lang: request.lang, id: request.public_id }}
 					className={buttonVariants({ variant: 'soft', size: 'sm' })}
 				>
 					View Details
@@ -491,6 +497,7 @@ function PlaylistCard({
 }: {
 	playlist: {
 		id: string
+		public_id: string
 		lang: string
 		title: string
 		description: string | null
@@ -541,7 +548,7 @@ function PlaylistCard({
 				</div>
 				<Link
 					to="/learn/$lang/playlists/$playlistId"
-					params={{ lang: playlist.lang, playlistId: playlist.id }}
+					params={{ lang: playlist.lang, playlistId: playlist.public_id }}
 					className={cn(buttonVariants({ variant: 'soft' }), 'w-full')}
 				>
 					Start Learning

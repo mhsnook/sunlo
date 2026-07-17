@@ -1,6 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
+import { looksLikeUuid } from '@/lib/public-id'
 import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
@@ -51,19 +52,25 @@ export const useRequestCounts = (
 	}
 }
 
+// Resolves by public_id first (the canonical URL form) and falls back to the
+// uuid so old bookmarks and foreign-key deep links keep working.
 export const useRequest = (
-	id: uuid | undefined | null
-): UseLiveQueryResult<PhraseRequestType> =>
-	useLiveQuery(
+	handle: string | undefined | null
+): UseLiveQueryResult<PhraseRequestType> => {
+	const byUuid = !!handle && looksLikeUuid(handle)
+	return useLiveQuery(
 		(q) =>
-			!id
+			!handle
 				? undefined
 				: q
 						.from({ req: phraseRequestsCollection })
-						.where(({ req }) => eq(req.id, id))
+						.where(({ req }) =>
+							byUuid ? eq(req.id, handle) : eq(req.public_id, handle)
+						)
 						.findOne(),
-		[id]
+		[handle, byUuid]
 	)
+}
 
 export function useAnyonesPhraseRequests(
 	uid: uuid,
@@ -91,20 +98,29 @@ export const useHasRequestUpvote = (requestId: uuid): boolean =>
 		[requestId]
 	).data?.length
 
-/** Look up a single comment by ID. Returns undefined when no id is given. */
+/**
+ * Look up a single comment by public_id or uuid. Returns undefined when no
+ * handle is given. The request thread's `?focus=` param is a comment public_id,
+ * but in-app deep links that only carry the uuid (e.g. comment_phrase_link
+ * rows) still resolve.
+ */
 export const useOneComment = (
-	commentId: uuid | undefined
-): UseLiveQueryResult<RequestCommentType> =>
-	useLiveQuery(
+	handle: uuid | undefined
+): UseLiveQueryResult<RequestCommentType> => {
+	const byUuid = !!handle && looksLikeUuid(handle)
+	return useLiveQuery(
 		(q) =>
-			!commentId
+			!handle
 				? undefined
 				: q
 						.from({ comment: commentsCollection })
-						.where(({ comment }) => eq(comment.id, commentId))
+						.where(({ comment }) =>
+							byUuid ? eq(comment.id, handle) : eq(comment.public_id, handle)
+						)
 						.findOne(),
-		[commentId]
+		[handle, byUuid]
 	)
+}
 
 /**
  * Comment-phrase-link rows for a single comment. Phrase hydration is the

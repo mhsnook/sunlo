@@ -29,7 +29,7 @@ export function ShareRequestButton({
 			.share({
 				title: `Sunlo: ${request?.prompt}`,
 				text: `Check out this request for a phrase in ${languages[request.lang]}: ${request.prompt}`,
-				url: `${window.location.origin}/learn/${request.lang}/requests/${request.id}`,
+				url: `${window.location.origin}/learn/${request.lang}/requests/${request.public_id}`,
 			})
 			.catch((error: DOMException) => {
 				if (error.name !== 'AbortError') {

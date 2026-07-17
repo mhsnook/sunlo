@@ -23,7 +23,7 @@ const handleReport = () => {
 }
 
 export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
-	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?focus=${comment.id}`
+	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?focus=${comment.public_id}`
 
 	const handleShare = () => {
 		if (!navigator.share) {

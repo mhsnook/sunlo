@@ -38,12 +38,12 @@ import {
 	ReplyDialog,
 	deriveReplyDialogMode,
 } from '@/components/comments/reply-dialog'
-import { toastNeutral } from '@/components/ui/sonner'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
-		focus: z.string().uuid().optional().catch(undefined),
+		// A comment public_id (opaque short string); uuids still resolve too.
+		focus: z.string().optional().catch(undefined),
 		mode: z.enum(['reply', 'edit', 'comment', 'search']).optional(),
 		attaching: z.boolean().optional(),
 	}),
@@ -53,7 +53,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 			title: `${languages[params.lang]} Request`,
 		}),
 	},
-	loader: async ({ context, location, cause }) => {
+	loader: async ({ context }) => {
 		const preloads: Promise<unknown>[] = [
 			commentsCollection.preload(),
 			commentPhraseLinksCollection.preload(),
@@ -62,12 +62,6 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 			preloads.push(commentUpvotesCollection.preload())
 		}
 		await Promise.all(preloads)
-		const rawFocus = new URLSearchParams(location.searchStr).get('focus')
-		if (rawFocus && !z.string().uuid().safeParse(rawFocus).success) {
-			if (cause === 'preload')
-				console.error('Malformed focus param in preload link:', rawFocus)
-			else toastNeutral("Couldn't find that comment")
-		}
 	},
 	component: RequestThreadPage,
 })
@@ -148,21 +142,21 @@ function RequestThreadPage() {
 			</CardlikeRequest>
 
 			<CommentDialog
-				requestId={params.id}
+				requestId={request.id}
 				lang={params.lang}
 				mode={effectiveCommentMode}
 				editComment={editComment ?? undefined}
 			/>
 
-			<ReplyDialog requestId={params.id} lang={params.lang} mode={replyMode} />
+			<ReplyDialog requestId={request.id} lang={params.lang} mode={replyMode} />
 
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
 				<AnswersOnlyToggle answersOnly={search.show === 'answers-only'} />
 				{search.show === 'answers-only' ? (
-					<AnswersOnlyView />
+					<AnswersOnlyView requestId={request.id} />
 				) : (
-					<TopLevelComments requestId={params.id} lang={params.lang} />
+					<TopLevelComments requestId={request.id} lang={params.lang} />
 				)}
 			</Collapsible>
 		</main>
@@ -198,14 +192,13 @@ function AnswersOnlyToggle({ answersOnly }: { answersOnly: boolean }) {
 	)
 }
 
-function AnswersOnlyView() {
-	const params = Route.useParams()
+function AnswersOnlyView({ requestId }: { requestId: uuid }) {
 	const { data: links, isLoading } = useLiveQuery(
 		(q) =>
 			q
 				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.request_id, params.id)),
-		[params.id]
+				.where(({ link }) => eq(link.request_id, requestId)),
+		[requestId]
 	)
 	if (isLoading) return <Loader />
 	const linksWithCommentsMap = mapArrays<CommentPhraseLinkType, 'phrase_id'>(

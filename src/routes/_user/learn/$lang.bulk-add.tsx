@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import languages from '@/lib/languages'
+import { newPublicId } from '@/lib/public-id'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { Separator } from '@/components/ui/separator'
 import { LanguagePicker } from '@/components/fields/language-picker'
@@ -228,6 +229,7 @@ function BulkAddPhrasesPage() {
 
 		const actionPhrases = stagedPhrases.map((staged) => {
 			const phraseId = crypto.randomUUID()
+			const publicId = newPublicId()
 			const onlyReverse = false
 			const cards = shouldCreateCards
 				? directionsForPhrase(onlyReverse).map((direction) => ({
@@ -237,6 +239,7 @@ function BulkAddPhrasesPage() {
 				: []
 			return {
 				phraseId,
+				publicId,
 				text: staged.phrase_text,
 				onlyReverse,
 				translations: staged.translations.map((t) => ({

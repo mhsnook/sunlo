@@ -6,6 +6,8 @@ import {
 	phraseTagLinksCollection,
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
+import { usePhraseByHandle } from '@/features/phrases/hooks'
+import { Loader } from '@/components/ui/loader'
 import { cardsCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 
@@ -32,9 +34,14 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function RouteComponent() {
 	const { id } = Route.useParams()
+	// `id` is a public_id in canonical URLs; resolve it to the phrase's uuid so
+	// everything below BigPhraseCard keeps working in uuids. Falls back to the
+	// raw param (uuid deep links / old bookmarks), and an unresolved handle
+	// flows through as-is so BigPhraseCard renders its own not-found state.
+	const { data: phrase, isLoading } = usePhraseByHandle(id)
 	return (
 		<main style={style} data-testid="phrase-detail-page">
-			<BigPhraseCard pid={id} />
+			{isLoading ? <Loader /> : <BigPhraseCard pid={phrase?.id ?? id} />}
 		</main>
 	)
 }

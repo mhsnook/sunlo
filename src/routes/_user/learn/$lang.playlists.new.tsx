@@ -122,7 +122,7 @@ function NewPlaylistPageContent() {
 			toastSuccess(`Added new playlist with ${data.links.length} phrases`)
 			void navigate({
 				to: '/learn/$lang/playlists/$playlistId',
-				params: { lang, playlistId: data.playlist.id },
+				params: { lang, playlistId: data.playlist.public_id },
 			})
 		},
 		onError: (error) => {

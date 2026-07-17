@@ -16,6 +16,7 @@ import { langTagsCollection } from '@/features/languages/collections'
 // phrase before cards.
 type CreatePhraseWithTranslationInput = {
 	phraseId: uuid
+	phrasePublicId: string
 	translationId: uuid
 	lang: string
 	text: string
@@ -33,6 +34,7 @@ export const createPhraseWithTranslation =
 	createOptimisticAction<CreatePhraseWithTranslationInput>({
 		onMutate: ({
 			phraseId,
+			phrasePublicId,
 			translationId,
 			lang,
 			text,
@@ -45,6 +47,7 @@ export const createPhraseWithTranslation =
 			const now = new Date().toISOString()
 			phrasesCollection.insert({
 				id: phraseId,
+				public_id: phrasePublicId,
 				lang,
 				text,
 				only_reverse: onlyReverse,
@@ -83,6 +86,7 @@ export const createPhraseWithTranslation =
 		},
 		mutationFn: async ({
 			phraseId,
+			phrasePublicId,
 			translationId,
 			lang,
 			text,
@@ -97,6 +101,7 @@ export const createPhraseWithTranslation =
 				.from('phrase')
 				.insert({
 					id: phraseId,
+					public_id: phrasePublicId,
 					lang,
 					text,
 					only_reverse: onlyReverse,
@@ -133,6 +138,7 @@ export const createPhraseWithTranslation =
 			// the same values we just persisted to keep them past this tick.
 			phrasesCollection.utils.writeInsert({
 				id: phraseId,
+				public_id: phrasePublicId,
 				lang,
 				text,
 				only_reverse: onlyReverse,
@@ -196,6 +202,7 @@ type BulkAddPhrasesInput = {
 	newTags: Array<{ id: uuid; name: string }>
 	phrases: Array<{
 		phraseId: uuid
+		publicId: string
 		text: string
 		onlyReverse: boolean
 		translations: Array<{ id: uuid; lang: string; text: string }>
@@ -219,6 +226,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 		for (const p of phrases) {
 			phrasesCollection.insert({
 				id: p.phraseId,
+				public_id: p.publicId,
 				lang,
 				text: p.text,
 				only_reverse: p.onlyReverse,
@@ -286,6 +294,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 				.insert(
 					phrases.map((p) => ({
 						id: p.phraseId,
+						public_id: p.publicId,
 						lang,
 						text: p.text,
 						only_reverse: p.onlyReverse,
@@ -347,6 +356,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 		for (const p of phrases) {
 			phrasesCollection.utils.writeInsert({
 				id: p.phraseId,
+				public_id: p.publicId,
 				lang,
 				text: p.text,
 				only_reverse: p.onlyReverse,

@@ -9,6 +9,7 @@ export const PhraseRequestStatusEnumSchema = z.enum([
 
 export const PhraseRequestSchema = z.object({
 	id: z.string().uuid(),
+	public_id: z.string(),
 	created_at: z.string(),
 	requester_uid: z.string().uuid(),
 	lang: LangSchema,
@@ -81,6 +82,7 @@ export type RequestPhraseFormInputs = z.infer<typeof RequestPhraseFormSchema>
 
 export const RequestCommentSchema = z.object({
 	id: z.string().uuid(),
+	public_id: z.string(),
 	request_id: z.string().uuid(),
 	parent_comment_id: z.string().uuid().nullable(),
 	uid: z.string().uuid(),

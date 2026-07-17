@@ -44,10 +44,17 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	const replies = repliesData ?? []
 
-	const isFocused = search.focus === comment.id
+	// `focus` is a comment public_id in canonical links, but uuid-sourced deep
+	// links (provenance, answers-only view) still arrive — accept either.
+	const isFocused =
+		search.focus === comment.public_id || search.focus === comment.id
 	const isFocusMode = search.focus && !search.mode
 	const hasHighlightedReply =
-		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
+		isFocusMode &&
+		replies.some(
+			({ reply }) =>
+				reply.public_id === search.focus || reply.id === search.focus
+		)
 	const showSubthread = isFocused || hasHighlightedReply
 
 	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
@@ -81,7 +88,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						timeValue={comment.created_at}
 						action="commented"
 						timeLinkParams={{ id: comment.request_id, lang }}
-						timeLinkSearch={{ focus: comment.id }}
+						timeLinkSearch={{ focus: comment.public_id }}
 						timeLinkTo="/learn/$lang/requests/$id"
 					/>
 
@@ -92,7 +99,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 									to="."
 									search={(prev) => ({
 										...prev,
-										focus: comment.id,
+										focus: comment.public_id,
 										mode: 'edit' as const,
 									})}
 									className={buttonVariants({ variant: 'ghost', size: 'icon' })}
@@ -141,7 +148,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							to={'.'}
 							search={(search) => ({
 								...search,
-								focus: comment.id,
+								focus: comment.public_id,
 								mode: 'reply' as const,
 							})}
 							data-testid="reply-link"
@@ -162,7 +169,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								if (showSubthread) {
 									const { focus: _, ...args } = search
 									return args
-								} else return { ...search, focus: comment.id }
+								} else return { ...search, focus: comment.public_id }
 							}}
 							data-name="show-replies-button"
 						>
@@ -187,7 +194,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							to="."
 							search={(prev) => ({
 								...prev,
-								focus: comment.id,
+								focus: comment.public_id,
 								mode: 'reply' as const,
 							})}
 							className="mt-2 flex grow cursor-pointer flex-row items-center gap-2 py-2"
@@ -216,7 +223,9 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
 	const isHighlighted = useSearch({
 		strict: false,
-		select: (data) => data.focus === comment.id && !data.mode,
+		select: (data) =>
+			(data.focus === comment.public_id || data.focus === comment.id) &&
+			!data.mode,
 	})
 	const userId = useUserId()
 	const links = phraseLinks ?? []
@@ -234,7 +243,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 					timeValue={comment.created_at}
 					action="replied"
 					timeLinkParams={{ id: comment.request_id, lang }}
-					timeLinkSearch={{ focus: comment.id }}
+					timeLinkSearch={{ focus: comment.public_id }}
 					timeLinkTo="/learn/$lang/requests/$id"
 				/>
 
@@ -245,7 +254,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 								to="."
 								search={(prev) => ({
 									...prev,
-									focus: comment.id,
+									focus: comment.public_id,
 									mode: 'edit' as const,
 								})}
 								className={buttonVariants({ variant: 'ghost', size: 'icon' })}

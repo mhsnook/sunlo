@@ -7,6 +7,7 @@ import type {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
 	PhraseFullType,
+	PhraseType,
 } from './schemas'
 import {
 	phrasesFull,
@@ -15,9 +16,31 @@ import {
 	usePhraseComments,
 	type PhraseProvenanceItem,
 } from './live'
+import { phrasesCollection } from './collections'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import { useUserId } from '@/lib/use-auth'
+import { looksLikeUuid } from '@/lib/public-id'
+
+/**
+ * Resolve a route handle (public_id or uuid) to a phrase row. The phrase
+ * detail route addresses phrases by their public_id, but everything downstream
+ * of it works in uuids — so the route resolves here and threads `phrase.id`
+ * onward. Falls back to uuid so old bookmarks and FK deep links keep resolving.
+ */
+export const usePhraseByHandle = (
+	handle: string
+): UseLiveQueryResult<PhraseType> => {
+	const byUuid = looksLikeUuid(handle)
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ p: phrasesCollection })
+				.where(({ p }) => (byUuid ? eq(p.id, handle) : eq(p.public_id, handle)))
+				.findOne(),
+		[handle, byUuid]
+	)
+}
 
 export const useLanguagePhrases = (
 	lang: string

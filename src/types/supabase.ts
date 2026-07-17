@@ -545,6 +545,7 @@ export type Database = {
 					id: string
 					lang: string
 					only_reverse: boolean
+					public_id: string
 					text: string
 					text_script: string | null
 					updated_at: string
@@ -556,6 +557,7 @@ export type Database = {
 					id?: string
 					lang: string
 					only_reverse?: boolean
+					public_id?: string
 					text: string
 					text_script?: string | null
 					updated_at?: string
@@ -567,6 +569,7 @@ export type Database = {
 					id?: string
 					lang?: string
 					only_reverse?: boolean
+					public_id?: string
 					text?: string
 					text_script?: string | null
 					updated_at?: string
@@ -611,6 +614,7 @@ export type Database = {
 					href: string | null
 					id: string
 					lang: string
+					public_id: string
 					title: string
 					uid: string
 					updated_at: string | null
@@ -624,6 +628,7 @@ export type Database = {
 					href?: string | null
 					id?: string
 					lang: string
+					public_id?: string
 					title: string
 					uid?: string
 					updated_at?: string | null
@@ -637,6 +642,7 @@ export type Database = {
 					href?: string | null
 					id?: string
 					lang?: string
+					public_id?: string
 					title?: string
 					uid?: string
 					updated_at?: string | null
@@ -771,6 +777,7 @@ export type Database = {
 					lang: string
 					message_id: string
 					prompt: string
+					public_id: string
 					requester_uid: string
 					updated_at: string | null
 					upvote_count: number
@@ -782,6 +789,7 @@ export type Database = {
 					lang: string
 					message_id?: string
 					prompt: string
+					public_id?: string
 					requester_uid: string
 					updated_at?: string | null
 					upvote_count?: number
@@ -793,6 +801,7 @@ export type Database = {
 					lang?: string
 					message_id?: string
 					prompt?: string
+					public_id?: string
 					requester_uid?: string
 					updated_at?: string | null
 					upvote_count?: number
@@ -1072,6 +1081,7 @@ export type Database = {
 					created_at: string
 					id: string
 					parent_comment_id: string | null
+					public_id: string
 					request_id: string
 					uid: string
 					updated_at: string
@@ -1082,6 +1092,7 @@ export type Database = {
 					created_at?: string
 					id?: string
 					parent_comment_id?: string | null
+					public_id?: string
 					request_id: string
 					uid?: string
 					updated_at?: string
@@ -1092,6 +1103,7 @@ export type Database = {
 					created_at?: string
 					id?: string
 					parent_comment_id?: string | null
+					public_id?: string
 					request_id?: string
 					uid?: string
 					updated_at?: string
@@ -1725,6 +1737,7 @@ export type Database = {
 					id: string | null
 					lang: string | null
 					only_reverse: boolean | null
+					public_id: string | null
 					tags: Json | null
 					text: string | null
 					updated_at: string | null

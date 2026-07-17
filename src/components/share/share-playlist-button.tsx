@@ -15,7 +15,7 @@ export function SharePlaylistButton({ id }: { id: uuid }) {
 			.share({
 				title: `Sunlo: ${playlist?.title}`,
 				text: `Check out this playlist of ${languages[playlist?.lang]} phrases: ${playlist?.title}`,
-				url: `${window.location.origin}/learn/${playlist?.lang}/playlists/${playlist?.id}`,
+				url: `${window.location.origin}/learn/${playlist?.lang}/playlists/${playlist?.public_id}`,
 			})
 			.catch((error: DOMException) => {
 				if (error.name !== 'AbortError') {

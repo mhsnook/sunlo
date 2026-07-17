@@ -421,6 +421,22 @@ $$;
 
 alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
 
+create or replace function "public"."gen_public_id" ("size" integer default 10) returns "text" language "plpgsql" as $$
+declare
+  alphabet text := '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  bytes bytea := extensions.gen_random_bytes(size);
+  result text := '';
+  i int;
+begin
+  for i in 0 .. size - 1 loop
+    result := result || substr(alphabet, (get_byte(bytes, i) % 62) + 1, 1);
+  end loop;
+  return result;
+end;
+$$;
+
+alter function "public"."gen_public_id" ("size" integer) owner to "postgres";
+
 create or replace function "public"."handle_new_user" () returns "trigger" language "plpgsql" security definer as $$
 begin
 	insert into "public"."user_profile" ("uid", "flags")
@@ -1266,7 +1282,8 @@ create table if not exists "public"."phrase" (
 	"text_script" "text",
 	"only_reverse" boolean default false not null,
 	"archived" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" () not null
+	"updated_at" timestamp with time zone default "now" () not null,
+	"public_id" "text" default "public"."gen_public_id" () not null
 );
 
 alter table "public"."phrase" owner to "postgres";
@@ -1288,7 +1305,8 @@ create table if not exists "public"."phrase_playlist" (
 	"upvote_count" integer default 0 not null,
 	"deleted" boolean default false not null,
 	"updated_at" timestamp with time zone default "now" (),
-	"cover_image_path" "text"
+	"cover_image_path" "text",
+	"public_id" "text" default "public"."gen_public_id" () not null
 );
 
 alter table "public"."phrase_playlist" owner to "postgres";
@@ -1301,7 +1319,8 @@ create table if not exists "public"."phrase_request" (
 	"prompt" "text" not null,
 	"upvote_count" integer default 0 not null,
 	"deleted" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" ()
+	"updated_at" timestamp with time zone default "now" (),
+	"public_id" "text" default "public"."gen_public_id" () not null
 );
 
 alter table "public"."phrase_request" owner to "postgres";
@@ -1729,7 +1748,8 @@ select
 	"stats"."avg_difficulty",
 	"stats"."avg_stability",
 	coalesce("tags"."tags", '[]'::"jsonb") as "tags",
-	"phrase"."updated_at"
+	"phrase"."updated_at",
+	"phrase"."public_id"
 from
 	(
 		(
@@ -1827,7 +1847,8 @@ create table if not exists "public"."request_comment" (
 	"content" "text" not null,
 	"created_at" timestamp with time zone default "now" () not null,
 	"updated_at" timestamp with time zone default "now" () not null,
-	"upvote_count" integer default 0 not null
+	"upvote_count" integer default 0 not null,
+	"public_id" "text" default "public"."gen_public_id" () not null
 );
 
 alter table "public"."request_comment" owner to "postgres";
@@ -2182,6 +2203,9 @@ add constraint "card_phrase_id_int_key" unique ("id");
 alter table only "public"."phrase"
 add constraint "card_phrase_pkey" primary key ("id");
 
+alter table only "public"."phrase"
+add constraint "phrase_public_id_key" unique ("public_id");
+
 alter table only "public"."phrase_relation"
 add constraint "card_see_also_pkey" primary key ("id");
 
@@ -2224,11 +2248,17 @@ add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 alter table only "public"."phrase_playlist"
 add constraint "phrase_playlist_pkey" primary key ("id");
 
+alter table only "public"."phrase_playlist"
+add constraint "phrase_playlist_public_id_key" unique ("public_id");
+
 alter table only "public"."phrase_playlist_upvote"
 add constraint "phrase_playlist_upvote_pkey" primary key ("playlist_id", "uid");
 
 alter table only "public"."phrase_request"
 add constraint "phrase_request_pkey" primary key ("id");
+
+alter table only "public"."phrase_request"
+add constraint "phrase_request_public_id_key" unique ("public_id");
 
 alter table only "public"."phrase_request_upvote"
 add constraint "phrase_request_upvote_pkey" primary key ("request_id", "uid");
@@ -2250,6 +2280,9 @@ add constraint "profiles_username_key" unique ("username");
 
 alter table only "public"."request_comment"
 add constraint "request_comment_pkey" primary key ("id");
+
+alter table only "public"."request_comment"
+add constraint "request_comment_public_id_key" unique ("public_id");
 
 alter table only "public"."search_corpus"
 add constraint "search_corpus_pkey" primary key ("source_type", "source_id");

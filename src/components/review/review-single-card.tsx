@@ -504,7 +504,7 @@ function ContextMenu({
 						render={
 							<Link
 								to="/learn/$lang/phrases/$id"
-								params={{ lang: phrase.lang, id: phrase.id }}
+								params={{ lang: phrase.lang, id: phrase.public_id }}
 							/>
 						}
 					>

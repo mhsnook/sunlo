@@ -23,7 +23,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 	return (
 		<Link
 			to={'/learn/$lang/requests/$id'}
-			params={{ lang: request.lang, id }}
+			params={{ lang: request.lang, id: request.public_id }}
 			data-testid="chat-request-preview"
 			data-key={id}
 		>

@@ -368,8 +368,8 @@ function CommentCardWithPhrases({
 				uid={comment.uid}
 				timeValue={comment.created_at}
 				action={comment.parent_comment_id ? 'replied' : 'commented'}
-				timeLinkParams={{ id: request.id, lang: request.lang }}
-				timeLinkSearch={{ focus: comment.id }}
+				timeLinkParams={{ id: request.public_id, lang: request.lang }}
+				timeLinkSearch={{ focus: comment.public_id }}
 				timeLinkTo="/learn/$lang/requests/$id"
 			/>
 			{comment.content && (

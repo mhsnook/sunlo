@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
+import { newPublicId } from '@/lib/public-id'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
 import { DeckMetaSchema } from '@/features/deck/schemas'
@@ -159,11 +160,13 @@ function AddPhraseTab() {
 		])
 
 		const phraseId = crypto.randomUUID()
+		const phrasePublicId = newPublicId()
 		const translationId = crypto.randomUUID()
 		const cards = shouldCreateCard ? buildCardSet(variables.only_reverse) : []
 
 		const tx = createPhraseWithTranslation({
 			phraseId,
+			phrasePublicId,
 			translationId,
 			lang,
 			text: variables.phrase_text,

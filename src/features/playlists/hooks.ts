@@ -1,5 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
+import { looksLikeUuid } from '@/lib/public-id'
 import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import type { PhrasePlaylistType, PlaylistPhraseLinkType } from './schemas'
 
@@ -49,16 +50,21 @@ export function useMyPlaylists(): UseLiveQueryResult<PhrasePlaylistType[]> {
 	return useAnyonesPlaylists(userId!)
 }
 
+// Resolves by public_id first (the canonical URL form) and falls back to the
+// uuid so old bookmarks and foreign-key deep links keep working.
 export function useOnePlaylist(
-	id: uuid
+	handle: string
 ): UseLiveQueryResult<PhrasePlaylistType> {
+	const byUuid = looksLikeUuid(handle)
 	return useLiveQuery(
 		(q) =>
 			q
 				.from({ list: phrasePlaylistsCollection })
-				.where(({ list }) => eq(list.id, id))
+				.where(({ list }) =>
+					byUuid ? eq(list.id, handle) : eq(list.public_id, handle)
+				)
 				.findOne(),
-		[id]
+		[handle, byUuid]
 	)
 }
 

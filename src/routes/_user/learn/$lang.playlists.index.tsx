@@ -28,14 +28,15 @@ function RouteComponent() {
 					<Plus /> Create playlist
 				</Link>
 			</div>
-			{isLoading ?
+			{isLoading ? (
 				<Loader />
-			:	<div className="divide-y border" data-testid="playlist-list">
+			) : (
+				<div className="divide-y border" data-testid="playlist-list">
 					{playlists?.map((p) => (
 						<Link
 							key={p.id}
 							to="/learn/$lang/playlists/$playlistId"
-							params={{ lang, playlistId: p.id }}
+							params={{ lang, playlistId: p.public_id }}
 							style={
 								{ viewTransitionName: `playlist-${p.id}` } as CSSProperties
 							}
@@ -47,7 +48,7 @@ function RouteComponent() {
 						</Link>
 					))}
 				</div>
-			}
+			)}
 		</main>
 	)
 }

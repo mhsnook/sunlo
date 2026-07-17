@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import languages from '@/lib/languages'
+import { newPublicId } from '@/lib/public-id'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import {
 	phrasesCollection,
@@ -132,10 +133,12 @@ function InlinePhraseForm({
 		])
 
 		const phraseId = crypto.randomUUID()
+		const phrasePublicId = newPublicId()
 		const translationId = crypto.randomUUID()
 		const cards = hasDeck ? buildCardSet(values.only_reverse) : []
 		const tx = createPhraseWithTranslation({
 			phraseId,
+			phrasePublicId,
 			translationId,
 			lang,
 			text: values.phrase_text,

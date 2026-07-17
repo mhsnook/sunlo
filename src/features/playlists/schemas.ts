@@ -15,6 +15,7 @@ export type PlaylistPhraseLinkType = z.infer<typeof PlaylistPhraseLinkSchema>
 
 export const PhrasePlaylistSchema = z.object({
 	id: z.string().uuid(),
+	public_id: z.string(),
 	uid: z.string().uuid(),
 	description: z.string().nullable(),
 	href: z.string().nullable(),

@@ -23,7 +23,7 @@ export default function SharePhraseButton({
 			.share({
 				title: `Sunlo: ${phrase.text}`,
 				text: `Check out this phrase in ${languages[phrase.lang]}: ${phrase.text}`,
-				url: `${window.location.origin}/learn/${phrase.lang}/${phrase.id}`,
+				url: `${window.location.origin}/learn/${phrase.lang}/phrases/${phrase.public_id}`,
 			})
 			.catch((error: DOMException) => {
 				if (error.name !== 'AbortError') {

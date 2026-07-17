@@ -37,7 +37,7 @@ export function CardResultSimple({
 					<CardStatusHeart phrase={phrase} />
 					<PermalinkButton
 						to="/learn/$lang/phrases/$id"
-						params={{ lang: phrase.lang, id: phrase.id }}
+						params={{ lang: phrase.lang, id: phrase.public_id }}
 						variant="ghost"
 						size="icon"
 						aria-label="View full phrase info"

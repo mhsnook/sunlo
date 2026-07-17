@@ -212,7 +212,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 			</CardlikeFlashcard>
 			<div className="flex w-full flex-row flex-wrap justify-start gap-4 px-2 py-3">
 				<CopyLinkButton
-					url={`${window.location.host}/learn/${phrase.lang}/phrases/${pid}`}
+					url={`${window.location.host}/learn/${phrase.lang}/phrases/${phrase.public_id}`}
 					variant="ghost"
 					size="icon"
 					text=""
