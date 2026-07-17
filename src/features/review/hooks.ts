@@ -6,7 +6,6 @@ import {
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
-	useReviewStage,
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
@@ -150,22 +149,23 @@ export function useNextValid(): number {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
 	const day_session = useReviewDayString()
-	const stage = useReviewStage()
 	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	const { manifest, reviewsMap } = reviewsData
+	const { manifest, reviewsMap, stage } = reviewsData
 	return (stage ?? 0) < 3
 		? getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
 		: getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
 /**
- * The server-persisted stage for a session: the `stage` of the latest
- * user_review_milestone. Replaces the old mutable `user_review_session.stage` —
- * progress is now an append-only log, so the newest milestone wins. Returns
- * undefined when no milestone has landed yet (brand-new session), which lets
- * callers fall back to the client-inferred stage.
+ * The current stage for a session: the `stage` of the latest
+ * user_review_milestone. Progress is an append-only log, so the newest
+ * milestone wins. The collection is realtime-synced *and* mirrored to
+ * localStorage (see PERSISTED_COLLECTIONS), so this resolves across devices
+ * and paints instantly on a cold reload — no separate store copy to go stale.
+ * Returns undefined when no milestone has landed yet (brand-new session),
+ * which lets callers fall back to the client-inferred stage.
  */
-export function useReviewStageServer(
+export function useReviewStage(
 	lang: string,
 	day_session: string
 ): ReviewStages | undefined {
@@ -198,7 +198,7 @@ export function useReviewsToday(lang: string, day_session: string) {
 	)
 	const reviewDayQuery = useReviewDay(lang, day_session)
 	// Stage now folds out of the append-only milestone log, not the session row.
-	const stage = useReviewStageServer(lang, day_session)
+	const stage = useReviewStage(lang, day_session)
 	return {
 		isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
 		data: {
@@ -556,7 +556,7 @@ export const useOneCardReviews = (
 /**
  * Append a review-session milestone as an optimistic collection action. The
  * row (client-generated id + created_at) lands in the collection immediately —
- * so `useReviewStageServer` reflects it at once — and the collection's onInsert
+ * so `useReviewStage` reflects it at once — and the collection's onInsert
  * persists it and owns any error.
  */
 export function insertMilestone(input: {

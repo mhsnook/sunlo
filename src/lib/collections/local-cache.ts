@@ -6,6 +6,17 @@ import {
 import { MyProfileSchema } from '@/features/profile/schemas'
 import { decksCollection } from '@/features/deck/collections'
 import { DeckMetaSchema } from '@/features/deck/schemas'
+import {
+	cardReviewsCollection,
+	reviewSessionsCollection,
+	reviewMilestonesCollection,
+} from '@/features/review/collections'
+import {
+	CardReviewSchema,
+	ReviewSessionSchema,
+	ReviewMilestoneSchema,
+} from '@/features/review/schemas'
+import { todayString } from '@/lib/utils'
 
 /**
  * Local persistence for user-owned collections — currently the profile and
@@ -44,6 +55,20 @@ export type PersistedCollection = {
 		subscribeChanges: (callback: () => void) => unknown
 	}
 	parseRow: (row: unknown) => unknown
+	// Optional reducer applied before persisting: mirror only a bounded slice of
+	// an otherwise-unbounded collection. Used for the append-only review logs,
+	// where we only need *today's* rows on the next cold start — never the whole
+	// history. Absent → the whole `toArray` is mirrored (profile, decks).
+	project?: (rows: ReadonlyArray<unknown>) => ReadonlyArray<unknown>
+}
+
+// Keep only rows belonging to the current review day (4am-cutoff `todayString`).
+// Evaluated at persist time, so it always tracks the live day.
+const onlyToday = (rows: ReadonlyArray<unknown>): ReadonlyArray<unknown> => {
+	const today = todayString()
+	return (rows as ReadonlyArray<{ day_session?: string }>).filter(
+		(r) => r.day_session === today
+	)
 }
 
 export const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
@@ -60,6 +85,35 @@ export const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
 		queryKey: ['user', 'deck_plus'],
 		collection: decksCollection,
 		parseRow: (row) => DeckMetaSchema.parse(row),
+	},
+	// Review session state, mirrored per-day so a hard refresh (or a second
+	// device catching up) repaints an in-progress session — its stage, its
+	// card history — on the first frame, across every language being reviewed.
+	// All three project to today's rows only: the logs are append-only and grow
+	// without bound, but only the current day is needed to resume.
+	{
+		label: 'review-sessions',
+		storageKey: 'sunlo-cache-review-sessions',
+		queryKey: ['user', 'user_review_session'],
+		collection: reviewSessionsCollection,
+		parseRow: (row) => ReviewSessionSchema.parse(row),
+		project: onlyToday,
+	},
+	{
+		label: 'review-milestones',
+		storageKey: 'sunlo-cache-review-milestones',
+		queryKey: ['user', 'user_review_milestone'],
+		collection: reviewMilestonesCollection,
+		parseRow: (row) => ReviewMilestoneSchema.parse(row),
+		project: onlyToday,
+	},
+	{
+		label: 'card-reviews',
+		storageKey: 'sunlo-cache-card-reviews',
+		queryKey: ['user', 'card_review'],
+		collection: cardReviewsCollection,
+		parseRow: (row) => CardReviewSchema.parse(row),
+		project: onlyToday,
 	},
 ]
 
@@ -85,10 +139,10 @@ export function hasSupabaseSessionToken(): boolean {
 export function attachMirror(entry: PersistedCollection): void {
 	entry.collection.subscribeChanges(() => {
 		try {
-			localStorage.setItem(
-				entry.storageKey,
-				JSON.stringify(entry.collection.toArray)
-			)
+			const rows = entry.project
+				? entry.project(entry.collection.toArray)
+				: entry.collection.toArray
+			localStorage.setItem(entry.storageKey, JSON.stringify(rows))
 		} catch (error) {
 			console.warn(`[local-cache] could not save ${entry.storageKey}`, error)
 		}

@@ -7,12 +7,12 @@ import {
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
-	useReviewStage,
 } from '@/features/review/store'
 import {
 	ensureManifestCardsInCollection,
 	useNextValid,
 	useReviewDay,
+	useReviewsTodayStats,
 } from '@/features/review/hooks'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
@@ -51,11 +51,14 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 function ReviewPage() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
+	const currentCardIndex = useCardIndex()
 	const { data: day, isLoading } = useReviewDay(lang, dayString)
-	const stage = useReviewStage()
 
 	if (isLoading) return <Loader />
-	if (!day?.manifest?.length || stage === null)
+	// currentCardIndex === -1 means the cursor store hasn't been initialised —
+	// i.e. we landed here without going through setup/continue. Redirect back so
+	// the index route can seed the cursor (from stats.index) before we render.
+	if (!day?.manifest?.length || currentCardIndex === -1)
 		return <Navigate to="/learn/$lang/review" from={Route.fullPath} />
 
 	return (
@@ -71,7 +74,8 @@ function FlashCardReviewSession({
 	dayString: string
 }) {
 	const currentCardIndex = useCardIndex()
-	const reviewStage = useReviewStage()
+	const lang = useReviewLang()
+	const reviewStage = useReviewsTodayStats(lang, dayString).data.stage
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
 	const nextValidIndex = useNextValid()
 

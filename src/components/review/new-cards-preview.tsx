@@ -8,14 +8,17 @@ import { CardContent } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { useNewCardEntries } from '@/features/review/store'
+import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
+import { cardReviewsCollection } from '@/features/review/collections'
 import type { uuid } from '@/types/main'
 import type { TranslationType } from '@/features/phrases/schemas'
 import type { CardDirectionType } from '@/features/deck/schemas'
 import {
 	parseManifestEntry,
+	toManifestEntry,
 	type ManifestEntry,
 } from '@/features/review/manifest'
+import { todayString } from '@/lib/utils'
 
 function PreviewCard({
 	pid,
@@ -57,18 +60,19 @@ function PreviewCard({
 			}
 		>
 			<CardContent className="flex flex-col items-center justify-center gap-3 p-4">
-				{isReverse ?
+				{isReverse ? (
 					<>
 						{translationsDisplay}
 						<Separator />
 						{phraseDisplay}
 					</>
-				:	<>
+				) : (
+					<>
 						{phraseDisplay}
 						<Separator />
 						{translationsDisplay}
 					</>
-				}
+				)}
 			</CardContent>
 		</CardlikeFlashcard>
 	)
@@ -80,21 +84,34 @@ export function NewCardsPreview({
 	manifest: Array<ManifestEntry>
 }) {
 	const { lang } = useParams({ strict: false })
-	const newCardEntries = useNewCardEntries()
 	const navigate = useNavigate()
 
 	const handleStartReview = () => {
 		void navigate({ to: '/learn/$lang/review/go', params: { lang: lang! } })
 	}
 
-	// Use the session's captured list of fresh-for-today entries. Filtering the
-	// manifest by "unreviewed" state is unreliable — last_reviewed_at comes from
-	// the user_card_plus view's "most recent review" join, which can be shaped
-	// by prior same-day (phase-3) reviews.
-	const newEntriesSet = new Set<ManifestEntry>(newCardEntries ?? [])
-	const unreviewedInOrder = manifest.filter((entry) =>
-		newEntriesSet.has(entry)
+	// "New" = never scored before today. Derive it from the card_review log —
+	// specifically prior-session scoring reviews (stages 1–2, day_session < today)
+	// — rather than the card's last_reviewed_at, which same-day again-round
+	// reviews can shape. An entry with no earlier-session scoring review is fresh.
+	const today = todayString()
+	const { data: priorReviews } = useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) =>
+					and(
+						eq(review.lang, lang ?? ''),
+						inArray(review.stage, [1, 2]),
+						lt(review.day_session, today)
+					)
+				),
+		[lang, today]
 	)
+	const seenBefore = new Set<ManifestEntry>(
+		priorReviews.map((r) => toManifestEntry(r.phrase_id, r.direction))
+	)
+	const unreviewedInOrder = manifest.filter((entry) => !seenBefore.has(entry))
 
 	if (unreviewedInOrder.length === 0) {
 		// No unreviewed cards to preview - show helpful guidance
