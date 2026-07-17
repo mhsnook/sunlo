@@ -1,5 +1,4 @@
 import type { Page } from '@playwright/test'
-import type { DailyReviewStateType } from '../../src/lib/schemas'
 
 // Intro keys that need to be pre-affirmed for tests
 const INTRO_KEYS = ['deck-new', 'review', 'deck-settings', 'community-norms']
@@ -32,29 +31,6 @@ export async function clearAllIntroStates(page: Page): Promise<void> {
 			})
 		},
 		{ keys: INTRO_KEYS, prefix: INTRO_STORAGE_PREFIX }
-	)
-}
-
-/**
- * Get review session from local collection
- */
-export async function getReviewSessionLocal(
-	page: Page,
-	lang: string,
-	daySession: string
-): Promise<DailyReviewStateType | null> {
-	return await page.evaluate(
-		({ lang, daySession }) => {
-			// @ts-expect-error - accessing window global
-			const reviewDaysCollection = window.__reviewDaysCollection
-			if (!reviewDaysCollection) {
-				throw new Error('reviewDaysCollection not attached to window')
-			}
-
-			const key = `${daySession}--${lang}`
-			return reviewDaysCollection.get(key) || null
-		},
-		{ lang, daySession }
 	)
 }
 

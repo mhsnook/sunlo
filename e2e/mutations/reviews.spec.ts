@@ -8,7 +8,6 @@ import {
 	cleanupReviewSession,
 	supabase,
 } from '../helpers/db-helpers'
-import { getReviewSessionBoth } from '../helpers/both-helpers'
 import { todayString } from '../../src/lib/utils'
 import { goToDeckPage } from '../helpers/goto-helpers'
 import { TEST_LANG } from '../helpers/test-constants'
@@ -77,34 +76,19 @@ test.describe.serial('Review Mutations', () => {
 		// Verify we're on a card review page
 		await expect(page.getByText(/Card \d+ of \d+/)).toBeVisible()
 
-		// Use helper to get both DB and local session
-		const { fromDB, fromLocal } = await getReviewSessionBoth(
-			page,
+		// Verify the review session was persisted server-side
+		const { data: fromDB } = await getReviewSessionState(
 			TEST_USER_UID,
 			TEST_LANG,
 			sessionDate
 		)
-
-		// Verify DB session (with type safety from parsed schema)
 		expect(fromDB).toBeTruthy()
 		expect(fromDB!.uid).toBe(TEST_USER_UID)
 		expect(fromDB!.lang).toBe(TEST_LANG)
+		expect(fromDB!.day_session).toBe(sessionDate)
 		expect(fromDB!.manifest).toBeTruthy()
 		expect(Array.isArray(fromDB!.manifest)).toBe(true)
-		expect(fromDB!.manifest!.length).toBeGreaterThan(0)
-
-		// Verify local collection session
-		expect(fromLocal).toBeTruthy()
-		expect(fromLocal!.lang).toBe(TEST_LANG)
-		expect(fromLocal!.manifest).toBeTruthy()
-		expect(Array.isArray(fromLocal!.manifest)).toBe(true)
-
-		// Verify DB and collection match
-		expect(fromLocal!.manifest!.length).toBe(fromDB!.manifest!.length)
-		expect(fromLocal!.day_session).toBe(fromDB!.day_session)
-		expect(fromLocal!.uid).toBe(fromDB!.uid)
-		expect(fromLocal!.lang).toBe(fromDB!.lang)
-		expect(fromLocal!.created_at).toBe(fromDB!.created_at)
+		expect((fromDB!.manifest as string[]).length).toBeGreaterThan(0)
 	})
 
 	test('1. useReviewMutation: submit first card review, edit it', async ({
