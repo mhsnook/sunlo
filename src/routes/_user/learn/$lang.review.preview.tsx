@@ -30,7 +30,7 @@ export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 			cardReviewsCollection.preload(),
 			reviewMilestonesCollection.preload(),
 		])
-		await ensureManifestCardsInCollection(params.lang, todayString())
+		ensureManifestCardsInCollection(params.lang, todayString())
 	},
 })
 

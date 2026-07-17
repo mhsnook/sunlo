@@ -6,6 +6,7 @@ import type { Tables, TablesInsert } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
 	ChatMessageSchema,
+	FriendSummarySchema,
 	type ChatMessageRelType,
 	type ChatMessageType,
 } from './schemas'
@@ -301,12 +302,9 @@ export const useMarkAsRead = () => {
 				})
 			})
 		},
-		/*
-		onSettled: async () => {
-			// Sync the data back after success or failure
-			await chatMessagesCollection.utils.refetch()
-		},
-		*/
+		// No onSettled refetch: the optimistic writeUpdate above already reflects
+		// the read; cross-device read_at sync arrives via the chat realtime
+		// channel (see useSocialRealtime).
 	})
 }
 
@@ -357,6 +355,19 @@ export const useSendToFriends = (
 	})
 }
 
+// `friend_summary` is a per-pair fold of the friend_request_action log
+// (`distinct on (uid_less, uid_more) ... order by created_at desc`). A realtime
+// INSERT is always the newest action for its pair, so folding it client-side
+// and upserting the derived summary reproduces the view exactly — no full
+// `friend_summary` refetch needed.
+const ACTION_TYPE_TO_STATUS = {
+	accept: 'friends',
+	invite: 'pending',
+	decline: 'unconnected',
+	cancel: 'unconnected',
+	remove: 'unconnected',
+} as const
+
 /** Subscribe to realtime friend-request and chat-message events. */
 export const useSocialRealtime = () => {
 	const userId = useUserId()
@@ -382,7 +393,27 @@ export const useSocialRealtime = () => {
 						toastSuccess('Friend request accepted')
 					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
 						toastSuccess('You are now connected')
-					void friendSummariesCollection.utils.refetch()
+
+					const status = newAction.action_type
+						? ACTION_TYPE_TO_STATUS[newAction.action_type]
+						: undefined
+					if (status && newAction.uid_less && newAction.uid_more) {
+						friendSummariesCollection.utils.writeUpsert(
+							FriendSummarySchema.parse({
+								uid_less: newAction.uid_less,
+								uid_more: newAction.uid_more,
+								status,
+								most_recent_created_at: newAction.created_at,
+								most_recent_uid_by: newAction.uid_by,
+								most_recent_uid_for: newAction.uid_for,
+								most_recent_action_type: newAction.action_type,
+								uid:
+									newAction.uid_by === userId
+										? newAction.uid_for
+										: newAction.uid_by,
+							})
+						)
+					}
 				}
 			)
 			.subscribe()

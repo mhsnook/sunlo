@@ -253,12 +253,16 @@ export function useReviewDay(
  * The manifest is the authoritative list of cards for a review session —
  * it's persisted server-side, so any device loading today's session sees
  * the same set. Local `cardsCollection` can drift from that (long-lived
- * PWA without refetches, server-side data migrations, sessions authored
- * on another device), and if the manifest references a card the local
- * collection has never heard of, the review mutation can't find it when
- * syncing FSRS state. Refetch once to self-heal before the session starts.
+ * PWA, server-side data migrations, sessions authored on another device),
+ * and if the manifest references a card the local collection has never heard
+ * of, the review mutation can't find it when syncing FSRS state.
+ *
+ * With `user_card` INSERTs streaming in over realtime (#723), cards created
+ * elsewhere now arrive on their own, so that drift is close to unreachable —
+ * this is a logged warning rather than a full-table refetch. If it fires with
+ * any regularity, the realtime binding isn't keeping up and wants a look.
  */
-export async function ensureManifestCardsInCollection(
+export function ensureManifestCardsInCollection(
 	lang: string,
 	day_session: string
 ) {
@@ -275,10 +279,9 @@ export async function ensureManifestCardsInCollection(
 	const missing = reviewDay.manifest.some((entry) => !present.has(entry))
 	if (missing) {
 		console.warn(
-			`Review manifest references cards not in local cardsCollection; refetching to self-heal.`,
+			`Review manifest references cards not in local cardsCollection; expecting realtime user_card INSERTs to fill the gap.`,
 			{ lang, day_session }
 		)
-		await cardsCollection.utils.refetch()
 	}
 }
 
