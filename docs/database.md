@@ -33,6 +33,33 @@ pnpm run db-schema
 
 Schema definitions live in `supabase/schemas/`, migrations in `supabase/migrations/`, and seed files (`supabase/seed-*.sql`) load in alphabetical order.
 
+## Web sessions / no Docker: validating migrations natively
+
+The workflow above needs `supabase start`, which runs the stack as Docker
+containers. Claude Code web sessions have no Docker, so use
+`scripts/db-native.sh` — it stands up a plain Postgres 16 and reproduces the
+minimal Supabase baseline (see `supabase/dev-native/`) so you can exercise a
+migration without pulling to a local machine:
+
+```bash
+scripts/db-native.sh reset                              # bootstrap + base.sql + all seeds
+scripts/db-native.sh apply supabase/migrations/<new>.sql  # does the new migration apply?
+scripts/db-native.sh psql -c '\d some_table'            # poke around
+```
+
+**Use it to validate, not to author the committed artifacts.** It confirms
+migrations apply and seeds load (that's the reliable win). It can also
+`dump` (`base.sql`) and `types` (`supabase.ts`), but those go through
+`pg_dump` / a standalone `postgres-meta` rather than the Docker-only
+`supabase db dump` / `supabase gen types`, so the output is **not**
+byte-identical — keep regenerating the committed `base.sql` and
+`src/types/supabase.ts` locally or in CI with the real Supabase CLI. Known
+limits: `auth.uid()` returns NULL (RLS is effectively off — don't test RLS
+here), and `reset` builds from `base.sql` + applies new migrations on top
+rather than replaying the full history (the plv8 migrations can't run
+natively; CI still replays everything via Docker). Full detail lives in the
+header of `scripts/db-native.sh`.
+
 ## Schema Patterns
 
 - **Primary keys**: Always UUID with `id uuid default gen_random_uuid() not null`

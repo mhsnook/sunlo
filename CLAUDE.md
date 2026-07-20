@@ -52,6 +52,8 @@ pnpm install
 cp .env.example .env    # populate from supabase outputs
 supabase start          # requires Docker Desktop + Supabase CLI
 supabase db reset       # apply migrations + seeds
+# No Docker (e.g. Claude Code web)? Use scripts/db-native.sh to validate
+# migrations/seeds against a native Postgres — see docs/database.md.
 
 pnpm dev                # dev server at http://127.0.0.1:5173
 pnpm check              # typecheck
