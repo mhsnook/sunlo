@@ -273,9 +273,15 @@ inspector_port = 8083
 
 [functions.search]
 enabled = true
-# Public-facing endpoint: anonymous callers should be able to invoke it
-# without a JWT (/chats and /search both work for unauthenticated visitors).
-verify_jwt = false
+# Public-facing endpoint used by /chats and /search, including for
+# unauthenticated visitors. `verify_jwt = true` still serves anonymous
+# callers — the supabase-js client attaches the anon key as a bearer JWT on
+# every `functions.invoke('search')` call (falling back to the anon key when
+# there is no user session), so real visitors pass while credential-less
+# callers are rejected by the runtime with a 401 before the function code
+# runs. The anon key ships in the SPA bundle so this is a speed bump, not a
+# real defense — see issue #607 for the per-IP rate limit / WAF follow-ups.
+verify_jwt = true
 
 [functions.embed-corpus-row]
 enabled = true
