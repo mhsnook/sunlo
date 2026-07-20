@@ -273,9 +273,7 @@ inspector_port = 8083
 
 [functions.search]
 enabled = true
-# Public-facing endpoint: anonymous callers should be able to invoke it
-# without a JWT (/chats and /search both work for unauthenticated visitors).
-verify_jwt = false
+verify_jwt = true
 
 [functions.embed-corpus-row]
 enabled = true
