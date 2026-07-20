@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -75,9 +75,25 @@ function FlashCardReviewSession({
 }) {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
-	const reviewStage = useReviewsTodayStats(lang, dayString).data.stage
+	const stats = useReviewsTodayStats(lang, dayString).data
+	const reviewStage = stats.stage
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
 	const nextValidIndex = useNextValid()
+
+	// Position derives from the shared (stage, reviews). The stored cursor is a
+	// within-stage browse offset only; on mount and whenever the stage advances —
+	// including a stage change pushed in from another device — snap back to the
+	// stage's canonical resume index (stats.index). Without this, a cursor left
+	// mid-manifest under a now-stale stage gets read against the wrong phase (e.g.
+	// a stage-5 session rendering a leftover card, where one "skip" jumps to the
+	// again-round's empty set and lands on "finished"). The ref keeps the effect
+	// keyed on stage alone — re-seeding on every stats.index change would fight
+	// in-stage navigation and answer-advance.
+	const seedRef = useRef(stats.index)
+	seedRef.current = stats.index
+	useLayoutEffect(() => {
+		gotoIndex(seedRef.current)
+	}, [reviewStage, gotoIndex])
 
 	const atTheEnd = currentCardIndex === manifest.length
 
