@@ -75,8 +75,8 @@ importers:
         specifier: ^1.7.0
         version: 1.7.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tailwind-oklch:
-        specifier: git+https://github.com/mhsnook/tailwind-oklch.git#main
-        version: git+https://git@github.com:mhsnook/tailwind-oklch.git#112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0)
+        specifier: github:mhsnook/tailwind-oklch#main
+        version: https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0)
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.3.0)
@@ -3128,8 +3128,8 @@ packages:
   tailwind-merge@2.6.1:
     resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
 
-  tailwind-oklch@git+https://git@github.com:mhsnook/tailwind-oklch.git#112de8ee25571842520abcbea54a98f54cdb66f5:
-    resolution: {commit: 112de8ee25571842520abcbea54a98f54cdb66f5, repo: git@github.com:mhsnook/tailwind-oklch.git, type: git}
+  tailwind-oklch@https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5:
+    resolution: {tarball: https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5}
     version: 0.6.0
     peerDependencies:
       tailwindcss: '>=4.0.0'
@@ -6284,7 +6284,7 @@ snapshots:
 
   tailwind-merge@2.6.1: {}
 
-  tailwind-oklch@git+https://git@github.com:mhsnook/tailwind-oklch.git#112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0):
+  tailwind-oklch@https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0):
     dependencies:
       tailwindcss: 4.3.0
 
