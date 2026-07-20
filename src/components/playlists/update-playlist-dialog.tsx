@@ -10,15 +10,11 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
-	PhrasePlaylistSchema,
 	PhrasePlaylistUpdateSchema,
 	type PhrasePlaylistType,
 	type PhrasePlaylistUpdateType,
 } from '@/features/playlists/schemas'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
-import supabase from '@/lib/supabase-client'
-import { useMutation } from '@tanstack/react-query'
 import { CoverImageField } from '@/components/fields/cover-image-field'
 import { isEmbeddableUrl } from './playlist-embed'
 import { useAppForm } from '@/components/form'
@@ -41,41 +37,17 @@ export function UpdatePlaylistDialog({
 }) {
 	const [open, setOpen] = useState(false)
 
-	const mutation = useMutation({
-		mutationFn: async (values: PhrasePlaylistUpdateType) => {
-			const { data, error } = await supabase
-				.from('phrase_playlist')
-				.update({
-					title: values.title,
-					description: values.description || null,
-					href: values.href || null,
-					cover_image_path: values.cover_image_path || null,
-				})
-				.eq('id', playlist.id)
-				.select()
-				.single()
-
-			if (error) throw error
-			return data
-		},
-		onSuccess: (data: PhrasePlaylistType) => {
-			setOpen(false)
-			toastSuccess('Playlist updated!')
-			phrasePlaylistsCollection.utils.writeUpdate(
-				PhrasePlaylistSchema.parse(data)
-			)
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to update playlist: ${error.message}`)
-			console.log('Error', error)
-		},
-	})
-
 	const form = useAppForm({
 		defaultValues: playlistDefaults(playlist),
 		validators: { onChange: PhrasePlaylistUpdateSchema },
-		onSubmit: async ({ value }) => {
-			await mutation.mutateAsync(value)
+		onSubmit: ({ value }) => {
+			phrasePlaylistsCollection.update(playlist.id, (draft) => {
+				draft.title = value.title
+				draft.description = value.description || null
+				draft.href = value.href || null
+				draft.cover_image_path = value.cover_image_path || null
+			})
+			setOpen(false)
 		},
 	})
 

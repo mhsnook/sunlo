@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -14,7 +12,6 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { PhrasePlaylistType } from '@/features/playlists/schemas'
-import supabase from '@/lib/supabase-client'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -26,29 +23,13 @@ export function DeletePlaylistDialog({
 	const [open, setOpen] = useState(false)
 	const navigate = useNavigate()
 
-	// Delete playlist mutation
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const { error } = await supabase
-				.from('phrase_playlist')
-				.update({ deleted: true })
-				.eq('id', playlist.id)
-
-			if (error) throw error
-		},
-		onSuccess: () => {
-			phrasePlaylistsCollection.utils.writeDelete(playlist.id)
-			toastSuccess('Playlist deleted')
-			// Navigate away from the deleted playlist page
-			void navigate({
-				to: '/learn/$lang',
-				params: { lang: playlist.lang },
-			})
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to delete playlist: ${error.message}`)
-		},
-	})
+	const handleDelete = () => {
+		phrasePlaylistsCollection.delete(playlist.id)
+		void navigate({
+			to: '/learn/$lang',
+			params: { lang: playlist.lang },
+		})
+	}
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<Button
@@ -71,8 +52,7 @@ export function DeletePlaylistDialog({
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
-						disabled={mutation.isPending}
-						onClick={() => mutation.mutate()}
+						onClick={handleDelete}
 						data-testid="confirm-delete-button"
 						className="bg-destructive text-destructive-foreground"
 					>

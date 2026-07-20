@@ -11,6 +11,8 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { toastError } from '@/components/ui/sonner'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const phrasePlaylistsCollection = createCollection(
 	queryCollectionOptions({
@@ -30,6 +32,42 @@ export const phrasePlaylistsCollection = createCollection(
 		schema: PhrasePlaylistSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onUpdate: async ({ transaction }) => {
+			// { refetch: false } keeps the optimistic value; the edited columns are
+			// exactly what we send, so the local row already matches the server.
+			try {
+				await Promise.all(
+					transaction.mutations.map((m) =>
+						supabase
+							.from('phrase_playlist')
+							.update(m.changes as TablesUpdate<'phrase_playlist'>)
+							.eq('id', m.original.id)
+							.throwOnError()
+					)
+				)
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to update playlist — please try again')
+				throw err
+			}
+		},
+		onDelete: async ({ transaction }) => {
+			// soft delete
+			try {
+				await supabase
+					.from('phrase_playlist')
+					.update({ deleted: true })
+					.in(
+						'id',
+						transaction.mutations.map((m) => m.original.id)
+					)
+					.throwOnError()
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to delete playlist — please try again')
+				throw err
+			}
+		},
 	})
 )
 
