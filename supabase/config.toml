@@ -273,8 +273,6 @@ inspector_port = 8083
 
 [functions.search]
 enabled = true
-# Anon key required; supabase-js sends it on every invoke. Speed bump, not
-# real defense — see #607 for the rate-limit / WAF follow-ups.
 verify_jwt = true
 
 [functions.embed-corpus-row]
