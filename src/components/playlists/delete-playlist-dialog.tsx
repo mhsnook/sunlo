@@ -11,6 +11,7 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { toastSuccess } from '@/components/ui/sonner'
 import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import { useNavigate } from '@tanstack/react-router'
@@ -24,7 +25,13 @@ export function DeletePlaylistDialog({
 	const navigate = useNavigate()
 
 	const handleDelete = () => {
-		phrasePlaylistsCollection.delete(playlist.id)
+		const tx = phrasePlaylistsCollection.delete(playlist.id)
+		// Fire-and-forget: navigate immediately, confirm on settle. The error
+		// toast lives in the collection's onDelete handler.
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Playlist deleted'),
+			() => {}
+		)
 		void navigate({
 			to: '/learn/$lang',
 			params: { lang: playlist.lang },

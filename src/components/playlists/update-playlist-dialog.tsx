@@ -15,6 +15,7 @@ import {
 	type PhrasePlaylistUpdateType,
 } from '@/features/playlists/schemas'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
+import { toastSuccess } from '@/components/ui/sonner'
 import { CoverImageField } from '@/components/fields/cover-image-field'
 import { isEmbeddableUrl } from './playlist-embed'
 import { useAppForm } from '@/components/form'
@@ -41,12 +42,18 @@ export function UpdatePlaylistDialog({
 		defaultValues: playlistDefaults(playlist),
 		validators: { onChange: PhrasePlaylistUpdateSchema },
 		onSubmit: ({ value }) => {
-			phrasePlaylistsCollection.update(playlist.id, (draft) => {
+			const tx = phrasePlaylistsCollection.update(playlist.id, (draft) => {
 				draft.title = value.title
 				draft.description = value.description || null
 				draft.href = value.href || null
 				draft.cover_image_path = value.cover_image_path || null
 			})
+			// Fire-and-forget: close immediately, confirm on settle. The error
+			// toast lives in the collection's onUpdate handler.
+			tx.isPersisted.promise.then(
+				() => toastSuccess('Playlist updated!'),
+				() => {}
+			)
 			setOpen(false)
 		},
 	})
