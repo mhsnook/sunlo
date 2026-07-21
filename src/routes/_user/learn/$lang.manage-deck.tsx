@@ -1,7 +1,5 @@
 import { CSSProperties, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
-import { PostgrestError } from '@supabase/supabase-js'
 import {
 	ArrowDown,
 	ArrowUp,
@@ -20,17 +18,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta, useDeckCards } from '@/features/deck/hooks'
-import { cardsCollection } from '@/features/deck/collections'
+import { updateCardsStatus } from '@/features/deck/card-status'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
-import {
-	type CardMetaType,
-	CardStatusEnumSchema,
-} from '@/features/deck/schemas'
-import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/use-auth'
+import { type CardMetaType } from '@/features/deck/schemas'
 import { cn, sessionDaysDiff } from '@/lib/utils'
 import { calculateInterval } from '@/features/review'
-import { Tables } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/manage-deck')({
 	component: ManageDeckPage,
@@ -642,39 +634,18 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 /* ── Shared: status change buttons ───────────────────────────── */
 
 function CardStatusActions({ row }: { row: PhraseRow }) {
-	const userId = useUserId()
-
-	const mutation = useMutation<
-		Array<Tables<'user_card'>>,
-		PostgrestError,
-		{ status: 'active' | 'learned' | 'skipped' }
-	>({
-		mutationKey: ['manage-card-status', row.phrase_id],
-		mutationFn: async ({ status }) => {
-			const { data } = await supabase
-				.from('user_card')
-				.update({ status })
-				.eq('phrase_id', row.phrase_id)
-				.eq('uid', userId!)
-				.select()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			for (const c of data) {
-				cardsCollection.utils.writeUpdate({
-					id: c.id,
-					status: CardStatusEnumSchema.parse(c.status),
-					updated_at: c.updated_at!,
-				})
+	const setStatus = (status: 'active' | 'learned' | 'skipped') => {
+		const ids = row.cards.map((c) => c.id)
+		if (ids.length === 0) return
+		const tx = updateCardsStatus(ids, row.phrase_id, row.status, status)
+		tx.isPersisted.promise.then(
+			() => toastSuccess(`Phrase status changed to "${status}"`),
+			(error) => {
+				console.log('Error', error)
+				toastError('Failed to update phrase status')
 			}
-			toastSuccess(`Phrase status changed to "${data[0]?.status}"`)
-		},
-		onError: (error) => {
-			toastError('Failed to update phrase status')
-			console.log('Error', error)
-		},
-	})
+		)
+	}
 
 	const buttons: Array<{
 		status: 'active' | 'learned' | 'skipped'
@@ -696,8 +667,7 @@ function CardStatusActions({ row }: { row: PhraseRow }) {
 						variant="ghost"
 						size="sm"
 						className="h-7 gap-1 px-2 text-xs"
-						disabled={mutation.isPending}
-						onClick={() => mutation.mutate({ status: b.status })}
+						onClick={() => setStatus(b.status)}
 						data-testid={`set-${b.status}-button`}
 					>
 						<b.Icon className="size-3" />

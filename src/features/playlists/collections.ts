@@ -11,6 +11,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const phrasePlaylistsCollection = createCollection(
 	queryCollectionOptions({
@@ -23,13 +24,29 @@ export const phrasePlaylistsCollection = createCollection(
 				.select()
 				.throwOnError()
 
-			return data
+			return data?.map((p) => PhrasePlaylistSchema.parse(p)) ?? []
 		},
 		getKey: (item: PhrasePlaylistType) => item.id,
 		queryClient,
 		schema: PhrasePlaylistSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		// Delete is a soft delete (deleted: true) driven through onUpdate; the
+		// `deleted = false` filter in live queries hides the row. Call sites own
+		// the toast UX via tx.isPersisted.promise.
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('phrase_playlist')
+						.update(m.changes as TablesUpdate<'phrase_playlist'>)
+						.eq('id', m.original.id)
+						.select()
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
 	})
 )
 
