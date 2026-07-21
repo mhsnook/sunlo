@@ -347,7 +347,9 @@ const UserBrowseLangRoute = UserBrowseLangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
   getParentRoute: () => UserBrowseRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_user/browse.$lang.lazy').then((d) => d.Route),
+)
 const UserAdminRoutesRoute = UserAdminRoutesRouteImport.update({
   id: '/routes',
   path: '/routes',
