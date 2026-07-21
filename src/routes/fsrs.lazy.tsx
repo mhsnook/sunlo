@@ -140,22 +140,14 @@ function simulateReviews(
 			difficulty,
 		})
 
-		// Minimal review record to feed the next iteration's calculateFSRS.
+		// Minimal review record to feed the next iteration's calculateFSRS —
+		// it only reads created_at, difficulty, and stability off the previous
+		// review, so the rest of CardReviewType is irrelevant to the simulation.
 		previousReview = {
-			id: crypto.randomUUID(),
 			created_at: atDay(day).toISOString(),
-			uid: '00000000-0000-0000-0000-000000000000',
-			day_session: atDay(day).toISOString().slice(0, 10),
-			lang: 'eng',
-			phrase_id: '00000000-0000-0000-0000-000000000000',
-			direction: 'forward',
-			score,
-			day_first_review: i === 0,
 			difficulty,
-			review_time_retrievability: i === 0 ? null : desiredRetention,
 			stability,
-			updated_at: null,
-		}
+		} as CardReviewType
 
 		day += interval
 	})
