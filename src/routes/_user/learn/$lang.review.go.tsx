@@ -13,6 +13,7 @@ import {
 	useNextValid,
 	useReviewDay,
 	useReviewsTodayStats,
+	useUpdateReviewStage,
 } from '@/features/review/hooks'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
@@ -79,6 +80,22 @@ function FlashCardReviewSession({
 	const reviewStage = stats.stage
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
 	const nextValidIndex = useNextValid()
+	const updateStage = useUpdateReviewStage(lang, dayString)
+
+	// "Skip for today" means different things per phase. In the go-back phase
+	// (stage 2) it skips one unreviewed card and walks forward to the end. In the
+	// again round (stage >= 3) there's no forward end to walk to — unmastered
+	// Again cards keep the complete-screen re-offering the round, and the phase
+	// only closes by advancing to stage 5. So skipping the again round finishes
+	// it outright rather than cycling back onto the remaining Again cards.
+	const handleSkipForToday = useCallback(() => {
+		if ((reviewStage ?? 0) >= 3) {
+			updateStage(5)
+			gotoIndex(manifest.length)
+		} else {
+			gotoIndex(nextValidIndex)
+		}
+	}, [reviewStage, updateStage, gotoIndex, manifest.length, nextValidIndex])
 
 	// Position derives from the shared (stage, reviews). The stored cursor is a
 	// within-stage browse offset only; on mount and whenever the stage advances —
@@ -156,9 +173,7 @@ function FlashCardReviewSession({
 							size="sm"
 							variant="ghost"
 							aria-label="skip for today"
-							onClick={() =>
-								animateAndNavigate(() => gotoIndex(nextValidIndex))
-							}
+							onClick={() => animateAndNavigate(handleSkipForToday)}
 							className="ps-4 pe-2"
 						>
 							Skip for today <ChevronRight className="size-4" />
