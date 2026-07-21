@@ -76,7 +76,7 @@ importers:
         version: 1.7.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tailwind-oklch:
         specifier: github:mhsnook/tailwind-oklch#main
-        version: https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0)
+        version: git+https://git@github.com:mhsnook/tailwind-oklch.git#112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0)
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.3.0)
@@ -106,14 +106,14 @@ importers:
         specifier: ^0.2.3
         version: 0.2.3(@babel/core@7.29.0)(@babel/runtime@7.28.6)(rolldown@1.0.1)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       '@scenetest/checks':
-        specifier: ^0.13.0
-        version: 0.13.0(react@19.2.3)
+        specifier: ^0.13.1
+        version: 0.13.1(preact@10.29.1)(react@19.2.3)
       '@scenetest/scenes':
         specifier: ^0.15.0
         version: 0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       '@scenetest/vite-plugin':
-        specifier: ^0.14.0
-        version: 0.14.0(@scenetest/scenes@0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: ^0.16.0
+        version: 0.16.0(@scenetest/scenes@0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(preact-render-to-string@6.7.0(preact@10.29.1))(react@19.2.3)(typescript@6.0.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@4.3.0)
@@ -1309,8 +1309,28 @@ packages:
       vue:
         optional: true
 
-  '@scenetest/dashboard@0.11.0':
-    resolution: {integrity: sha512-8lAlcdE/wxiQBknjtvTuNjeyoLGq/tI73/yo6n36AprUZRdmWcPxABcP1QSTP/DRJyJs4hTUzS+PL0OwjTKbxg==}
+  '@scenetest/checks@0.13.1':
+    resolution: {integrity: sha512-AVkP093mRtgnwFdkJq+G+yVXioB2zEd8g+jIvLqao14iZQqGNX28GeqAjDaxS6RgSYA6FTYKseJR/5ob4Gg+Tw==}
+    peerDependencies:
+      preact: ^10.0.0
+      react: ^18.0.0 || ^19.0.0
+      solid-js: ^1.8.0
+      svelte: ^5.55.7
+      vue: ^3.3.0
+    peerDependenciesMeta:
+      preact:
+        optional: true
+      react:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+
+  '@scenetest/dashboard@0.13.0':
+    resolution: {integrity: sha512-Cjw2mWCFZGemDYg2hobhreANMrZgMo901q1SrF87eRsnsl8Ww9FOHE8ol9Yp85v76l0Rd3s89I1qKhRFlXRyhw==}
 
   '@scenetest/protocol@0.11.0':
     resolution: {integrity: sha512-Lh/0nGWp+pck16ncePrNd9d4MGpXOQ1G2aJxXDkc3U9GoV76iXP+sdePLjPU00sSrei15RS1iXGE71moa/AEYg==}
@@ -1327,10 +1347,10 @@ packages:
       vite:
         optional: true
 
-  '@scenetest/vite-plugin@0.14.0':
-    resolution: {integrity: sha512-a8dUpQrYSgceKkBw1pRCwNpGJyICMm37Mq/b/fg8YIrDnIuLyFELqdqtr01Dl8HFOUQmPs6+9VnuoWeaIT7yNg==}
+  '@scenetest/vite-plugin@0.16.0':
+    resolution: {integrity: sha512-uops6X0ezm9UbD29CTwA1tH9gDFF0LMWkacY/JsD1x/lkh//ZU9scEP16Vr7z1s7miARK3/hWB0rZpq/nuxlDQ==}
     peerDependencies:
-      '@scenetest/scenes': ^0.14.0
+      '@scenetest/scenes': ^0.15.0
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
     peerDependenciesMeta:
       '@scenetest/scenes':
@@ -2856,6 +2876,17 @@ packages:
     resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
     engines: {node: ^10 || ^12 || >=14}
 
+  preact-iso@2.12.0:
+    resolution: {integrity: sha512-k0Y44UONBJ1zBXXCBhJRAa5O4ww8a5FHdLD6l21IxcnsTmDBto4n7KPQAH6xqegsKDMX4SuJ02qItiUlciIlZQ==}
+    peerDependencies:
+      preact: '>=10 || >= 11.0.0-0'
+      preact-render-to-string: '>=6.4.0'
+
+  preact-render-to-string@6.7.0:
+    resolution: {integrity: sha512-Z4WR8fmLMRpdYqJ9i7vrlXSsSrxVJydwrkEXHapexfARbWfGb7vGcnvNQnIzN0cXciMVOlz/XLoiMCi9gUsy9Q==}
+    peerDependencies:
+      preact: '>=10 || >= 11.0.0-0'
+
   preact@10.29.1:
     resolution: {integrity: sha512-gQCLc/vWroE8lIpleXtdJhTFDogTdZG9AjMUpVkDf2iTCNwYNWA+u16dL41TqUDJO4gm2IgrcMv3uTpjd4Pwmg==}
 
@@ -3128,8 +3159,8 @@ packages:
   tailwind-merge@2.6.1:
     resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
 
-  tailwind-oklch@https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5:
-    resolution: {tarball: https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5}
+  tailwind-oklch@git+https://git@github.com:mhsnook/tailwind-oklch.git#112de8ee25571842520abcbea54a98f54cdb66f5:
+    resolution: {commit: 112de8ee25571842520abcbea54a98f54cdb66f5, repo: git@github.com:mhsnook/tailwind-oklch.git, type: git}
     version: 0.6.0
     peerDependencies:
       tailwindcss: '>=4.0.0'
@@ -4269,11 +4300,20 @@ snapshots:
     optionalDependencies:
       react: 19.2.3
 
-  '@scenetest/dashboard@0.11.0':
+  '@scenetest/checks@0.13.1(preact@10.29.1)(react@19.2.3)':
+    optionalDependencies:
+      preact: 10.29.1
+      react: 19.2.3
+
+  '@scenetest/dashboard@0.13.0(preact-render-to-string@6.7.0(preact@10.29.1))(typescript@6.0.3)':
     dependencies:
       '@scenetest/protocol': 0.11.0
-      htm: 3.1.1
+      '@tanstack/db': 0.6.5(typescript@6.0.3)
       preact: 10.29.1
+      preact-iso: 2.12.0(preact-render-to-string@6.7.0(preact@10.29.1))(preact@10.29.1)
+    transitivePeerDependencies:
+      - preact-render-to-string
+      - typescript
 
   '@scenetest/protocol@0.11.0': {}
 
@@ -4299,13 +4339,13 @@ snapshots:
       - svelte
       - vue
 
-  '@scenetest/vite-plugin@0.14.0(@scenetest/scenes@0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@scenetest/vite-plugin@0.16.0(@scenetest/scenes@0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(preact-render-to-string@6.7.0(preact@10.29.1))(react@19.2.3)(typescript@6.0.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@babel/parser': 7.29.2
       '@babel/traverse': 7.29.0
       '@babel/types': 7.29.0
       '@scenetest/checks': 0.13.0(react@19.2.3)
-      '@scenetest/dashboard': 0.11.0
+      '@scenetest/dashboard': 0.13.0(preact-render-to-string@6.7.0(preact@10.29.1))(typescript@6.0.3)
       '@scenetest/protocol': 0.11.0
       '@scenetest/receiver': 0.11.0
       htm: 3.1.1
@@ -4315,10 +4355,12 @@ snapshots:
     optionalDependencies:
       '@scenetest/scenes': 0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
     transitivePeerDependencies:
+      - preact-render-to-string
       - react
       - solid-js
       - supports-color
       - svelte
+      - typescript
       - vue
 
   '@standard-schema/spec@1.1.0': {}
@@ -6000,6 +6042,15 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  preact-iso@2.12.0(preact-render-to-string@6.7.0(preact@10.29.1))(preact@10.29.1):
+    dependencies:
+      preact: 10.29.1
+      preact-render-to-string: 6.7.0(preact@10.29.1)
+
+  preact-render-to-string@6.7.0(preact@10.29.1):
+    dependencies:
+      preact: 10.29.1
+
   preact@10.29.1: {}
 
   prelude-ls@1.2.1: {}
@@ -6284,7 +6335,7 @@ snapshots:
 
   tailwind-merge@2.6.1: {}
 
-  tailwind-oklch@https://codeload.github.com/mhsnook/tailwind-oklch/tar.gz/112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0):
+  tailwind-oklch@git+https://git@github.com:mhsnook/tailwind-oklch.git#112de8ee25571842520abcbea54a98f54cdb66f5(tailwindcss@4.3.0):
     dependencies:
       tailwindcss: 4.3.0
 
