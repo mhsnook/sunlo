@@ -15,7 +15,7 @@ import {
 	type PhrasePlaylistUpdateType,
 } from '@/features/playlists/schemas'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
-import { toastSuccess } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { CoverImageField } from '@/components/fields/cover-image-field'
 import { isEmbeddableUrl } from './playlist-embed'
 import { useAppForm } from '@/components/form'
@@ -48,11 +48,12 @@ export function UpdatePlaylistDialog({
 				draft.href = value.href || null
 				draft.cover_image_path = value.cover_image_path || null
 			})
-			// Fire-and-forget: close immediately, confirm on settle. The error
-			// toast lives in the collection's onUpdate handler.
 			tx.isPersisted.promise.then(
 				() => toastSuccess('Playlist updated!'),
-				() => {}
+				(err: unknown) => {
+					const message = err instanceof Error ? err.message : 'unknown error'
+					toastError(`Failed to update playlist: ${message}`)
+				}
 			)
 			setOpen(false)
 		},
