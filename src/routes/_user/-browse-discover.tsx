@@ -1,10 +1,17 @@
 // Non-route helper components for the language Browse / Discover page
 // (`/browse/$lang`). Kept beside the route file (prefixed `-` so the router
 // ignores it) to keep the route module itself focused on data + layout.
-import { type CSSProperties, useState } from 'react'
+import { type CSSProperties, type ReactNode, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { Check, ChevronDown, MessagesSquare, Plus, Volume2 } from 'lucide-react'
+import {
+	ArrowRight,
+	Check,
+	ChevronDown,
+	MessagesSquare,
+	Plus,
+	Volume2,
+} from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { usePhrase } from '@/hooks/composite-phrase'
@@ -18,9 +25,69 @@ import { Badge } from '@/components/ui/badge'
 import { Loader } from '@/components/ui/loader'
 import { Button } from '@/components/ui/button'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import Flagged from '@/components/flagged'
+
+/** A titled section with an optional "see more →" action in its header. */
+export function BrowseSection({
+	title,
+	testid,
+	dataKey,
+	count,
+	onSeeMore,
+	seeMoreLabel,
+	children,
+}: {
+	title: string
+	testid?: string
+	dataKey?: string
+	count?: number
+	onSeeMore?: () => void
+	seeMoreLabel?: string
+	children: ReactNode
+}) {
+	return (
+		<section data-testid={testid} data-key={dataKey}>
+			<div className="mb-3 flex items-baseline justify-between gap-3">
+				<h2 className="text-lg font-bold">
+					{title}
+					{count != null ? (
+						<span className="text-muted-foreground ms-2 text-sm font-normal">
+							{count}
+						</span>
+					) : null}
+				</h2>
+				{onSeeMore ? (
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={onSeeMore}
+						data-testid="browse-see-more"
+					>
+						{seeMoreLabel ?? 'See more'} <ArrowRight className="size-4" />
+					</Button>
+				) : null}
+			</div>
+			{children}
+		</section>
+	)
+}
+
+/** Horizontally-scrolling strip of compact phrase cards — the "browse" row. */
+export function PhraseStrip({ pids }: { pids: uuid[] }) {
+	return (
+		<ScrollArea className="w-full">
+			<div className="flex w-max flex-row gap-2 pb-3">
+				{pids.map((pid) => (
+					<PhraseTinyCard key={pid} pid={pid} className="m-0" />
+				))}
+			</div>
+			<ScrollBar orientation="horizontal" />
+		</ScrollArea>
+	)
+}
 
 /** Small "✓ Added / + Add" status pill shown in the corner of set tiles. */
 function AddedPill({ added }: { added: boolean }) {

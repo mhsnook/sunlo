@@ -22,6 +22,19 @@ learner:
 - see browse-cards-section
 - notSee browse-sets-section
 
+# see-more on a section expands into that tab without leaving the page
+
+learner:
+
+- login
+- openTo /browse/[team.lang_full]
+- see browse-lang-page
+- see browse-sets-section
+- click browse-sets-section browse-see-more
+- up
+- see browse-sets-section
+- notSee browse-cards-section
+
 # visitor can browse a language without logging in
 
 visitor:

@@ -211,6 +211,75 @@ export function useRequestTagSets(lang: string): RequestTagSet[] {
 	}, [tags, tagLinks, requests, phraseLinks])
 }
 
+/** Requests for a language, grouped by the message tags on each request. */
+export type RequestTagGroup = {
+	slug: string
+	label: string
+	description: string | null
+	requests: PhraseRequestType[]
+}
+
+export function useRequestsByMessageTag(lang: string): {
+	groups: RequestTagGroup[]
+	untagged: PhraseRequestType[]
+} {
+	const { data: tags } = useMessageTags()
+	const { data: tagLinks } = useLiveQuery(
+		(q) => q.from({ link: messageTagLinksCollection }),
+		[]
+	)
+	const { data: requests } = useLiveQuery(
+		(q) =>
+			q
+				.from({ request: phraseRequestsCollection })
+				.where(({ request }) =>
+					and(eq(request.lang, lang), eq(request.deleted, false))
+				)
+				.orderBy(({ request }) => request.created_at, 'desc'),
+		[lang]
+	)
+
+	return useMemo(() => {
+		const reqs = requests ?? []
+		if (!reqs.length) return { groups: [], untagged: [] }
+
+		const slugsByMessage = new Map<uuid, string[]>()
+		for (const link of tagLinks ?? []) {
+			const list = slugsByMessage.get(link.message_id) ?? []
+			list.push(link.tag_slug)
+			slugsByMessage.set(link.message_id, list)
+		}
+
+		const bySlug = new Map<string, PhraseRequestType[]>()
+		const untagged: PhraseRequestType[] = []
+		for (const request of reqs) {
+			const slugs = request.message_id
+				? slugsByMessage.get(request.message_id)
+				: undefined
+			if (!slugs?.length) {
+				untagged.push(request)
+				continue
+			}
+			for (const slug of slugs) {
+				const arr = bySlug.get(slug) ?? []
+				arr.push(request)
+				bySlug.set(slug, arr)
+			}
+		}
+
+		const groups = (tags ?? [])
+			.map((tag) => ({
+				slug: tag.slug,
+				label: tag.label,
+				description: tag.description,
+				requests: bySlug.get(tag.slug) ?? [],
+			}))
+			.filter((group) => group.requests.length > 0)
+
+		return { groups, untagged }
+	}, [tags, tagLinks, requests])
+}
+
 /** All active (non-archived) message tags, ordered by sort_order. */
 export const useMessageTags = () =>
 	useLiveQuery(

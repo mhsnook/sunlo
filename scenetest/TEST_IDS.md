@@ -205,6 +205,8 @@ natural wrapper element to label.
 | `browse-sets-section`                    | data-testid | Browse `/browse/$lang`   | "Popular Sets" section                                                                                             |
 | `browse-cards-section`                   | data-testid | Browse `/browse/$lang`   | "New Cards" section                                                                                                |
 | `browse-requests-section`                | data-testid | Browse `/browse/$lang`   | "Active Discussions" section                                                                                       |
+| `browse-see-more`                        | data-testid | Browse `/browse/$lang`   | "See more" header action on an All-tab section (switches to that tab)                                              |
+| `browse-empty`                           | data-testid | Browse `/browse/$lang`   | Empty-state shown when a tab has nothing to browse                                                                 |
 | `browse-set-tile`                        | data-testid | Browse `/browse/$lang`   | One playlist set tile (carries `data-key={playlist.id}`)                                                           |
 | `browse-tag-set-tile`                    | data-testid | Browse `/browse/$lang`   | One request-tag set tile — expands inline to its phrases (carries `data-key={tag.slug}`)                           |
 | `browse-card-tile`                       | data-testid | Browse `/browse/$lang`   | One flashcard tile (carries `data-key={phrase.id}`)                                                                |

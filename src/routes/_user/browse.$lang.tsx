@@ -18,7 +18,7 @@ import { useLanguagePhrases } from '@/features/phrases/hooks'
 import { useLanguageTags } from '@/features/languages/hooks'
 import { useLangPlaylists } from '@/features/playlists/hooks'
 import { phraseRequestsActive } from '@/features/requests/live'
-import { useRequestTagSets } from '@/features/requests'
+import { useRequestsByMessageTag, useRequestTagSets } from '@/features/requests'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
@@ -30,6 +30,7 @@ import {
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import type { PhraseFullType } from '@/features/phrases/schemas'
+import type { uuid } from '@/types/main'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
@@ -42,7 +43,13 @@ import {
 } from '@/components/ui/select'
 import { RequestItem } from '@/components/requests/request-list-item'
 
-import { NewCardTile, SetTile, TagSetTile } from './-browse-discover'
+import {
+	BrowseSection,
+	NewCardTile,
+	PhraseStrip,
+	SetTile,
+	TagSetTile,
+} from './-browse-discover'
 
 const TabSchema = z.enum(['all', 'cards', 'sets', 'requests'])
 
@@ -93,6 +100,13 @@ export const Route = createFileRoute('/_user/browse/$lang')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 const LEVELS = [1, 2, 3, 4, 5] as const
+
+// How many tiles a horizontal browse row / grouped list shows before it stops.
+const STRIP_SIZE = 20
+const GROUP_SIZE = 6
+// Cap topic rows on the Cards tab so a tag-heavy language can't spawn a huge
+// number of live phrase subscriptions at once.
+const MAX_TOPIC_ROWS = 12
 
 /** Map a phrase's average difficulty (0–10, often null) to a 1–5 level. */
 function phraseLevel(avgDifficulty: number | null): number {
@@ -185,15 +199,39 @@ function BrowseLanguagePage() {
 		[requests, query]
 	)
 
+	// Newest phrases, for the "Recently added" browse row.
+	const recentPids = useMemo(
+		() =>
+			(allPhrases ?? [])
+				.toSorted((a, b) => b.created_at.localeCompare(a.created_at))
+				.slice(0, STRIP_SIZE)
+				.map((p) => p.id),
+		[allPhrases]
+	)
+
+	// Phrases grouped by topic tag — one browse row per tag (a phrase with
+	// several tags appears under each), largest topics first.
+	const phraseTagGroups = useMemo(() => {
+		const byTag = new Map<string, uuid[]>()
+		for (const p of allPhrases ?? [])
+			for (const t of p.tags ?? []) {
+				const arr = byTag.get(t.name) ?? []
+				arr.push(p.id)
+				byTag.set(t.name, arr)
+			}
+		return (tags ?? [])
+			.map((t) => ({ name: t.name, pids: byTag.get(t.name) ?? [] }))
+			.filter((g) => g.pids.length > 0)
+			.toSorted((a, b) => b.pids.length - a.pids.length)
+	}, [allPhrases, tags])
+
+	const { groups: requestGroups, untagged: untaggedRequests } =
+		useRequestsByMessageTag(lang)
+
 	const setSearchValue = (next: Partial<z.infer<typeof SearchSchema>>) =>
 		void navigate({ search: (prev) => ({ ...prev, ...next }), replace: true })
 
-	const showCards = tab === 'all' || tab === 'cards'
-	const showSets = tab === 'all' || tab === 'sets'
-	const showRequests = tab === 'all' || tab === 'requests'
-
-	const cardsLimit = tab === 'all' ? 4 : filteredPhrases.length
-	const requestsLimit = tab === 'all' ? 3 : filteredRequests.length
+	const hasFilters = Boolean(query || selectedTag || level)
 
 	// Playlists and request-tag sets share the "Popular Sets" grid. On the All
 	// tab they share a budget of 4 tiles, playlists first.
@@ -296,53 +334,207 @@ function BrowseLanguagePage() {
 				</div>
 
 				<TabsContent value={tab} className="mt-8 space-y-10">
-					{showSets ? (
-						<Section
-							title="Popular Sets"
-							testid="browse-sets-section"
-							empty={setsEmpty && 'No sets to show yet.'}
-						>
-							<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
-								{visiblePlaylists.map((p) => (
-									<SetTile key={p.id} playlist={p} lang={lang} />
-								))}
-								{visibleTagSets.map((s) => (
-									<TagSetTile key={s.slug} tagSet={s} lang={lang} />
-								))}
-							</div>
-						</Section>
+					{/* ── All: a preview of each section, each with a "see more" that
+					    swaps to the dedicated tab without leaving the page ── */}
+					{tab === 'all' ? (
+						<>
+							{!setsEmpty ? (
+								<BrowseSection
+									title="Popular Sets"
+									testid="browse-sets-section"
+									seeMoreLabel="See more sets"
+									onSeeMore={() => setSearchValue({ tab: 'sets' })}
+								>
+									<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+										{visiblePlaylists.map((p) => (
+											<SetTile key={p.id} playlist={p} lang={lang} />
+										))}
+										{visibleTagSets.map((s) => (
+											<TagSetTile key={s.slug} tagSet={s} lang={lang} />
+										))}
+									</div>
+								</BrowseSection>
+							) : null}
+
+							{filteredPhrases.length ? (
+								<BrowseSection
+									title="New Cards"
+									testid="browse-cards-section"
+									seeMoreLabel="See more phrases"
+									onSeeMore={() => setSearchValue({ tab: 'cards' })}
+								>
+									<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+										{filteredPhrases.slice(0, 4).map((p) => (
+											<NewCardTile key={p.id} pid={p.id} />
+										))}
+									</div>
+								</BrowseSection>
+							) : null}
+
+							{filteredRequests.length ? (
+								<BrowseSection
+									title="Active Discussions"
+									testid="browse-requests-section"
+									seeMoreLabel="See more discussions"
+									onSeeMore={() => setSearchValue({ tab: 'requests' })}
+								>
+									<div className="space-y-4">
+										{filteredRequests.slice(0, 3).map((r) => (
+											<RequestItem key={r.id} request={r} />
+										))}
+									</div>
+								</BrowseSection>
+							) : null}
+
+							{setsEmpty &&
+							!filteredPhrases.length &&
+							!filteredRequests.length ? (
+								<EmptyBrowse />
+							) : null}
+						</>
 					) : null}
 
-					{showCards ? (
-						<Section
-							title="New Cards"
-							testid="browse-cards-section"
-							empty={
-								filteredPhrases.length === 0 && 'No cards match your filters.'
-							}
-						>
-							<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
-								{filteredPhrases.slice(0, cardsLimit).map((p) => (
-									<NewCardTile key={p.id} pid={p.id} />
-								))}
-							</div>
-						</Section>
+					{/* ── Sets: playlists and request-tag topics, browseable ── */}
+					{tab === 'sets' ? (
+						<>
+							{filteredPlaylists.length ? (
+								<BrowseSection
+									title="Playlists"
+									testid="browse-sets-section"
+									count={filteredPlaylists.length}
+								>
+									<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+										{filteredPlaylists.map((p) => (
+											<SetTile key={p.id} playlist={p} lang={lang} />
+										))}
+									</div>
+								</BrowseSection>
+							) : null}
+
+							{filteredTagSets.length ? (
+								<BrowseSection
+									title="Topics"
+									dataKey="topics"
+									testid={
+										filteredPlaylists.length ? undefined : 'browse-sets-section'
+									}
+									count={filteredTagSets.length}
+								>
+									<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+										{filteredTagSets.map((s) => (
+											<TagSetTile key={s.slug} tagSet={s} lang={lang} />
+										))}
+									</div>
+								</BrowseSection>
+							) : null}
+
+							{setsEmpty ? <EmptyBrowse label="No sets to show yet." /> : null}
+						</>
 					) : null}
 
-					{showRequests ? (
-						<Section
-							title="Active Discussions"
-							testid="browse-requests-section"
-							empty={
-								filteredRequests.length === 0 && 'No discussions to show yet.'
-							}
-						>
-							<div className="space-y-4">
-								{filteredRequests.slice(0, requestsLimit).map((r) => (
-									<RequestItem key={r.id} request={r} />
+					{/* ── Cards: filtered flat, or browse rows by topic ── */}
+					{tab === 'cards' ? (
+						hasFilters ? (
+							<BrowseSection
+								title="Cards"
+								testid="browse-cards-section"
+								count={filteredPhrases.length}
+							>
+								{filteredPhrases.length ? (
+									<div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+										{filteredPhrases.map((p) => (
+											<NewCardTile key={p.id} pid={p.id} />
+										))}
+									</div>
+								) : (
+									<EmptyText>No cards match your filters.</EmptyText>
+								)}
+							</BrowseSection>
+						) : (
+							<>
+								{recentPids.length ? (
+									<BrowseSection
+										title="Recently added"
+										testid="browse-cards-section"
+									>
+										<PhraseStrip pids={recentPids} />
+									</BrowseSection>
+								) : null}
+								{phraseTagGroups.slice(0, MAX_TOPIC_ROWS).map((g) => (
+									<BrowseSection
+										key={g.name}
+										title={g.name}
+										dataKey={g.name}
+										count={g.pids.length}
+									>
+										<PhraseStrip pids={g.pids.slice(0, STRIP_SIZE)} />
+									</BrowseSection>
 								))}
-							</div>
-						</Section>
+								{!recentPids.length && !phraseTagGroups.length ? (
+									<EmptyBrowse label="No cards to show yet." />
+								) : null}
+							</>
+						)
+					) : null}
+
+					{/* ── Requests: filtered flat, or grouped by message tag ── */}
+					{tab === 'requests' ? (
+						query ? (
+							<BrowseSection
+								title="Discussions"
+								testid="browse-requests-section"
+								count={filteredRequests.length}
+							>
+								{filteredRequests.length ? (
+									<div className="space-y-4">
+										{filteredRequests.map((r) => (
+											<RequestItem key={r.id} request={r} />
+										))}
+									</div>
+								) : (
+									<EmptyText>No discussions match your search.</EmptyText>
+								)}
+							</BrowseSection>
+						) : (
+							<>
+								{requestGroups.map((g, i) => (
+									<BrowseSection
+										key={g.slug}
+										title={g.label}
+										dataKey={g.slug}
+										count={g.requests.length}
+										testid={i === 0 ? 'browse-requests-section' : undefined}
+									>
+										<div className="space-y-4">
+											{g.requests.slice(0, GROUP_SIZE).map((r) => (
+												<RequestItem key={r.id} request={r} />
+											))}
+										</div>
+									</BrowseSection>
+								))}
+								{untaggedRequests.length ? (
+									<BrowseSection
+										title="More discussions"
+										dataKey="untagged"
+										count={untaggedRequests.length}
+										testid={
+											requestGroups.length
+												? undefined
+												: 'browse-requests-section'
+										}
+									>
+										<div className="space-y-4">
+											{untaggedRequests.slice(0, GROUP_SIZE).map((r) => (
+												<RequestItem key={r.id} request={r} />
+											))}
+										</div>
+									</BrowseSection>
+								) : null}
+								{!requestGroups.length && !untaggedRequests.length ? (
+									<EmptyBrowse label="No discussions to show yet." />
+								) : null}
+							</>
+						)
 					) : null}
 				</TabsContent>
 			</Tabs>
@@ -368,25 +560,17 @@ function BrowseTab({
 	)
 }
 
-function Section({
-	title,
-	testid,
-	empty,
-	children,
-}: {
-	title: string
-	testid: string
-	empty: string | false
-	children: ReactNode
-}) {
+function EmptyText({ children }: { children: ReactNode }) {
+	return <p className="text-muted-foreground text-sm">{children}</p>
+}
+
+function EmptyBrowse({ label }: { label?: string }) {
 	return (
-		<section data-testid={testid}>
-			<h2 className="mb-4 text-lg font-bold">{title}</h2>
-			{empty ? (
-				<p className="text-muted-foreground text-sm">{empty}</p>
-			) : (
-				children
-			)}
-		</section>
+		<div
+			className="text-muted-foreground py-12 text-center text-sm"
+			data-testid="browse-empty"
+		>
+			{label ?? 'Nothing to browse here yet.'}
+		</div>
 	)
 }

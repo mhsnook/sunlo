@@ -53,4 +53,6 @@ export {
 	useMessageTagsForMessage,
 	useRequestTagSets,
 	type RequestTagSet,
+	useRequestsByMessageTag,
+	type RequestTagGroup,
 } from './hooks'
