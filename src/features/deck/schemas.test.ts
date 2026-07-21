@@ -34,10 +34,21 @@ describe('DeckMetaRawSchema', () => {
 		const result = DeckMetaRawSchema.parse(validDeck)
 		expect(result.lang).toBe('hin')
 		expect(result.daily_review_goal).toBe(15)
-		expect(result.cards_active).toBe(0)
-		expect(result.cards_learned).toBe(0)
-		expect(result.cards_skipped).toBe(0)
-		expect(result.count_reviews_7d).toBe(0)
+	})
+
+	it('strips server-side stats columns no longer on the schema', () => {
+		// The slimmed view no longer ships these; if a stale row carries them,
+		// zod drops them rather than failing.
+		const result = DeckMetaRawSchema.parse({
+			...validDeck,
+			cards_active: 20,
+			count_reviews_7d: 45,
+			lang_total_phrases: 100,
+			most_recent_review_at: '2026-03-30T12:00:00Z',
+		}) as Record<string, unknown>
+		expect(result.cards_active).toBeUndefined()
+		expect(result.most_recent_review_at).toBeUndefined()
+		expect(result.lang_total_phrases).toBeUndefined()
 	})
 
 	it('accepts review_answer_mode values', () => {
@@ -86,27 +97,6 @@ describe('DeckMetaRawSchema', () => {
 		expect(() =>
 			DeckMetaRawSchema.parse({ ...validDeck, learning_goal: 'tourism' })
 		).toThrow()
-	})
-
-	it('defaults most_recent_review_at to null', () => {
-		const result = DeckMetaRawSchema.parse(validDeck)
-		expect(result.most_recent_review_at).toBeNull()
-	})
-
-	it('accepts populated stats fields', () => {
-		const result = DeckMetaRawSchema.parse({
-			...validDeck,
-			cards_active: 20,
-			cards_learned: 5,
-			cards_skipped: 2,
-			count_reviews_7d: 45,
-			count_reviews_7d_positive: 38,
-			lang_total_phrases: 100,
-			most_recent_review_at: '2026-03-30T12:00:00Z',
-		})
-		expect(result.cards_active).toBe(20)
-		expect(result.count_reviews_7d_positive).toBe(38)
-		expect(result.most_recent_review_at).toBe('2026-03-30T12:00:00Z')
 	})
 })
 

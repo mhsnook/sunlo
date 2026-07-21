@@ -14,15 +14,16 @@ import {
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { decksCollection } from '@/features/deck/collections'
 import { type DeckMetaType } from '@/features/deck/schemas'
-import { useDeckPids } from '@/features/deck/hooks'
+import { useDeckPids, useDeckCardStats } from '@/features/deck/hooks'
 import { ago } from '@/lib/dayjs'
 
 export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 	const [open, setOpen] = useState(false)
 	const { data: pids } = useDeckPids(deck.lang)
+	const { most_recent_review_at } = useDeckCardStats(deck.lang)
 
 	const totalCards = pids?.all.length ?? 0
-	const lastReviewed = ago(deck.most_recent_review_at)
+	const lastReviewed = ago(most_recent_review_at)
 
 	const restoreDeck = () => {
 		const tx = decksCollection.update(deck.lang, (draft) => {

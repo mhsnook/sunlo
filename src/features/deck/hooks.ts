@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
 import { should } from '@scenetest/checks/react'
 import dayjs from 'dayjs'
@@ -78,10 +79,118 @@ export const useDeckMeta = (lang: string): UseLiveQueryResult<DeckMetaType> =>
 
 export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
 	const query = useLiveQuery((q) => q.from({ deck: decksCollection }))
+	const statsByLang = useDeckCardStatsByLang()
 	return {
 		...query,
-		data: query.data.toSorted(sortDecksByActivity),
+		data: query.data.toSorted((a, b) =>
+			sortDecksByActivity(
+				{
+					lang: a.lang,
+					created_at: a.created_at,
+					most_recent_review_at:
+						statsByLang[a.lang]?.most_recent_review_at ?? null,
+				},
+				{
+					lang: b.lang,
+					created_at: b.created_at,
+					most_recent_review_at:
+						statsByLang[b.lang]?.most_recent_review_at ?? null,
+				}
+			)
+		),
 	}
+}
+
+/**
+ * Per-deck stats derived from user_card (both directions), replacing the
+ * server-side aggregates that used to live on `user_deck_plus`. cardsCollection
+ * is preloaded app-wide (see auth-lifecycle) so these resolve wherever a deck
+ * renders — the nav switcher and the `/learn` activity sort included.
+ */
+export type DeckCardStats = {
+	cards_active: number
+	cards_learned: number
+	cards_skipped: number
+	most_recent_review_at: string | null
+}
+
+const aggregateDeckCardStats = (
+	cards: ReadonlyArray<CardMetaType>
+): DeckCardStats => {
+	const stats: DeckCardStats = {
+		cards_active: 0,
+		cards_learned: 0,
+		cards_skipped: 0,
+		most_recent_review_at: null,
+	}
+	for (const card of cards) {
+		if (card.status === 'active') stats.cards_active++
+		else if (card.status === 'learned') stats.cards_learned++
+		else if (card.status === 'skipped') stats.cards_skipped++
+		// most_recent_review_at on user_card_plus is review.created_at, so the
+		// deck's is the max across its cards.
+		if (
+			card.last_reviewed_at &&
+			(stats.most_recent_review_at === null ||
+				card.last_reviewed_at > stats.most_recent_review_at)
+		)
+			stats.most_recent_review_at = card.last_reviewed_at
+	}
+	return stats
+}
+
+/** Card stats for one deck. */
+export const useDeckCardStats = (lang: string): DeckCardStats => {
+	const { data: cards } = useDeckCards(lang)
+	return useMemo(() => aggregateDeckCardStats(cards ?? []), [cards])
+}
+
+/** Card stats for every deck, keyed by lang (nav switcher, activity sort). */
+export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
+	const { data: cards } = useLiveQuery((q) => q.from({ card: cardsCollection }))
+	return useMemo(() => {
+		const byLang = new Map<string, Array<CardMetaType>>()
+		for (const card of cards ?? []) {
+			const arr = byLang.get(card.lang)
+			if (arr) arr.push(card)
+			else byLang.set(card.lang, [card])
+		}
+		const out: Record<string, DeckCardStats> = {}
+		for (const [lang, langCards] of byLang)
+			out[lang] = aggregateDeckCardStats(langCards)
+		return out
+	}, [cards])
+}
+
+export type DeckReviewCounts = {
+	count_reviews_7d: number
+	count_reviews_7d_positive: number
+}
+
+/**
+ * Review counts for the last 7 days, derived from cardReviewsCollection (the
+ * full review log). Only used under `$lang` routes, where that collection is
+ * already loaded — never globally.
+ */
+export const useDeckReviewCounts = (lang: string): DeckReviewCounts => {
+	const { data: reviews } = useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) => eq(review.lang, lang)),
+		[lang]
+	)
+	return useMemo(() => {
+		let count_reviews_7d = 0
+		let count_reviews_7d_positive = 0
+		for (const review of reviews ?? []) {
+			if (inLastWeek(review.created_at)) {
+				count_reviews_7d++
+				if (review.score >= 2) count_reviews_7d_positive++
+			}
+		}
+		return { count_reviews_7d, count_reviews_7d_positive }
+	}, [reviews])
 }
 
 export type CardWithSibling = CardMetaType & { sibling_id: string | null }

@@ -10,6 +10,10 @@ export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
 export const CardDirectionSchema = z.enum(['forward', 'reverse'])
 export type CardDirectionType = z.infer<typeof CardDirectionSchema>
 
+// Base user_deck columns only. Per-deck card/review aggregates (cards_active,
+// count_reviews_7d, most_recent_review_at, …) are derived client-side from
+// cardsCollection / cardReviewsCollection — see useDeckCardStats /
+// useDeckReviewCounts. language / lang_total_phrases live in languagesCollection.
 export const DeckMetaRawSchema = z.object({
 	uid: z.string(),
 	lang: LangSchema,
@@ -19,13 +23,6 @@ export const DeckMetaRawSchema = z.object({
 	learning_goal: LearningGoalEnumSchema,
 	preferred_translation_lang: LangSchema.nullable().default(null),
 	review_answer_mode: ReviewAnswerModeSchema.nullable().default(null),
-	cards_active: z.number().default(0),
-	cards_learned: z.number().default(0),
-	cards_skipped: z.number().default(0),
-	count_reviews_7d: z.number().default(0),
-	count_reviews_7d_positive: z.number().default(0),
-	lang_total_phrases: z.number().default(0),
-	most_recent_review_at: z.string().nullable().default(null),
 })
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({

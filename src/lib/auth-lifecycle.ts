@@ -1,7 +1,7 @@
 import { failed } from '@scenetest/checks/react'
 import { queryClient } from '@/lib/query-client'
 import { myProfileCollection } from '@/features/profile/collections'
-import { decksCollection } from '@/features/deck/collections'
+import { decksCollection, cardsCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { resetUiPrefs } from '@/lib/ui-prefs'
 import {
@@ -115,6 +115,11 @@ class AuthLifecycle {
 		}
 
 		void friendSummariesCollection.preload()
+		// Deck stats (card counts, most_recent_review_at) are derived from
+		// cardsCollection client-side now, and the nav switcher + /learn activity
+		// sort render outside $lang routes — so load cards app-wide, not just per
+		// deck. Non-blocking: the shell renders on profile+decks; stats fill in.
+		void cardsCollection.preload()
 	}
 }
 

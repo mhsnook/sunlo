@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.31 - Slim `user_deck_plus`; Deck Stats as Client-Side Live Queries
+
+_21 July, 2026_
+
+### Refactors
+
+- **`user_deck_plus` collapses to the base `user_deck` columns.** The per-deck aggregates it computed server-side — `cards_active/learned/skipped`, `count_reviews_7d[_positive]`, `most_recent_review_at` — are now derived on the client via live queries (`useDeckCardStats`, `useDeckCardStatsByLang`, `useDeckReviewCounts`) over `cardsCollection` / `cardReviewsCollection`, so they update optimistically with card and review mutations instead of going stale until a decks refetch. `language` and `lang_total_phrases` duplicated `meta_language` metadata already loaded on every client (`languagesCollection`), so they're dropped too. `cardsCollection` now preloads app-wide (`auth-lifecycle`) so deck stats resolve outside `$lang` routes — the nav deck-switcher badge and the `/learn` activity sort included.
+
+### Migrations
+
+- `20260721120000_slim_user_deck_plus.sql` — drops the `user_card` join and the `phrase` / `user_card_review` subqueries from `user_deck_plus`, leaving a `security_invoker` passthrough of the base `user_deck` columns.
+
 ## v0.30 - Realtime User Collections; Reviews & Upvotes as Collection Actions
 
 _16 July, 2026_

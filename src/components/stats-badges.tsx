@@ -7,11 +7,18 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ago } from '@/lib/dayjs'
-import { useDeckMeta, useDeckPids } from '@/features/deck/hooks'
+import {
+	useDeckMeta,
+	useDeckPids,
+	useDeckCardStats,
+	useDeckReviewCounts,
+} from '@/features/deck/hooks'
 
 export function DeckStatsBadges({ lang }: { lang: string }) {
 	const { data: deckMeta } = useDeckMeta(lang)
 	const { data: deckPids } = useDeckPids(lang)
+	const { most_recent_review_at } = useDeckCardStats(lang)
+	const { count_reviews_7d } = useDeckReviewCounts(lang)
 	return !deckPids || !deckMeta ? null : (
 		<>
 			{deckPids?.today_active ? (
@@ -24,10 +31,10 @@ export function DeckStatsBadges({ lang }: { lang: string }) {
 					for today
 				</Badge>
 			) : null}
-			{deckMeta.count_reviews_7d ? (
+			{count_reviews_7d ? (
 				<Badge variant="outline" data-testid="badge-count-reviews-7d">
 					<ChartSpline />
-					<span>{deckMeta.count_reviews_7d} reviews this week</span>
+					<span>{count_reviews_7d} reviews this week</span>
 				</Badge>
 			) : (
 				<Badge variant="outline" data-testid="badge-no-reviews-7d">
@@ -40,10 +47,10 @@ export function DeckStatsBadges({ lang }: { lang: string }) {
 				<span>{deckPids.active.length} active phrases</span>
 			</Badge>
 
-			{deckMeta.most_recent_review_at ? (
+			{most_recent_review_at ? (
 				<Badge variant="outline" data-testid="badge-most-recent-review">
 					<BookOpenCheck />
-					<span>{ago(deckMeta.most_recent_review_at)}</span>
+					<span>{ago(most_recent_review_at)}</span>
 				</Badge>
 			) : null}
 		</>
