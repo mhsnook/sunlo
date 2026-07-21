@@ -6,7 +6,7 @@ _21 July, 2026_
 
 ### Refactors
 
-- **`user_deck_plus` collapses to the base `user_deck` columns.** The per-deck aggregates it computed server-side — `cards_active/learned/skipped`, `count_reviews_7d[_positive]`, `most_recent_review_at` — are now derived on the client via live queries (`useDeckCardStats`, `useDeckCardStatsByLang`, `useDeckReviewCounts`) over `cardsCollection` / `cardReviewsCollection`, so they update optimistically with card and review mutations instead of going stale until a decks refetch. `language` and `lang_total_phrases` duplicated `meta_language` metadata already loaded on every client (`languagesCollection`), so they're dropped too. `cardsCollection` now preloads app-wide (`auth-lifecycle`) so deck stats resolve outside `$lang` routes — the nav deck-switcher badge and the `/learn` activity sort included.
+- **`user_deck_plus` collapses to the base `user_deck` columns (#737).** The per-deck aggregates it computed server-side — `cards_active/learned/skipped`, `count_reviews_7d[_positive]`, `most_recent_review_at` — are now derived on the client via live queries (`useDeckCardStats`, `useDeckCardStatsByLang`, `useDeckReviewCounts`) over `cardsCollection` / `cardReviewsCollection`, so they update optimistically with card and review mutations instead of going stale until a decks refetch. `language` and `lang_total_phrases` duplicated `meta_language` metadata already loaded on every client (`languagesCollection`), so they're dropped too. `cardsCollection` now preloads app-wide (`auth-lifecycle`) so deck stats resolve outside `$lang` routes — the nav deck-switcher badge and the `/learn` activity sort included.
 
 ### Migrations
 
