@@ -507,14 +507,16 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 					{/* Actions */}
 					<div className="flex flex-wrap items-center gap-2">
 						<CardStatusActions row={row} />
-						<Link
-							to="/learn/$lang/phrases/$id"
-							params={{ lang, id: row.phrase_public_id }}
-							className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
-						>
-							<ExternalLink className="size-3" />
-							View phrase
-						</Link>
+						{row.phrase_public_id ? (
+							<Link
+								to="/learn/$lang/phrases/$id"
+								params={{ lang, id: row.phrase_public_id }}
+								className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
+							>
+								<ExternalLink className="size-3" />
+								View phrase
+							</Link>
+						) : null}
 					</div>
 				</div>
 			)}
@@ -583,13 +585,19 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 		>
 			{/* Phrase */}
 			<td className="max-w-60 px-3 py-2">
-				<Link
-					to="/learn/$lang/phrases/$id"
-					params={{ lang, id: row.phrase_public_id }}
-					className="s-link line-clamp-2 text-sm font-medium"
-				>
-					{row.phrase_text}
-				</Link>
+				{row.phrase_public_id ? (
+					<Link
+						to="/learn/$lang/phrases/$id"
+						params={{ lang, id: row.phrase_public_id }}
+						className="s-link line-clamp-2 text-sm font-medium"
+					>
+						{row.phrase_text}
+					</Link>
+				) : (
+					<span className="line-clamp-2 text-sm font-medium">
+						{row.phrase_text}
+					</span>
+				)}
 			</td>
 
 			{/* Status */}

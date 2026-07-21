@@ -38,24 +38,6 @@ export const usePhraseByHandle = (
 		[publicId]
 	)
 
-/**
- * Resolve a phrase uuid to its public_id, for building links from derived data
- * (feed, etc.) that only carries the uuid. Public phrase collection is fully
- * synced, so this is a cheap local lookup.
- */
-export const usePhrasePublicId = (id: uuid | undefined): string | undefined =>
-	useLiveQuery(
-		(q) =>
-			!id
-				? undefined
-				: q
-						.from({ p: phrasesCollection })
-						.where(({ p }) => eq(p.id, id))
-						.select(({ p }) => ({ public_id: p.public_id }))
-						.findOne(),
-		[id]
-	).data?.public_id
-
 export const useLanguagePhrases = (
 	lang: string
 ): UseLiveQueryResult<PhraseFullType[]> =>

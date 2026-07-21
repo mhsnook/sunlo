@@ -173,11 +173,14 @@ function NewReplyForm({
 					phraseLinks: [],
 				})
 				await tx.isPersisted.promise
-				void navigate({
-					to: '/learn/$lang/requests/$id',
-					params: { lang, id: request?.public_id ?? '' },
-					search: { focus: parentComment?.public_id ?? '' },
-				})
+				// Both are in synced collections and loaded by the time a reply
+				// posts (we're on the request page); only navigate once resolved.
+				if (request && parentComment)
+					void navigate({
+						to: '/learn/$lang/requests/$id',
+						params: { lang, id: request.public_id },
+						search: { focus: parentComment.public_id },
+					})
 				toastSuccess('Reply posted!')
 				formApi.reset()
 				onClose()

@@ -16,7 +16,7 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 		if (target.closest('button, a, input')) return
 		void navigate({
 			to: '/learn/$lang/playlists/$playlistId',
-			params: { lang: item.lang, playlistId: playlist?.public_id ?? '' },
+			params: { lang: item.lang, playlistId: item.public_id },
 		})
 	}
 

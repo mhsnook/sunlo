@@ -126,7 +126,7 @@ export function PlaylistItem({
 						timeLinkTo="/learn/$lang/playlists/$playlistId"
 						timeLinkParams={{
 							lang: playlist.lang,
-							playlistId: playlist.id,
+							playlistId: playlist.public_id,
 						}}
 						timeValue={playlist.created_at}
 					/>

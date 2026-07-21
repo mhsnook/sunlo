@@ -112,7 +112,11 @@ export function CommentWithReplies({
 								<DeleteCommentDialog comment={comment} />
 							</>
 						)}
-						<CommentContextMenu comment={comment} lang={lang} />
+						<CommentContextMenu
+							comment={comment}
+							requestPublicId={requestPublicId}
+							lang={lang}
+						/>
 					</div>
 				</div>
 
@@ -270,7 +274,11 @@ function CommentReply({ comment, requestPublicId, lang }: CommentThreadProps) {
 							<DeleteCommentDialog comment={comment} />
 						</>
 					)}
-					<CommentContextMenu comment={comment} lang={lang} />
+					<CommentContextMenu
+						comment={comment}
+						requestPublicId={requestPublicId}
+						lang={lang}
+					/>
 				</div>
 			</div>
 

@@ -1637,6 +1637,7 @@ export type Database = {
 					lang: string | null
 					payload: Json | null
 					popularity: number | null
+					public_id: string | null
 					type: string | null
 					uid: string | null
 				}

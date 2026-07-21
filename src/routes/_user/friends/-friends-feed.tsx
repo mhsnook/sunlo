@@ -164,7 +164,7 @@ function activityMeta(item: FeedActivityType): ActivityMeta | null {
 			Icon: MessageSquarePlus,
 			preview: payload.prompt,
 			to: '/learn/$lang/requests/$id',
-			params: { lang: item.lang, id: item.id },
+			params: { lang: item.lang, id: item.public_id },
 		}
 	}
 	if (item.type === 'playlist') {
@@ -179,7 +179,7 @@ function activityMeta(item: FeedActivityType): ActivityMeta | null {
 			Icon: ListMusic,
 			preview: `${payload.title} · ${countLabel}`,
 			to: '/learn/$lang/playlists/$playlistId',
-			params: { lang: item.lang, playlistId: item.id },
+			params: { lang: item.lang, playlistId: item.public_id },
 		}
 	}
 	if (item.type === 'phrase') {
@@ -190,7 +190,7 @@ function activityMeta(item: FeedActivityType): ActivityMeta | null {
 			Icon: WalletCards,
 			preview: payload.text ? `“${payload.text}”` : null,
 			to: '/learn/$lang/phrases/$id',
-			params: { lang: item.lang, id: item.id },
+			params: { lang: item.lang, id: item.public_id },
 		}
 	}
 	return null

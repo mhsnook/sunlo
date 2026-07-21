@@ -2,7 +2,6 @@ import { FeedActivityType } from '@/features/feed/schemas'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { usePhrasePublicId } from '@/features/phrases/hooks'
 import { useProfile } from '@/features/profile/hooks'
 import { useMyCard } from '@/features/deck/hooks'
 import { MessageSquareQuote, Users } from 'lucide-react'
@@ -73,10 +72,9 @@ export function PhraseSummaryLine({
 }
 
 export function FeedPhraseGroupItem({ items }: { items: FeedActivityType[] }) {
-	const firstItem = items[0]
-	const firstPublicId = usePhrasePublicId(firstItem?.id)
-
 	if (items.length === 0) return null
+
+	const firstItem = items[0]
 
 	return (
 		<div className="text-muted-foreground flex flex-col gap-2 rounded-lg p-3 text-sm">
@@ -86,7 +84,7 @@ export function FeedPhraseGroupItem({ items }: { items: FeedActivityType[] }) {
 					action={`added ${items.length} phrase${items.length === 1 ? '' : 's'}`}
 					timeValue={firstItem.created_at}
 					timeLinkTo="/learn/$lang/phrases/$id"
-					timeLinkParams={{ lang: firstItem.lang, id: firstPublicId ?? '' }}
+					timeLinkParams={{ lang: firstItem.lang, id: firstItem.public_id }}
 				/>
 			</div>
 			<div className="bg-background flex flex-col gap-1 rounded p-2">

@@ -22,7 +22,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 		if (target.closest('button, a, input')) return
 		void navigate({
 			to: '/learn/$lang/requests/$id',
-			params: { lang: request.lang, id: request.id },
+			params: { lang: request.lang, id: request.public_id },
 		})
 	}
 

@@ -49,7 +49,7 @@ function NewRequestPage() {
 					onSuccess={(data: PhraseRequestType) => {
 						void navigate({
 							to: '/learn/$lang/requests/$id',
-							params: { lang, id: data.id },
+							params: { lang, id: data.public_id },
 						})
 					}}
 				/>

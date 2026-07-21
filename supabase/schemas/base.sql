@@ -1438,7 +1438,8 @@ select
 	"pr"."lang",
 	"pr"."requester_uid" as "uid",
 	coalesce("pr"."upvote_count", 0) as "popularity",
-	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload"
+	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload",
+	"pr"."public_id"
 from
 	"public"."phrase_request" "pr"
 where
@@ -1467,7 +1468,8 @@ select
 			where
 				("playlist_phrase_link"."playlist_id" = "pp"."id")
 		)
-	) as "payload"
+	) as "payload",
+	"pp"."public_id"
 from
 	"public"."phrase_playlist" "pp"
 where
@@ -1498,7 +1500,8 @@ select distinct
 			)
 			else null::"jsonb"
 		end
-	) as "payload"
+	) as "payload",
+	"p"."public_id"
 from
 	(
 		(

@@ -264,7 +264,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 						if (target.closest('button, a, input')) return
 						void navigate({
 							to: '/learn/$lang/playlists/$playlistId',
-							params: { lang: playlist.lang, playlistId: playlist.id },
+							params: { lang: playlist.lang, playlistId: playlist.public_id },
 						})
 					}}
 					onKeyDown={(e) => {

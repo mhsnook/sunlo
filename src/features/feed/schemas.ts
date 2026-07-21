@@ -40,6 +40,7 @@ export const FeedActivityPayloadPhraseSchema = z.object({
 
 export const FeedActivitySchema = z.object({
 	id: z.string().uuid(),
+	public_id: z.string(),
 	type: FeedActivityTypeEnumSchema,
 	created_at: z.string(),
 	lang: LangSchema,

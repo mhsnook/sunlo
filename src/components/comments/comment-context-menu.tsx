@@ -14,6 +14,9 @@ import Flagged from '../flagged'
 
 interface CommentContextMenuProps {
 	comment: RequestCommentType
+	// The parent request's public_id (the comment row only holds the request
+	// uuid). Threaded from the thread page for the shareable permalink.
+	requestPublicId: string
 	lang: string
 }
 
@@ -22,8 +25,12 @@ const handleReport = () => {
 	toastSuccess('Thank you for reporting. We will review this comment shortly.')
 }
 
-export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
-	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?focus=${comment.public_id}`
+export function CommentContextMenu({
+	comment,
+	requestPublicId,
+	lang,
+}: CommentContextMenuProps) {
+	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${requestPublicId}?focus=${comment.public_id}`
 
 	const handleShare = () => {
 		if (!navigator.share) {
