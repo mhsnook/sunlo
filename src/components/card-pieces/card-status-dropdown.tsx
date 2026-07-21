@@ -34,9 +34,13 @@ import {
 } from '@/features/deck/hooks'
 import languages from '@/lib/languages'
 import { Button } from '@/components/ui/button'
-import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { directionsForPhrase } from '@/features/deck/card-directions'
+import {
+	updateCardsStatus,
+	updatePhraseLearnerCount,
+	type LearningStatus,
+} from '@/features/deck/card-status'
 import { postNewDeck } from '@/features/deck/mutations'
 import { DeckMetaSchema, type DeckMetaType } from '@/features/deck/schemas'
 import {
@@ -51,7 +55,6 @@ interface CardStatusDropdownProps {
 	className?: string
 }
 
-type LearningStatus = 'active' | 'skipped' | 'learned'
 type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
 export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
@@ -139,36 +142,6 @@ const triggerDotClass: Record<ShowableActions, string> = {
 	nodeck: 'bg-3-lo-neutral',
 }
 
-const isLearnerStatus = (s: LearningStatus | undefined) =>
-	s === 'active' || s === 'learned' ? 1 : 0
-
-// count_learners is server-derived (aggregated in the phrase_full view from
-// user_card status), so phrasesCollection has no direct mutation handler for
-// it — we apply the predicted delta optimistically via writeUpdate and revert
-// it manually if the card transaction rolls back.
-function updatePhraseCount(
-	phraseId: string,
-	oldStatus: LearningStatus | undefined,
-	newStatus: LearningStatus
-): (() => void) | undefined {
-	if (oldStatus === newStatus) return
-	const previous = phrasesCollection.get(phraseId)
-	if (!previous) {
-		console.error(`updatePhraseCount: no phrase ${phraseId} in collection`)
-		return
-	}
-	phrasesCollection.utils.writeUpdate({
-		id: previous.id,
-		count_learners: Math.max(
-			(previous.count_learners ?? 0) -
-				isLearnerStatus(oldStatus) +
-				isLearnerStatus(newStatus),
-			0
-		),
-	})
-	return () => phrasesCollection.utils.writeUpdate(previous)
-}
-
 function useCardStatusMutator(
 	phrase: AnyPhrase,
 	card: CardWithSibling | undefined
@@ -183,17 +156,15 @@ function useCardStatusMutator(
 		if (card?.status === status) return Promise.resolve()
 
 		const tx = card
-			? cardsCollection.update(
+			? updateCardsStatus(
 					card.sibling_id ? [card.id, card.sibling_id] : [card.id],
-					(drafts) => {
-						drafts.forEach((d) => {
-							d.status = status
-						})
-					}
+					phrase.id,
+					card.status,
+					status
 				)
 			: (() => {
 					const nowIso = new Date().toISOString()
-					return cardsCollection.insert(
+					const insertTx = cardsCollection.insert(
 						directionsForPhrase(phrase.only_reverse).map((direction) => ({
 							id: crypto.randomUUID(),
 							uid: userId,
@@ -208,9 +179,15 @@ function useCardStatusMutator(
 							stability: null,
 						}))
 					)
+					const revertCount = updatePhraseLearnerCount(
+						phrase.id,
+						undefined,
+						status
+					)
+					if (revertCount)
+						insertTx.isPersisted.promise.then(undefined, revertCount)
+					return insertTx
 				})()
-
-		const revertCount = updatePhraseCount(phrase.id, card?.status, status)
 
 		return tx.isPersisted.promise.then(
 			() => {
@@ -223,7 +200,6 @@ function useCardStatusMutator(
 				}
 			},
 			(err) => {
-				revertCount?.()
 				console.error('Card status mutation rolled back:', err)
 				if (options?.silent) throw err
 				toastError(

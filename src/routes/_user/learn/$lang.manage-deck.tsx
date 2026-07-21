@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta, useDeckCards } from '@/features/deck/hooks'
-import { cardsCollection } from '@/features/deck/collections'
+import { updateCardsStatus } from '@/features/deck/card-status'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import { type CardMetaType } from '@/features/deck/schemas'
 import { cn, sessionDaysDiff } from '@/lib/utils'
@@ -634,17 +634,10 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 /* ── Shared: status change buttons ───────────────────────────── */
 
 function CardStatusActions({ row }: { row: PhraseRow }) {
-	// Update every card for this phrase (both directions) in one optimistic
-	// transaction. cardsCollection.onUpdate owns persistence; toasts are wired to
-	// the transaction here since the change is off-screen for skipped rows.
 	const setStatus = (status: 'active' | 'learned' | 'skipped') => {
 		const ids = row.cards.map((c) => c.id)
 		if (ids.length === 0) return
-		const tx = cardsCollection.update(ids, (drafts) => {
-			drafts.forEach((draft) => {
-				draft.status = status
-			})
-		})
+		const tx = updateCardsStatus(ids, row.phrase_id, row.status, status)
 		tx.isPersisted.promise.then(
 			() => toastSuccess(`Phrase status changed to "${status}"`),
 			(error) => {
