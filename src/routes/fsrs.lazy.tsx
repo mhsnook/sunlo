@@ -48,7 +48,9 @@ const PRESETS: Array<{ label: string; scores: Array<Score> }> = [
 	{ label: 'Quick learner', scores: [4, 4, 4, 4] },
 ]
 
-// Per-score presentation. Full literal class strings so Tailwind picks them up.
+// Per-score presentation, matching the review buttons' raw palette colors
+// (see review-single-card.tsx): Again=red, Hard=gray, Good=blue, Easy=green.
+// Full literal class strings so Tailwind picks them up.
 const SCORE_META: Record<
 	Score,
 	{ label: string; glyph: string; text: string; activeBtn: string }
@@ -56,26 +58,26 @@ const SCORE_META: Record<
 	1: {
 		label: 'Again',
 		glyph: '✕',
-		text: 'text-5-hi-danger',
-		activeBtn: 'bg-2-mlo-danger border-4-mid-danger text-5-hi-danger',
+		text: 'text-red-600',
+		activeBtn: 'bg-red-600 border-red-600 text-white',
 	},
 	2: {
 		label: 'Hard',
 		glyph: '○',
-		text: 'text-6-hi-warning',
-		activeBtn: 'bg-2-mlo-warning border-4-mid-warning text-6-hi-warning',
+		text: 'text-gray-400',
+		activeBtn: 'bg-gray-200 border-gray-300 text-gray-700',
 	},
 	3: {
 		label: 'Good',
 		glyph: '●',
-		text: 'text-6-hi-accent',
-		activeBtn: 'bg-2-mlo-accent border-4-mid-accent text-6-hi-accent',
+		text: 'text-blue-500',
+		activeBtn: 'bg-blue-500 border-blue-500 text-white',
 	},
 	4: {
 		label: 'Easy',
 		glyph: '◆',
-		text: 'text-5-hi-success',
-		activeBtn: 'bg-2-mlo-success border-4-mid-success text-5-hi-success',
+		text: 'text-green-500',
+		activeBtn: 'bg-green-500 border-green-500 text-white',
 	},
 }
 
@@ -230,6 +232,20 @@ function ForgettingCurveChart({
 		yTicks.push(Math.round(r * 100) / 100)
 	}
 
+	// When early reviews cluster (e.g. after a lapse), their top labels would
+	// overlap. Draw a grade label only when there's horizontal room since the
+	// last one; the colored arrow + glyph still mark every review.
+	const MIN_LABEL_GAP = 48
+	const labeledIndices = new Set<number>()
+	let lastLabelX = -Infinity
+	for (const s of segments) {
+		const x = toX(s.startDay)
+		if (x - lastLabelX >= MIN_LABEL_GAP) {
+			labeledIndices.add(s.index)
+			lastLabelX = x
+		}
+	}
+
 	return (
 		<svg viewBox={`0 0 ${VB.w} ${VB.h}`} className="h-auto w-full">
 			<title>FSRS forgetting curve for a sequence of reviews</title>
@@ -359,15 +375,17 @@ function ForgettingCurveChart({
 							d={`M${x - 4},${PAD.top - 11} L${x},${PAD.top - 4} L${x + 4},${PAD.top - 11} Z`}
 							fill="currentColor"
 						/>
-						<text
-							x={x}
-							y={PAD.top - 32}
-							textAnchor="middle"
-							className="text-[12px] font-medium"
-							fill="currentColor"
-						>
-							{s.index === 0 ? `Learn · ${meta.label}` : meta.label}
-						</text>
+						{labeledIndices.has(s.index) && (
+							<text
+								x={x}
+								y={PAD.top - 32}
+								textAnchor="middle"
+								className="text-[12px] font-medium"
+								fill="currentColor"
+							>
+								{s.index === 0 ? `Learn` : meta.label}
+							</text>
+						)}
 						<ScoreGlyph score={s.score} x={x} y={toY(1)} />
 					</g>
 				)
@@ -523,9 +541,9 @@ function FsrsPage() {
 					<code className="text-xs">src/features/review/fsrs.ts</code>. Each
 					time recall decays to your target retention the card comes back around
 					— and how you grade it reshapes what comes next. A lapse{' '}
-					<span className="text-5-hi-danger">(Again ✕)</span> still resets
-					recall when you re-study, but stability collapses, so the next curve
-					is short and steep.
+					<span className="text-red-600">(Again ✕)</span> still resets recall
+					when you re-study, but stability collapses, so the next curve is short
+					and steep.
 				</p>
 			</div>
 
