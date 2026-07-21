@@ -8,7 +8,7 @@ import type { uuid } from '@/types/main'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import { useRequest } from '@/features/requests/hooks'
+import { useRequestByHandle } from '@/features/requests/hooks'
 import { Markdown } from '@/components/my-markdown'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
@@ -16,7 +16,6 @@ import { MessageTagsRow } from '@/components/requests/message-tags-row'
 import { buttonVariants } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn, mapArrays } from '@/lib/utils'
-import type { CommentPhraseLinkType } from '@/features/requests/schemas'
 import { Collapsible } from '@/components/ui/collapsible'
 import languages from '@/lib/languages'
 import { RequestButtonsRow } from '@/components/requests/request-buttons-row'
@@ -28,7 +27,7 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 } from '@/features/requests/collections'
-import { useOneComment } from '@/features/requests/hooks'
+import { useOneCommentByHandle } from '@/features/requests/hooks'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
 	CommentDialog,
@@ -70,13 +69,13 @@ const style = { viewTransitionName: 'main-area' } as CSSProperties
 
 function RequestThreadPage() {
 	const params = Route.useParams()
-	const { data: request, isLoading } = useRequest(params.id)
+	const { data: request, isLoading } = useRequestByHandle(params.id)
 	const search = Route.useSearch()
 
 	// Look up the comment being edited/focused (if any) for both dialogs
 	const editingId =
 		search.mode === 'edit' || search.mode === 'reply' ? search.focus : undefined
-	const { data: editComment } = useOneComment(editingId)
+	const { data: editComment } = useOneCommentByHandle(editingId)
 
 	// Derive dialog modes from URL
 	const commentMode = deriveCommentDialogMode(search)
@@ -156,7 +155,11 @@ function RequestThreadPage() {
 				{search.show === 'answers-only' ? (
 					<AnswersOnlyView requestId={request.id} />
 				) : (
-					<TopLevelComments requestId={request.id} lang={params.lang} />
+					<TopLevelComments
+						requestId={request.id}
+						requestPublicId={request.public_id}
+						lang={params.lang}
+					/>
 				)}
 			</Collapsible>
 		</main>
@@ -192,16 +195,28 @@ function AnswersOnlyToggle({ answersOnly }: { answersOnly: boolean }) {
 	)
 }
 
+type AnswerLink = { id: uuid; phrase_id: uuid; comment_public_id: string }
+
 function AnswersOnlyView({ requestId }: { requestId: uuid }) {
 	const { data: links, isLoading } = useLiveQuery(
 		(q) =>
 			q
 				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.request_id, requestId)),
+				.where(({ link }) => eq(link.request_id, requestId))
+				.join(
+					{ comment: commentsCollection },
+					({ link, comment }) => eq(link.comment_id, comment.id),
+					'inner'
+				)
+				.select(({ link, comment }) => ({
+					id: link.id,
+					phrase_id: link.phrase_id,
+					comment_public_id: comment.public_id,
+				})),
 		[requestId]
 	)
 	if (isLoading) return <Loader />
-	const linksWithCommentsMap = mapArrays<CommentPhraseLinkType, 'phrase_id'>(
+	const linksWithCommentsMap = mapArrays<AnswerLink, 'phrase_id'>(
 		links,
 		'phrase_id'
 	)
@@ -233,7 +248,7 @@ function AnswersOnlyView({ requestId }: { requestId: uuid }) {
 											to="."
 											search={{
 												show: 'thread',
-												focus: l.comment_id,
+												focus: l.comment_public_id,
 											}}
 											className="s-link text-sm"
 										>
@@ -258,9 +273,11 @@ function AnswersOnlyView({ requestId }: { requestId: uuid }) {
 
 function TopLevelComments({
 	requestId,
+	requestPublicId,
 	lang,
 }: {
 	requestId: uuid
+	requestPublicId: string
 	lang: string
 }) {
 	const { data: comments, isLoading } = useLiveQuery(
@@ -291,6 +308,7 @@ function TopLevelComments({
 						<CommentWithReplies
 							key={comment.id}
 							comment={comment}
+							requestPublicId={requestPublicId}
 							lang={lang}
 						/>
 					))}

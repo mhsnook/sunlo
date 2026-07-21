@@ -22,10 +22,17 @@ import { Separator } from '../ui/separator'
 
 interface CommentThreadProps {
 	comment: RequestCommentType
+	// The parent request's public_id — the comment row only carries the request
+	// uuid, so the thread page threads the handle down for permalinks.
+	requestPublicId: string
 	lang: string
 }
 
-export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
+export function CommentWithReplies({
+	comment,
+	requestPublicId,
+	lang,
+}: CommentThreadProps) {
 	const userId = useUserId()
 	const search = useSearch({ strict: false })
 
@@ -44,17 +51,11 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	const replies = repliesData ?? []
 
-	// `focus` is a comment public_id in canonical links, but uuid-sourced deep
-	// links (provenance, answers-only view) still arrive — accept either.
-	const isFocused =
-		search.focus === comment.public_id || search.focus === comment.id
+	// `focus` is always a comment public_id.
+	const isFocused = search.focus === comment.public_id
 	const isFocusMode = search.focus && !search.mode
 	const hasHighlightedReply =
-		isFocusMode &&
-		replies.some(
-			({ reply }) =>
-				reply.public_id === search.focus || reply.id === search.focus
-		)
+		isFocusMode && replies.some(({ reply }) => reply.public_id === search.focus)
 	const showSubthread = isFocused || hasHighlightedReply
 
 	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
@@ -87,7 +88,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						uid={comment.uid}
 						timeValue={comment.created_at}
 						action="commented"
-						timeLinkParams={{ id: comment.request_id, lang }}
+						timeLinkParams={{ id: requestPublicId, lang }}
 						timeLinkSearch={{ focus: comment.public_id }}
 						timeLinkTo="/learn/$lang/requests/$id"
 					/>
@@ -208,7 +209,12 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						{replies.length > 0 && (
 							<div className="divide-y">
 								{replies.map(({ reply }) => (
-									<CommentReply key={reply.id} comment={reply} lang={lang} />
+									<CommentReply
+										key={reply.id}
+										comment={reply}
+										requestPublicId={requestPublicId}
+										lang={lang}
+									/>
 								))}
 							</div>
 						)}
@@ -219,13 +225,11 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	)
 }
 
-function CommentReply({ comment, lang }: CommentThreadProps) {
+function CommentReply({ comment, requestPublicId, lang }: CommentThreadProps) {
 	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
 	const isHighlighted = useSearch({
 		strict: false,
-		select: (data) =>
-			(data.focus === comment.public_id || data.focus === comment.id) &&
-			!data.mode,
+		select: (data) => data.focus === comment.public_id && !data.mode,
 	})
 	const userId = useUserId()
 	const links = phraseLinks ?? []
@@ -242,7 +246,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 					uid={comment.uid}
 					timeValue={comment.created_at}
 					action="replied"
-					timeLinkParams={{ id: comment.request_id, lang }}
+					timeLinkParams={{ id: requestPublicId, lang }}
 					timeLinkSearch={{ focus: comment.public_id }}
 					timeLinkTo="/learn/$lang/requests/$id"
 				/>

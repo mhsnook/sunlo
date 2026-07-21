@@ -489,7 +489,7 @@ function PhraseResultRow({
 	return (
 		<Link
 			to="/learn/$lang/phrases/$id"
-			params={{ lang: phrase.lang, id: phrase.id }}
+			params={{ lang: phrase.lang, id: phrase.public_id }}
 			className="hover:bg-muted/50 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors"
 		>
 			<div className="min-w-0 flex-1">
@@ -586,7 +586,7 @@ function EntityResultRow({
 		return (
 			<Link
 				to="/learn/$lang/playlists/$playlistId"
-				params={{ lang: entity.lang, playlistId: entity.id }}
+				params={{ lang: entity.lang, playlistId: entity.public_id }}
 				className={linkClass}
 			>
 				{body}
@@ -596,7 +596,7 @@ function EntityResultRow({
 	return (
 		<Link
 			to="/learn/$lang/requests/$id"
-			params={{ lang: entity.lang, id: entity.id }}
+			params={{ lang: entity.lang, id: entity.public_id }}
 			className={linkClass}
 		>
 			{body}

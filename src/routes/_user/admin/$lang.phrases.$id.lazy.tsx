@@ -150,7 +150,7 @@ function AdminPhraseDetail() {
 						<dd>
 							<Link
 								to="/learn/$lang/phrases/$id"
-								params={{ lang: phrase.lang, id: phrase.id }}
+								params={{ lang: phrase.lang, id: phrase.public_id }}
 								className="s-link inline-flex items-center gap-1 text-sm"
 							>
 								View phrase page

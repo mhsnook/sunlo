@@ -27,16 +27,3 @@ export function newPublicId(size = 10): string {
 	for (let i = 0; i < size; i++) out += ALPHABET[bytes[i]! % 62]
 	return out
 }
-
-const UUID_RE =
-	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-/**
- * True when a route param is a canonical uuid rather than a public_id. Detail
- * routes resolve by public_id first but fall back to uuid so old bookmarks,
- * shared links, and foreign-key deep links (which only carry the uuid) keep
- * working. public_ids never contain dashes, so the two never collide.
- */
-export function looksLikeUuid(value: string): boolean {
-	return UUID_RE.test(value)
-}

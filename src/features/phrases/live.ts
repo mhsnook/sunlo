@@ -90,6 +90,7 @@ export interface PhraseProvenancePlaylist {
 	type: 'playlist'
 	id: uuid
 	playlistId: uuid
+	playlistPublicId: string
 	title: string
 	description: string | null
 	href: string | null
@@ -101,7 +102,9 @@ export interface PhraseProvenanceComment {
 	type: 'comment'
 	id: uuid
 	commentId: uuid
+	commentPublicId: string
 	requestId: uuid
+	requestPublicId: string
 	prompt: string
 	created_at: string
 	uid: uuid
@@ -141,6 +144,7 @@ export const usePhrasePlaylists = (
 							type: 'playlist' as const,
 							id: link.id,
 							playlistId: playlist.id,
+							playlistPublicId: playlist.public_id,
 							title: playlist.title,
 							description: playlist.description,
 							href: link.href,
@@ -187,7 +191,9 @@ export const usePhraseComments = (
 							type: 'comment' as const,
 							id: link.id,
 							commentId: comment.id,
+							commentPublicId: comment.public_id,
 							requestId: request.id,
+							requestPublicId: request.public_id,
 							prompt: request.prompt,
 							created_at: comment.created_at,
 							uid: comment.uid,
@@ -202,6 +208,7 @@ export const usePhraseComments = (
 export interface RelatedCardSource {
 	type: 'playlist' | 'thread'
 	id: uuid
+	publicId: string
 	label: string
 }
 
@@ -238,6 +245,7 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 						.select(({ link, playlist }) => ({
 							phraseId: link.phrase_id,
 							playlistId: playlist.id,
+							playlistPublicId: playlist.public_id,
 							title: playlist.title,
 						})),
 		[playlistIds.join(',')]
@@ -258,6 +266,7 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 						.select(({ link, request }) => ({
 							phraseId: link.phrase_id,
 							requestId: request.id,
+							requestPublicId: request.public_id,
 							prompt: request.prompt,
 						})),
 		[requestIds.join(',')]
@@ -269,7 +278,12 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 		if (s.phraseId === phraseId) continue
 		const sources = sourceMap.get(s.phraseId) ?? []
 		if (!sources.some((x) => x.type === 'playlist' && x.id === s.playlistId)) {
-			sources.push({ type: 'playlist', id: s.playlistId, label: s.title })
+			sources.push({
+				type: 'playlist',
+				id: s.playlistId,
+				publicId: s.playlistPublicId,
+				label: s.title,
+			})
 		}
 		sourceMap.set(s.phraseId, sources)
 	}
@@ -278,7 +292,12 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 		if (s.phraseId === phraseId) continue
 		const sources = sourceMap.get(s.phraseId) ?? []
 		if (!sources.some((x) => x.type === 'thread' && x.id === s.requestId)) {
-			sources.push({ type: 'thread', id: s.requestId, label: s.prompt })
+			sources.push({
+				type: 'thread',
+				id: s.requestId,
+				publicId: s.requestPublicId,
+				label: s.prompt,
+			})
 		}
 		sourceMap.set(s.phraseId, sources)
 	}

@@ -332,7 +332,7 @@ function SearchResultLink({
 		return (
 			<Link
 				to="/learn/$lang/phrases/$id"
-				params={{ lang: item.entity.lang, id: item.id }}
+				params={{ lang: item.entity.lang, id: item.entity.public_id }}
 				{...linkProps}
 			>
 				{inner}
@@ -343,7 +343,7 @@ function SearchResultLink({
 		return (
 			<Link
 				to="/learn/$lang/playlists/$playlistId"
-				params={{ lang: item.entity.lang, playlistId: item.id }}
+				params={{ lang: item.entity.lang, playlistId: item.entity.public_id }}
 				{...linkProps}
 			>
 				{inner}
@@ -353,7 +353,7 @@ function SearchResultLink({
 	return (
 		<Link
 			to="/learn/$lang/requests/$id"
-			params={{ lang: item.entity.lang, id: item.id }}
+			params={{ lang: item.entity.lang, id: item.entity.public_id }}
 			{...linkProps}
 		>
 			{inner}

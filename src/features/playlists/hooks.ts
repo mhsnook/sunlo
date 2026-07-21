@@ -1,6 +1,5 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import { looksLikeUuid } from '@/lib/public-id'
 import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import type { PhrasePlaylistType, PlaylistPhraseLinkType } from './schemas'
 
@@ -50,21 +49,36 @@ export function useMyPlaylists(): UseLiveQueryResult<PhrasePlaylistType[]> {
 	return useAnyonesPlaylists(userId!)
 }
 
-// Resolves by public_id first (the canonical URL form) and falls back to the
-// uuid so old bookmarks and foreign-key deep links keep working.
+// Internal getter: look up a playlist by its uuid. Used by feed items,
+// previews, and the share button — all holding a uuid from synced data.
 export function useOnePlaylist(
-	handle: string
+	id: string | undefined | null
 ): UseLiveQueryResult<PhrasePlaylistType> {
-	const byUuid = looksLikeUuid(handle)
 	return useLiveQuery(
 		(q) =>
-			q
-				.from({ list: phrasePlaylistsCollection })
-				.where(({ list }) =>
-					byUuid ? eq(list.id, handle) : eq(list.public_id, handle)
-				)
-				.findOne(),
-		[handle, byUuid]
+			!id
+				? undefined
+				: q
+						.from({ list: phrasePlaylistsCollection })
+						.where(({ list }) => eq(list.id, id))
+						.findOne(),
+		[id]
+	)
+}
+
+// Route-boundary resolver: look up a playlist by its public_id (URL handle).
+export function useOnePlaylistByHandle(
+	publicId: string | undefined | null
+): UseLiveQueryResult<PhrasePlaylistType> {
+	return useLiveQuery(
+		(q) =>
+			!publicId
+				? undefined
+				: q
+						.from({ list: phrasePlaylistsCollection })
+						.where(({ list }) => eq(list.public_id, publicId))
+						.findOne(),
+		[publicId]
 	)
 }
 

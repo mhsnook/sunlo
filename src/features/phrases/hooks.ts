@@ -20,27 +20,41 @@ import { phrasesCollection } from './collections'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import { useUserId } from '@/lib/use-auth'
-import { looksLikeUuid } from '@/lib/public-id'
 
 /**
- * Resolve a route handle (public_id or uuid) to a phrase row. The phrase
- * detail route addresses phrases by their public_id, but everything downstream
- * of it works in uuids — so the route resolves here and threads `phrase.id`
- * onward. Falls back to uuid so old bookmarks and FK deep links keep resolving.
+ * Route-boundary resolver: resolve a phrase public_id (the URL handle) to its
+ * row. The detail route addresses phrases by public_id; everything downstream
+ * works in uuids, so the route resolves here and threads `phrase.id` onward.
  */
 export const usePhraseByHandle = (
-	handle: string
-): UseLiveQueryResult<PhraseType> => {
-	const byUuid = looksLikeUuid(handle)
-	return useLiveQuery(
+	publicId: string
+): UseLiveQueryResult<PhraseType> =>
+	useLiveQuery(
 		(q) =>
 			q
 				.from({ p: phrasesCollection })
-				.where(({ p }) => (byUuid ? eq(p.id, handle) : eq(p.public_id, handle)))
+				.where(({ p }) => eq(p.public_id, publicId))
 				.findOne(),
-		[handle, byUuid]
+		[publicId]
 	)
-}
+
+/**
+ * Resolve a phrase uuid to its public_id, for building links from derived data
+ * (feed, etc.) that only carries the uuid. Public phrase collection is fully
+ * synced, so this is a cheap local lookup.
+ */
+export const usePhrasePublicId = (id: uuid | undefined): string | undefined =>
+	useLiveQuery(
+		(q) =>
+			!id
+				? undefined
+				: q
+						.from({ p: phrasesCollection })
+						.where(({ p }) => eq(p.id, id))
+						.select(({ p }) => ({ public_id: p.public_id }))
+						.findOne(),
+		[id]
+	).data?.public_id
 
 export const useLanguagePhrases = (
 	lang: string

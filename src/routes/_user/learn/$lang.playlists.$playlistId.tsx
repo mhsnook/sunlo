@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import type { CSSProperties } from 'react'
 import { PlaylistItem } from '@/components/playlists/playlist-list-item'
 import { Loader } from '@/components/ui/loader'
-import { useOnePlaylist } from '@/features/playlists/hooks'
+import { useOnePlaylistByHandle } from '@/features/playlists/hooks'
 import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'
 
@@ -23,7 +23,7 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function PlaylistPage() {
 	const { playlistId } = Route.useParams()
-	const { data: playlist, isLoading } = useOnePlaylist(playlistId)
+	const { data: playlist, isLoading } = useOnePlaylistByHandle(playlistId)
 
 	return (
 		<main style={style} data-testid="playlist-detail-page">

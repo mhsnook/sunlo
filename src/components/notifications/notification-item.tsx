@@ -74,12 +74,12 @@ function useNotificationLink(notification: NotificationType): {
 		const search: Record<string, string> = {}
 
 		if (notification.comment_id && comment) {
-			search.focus = comment.id
+			search.focus = comment.public_id
 		}
 
 		return {
 			to: '/learn/$lang/requests/$id',
-			params: { lang: request.lang, id: request.id },
+			params: { lang: request.lang, id: request.public_id },
 			...(Object.keys(search).length > 0 && { search }),
 		}
 	}
@@ -88,7 +88,7 @@ function useNotificationLink(notification: NotificationType): {
 	if (notification.phrase_id && phrase) {
 		return {
 			to: '/learn/$lang/phrases/$id',
-			params: { lang: phrase.lang, id: phrase.id },
+			params: { lang: phrase.lang, id: phrase.public_id },
 		}
 	}
 

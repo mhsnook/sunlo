@@ -308,7 +308,7 @@ function RelatedCardsSection({ pid, lang }: { pid: uuid; lang: string }) {
 										<Link
 											key={`playlist-${source.id}`}
 											to="/learn/$lang/playlists/$playlistId"
-											params={{ lang, playlistId: source.id }}
+											params={{ lang, playlistId: source.publicId }}
 											className="inline-flex"
 										>
 											<Badge variant="secondary" className="gap-1">
@@ -320,7 +320,7 @@ function RelatedCardsSection({ pid, lang }: { pid: uuid; lang: string }) {
 										<Link
 											key={`thread-${source.id}`}
 											to="/learn/$lang/requests/$id"
-											params={{ lang, id: source.id }}
+											params={{ lang, id: source.publicId }}
 											className="inline-flex"
 										>
 											<Badge variant="secondary" className="gap-1">
@@ -349,7 +349,7 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 						<span>Playlist: </span>
 						<Link
 							to="/learn/$lang/playlists/$playlistId"
-							params={{ lang, playlistId: item.playlistId }}
+							params={{ lang, playlistId: item.playlistPublicId }}
 							className="s-link font-medium"
 						>
 							{item.title}
@@ -382,8 +382,8 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 					<span>Thread: </span>
 					<Link
 						to="/learn/$lang/requests/$id"
-						params={{ lang, id: item.requestId }}
-						search={{ focus: item.commentId }}
+						params={{ lang, id: item.requestPublicId }}
+						search={{ focus: item.commentPublicId }}
 						className="s-link font-medium"
 					>
 						{item.prompt}

@@ -14,7 +14,7 @@ import {
 	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/requests/collections'
-import { useOneComment } from '@/features/requests/hooks'
+import { useOneComment, useRequest } from '@/features/requests/hooks'
 import { type RequestCommentType } from '@/features/requests/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
@@ -147,6 +147,10 @@ function NewReplyForm({
 }) {
 	const navigate = useNavigate()
 	const userId = useUserId()
+	// The redirect below addresses the request + parent comment by public_id;
+	// resolve them from the synced collections (we only hold their uuids here).
+	const { data: request } = useRequest(requestId)
+	const { data: parentComment } = useOneComment(parentCommentId)
 
 	const form = useAppForm({
 		defaultValues: { content: '' },
@@ -171,8 +175,8 @@ function NewReplyForm({
 				await tx.isPersisted.promise
 				void navigate({
 					to: '/learn/$lang/requests/$id',
-					params: { lang, id: requestId },
-					search: { focus: parentCommentId },
+					params: { lang, id: request?.public_id ?? '' },
+					search: { focus: parentComment?.public_id ?? '' },
 				})
 				toastSuccess('Reply posted!')
 				formApi.reset()

@@ -40,6 +40,7 @@ const style = { viewTransitionName: 'main-area' } as CSSProperties
 
 type PhraseRow = {
 	phrase_id: string
+	phrase_public_id: string
 	phrase_text: string
 	/** Most active status across both directions */
 	status: CardMetaType['status']
@@ -198,6 +199,7 @@ function useCardData(lang: string) {
 
 				return {
 					phrase_id: pid,
+					phrase_public_id: phrase?.public_id ?? '',
 					phrase_text: phrase?.text ?? '(unknown phrase)',
 					status,
 					last_reviewed_at: reviewed,
@@ -266,6 +268,7 @@ function useCardData(lang: string) {
 			)
 			return {
 				phrase_id: pid,
+				phrase_public_id: phrase?.public_id ?? '',
 				phrase_text: phrase?.text ?? '(unknown phrase)',
 				status,
 				last_reviewed_at: null,
@@ -506,7 +509,7 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 						<CardStatusActions row={row} />
 						<Link
 							to="/learn/$lang/phrases/$id"
-							params={{ lang, id: row.phrase_id }}
+							params={{ lang, id: row.phrase_public_id }}
 							className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
 						>
 							<ExternalLink className="size-3" />
@@ -582,7 +585,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 			<td className="max-w-60 px-3 py-2">
 				<Link
 					to="/learn/$lang/phrases/$id"
-					params={{ lang, id: row.phrase_id }}
+					params={{ lang, id: row.phrase_public_id }}
 					className="s-link line-clamp-2 text-sm font-medium"
 				>
 					{row.phrase_text}

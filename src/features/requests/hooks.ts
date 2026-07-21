@@ -1,7 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import { looksLikeUuid } from '@/lib/public-id'
 import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
@@ -52,25 +51,38 @@ export const useRequestCounts = (
 	}
 }
 
-// Resolves by public_id first (the canonical URL form) and falls back to the
-// uuid so old bookmarks and foreign-key deep links keep working.
+// Internal getter: look up a request by its uuid. Used by feed items,
+// notifications, previews, and the edit form — all of which already hold a
+// uuid from synced data, not a URL.
 export const useRequest = (
-	handle: string | undefined | null
-): UseLiveQueryResult<PhraseRequestType> => {
-	const byUuid = !!handle && looksLikeUuid(handle)
-	return useLiveQuery(
+	id: uuid | undefined | null
+): UseLiveQueryResult<PhraseRequestType> =>
+	useLiveQuery(
 		(q) =>
-			!handle
+			!id
 				? undefined
 				: q
 						.from({ req: phraseRequestsCollection })
-						.where(({ req }) =>
-							byUuid ? eq(req.id, handle) : eq(req.public_id, handle)
-						)
+						.where(({ req }) => eq(req.id, id))
 						.findOne(),
-		[handle, byUuid]
+		[id]
 	)
-}
+
+// Route-boundary resolver: look up a request by its public_id (the URL handle).
+// Resolve here, then thread `request.id` (uuid) to everything downstream.
+export const useRequestByHandle = (
+	publicId: string | undefined | null
+): UseLiveQueryResult<PhraseRequestType> =>
+	useLiveQuery(
+		(q) =>
+			!publicId
+				? undefined
+				: q
+						.from({ req: phraseRequestsCollection })
+						.where(({ req }) => eq(req.public_id, publicId))
+						.findOne(),
+		[publicId]
+	)
 
 export function useAnyonesPhraseRequests(
 	uid: uuid,
@@ -98,29 +110,36 @@ export const useHasRequestUpvote = (requestId: uuid): boolean =>
 		[requestId]
 	).data?.length
 
-/**
- * Look up a single comment by public_id or uuid. Returns undefined when no
- * handle is given. The request thread's `?focus=` param is a comment public_id,
- * but in-app deep links that only carry the uuid (e.g. comment_phrase_link
- * rows) still resolve.
- */
+/** Internal getter: look up a single comment by its uuid. */
 export const useOneComment = (
-	handle: uuid | undefined
-): UseLiveQueryResult<RequestCommentType> => {
-	const byUuid = !!handle && looksLikeUuid(handle)
-	return useLiveQuery(
+	id: uuid | undefined
+): UseLiveQueryResult<RequestCommentType> =>
+	useLiveQuery(
 		(q) =>
-			!handle
+			!id
 				? undefined
 				: q
 						.from({ comment: commentsCollection })
-						.where(({ comment }) =>
-							byUuid ? eq(comment.id, handle) : eq(comment.public_id, handle)
-						)
+						.where(({ comment }) => eq(comment.id, id))
 						.findOne(),
-		[handle, byUuid]
+		[id]
 	)
-}
+
+// Route-boundary resolver: look up a comment by its public_id. The request
+// thread's `?focus=` param is a comment public_id.
+export const useOneCommentByHandle = (
+	publicId: string | undefined
+): UseLiveQueryResult<RequestCommentType> =>
+	useLiveQuery(
+		(q) =>
+			!publicId
+				? undefined
+				: q
+						.from({ comment: commentsCollection })
+						.where(({ comment }) => eq(comment.public_id, publicId))
+						.findOne(),
+		[publicId]
+	)
 
 /**
  * Comment-phrase-link rows for a single comment. Phrase hydration is the
