@@ -1277,13 +1277,6 @@ export type Database = {
 						referencedColumns: ['uid', 'lang']
 					},
 					{
-						foreignKeyName: 'user_card_lang_uid_fkey'
-						columns: ['uid', 'lang']
-						isOneToOne: false
-						referencedRelation: 'user_deck_plus'
-						referencedColumns: ['uid', 'lang']
-					},
-					{
 						foreignKeyName: 'user_card_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
@@ -1365,13 +1358,6 @@ export type Database = {
 						columns: ['uid', 'lang']
 						isOneToOne: false
 						referencedRelation: 'user_deck'
-						referencedColumns: ['uid', 'lang']
-					},
-					{
-						foreignKeyName: 'user_card_review_lang_uid_fkey'
-						columns: ['uid', 'lang']
-						isOneToOne: false
-						referencedRelation: 'user_deck_plus'
 						referencedColumns: ['uid', 'lang']
 					},
 					{
@@ -1642,13 +1628,6 @@ export type Database = {
 						referencedRelation: 'user_deck'
 						referencedColumns: ['lang', 'uid']
 					},
-					{
-						foreignKeyName: 'user_review_session_lang_uid_fkey'
-						columns: ['lang', 'uid']
-						isOneToOne: false
-						referencedRelation: 'user_deck_plus'
-						referencedColumns: ['lang', 'uid']
-					},
 				]
 			}
 		}
@@ -1890,13 +1869,6 @@ export type Database = {
 						referencedColumns: ['uid', 'lang']
 					},
 					{
-						foreignKeyName: 'user_card_lang_uid_fkey'
-						columns: ['uid', 'lang']
-						isOneToOne: false
-						referencedRelation: 'user_deck_plus'
-						referencedColumns: ['uid', 'lang']
-					},
-					{
 						foreignKeyName: 'user_card_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
@@ -1919,56 +1891,6 @@ export type Database = {
 					},
 					{
 						foreignKeyName: 'user_card_uid_fkey'
-						columns: ['uid']
-						isOneToOne: false
-						referencedRelation: 'user_profile'
-						referencedColumns: ['uid']
-					},
-				]
-			}
-			user_deck_plus: {
-				Row: {
-					archived: boolean | null
-					cards_active: number | null
-					cards_learned: number | null
-					cards_skipped: number | null
-					count_reviews_7d: number | null
-					count_reviews_7d_positive: number | null
-					created_at: string | null
-					daily_review_goal: number | null
-					lang: string | null
-					lang_total_phrases: number | null
-					language: string | null
-					learning_goal: Database['public']['Enums']['learning_goal'] | null
-					most_recent_review_at: string | null
-					preferred_translation_lang: string | null
-					review_answer_mode: string | null
-					uid: string | null
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'user_deck_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'user_deck_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'meta_language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'user_deck_uid_fkey'
-						columns: ['uid']
-						isOneToOne: false
-						referencedRelation: 'public_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'user_deck_uid_fkey'
 						columns: ['uid']
 						isOneToOne: false
 						referencedRelation: 'user_profile'
@@ -2053,18 +1975,6 @@ export type Database = {
 					matched_via: string
 					similarity: number
 				}[]
-			}
-			set_comment_upvote: {
-				Args: { p_action: string; p_comment_id: string }
-				Returns: Json
-			}
-			set_phrase_playlist_upvote: {
-				Args: { p_action: string; p_playlist_id: string }
-				Returns: Json
-			}
-			set_phrase_request_upvote: {
-				Args: { p_action: string; p_request_id: string }
-				Returns: Json
 			}
 			show_limit: { Args: never; Returns: number }
 			show_trgm: { Args: { '': string }; Returns: string[] }
