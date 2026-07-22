@@ -10,14 +10,13 @@ import type { uuid } from '@/types/main'
 import { toManifestEntry, type ManifestEntry } from './manifest'
 
 /*
-	null: not yet initialised (zustand store only)
 	1. doing the first review
 	2. going back for unreviewed
 	3. skip unreviewed and see screen asking to re-review
 	4. doing re-reviews
 	5. skip re-reviews and end
 */
-export type ReviewStages = null | 1 | 2 | 3 | 4 | 5
+export type ReviewStages = 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
 	[key: ManifestEntry]: CardReviewType
 }

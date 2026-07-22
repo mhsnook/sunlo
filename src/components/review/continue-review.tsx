@@ -28,10 +28,11 @@ export function ContinueReview({
 	const initLocalReviewState = useInitialiseReviewStore()
 
 	const progressString =
-		reviewStats.stage === 5 ? `All ${reviewStats.complete} cards complete!`
-		: reviewStats.stage >= 3 ?
-			`${reviewStats.again} remaining out of ${reviewStats.count} cards today`
-		:	`${reviewStats.complete} reviewed out of ${reviewStats.count} cards today`
+		reviewStats.stage === 5
+			? `All ${reviewStats.complete} cards complete!`
+			: reviewStats.stage >= 3
+				? `${reviewStats.again} remaining out of ${reviewStats.count} cards today`
+				: `${reviewStats.complete} reviewed out of ${reviewStats.count} cards today`
 	return (
 		<Card>
 			<CardHeader>
@@ -46,25 +47,26 @@ export function ContinueReview({
 					{dayjs(dayString).format('dddd')}: You already have a review in
 					progress for today.
 				</p>
-				{reviewStats.reviewed === 0 ?
+				{reviewStats.reviewed === 0 ? (
 					<p>
 						You've set up a review with {reviewStats.count} cards in it, but you
 						haven't started reviewing yet. Go ahead and get started!
 					</p>
-				: reviewStats.stage === 1 ?
+				) : reviewStats.stage === 1 ? (
 					<p>
 						Today's review session has {reviewStats.count} cards in it, and
 						you've reviewed {reviewStats?.reviewed ?? 0} of them. Continue where
 						you left off?
 					</p>
-				:	<p>
+				) : (
+					<p>
 						You've reviewed all {reviewStats.count} cards, but there{' '}
-						{reviewStats?.again === 1 ?
-							`is one card`
-						:	`are ${reviewStats.again} cards`}{' '}
+						{reviewStats?.again === 1
+							? `is one card`
+							: `are ${reviewStats.again} cards`}{' '}
 						left that you've asked to see again. Continue where you left off?
 					</p>
-				}
+				)}
 			</CardContent>
 			<CardFooter>
 				<Button
@@ -74,8 +76,6 @@ export function ContinueReview({
 							lang,
 							dayString,
 							reviewStats.count,
-							null, // newCardEntries not available when continuing
-							reviewStats.stage,
 							reviewStats.index
 						)
 					}

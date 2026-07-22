@@ -6,7 +6,6 @@ import {
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
-	useReviewStage,
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
@@ -22,6 +21,7 @@ import {
 	type ReviewMilestoneType,
 } from './schemas'
 import { useUserId } from '@/lib/use-auth'
+import { todayString } from '@/lib/utils'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardDirectionType } from '@/features/deck/schemas'
 import { toManifestEntry, type ManifestEntry } from './manifest'
@@ -150,22 +150,23 @@ export function useNextValid(): number {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
 	const day_session = useReviewDayString()
-	const stage = useReviewStage()
 	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	const { manifest, reviewsMap } = reviewsData
+	const { manifest, reviewsMap, stage } = reviewsData
 	return (stage ?? 0) < 3
 		? getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
 		: getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
 /**
- * The server-persisted stage for a session: the `stage` of the latest
- * user_review_milestone. Replaces the old mutable `user_review_session.stage` —
- * progress is now an append-only log, so the newest milestone wins. Returns
- * undefined when no milestone has landed yet (brand-new session), which lets
- * callers fall back to the client-inferred stage.
+ * The current stage for a session: the `stage` of the latest
+ * user_review_milestone. Progress is an append-only log, so the newest
+ * milestone wins. The collection is realtime-synced *and* mirrored to
+ * localStorage (see PERSISTED_COLLECTIONS), so this resolves across devices
+ * and paints instantly on a cold reload — no separate store copy to go stale.
+ * Returns undefined when no milestone has landed yet (brand-new session),
+ * which lets callers fall back to the client-inferred stage.
  */
-export function useReviewStageServer(
+export function useReviewStage(
 	lang: string,
 	day_session: string
 ): ReviewStages | undefined {
@@ -198,7 +199,7 @@ export function useReviewsToday(lang: string, day_session: string) {
 	)
 	const reviewDayQuery = useReviewDay(lang, day_session)
 	// Stage now folds out of the append-only milestone log, not the session row.
-	const stage = useReviewStageServer(lang, day_session)
+	const stage = useReviewStage(lang, day_session)
 	return {
 		isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
 		data: {
@@ -217,8 +218,8 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 		query.data.manifest ?? [],
 		query.data.reviews
 	)
-	// Use server-persisted stage when available, fall back to inferred
-	const stage = (query.data.stage as ReviewStages) ?? computed.inferred.stage
+	// Use the milestone-derived stage when present, fall back to inferred
+	const stage = query.data.stage ?? computed.inferred.stage
 	const index =
 		stage >= 5
 			? computed.count
@@ -227,11 +228,42 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 				: computed.firstUnreviewedIndex
 	return {
 		...query,
-		data: { ...computed, stage, index },
+		data: { ...computed, stage, index, reviewsMap: query.data.reviewsMap },
 	}
 }
 
 export type ReviewStats = ReturnType<typeof useReviewsTodayStats>['data']
+
+/**
+ * The manifest entries that are new for today — never scored in an earlier
+ * session. Derived from prior-session scoring reviews (`isScoringReview`, i.e.
+ * stages 1–2, from a `day_session` before today) rather than the card's
+ * `last_reviewed_at`, which same-day again-round reviews can shape. Replaces the
+ * session's old captured `newCardEntries` snapshot.
+ */
+export function useNewManifestEntries(
+	manifest: Array<ManifestEntry>,
+	lang: string
+): Array<ManifestEntry> {
+	const today = todayString()
+	const { data: priorReviews } = useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) =>
+					and(
+						eq(review.lang, lang),
+						inArray(review.stage, [1, 2]),
+						lt(review.day_session, today)
+					)
+				),
+		[lang, today]
+	)
+	const seenBefore = new Set<ManifestEntry>(
+		priorReviews.map((r) => toManifestEntry(r.phrase_id, r.direction))
+	)
+	return manifest.filter((entry) => !seenBefore.has(entry))
+}
 
 export function useReviewDay(
 	lang: string,
@@ -556,7 +588,7 @@ export const useOneCardReviews = (
 /**
  * Append a review-session milestone as an optimistic collection action. The
  * row (client-generated id + created_at) lands in the collection immediately —
- * so `useReviewStageServer` reflects it at once — and the collection's onInsert
+ * so `useReviewStage` reflects it at once — and the collection's onInsert
  * persists it and owns any error.
  */
 export function insertMilestone(input: {

@@ -4,7 +4,6 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import {
 	useReviewActions,
-	useReviewStage,
 	useReviewLang,
 	useReviewDayString,
 } from '@/features/review/store'
@@ -19,25 +18,23 @@ import { ReviewShareButton } from './review-share-button'
 export function WhenComplete() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
-	const storeStage = useReviewStage()
 	const actions = useReviewActions()
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
 	const updateStage = useUpdateReviewStage(lang, dayString)
 
-	// Prefer ephemeral store stage (responsive) with server stage as fallback (cold load)
-	const stage = storeStage || stats?.stage
+	// Single source of truth: the milestone-derived stage (optimistic on tap,
+	// realtime across devices, mirrored to localStorage for cold loads).
+	const stage = stats.stage
 
 	const showWhich =
-		stats?.unreviewed && stage < 2 ? 'a' : stats?.again && stage < 5 ? 'b' : 'c'
+		stats.unreviewed && stage < 2 ? 'a' : stats.again && stage < 5 ? 'b' : 'c'
 
 	// When the user naturally finishes (no skip button), persist stage 5
 	useEffect(() => {
-		if (showWhich === 'c' && stats?.stage && stats.stage < 5) {
+		if (showWhich === 'c' && stats.stage < 5) {
 			updateStage(5)
 		}
-	}, [showWhich, stats?.stage])
-
-	if (!stats) return null
+	}, [showWhich, stats.stage])
 
 	return (
 		<Card
@@ -59,7 +56,7 @@ export function WhenComplete() {
 						<Button
 							size="lg"
 							onClick={() => {
-								actions.gotoReviewUnreviewed(stats.firstUnreviewedIndex)
+								actions.gotoIndex(stats.firstUnreviewedIndex)
 								updateStage(2)
 							}}
 						>
@@ -69,7 +66,6 @@ export function WhenComplete() {
 							size="lg"
 							variant="neutral"
 							onClick={() => {
-								actions.skipReviewUnreviewed()
 								updateStage(3)
 							}}
 						>
@@ -88,7 +84,7 @@ export function WhenComplete() {
 						<Button
 							size="lg"
 							onClick={() => {
-								actions.gotoReviewAgains(stats.firstAgainIndex)
+								actions.gotoIndex(stats.firstAgainIndex)
 								updateStage(4)
 							}}
 						>
@@ -119,7 +115,6 @@ export function WhenComplete() {
 							variant="neutral"
 							size="lg"
 							onClick={() => {
-								actions.skipReviewAgains()
 								updateStage(5)
 							}}
 						>
