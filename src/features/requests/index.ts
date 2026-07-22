@@ -51,4 +51,8 @@ export {
 	useAnyonesComments,
 	useMessageTags,
 	useMessageTagsForMessage,
+	useRequestTagSets,
+	type RequestTagSet,
+	useRequestsByMessageTag,
+	type RequestTagGroup,
 } from './hooks'
