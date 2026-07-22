@@ -205,7 +205,7 @@ function ActivityLine({ item }: { item: FeedActivityType }) {
 			<Link
 				to={meta.to}
 				params={meta.params}
-				className="hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary -mx-2 flex items-center gap-1.5 truncate rounded-lg px-2 py-0.5 text-sm"
+				className="-mx-2 flex items-center gap-1.5 truncate rounded-lg px-2 py-0.5 text-sm"
 			>
 				<Icon className="text-muted-foreground size-3.5 shrink-0" />
 				<span className="text-muted-foreground shrink-0">

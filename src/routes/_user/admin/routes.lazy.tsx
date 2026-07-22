@@ -132,7 +132,7 @@ function RoutesIntrospection() {
 						{filtered.map((r) => (
 							<tr
 								key={r.id}
-								className="hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary border-b align-top"
+								className="border-b align-top"
 								data-name="admin-route-row"
 								data-key={r.id}
 							>
