@@ -40,9 +40,9 @@ export function toastSuccess(message: string) {
 		() => (
 			<div
 				data-testid="toast-success"
-				className={`${ephemeralClass} border-4-mid-success bg-1-mlo-success text-8-mid-success`}
+				className={`${ephemeralClass} border-lc-4 border-chroma-mid border-hue-success bg-lc-1 bg-chroma-mlo bg-hue-success text-lc-8 text-chroma-mid text-hue-success`}
 			>
-				<CheckCircle className="text-6-mhi-success size-5 shrink-0" />
+				<CheckCircle className="text-lc-6 text-chroma-mhi text-hue-success size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
 			</div>
 		),
@@ -82,15 +82,15 @@ export function toastInfo(message: string) {
 		(t) => (
 			<div
 				data-testid="toast-info"
-				className={`${persistentClass} border-4-mid-info bg-1-mlo-info text-8-mid-info`}
+				className={`${persistentClass} border-lc-4 border-chroma-mid border-hue-info bg-lc-1 bg-chroma-mlo bg-hue-info text-lc-8 text-chroma-mid text-hue-info`}
 			>
-				<Info className="text-lc-6 text-c-mhi text-h-info size-5 shrink-0" />
+				<Info className="text-lc-6 text-chroma-mhi text-hue-info size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
 				<div className="flex shrink-0 items-center gap-1">
 					<Button
 						variant="ghost"
 						size="icon"
-						className="text-6-mhi-info hover:bg-2-mlo-info size-7"
+						className="text-lc-6 text-chroma-mhi text-hue-info hover:bg-lc-2 hover:bg-chroma-mlo hover:bg-hue-info size-7"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onClick={copyToClipboard(message)}
 						aria-label="Copy message"
@@ -100,7 +100,7 @@ export function toastInfo(message: string) {
 					<Button
 						variant="ghost"
 						size="icon"
-						className="text-6-mhi-info hover:bg-2-mlo-info size-7"
+						className="text-lc-6 text-chroma-mhi text-hue-info hover:bg-lc-2 hover:bg-chroma-mlo hover:bg-hue-info size-7"
 						onClick={() => toast.dismiss(t)}
 						aria-label="Dismiss"
 					>
@@ -123,15 +123,15 @@ export function toastError(message: string) {
 		(t) => (
 			<div
 				data-testid="toast-error"
-				className={`${persistentClass} border-4-mid-danger bg-1-mlo-danger text-8-mid-danger`}
+				className={`${persistentClass} border-lc-4 border-chroma-mid border-hue-danger bg-lc-1 bg-chroma-mlo bg-hue-danger text-lc-8 text-chroma-mid text-hue-danger`}
 			>
-				<AlertCircle className="text-lc-6 text-c-mhi text-h-danger size-5 shrink-0" />
+				<AlertCircle className="text-lc-6 text-chroma-mhi text-hue-danger size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
 				<div className="flex shrink-0 items-center gap-1">
 					<Button
 						variant="ghost"
 						size="icon"
-						className="text-6-mhi-danger hover:bg-2-mlo-danger size-7"
+						className="text-lc-6 text-chroma-mhi text-hue-danger hover:bg-lc-2 hover:bg-chroma-mlo hover:bg-hue-danger size-7"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onClick={copyToClipboard(message)}
 						aria-label="Copy error"
@@ -141,7 +141,7 @@ export function toastError(message: string) {
 					<Button
 						variant="ghost"
 						size="icon"
-						className="text-6-mhi-danger hover:bg-2-mlo-danger size-7"
+						className="text-lc-6 text-chroma-mhi text-hue-danger hover:bg-lc-2 hover:bg-chroma-mlo hover:bg-hue-danger size-7"
 						onClick={() => toast.dismiss(t)}
 						aria-label="Dismiss"
 					>

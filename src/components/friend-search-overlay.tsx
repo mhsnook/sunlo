@@ -114,5 +114,5 @@ export default function FriendSearchOverlay({
 }
 
 const BigGarlic = () => (
-	<Garlic className="bg-2-mlo-primary w-20 rounded-full p-3 @xl:p-4" />
+	<Garlic className="bg-lc-2 bg-chroma-mlo bg-hue-primary w-20 rounded-full p-3 @xl:p-4" />
 )

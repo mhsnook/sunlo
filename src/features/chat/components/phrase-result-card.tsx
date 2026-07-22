@@ -22,7 +22,7 @@ export function PhraseResultCard({ phrase }: Props) {
 			data-in-cart={inCart ? '' : undefined}
 			className={cn(
 				'flex flex-row items-start gap-3 rounded border p-3',
-				inCart ? 'bg-1-mlo-primary' : 'bg-card/50'
+				inCart ? 'bg-lc-1 bg-chroma-mlo bg-hue-primary' : 'bg-card/50'
 			)}
 		>
 			<div className="flex flex-1 flex-col gap-1">

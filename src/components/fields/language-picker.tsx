@@ -133,7 +133,7 @@ function LangRow({
 		<button
 			type="button"
 			data-key={code}
-			className="hover:bg-1-lo-primary focus-visible:bg-1-lo-primary text-foreground flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
+			className="hover:bg-lc-1 hover:bg-chroma-lo hover:bg-hue-primary focus-visible:bg-lc-1 focus-visible:bg-chroma-lo focus-visible:bg-hue-primary text-foreground flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
 			onClick={() => onPick(code)}
 		>
 			<span className="min-w-0 flex-1 truncate text-sm font-semibold">
@@ -397,7 +397,9 @@ export function LanguagePickerTrigger({
 				'flex w-full items-center gap-2.5 rounded-2xl border bg-card/50 px-3.5 py-2.5 text-left text-sm font-sans inset-shadow-sm',
 				'ring-offset-background cursor-pointer hover:border-primary',
 				'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
-				hasError ? 'border-destructive' : 'border-3-mlo-primary',
+				hasError
+					? 'border-destructive'
+					: 'border-lc-3 border-chroma-mlo border-hue-primary',
 				!value && 'text-muted-foreground',
 				className
 			)}

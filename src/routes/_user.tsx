@@ -175,7 +175,7 @@ function UserLayout() {
 								fallback={
 									<div
 										aria-hidden
-										className="bg-base-lo-neutral mt-1 -mb-[2px] h-12"
+										className="bg-lc-base bg-chroma-lo bg-hue-neutral mt-1 -mb-[2px] h-12"
 									/>
 								}
 							>

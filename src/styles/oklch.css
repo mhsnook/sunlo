@@ -1,0 +1,524 @@
+/* oklch.css — single-axis, cascade-first OKLCH color system for Tailwind v4
+ *
+ * Vendored from mhsnook/tailwind-oklch@112de8e (MIT). Reworked into a
+ * single-axis, cascade-first API with no JavaScript plugin:
+ *
+ *   - Cascade seeders set an axis for every color property at once and
+ *     apply no property themselves. They flow down the DOM tree:
+ *       hue-primary · hue-danger · …    seeds hue for everything below
+ *       chroma-mlo · chroma-hi · …      seeds chroma for everything below
+ *
+ *   - Per-property setters apply exactly one CSS property from one axis.
+ *     Hue and chroma inherit from a seeder (or the :root default) unless
+ *     set explicitly, so most elements only ever state their luminance:
+ *       bg-lc-1      bg-chroma-mlo     bg-hue-accent
+ *       text-lc-8    text-chroma-hi    text-hue-info
+ *       border-lc-3  border-chroma-[6] border-hue-primary
+ *       …plus border-b-*, from-*, to-*
+ *
+ *   - Relative adjustments nudge off the inherited/current luminance
+ *     without rewriting it (so they don't compound down the tree):
+ *       bg-lc-up-1 · bg-lc-down-1 · text-lc-up-1 · from-lc-up-1 · …
+ *
+ * Named and arbitrary values coexist per utility by stacking two
+ * @utility blocks of the same name: the one whose --value() resolves
+ * wins. Named luminance/chroma pull from the @theme scales; arbitrary
+ * integers are divided by 100 (chroma) and auto-flipped for dark mode
+ * (luminance: L = v + flip × (1 − 2v)).
+ *
+ * Luminance contrast scale: 0–10.
+ *   0 / base  = close to the page color (blends in)
+ *   10 / fore = high contrast with the page (stands out, like text)
+ *   1–9       = evenly distributed between those endpoints
+ *   none      = absolute minimum (pure white or pure black, per mode)
+ *   full      = absolute maximum (pure black or pure white, per mode)
+ */
+
+@theme {
+	/* ── Hue Definitions ─────────────────────────────────────────────────
+	   Change these to re-theme your entire app. Overridden per-app in
+	   globals.css and per-language via inline --hue-* style vars. */
+	--hue-primary: 233;
+	--hue-accent: 350;
+	--hue-success: 145;
+	--hue-warning: 55;
+	--hue-danger: 15;
+	--hue-info: 220;
+	--hue-neutral: 260;
+
+	/* ── Luminance Contrast Range ─────────────────────────────────────
+	   Defines the OKLCH lightness values at 0 (base) and 10 (fore).
+	   Light mode (default): base is near white, fore is near black.
+	   Dark mode flips them (see .dark below).
+	   Override --lc-range-start and --lc-range-end to shift the range. */
+	--lc-range-start: 0.95;
+	--lc-range-end: 0.15;
+
+	/* ── 0–10 Luminance Contrast Scale ────────────────────────────────
+	   Light mode uses a power curve (p≈1.3): smaller steps near the
+	   high-luminance base, growing toward the fore. Perception is
+	   more sensitive to differences near white, so subtle surfaces
+	   need finer L deltas there.
+	   Computed: step N = start + (end − start) × (N / 10)^1.3
+	   Light mode (default): 0→0.95, 1→0.91, 5→0.63, 10→0.15
+	   Dark mode stays linear (see .dark): 0→0.12, 5→0.52, 10→0.92 */
+	--l-0: 0.95;
+	--l-1: 0.91;
+	--l-2: 0.85;
+	--l-3: 0.78;
+	--l-4: 0.71;
+	--l-5: 0.63;
+	--l-6: 0.54;
+	--l-7: 0.44;
+	--l-8: 0.34;
+	--l-9: 0.23;
+	--l-10: 0.15;
+
+	/* Semantic aliases */
+	--l-base: 0.95;
+	--l-fore: 0.15;
+
+	/* Absolute extremes — escape the configured range entirely.
+	   none = beyond base (pure white in light, pure black in dark).
+	   full = beyond fore (pure black in light, pure white in dark). */
+	--l-none: 1;
+	--l-full: 0;
+
+	/* ── Named Chroma Stops ──────────────────────────────────────────────
+	   OKLCH chroma: practical range 0–0.25 */
+	--c-lo: 0.02;
+	--c-mlo: 0.06;
+	--c-mid: 0.12;
+	--c-mhi: 0.18;
+	--c-hi: 0.25;
+
+	/* ── LC Adjustment Steps ───────────────────────────────────────────
+	   Each step ≈ one position on the 0–10 scale (~0.08 OKLCH L). */
+	--lc-adj-1: 0.08;
+	--lc-adj-2: 0.16;
+	--lc-adj-3: 0.24;
+}
+
+/* ── Dark-mode luminance contrast range ──────────────────────────────
+   In dark mode the scale flips: 0/base is near black (blends with
+   the page), 10/fore is near white (high contrast, like text). */
+
+.dark {
+	--lc-dir: 1;
+	--lc-flip: 1;
+	--lc-range-start: 0.12;
+	--lc-range-end: 0.92;
+
+	--l-0: 0.12;
+	--l-1: 0.2;
+	--l-2: 0.28;
+	--l-3: 0.36;
+	--l-4: 0.44;
+	--l-5: 0.52;
+	--l-6: 0.6;
+	--l-7: 0.68;
+	--l-8: 0.76;
+	--l-9: 0.84;
+	--l-10: 0.92;
+
+	--l-base: 0.12;
+	--l-fore: 0.92;
+
+	--l-none: 0;
+	--l-full: 1;
+}
+
+/* ── Cascade Defaults ────────────────────────────────────────────────────
+   Sensible fallbacks so any single-axis setter immediately resolves.
+   These inherit down the DOM tree, so a parent's bg-hue-accent
+   naturally flows to children that only set bg-lc-* or bg-chroma-*. */
+
+:root {
+	--lc-dir: -1;
+	--lc-flip: 0;
+
+	--bg-l: var(--l-5);
+	--bg-c: var(--c-lo);
+	--bg-h: var(--hue-primary);
+
+	--tx-l: var(--l-fore);
+	--tx-c: var(--c-lo);
+	--tx-h: var(--hue-primary);
+
+	--bd-l: var(--l-3);
+	--bd-c: var(--c-lo);
+	--bd-h: var(--hue-primary);
+
+	--bdb-l: var(--l-3);
+	--bdb-c: var(--c-lo);
+	--bdb-h: var(--hue-primary);
+
+	--gf-l: var(--l-5);
+	--gf-c: var(--c-mid);
+	--gf-h: var(--hue-primary);
+
+	--gt-l: var(--l-5);
+	--gt-c: var(--c-mid);
+	--gt-h: var(--hue-primary);
+}
+
+/* ── Global Hue seeder ───────────────────────────────────────────────────
+   Set the hue for ALL color properties at once, applying no property.
+   Per-property hue utilities (bg-hue-*, text-hue-*, …) still override.
+   Usage: hue-primary, hue-accent, hue-danger, etc. */
+
+@utility hue-* {
+	--bg-h: --value(--hue-*);
+	--tx-h: --value(--hue-*);
+	--bd-h: --value(--hue-*);
+	--bdb-h: --value(--hue-*);
+	--gf-h: --value(--hue-*);
+	--gt-h: --value(--hue-*);
+}
+
+/* ── Global Chroma seeder ────────────────────────────────────────────────
+   Set the chroma for ALL color properties at once, applying no property.
+   Per-property chroma utilities (bg-chroma-*, …) still override.
+   Usage: chroma-lo, chroma-mid, chroma-hi, etc. */
+
+@utility chroma-* {
+	--bg-c: --value(--c-*);
+	--tx-c: --value(--c-*);
+	--bd-c: --value(--c-*);
+	--bdb-c: --value(--c-*);
+	--gf-c: --value(--c-*);
+	--gt-c: --value(--c-*);
+}
+
+/* ── Background ──────────────────────────────────────────────────────── */
+
+@utility bg-lc-* {
+	--bg-l: --value(--l-*);
+	background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
+}
+@utility bg-lc-* {
+	/* arbitrary bg-lc-[93]: auto-flip L = v + flip × (1 − 2v) */
+	--bg-lv: calc(--value([integer]) / 100);
+	--bg-l: calc(var(--bg-lv) + var(--lc-flip) * (1 - 2 * var(--bg-lv)));
+	background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
+}
+
+@utility bg-chroma-* {
+	--bg-c: --value(--c-*);
+	background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
+}
+@utility bg-chroma-* {
+	/* arbitrary bg-chroma-[6]: chroma = n / 100 */
+	--bg-c: calc(--value([integer]) / 100);
+	background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
+}
+
+@utility bg-hue-* {
+	--bg-h: --value(--hue-*);
+	background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
+}
+
+@utility bg-lc-up-* {
+	--bg-l-adj: --value(--lc-adj-*);
+	background-color: oklch(
+		clamp(0, calc(var(--bg-l) + var(--lc-dir) * var(--bg-l-adj)), 1) var(--bg-c)
+			var(--bg-h)
+	);
+}
+@utility bg-lc-down-* {
+	--bg-l-adj: --value(--lc-adj-*);
+	background-color: oklch(
+		clamp(0, calc(var(--bg-l) - var(--lc-dir) * var(--bg-l-adj)), 1) var(--bg-c)
+			var(--bg-h)
+	);
+}
+
+/* ── Text ────────────────────────────────────────────────────────────── */
+
+@utility text-lc-* {
+	--tx-l: --value(--l-*);
+	color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
+}
+@utility text-lc-* {
+	--tx-lv: calc(--value([integer]) / 100);
+	--tx-l: calc(var(--tx-lv) + var(--lc-flip) * (1 - 2 * var(--tx-lv)));
+	color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
+}
+
+@utility text-chroma-* {
+	--tx-c: --value(--c-*);
+	color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
+}
+@utility text-chroma-* {
+	--tx-c: calc(--value([integer]) / 100);
+	color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
+}
+
+@utility text-hue-* {
+	--tx-h: --value(--hue-*);
+	color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
+}
+
+@utility text-lc-up-* {
+	--tx-l-adj: --value(--lc-adj-*);
+	color: oklch(
+		clamp(0, calc(var(--tx-l) + var(--lc-dir) * var(--tx-l-adj)), 1) var(--tx-c)
+			var(--tx-h)
+	);
+}
+@utility text-lc-down-* {
+	--tx-l-adj: --value(--lc-adj-*);
+	color: oklch(
+		clamp(0, calc(var(--tx-l) - var(--lc-dir) * var(--tx-l-adj)), 1) var(--tx-c)
+			var(--tx-h)
+	);
+}
+
+/* ── Border ──────────────────────────────────────────────────────────── */
+
+@utility border-lc-* {
+	--bd-l: --value(--l-*);
+	border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
+}
+@utility border-lc-* {
+	--bd-lv: calc(--value([integer]) / 100);
+	--bd-l: calc(var(--bd-lv) + var(--lc-flip) * (1 - 2 * var(--bd-lv)));
+	border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
+}
+
+@utility border-chroma-* {
+	--bd-c: --value(--c-*);
+	border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
+}
+@utility border-chroma-* {
+	--bd-c: calc(--value([integer]) / 100);
+	border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
+}
+
+@utility border-hue-* {
+	--bd-h: --value(--hue-*);
+	border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
+}
+
+@utility border-lc-up-* {
+	--bd-l-adj: --value(--lc-adj-*);
+	border-color: oklch(
+		clamp(0, calc(var(--bd-l) + var(--lc-dir) * var(--bd-l-adj)), 1) var(--bd-c)
+			var(--bd-h)
+	);
+}
+@utility border-lc-down-* {
+	--bd-l-adj: --value(--lc-adj-*);
+	border-color: oklch(
+		clamp(0, calc(var(--bd-l) - var(--lc-dir) * var(--bd-l-adj)), 1) var(--bd-c)
+			var(--bd-h)
+	);
+}
+
+/* ── Border Bottom ───────────────────────────────────────────────────── */
+
+@utility border-b-lc-* {
+	--bdb-l: --value(--l-*);
+	border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
+}
+@utility border-b-lc-* {
+	--bdb-lv: calc(--value([integer]) / 100);
+	--bdb-l: calc(var(--bdb-lv) + var(--lc-flip) * (1 - 2 * var(--bdb-lv)));
+	border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
+}
+
+@utility border-b-chroma-* {
+	--bdb-c: --value(--c-*);
+	border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
+}
+@utility border-b-chroma-* {
+	--bdb-c: calc(--value([integer]) / 100);
+	border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
+}
+
+@utility border-b-hue-* {
+	--bdb-h: --value(--hue-*);
+	border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
+}
+
+@utility border-b-lc-up-* {
+	--bdb-l-adj: --value(--lc-adj-*);
+	border-bottom-color: oklch(
+		clamp(0, calc(var(--bdb-l) + var(--lc-dir) * var(--bdb-l-adj)), 1)
+			var(--bdb-c) var(--bdb-h)
+	);
+}
+@utility border-b-lc-down-* {
+	--bdb-l-adj: --value(--lc-adj-*);
+	border-bottom-color: oklch(
+		clamp(0, calc(var(--bdb-l) - var(--lc-dir) * var(--bdb-l-adj)), 1)
+			var(--bdb-c) var(--bdb-h)
+	);
+}
+
+/* ── Gradient From ───────────────────────────────────────────────────────
+   Composes --tw-gradient-stops to match Tailwind v4's gradient plumbing. */
+
+@utility from-lc-* {
+	--gf-l: --value(--l-*);
+	--tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+@utility from-lc-* {
+	--gf-lv: calc(--value([integer]) / 100);
+	--gf-l: calc(var(--gf-lv) + var(--lc-flip) * (1 - 2 * var(--gf-lv)));
+	--tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+
+@utility from-chroma-* {
+	--gf-c: --value(--c-*);
+	--tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+@utility from-chroma-* {
+	--gf-c: calc(--value([integer]) / 100);
+	--tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+
+@utility from-hue-* {
+	--gf-h: --value(--hue-*);
+	--tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+
+@utility from-lc-up-* {
+	--gf-l-adj: --value(--lc-adj-*);
+	--tw-gradient-from: oklch(
+		clamp(0, calc(var(--gf-l) + var(--lc-dir) * var(--gf-l-adj)), 1) var(--gf-c)
+			var(--gf-h)
+	);
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+@utility from-lc-down-* {
+	--gf-l-adj: --value(--lc-adj-*);
+	--tw-gradient-from: oklch(
+		clamp(0, calc(var(--gf-l) - var(--lc-dir) * var(--gf-l-adj)), 1) var(--gf-c)
+			var(--gf-h)
+	);
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+
+/* ── Gradient To ─────────────────────────────────────────────────────── */
+
+@utility to-lc-* {
+	--gt-l: --value(--l-*);
+	--tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+@utility to-lc-* {
+	--gt-lv: calc(--value([integer]) / 100);
+	--gt-l: calc(var(--gt-lv) + var(--lc-flip) * (1 - 2 * var(--gt-lv)));
+	--tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+
+@utility to-chroma-* {
+	--gt-c: --value(--c-*);
+	--tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+@utility to-chroma-* {
+	--gt-c: calc(--value([integer]) / 100);
+	--tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+
+@utility to-hue-* {
+	--gt-h: --value(--hue-*);
+	--tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+
+@utility to-lc-up-* {
+	--gt-l-adj: --value(--lc-adj-*);
+	--tw-gradient-to: oklch(
+		clamp(0, calc(var(--gt-l) + var(--lc-dir) * var(--gt-l-adj)), 1) var(--gt-c)
+			var(--gt-h)
+	);
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}
+@utility to-lc-down-* {
+	--gt-l-adj: --value(--lc-adj-*);
+	--tw-gradient-to: oklch(
+		clamp(0, calc(var(--gt-l) - var(--lc-dir) * var(--gt-l-adj)), 1) var(--gt-c)
+			var(--gt-h)
+	);
+	--tw-gradient-stops: var(
+		--tw-gradient-via-stops,
+		var(--tw-gradient-position),
+		var(--tw-gradient-from) var(--tw-gradient-from-position),
+		var(--tw-gradient-to) var(--tw-gradient-to-position)
+	);
+}

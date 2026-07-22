@@ -13,7 +13,7 @@ export function AvatarIconRow({ children, ...profile }: AvatarIconRowProps) {
 			<Link
 				to="/friends/$uid"
 				params={{ uid: profile.uid }}
-				className="hover:bg-1-mlo-primary hover:border-2-mlo-primary flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2"
+				className="hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary hover:border-lc-2 hover:border-chroma-mlo hover:border-hue-primary flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2"
 			>
 				<UserAvatar profile={profile} className="size-8" />
 				<span>{profile.username}</span>

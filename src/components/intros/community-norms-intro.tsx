@@ -54,7 +54,7 @@ export function CommunityNormsIntro({
 					/>
 				</div>
 
-				<div className="bg-0-lo-primary rounded-lg border p-4 text-sm">
+				<div className="bg-lc-0 bg-chroma-lo bg-hue-primary rounded-lg border p-4 text-sm">
 					<p className="font-medium">What this means in practice:</p>
 					<ul className="text-muted-foreground mt-2 ml-4 list-disc space-y-1">
 						<li>Don't add joke translations or misleading content</li>
@@ -82,7 +82,7 @@ function NormItem({
 }) {
 	return (
 		<div className="flex gap-3">
-			<div className="bg-1-mlo-primary text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
+			<div className="bg-lc-1 bg-chroma-mlo bg-hue-primary text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
 				<Icon className="size-5" />
 			</div>
 			<div>

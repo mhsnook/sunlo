@@ -39,7 +39,7 @@ function InviteFriendPage() {
 			data-testid="invite-friend-page"
 		>
 			<div className="text-center">
-				<div className="bg-1-mlo-primary text-primary mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
+				<div className="bg-lc-1 bg-chroma-mlo bg-hue-primary text-primary mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
 					<Sparkles className="h-4 w-4" />
 					<span>Grow your learning network</span>
 				</div>
@@ -61,7 +61,7 @@ function InviteFriendPage() {
 						<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
-									<div className="bg-1-mlo-primary group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<div className="bg-lc-1 bg-chroma-mlo bg-hue-primary group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
 										<Share className="text-primary h-6 w-6" />
 									</div>
 									<div>
@@ -81,7 +81,7 @@ function InviteFriendPage() {
 						<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
-									<div className="bg-1-mlo-accent group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<div className="bg-lc-1 bg-chroma-mlo bg-hue-accent group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
 										<Copy className="text-accent-foreground h-6 w-6" />
 									</div>
 									<div>
@@ -95,7 +95,7 @@ function InviteFriendPage() {
 								</div>
 								<CopyLinkButton
 									size="lg"
-									className="border-3-mid-accent bg-1-mlo-accent text-accent-foresoft hover:bg-lc-up-1 w-full"
+									className="border-lc-3 border-chroma-mid border-hue-accent bg-lc-1 bg-chroma-mlo bg-hue-accent text-accent-foresoft hover:bg-lc-up-1 w-full"
 									variant="soft"
 									url={share.url}
 								/>
@@ -121,8 +121,8 @@ function InviteFriendPage() {
 							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
-								<div className="bg-1-mlo-info group-hover:bg-lc-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<Mail className="text-6-hi-info h-6 w-6" />
+								<div className="bg-lc-1 bg-chroma-mlo bg-hue-info group-hover:bg-lc-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<Mail className="text-lc-6 text-chroma-hi text-hue-info h-6 w-6" />
 								</div>
 								<div>
 									<h3 className="text-foreground font-semibold">Email</h3>
@@ -140,8 +140,8 @@ function InviteFriendPage() {
 							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
-								<div className="bg-1-mlo-success group-hover:bg-lc-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<MessageSquare className="text-6-hi-success h-6 w-6" />
+								<div className="bg-lc-1 bg-chroma-mlo bg-hue-success group-hover:bg-lc-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<MessageSquare className="text-lc-6 text-chroma-hi text-hue-success h-6 w-6" />
 								</div>
 								<div>
 									<h3 className="text-foreground font-semibold">WhatsApp</h3>
@@ -158,8 +158,8 @@ function InviteFriendPage() {
 								className="group border-border/50 col-span-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 							>
 								<div className="flex items-center space-x-3">
-									<div className="bg-1-mlo-warning group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Copy className="text-6-hi-warning h-6 w-6" />
+									<div className="bg-lc-1 bg-chroma-mlo bg-hue-warning group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+										<Copy className="text-lc-6 text-chroma-hi text-hue-warning h-6 w-6" />
 									</div>
 									<div>
 										<h3 className="text-foreground text-lg font-semibold">
@@ -192,7 +192,7 @@ function InviteFriendPage() {
 						/>
 					</div>
 					<div className="flex-1 space-y-3 text-center @lg:text-start">
-						<div className="bg-1-mlo-accent text-accent-foresoft inline-flex items-center space-x-2 rounded-full px-3 py-1 text-sm font-medium">
+						<div className="bg-lc-1 bg-chroma-mlo bg-hue-accent text-accent-foresoft inline-flex items-center space-x-2 rounded-full px-3 py-1 text-sm font-medium">
 							<QrCode className="h-4 w-4" />
 							<span>Scan to invite</span>
 						</div>

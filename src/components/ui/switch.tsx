@@ -6,7 +6,7 @@ const Switch = ({ className, ...props }: SwitchPrimitive.Root.Props) => (
 	<SwitchPrimitive.Root
 		data-slot="switch"
 		className={cn(
-			'peer ring-offset-background focus-visible:ring-ring inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full bg-1-mlo-neutral inset-shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+			'peer ring-offset-background focus-visible:ring-ring inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full bg-lc-1 bg-chroma-mlo bg-hue-neutral inset-shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
 			className
 		)}
 		{...props}

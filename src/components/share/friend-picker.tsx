@@ -51,7 +51,7 @@ function highlight(text: string, query: string): ReactNode {
 	return (
 		<>
 			{text.slice(0, i)}
-			<mark className="bg-2-mid-warning text-8-hi-warning rounded-[3px] px-px">
+			<mark className="bg-lc-2 bg-chroma-mid bg-hue-warning text-lc-8 text-chroma-hi text-hue-warning rounded-[3px] px-px">
 				{text.slice(i, i + query.length)}
 			</mark>
 			{text.slice(i + query.length)}
@@ -83,8 +83,9 @@ function FriendRow({
 			data-key={friend.uid}
 			onClick={() => onToggle(friend.uid)}
 			className={cn(
-				'group hover:bg-0-mlo-primary flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-start outline -outline-offset-1 outline-transparent transition-colors',
-				selected && 'bg-1-mlo-primary outline-primary-foresoft/40'
+				'group hover:bg-lc-0 hover:bg-chroma-mlo hover:bg-hue-primary flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-start outline -outline-offset-1 outline-transparent transition-colors',
+				selected &&
+					'bg-lc-1 bg-chroma-mlo bg-hue-primary outline-primary-foresoft/40'
 			)}
 		>
 			<UserAvatar profile={profile} className="size-10" />
@@ -95,7 +96,7 @@ function FriendRow({
 			</span>
 			<span className="flex shrink-0 flex-col items-end gap-1">
 				{friend.status === 'pending' ? (
-					<span className="bg-2-mid-primary text-7-hi-primary inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
+					<span className="bg-lc-2 bg-chroma-mid bg-hue-primary text-lc-7 text-chroma-hi text-hue-primary inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
 						<UserPlus className="size-2.5" /> Pending
 					</span>
 				) : timestamp ? (
@@ -132,8 +133,10 @@ export function SharePreviewChip({
 	subtitle?: ReactNode
 }) {
 	return (
-		<div className="bg-0-mlo-primary border-2-mlo-primary border-l-primary mx-3.5 flex items-center gap-2.5 rounded-lg border border-l-4 px-3 py-2.5">
-			<span className="text-6-hi-accent flex shrink-0">{icon}</span>
+		<div className="bg-lc-0 bg-chroma-mlo bg-hue-primary border-lc-2 border-chroma-mlo border-hue-primary border-l-primary mx-3.5 flex items-center gap-2.5 rounded-lg border border-l-4 px-3 py-2.5">
+			<span className="text-lc-6 text-chroma-hi text-hue-accent flex shrink-0">
+				{icon}
+			</span>
 			<span className="min-w-0 flex-1">
 				<span className="block truncate font-bold">{title}</span>
 				{subtitle ? (
@@ -222,7 +225,7 @@ function PickerBody({
 			<div className="flex flex-col">
 				{preview ? <div className="pt-1">{preview}</div> : null}
 				<div className="text-muted-foreground px-6 py-9 text-center">
-					<span className="bg-2-mlo-primary text-6-hi-primary mb-3.5 inline-flex size-14 items-center justify-center rounded-full">
+					<span className="bg-lc-2 bg-chroma-mlo bg-hue-primary text-lc-6 text-chroma-hi text-hue-primary mb-3.5 inline-flex size-14 items-center justify-center rounded-full">
 						<Users className="size-7" />
 					</span>
 					<h3 className="text-foreground mb-1.5 text-base font-bold">
@@ -248,7 +251,7 @@ function PickerBody({
 
 			{/* Sticky search */}
 			<div className="bg-popover sticky top-0 z-5 border-b px-3.5 pt-3 pb-2.5">
-				<div className="bg-0-lo-neutral focus-within:bg-card focus-within:border-ring focus-within:ring-ring/25 flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition focus-within:ring-2">
+				<div className="bg-lc-0 bg-chroma-lo bg-hue-neutral focus-within:bg-card focus-within:border-ring focus-within:ring-ring/25 flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition focus-within:ring-2">
 					<Search className="text-muted-foreground size-4 shrink-0" />
 					<input
 						ref={searchRef}
@@ -426,7 +429,7 @@ export function FriendPickerDialog({
 					{showPicker ? (
 						<>
 							{isMobile ? (
-								<div className="bg-3-mlo-neutral mx-auto mt-2 h-1 w-9 rounded-full" />
+								<div className="bg-lc-3 bg-chroma-mlo bg-hue-neutral mx-auto mt-2 h-1 w-9 rounded-full" />
 							) : null}
 							<div className="flex items-center gap-3 px-4.5 pt-3.5 pb-2">
 								<DialogPrimitive.Title className="text-base font-bold tracking-tight">
@@ -440,7 +443,7 @@ export function FriendPickerDialog({
 								<DialogPrimitive.Close
 									aria-label="Close"
 									data-testid="close-friend-picker"
-									className="bg-2-lo-neutral hover:bg-3-lo-neutral text-foreground ms-auto flex size-8 items-center justify-center rounded-md transition-colors"
+									className="bg-lc-2 bg-chroma-lo bg-hue-neutral hover:bg-lc-3 hover:bg-chroma-lo hover:bg-hue-neutral text-foreground ms-auto flex size-8 items-center justify-center rounded-md transition-colors"
 								>
 									<X className="size-4" />
 								</DialogPrimitive.Close>

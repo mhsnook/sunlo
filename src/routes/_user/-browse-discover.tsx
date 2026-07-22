@@ -95,7 +95,9 @@ function AddedPill({ added }: { added: boolean }) {
 		<span
 			className={cn(
 				'flex items-center gap-1 text-xs font-medium',
-				added ? 'text-5-hi-success' : 'text-primary-foresoft'
+				added
+					? 'text-lc-5 text-chroma-hi text-hue-success'
+					: 'text-primary-foresoft'
 			)}
 		>
 			{added ? (

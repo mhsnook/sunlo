@@ -87,7 +87,7 @@ function EmptyState() {
 			data-testid="notifications-empty-state"
 		>
 			<CardContent className="flex flex-col items-center gap-3 py-12 text-center">
-				<div className="bg-1-lo-neutral flex h-16 w-16 items-center justify-center rounded-full">
+				<div className="bg-lc-1 bg-chroma-lo bg-hue-neutral flex h-16 w-16 items-center justify-center rounded-full">
 					<BellOff className="text-muted-foreground h-8 w-8" />
 				</div>
 				<h3 className="text-lg font-semibold">No notifications yet</h3>

@@ -22,7 +22,7 @@ export function ReviewBanner({
 		<div
 			data-testid="review-ready-banner"
 			data-key={focus.lang}
-			className="bg-1-mlo-info border-2-lo-info border-s-6-mhi-primary @container relative overflow-hidden rounded-lg border border-s-4 p-4 shadow-sm @md:p-5"
+			className="bg-lc-1 bg-chroma-mlo bg-hue-info border-lc-2 border-chroma-lo border-hue-info border-s-6-mhi-primary @container relative overflow-hidden rounded-lg border border-s-4 p-4 shadow-sm @md:p-5"
 		>
 			<div className="flex flex-col items-start gap-4 @md:flex-row @md:items-center @md:justify-between">
 				<div className="flex items-center gap-4">

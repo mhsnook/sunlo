@@ -18,7 +18,7 @@ export function ChatTurnView({ turn }: Props) {
 			<div className="flex justify-end">
 				<div
 					data-testid="chat-user-message"
-					className="bg-1-mlo-primary text-foreground max-w-[85%] rounded-2xl px-4 py-2 text-sm"
+					className="bg-lc-1 bg-chroma-mlo bg-hue-primary text-foreground max-w-[85%] rounded-2xl px-4 py-2 text-sm"
 				>
 					{turn.query.kind === 'text' ? (
 						turn.query.text

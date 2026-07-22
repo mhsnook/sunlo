@@ -110,7 +110,7 @@ function RetrievabilityBar({ value }: { value: number }) {
 				</div>
 				<span className="text-3xl font-bold tabular-nums">{pct}%</span>
 			</div>
-			<div className="bg-1-lo-neutral h-2 w-full overflow-hidden rounded-full">
+			<div className="bg-lc-1 bg-chroma-lo bg-hue-neutral h-2 w-full overflow-hidden rounded-full">
 				<div
 					className={cn('h-full rounded-full transition-all', color)}
 					style={{ width: `${pct}%` }}
@@ -286,7 +286,7 @@ function StatTile({
 	return (
 		<div
 			className={cn(
-				'bg-1-lo-neutral flex flex-col gap-0.5 rounded p-3',
+				'bg-lc-1 bg-chroma-lo bg-hue-neutral flex flex-col gap-0.5 rounded p-3',
 				className
 			)}
 		>

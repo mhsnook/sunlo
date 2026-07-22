@@ -22,7 +22,7 @@ export function SelectionBar() {
 	return (
 		<div
 			data-testid="chat-selection-bar"
-			className="bg-1-lo-primary flex flex-col gap-2 rounded border p-2"
+			className="bg-lc-1 bg-chroma-lo bg-hue-primary flex flex-col gap-2 rounded border p-2"
 		>
 			<div className="flex flex-row items-center justify-between gap-2">
 				<span className="text-muted-foreground text-xs font-medium">

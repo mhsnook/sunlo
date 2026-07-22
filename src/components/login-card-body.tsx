@@ -36,10 +36,10 @@ function InvalidCredentialsError() {
 			data-testid="login-error-invalid-credentials"
 			className="animate-shake flex items-center gap-2"
 		>
-			<span className="hue-danger bg-5-mhi flex size-7 shrink-0 items-center justify-center rounded-full">
+			<span className="hue-danger bg-lc-5 bg-chroma-mhi flex size-7 shrink-0 items-center justify-center rounded-full">
 				<X className="size-4 text-white" aria-hidden={true} />
 			</span>
-			<strong className="text-7-mhi-danger">
+			<strong className="text-lc-7 text-chroma-mhi text-hue-danger">
 				Incorrect email or password. Try again?
 			</strong>
 		</div>
