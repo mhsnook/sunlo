@@ -17,14 +17,11 @@ import type { TablesUpdate } from '@/types/supabase'
 export const decksCollection = createCollection(
 	queryCollectionOptions({
 		id: 'decks',
-		queryKey: ['user', 'deck_plus'],
+		queryKey: ['user', 'deck'],
 		queryFn: async () => {
 			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading decksCollection`)
-			const { data } = await supabase
-				.from('user_deck_plus')
-				.select()
-				.throwOnError()
+			const { data } = await supabase.from('user_deck').select().throwOnError()
 			return (
 				data
 					?.map((item) => DeckMetaRawSchema.parse(item))

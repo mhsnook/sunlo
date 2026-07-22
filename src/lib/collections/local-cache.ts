@@ -57,7 +57,7 @@ export const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
 	{
 		label: 'decks',
 		storageKey: 'sunlo-cache-decks',
-		queryKey: ['user', 'deck_plus'],
+		queryKey: ['user', 'deck'],
 		collection: decksCollection,
 		parseRow: (row) => DeckMetaSchema.parse(row),
 	},
