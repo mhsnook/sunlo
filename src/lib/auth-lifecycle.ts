@@ -115,10 +115,6 @@ class AuthLifecycle {
 		}
 
 		void friendSummariesCollection.preload()
-		// Deck stats (card counts, most_recent_review_at) are derived from
-		// cardsCollection client-side now, and the nav switcher + /learn activity
-		// sort render outside $lang routes — so load cards app-wide, not just per
-		// deck. Non-blocking: the shell renders on profile+decks; stats fill in.
 		void cardsCollection.preload()
 	}
 }
