@@ -104,7 +104,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang/review"
 								params={{ lang: deck.lang }}
 								data-testid="start-practice-link"
-								className="from-lc-5 from-chroma-mhi from-hue-primary to-lc-6 to-chroma-mid to-hue-primary text-primary-foreground hover:from-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="hue-primary from-lc-5 from-chroma-mhi to-lc-6 to-chroma-mid text-primary-foreground hover:from-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								{dueToday === 0 ? (
 									<CircleCheck className="size-6" />
@@ -129,7 +129,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang"
 								params={{ lang: deck.lang }}
 								data-testid="deck-link"
-								className="border-lc-2 border-chroma-lo border-hue-primary bg-lc-1 bg-chroma-mlo bg-hue-primary text-primary-foresoft hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="hue-primary border-lc-2 border-chroma-lo bg-lc-1 bg-chroma-mlo text-primary-foresoft hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								<Logs className="size-6" />
 								<div>
