@@ -34,9 +34,11 @@ export type ReviewStore = ReturnType<typeof createReviewStore>
  * exist (manifest), which have been reviewed (card_review), and what stage the
  * session is at (milestone log) — lives in the collections, synced across
  * devices and mirrored to localStorage. This store holds only the current
- * card index within the manifest, an in-tab navigation position that is fine
- * to re-derive on a fresh mount (see `stats.index`). It is persisted purely so
- * a hard refresh lands back on the same card rather than the resume point.
+ * card index within the manifest — an in-tab navigation position. The go route
+ * re-seeds it from `stats.index` on mount and on every stage change, so the
+ * actual position is always derived from the shared (stage, reviews); the
+ * persisted copy survives only as the "a session was started in this tab"
+ * signal the routing guard reads (`countCards`/`currentCardIndex` !== -1).
  */
 export function createReviewStore(lang: string, dayString: string) {
 	return createStore<ReviewState>()(

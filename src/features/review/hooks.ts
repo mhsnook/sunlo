@@ -21,6 +21,7 @@ import {
 	type ReviewMilestoneType,
 } from './schemas'
 import { useUserId } from '@/lib/use-auth'
+import { todayString } from '@/lib/utils'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardDirectionType } from '@/features/deck/schemas'
 import { toManifestEntry, type ManifestEntry } from './manifest'
@@ -217,8 +218,8 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 		query.data.manifest ?? [],
 		query.data.reviews
 	)
-	// Use server-persisted stage when available, fall back to inferred
-	const stage = (query.data.stage as ReviewStages) ?? computed.inferred.stage
+	// Use the milestone-derived stage when present, fall back to inferred
+	const stage = query.data.stage ?? computed.inferred.stage
 	const index =
 		stage >= 5
 			? computed.count
@@ -227,11 +228,42 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 				: computed.firstUnreviewedIndex
 	return {
 		...query,
-		data: { ...computed, stage, index },
+		data: { ...computed, stage, index, reviewsMap: query.data.reviewsMap },
 	}
 }
 
 export type ReviewStats = ReturnType<typeof useReviewsTodayStats>['data']
+
+/**
+ * The manifest entries that are new for today — never scored in an earlier
+ * session. Derived from prior-session scoring reviews (`isScoringReview`, i.e.
+ * stages 1–2, from a `day_session` before today) rather than the card's
+ * `last_reviewed_at`, which same-day again-round reviews can shape. Replaces the
+ * session's old captured `newCardEntries` snapshot.
+ */
+export function useNewManifestEntries(
+	manifest: Array<ManifestEntry>,
+	lang: string
+): Array<ManifestEntry> {
+	const today = todayString()
+	const { data: priorReviews } = useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) =>
+					and(
+						eq(review.lang, lang),
+						inArray(review.stage, [1, 2]),
+						lt(review.day_session, today)
+					)
+				),
+		[lang, today]
+	)
+	const seenBefore = new Set<ManifestEntry>(
+		priorReviews.map((r) => toManifestEntry(r.phrase_id, r.direction))
+	)
+	return manifest.filter((entry) => !seenBefore.has(entry))
+}
 
 export function useReviewDay(
 	lang: string,

@@ -10,11 +10,14 @@ import {
 } from '@/features/review/store'
 import {
 	ensureManifestCardsInCollection,
-	useNextValid,
 	useReviewDay,
 	useReviewsTodayStats,
 	useUpdateReviewStage,
 } from '@/features/review/hooks'
+import {
+	getIndexOfNextAgainCard,
+	getIndexOfNextUnreviewedCard,
+} from '@/features/review/review-utils'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
@@ -79,8 +82,17 @@ function FlashCardReviewSession({
 	const stats = useReviewsTodayStats(lang, dayString).data
 	const reviewStage = stats.stage
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
-	const nextValidIndex = useNextValid()
 	const updateStage = useUpdateReviewStage(lang, dayString)
+	// The next card needing attention this phase, computed off the same reviews
+	// data the stats already loaded (no second useReviewsToday subscription).
+	const nextValidIndex =
+		reviewStage < 3
+			? getIndexOfNextUnreviewedCard(
+					manifest,
+					stats.reviewsMap,
+					currentCardIndex
+				)
+			: getIndexOfNextAgainCard(manifest, stats.reviewsMap, currentCardIndex)
 
 	// "Skip for today" means different things per phase. In the go-back phase
 	// (stage 2) it skips one unreviewed card and walks forward to the end. In the
@@ -88,14 +100,14 @@ function FlashCardReviewSession({
 	// Again cards keep the complete-screen re-offering the round, and the phase
 	// only closes by advancing to stage 5. So skipping the again round finishes
 	// it outright rather than cycling back onto the remaining Again cards.
-	const handleSkipForToday = useCallback(() => {
-		if ((reviewStage ?? 0) >= 3) {
+	const handleSkipForToday = () => {
+		if (reviewStage >= 3) {
 			updateStage(5)
 			gotoIndex(manifest.length)
 		} else {
 			gotoIndex(nextValidIndex)
 		}
-	}, [reviewStage, updateStage, gotoIndex, manifest.length, nextValidIndex])
+	}
 
 	// Position derives from the shared (stage, reviews). The stored cursor is a
 	// within-stage browse offset only; on mount and whenever the stage advances —
@@ -168,7 +180,7 @@ function FlashCardReviewSession({
 								<ChevronRight className="size-4" />
 							</Button>
 						</>
-					) : !atTheEnd && (reviewStage ?? 0) > 1 ? (
+					) : !atTheEnd && reviewStage > 1 ? (
 						<Button
 							size="sm"
 							variant="ghost"
@@ -207,7 +219,7 @@ function FlashCardReviewSession({
 								<ReviewSingleCard
 									pid={phraseId}
 									direction={direction}
-									reviewStage={reviewStage ?? 1}
+									reviewStage={reviewStage}
 									dayString={dayString}
 									triggerSlide={triggerSlide}
 								/>

@@ -24,19 +24,17 @@ export function WhenComplete() {
 
 	// Single source of truth: the milestone-derived stage (optimistic on tap,
 	// realtime across devices, mirrored to localStorage for cold loads).
-	const stage = stats?.stage ?? 0
+	const stage = stats.stage
 
 	const showWhich =
-		stats?.unreviewed && stage < 2 ? 'a' : stats?.again && stage < 5 ? 'b' : 'c'
+		stats.unreviewed && stage < 2 ? 'a' : stats.again && stage < 5 ? 'b' : 'c'
 
 	// When the user naturally finishes (no skip button), persist stage 5
 	useEffect(() => {
-		if (showWhich === 'c' && stats?.stage && stats.stage < 5) {
+		if (showWhich === 'c' && stats.stage < 5) {
 			updateStage(5)
 		}
-	}, [showWhich, stats?.stage])
-
-	if (!stats) return null
+	}, [showWhich, stats.stage])
 
 	return (
 		<Card
