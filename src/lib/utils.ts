@@ -228,7 +228,12 @@ export const sortDecksByCreation = (
 				: -1
 
 // sort DESC most recent first
-export const sortDecksByActivity = (a: DeckMetaType, b: DeckMetaType) => {
+type DeckActivity = {
+	lang: string
+	created_at: string
+	most_recent_review_at: string | null
+}
+export const sortDecksByActivity = (a: DeckActivity, b: DeckActivity) => {
 	const aDate = a.most_recent_review_at ?? a.created_at
 	const bDate = b.most_recent_review_at ?? b.created_at
 

@@ -1,16 +1,16 @@
 // oxlint-disable no-await-in-loop
 // Issue #156 - "Possible bug in most_recent_review_at"
 //
-// After a review, the deck meta fields `count_reviews_7d` and
-// `most_recent_review_at` should update together. The issue report showed
-// count_reviews_7d moving while most_recent_review_at stayed stale, and a
-// follow-up noted that the "last activity" badge read "1 month" even when
-// there had been no activity (null formatting bug in ago()).
+// After a review, the "reviews this week" and "most recent review" stats should
+// update together. The issue report showed the review count moving while the
+// most-recent-review timestamp stayed stale, and a follow-up noted the "last
+// activity" badge read "1 month" even with no activity (null formatting in ago()).
 //
-// This scene wipes the learner's recent reviews, does one review, and then
-// asserts on both the server row AND the rendered UI that the two fields
-// agree. If the bug regresses, either the assertion on the DB row or the
-// assertion that the "most recent review" badge is visible will fail.
+// The two stats are derived client-side now — count_reviews_7d from
+// cardReviewsCollection, most_recent_review_at from cardsCollection's
+// last_reviewed_at — so this scene wipes recent reviews, does one review, and
+// asserts the rendered deck-stats badges reflect it: both present, and not the
+// "no reviews" badge. If only one stat updated, one of its badges would be missing.
 
 import { test } from '@scenetest/scenes'
 import { createClient } from '@supabase/supabase-js'
@@ -41,7 +41,7 @@ test('review updates most_recent_review_at and count_reviews_7d together', async
 	await learner
 		.do(async () => {
 			testStart = new Date().toISOString()
-			// Clear out reviews so the deck meta starts from a known zero state.
+			// Clear out reviews so the deck stats start from a known zero state.
 			await supabase
 				.from('user_card_review')
 				.delete()
@@ -100,40 +100,9 @@ test('review updates most_recent_review_at and count_reviews_7d together', async
 			}
 		})
 		.see('review-complete-page')
-		// Server-side invariant: the two fields must agree after a review.
-		// (count_reviews_7d and most_recent_review_at live on user_deck_plus.)
-		.do(async () => {
-			const { data: deck } = await supabase
-				.from('user_deck_plus')
-				.select('count_reviews_7d, most_recent_review_at')
-				.eq('uid', uid)
-				.eq('lang', lang)
-				.single()
-
-			if (!deck) throw new Error('Expected a user_deck_plus row after review')
-			if (!deck.count_reviews_7d || deck.count_reviews_7d < 1) {
-				throw new Error(
-					`Expected count_reviews_7d > 0 after reviewing; got ${deck.count_reviews_7d}`
-				)
-			}
-			if (!deck.most_recent_review_at) {
-				throw new Error(
-					'count_reviews_7d incremented but most_recent_review_at is still null (#156)'
-				)
-			}
-			// The new timestamp should be from this test run, not a stale value.
-			if (deck.most_recent_review_at < testStart) {
-				throw new Error(
-					`most_recent_review_at (${deck.most_recent_review_at}) is older than the test start (${testStart}); did not update`
-				)
-			}
-		})
-		// UI-side invariant: the "reviews this week" AND "most recent review"
-		// badges both appear in the deck-stats card on /learn/$lang/stats.
-		// If count_reviews_7d updated but most_recent_review_at didn't, the
-		// latter badge would be missing — which is exactly the #156 failure
-		// mode. (DeckStatsBadges only renders on /learn/$lang/stats now,
-		// after the learn-page redesign.)
+		// Both the "reviews this week" and "most recent review" badges appear on
+		// /learn/$lang/stats after the review. If one stat updated but the other
+		// didn't (the #156 failure mode), one badge would be missing.
 		.openTo(`/learn/${lang}/stats`)
 		.see('badge-count-reviews-7d')
 		.see('badge-most-recent-review')

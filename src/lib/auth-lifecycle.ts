@@ -1,7 +1,7 @@
 import { failed } from '@scenetest/checks/react'
 import { queryClient } from '@/lib/query-client'
 import { myProfileCollection } from '@/features/profile/collections'
-import { decksCollection } from '@/features/deck/collections'
+import { decksCollection, cardsCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { resetUiPrefs } from '@/lib/ui-prefs'
 import {
@@ -115,6 +115,7 @@ class AuthLifecycle {
 		}
 
 		void friendSummariesCollection.preload()
+		void cardsCollection.preload()
 	}
 }
 

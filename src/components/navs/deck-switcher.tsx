@@ -23,23 +23,25 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useDecks } from '@/features/deck/hooks'
+import { useDecks, useDeckCardStatsByLang } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { useLanguagesSortedByLearners } from '@/features/languages/hooks'
 import languages from '@/lib/languages'
 
 const useDeckMenuData = () => {
 	const { data } = useDecks()
+	const statsByLang = useDeckCardStatsByLang()
 	if (!data) return null
 
 	return (data ?? [])
 		.filter((deck) => !deck.archived)
 		.map((deck) => {
+			const stats = statsByLang[deck.lang]
 			return {
 				lang: deck.lang,
 				name: languages[deck.lang],
 				to: `/learn/$lang`,
-				badge: deck.cards_active + deck.cards_learned,
+				badge: (stats?.cards_active ?? 0) + (stats?.cards_learned ?? 0),
 				params: { lang: deck.lang },
 			}
 		})

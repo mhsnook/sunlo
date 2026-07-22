@@ -19,13 +19,6 @@ export const DeckMetaRawSchema = z.object({
 	learning_goal: LearningGoalEnumSchema,
 	preferred_translation_lang: LangSchema.nullable().default(null),
 	review_answer_mode: ReviewAnswerModeSchema.nullable().default(null),
-	cards_active: z.number().default(0),
-	cards_learned: z.number().default(0),
-	cards_skipped: z.number().default(0),
-	count_reviews_7d: z.number().default(0),
-	count_reviews_7d_positive: z.number().default(0),
-	lang_total_phrases: z.number().default(0),
-	most_recent_review_at: z.string().nullable().default(null),
 })
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({

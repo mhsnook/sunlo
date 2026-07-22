@@ -13,6 +13,7 @@ import {
 	useDeckMeta,
 	useDeckPids,
 	useDeckRoutineStats,
+	useDeckCardStats,
 } from '@/features/deck/hooks'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/routes/_user/learn/-recommended-phrases'
@@ -31,14 +32,14 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 function WelcomePage() {
 	const { lang } = Route.useParams()
 	const { data: deck, isReady } = useDeckMeta(lang)
+	const { cards_active, cards_skipped, cards_learned } = useDeckCardStats(lang)
 	const { isOpen, showCallout, handleClose, handleReopen } =
 		useIntro('deck-new')
 
 	if (isReady && !deck) throw new Error("Could not load this deck's data")
 	if (!deck) return null
 
-	const deckIsNew =
-		deck.cards_active + deck.cards_skipped + deck.cards_learned === 0
+	const deckIsNew = cards_active + cards_skipped + cards_learned === 0
 
 	return (
 		<main className="space-y-8" style={style}>
@@ -62,6 +63,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 	const { data: meta } = useDeckMeta(lang)
 	const { data: deckPids } = useDeckPids(lang)
 	const { data: routineStats } = useDeckRoutineStats(lang)
+	const { most_recent_review_at } = useDeckCardStats(lang)
 	if (!meta || !deckPids || routineStats === undefined) {
 		console.log(`oops, deck not found:`, meta, deckPids, routineStats)
 		throw Error('This deck does not exist, sorry')
@@ -77,33 +79,32 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
-				{deckIsNew ?
+				{deckIsNew ? (
 					<p className="text-base">
 						Let's get started! Browse the feed to find phrases, or add your own.
 					</p>
-				: meta.most_recent_review_at ?
+				) : most_recent_review_at ? (
 					<p>
 						Your last review was{' '}
-						<span className="font-bold">{ago(meta.most_recent_review_at)}</span>
+						<span className="font-bold">{ago(most_recent_review_at)}</span>
 					</p>
-				:	<p>You haven't done any reviews yet</p>}
-				{!deckIsNew && routineStats ?
+				) : (
+					<p>You haven't done any reviews yet</p>
+				)}
+				{!deckIsNew && routineStats ? (
 					<p>
 						You've kept up with your routine
 						<span className="font-bold">
-							{(
-								routineStats.daysMet === routineStats.daysSoFar &&
-								routineStats.daysSoFar > 1
-							) ?
-								` all ${routineStats.daysSoFar} days this week!`
-							:	` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
-									routineStats.daysSoFar === 1 ? 'day' : 'days'
-								}`
-							}
+							{routineStats.daysMet === routineStats.daysSoFar &&
+							routineStats.daysSoFar > 1
+								? ` all ${routineStats.daysSoFar} days this week!`
+								: ` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
+										routineStats.daysSoFar === 1 ? 'day' : 'days'
+									}`}
 						</span>{' '}
 						this week.
 					</p>
-				:	null}
+				) : null}
 				{!deckIsNew && (
 					<p>
 						You have{' '}
@@ -146,11 +147,11 @@ function DeckSettings() {
 					<li>
 						Your learning motivation is:{' '}
 						<strong>
-							{data?.learning_goal === 'family' ?
-								'To connect with family'
-							: data?.learning_goal === 'visiting' ?
-								'Preparing to visit'
-							:	'Living in a new place'}
+							{data?.learning_goal === 'family'
+								? 'To connect with family'
+								: data?.learning_goal === 'visiting'
+									? 'Preparing to visit'
+									: 'Living in a new place'}
 						</strong>
 					</li>
 					<Flagged name="learning_goals">

@@ -640,141 +640,6 @@ alter function "public"."search_by_trigram" (
 	"cursor_id" "uuid"
 ) owner to "postgres";
 
-create or replace function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
-DECLARE
-  v_user_uid uuid := auth.uid();
-  v_upvote_exists boolean;
-  v_actual_action text;
-BEGIN
-  -- Check if upvote exists
-  SELECT EXISTS(
-    SELECT 1 FROM comment_upvote
-    WHERE comment_id = p_comment_id AND uid = v_user_uid
-  ) INTO v_upvote_exists;
-
-  IF p_action = 'add' THEN
-    IF NOT v_upvote_exists THEN
-      -- Add upvote
-      INSERT INTO comment_upvote (comment_id, uid)
-      VALUES (p_comment_id, v_user_uid);
-      v_actual_action := 'added';
-    ELSE
-      -- Already exists, no change
-      v_actual_action := 'no_change';
-    END IF;
-  ELSIF p_action = 'remove' THEN
-    IF v_upvote_exists THEN
-      -- Remove upvote
-      DELETE FROM comment_upvote
-      WHERE comment_id = p_comment_id AND uid = v_user_uid;
-      v_actual_action := 'removed';
-    ELSE
-      -- Doesn't exist, no change
-      v_actual_action := 'no_change';
-    END IF;
-  ELSE
-    RAISE EXCEPTION 'Invalid action: %. Must be "add" or "remove"', p_action;
-  END IF;
-
-  RETURN json_build_object(
-    'comment_id', p_comment_id,
-    'action', v_actual_action
-  );
-END;
-$$;
-
-alter function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") owner to "postgres";
-
-create or replace function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
-DECLARE
-  v_user_uid uuid := auth.uid();
-  v_upvote_exists boolean;
-  v_actual_action text;
-BEGIN
-  -- Check if upvote exists
-  SELECT EXISTS(
-    SELECT 1 FROM phrase_playlist_upvote
-    WHERE playlist_id = p_playlist_id AND uid = v_user_uid
-  ) INTO v_upvote_exists;
-
-  IF p_action = 'add' THEN
-    IF NOT v_upvote_exists THEN
-      -- Add upvote
-      INSERT INTO phrase_playlist_upvote (playlist_id, uid)
-      VALUES (p_playlist_id, v_user_uid);
-      v_actual_action := 'added';
-    ELSE
-      -- Already exists, no change
-      v_actual_action := 'no_change';
-    END IF;
-  ELSIF p_action = 'remove' THEN
-    IF v_upvote_exists THEN
-      -- Remove upvote
-      DELETE FROM phrase_playlist_upvote
-      WHERE playlist_id = p_playlist_id AND uid = v_user_uid;
-      v_actual_action := 'removed';
-    ELSE
-      -- Doesn't exist, no change
-      v_actual_action := 'no_change';
-    END IF;
-  ELSE
-    RAISE EXCEPTION 'Invalid action: %. Must be "add" or "remove"', p_action;
-  END IF;
-
-  RETURN json_build_object(
-    'playlist_id', p_playlist_id,
-    'action', v_actual_action
-  );
-END;
-$$;
-
-alter function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") owner to "postgres";
-
-create or replace function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
-DECLARE
-  v_user_uid uuid := auth.uid();
-  v_upvote_exists boolean;
-  v_actual_action text;
-BEGIN
-  -- Check if upvote exists
-  SELECT EXISTS(
-    SELECT 1 FROM phrase_request_upvote
-    WHERE request_id = p_request_id AND uid = v_user_uid
-  ) INTO v_upvote_exists;
-
-  IF p_action = 'add' THEN
-    IF NOT v_upvote_exists THEN
-      -- Add upvote
-      INSERT INTO phrase_request_upvote (request_id, uid)
-      VALUES (p_request_id, v_user_uid);
-      v_actual_action := 'added';
-    ELSE
-      -- Already exists, no change
-      v_actual_action := 'no_change';
-    END IF;
-  ELSIF p_action = 'remove' THEN
-    IF v_upvote_exists THEN
-      -- Remove upvote
-      DELETE FROM phrase_request_upvote
-      WHERE request_id = p_request_id AND uid = v_user_uid;
-      v_actual_action := 'removed';
-    ELSE
-      -- Doesn't exist, no change
-      v_actual_action := 'no_change';
-    END IF;
-  ELSE
-    RAISE EXCEPTION 'Invalid action: %. Must be "add" or "remove"', p_action;
-  END IF;
-
-  RETURN json_build_object(
-    'request_id', p_request_id,
-    'action', v_actual_action
-  );
-END;
-$$;
-
-alter function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") owner to "postgres";
-
 create or replace function "public"."skip_stale_corpus_upsert" () returns "trigger" language "plpgsql" as $$
 begin
 	if tg_op = 'UPDATE' and new.vectorized_at < old.vectorized_at then
@@ -959,8 +824,8 @@ alter function "public"."update_phrase_translation_updated_at" () owner to "post
 
 create or replace function "public"."update_user_card_review_updated_at" () returns "trigger" language "plpgsql" as $$
 begin
-  NEW.updated_at = now();
-  return NEW;
+  new.updated_at = now();
+  return new;
 end;
 $$;
 
@@ -1919,128 +1784,6 @@ create table if not exists "public"."user_client_event" (
 );
 
 alter table "public"."user_client_event" owner to "postgres";
-
-create or replace view "public"."user_deck_plus"
-with
-	("security_invoker" = 'true') as
-select
-	"d"."uid",
-	"d"."lang",
-	"d"."learning_goal",
-	"d"."archived",
-	"d"."daily_review_goal",
-	"d"."preferred_translation_lang",
-	"d"."review_answer_mode",
-	(
-		select
-			"l"."name"
-		from
-			"public"."language" "l"
-		where
-			(("l"."lang")::"text" = ("d"."lang")::"text")
-		limit
-			1
-	) as "language",
-	"d"."created_at",
-	"count" (*) filter (
-		where
-			("c"."status" = 'learned'::"public"."card_status")
-	) as "cards_learned",
-	"count" (*) filter (
-		where
-			("c"."status" = 'active'::"public"."card_status")
-	) as "cards_active",
-	"count" (*) filter (
-		where
-			("c"."status" = 'skipped'::"public"."card_status")
-	) as "cards_skipped",
-	(
-		select
-			"count" (*) as "count"
-		from
-			"public"."phrase" "p"
-		where
-			(("p"."lang")::"text" = ("d"."lang")::"text")
-	) as "lang_total_phrases",
-	(
-		select
-			"max" ("r"."created_at") as "max"
-		from
-			"public"."user_card_review" "r"
-		where
-			(
-				(("r"."lang")::"text" = ("d"."lang")::"text")
-				and ("r"."uid" = "d"."uid")
-			)
-		limit
-			1
-	) as "most_recent_review_at",
-	(
-		select
-			"count" (*) as "count"
-		from
-			"public"."user_card_review" "r"
-		where
-			(
-				(("r"."lang")::"text" = ("d"."lang")::"text")
-				and ("r"."uid" = "d"."uid")
-				and ("r"."created_at" > ("now" () - '7 days'::interval))
-			)
-		limit
-			1
-	) as "count_reviews_7d",
-	(
-		select
-			"count" (*) as "count"
-		from
-			"public"."user_card_review" "r"
-		where
-			(
-				(("r"."lang")::"text" = ("d"."lang")::"text")
-				and ("r"."uid" = "d"."uid")
-				and ("r"."created_at" > ("now" () - '7 days'::interval))
-				and ("r"."score" >= 2)
-			)
-		limit
-			1
-	) as "count_reviews_7d_positive"
-from
-	(
-		"public"."user_deck" "d"
-		left join "public"."user_card" "c" on (
-			(
-				(("d"."lang")::"text" = ("c"."lang")::"text")
-				and ("d"."uid" = "c"."uid")
-			)
-		)
-	)
-group by
-	"d"."uid",
-	"d"."lang",
-	"d"."learning_goal",
-	"d"."archived",
-	"d"."daily_review_goal",
-	"d"."preferred_translation_lang",
-	"d"."review_answer_mode",
-	"d"."created_at"
-order by
-	(
-		select
-			"count" (*) as "count"
-		from
-			"public"."user_card_review" "r"
-		where
-			(
-				(("r"."lang")::"text" = ("d"."lang")::"text")
-				and ("r"."uid" = "d"."uid")
-				and ("r"."created_at" > ("now" () - '7 days'::interval))
-			)
-		limit
-			1
-	) desc nulls last,
-	"d"."created_at" desc;
-
-alter table "public"."user_deck_plus" owner to "postgres";
 
 create table if not exists "public"."user_review_milestone" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -4187,12 +3930,6 @@ grant all on function "public"."search_by_trigram" (
 	"cursor_id" "uuid"
 ) to "service_role";
 
-grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "anon";
-
-grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
-
-grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "service_role";
-
 grant all on function "public"."set_limit" (real) to "postgres";
 
 grant all on function "public"."set_limit" (real) to "anon";
@@ -4200,18 +3937,6 @@ grant all on function "public"."set_limit" (real) to "anon";
 grant all on function "public"."set_limit" (real) to "authenticated";
 
 grant all on function "public"."set_limit" (real) to "service_role";
-
-grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "anon";
-
-grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "authenticated";
-
-grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "service_role";
-
-grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "anon";
-
-grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "authenticated";
-
-grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "service_role";
 
 grant all on function "public"."show_limit" () to "postgres";
 
@@ -4912,12 +4637,6 @@ grant all on table "public"."user_client_event" to "anon";
 grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
-
-grant all on table "public"."user_deck_plus" to "anon";
-
-grant all on table "public"."user_deck_plus" to "authenticated";
-
-grant all on table "public"."user_deck_plus" to "service_role";
 
 grant all on table "public"."user_review_milestone" to "anon";
 
