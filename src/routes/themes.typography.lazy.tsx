@@ -59,7 +59,7 @@ function SampleBlock({
 
 	return (
 		<Card className="overflow-hidden">
-			<div className="bg-1-mlo-primary border-b px-4 py-2">
+			<div className="bg-lc-1 bg-chroma-mlo bg-hue-primary border-b px-4 py-2">
 				<div className="flex items-center justify-between">
 					<p className="text-sm font-medium">{label}</p>
 					<p className="text-muted-foreground text-xs">
@@ -69,9 +69,9 @@ function SampleBlock({
 			</div>
 			<CardContent className="space-y-5 p-5" style={baseStyle}>
 				{/* Request-card replica */}
-				<div className="bg-1-mlo-primary rounded-2xl border p-4">
+				<div className="bg-lc-1 bg-chroma-mlo bg-hue-primary rounded-2xl border p-4">
 					<div className="flex items-start gap-3">
-						<div className="bg-3-mid-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm">
+						<div className="bg-lc-3 bg-chroma-mid bg-hue-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm">
 							Y
 						</div>
 						<div className="flex-1">
@@ -85,7 +85,7 @@ function SampleBlock({
 					<p className="mt-3">
 						hey, i&apos;m introducing my friend to coworkers, how do i say:
 					</p>
-					<blockquote className="bg-2-mid-primary mt-3 rounded-md border-s-4 px-4 py-3 italic">
+					<blockquote className="bg-lc-2 bg-chroma-mid bg-hue-primary mt-3 rounded-md border-s-4 px-4 py-3 italic">
 						<span style={boldStyle}>This is maria</span> hello
 					</blockquote>
 					<p className="mt-3">i want to be informal but polite.</p>

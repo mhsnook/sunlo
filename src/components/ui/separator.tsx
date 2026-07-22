@@ -11,7 +11,7 @@ const Separator = ({
 		data-slot="separator"
 		orientation={orientation}
 		className={cn(
-			'bg-3-mlo-primary shrink-0',
+			'bg-lc-3 bg-chroma-mlo bg-hue-primary shrink-0',
 			orientation === 'horizontal' ? 'h-[1px] w-full' : 'h-full w-[1px]',
 			className
 		)}

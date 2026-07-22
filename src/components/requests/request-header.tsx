@@ -17,7 +17,7 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 	const isOwner = profile?.uid === request.requester_uid
 
 	return (
-		<CardHeader className="border-2-lo-primary py-3 @md:py-6">
+		<CardHeader className="border-lc-2 border-chroma-lo border-hue-primary py-3 @md:py-6">
 			<div className="flex flex-row items-center justify-between gap-2">
 				<UidPermalink
 					uid={request.requester_uid}

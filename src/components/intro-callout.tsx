@@ -24,7 +24,7 @@ export function IntroCallout({
 	return (
 		<div
 			className={cn(
-				'border-3-mlo-primary bg-1-mlo-primary flex items-start gap-2 rounded border px-3 py-2 text-sm',
+				'border-lc-3 border-chroma-mlo border-hue-primary bg-lc-1 bg-chroma-mlo bg-hue-primary flex items-start gap-2 rounded border px-3 py-2 text-sm',
 				className
 			)}
 		>

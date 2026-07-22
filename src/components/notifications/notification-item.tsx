@@ -28,32 +28,38 @@ const notificationConfig: Record<
 	request_commented: {
 		Icon: MessageSquareQuote,
 		action: 'commented on your request',
-		iconClass: 'text-7-mid-primary bg-1-lo-primary',
+		iconClass:
+			'text-lc-7 text-chroma-mid text-hue-primary bg-lc-1 bg-chroma-lo bg-hue-primary',
 	},
 	comment_replied: {
 		Icon: MessagesSquare,
 		action: 'replied to your comment',
-		iconClass: 'text-7-mid-info bg-1-lo-info',
+		iconClass:
+			'text-lc-7 text-chroma-mid text-hue-info bg-lc-1 bg-chroma-lo bg-hue-info',
 	},
 	phrase_translated: {
 		Icon: Languages,
 		action: 'added a translation to your phrase',
-		iconClass: 'text-7-mid-success bg-1-lo-success',
+		iconClass:
+			'text-lc-7 text-chroma-mid text-hue-success bg-lc-1 bg-chroma-lo bg-hue-success',
 	},
 	phrase_referenced: {
 		Icon: Link2,
 		action: 'referenced your phrase as an answer',
-		iconClass: 'text-7-mid-accent bg-1-lo-accent',
+		iconClass:
+			'text-lc-7 text-chroma-mid text-hue-accent bg-lc-1 bg-chroma-lo bg-hue-accent',
 	},
 	request_upvoted: {
 		Icon: ThumbsUp,
 		action: 'upvoted your request',
-		iconClass: 'text-7-mid-warning bg-1-lo-warning',
+		iconClass:
+			'text-lc-7 text-chroma-mid text-hue-warning bg-lc-1 bg-chroma-lo bg-hue-warning',
 	},
 	change_suggested: {
 		Icon: MessageSquareQuote,
 		action: 'suggested a change to your content',
-		iconClass: 'text-7-mid-neutral bg-1-lo-neutral',
+		iconClass:
+			'text-lc-7 text-chroma-mid text-hue-neutral bg-lc-1 bg-chroma-lo bg-hue-neutral',
 	},
 }
 

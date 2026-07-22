@@ -23,7 +23,7 @@ export function FeedComposer({ lang }: { lang: string }) {
 					<button
 						type="button"
 						data-testid="feed-composer-trigger"
-						className="border-3-mlo-primary hover:border-primary bg-card text-muted-foreground mb-3 flex h-10 w-full rounded-2xl border px-3 py-2 text-start text-sm inset-shadow-sm transition-colors"
+						className="border-lc-3 border-chroma-mlo border-hue-primary hover:border-primary bg-card text-muted-foreground mb-3 flex h-10 w-full rounded-2xl border px-3 py-2 text-start text-sm inset-shadow-sm transition-colors"
 					>
 						Ask the community for a phrase...
 					</button>

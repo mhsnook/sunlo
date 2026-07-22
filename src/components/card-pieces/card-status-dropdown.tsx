@@ -136,10 +136,10 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 // one shape, one size, just hue swapping with the state.
 const triggerDotClass: Record<ShowableActions, string> = {
 	active: 'bg-primary',
-	learned: 'bg-5-hi-success',
-	skipped: 'bg-4-lo-neutral',
-	nocard: 'bg-3-lo-neutral',
-	nodeck: 'bg-3-lo-neutral',
+	learned: 'bg-lc-5 bg-chroma-hi bg-hue-success',
+	skipped: 'bg-lc-4 bg-chroma-lo bg-hue-neutral',
+	nocard: 'bg-lc-3 bg-chroma-lo bg-hue-neutral',
+	nodeck: 'bg-lc-3 bg-chroma-lo bg-hue-neutral',
 }
 
 function useCardStatusMutator(
@@ -282,21 +282,33 @@ export function CardStatusDropdown({
 						<>
 							<DropdownMenuItem
 								onClick={() => pickStatus('active')}
-								className={card.status === 'active' ? 'bg-0-mid-primary' : ''}
+								className={
+									card.status === 'active'
+										? 'bg-lc-0 bg-chroma-mid bg-hue-primary'
+										: ''
+								}
 								data-testid="activate-card-option"
 							>
 								<StatusSpan choice="active" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => pickStatus('learned')}
-								className={card.status === 'learned' ? 'bg-0-mid-primary' : ''}
+								className={
+									card.status === 'learned'
+										? 'bg-lc-0 bg-chroma-mid bg-hue-primary'
+										: ''
+								}
 								data-testid="set-learned-option"
 							>
 								<StatusSpan choice="learned" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => pickStatus('skipped')}
-								className={card.status === 'skipped' ? 'bg-0-mid-primary' : ''}
+								className={
+									card.status === 'skipped'
+										? 'bg-lc-0 bg-chroma-mid bg-hue-primary'
+										: ''
+								}
 								data-testid="ignore-card-option"
 							>
 								<StatusSpan choice="skipped" />
@@ -473,7 +485,7 @@ function StartLearningDialog({
 						onClick={() => void handleConfirm()}
 						disabled={pending}
 						data-testid="confirm-start-learning-button"
-						className="from-5-mhi-primary to-6-mid-primary text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+						className="from-lc-5 from-chroma-mhi from-hue-primary to-lc-6 to-chroma-mid to-hue-primary text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
 					>
 						{isUnarchive ? (
 							<ArchiveRestore className="size-6" />
@@ -500,7 +512,7 @@ function StartLearningDialog({
 
 					<DialogClose
 						data-testid="cancel-start-learning-button"
-						className="border-2-lo-neutral bg-1-mlo-neutral text-7-mid-neutral hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+						className="border-lc-2 border-chroma-lo border-hue-neutral bg-lc-1 bg-chroma-mlo bg-hue-neutral text-lc-7 text-chroma-mid text-hue-neutral hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 					>
 						<Bookmark className="size-6" />
 						<div>

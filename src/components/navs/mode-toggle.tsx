@@ -48,30 +48,42 @@ export function ModeToggle() {
 						sideOffset={4}
 					>
 						<DropdownMenuItem
-							className={theme === 'light' ? 'bg-1-mlo-primary' : ''}
+							className={
+								theme === 'light' ? 'bg-lc-1 bg-chroma-mlo bg-hue-primary' : ''
+							}
 							onClick={setLight}
 						>
-							{theme === 'light' ?
+							{theme === 'light' ? (
 								<Check className="mr-2 size-4" />
-							:	<Sun className="mr-2 size-4" />}
+							) : (
+								<Sun className="mr-2 size-4" />
+							)}
 							Light
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							className={theme === 'dark' ? 'bg-1-mlo-primary' : ''}
+							className={
+								theme === 'dark' ? 'bg-lc-1 bg-chroma-mlo bg-hue-primary' : ''
+							}
 							onClick={setDark}
 						>
-							{theme === 'dark' ?
+							{theme === 'dark' ? (
 								<Check className="mr-2 size-4" />
-							:	<Moon className="mr-2 size-4" />}
+							) : (
+								<Moon className="mr-2 size-4" />
+							)}
 							Dark
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							className={theme === 'system' ? 'bg-1-mlo-primary' : ''}
+							className={
+								theme === 'system' ? 'bg-lc-1 bg-chroma-mlo bg-hue-primary' : ''
+							}
 							onClick={setSystem}
 						>
-							{theme === 'system' ?
+							{theme === 'system' ? (
 								<Check className="mr-2 size-4" />
-							:	<MonitorCog className="mr-2 size-4" />}
+							) : (
+								<MonitorCog className="mr-2 size-4" />
+							)}
 							System
 						</DropdownMenuItem>
 					</DropdownMenuContent>

@@ -56,15 +56,15 @@ const statusIcon = {
 } as const
 
 const statusColors = {
-	active: 'text-7-hi-primary',
-	learned: 'text-7-hi-success',
-	skipped: 'text-5-mid-neutral',
+	active: 'text-lc-7 text-chroma-hi text-hue-primary',
+	learned: 'text-lc-7 text-chroma-hi text-hue-success',
+	skipped: 'text-lc-5 text-chroma-mid text-hue-neutral',
 } as const
 
 const statusBgColors = {
-	active: 'bg-1-lo-primary',
-	learned: 'bg-1-lo-success',
-	skipped: 'bg-1-lo-neutral',
+	active: 'bg-lc-1 bg-chroma-lo bg-hue-primary',
+	learned: 'bg-lc-1 bg-chroma-lo bg-hue-success',
+	skipped: 'bg-lc-1 bg-chroma-lo bg-hue-neutral',
 } as const
 
 const DEFAULT_RETENTION = 0.9
@@ -94,11 +94,14 @@ function getDueInfo(item: DueCheckable): {
 		const overdue = Math.abs(daysUntilDue)
 		return {
 			label: overdue === 1 ? 'Overdue 1d' : `Overdue ${overdue}d`,
-			color: 'text-7-hi-danger',
+			color: 'text-lc-7 text-chroma-hi text-hue-danger',
 		}
 	}
 	if (daysUntilDue === 0)
-		return { label: 'Due today', color: 'text-7-hi-warning' }
+		return {
+			label: 'Due today',
+			color: 'text-lc-7 text-chroma-hi text-hue-warning',
+		}
 	return {
 		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,
 		color: 'text-muted-foreground',
@@ -361,7 +364,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 			<div className="hidden overflow-x-auto rounded-lg border @md:block">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="bg-1-lo-neutral border-b">
+						<tr className="bg-lc-1 bg-chroma-lo bg-hue-neutral border-b">
 							<SortableHeader
 								label="Phrase"
 								field="phrase"
@@ -425,7 +428,9 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 		<div
 			className={cn(
 				'rounded-lg border transition-colors',
-				open ? 'bg-0-lo-neutral' : 'hover:bg-0-lo-neutral',
+				open
+					? 'bg-lc-0 bg-chroma-lo bg-hue-neutral'
+					: 'hover:bg-lc-0 hover:bg-chroma-lo hover:bg-hue-neutral',
 				isSkipped && 'opacity-50'
 			)}
 			data-testid="manage-deck-row"
@@ -565,7 +570,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 	return (
 		<tr
 			className={cn(
-				'hover:bg-0-lo-neutral border-b transition-colors last:border-b-0',
+				'hover:bg-lc-0 hover:bg-chroma-lo hover:bg-hue-neutral border-b transition-colors last:border-b-0',
 				isSkipped && 'opacity-50'
 			)}
 			data-testid="manage-deck-row"

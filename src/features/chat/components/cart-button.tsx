@@ -77,7 +77,7 @@ export function CartButton() {
 									key={phrase.id}
 									data-key={phrase.id}
 									data-testid="chat-cart-item"
-									className="hover:bg-1-mlo-primary flex flex-row items-start justify-between gap-2 rounded p-2 text-sm"
+									className="hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary flex flex-row items-start justify-between gap-2 rounded p-2 text-sm"
 								>
 									<div className="flex flex-col">
 										<span lang={phrase.lang} className="font-medium">

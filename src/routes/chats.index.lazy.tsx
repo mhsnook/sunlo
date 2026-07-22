@@ -59,7 +59,7 @@ function ChatsIndexPage() {
 									params: { lang: language.lang },
 								})
 							}}
-							className="bg-card/50 hover:bg-1-mlo-primary block w-full rounded border p-3 text-left text-sm"
+							className="bg-card/50 hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary block w-full rounded border p-3 text-left text-sm"
 						>
 							<div className="font-medium">{language.name}</div>
 							<div className="text-muted-foreground font-mono text-xs uppercase">
@@ -75,7 +75,7 @@ function ChatsIndexPage() {
 							type="button"
 							data-testid="chats-search-trigger"
 							onClick={() => setSearchOpen(true)}
-							className="bg-1-lo-primary hover:bg-1-mlo-primary text-foresoft-primary flex w-full flex-col gap-1 rounded border border-dashed p-3 text-left text-sm"
+							className="bg-lc-1 bg-chroma-lo bg-hue-primary hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary text-foresoft-primary flex w-full flex-col gap-1 rounded border border-dashed p-3 text-left text-sm"
 						>
 							<div className="flex items-center gap-2 font-medium">
 								<Search className="h-4 w-4" />

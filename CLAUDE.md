@@ -74,7 +74,7 @@ pnpm run seeds:schema   # regenerate base.sql — review the diff carefully
 - **New tests are scenetest markdown scenes** (`scenetest/scenes/*.spec.md`), never new `@playwright/test` specs — `e2e/` is deprecated (`transform` label). Navigate by clicking, not by reloading (`openTo` is for the entry point only).
 - **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically.
 - **Base UI, not Radix** for primitives: selected tabs get `data-active` (style with `data-[active]:`), not `data-state="active"`. Verify attribute names in `node_modules/@base-ui/react/esm/` types.
-- **Avoid `dark:` prefixes and opacity tints** (`bg-primary/10`) — the oklch color system auto-flips; use luminance steps (`bg-1-mlo-primary`). Full system: `docs/styling.md`.
+- **Avoid `dark:` prefixes and opacity tints** (`bg-primary/10`) — the oklch color system auto-flips; use luminance steps (`bg-lc-1`). Full system: `docs/styling.md`.
 
 ## Architecture
 
@@ -125,7 +125,7 @@ Route context carries `{ auth, queryClient }` — access auth via `Route.useRout
 - **`getKey` must return the row's real unique id.** Most collections use `item.id`, but not all (decks/languages → `item.lang`, profiles → `item.uid`, upvotes → the foreign key, link/composite-PK tables → composite strings) — always check the source table's unique constraint.
 - **Query keys** mirror collection ids (`['public', 'phrase_full']`).
 - **Dates**: `todayString()` (`@/lib/utils`) uses a 4am cutoff, not midnight — some people study after midnight; `ago()` and friends from `@/lib/dayjs`.
-- **UI**: always use the generic components (`<Input>`, `<Textarea>`, `<Button>`); toasts via `toastSuccess()`/`toastError()` from `@/components/ui/sonner`; `cn()` for conditional classes; `start`/`end` not `left`/`right` (RTL); `rounded-2xl` for interactive elements, `rounded` for cards; standard Tailwind classes over arbitrary values. oklch shorthand is `{prop}-{L}-{C}-{H}` (e.g. `bg-1-mlo-primary`) — full system and button-variant roles in `docs/styling.md`.
+- **UI**: always use the generic components (`<Input>`, `<Textarea>`, `<Button>`); toasts via `toastSuccess()`/`toastError()` from `@/components/ui/sonner`; `cn()` for conditional classes; `start`/`end` not `left`/`right` (RTL); `rounded-2xl` for interactive elements, `rounded` for cards; standard Tailwind classes over arbitrary values. oklch colors are single-axis and cascade-first: seed `hue-*`/`chroma-*` near a component's top, then state luminance per property (`bg-lc-1`, `text-lc-8`, `hover:bg-lc-up-1`) — full system and button-variant roles in `docs/styling.md`.
 - **DB**: singular table names, uuid primary keys, `created_at timestamptz default now()`, RLS on every `uid` table — never expose one without it. Workflow and seed conventions in `docs/database.md`.
 - **Test selectors**: use semantic `data-testid`s (`affirm-community-norms-button`), `data-key` for list items; register new ids in `scenetest/TEST_IDS.md`.
 - **Realtime**: subscribe in `useEffect`, parse the payload with the Zod schema, and `writeInsert` into the collection (see `docs/mutations.md`).

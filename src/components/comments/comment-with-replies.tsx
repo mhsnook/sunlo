@@ -62,7 +62,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				isFocused
 					? 'border-primary bg-card/50 rounded border border-s-2'
 					: hasHighlightedReply
-						? 'border-3-mlo-primary bg-card/50 rounded border border-s-2'
+						? 'border-lc-3 border-chroma-mlo border-hue-primary bg-card/50 rounded border border-s-2'
 						: ''
 			} p-4`}
 			data-comment-id={comment.id}

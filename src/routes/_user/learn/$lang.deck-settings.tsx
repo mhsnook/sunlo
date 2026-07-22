@@ -206,7 +206,7 @@ function DailyGoalSection({
 							learners do well with 10-15 new cards per day.
 						</p>
 						<div className="mx-2 space-y-3">
-							<div className="bg-0-lo-primary flex items-start gap-3 rounded-2xl px-4 py-3">
+							<div className="bg-lc-0 bg-chroma-lo bg-hue-primary flex items-start gap-3 rounded-2xl px-4 py-3">
 								<Cat className="text-primary mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Relaxed — 10 new cards</p>
@@ -215,7 +215,7 @@ function DailyGoalSection({
 									</p>
 								</div>
 							</div>
-							<div className="bg-0-lo-primary flex items-start gap-3 rounded-2xl px-4 py-3">
+							<div className="bg-lc-0 bg-chroma-lo bg-hue-primary flex items-start gap-3 rounded-2xl px-4 py-3">
 								<IceCreamBowl className="text-primary mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Standard — 15 new cards</p>
@@ -224,7 +224,7 @@ function DailyGoalSection({
 									</p>
 								</div>
 							</div>
-							<div className="bg-0-lo-primary flex items-start gap-3 rounded-2xl px-4 py-3">
+							<div className="bg-lc-0 bg-chroma-lo bg-hue-primary flex items-start gap-3 rounded-2xl px-4 py-3">
 								<Rocket className="text-primary mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Serious — 20 new cards</p>

@@ -13,7 +13,7 @@ export function NavFooterActions() {
 				href="https://github.com/mhsnook/sunlo"
 				target="_blank"
 				rel="noreferrer"
-				className="text-c-lo text-lc-5 hover:text-lc-7 flex items-center gap-2 text-xs"
+				className="text-chroma-lo text-lc-5 hover:text-lc-7 flex items-center gap-2 text-xs"
 				data-testid="sidebar-open-source-link"
 			>
 				<Github className="size-4" />

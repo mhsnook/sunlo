@@ -280,7 +280,7 @@ function ShowcaseRequestThread() {
 	return (
 		<div className="space-y-4" data-testid="showcase-request">
 			<CardlikeRequest>
-				<CardHeader className="border-2-lo-primary py-3 @md:py-6">
+				<CardHeader className="border-lc-2 border-chroma-lo border-hue-primary py-3 @md:py-6">
 					<div className="flex flex-row items-center justify-between gap-2">
 						<Byline
 							initials="PL"
@@ -432,7 +432,7 @@ function ShowcaseDeckDialog() {
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-				<div className="from-5-mhi-primary to-6-mid-primary text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
+				<div className="from-lc-5 from-chroma-mhi from-hue-primary to-lc-6 to-chroma-mid to-hue-primary text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
 					<Rocket className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -443,7 +443,7 @@ function ShowcaseDeckDialog() {
 						</div>
 					</div>
 				</div>
-				<div className="border-2-lo-primary bg-1-mlo-primary text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
+				<div className="border-lc-2 border-chroma-lo border-hue-primary bg-lc-1 bg-chroma-mlo bg-hue-primary text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
 					<Logs className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -645,10 +645,10 @@ const cardStatusShowcaseStates: Array<{
 	soft?: boolean
 }> = [
 	{ choice: 'active', dot: 'bg-primary', soft: true },
-	{ choice: 'learned', dot: 'bg-5-hi-success' },
-	{ choice: 'skipped', dot: 'bg-4-lo-neutral' },
-	{ choice: 'nocard', dot: 'bg-3-lo-neutral' },
-	{ choice: 'nodeck', dot: 'bg-3-lo-neutral' },
+	{ choice: 'learned', dot: 'bg-lc-5 bg-chroma-hi bg-hue-success' },
+	{ choice: 'skipped', dot: 'bg-lc-4 bg-chroma-lo bg-hue-neutral' },
+	{ choice: 'nocard', dot: 'bg-lc-3 bg-chroma-lo bg-hue-neutral' },
+	{ choice: 'nodeck', dot: 'bg-lc-3 bg-chroma-lo bg-hue-neutral' },
 ]
 
 function CardStatusMenuItem({ choice }: { choice: ShowableActions }) {
@@ -1170,7 +1170,7 @@ function ProfilePill({
 }) {
 	return (
 		<div className="flex w-full flex-row items-center gap-4">
-			<div className="hover:bg-1-mlo-primary hover:border-2-mlo-primary flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2">
+			<div className="hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary hover:border-lc-2 hover:border-chroma-mlo hover:border-hue-primary flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2">
 				<Avatar className="size-8">
 					<AvatarFallback seed={seed} className="text-xs font-bold">
 						{username.slice(0, 2).toUpperCase()}
@@ -1234,7 +1234,7 @@ function ShowcaseProfilePills() {
 function ShowcaseIntroCallout() {
 	return (
 		<div className="space-y-2">
-			<div className="border-3-mlo-primary bg-1-mlo-primary flex items-start gap-2 rounded border px-3 py-2 text-sm">
+			<div className="border-lc-3 border-chroma-mlo border-hue-primary bg-lc-1 bg-chroma-mlo bg-hue-primary flex items-start gap-2 rounded border px-3 py-2 text-sm">
 				<Info className="text-primary mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span className="text-foreground/80">
@@ -1246,7 +1246,7 @@ function ShowcaseIntroCallout() {
 					</button>
 				</div>
 			</div>
-			<div className="border-3-mlo-primary bg-1-mlo-primary flex items-start gap-2 rounded border px-3 py-2 text-sm">
+			<div className="border-lc-3 border-chroma-mlo border-hue-primary bg-lc-1 bg-chroma-mlo bg-hue-primary flex items-start gap-2 rounded border px-3 py-2 text-sm">
 				<Info className="text-primary mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span className="text-foreground/80">
@@ -1569,7 +1569,7 @@ function ThemesPage() {
 								)}
 								style={{ '--hue-primary': s.hue } as CSSProperties}
 							>
-								<div className="bg-1-mlo-primary h-10 w-full rounded" />
+								<div className="bg-lc-1 bg-chroma-mlo bg-hue-primary h-10 w-full rounded" />
 								<span className="flex flex-col items-center text-center leading-tight">
 									<span
 										className={cn(

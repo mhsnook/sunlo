@@ -154,31 +154,37 @@ export function SpreadsheetImportDialog({
 								</p>
 								<div className="space-y-2 ps-1">
 									<p>
-										<strong className="text-7-mhi-primary">Phrase</strong>{' '}
+										<strong className="text-lc-7 text-chroma-mhi text-hue-primary">
+											Phrase
+										</strong>{' '}
 										&mdash; the word or sentence in your learning language.
 										Include the word &ldquo;phrase&rdquo; in the header (e.g.{' '}
-										<code className="bg-1-mlo-primary rounded px-1.5 py-0.5 text-sm">
+										<code className="bg-lc-1 bg-chroma-mlo bg-hue-primary rounded px-1.5 py-0.5 text-sm">
 											phrase
 										</code>
 										).
 									</p>
 									<p>
-										<strong className="text-7-mhi-accent">Translation</strong>{' '}
+										<strong className="text-lc-7 text-chroma-mhi text-hue-accent">
+											Translation
+										</strong>{' '}
 										&mdash; put the language name or 3-letter code in the header
 										(e.g.{' '}
-										<code className="bg-1-mlo-accent rounded px-1.5 py-0.5 text-sm">
+										<code className="bg-lc-1 bg-chroma-mlo bg-hue-accent rounded px-1.5 py-0.5 text-sm">
 											translation (eng)
 										</code>{' '}
 										or{' '}
-										<code className="bg-1-mlo-accent rounded px-1.5 py-0.5 text-sm">
+										<code className="bg-lc-1 bg-chroma-mlo bg-hue-accent rounded px-1.5 py-0.5 text-sm">
 											English
 										</code>
 										). You can have multiple translation columns.
 									</p>
 									<p>
-										<strong className="text-7-mhi-info">Tags</strong> &mdash;
-										optional. Include &ldquo;tag&rdquo; in the header. Separate
-										multiple tags with commas inside a cell.
+										<strong className="text-lc-7 text-chroma-mhi text-hue-info">
+											Tags
+										</strong>{' '}
+										&mdash; optional. Include &ldquo;tag&rdquo; in the header.
+										Separate multiple tags with commas inside a cell.
 									</p>
 								</div>
 								<p className="text-muted-foreground text-sm">

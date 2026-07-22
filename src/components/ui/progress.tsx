@@ -12,7 +12,7 @@ function Progress({
 			value={value}
 			data-slot="progress"
 			className={cn(
-				'bg-2-mlo-primary relative h-2 w-full overflow-hidden rounded-full',
+				'bg-lc-2 bg-chroma-mlo bg-hue-primary relative h-2 w-full overflow-hidden rounded-full',
 				className
 			)}
 			{...props}

@@ -31,8 +31,8 @@ export function ChoiceTile({
 				'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 				'disabled:cursor-not-allowed disabled:opacity-60',
 				selected
-					? 'bg-0-mlo-primary border-2-mlo-primary'
-					: 'border-input hover:bg-base-mlo-primary hover:border-4-mlo-primary',
+					? 'bg-lc-0 bg-chroma-mlo bg-hue-primary border-lc-2 border-chroma-mlo border-hue-primary'
+					: 'border-input hover:bg-lc-base hover:bg-chroma-mlo hover:bg-hue-primary hover:border-lc-4 hover:border-chroma-mlo hover:border-hue-primary',
 				className
 			)}
 			{...props}

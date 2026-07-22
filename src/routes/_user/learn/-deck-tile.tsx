@@ -104,7 +104,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang/review"
 								params={{ lang: deck.lang }}
 								data-testid="start-practice-link"
-								className="from-5-mhi-primary to-6-mid-primary text-primary-foreground hover:from-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="from-lc-5 from-chroma-mhi from-hue-primary to-lc-6 to-chroma-mid to-hue-primary text-primary-foreground hover:from-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								{dueToday === 0 ? (
 									<CircleCheck className="size-6" />
@@ -129,7 +129,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang"
 								params={{ lang: deck.lang }}
 								data-testid="deck-link"
-								className="border-2-lo-primary bg-1-mlo-primary text-primary-foresoft hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="border-lc-2 border-chroma-lo border-hue-primary bg-lc-1 bg-chroma-mlo bg-hue-primary text-primary-foresoft hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								<Logs className="size-6" />
 								<div>
@@ -209,7 +209,7 @@ export function AddDeckTile() {
 			data-testid="add-deck-tile"
 			className="block h-full transition-all duration-200 hover:-translate-y-0.5"
 		>
-			<Card className="border-3-lo-primary text-muted-foreground hover:text-primary-foresoft hover:border-primary-foresoft flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
+			<Card className="border-lc-3 border-chroma-lo border-hue-primary text-muted-foreground hover:text-primary-foresoft hover:border-primary-foresoft flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
 				<span className="text-2xl leading-none">+</span>
 				<span className="text-xs font-medium">Start a new deck</span>
 			</Card>

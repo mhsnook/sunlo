@@ -96,7 +96,7 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 							type="button"
 							onClick={restoreDeck}
 							data-testid="confirm-restore-button"
-							className="from-5-mhi-primary to-6-mid-primary text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+							className="from-lc-5 from-chroma-mhi from-hue-primary to-lc-6 to-chroma-mid to-hue-primary text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
 						>
 							<ArchiveRestore className="size-6" />
 							<div>
@@ -111,7 +111,7 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 
 						<DialogClose
 							data-testid="cancel-restore-button"
-							className="border-2-lo-neutral bg-1-mlo-neutral text-7-mid-neutral hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+							className="border-lc-2 border-chroma-lo border-hue-neutral bg-lc-1 bg-chroma-mlo bg-hue-neutral text-lc-7 text-chroma-mid text-hue-neutral hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 						>
 							<Archive className="size-6" />
 							<div>

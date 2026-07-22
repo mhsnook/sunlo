@@ -82,31 +82,32 @@ export function SelectPhrasesForComment({
 	const isMaxReached = selectedPhraseIds.length >= effectiveMax
 
 	const countDisplay =
-		maxPhrases === null ?
-			`${selectedPhraseIds.length} selected`
-		:	`${selectedPhraseIds.length}/${maxPhrases}`
+		maxPhrases === null
+			? `${selectedPhraseIds.length} selected`
+			: `${selectedPhraseIds.length}/${maxPhrases}`
 
-	const triggerButton =
-		cardShape ?
-			<button
-				type="button"
-				disabled={isMaxReached}
-				data-testid="open-phrase-picker"
-				className="border-2-lo-primary text-muted-foreground hover:bg-1-lo-primary hover:text-7-mid-primary hover:border-4-mlo-primary flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors disabled:pointer-events-none disabled:opacity-50"
-			>
-				<Plus className="h-6 w-6" />
-			</button>
-		:	<Button
-				type="button"
-				variant="soft"
-				size="sm"
-				disabled={isMaxReached}
-				data-testid="open-phrase-picker"
-				className={className}
-			>
-				<Paperclip className="h-4 w-4" />
-				{isMaxReached ? triggerMaxText : triggerText}
-			</Button>
+	const triggerButton = cardShape ? (
+		<button
+			type="button"
+			disabled={isMaxReached}
+			data-testid="open-phrase-picker"
+			className="border-lc-2 border-chroma-lo border-hue-primary text-muted-foreground hover:bg-lc-1 hover:bg-chroma-lo hover:bg-hue-primary hover:text-lc-7 hover:text-chroma-mid hover:text-hue-primary hover:border-lc-4 hover:border-chroma-mlo hover:border-hue-primary flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors disabled:pointer-events-none disabled:opacity-50"
+		>
+			<Plus className="h-6 w-6" />
+		</button>
+	) : (
+		<Button
+			type="button"
+			variant="soft"
+			size="sm"
+			disabled={isMaxReached}
+			data-testid="open-phrase-picker"
+			className={className}
+		>
+			<Paperclip className="h-4 w-4" />
+			{isMaxReached ? triggerMaxText : triggerText}
+		</Button>
+	)
 
 	return (
 		<Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
@@ -114,16 +115,16 @@ export function SelectPhrasesForComment({
 			<DialogContent className="grid max-h-[98dvh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden px-4 pt-0 pb-4 sm:px-6 sm:pb-6">
 				<DialogHeader className="flex-none border-b p-6 pb-4">
 					<DialogTitle>
-						{showCreateForm ?
-							'Create New Phrase'
-						:	`Select Flashcards (${countDisplay})`}
+						{showCreateForm
+							? 'Create New Phrase'
+							: `Select Flashcards (${countDisplay})`}
 					</DialogTitle>
 					<DialogDescription>
-						{showCreateForm ?
-							'Add a new phrase to the library'
-						: maxPhrases === null ?
-							'Select flashcards to add'
-						:	`Choose up to ${maxPhrases} flashcards`}
+						{showCreateForm
+							? 'Add a new phrase to the library'
+							: maxPhrases === null
+								? 'Select flashcards to add'
+								: `Choose up to ${maxPhrases} flashcards`}
 					</DialogDescription>
 					{!showCreateForm && (
 						<div className="relative mt-2">
@@ -143,13 +144,14 @@ export function SelectPhrasesForComment({
 				<div className="min-h-0 overflow-hidden">
 					<ScrollArea className="h-full">
 						<div className="flex flex-col gap-3 p-6">
-							{showCreateForm ?
+							{showCreateForm ? (
 								<InlinePhraseCreator
 									lang={lang}
 									onPhraseCreated={handlePhraseCreated}
 									onCancel={() => setShowCreateForm(false)}
 								/>
-							:	<>
+							) : (
+								<>
 									<Button
 										type="button"
 										variant="dashed-w-full"
@@ -159,11 +161,12 @@ export function SelectPhrasesForComment({
 										<Plus className="h-4 w-4" />
 										Create new phrase
 									</Button>
-									{!filteredPhrases?.length ?
+									{!filteredPhrases?.length ? (
 										<p className="text-muted-foreground py-8 text-center">
 											No phrases found
 										</p>
-									:	filteredPhrases
+									) : (
+										filteredPhrases
 											.filter(
 												(phrase) => !selectedPhraseIds.includes(phrase.id)
 											)
@@ -180,9 +183,9 @@ export function SelectPhrasesForComment({
 													<PhraseTinyCard pid={phrase.id} nonInteractive />
 												</button>
 											))
-									}
+									)}
 								</>
-							}
+							)}
 						</div>
 					</ScrollArea>
 				</div>

@@ -132,7 +132,7 @@ function RoutesIntrospection() {
 						{filtered.map((r) => (
 							<tr
 								key={r.id}
-								className="hover:bg-1-mlo-primary/40 border-b align-top"
+								className="hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary border-b align-top"
 								data-name="admin-route-row"
 								data-key={r.id}
 							>
@@ -169,8 +169,8 @@ function LoadCell({ isLazy }: { isLazy: boolean }) {
 				className={cn(
 					'inline-block rounded px-1.5 py-0.5 font-mono',
 					isLazy
-						? 'bg-1-mlo-info text-7-hi-info'
-						: 'bg-1-mlo-neutral text-muted-foreground'
+						? 'bg-lc-1 bg-chroma-mlo bg-hue-info text-lc-7 text-chroma-hi text-hue-info'
+						: 'bg-lc-1 bg-chroma-mlo bg-hue-neutral text-muted-foreground'
 				)}
 			>
 				{isLazy ? 'lazy' : 'eager'}
@@ -184,7 +184,9 @@ function BoolCell({ on }: { on: boolean }) {
 		<td
 			className={cn(
 				'px-2 py-1.5 text-center',
-				on ? 'text-7-hi-success' : 'text-muted-foreground'
+				on
+					? 'text-lc-7 text-chroma-hi text-hue-success'
+					: 'text-muted-foreground'
 			)}
 		>
 			{on ? '✓' : '·'}
@@ -196,7 +198,7 @@ function SearchCell({ scope }: { scope: SearchScope | undefined }) {
 	if (scope === undefined)
 		return <td className="text-muted-foreground px-2 py-1.5 text-center">·</td>
 	return (
-		<td className="text-7-hi-success px-2 py-1.5 text-center font-mono text-xs">
+		<td className="text-lc-7 text-chroma-hi text-hue-success px-2 py-1.5 text-center font-mono text-xs">
 			{scope}
 		</td>
 	)

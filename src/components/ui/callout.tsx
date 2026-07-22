@@ -10,15 +10,17 @@ type CalloutProps = PropsWithChildren & {
 }
 
 const variants = {
-	default: 'bg-1-mlo-primary border-3-mlo-primary',
-	problem: 'hue-danger bg-lc-[97] bg-c-[3] border-lc-[88] border-c-[6]',
+	default:
+		'bg-lc-1 bg-chroma-mlo bg-hue-primary border-lc-3 border-chroma-mlo border-hue-primary',
+	problem:
+		'hue-danger bg-lc-[97] bg-chroma-[3] border-lc-[88] border-chroma-[6]',
 	ghost: 'border text-muted-foreground bg-muted',
 }
 
 const iconCircleVariants = {
-	default: 'bg-lc-[95] bg-c-[6]',
-	problem: 'border border-lc-[82] border-c-[9] bg-none-lo',
-	ghost: 'bg-1-lo-neutral',
+	default: 'bg-lc-[95] bg-chroma-[6]',
+	problem: 'border border-lc-[82] border-chroma-[9] bg-lc-none bg-chroma-lo',
+	ghost: 'bg-lc-1 bg-chroma-lo bg-hue-neutral',
 }
 
 const sizes = {

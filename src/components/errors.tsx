@@ -77,14 +77,9 @@ export const ShowErrorDontLog = memo(function ShowAndLogError({
 			Icon={DestructiveTriangle}
 		>
 			<strong>
-				{'status' in error ?
-					<> (Error {error.status}) </>
-				:	null}
+				{'status' in error ? <> (Error {error.status}) </> : null}
 				{/* Text is only for display purposes; not logged */}
-				{text}{' '}
-				{'cause' in error ?
-					<>({error.cause})</>
-				:	null}
+				{text} {'cause' in error ? <>({error.cause})</> : null}
 			</strong>
 			<p>{error.message} </p>
 		</Callout>
@@ -158,5 +153,7 @@ function Logger({
 }
 
 function DestructiveTriangle() {
-	return <TriangleAlert className="text-5-mhi" aria-hidden={true} />
+	return (
+		<TriangleAlert className="text-lc-5 text-chroma-mhi" aria-hidden={true} />
+	)
 }
