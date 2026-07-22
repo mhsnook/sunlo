@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
+import { and, count, eq, gte, max, useLiveQuery } from '@tanstack/react-db'
 import { should } from '@scenetest/checks/react'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
@@ -108,8 +108,14 @@ export type DeckCardStats = {
 	most_recent_review_at: string | null
 }
 
-const aggregateDeckCardStats = (
-	cards: ReadonlyArray<CardMetaType>
+type CardStatusGroup = {
+	status: string
+	count: number
+	most_recent: string | null
+}
+
+const statsFromStatusGroups = (
+	groups: ReadonlyArray<CardStatusGroup>
 ): DeckCardStats => {
 	const stats: DeckCardStats = {
 		cards_active: 0,
@@ -117,39 +123,61 @@ const aggregateDeckCardStats = (
 		cards_skipped: 0,
 		most_recent_review_at: null,
 	}
-	for (const card of cards) {
-		if (card.status === 'active') stats.cards_active++
-		else if (card.status === 'learned') stats.cards_learned++
-		else if (card.status === 'skipped') stats.cards_skipped++
+	for (const g of groups) {
+		if (g.status === 'active') stats.cards_active = g.count
+		else if (g.status === 'learned') stats.cards_learned = g.count
+		else if (g.status === 'skipped') stats.cards_skipped = g.count
 		if (
-			card.last_reviewed_at &&
+			g.most_recent &&
 			(stats.most_recent_review_at === null ||
-				card.last_reviewed_at > stats.most_recent_review_at)
+				g.most_recent > stats.most_recent_review_at)
 		)
-			stats.most_recent_review_at = card.last_reviewed_at
+			stats.most_recent_review_at = g.most_recent
 	}
 	return stats
 }
 
 export const useDeckCardStats = (lang: string): DeckCardStats => {
-	const { data: cards } = useDeckCards(lang)
-	return useMemo(() => aggregateDeckCardStats(cards ?? []), [cards])
+	const { data } = useLiveQuery(
+		(q) =>
+			q
+				.from({ card: cardsCollection })
+				.where(({ card }) => eq(card.lang, lang))
+				.groupBy(({ card }) => card.status)
+				.select(({ card }) => ({
+					status: card.status,
+					count: count(card.id),
+					most_recent: max(card.last_reviewed_at),
+				})),
+		[lang]
+	)
+	return useMemo(() => statsFromStatusGroups(data ?? []), [data])
 }
 
 export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
-	const { data: cards } = useLiveQuery((q) => q.from({ card: cardsCollection }))
+	const { data } = useLiveQuery((q) =>
+		q
+			.from({ card: cardsCollection })
+			.groupBy(({ card }) => [card.lang, card.status])
+			.select(({ card }) => ({
+				lang: card.lang,
+				status: card.status,
+				count: count(card.id),
+				most_recent: max(card.last_reviewed_at),
+			}))
+	)
 	return useMemo(() => {
-		const byLang = new Map<string, Array<CardMetaType>>()
-		for (const card of cards ?? []) {
-			const arr = byLang.get(card.lang)
-			if (arr) arr.push(card)
-			else byLang.set(card.lang, [card])
+		const byLang = new Map<string, Array<CardStatusGroup>>()
+		for (const row of data ?? []) {
+			const arr = byLang.get(row.lang)
+			if (arr) arr.push(row)
+			else byLang.set(row.lang, [row])
 		}
 		const out: Record<string, DeckCardStats> = {}
-		for (const [lang, langCards] of byLang)
-			out[lang] = aggregateDeckCardStats(langCards)
+		for (const [lang, groups] of byLang)
+			out[lang] = statsFromStatusGroups(groups)
 		return out
-	}, [cards])
+	}, [data])
 }
 
 export type DeckReviewCounts = {
@@ -158,24 +186,33 @@ export type DeckReviewCounts = {
 }
 
 export const useDeckReviewCounts = (lang: string): DeckReviewCounts => {
-	const { data: reviews } = useLiveQuery(
+	const cutoff = dayjs()
+		.subtract(6, 'day')
+		.subtract(4, 'hour')
+		.format('YYYY-MM-DD')
+	const { data } = useLiveQuery(
 		(q) =>
 			q
 				.from({ review: cardReviewsCollection })
-				.where(({ review }) => eq(review.lang, lang)),
-		[lang]
+				.where(({ review }) =>
+					and(eq(review.lang, lang), gte(review.day_session, cutoff))
+				)
+				.groupBy(({ review }) => review.score)
+				.select(({ review }) => ({
+					score: review.score,
+					count: count(review.id),
+				})),
+		[lang, cutoff]
 	)
 	return useMemo(() => {
 		let count_reviews_7d = 0
 		let count_reviews_7d_positive = 0
-		for (const review of reviews ?? []) {
-			if (inLastWeek(review.created_at)) {
-				count_reviews_7d++
-				if (review.score >= 2) count_reviews_7d_positive++
-			}
+		for (const row of data ?? []) {
+			count_reviews_7d += row.count
+			if (row.score >= 2) count_reviews_7d_positive += row.count
 		}
 		return { count_reviews_7d, count_reviews_7d_positive }
-	}, [reviews])
+	}, [data])
 }
 
 export type CardWithSibling = CardMetaType & { sibling_id: string | null }
