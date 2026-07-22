@@ -5,7 +5,6 @@ learner:
 - login
 - openTo /browse/[team.lang_full]
 - see browse-lang-page
-- see browse-topic-chips
 - see browse-sets-section
 - see browse-cards-section
 - see browse-requests-section

@@ -17,7 +17,6 @@ import { useLanguageTags } from '@/features/languages/hooks'
 import { useLangPlaylists } from '@/features/playlists/hooks'
 import { phraseRequestsActive } from '@/features/requests/live'
 import { useRequestsByMessageTag, useRequestTagSets } from '@/features/requests'
-import type { PhraseFullType } from '@/features/phrases/schemas'
 import type { uuid } from '@/types/main'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -93,23 +92,21 @@ function BrowseLanguagePage() {
 		[lang]
 	)
 
-	const phraseMatches = (p: PhraseFullType) => {
-		if (selectedTag && !p.tags?.some((t) => t.name === selectedTag))
-			return false
-		if (level && phraseLevel(p.avg_difficulty) !== level) return false
-		if (
-			query &&
-			!p.text.toLowerCase().includes(query) &&
-			!p.translations?.some((t) => t.text.toLowerCase().includes(query))
-		)
-			return false
-		return true
-	}
-
 	const filteredPhrases = useMemo(
 		() =>
 			(allPhrases ?? [])
-				.filter(phraseMatches)
+				.filter((p) => {
+					if (selectedTag && !p.tags?.some((t) => t.name === selectedTag))
+						return false
+					if (level && phraseLevel(p.avg_difficulty) !== level) return false
+					if (
+						query &&
+						!p.text.toLowerCase().includes(query) &&
+						!p.translations?.some((t) => t.text.toLowerCase().includes(query))
+					)
+						return false
+					return true
+				})
 				.toSorted((a, b) => b.created_at.localeCompare(a.created_at)),
 		[allPhrases, selectedTag, level, query]
 	)
@@ -212,38 +209,39 @@ function BrowseLanguagePage() {
 
 				{/* Filters — shared across every tab */}
 				<div className="mt-6 space-y-4">
-					<div>
-						<h2 className="text-muted-foreground mb-3 text-lg font-semibold">
-							What are you looking for?
-						</h2>
-						<div
-							className="flex flex-wrap gap-2"
-							data-testid="browse-topic-chips"
-						>
-							{tags?.map((tag) => {
-								const active = selectedTag === tag.name
-								return (
-									<button
-										key={tag.id}
-										type="button"
-										onClick={() =>
-											setSearchValue({ tag: active ? undefined : tag.name })
-										}
-										data-key={tag.id}
-										data-active={active || undefined}
-										className={cn(
-											'rounded-full px-4 py-1.5 text-sm transition-colors',
-											active
-												? 'bg-primary text-primary-foreground'
-												: 'bg-1-lo-neutral text-6-mid-neutral hover:bg-2-lo-neutral'
-										)}
-									>
-										{tag.name}
-									</button>
-								)
-							})}
+					{/* Topic chips only when this language actually has tags — an
+					    empty chip row would just be dead space. */}
+					{tags?.length ? (
+						<div data-testid="browse-topic-chips">
+							<h2 className="text-muted-foreground mb-3 text-lg font-semibold">
+								What are you looking for?
+							</h2>
+							<div className="flex flex-wrap gap-2">
+								{tags.map((tag) => {
+									const active = selectedTag === tag.name
+									return (
+										<button
+											key={tag.id}
+											type="button"
+											onClick={() =>
+												setSearchValue({ tag: active ? undefined : tag.name })
+											}
+											data-key={tag.id}
+											data-active={active || undefined}
+											className={cn(
+												'rounded-full px-4 py-1.5 text-sm transition-colors',
+												active
+													? 'bg-primary text-primary-foreground'
+													: 'bg-1-lo-neutral text-6-mid-neutral hover:bg-2-lo-neutral'
+											)}
+										>
+											{tag.name}
+										</button>
+									)
+								})}
+							</div>
 						</div>
-					</div>
+					) : null}
 
 					<div className="flex flex-col gap-3 @md:flex-row @md:items-center">
 						<Select
