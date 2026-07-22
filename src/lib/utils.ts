@@ -181,8 +181,7 @@ export const sortDecksByCreation = (
 				? 1
 				: -1
 
-// sort DESC most recent first. most_recent_review_at is no longer on the deck
-// row (it's derived from cardsCollection), so callers pass it explicitly.
+// sort DESC most recent first
 type DeckActivity = {
 	lang: string
 	created_at: string

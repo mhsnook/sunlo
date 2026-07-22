@@ -37,8 +37,6 @@ describe('DeckMetaRawSchema', () => {
 	})
 
 	it('strips server-side stats columns no longer on the schema', () => {
-		// The slimmed view no longer ships these; if a stale row carries them,
-		// zod drops them rather than failing.
 		const result = DeckMetaRawSchema.parse({
 			...validDeck,
 			cards_active: 20,

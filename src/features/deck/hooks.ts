@@ -101,12 +101,6 @@ export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
 	}
 }
 
-/**
- * Per-deck stats derived from user_card (both directions), replacing the
- * server-side aggregates that used to live on `user_deck_plus`. cardsCollection
- * is preloaded app-wide (see auth-lifecycle) so these resolve wherever a deck
- * renders — the nav switcher and the `/learn` activity sort included.
- */
 export type DeckCardStats = {
 	cards_active: number
 	cards_learned: number
@@ -127,8 +121,6 @@ const aggregateDeckCardStats = (
 		if (card.status === 'active') stats.cards_active++
 		else if (card.status === 'learned') stats.cards_learned++
 		else if (card.status === 'skipped') stats.cards_skipped++
-		// most_recent_review_at on user_card_plus is review.created_at, so the
-		// deck's is the max across its cards.
 		if (
 			card.last_reviewed_at &&
 			(stats.most_recent_review_at === null ||
@@ -139,13 +131,11 @@ const aggregateDeckCardStats = (
 	return stats
 }
 
-/** Card stats for one deck. */
 export const useDeckCardStats = (lang: string): DeckCardStats => {
 	const { data: cards } = useDeckCards(lang)
 	return useMemo(() => aggregateDeckCardStats(cards ?? []), [cards])
 }
 
-/** Card stats for every deck, keyed by lang (nav switcher, activity sort). */
 export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
 	const { data: cards } = useLiveQuery((q) => q.from({ card: cardsCollection }))
 	return useMemo(() => {
@@ -167,11 +157,6 @@ export type DeckReviewCounts = {
 	count_reviews_7d_positive: number
 }
 
-/**
- * Review counts for the last 7 days, derived from cardReviewsCollection (the
- * full review log). Only used under `$lang` routes, where that collection is
- * already loaded — never globally.
- */
 export const useDeckReviewCounts = (lang: string): DeckReviewCounts => {
 	const { data: reviews } = useLiveQuery(
 		(q) =>
