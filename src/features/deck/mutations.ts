@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { failed } from '@scenetest/checks/react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import { useUserId } from '@/lib/use-auth'
@@ -37,7 +38,12 @@ export function useCreateDeck() {
 	const userId = useUserId()
 
 	return (lang: string) => {
-		if (!userId) return
+		if (!userId) {
+			// Both entry points are auth-gated (add-deck is under RequireAuth), so
+			// this is a broken invariant, not a normal branch.
+			failed('createDeck called without a logged-in user', { lang })
+			throw new Error('Please log in to create a deck')
+		}
 		const tx = decksCollection.insert(optimisticNewDeck(lang, userId))
 		tx.isPersisted.promise.then(
 			() => toastSuccess(`Created a new deck to learn ${languages[lang]}`),

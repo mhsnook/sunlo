@@ -38,17 +38,13 @@ export const decksCollection = createCollection(
 		startSync: false,
 		schema: DeckMetaSchema,
 		onInsert: async ({ transaction }) => {
-			// Insert only { lang }; uid, created_at and the rest take their
+			// One bulk insert of { lang } rows (uid, created_at and the rest take
 			// base-table defaults, which optimisticNewDeck already mirrors — so the
-			// optimistic row is exact and { refetch: false } skips a reload.
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('user_deck')
-						.insert({ lang: m.modified.lang })
-						.throwOnError()
-				)
-			)
+			// optimistic rows are exact and { refetch: false } skips a reload).
+			await supabase
+				.from('user_deck')
+				.insert(transaction.mutations.map((m) => ({ lang: m.modified.lang })))
+				.throwOnError()
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
