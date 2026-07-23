@@ -113,7 +113,7 @@ export function ActiveReviewCallout({
 }
 
 const calloutCard =
-	'border-lc-[87] border-chroma-[6] border-hue-primary bg-lc-[93] bg-chroma-[4] bg-hue-primary mx-2 mb-2 rounded-xl border p-3'
+	'hue-primary border-lc-[87] border-chroma-[6] bg-lc-[93] bg-chroma-[4] mx-2 mb-2 rounded-xl border p-3'
 const iconCircle = 'rounded-lg bg-white p-1.5'
 
 function CalloutContent({
@@ -151,7 +151,7 @@ function CalloutContent({
 			<div className={calloutCard}>
 				<div className="flex items-center gap-2">
 					<div className={iconCircle}>
-						<Rocket className="text-lc-5 text-chroma-mid text-hue-primary h-4 w-4" />
+						<Rocket className="text-lc-5 text-chroma-mid h-4 w-4" />
 					</div>
 					<div className="flex-1">
 						<p className="text-sm font-semibold">{remaining} cards left</p>
@@ -181,7 +181,7 @@ function CalloutContent({
 		<div className={calloutCard}>
 			<div className="flex items-center gap-2">
 				<div className={iconCircle}>
-					<Rocket className="text-lc-5 text-chroma-mid text-hue-primary h-4 w-4" />
+					<Rocket className="text-lc-5 text-chroma-mid h-4 w-4" />
 				</div>
 				<span className="text-sm font-semibold">Finish your review</span>
 			</div>
