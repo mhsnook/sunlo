@@ -34,12 +34,12 @@ function InvalidCredentialsError() {
 		<div
 			role="alert"
 			data-testid="login-error-invalid-credentials"
-			className="animate-shake flex items-center gap-2"
+			className="hue-danger chroma-mhi animate-shake flex items-center gap-2"
 		>
-			<span className="hue-danger bg-lc-5 bg-chroma-mhi flex size-7 shrink-0 items-center justify-center rounded-full">
+			<span className="bg-lc-5 flex size-7 shrink-0 items-center justify-center rounded-full">
 				<X className="size-4 text-white" aria-hidden={true} />
 			</span>
-			<strong className="text-lc-7 text-chroma-mhi text-hue-danger">
+			<strong className="text-lc-7">
 				Incorrect email or password. Try again?
 			</strong>
 		</div>
