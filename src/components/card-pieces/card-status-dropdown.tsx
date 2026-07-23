@@ -41,8 +41,8 @@ import {
 	updatePhraseLearnerCount,
 	type LearningStatus,
 } from '@/features/deck/card-status'
-import { postNewDeck } from '@/features/deck/mutations'
-import { DeckMetaSchema, type DeckMetaType } from '@/features/deck/schemas'
+import { optimisticNewDeck } from '@/features/deck/mutations'
+import { type DeckMetaType } from '@/features/deck/schemas'
 import {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
@@ -417,6 +417,7 @@ function StartLearningDialog({
 	archivedDeck: DeckMetaType | null
 	onConfirmed: () => Promise<void>
 }) {
+	const userId = useUserId()
 	const [pending, setPending] = useState(false)
 	const language = languages[lang] ?? lang
 	const isUnarchive = !!archivedDeck
@@ -431,10 +432,10 @@ function StartLearningDialog({
 				})
 				await tx.isPersisted.promise
 			} else {
-				const row = await postNewDeck(lang)
-				decksCollection.utils.writeInsert(
-					DeckMetaSchema.parse({ ...row, language })
-				)
+				// FK: user_card(uid, lang) → user_deck(uid, lang), so the deck must
+				// be persisted before onConfirmed() inserts the card.
+				const tx = decksCollection.insert(optimisticNewDeck(lang, userId!))
+				await tx.isPersisted.promise
 			}
 			deckReady = true
 			await onConfirmed()
