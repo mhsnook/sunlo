@@ -3,9 +3,8 @@ import * as z from 'zod'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
-import { ShowAndLogError } from '@/components/errors'
 import { LanguagePicker } from '@/components/fields/language-picker'
-import { useNewDeckMutation } from '@/features/deck/mutations'
+import { useCreateDeck } from '@/features/deck/mutations'
 import languages from '@/lib/languages'
 import { Loader } from '@/components/ui/loader'
 import { useDecks } from '@/features/deck/hooks'
@@ -35,7 +34,7 @@ function NewDeckForm() {
 }
 
 function NewDeckFormInner() {
-	const createNewDeck = useNewDeckMutation()
+	const createDeck = useCreateDeck()
 	const { data: decks, isLoading: decksLoading } = useDecks()
 	const deckLangs = useDeckLangs()
 	const search = Route.useSearch()
@@ -94,12 +93,8 @@ function NewDeckFormInner() {
 						discover
 						placeholder="Choose a language to learn…"
 						title={TITLE}
-						onConfirm={(lang) => createNewDeck.mutate({ lang })}
+						onConfirm={(lang) => createDeck(lang)}
 						confirmLabel={(lang) => `Start learning ${languages[lang]}`}
-					/>
-					<ShowAndLogError
-						text="Problem creating new deck"
-						error={createNewDeck.error}
 					/>
 				</CardContent>
 			</Card>
