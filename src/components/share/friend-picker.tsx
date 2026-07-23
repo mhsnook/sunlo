@@ -51,7 +51,7 @@ function highlight(text: string, query: string): ReactNode {
 	return (
 		<>
 			{text.slice(0, i)}
-			<mark className="bg-lc-2 bg-chroma-mid bg-hue-warning text-lc-8 text-chroma-hi text-hue-warning rounded-[3px] px-px">
+			<mark className="hue-warning bg-lc-2 bg-chroma-mid text-lc-8 text-chroma-hi rounded-[3px] px-px">
 				{text.slice(i, i + query.length)}
 			</mark>
 			{text.slice(i + query.length)}
@@ -96,7 +96,7 @@ function FriendRow({
 			</span>
 			<span className="flex shrink-0 flex-col items-end gap-1">
 				{friend.status === 'pending' ? (
-					<span className="bg-lc-2 bg-chroma-mid bg-hue-primary text-lc-7 text-chroma-hi text-hue-primary inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
+					<span className="hue-primary bg-lc-2 bg-chroma-mid text-lc-7 text-chroma-hi inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
 						<UserPlus className="size-2.5" /> Pending
 					</span>
 				) : timestamp ? (
@@ -225,7 +225,7 @@ function PickerBody({
 			<div className="flex flex-col">
 				{preview ? <div className="pt-1">{preview}</div> : null}
 				<div className="text-muted-foreground px-6 py-9 text-center">
-					<span className="bg-lc-2 bg-chroma-mlo bg-hue-primary text-lc-6 text-chroma-hi text-hue-primary mb-3.5 inline-flex size-14 items-center justify-center rounded-full">
+					<span className="hue-primary bg-lc-2 bg-chroma-mlo text-lc-6 text-chroma-hi mb-3.5 inline-flex size-14 items-center justify-center rounded-full">
 						<Users className="size-7" />
 					</span>
 					<h3 className="text-foreground mb-1.5 text-base font-bold">
