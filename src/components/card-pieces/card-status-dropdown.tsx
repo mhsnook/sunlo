@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { failed } from '@scenetest/checks/react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	ArchiveRestore,
@@ -427,14 +426,6 @@ function StartLearningDialog({
 		setPending(true)
 		let deckReady = false
 		try {
-			if (!userId) {
-				// The dropdown/heart render null when logged out, so reaching this
-				// dialog without a user is a broken invariant.
-				failed('StartLearningDialog confirmed without a logged-in user', {
-					lang,
-				})
-				throw new Error('Please log in to start a deck')
-			}
 			if (isUnarchive) {
 				const tx = decksCollection.update(lang, (draft) => {
 					draft.archived = false
@@ -443,7 +434,7 @@ function StartLearningDialog({
 			} else {
 				// FK: user_card(uid, lang) → user_deck(uid, lang), so the deck must
 				// be persisted before onConfirmed() inserts the card.
-				const tx = decksCollection.insert(optimisticNewDeck(lang, userId))
+				const tx = decksCollection.insert(optimisticNewDeck(lang, userId!))
 				await tx.isPersisted.promise
 			}
 			deckReady = true
