@@ -42,11 +42,11 @@ export function OnboardingNudge() {
 	return (
 		<div
 			data-testid="onboarding-nudge"
-			className="border-lc-[87] border-chroma-[6] border-hue-primary bg-lc-[93] bg-chroma-[4] bg-hue-primary mx-2 mb-2 rounded-xl border p-3"
+			className="hue-primary border-lc-[87] border-chroma-[6] bg-lc-[93] bg-chroma-[4] mx-2 mb-2 rounded-xl border p-3"
 		>
 			<div className="flex items-start gap-2">
 				<div className="rounded-lg bg-white p-1.5">
-					<Sparkles className="text-lc-5 text-chroma-mid text-hue-primary h-4 w-4" />
+					<Sparkles className="text-lc-5 text-chroma-mid h-4 w-4" />
 				</div>
 				<div className="flex-1">
 					<p className="text-sm font-semibold">Continue setup</p>
