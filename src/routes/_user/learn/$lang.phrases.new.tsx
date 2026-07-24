@@ -5,7 +5,6 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useDebounce } from '@/hooks/use-debounce'
 import { Brain, Lightbulb, NotebookPen, Search } from 'lucide-react'
 
-import type { Tables } from '@/types/supabase'
 import type { uuid } from '@/types/main'
 import { RequireAuth } from '@/components/require-auth'
 import {
@@ -18,10 +17,8 @@ import {
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import languages from '@/lib/languages'
-import supabase from '@/lib/supabase-client'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
-import { DeckMetaSchema } from '@/features/deck/schemas'
 import {
 	phrasesCollection,
 	phraseTranslationsCollection,
@@ -31,15 +28,12 @@ import {
 	createPhraseWithTranslation,
 } from '@/features/phrases/mutations'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
+import { optimisticNewDeck } from '@/features/deck/mutations'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
-import {
-	useDeckMeta,
-	useDecks,
-	usePreferredTranslationLang,
-} from '@/features/deck/hooks'
+import { useDeckMeta, usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
 import { useAppForm } from '@/components/form'
@@ -94,7 +88,6 @@ function AddPhraseTab() {
 
 	// Deck status detection
 	const { data: deck } = useDeckMeta(lang)
-	const { data: allDecks } = useDecks()
 	const hasActiveDeck = !!deck && !deck.archived
 	const hasArchivedDeck = !!deck && deck.archived
 	const noDeck = !deck
@@ -116,39 +109,23 @@ function AddPhraseTab() {
 		}
 		const shouldCreateCard = hasActiveDeck || shouldCreateOrReactivateDeck
 
-		// Deck creation/reactivation runs first — cards need a deck row.
-		let newDeck: Tables<'user_deck'> | null = null
+		// Deck creation/reactivation runs first — cards FK into a deck row, so we
+		// await the server persist before firing the phrase/card inserts below.
+		let didSetupDeck = false
 		if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
-			if (hasArchivedDeck) {
-				const { data } = await supabase
-					.from('user_deck')
-					.update({ archived: false })
-					.eq('lang', lang)
-					.eq('uid', userId)
-					.select()
-					.maybeSingle()
-					.throwOnError()
-				newDeck = data
-			} else if (noDeck) {
-				const { data } = await supabase
-					.from('user_deck')
-					.insert({ lang })
-					.select()
-					.maybeSingle()
-					.throwOnError()
-				newDeck = data
-			}
-			if (newDeck) {
-				const deckWithTheme = {
-					...newDeck,
-					language: languages[newDeck.lang],
-					theme: (allDecks?.length ?? 0) % 5,
-				}
-				if (hasArchivedDeck) {
-					decksCollection.utils.writeUpdate(DeckMetaSchema.parse(deckWithTheme))
-				} else {
-					decksCollection.utils.writeInsert(DeckMetaSchema.parse(deckWithTheme))
-				}
+			const deckTx = hasArchivedDeck
+				? decksCollection.update(lang, (draft) => {
+						draft.archived = false
+					})
+				: decksCollection.insert(optimisticNewDeck(lang, userId))
+			try {
+				await deckTx.isPersisted.promise
+				didSetupDeck = true
+			} catch (err) {
+				const message = err instanceof Error ? err.message : String(err)
+				toastError(`Error setting up deck: ${message}`)
+				console.log('Error', err)
+				return
 			}
 		}
 
@@ -191,7 +168,7 @@ function AddPhraseTab() {
 			only_reverse: false,
 		})
 
-		if (newDeck && shouldCreateCard) {
+		if (didSetupDeck && shouldCreateCard) {
 			const deckAction = hasArchivedDeck
 				? `re-activated your ${languages[lang]} deck`
 				: `started learning ${languages[lang]}`
