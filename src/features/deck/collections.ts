@@ -37,6 +37,13 @@ export const decksCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: DeckMetaSchema,
+		onInsert: async ({ transaction }) => {
+			await supabase
+				.from('user_deck')
+				.insert(transaction.mutations.map((m) => ({ lang: m.modified.lang })))
+				.throwOnError()
+			return { refetch: false }
+		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {

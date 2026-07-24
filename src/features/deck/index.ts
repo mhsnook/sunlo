@@ -33,7 +33,7 @@ export {
 export { isDueCard } from './is-due-card'
 
 // Mutations
-export { useNewDeckMutation } from './mutations'
+export { useCreateDeck, optimisticNewDeck } from './mutations'
 
 // Utilities
 export { directionsForPhrase } from './card-directions'
