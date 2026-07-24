@@ -162,9 +162,9 @@ function Switcher() {
 										disabled={busy || active}
 										onClick={() => void switchTo(a.email)}
 										className={cn(
-											'hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary flex w-full items-baseline justify-between gap-2 rounded border-s-2 border-transparent px-2 py-1 text-start text-sm disabled:opacity-100',
+											'hover:bg-lc-1 hover:bg-chroma-mlo flex w-full items-baseline justify-between gap-2 rounded border-s-2 border-transparent px-2 py-1 text-start text-sm disabled:opacity-100',
 											active &&
-												'bg-lc-2 bg-chroma-mlo bg-hue-primary border-s-primary-foresoft font-medium'
+												'bg-lc-2 bg-chroma-mlo border-s-primary-foresoft font-medium'
 										)}
 									>
 										<span className="truncate">

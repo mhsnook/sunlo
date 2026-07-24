@@ -29,7 +29,7 @@ const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const
 const inactiveProps = {
 	className:
-		'border-transparent text-muted-foreground hover:text-lc-7 hover:text-chroma-mhi hover:text-hue-primary',
+		'border-transparent text-muted-foreground hover:text-lc-7 hover:text-chroma-mhi',
 } as const
 
 export function AppNav() {
@@ -63,7 +63,7 @@ export function AppNav() {
 						<NavigationMenuList className="flex w-full flex-row justify-start ps-2">
 							{links.map((l: LinkType) => (
 								<NavigationMenuItem
-									className="hover:bg-lc-1 hover:bg-chroma-mlo hover:bg-hue-primary rounded-xl px-3"
+									className="hover:bg-lc-1 hover:bg-chroma-mlo rounded-xl px-3"
 									key={l.link.to}
 								>
 									<NavigationMenuLink asChild>

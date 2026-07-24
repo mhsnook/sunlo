@@ -136,10 +136,10 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 // one shape, one size, just hue swapping with the state.
 const triggerDotClass: Record<ShowableActions, string> = {
 	active: 'bg-primary',
-	learned: 'bg-lc-5 bg-chroma-hi bg-hue-success',
-	skipped: 'bg-lc-4 bg-chroma-lo bg-hue-neutral',
-	nocard: 'bg-lc-3 bg-chroma-lo bg-hue-neutral',
-	nodeck: 'bg-lc-3 bg-chroma-lo bg-hue-neutral',
+	learned: 'hue-success bg-lc-5 bg-chroma-hi',
+	skipped: 'hue-neutral bg-lc-4',
+	nocard: 'hue-neutral bg-lc-3',
+	nodeck: 'hue-neutral bg-lc-3',
 }
 
 function useCardStatusMutator(
@@ -283,9 +283,7 @@ export function CardStatusDropdown({
 							<DropdownMenuItem
 								onClick={() => pickStatus('active')}
 								className={
-									card.status === 'active'
-										? 'bg-lc-0 bg-chroma-mid bg-hue-primary'
-										: ''
+									card.status === 'active' ? 'bg-lc-0 bg-chroma-mid' : ''
 								}
 								data-testid="activate-card-option"
 							>
@@ -294,9 +292,7 @@ export function CardStatusDropdown({
 							<DropdownMenuItem
 								onClick={() => pickStatus('learned')}
 								className={
-									card.status === 'learned'
-										? 'bg-lc-0 bg-chroma-mid bg-hue-primary'
-										: ''
+									card.status === 'learned' ? 'bg-lc-0 bg-chroma-mid' : ''
 								}
 								data-testid="set-learned-option"
 							>
@@ -305,9 +301,7 @@ export function CardStatusDropdown({
 							<DropdownMenuItem
 								onClick={() => pickStatus('skipped')}
 								className={
-									card.status === 'skipped'
-										? 'bg-lc-0 bg-chroma-mid bg-hue-primary'
-										: ''
+									card.status === 'skipped' ? 'bg-lc-0 bg-chroma-mid' : ''
 								}
 								data-testid="ignore-card-option"
 							>
@@ -485,7 +479,7 @@ function StartLearningDialog({
 						onClick={() => void handleConfirm()}
 						disabled={pending}
 						data-testid="confirm-start-learning-button"
-						className="from-lc-5 from-chroma-mhi from-hue-primary to-lc-6 to-chroma-mid to-hue-primary text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+						className="from-lc-5 from-chroma-mhi to-lc-6 text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
 					>
 						{isUnarchive ? (
 							<ArchiveRestore className="size-6" />
@@ -512,7 +506,7 @@ function StartLearningDialog({
 
 					<DialogClose
 						data-testid="cancel-start-learning-button"
-						className="border-lc-2 border-chroma-lo border-hue-neutral bg-lc-1 bg-chroma-mlo bg-hue-neutral text-lc-7 text-chroma-mid text-hue-neutral hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+						className="hue-neutral border-lc-2 bg-lc-1 bg-chroma-mlo text-lc-7 text-chroma-mid hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 					>
 						<Bookmark className="size-6" />
 						<div>

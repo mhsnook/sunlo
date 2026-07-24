@@ -91,7 +91,7 @@ export function SelectPhrasesForComment({
 			type="button"
 			disabled={isMaxReached}
 			data-testid="open-phrase-picker"
-			className="border-lc-2 border-chroma-lo border-hue-primary text-muted-foreground hover:bg-lc-1 hover:bg-chroma-lo hover:bg-hue-primary hover:text-lc-7 hover:text-chroma-mid hover:text-hue-primary hover:border-lc-4 hover:border-chroma-mlo hover:border-hue-primary flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors disabled:pointer-events-none disabled:opacity-50"
+			className="border-lc-2 text-muted-foreground hover:bg-lc-1 hover:text-lc-7 hover:text-chroma-mid hover:border-lc-4 hover:border-chroma-mlo flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors disabled:pointer-events-none disabled:opacity-50"
 		>
 			<Plus className="h-6 w-6" />
 		</button>

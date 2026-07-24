@@ -28,32 +28,32 @@ const notificationConfig: Record<
 	request_commented: {
 		Icon: MessageSquareQuote,
 		action: 'commented on your request',
-		iconClass: 'hue-primary text-lc-7 text-chroma-mid bg-lc-1 bg-chroma-lo',
+		iconClass: 'text-lc-7 text-chroma-mid bg-lc-1',
 	},
 	comment_replied: {
 		Icon: MessagesSquare,
 		action: 'replied to your comment',
-		iconClass: 'hue-info text-lc-7 text-chroma-mid bg-lc-1 bg-chroma-lo',
+		iconClass: 'hue-info text-lc-7 text-chroma-mid bg-lc-1',
 	},
 	phrase_translated: {
 		Icon: Languages,
 		action: 'added a translation to your phrase',
-		iconClass: 'hue-success text-lc-7 text-chroma-mid bg-lc-1 bg-chroma-lo',
+		iconClass: 'hue-success text-lc-7 text-chroma-mid bg-lc-1',
 	},
 	phrase_referenced: {
 		Icon: Link2,
 		action: 'referenced your phrase as an answer',
-		iconClass: 'hue-accent text-lc-7 text-chroma-mid bg-lc-1 bg-chroma-lo',
+		iconClass: 'hue-accent text-lc-7 text-chroma-mid bg-lc-1',
 	},
 	request_upvoted: {
 		Icon: ThumbsUp,
 		action: 'upvoted your request',
-		iconClass: 'hue-warning text-lc-7 text-chroma-mid bg-lc-1 bg-chroma-lo',
+		iconClass: 'hue-warning text-lc-7 text-chroma-mid bg-lc-1',
 	},
 	change_suggested: {
 		Icon: MessageSquareQuote,
 		action: 'suggested a change to your content',
-		iconClass: 'hue-neutral text-lc-7 text-chroma-mid bg-lc-1 bg-chroma-lo',
+		iconClass: 'hue-neutral text-lc-7 text-chroma-mid bg-lc-1',
 	},
 }
 

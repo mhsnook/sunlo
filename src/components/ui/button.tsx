@@ -18,12 +18,11 @@ const buttonVariants = cva(
 				red: `hue-danger ${solids}`,
 				'red-soft': `hue-danger ${softs}`,
 				neutral: 'hover:bg-lc-up-1 hover:bg-chroma-mlo',
-				ghost:
-					'text-chroma-lo text-lc-6 hover:bg-lc-0 hover:bg-chroma-lo hover:bg-hue-primary hover:text-lc-7',
+				ghost: 'text-lc-6 hover:bg-lc-0 hover:text-lc-7',
 				'badge-outline':
-					'rounded border-border text-lc-8 text-chroma-mid text-hue-neutral bg-lc-0 bg-chroma-lo bg-hue-neutral hover:border-primary',
+					'hue-neutral rounded border-border text-lc-8 text-chroma-mid bg-lc-0 hover:border-primary',
 				'dashed-w-full':
-					'w-full border-2 border-dashed border-lc-2 border-chroma-lo border-hue-primary hover:border-border shadow-none hover:shadow',
+					'w-full border-2 border-dashed border-lc-2 hover:border-border shadow-none hover:shadow',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2 text-md',

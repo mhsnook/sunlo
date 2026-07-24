@@ -48,9 +48,7 @@ export function ModeToggle() {
 						sideOffset={4}
 					>
 						<DropdownMenuItem
-							className={
-								theme === 'light' ? 'bg-lc-1 bg-chroma-mlo bg-hue-primary' : ''
-							}
+							className={theme === 'light' ? 'bg-lc-1 bg-chroma-mlo' : ''}
 							onClick={setLight}
 						>
 							{theme === 'light' ? (
@@ -61,9 +59,7 @@ export function ModeToggle() {
 							Light
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							className={
-								theme === 'dark' ? 'bg-lc-1 bg-chroma-mlo bg-hue-primary' : ''
-							}
+							className={theme === 'dark' ? 'bg-lc-1 bg-chroma-mlo' : ''}
 							onClick={setDark}
 						>
 							{theme === 'dark' ? (
@@ -74,9 +70,7 @@ export function ModeToggle() {
 							Dark
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							className={
-								theme === 'system' ? 'bg-lc-1 bg-chroma-mlo bg-hue-primary' : ''
-							}
+							className={theme === 'system' ? 'bg-lc-1 bg-chroma-mlo' : ''}
 							onClick={setSystem}
 						>
 							{theme === 'system' ? (

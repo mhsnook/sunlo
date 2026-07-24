@@ -44,7 +44,7 @@ function ReviewRemainingLink({
 			<span className="text-xs font-medium group-hover:underline">
 				{languages[lang]}
 			</span>
-			<span className="text-lc-5 text-chroma-mlo text-hue-primary group-hover:text-lc-up-1 text-xs font-bold">
+			<span className="text-lc-5 text-chroma-mlo group-hover:text-lc-up-1 text-xs font-bold">
 				{remaining} left
 			</span>
 		</Link>
@@ -113,7 +113,7 @@ export function ActiveReviewCallout({
 }
 
 const calloutCard =
-	'hue-primary border-lc-[87] border-chroma-[6] bg-lc-[93] bg-chroma-[4] mx-2 mb-2 rounded-xl border p-3'
+	'border-lc-[87] border-chroma-[6] bg-lc-[93] bg-chroma-[4] mx-2 mb-2 rounded-xl border p-3'
 const iconCircle = 'rounded-lg bg-white p-1.5'
 
 function CalloutContent({
@@ -136,7 +136,7 @@ function CalloutContent({
 				to="/learn/$lang/review"
 				params={{ lang: activeReviews[0].lang }}
 				onClick={setClosedMobile}
-				className="text-lc-5 text-chroma-mid text-hue-primary hover:bg-lc-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
+				className="text-lc-5 text-chroma-mid hover:bg-lc-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
 				aria-label="Active review in progress"
 			>
 				<Rocket className="h-4 w-4" />

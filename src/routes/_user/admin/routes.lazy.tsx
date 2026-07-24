@@ -169,8 +169,8 @@ function LoadCell({ isLazy }: { isLazy: boolean }) {
 				className={cn(
 					'inline-block rounded px-1.5 py-0.5 font-mono',
 					isLazy
-						? 'bg-lc-1 bg-chroma-mlo bg-hue-info text-lc-7 text-chroma-hi text-hue-info'
-						: 'bg-lc-1 bg-chroma-mlo bg-hue-neutral text-muted-foreground'
+						? 'hue-info bg-lc-1 bg-chroma-mlo text-lc-7 text-chroma-hi'
+						: 'hue-neutral bg-lc-1 bg-chroma-mlo text-muted-foreground'
 				)}
 			>
 				{isLazy ? 'lazy' : 'eager'}
@@ -184,9 +184,7 @@ function BoolCell({ on }: { on: boolean }) {
 		<td
 			className={cn(
 				'px-2 py-1.5 text-center',
-				on
-					? 'text-lc-7 text-chroma-hi text-hue-success'
-					: 'text-muted-foreground'
+				on ? 'hue-success text-lc-7 text-chroma-hi' : 'text-muted-foreground'
 			)}
 		>
 			{on ? '✓' : '·'}
@@ -198,7 +196,7 @@ function SearchCell({ scope }: { scope: SearchScope | undefined }) {
 	if (scope === undefined)
 		return <td className="text-muted-foreground px-2 py-1.5 text-center">·</td>
 	return (
-		<td className="text-lc-7 text-chroma-hi text-hue-success px-2 py-1.5 text-center font-mono text-xs">
+		<td className="hue-success text-lc-7 text-chroma-hi px-2 py-1.5 text-center font-mono text-xs">
 			{scope}
 		</td>
 	)
