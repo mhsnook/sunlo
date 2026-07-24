@@ -9,19 +9,13 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { useUserId } from '@/lib/use-auth'
-
-import supabase from '@/lib/supabase-client'
-import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { should } from '@scenetest/checks/react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
 import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaRawSchema } from '@/features/deck/schemas'
 
 export function ArchiveDeckButton({
 	lang,
@@ -33,58 +27,31 @@ export function ArchiveDeckButton({
 	className?: string
 }) {
 	const [open, setOpen] = useState(false)
-	const userId = useUserId()
 	const navigate = useNavigate()
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const { data } = await supabase
-				.from('user_deck')
-				.update({ archived: !archived })
-				.eq('lang', lang)
-				.eq('uid', userId!)
-				.select()
-				.maybeSingle()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			setOpen(false)
-			if (!data) return null
-			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 
-			// Confirm the server row's archived flag matches what we submitted.
-			// Stripped from production by the Vite plugin.
-			should(
-				'user_deck archived flag matches the submitted value',
-				data.archived === !archived,
-				{ submitted: !archived, returned: data }
-			)
-
-			toastSuccess(
-				!data.archived
-					? 'The deck has been re-activated!'
-					: 'The deck has been archived and hidden from your active decks.'
-			)
-
-			if (!data.archived) {
-				void navigate({
-					to: '/learn/$lang/feed',
-					params: { lang },
-				})
+	const toggleArchived = () => {
+		const nextArchived = !archived
+		const tx = decksCollection.update(lang, (draft) => {
+			draft.archived = nextArchived
+		})
+		setOpen(false)
+		tx.isPersisted.promise.then(
+			() =>
+				toastSuccess(
+					nextArchived
+						? 'The deck has been archived and hidden from your active decks.'
+						: 'The deck has been re-activated!'
+				),
+			(error) => {
+				toastError('Failed to update deck status, please try again.')
+				console.error(error)
 			}
-		},
-		onError: (error) => {
-			if (error) {
-				toastError(
-					`Failed to update deck status, we'll just try refreshing the page...`
-				)
-				console.log(error)
-			}
-			setTimeout(() => {
-				window.location.reload()
-			}, 1500)
-		},
-	})
+		)
+		// Restoring drops you back into the deck's feed; archiving leaves you here.
+		if (!nextArchived) {
+			void navigate({ to: '/learn/$lang/feed', params: { lang } })
+		}
+	}
 
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
@@ -136,7 +103,7 @@ export function ArchiveDeckButton({
 					</AlertDialogCancel>
 					{archived ? (
 						<AlertDialogAction
-							onClick={() => mutation.mutate()}
+							onClick={toggleArchived}
 							data-testid="confirm-restore-button"
 						>
 							Restore
@@ -144,7 +111,7 @@ export function ArchiveDeckButton({
 					) : (
 						<AlertDialogAction
 							className={buttonVariants({ variant: 'red' })}
-							onClick={() => mutation.mutate()}
+							onClick={toggleArchived}
 							data-testid="confirm-archive-button"
 						>
 							Archive

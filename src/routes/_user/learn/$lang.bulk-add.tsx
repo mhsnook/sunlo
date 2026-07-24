@@ -4,7 +4,6 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { should } from '@scenetest/checks/react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 
-import supabase from '@/lib/supabase-client'
 import { RequireAuth } from '@/components/require-auth'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,17 +21,16 @@ import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { Separator } from '@/components/ui/separator'
 import { LanguagePicker } from '@/components/fields/language-picker'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { DeckMetaSchema } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import { langTagsCollection } from '@/features/languages/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { bulkAddPhrases } from '@/features/phrases/mutations'
 import { decksCollection } from '@/features/deck/collections'
-import { Tables } from '@/types/supabase'
+import { optimisticNewDeck } from '@/features/deck/mutations'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
 import { useInvalidateFeed } from '@/features/feed/hooks'
-import { useDeckMeta, useDecks } from '@/features/deck/hooks'
+import { useDeckMeta } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import {
 	SpreadsheetImportDialog,
@@ -90,7 +88,6 @@ function BulkAddPhrasesPage() {
 
 	// Deck status detection
 	const { data: deck } = useDeckMeta(lang)
-	const { data: allDecks } = useDecks()
 	const hasActiveDeck = !!deck && !deck.archived
 	const hasArchivedDeck = !!deck && deck.archived
 	const noDeck = !deck
@@ -164,46 +161,23 @@ function BulkAddPhrasesPage() {
 			(hasActiveDeck || (shouldCreateOrReactivateDeck && showDeckCheckbox)) &&
 			shouldAddToMyDeck
 
-		// Deck creation/reactivation runs first — cards FK into a deck row.
-		let newDeck: Tables<'user_deck'> | null = null
+		// Deck creation/reactivation runs first — cards FK into a deck row, so we
+		// await the server persist before firing the phrase/card inserts below.
+		let didSetupDeck = false
 		if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
+			const deckTx = hasArchivedDeck
+				? decksCollection.update(lang, (draft) => {
+						draft.archived = false
+					})
+				: decksCollection.insert(optimisticNewDeck(lang, userId))
 			try {
-				if (hasArchivedDeck) {
-					const { data } = await supabase
-						.from('user_deck')
-						.update({ archived: false })
-						.eq('lang', lang)
-						.eq('uid', userId)
-						.select()
-						.maybeSingle()
-						.throwOnError()
-					newDeck = data
-				} else if (noDeck) {
-					const { data } = await supabase
-						.from('user_deck')
-						.insert({ lang })
-						.select()
-						.maybeSingle()
-						.throwOnError()
-					newDeck = data
-				}
+				await deckTx.isPersisted.promise
+				didSetupDeck = true
 			} catch (err) {
 				const message = err instanceof Error ? err.message : String(err)
 				toastError(`Error setting up deck: ${message}`)
 				console.log('Error', err)
 				return
-			}
-			if (newDeck) {
-				const deckWithTheme = {
-					...newDeck,
-					language: languages[newDeck.lang],
-					theme: (allDecks?.length ?? 0) % 5,
-				}
-				if (hasArchivedDeck) {
-					decksCollection.utils.writeUpdate(DeckMetaSchema.parse(deckWithTheme))
-				} else {
-					decksCollection.utils.writeInsert(DeckMetaSchema.parse(deckWithTheme))
-				}
 			}
 		}
 
@@ -278,7 +252,7 @@ function BulkAddPhrasesPage() {
 		const cardsMessage = shouldCreateCards
 			? ' They will appear in your next review.'
 			: ''
-		if (newDeck) {
+		if (didSetupDeck) {
 			const deckAction = hasArchivedDeck
 				? `re-activated your ${languages[lang]} deck`
 				: `started learning ${languages[lang]}`
