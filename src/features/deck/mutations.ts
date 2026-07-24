@@ -6,12 +6,6 @@ import languages from '@/lib/languages'
 import { decksCollection } from './collections'
 import { DeckMetaSchema, type DeckMetaType } from './schemas'
 
-/**
- * The optimistic user_deck row for a brand-new deck. Every column has a fixed
- * base-table default (learning_goal 'moving', archived false, daily_review_goal
- * 15, preferred_translation_lang / review_answer_mode null), so the row is exact
- * and decksCollection.onInsert can skip the reconciliation refetch.
- */
 export function optimisticNewDeck(lang: string, uid: string): DeckMetaType {
 	return DeckMetaSchema.parse({
 		uid,
@@ -26,12 +20,6 @@ export function optimisticNewDeck(lang: string, uid: string): DeckMetaType {
 	})
 }
 
-/**
- * Returns a `createDeck(lang)` that optimistically inserts the new deck and
- * navigates to it immediately. Persistence lives on decksCollection.onInsert; on
- * rollback the deck page's own "no deck" branch handles it and the error toast
- * explains why.
- */
 export function useCreateDeck() {
 	const navigate = useNavigate()
 	const userId = useUserId()

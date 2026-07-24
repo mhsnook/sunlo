@@ -38,9 +38,6 @@ export const decksCollection = createCollection(
 		startSync: false,
 		schema: DeckMetaSchema,
 		onInsert: async ({ transaction }) => {
-			// One bulk insert of { lang } rows (uid, created_at and the rest take
-			// base-table defaults, which optimisticNewDeck already mirrors — so the
-			// optimistic rows are exact and { refetch: false } skips a reload).
 			await supabase
 				.from('user_deck')
 				.insert(transaction.mutations.map((m) => ({ lang: m.modified.lang })))
