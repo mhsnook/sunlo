@@ -168,7 +168,7 @@ function InlinePhraseForm({
 			translation_lang: defaultTranslationLang,
 			only_reverse: false,
 		},
-		validators: { onChange: schema },
+		validators: { onMount: schema, onChange: schema },
 		onSubmit: async ({ value }) => {
 			await submitPhrase(value)
 			onCancel()
