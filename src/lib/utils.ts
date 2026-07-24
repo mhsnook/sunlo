@@ -7,7 +7,7 @@ import { useState } from 'react'
 
 /* ── OKLCH single-axis utilities × tailwind-merge ──────────────────────────
    Our color utilities decompose into three same-prefix classes per property
-   (`bg-lc-7 bg-chroma-mhi bg-hue-primary`). Out of the box tailwind-merge
+   (`bg-lc-7 bg-chroma-mhi`). Out of the box tailwind-merge
    treats those as conflicting `bg-*` utilities and keeps only the last one,
    silently dropping two of the three axes. Register each (property × axis) as
    its own conflict group so the axes are independent: two `bg-lc-*` still

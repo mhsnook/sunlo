@@ -196,7 +196,7 @@ function AddTagPopover({
 						return (
 							<li key={tag.slug}>
 								<label
-									className="hover:bg-lc-1 hover:bg-chroma-lo hover:bg-hue-neutral flex cursor-pointer items-center gap-2 rounded p-2 text-sm"
+									className="hover:hue-neutral hover:bg-lc-1 flex cursor-pointer items-center gap-2 rounded p-2 text-sm"
 									data-testid="message-tag-option"
 									data-key={tag.slug}
 								>

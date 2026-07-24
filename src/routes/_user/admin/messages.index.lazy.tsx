@@ -782,8 +782,8 @@ function BulkAddSection({
 								<button
 									type="button"
 									className={cn(
-										'hover:bg-lc-1 hover:bg-chroma-lo hover:bg-hue-neutral block w-full rounded p-2 text-start text-sm',
-										tagSlug === null && 'bg-lc-1 bg-chroma-mlo bg-hue-primary'
+										'hover:hue-neutral hover:bg-lc-1 block w-full rounded p-2 text-start text-sm',
+										tagSlug === null && 'bg-lc-1 bg-chroma-mlo'
 									)}
 									onClick={() => {
 										setTagSlug(null)
@@ -799,9 +799,8 @@ function BulkAddSection({
 											<button
 												type="button"
 												className={cn(
-													'hover:bg-lc-1 hover:bg-chroma-lo hover:bg-hue-neutral block w-full rounded p-2 text-start text-sm',
-													tagSlug === tag.slug &&
-														'bg-lc-1 bg-chroma-mlo bg-hue-primary'
+													'hover:hue-neutral hover:bg-lc-1 block w-full rounded p-2 text-start text-sm',
+													tagSlug === tag.slug && 'bg-lc-1 bg-chroma-mlo'
 												)}
 												onClick={() => {
 													setTagSlug(tag.slug)
@@ -917,7 +916,7 @@ function SelectionBar({
 
 	return (
 		<div
-			className="bg-lc-1 bg-chroma-mlo bg-hue-primary flex flex-wrap items-center gap-3 rounded border p-3"
+			className="bg-lc-1 bg-chroma-mlo flex flex-wrap items-center gap-3 rounded border p-3"
 			data-testid="admin-messages-selection-bar"
 		>
 			<span className="text-sm font-semibold">
@@ -1006,7 +1005,7 @@ function MessagesTable({
 			data-name="message-row"
 		>
 			{isAdmin && (
-				<div className="bg-lc-1 bg-chroma-lo bg-hue-neutral flex items-center gap-2 border-b px-3 py-2 text-xs">
+				<div className="hue-neutral bg-lc-1 flex items-center gap-2 border-b px-3 py-2 text-xs">
 					<Checkbox
 						checked={allVisibleSelected}
 						onCheckedChange={toggleVisibleAll}
@@ -1049,7 +1048,7 @@ function MessageRowItem({
 		<li
 			className={cn(
 				'flex items-start gap-3 p-3',
-				isSelected && 'bg-lc-1 bg-chroma-mlo bg-hue-primary'
+				isSelected && 'bg-lc-1 bg-chroma-mlo'
 			)}
 			data-testid="message-row"
 			data-key={row.message_id}

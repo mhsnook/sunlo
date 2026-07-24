@@ -108,12 +108,33 @@ export function useLangPopularityReady(): boolean {
 	)
 }
 
+// The axis hue variables every color utility resolves through. A theme
+// container re-declares them from --hue-primary so its whole subtree inherits
+// the language hue for bg/text/border/gradient with no per-element hue class.
+// (Setting only --hue-* is not enough: the :root axis defaults resolve
+// var(--hue-primary) once, at :root, and inherit that fixed value — so a
+// descendant that overrides --hue-primary is ignored unless the axis var is
+// re-declared here, where the override is in scope.)
+const AXIS_HUE_VARS = [
+	'--bg-h',
+	'--tx-h',
+	'--bd-h',
+	'--bdb-h',
+	'--gf-h',
+	'--gt-h',
+] as const
+
+const AXIS_HUE_CSS = Object.fromEntries(
+	AXIS_HUE_VARS.map((v) => [v, 'var(--hue-primary)'])
+) as CSSProperties
+
 export function getLangThemeCss(lang: string): CSSProperties {
 	const hue = getLangHue(lang)
 	return {
 		'--hue-primary': hue,
 		'--hue-accent': hue,
 		'--hue-neutral': hue,
+		...AXIS_HUE_CSS,
 	} as CSSProperties
 }
 
@@ -132,10 +153,12 @@ export function setLangTheme(element?: HTMLElement, lang?: string): void {
 		el.style.removeProperty('--hue-primary')
 		el.style.removeProperty('--hue-accent')
 		el.style.removeProperty('--hue-neutral')
+		for (const v of AXIS_HUE_VARS) el.style.removeProperty(v)
 		return
 	}
 	const hue = String(getLangHue(lang))
 	el.style.setProperty('--hue-primary', hue)
 	el.style.setProperty('--hue-accent', hue)
 	el.style.setProperty('--hue-neutral', hue)
+	for (const v of AXIS_HUE_VARS) el.style.setProperty(v, 'var(--hue-primary)')
 }
