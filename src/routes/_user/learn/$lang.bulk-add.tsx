@@ -636,7 +636,7 @@ function EditPhraseDialog({
 }) {
 	const [phraseText, setPhraseText] = useState(phrase.phrase_text)
 	const [translations, setTranslations] = useState(() =>
-		phrase.translations.map((t) => ({ ...t, _key: crypto.randomUUID() }))
+		phrase.translations.map((t) => ({ ...t, rowKey: crypto.randomUUID() }))
 	)
 	const [selectedTags, setSelectedTags] = useState<Array<string>>(phrase.tags)
 
@@ -658,7 +658,7 @@ function EditPhraseDialog({
 	const addTranslation = () => {
 		setTranslations((prev) => [
 			...prev,
-			{ _key: crypto.randomUUID(), lang: translationLang, text: '' },
+			{ rowKey: crypto.randomUUID(), lang: translationLang, text: '' },
 		])
 	}
 
@@ -673,7 +673,7 @@ function EditPhraseDialog({
 			phrase_text: phraseText,
 			translations: translations
 				.filter((t) => t.text.trim())
-				.map(({ _key, ...rest }) => rest),
+				.map((t) => ({ lang: t.lang, text: t.text })),
 			tags: selectedTags,
 		})
 	}
@@ -701,7 +701,7 @@ function EditPhraseDialog({
 					<div className="space-y-2">
 						<Label>Translations</Label>
 						{translations.map((t, i) => (
-							<div key={t._key} className="flex items-center gap-2">
+							<div key={t.rowKey} className="flex items-center gap-2">
 								<LanguagePicker
 									value={t.lang}
 									setValue={(val) => updateTranslation(i, { lang: val })}
