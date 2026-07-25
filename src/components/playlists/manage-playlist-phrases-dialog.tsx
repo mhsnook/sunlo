@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	ChevronUp,
@@ -21,9 +20,9 @@ import {
 	type PhrasePlaylistType,
 	validateUrl,
 } from '@/features/playlists/schemas'
-import supabase from '@/lib/supabase-client'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { useOnePlaylistPhrases } from '@/features/playlists/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { PhraseSummaryLine } from '../feed/feed-phrase-group-item'
@@ -73,6 +72,27 @@ function HrefInput({
 	)
 }
 
+function removePhrase(linkId: string) {
+	const tx = playlistPhraseLinksCollection.delete(linkId)
+	tx.isPersisted.promise.then(
+		() => toastSuccess('Phrase removed from playlist'),
+		(err: unknown) => {
+			const message = err instanceof Error ? err.message : 'unknown error'
+			toastError(`Failed to remove phrase: ${message}`)
+		}
+	)
+}
+
+function updateHref(linkId: string, href: string) {
+	const tx = playlistPhraseLinksCollection.update(linkId, (d) => {
+		d.href = href || null
+	})
+	tx.isPersisted.promise.catch((err: unknown) => {
+		const message = err instanceof Error ? err.message : 'unknown error'
+		toastError(`Failed to update link: ${message}`)
+	})
+}
+
 export function ManagePlaylistPhrasesDialog({
 	playlist,
 }: {
@@ -81,144 +101,63 @@ export function ManagePlaylistPhrasesDialog({
 	const [open, setOpen] = useState(false)
 	const [showCreateForm, setShowCreateForm] = useState(false)
 	const { data: phrasesData } = useOnePlaylistPhrases(playlist.id)
+	const userId = useUserId()
 
 	// Track which phrase IDs are already in the playlist
 	const currentPhraseIds = phrasesData?.map((p) => p.phrase.id) ?? []
 
-	// Add phrase mutation
-	const addPhraseMutation = useMutation({
-		mutationFn: async (phraseId: string) => {
-			// Check if phrase already exists in playlist
-			if (currentPhraseIds.includes(phraseId)) {
-				throw new Error('Phrase already in playlist')
+	const addPhrase = (phraseId: string) => {
+		if (!userId) return
+		if (currentPhraseIds.includes(phraseId)) {
+			toastError('Phrase is already in this playlist')
+			return
+		}
+		const maxOrder = Math.max(
+			...(phrasesData?.map((p) => p.link.order || 0) ?? [0]),
+			0
+		)
+		const tx = playlistPhraseLinksCollection.insert({
+			id: crypto.randomUUID(),
+			uid: userId,
+			playlist_id: playlist.id,
+			phrase_id: phraseId,
+			order: maxOrder + 1,
+			href: null,
+			created_at: new Date().toISOString(),
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Phrase added to playlist'),
+			(err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to add phrase: ${message}`)
 			}
+		)
+	}
 
-			// Calculate next order value
-			const maxOrder = Math.max(
-				...(phrasesData?.map((p) => p.link.order || 0) ?? [0]),
-				0
-			)
+	// Swap order values with the adjacent phrase in the requested direction.
+	const reorder = (currentIndex: number, direction: 'up' | 'down') => {
+		if (!phrasesData) return
+		const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+		if (targetIndex < 0 || targetIndex >= phrasesData.length) return
 
-			const { data, error } = await supabase
-				.from('playlist_phrase_link')
-				.insert({
-					playlist_id: playlist.id,
-					phrase_id: phraseId,
-					order: maxOrder + 1,
-					href: null,
-				})
-				.select()
-				.single()
+		const currentLink = phrasesData[currentIndex].link
+		const targetLink = phrasesData[targetIndex].link
+		const currentOrder = currentLink.order ?? currentIndex
+		const targetOrder = targetLink.order ?? targetIndex
 
-			if (error) throw error
-			return data
-		},
-		onSuccess: (data) => {
-			playlistPhraseLinksCollection.utils.writeInsert(data)
-			toastSuccess('Phrase added to playlist')
-		},
-		onError: (error: Error) => {
-			if (error.message === 'Phrase already in playlist') {
-				toastError('Phrase is already in this playlist')
-			} else {
-				toastError(`Failed to add phrase: ${error.message}`)
+		const tx1 = playlistPhraseLinksCollection.update(currentLink.id, (d) => {
+			d.order = targetOrder
+		})
+		const tx2 = playlistPhraseLinksCollection.update(targetLink.id, (d) => {
+			d.order = currentOrder
+		})
+		Promise.all([tx1.isPersisted.promise, tx2.isPersisted.promise]).catch(
+			(err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to reorder: ${message}`)
 			}
-		},
-	})
-
-	// Remove phrase mutation
-	const removePhraseMutation = useMutation({
-		mutationFn: async (linkId: string) => {
-			const { error } = await supabase
-				.from('playlist_phrase_link')
-				.delete()
-				.eq('id', linkId)
-
-			if (error) throw error
-			return linkId
-		},
-		onSuccess: (linkId) => {
-			playlistPhraseLinksCollection.utils.writeDelete(linkId)
-			toastSuccess('Phrase removed from playlist')
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to remove phrase: ${error.message}`)
-		},
-	})
-
-	// Reorder mutation - swap order values with adjacent phrase
-	const reorderMutation = useMutation({
-		mutationFn: async ({
-			currentIndex,
-			direction,
-		}: {
-			currentIndex: number
-			direction: 'up' | 'down'
-		}) => {
-			if (!phrasesData) return
-
-			const targetIndex =
-				direction === 'up' ? currentIndex - 1 : currentIndex + 1
-			if (targetIndex < 0 || targetIndex >= phrasesData.length) return
-
-			const currentLink = phrasesData[currentIndex].link
-			const targetLink = phrasesData[targetIndex].link
-
-			// Swap order values
-			const currentOrder = currentLink.order || currentIndex
-			const targetOrder = targetLink.order || targetIndex
-
-			// Update both links
-			const { error: error1 } = await supabase
-				.from('playlist_phrase_link')
-				.update({ order: targetOrder })
-				.eq('id', currentLink.id)
-
-			if (error1) throw error1
-
-			const { error: error2 } = await supabase
-				.from('playlist_phrase_link')
-				.update({ order: currentOrder })
-				.eq('id', targetLink.id)
-
-			if (error2) throw error2
-
-			// Return updated data
-			return {
-				current: { ...currentLink, order: targetOrder },
-				target: { ...targetLink, order: currentOrder },
-			}
-		},
-		onSuccess: (data) => {
-			if (!data) return
-			playlistPhraseLinksCollection.utils.writeUpdate(data.current)
-			playlistPhraseLinksCollection.utils.writeUpdate(data.target)
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to reorder: ${error.message}`)
-		},
-	})
-
-	// Update href mutation
-	const updateHrefMutation = useMutation({
-		mutationFn: async ({ linkId, href }: { linkId: string; href: string }) => {
-			const { data, error } = await supabase
-				.from('playlist_phrase_link')
-				.update({ href: href || null })
-				.eq('id', linkId)
-				.select()
-				.single()
-
-			if (error) throw error
-			return data
-		},
-		onSuccess: (data) => {
-			playlistPhraseLinksCollection.utils.writeUpdate(data)
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to update link: ${error.message}`)
-		},
-	})
+		)
+	}
 
 	// Handle phrase selection from SelectPhrasesForComment
 	const handleSelectionChange = (phraseIds: string[]) => {
@@ -227,9 +166,8 @@ export function ManagePlaylistPhrasesDialog({
 			(id) => !currentPhraseIds.includes(id)
 		)
 
-		// Add each new phrase
 		for (const phraseId of newPhraseIds) {
-			addPhraseMutation.mutate(phraseId)
+			addPhrase(phraseId)
 		}
 	}
 
@@ -257,7 +195,7 @@ export function ManagePlaylistPhrasesDialog({
 
 				<div className="min-h-0 flex-1 overflow-y-auto pr-4">
 					<div className="space-y-3">
-						{phrasesData && phrasesData.length > 0 ?
+						{phrasesData && phrasesData.length > 0 ? (
 							phrasesData.map((item, index) => (
 								<div
 									key={item.link.id}
@@ -274,13 +212,8 @@ export function ManagePlaylistPhrasesDialog({
 												className="h-6 w-6"
 												aria-label="Move phrase up"
 												data-name="move-phrase-up-button"
-												disabled={index === 0 || reorderMutation.isPending}
-												onClick={() =>
-													reorderMutation.mutate({
-														currentIndex: index,
-														direction: 'up',
-													})
-												}
+												disabled={index === 0}
+												onClick={() => reorder(index, 'up')}
 											>
 												<ChevronUp className="h-4 w-4" />
 											</Button>
@@ -291,16 +224,8 @@ export function ManagePlaylistPhrasesDialog({
 												className="h-6 w-6"
 												aria-label="Move phrase down"
 												data-name="move-phrase-down-button"
-												disabled={
-													index === phrasesData.length - 1 ||
-													reorderMutation.isPending
-												}
-												onClick={() =>
-													reorderMutation.mutate({
-														currentIndex: index,
-														direction: 'down',
-													})
-												}
+												disabled={index === phrasesData.length - 1}
+												onClick={() => reorder(index, 'down')}
 											>
 												<ChevronDown className="h-4 w-4" />
 											</Button>
@@ -314,12 +239,7 @@ export function ManagePlaylistPhrasesDialog({
 											<div className="mt-2">
 												<HrefInput
 													initialValue={item.link.href}
-													onSave={(href) =>
-														updateHrefMutation.mutate({
-															linkId: item.link.id,
-															href,
-														})
-													}
+													onSave={(href) => updateHref(item.link.id, href)}
 												/>
 											</div>
 										</div>
@@ -327,22 +247,22 @@ export function ManagePlaylistPhrasesDialog({
 										{/* Delete button */}
 										<Button
 											type="button"
-											onClick={() => removePhraseMutation.mutate(item.link.id)}
+											onClick={() => removePhrase(item.link.id)}
 											variant="ghost"
 											size="icon"
 											aria-label="Remove phrase"
 											data-name="remove-phrase-button"
-											disabled={removePhraseMutation.isPending}
 										>
 											<Trash2 className="h-4 w-4" />
 										</Button>
 									</div>
 								</div>
 							))
-						:	<p className="text-muted-foreground py-8 text-center">
+						) : (
+							<p className="text-muted-foreground py-8 text-center">
 								No phrases in this playlist yet. Add some below!
 							</p>
-						}
+						)}
 					</div>
 
 					{/* Inline phrase creator */}
@@ -351,7 +271,7 @@ export function ManagePlaylistPhrasesDialog({
 							<InlinePhraseCreator
 								lang={playlist.lang}
 								onPhraseCreated={(phraseId) => {
-									addPhraseMutation.mutate(phraseId)
+									addPhrase(phraseId)
 								}}
 								onCancel={() => setShowCreateForm(false)}
 								submitLabel="Add phrase to playlist"

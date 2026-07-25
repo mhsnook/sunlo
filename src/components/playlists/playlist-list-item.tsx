@@ -1,6 +1,5 @@
 import { useState, type CSSProperties } from 'react'
 import { ExternalLink, Plus, Send, Bookmark } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
 import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Badge, LangBadge } from '@/components/ui/badge'
@@ -19,11 +18,10 @@ import { Button } from '@/components/ui/button'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { cardsCollection } from '@/features/deck/collections'
-import { CardMetaSchema } from '@/features/deck/schemas'
+import { type CardMetaType } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import { useDecks, useDeckCards, useMyCard } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
-import supabase from '@/lib/supabase-client'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
 
 export function PlaylistItem({
@@ -50,68 +48,91 @@ export function PlaylistItem({
 	const phrasesNotInDeck =
 		data?.filter((item) => !activeCardPhraseIds.has(item.phrase.id)) ?? []
 
-	const bulkAddMutation = useMutation({
-		mutationFn: async (
-			phrases: Array<{ id: string; only_reverse: boolean | null }>
-		) => {
-			const rows = phrases.flatMap((p) =>
-				directionsForPhrase(p.only_reverse).map((direction) => ({
-					lang: playlist.lang,
-					phrase_id: p.id,
-					status: 'active' as const,
-					direction,
-				}))
-			)
-			const { data: inserted } = await supabase
-				.from('user_card')
-				.upsert(rows, { onConflict: 'uid,phrase_id,direction' })
-				.select()
-				.throwOnError()
-			return inserted
-		},
-		onSuccess: (cards: Array<{ [key: string]: unknown }>) => {
-			for (const card of cards) {
-				cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
+	// Add every not-yet-in-deck phrase's cards to the deck. Phrases with an
+	// existing (skipped) card get flipped back to active; the rest are inserted.
+	// `phrasesNotInDeck` already excludes active/learned, so we never touch those.
+	const addPhrasesToDeck = (
+		phrases: Array<{ id: string; only_reverse: boolean | null }>
+	) => {
+		if (!userId) return
+		const nowIso = new Date().toISOString()
+		const existingByKey = new Map(
+			(langCards ?? []).map((c) => [`${c.phrase_id}:${c.direction}`, c])
+		)
+		const toInsert: Array<CardMetaType> = []
+		const toActivate: Array<string> = []
+		for (const p of phrases) {
+			for (const direction of directionsForPhrase(p.only_reverse)) {
+				const existing = existingByKey.get(`${p.id}:${direction}`)
+				if (existing) {
+					if (existing.status !== 'active') toActivate.push(existing.id)
+				} else {
+					toInsert.push({
+						id: crypto.randomUUID(),
+						uid: userId,
+						phrase_id: p.id,
+						lang: playlist.lang,
+						status: 'active',
+						direction,
+						created_at: nowIso,
+						updated_at: nowIso,
+						last_reviewed_at: null,
+						difficulty: null,
+						stability: null,
+					})
+				}
 			}
-			toastSuccess(
-				`Added ${cards.length} card${cards.length === 1 ? '' : 's'} to your deck`
-			)
-		},
-		onError: (error: Error) => {
-			toastError('Failed to add cards to deck')
-			console.log('Error', error)
-		},
-	})
+		}
+		const count = toInsert.length + toActivate.length
+		if (count === 0) return
 
-	// Mutation to link a newly created phrase to this playlist
-	const linkPhraseMutation = useMutation({
-		mutationFn: async (phraseId: string) => {
-			const maxOrder = Math.max(
-				...(data?.map((p) => p.link.order || 0) ?? [0]),
-				0
+		const promises: Array<Promise<unknown>> = []
+		if (toInsert.length)
+			promises.push(cardsCollection.insert(toInsert).isPersisted.promise)
+		if (toActivate.length)
+			promises.push(
+				cardsCollection.update(toActivate, (drafts) => {
+					drafts.forEach((d) => {
+						d.status = 'active'
+					})
+				}).isPersisted.promise
 			)
-			const { data: linkData, error } = await supabase
-				.from('playlist_phrase_link')
-				.insert({
-					playlist_id: playlist.id,
-					phrase_id: phraseId,
-					order: maxOrder + 1,
-					href: null,
-				})
-				.select()
-				.single()
-			if (error) throw error
-			return linkData
-		},
-		onSuccess: (linkData) => {
-			playlistPhraseLinksCollection.utils.writeInsert(linkData)
-			toastSuccess('Phrase added to playlist')
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to link phrase: ${error.message}`)
-			console.log('Error', error)
-		},
-	})
+		Promise.all(promises).then(
+			() =>
+				toastSuccess(
+					`Added ${count} card${count === 1 ? '' : 's'} to your deck`
+				),
+			(err: unknown) => {
+				toastError('Failed to add cards to deck')
+				console.log('Error', err)
+			}
+		)
+	}
+
+	// Link a newly created phrase to this playlist.
+	const linkPhrase = (phraseId: string) => {
+		if (!userId) return
+		const maxOrder = Math.max(
+			...(data?.map((p) => p.link.order || 0) ?? [0]),
+			0
+		)
+		const tx = playlistPhraseLinksCollection.insert({
+			id: crypto.randomUUID(),
+			uid: userId,
+			playlist_id: playlist.id,
+			phrase_id: phraseId,
+			order: maxOrder + 1,
+			href: null,
+			created_at: new Date().toISOString(),
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Phrase added to playlist'),
+			(err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to link phrase: ${message}`)
+			}
+		)
+	}
 
 	return (
 		<div
@@ -232,7 +253,7 @@ export function PlaylistItem({
 				<InlinePhraseCreator
 					lang={playlist.lang}
 					onPhraseCreated={(phraseId) => {
-						linkPhraseMutation.mutate(phraseId)
+						linkPhrase(phraseId)
 					}}
 					onCancel={() => setShowAddPhrase(false)}
 					submitLabel="Add phrase to playlist"
@@ -245,19 +266,16 @@ export function PlaylistItem({
 				<Button
 					variant="soft"
 					onClick={() =>
-						bulkAddMutation.mutate(
+						addPhrasesToDeck(
 							phrasesNotInDeck.map((item) => ({
 								id: item.phrase.id,
 								only_reverse: item.phrase.only_reverse,
 							}))
 						)
 					}
-					disabled={bulkAddMutation.isPending}
 					data-testid="bulk-add-playlist-to-deck"
 				>
-					{bulkAddMutation.isPending
-						? 'Adding…'
-						: `Add ${phrasesNotInDeck.length} new card${phrasesNotInDeck.length === 1 ? '' : 's'} to deck`}
+					{`Add ${phrasesNotInDeck.length} new card${phrasesNotInDeck.length === 1 ? '' : 's'} to deck`}
 				</Button>
 			)}
 
