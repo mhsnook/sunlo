@@ -276,22 +276,25 @@ natural wrapper element to label.
 
 ## Playlists
 
-| Selector                  | Attribute   | Component/Location | Description                                                                                    |
-| ------------------------- | ----------- | ------------------ | ---------------------------------------------------------------------------------------------- |
-| `playlist-detail-page`    | data-testid | Playlist route     | Playlist detail container                                                                      |
-| `update-playlist-button`  | data-testid | Playlist page      | Edit button (owner only)                                                                       |
-| `edit-playlist-dialog`    | data-testid | Dialog             | Edit playlist dialog (scopes `edit-playlist-form`)                                             |
-| `edit-playlist-form`      | data-testid | Edit dialog        | Form element (scope `title-input`, `description-input`, `href-input`, `submit-button` by this) |
-| `delete-playlist-button`  | data-testid | Playlist page      | Delete button (owner only)                                                                     |
-| `delete-playlist-dialog`  | data-testid | Dialog             | Delete confirmation                                                                            |
-| `manage-phrases-button`   | data-testid | Playlist page      | Manage phrases button (owner only)                                                             |
-| `manage-phrases-dialog`   | data-testid | Dialog             | Manage phrases dialog                                                                          |
-| `add-phrases-button`      | data-testid | Manage dialog      | Button to add phrases                                                                          |
-| `phrase-search-input`     | data-testid | Add phrases        | Search input                                                                                   |
-| `phrase-checkbox`         | data-testid | Add phrases        | Checkbox for phrase selection                                                                  |
-| `add-flashcard-button`    | data-testid | Add phrases        | Confirm add button                                                                             |
-| `remove-phrase-button`    | data-testid | Manage dialog      | Remove phrase button                                                                           |
-| `move-phrase-down-button` | data-testid | Manage dialog      | Reorder down button                                                                            |
+| Selector                     | Attribute   | Component/Location | Description                                                                                    |
+| ---------------------------- | ----------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `playlist-detail-page`       | data-testid | Playlist route     | Playlist detail container                                                                      |
+| `update-playlist-button`     | data-testid | Playlist page      | Edit button (owner only)                                                                       |
+| `edit-playlist-dialog`       | data-testid | Dialog             | Edit playlist dialog (scopes `edit-playlist-form`)                                             |
+| `edit-playlist-form`         | data-testid | Edit dialog        | Form element (scope `title-input`, `description-input`, `href-input`, `submit-button` by this) |
+| `delete-playlist-button`     | data-testid | Playlist page      | Delete button (owner only)                                                                     |
+| `delete-playlist-dialog`     | data-testid | Dialog             | Delete confirmation                                                                            |
+| `manage-phrases-button`      | data-testid | Playlist page      | Manage phrases button (owner only)                                                             |
+| `manage-phrases-dialog`      | data-testid | Dialog             | Manage phrases dialog                                                                          |
+| `manage-phrase-card`         | data-testid | Manage dialog      | One phrase row in the manage dialog                                                            |
+| `create-phrase-for-playlist` | data-testid | Manage dialog      | Reveal the inline creator to add a brand-new phrase                                            |
+| `open-phrase-picker`         | data-testid | Manage dialog      | "Add existing phrases" trigger (opens the phrase picker dialog)                                |
+| `phrase-search-input`        | data-testid | Phrase picker      | Search input in the picker dialog                                                              |
+| `phrase-picker-item`         | data-name   | Phrase picker      | A selectable phrase in the picker (carries `data-key={phrase.id}`)                             |
+| `remove-phrase-button`       | data-name   | Manage dialog      | Remove phrase button                                                                           |
+| `move-phrase-up-button`      | data-name   | Manage dialog      | Reorder up button                                                                              |
+| `move-phrase-down-button`    | data-name   | Manage dialog      | Reorder down button                                                                            |
+| `bulk-add-playlist-to-deck`  | data-testid | Playlist page      | Add all not-yet-in-deck playlist phrases to the learner's deck                                 |
 
 ## Feed
 
