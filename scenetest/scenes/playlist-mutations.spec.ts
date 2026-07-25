@@ -424,3 +424,160 @@ test('learner bulk-adds playlist phrases to their deck', async ({
 			await supabase.from('phrase').delete().in('id', phraseIds)
 	}
 })
+
+test('learner sets a timestamp link on a playlist phrase', async ({
+	actor,
+	team,
+}) => {
+	const lang = team.tags!.lang_full
+	const learner = await actor('learner')
+	const nonce = Date.now().toString(36)
+	const title = `Playlist for href ${nonce}`
+	const url = `https://youtu.be/${nonce}?t=42`
+	let playlistId = ''
+	let phraseId = ''
+	let linkId = ''
+
+	try {
+		const { data: playlist } = await supabase
+			.from('phrase_playlist')
+			.insert({ lang, title, uid: learner.key })
+			.select()
+			.single()
+			.throwOnError()
+		playlistId = playlist!.id
+		const { data: phrase } = await supabase
+			.from('phrase')
+			.insert({ lang, text: `Href phrase ${nonce}`, added_by: learner.key })
+			.select()
+			.single()
+			.throwOnError()
+		phraseId = phrase!.id
+		const { data: link } = await supabase
+			.from('playlist_phrase_link')
+			.insert({
+				playlist_id: playlistId,
+				phrase_id: phraseId,
+				uid: learner.key,
+				order: 1,
+			})
+			.select()
+			.single()
+			.throwOnError()
+		linkId = link!.id
+
+		await learner
+			.openTo('/login')
+			.typeInto('email-input', learner.email!)
+			.typeInto('password-input', learner.password!)
+			.click('submit-button')
+			.notSee('login-form')
+			.openTo(`/learn/${lang}/playlists/${playlistId}`)
+			.up()
+			.see('playlist-detail-page')
+			.click('manage-phrases-button')
+			.up()
+			.see('manage-phrases-dialog')
+			.typeInto('link-href-input', url)
+			// The field saves on blur; clicking the dialog body moves focus off it.
+			.click('manage-phrases-dialog')
+			.up()
+
+		const saved = await pollUntil(async () => {
+			const { data } = await supabase
+				.from('playlist_phrase_link')
+				.select('href')
+				.eq('id', linkId)
+				.single()
+			return data?.href === url
+		})
+		assert.ok(saved, 'the timestamp link should persist on the phrase link')
+	} finally {
+		if (playlistId) {
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlistId)
+			await supabase.from('phrase_playlist').delete().eq('id', playlistId)
+		}
+		if (phraseId) await supabase.from('phrase').delete().eq('id', phraseId)
+	}
+})
+
+test('an invalid timestamp link is rejected and not saved', async ({
+	actor,
+	team,
+}) => {
+	const lang = team.tags!.lang_full
+	const learner = await actor('learner')
+	const nonce = Date.now().toString(36)
+	const title = `Playlist for bad href ${nonce}`
+	let playlistId = ''
+	let phraseId = ''
+	let linkId = ''
+
+	try {
+		const { data: playlist } = await supabase
+			.from('phrase_playlist')
+			.insert({ lang, title, uid: learner.key })
+			.select()
+			.single()
+			.throwOnError()
+		playlistId = playlist!.id
+		const { data: phrase } = await supabase
+			.from('phrase')
+			.insert({ lang, text: `Bad href phrase ${nonce}`, added_by: learner.key })
+			.select()
+			.single()
+			.throwOnError()
+		phraseId = phrase!.id
+		const { data: link } = await supabase
+			.from('playlist_phrase_link')
+			.insert({
+				playlist_id: playlistId,
+				phrase_id: phraseId,
+				uid: learner.key,
+				order: 1,
+			})
+			.select()
+			.single()
+			.throwOnError()
+		linkId = link!.id
+
+		await learner
+			.openTo('/login')
+			.typeInto('email-input', learner.email!)
+			.typeInto('password-input', learner.password!)
+			.click('submit-button')
+			.notSee('login-form')
+			.openTo(`/learn/${lang}/playlists/${playlistId}`)
+			.up()
+			.see('playlist-detail-page')
+			.click('manage-phrases-button')
+			.up()
+			.see('manage-phrases-dialog')
+			.typeInto('link-href-input', 'not a url')
+			.click('manage-phrases-dialog')
+			.up()
+			// Validation runs synchronously on blur, before any save — the visible
+			// error proves onSave never fired.
+			.see('link-href-error')
+
+		const { data } = await supabase
+			.from('playlist_phrase_link')
+			.select('href')
+			.eq('id', linkId)
+			.single()
+			.throwOnError()
+		assert.equal(data?.href, null, 'an invalid URL must not be persisted')
+	} finally {
+		if (playlistId) {
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlistId)
+			await supabase.from('phrase_playlist').delete().eq('id', playlistId)
+		}
+		if (phraseId) await supabase.from('phrase').delete().eq('id', phraseId)
+	}
+})

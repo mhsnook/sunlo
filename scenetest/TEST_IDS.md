@@ -294,6 +294,8 @@ natural wrapper element to label.
 | `remove-phrase-button`       | data-name   | Manage dialog      | Remove phrase button                                                                           |
 | `move-phrase-up-button`      | data-name   | Manage dialog      | Reorder up button                                                                              |
 | `move-phrase-down-button`    | data-name   | Manage dialog      | Reorder down button                                                                            |
+| `link-href-input`            | data-name   | Manage dialog      | Per-phrase timestamp-link input (carries `data-key={link.id}`; saves on blur)                  |
+| `link-href-error`            | data-name   | Manage dialog      | Inline validation error for an invalid timestamp link (`data-key={link.id}`)                   |
 | `bulk-add-playlist-to-deck`  | data-testid | Playlist page      | Add all not-yet-in-deck playlist phrases to the learner's deck                                 |
 
 ## Feed

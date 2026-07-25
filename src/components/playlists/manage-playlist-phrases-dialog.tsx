@@ -31,9 +31,11 @@ import { buttonVariants } from '../ui/button'
 
 /** Controlled href input that validates on blur and only fires the mutation when valid */
 function HrefInput({
+	linkId,
 	initialValue,
 	onSave,
 }: {
+	linkId: string
 	initialValue: string | null
 	onSave: (href: string) => void
 }) {
@@ -59,6 +61,8 @@ function HrefInput({
 					type="url"
 					placeholder="Timestamp link (optional)"
 					value={value}
+					data-name="link-href-input"
+					data-key={linkId}
 					onChange={(e) => {
 						setValue(e.target.value)
 						if (error) setError(validateUrl(e.target.value))
@@ -67,7 +71,15 @@ function HrefInput({
 					className={`h-8 text-sm ${error ? 'border-red-500' : ''}`}
 				/>
 			</div>
-			{error && <p className="ms-8 mt-1 text-xs text-red-500">{error}</p>}
+			{error && (
+				<p
+					className="ms-8 mt-1 text-xs text-red-500"
+					data-name="link-href-error"
+					data-key={linkId}
+				>
+					{error}
+				</p>
+			)}
 		</div>
 	)
 }
@@ -238,6 +250,7 @@ export function ManagePlaylistPhrasesDialog({
 											{/* Href input for timestamp */}
 											<div className="mt-2">
 												<HrefInput
+													linkId={item.link.id}
 													initialValue={item.link.href}
 													onSave={(href) => updateHref(item.link.id, href)}
 												/>
