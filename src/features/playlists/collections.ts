@@ -68,6 +68,46 @@ export const playlistPhraseLinksCollection = createCollection(
 		schema: PlaylistPhraseLinkSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		// uid + created_at default server-side (auth.uid() / now()); the optimistic
+		// row already carries client values for them, so { refetch: false }.
+		onInsert: async ({ transaction }) => {
+			await supabase
+				.from('playlist_phrase_link')
+				.insert(
+					transaction.mutations.map((m) => ({
+						id: m.modified.id,
+						playlist_id: m.modified.playlist_id,
+						phrase_id: m.modified.phrase_id,
+						order: m.modified.order,
+						href: m.modified.href,
+					}))
+				)
+				.throwOnError()
+			return { refetch: false }
+		},
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('playlist_phrase_link')
+						.update(m.changes as TablesUpdate<'playlist_phrase_link'>)
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.in(
+					'id',
+					transaction.mutations.map((m) => m.original.id)
+				)
+				.throwOnError()
+			return { refetch: false }
+		},
 	})
 )
 
