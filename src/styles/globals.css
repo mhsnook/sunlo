@@ -26,6 +26,15 @@
 	--hue-neutral: 270;
 	--cscale-neutral: 1;
 	--chroma-taper: 8;
+
+	/* Light-mode only: lift the top of the ramp. v0.7.0 starts lum-1 at 0.92,
+	   which reads a touch dark for the page background and the lightest cards/
+	   callouts. Begin at 0.95 and carry the lift up through lum-3, rejoining the
+	   native curve by lum-4. (These set the light value; the library's `.dark`
+	   block keeps the dark half, so dark-mode surfaces are unchanged.) */
+	--lum-1: 0.95;
+	--lum-2: 0.915;
+	--lum-3: 0.85;
 }
 
 /* Static tokens: light mode (default) */

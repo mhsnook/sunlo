@@ -45,14 +45,14 @@ Property prefixes: `bg-`, `text-`, `border-`, `border-b-`, `from-`, `to-` (gradi
 
 ### Luminance scale (`lum`)
 
-`{prop}-lum-{1–10 | none | max}`. Numbered stops ride v0.7.0's **front-loaded** curve (fine steps near the page, opening toward the foreground) and measure contrast with the page; the pure poles sit _outside_ the numbers. The scale auto-flips between light and dark mode — **we use the library's native ramp** (it reads better than our old flat scale):
+`{prop}-lum-{1–10 | none | max}`. Numbered stops ride v0.7.0's **front-loaded** curve (fine steps near the page, opening toward the foreground) and measure contrast with the page; the pure poles sit _outside_ the numbers. The scale auto-flips between light and dark mode — **we use the library's native ramp**, with the top three light-mode stops lifted a little (`globals.css`, `@theme`) so the page and lightest cards don't read too dark; the dark half is untouched:
 
 | Value  | Light mode   | Dark mode    | Meaning                          |
 | ------ | ------------ | ------------ | -------------------------------- |
 | `none` | 1.00 (white) | 0.00 (black) | The page color — zero contrast   |
-| `1`    | 0.92         | 0.185        | Lightest usable surface          |
-| `2`    | 0.887        | 0.215        | Subtle surface / **card**        |
-| `3`    | 0.831        | 0.268        | Raised surface / border          |
+| `1`    | 0.95         | 0.185        | Lightest usable surface / page   |
+| `2`    | 0.915        | 0.215        | Subtle surface / **card**        |
+| `3`    | 0.85         | 0.268        | Raised surface / border          |
 | `5`    | 0.676        | 0.412        | Mid                              |
 | `7`    | 0.481        | 0.593        | Prominent (buttons, muted text)  |
 | `9`    | 0.254        | 0.805        | Strong text                      |
