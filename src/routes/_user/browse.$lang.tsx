@@ -268,7 +268,7 @@ function BrowseLanguagePage() {
 					    empty chip row would just be dead space. */}
 					{tags?.length ? (
 						<div data-testid="browse-topic-chips">
-							<h2 className="text-muted-foreground mb-3 text-lg font-semibold">
+							<h2 className="text-con-mid mb-3 text-lg font-semibold">
 								What are you looking for?
 							</h2>
 							<div className="flex flex-wrap gap-2">
@@ -286,8 +286,8 @@ function BrowseLanguagePage() {
 											className={cn(
 												'rounded-full px-4 py-1.5 text-sm transition-colors',
 												active
-													? 'bg-primary text-primary-foreground'
-													: 'hue-neutral hover:hue-neutral bg-lum-2 text-lum-6 text-chroma-mid hover:bg-lum-3'
+													? 'bg-lum-5 bg-chroma-max text-con-high'
+													: 'hue-neutral hover:hue-neutral bg-lum-2 text-lum-6 hover:bg-lum-3'
 											)}
 										>
 											{tag.name}
@@ -553,7 +553,7 @@ function BrowseTab({
 		<TabsTrigger
 			value={value}
 			data-testid={`browse-tab-${value}`}
-			className="data-[active]:border-primary text-muted-foreground data-[active]:text-foreground rounded-none border-0 border-b-2 border-transparent px-1 pb-2 text-base data-[active]:bg-transparent data-[active]:shadow-none"
+			className="data-[active]:border-lum-5 data-[active]:border-chroma-max text-con-mid data-[active]:text-con-mhigh rounded-none border-0 border-b-2 border-transparent px-1 pb-2 text-base data-[active]:bg-transparent data-[active]:shadow-none"
 		>
 			{children}
 		</TabsTrigger>
@@ -561,13 +561,13 @@ function BrowseTab({
 }
 
 function EmptyText({ children }: { children: ReactNode }) {
-	return <p className="text-muted-foreground text-sm">{children}</p>
+	return <p className="text-con-mid text-sm">{children}</p>
 }
 
 function EmptyBrowse({ label }: { label?: string }) {
 	return (
 		<div
-			className="text-muted-foreground py-12 text-center text-sm"
+			className="text-con-mid py-12 text-center text-sm"
 			data-testid="browse-empty"
 		>
 			{label ?? 'Nothing to browse here yet.'}

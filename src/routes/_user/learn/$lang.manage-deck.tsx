@@ -58,7 +58,7 @@ const statusIcon = {
 const statusColors = {
 	active: 'text-lum-7 text-chroma-high',
 	learned: 'hue-success text-lum-7 text-chroma-high',
-	skipped: 'hue-neutral text-lum-5 text-chroma-mid',
+	skipped: 'hue-neutral text-lum-5',
 } as const
 
 const statusBgColors = {
@@ -104,7 +104,7 @@ function getDueInfo(item: DueCheckable): {
 		}
 	return {
 		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,
-		color: 'text-muted-foreground',
+		color: 'text-con-mid',
 	}
 }
 
@@ -298,7 +298,7 @@ function ManageDeckSummary({ lang }: { lang: string }) {
 	for (const status of phraseStatus.values()) byStatus[status]++
 
 	return (
-		<p className="text-muted-foreground text-sm">
+		<p className="text-con-mid text-sm">
 			{phraseIds.size} phrases — {byStatus.active} active, {byStatus.learned}{' '}
 			learned, {byStatus.skipped} skipped
 		</p>
@@ -319,7 +319,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 
 	if (isLoading) {
 		return (
-			<div className="text-muted-foreground py-12 text-center text-sm">
+			<div className="text-con-mid py-12 text-center text-sm">
 				Loading your phrases...
 			</div>
 		)
@@ -327,7 +327,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 
 	if (!allPhraseRows.length) {
 		return (
-			<div className="text-muted-foreground py-12 text-center text-sm">
+			<div className="text-con-mid py-12 text-center text-sm">
 				No phrases in your deck yet.
 			</div>
 		)
@@ -337,7 +337,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 		<div className="@container space-y-4" data-testid="manage-deck-table">
 			{/* Filter bar */}
 			<div className="flex flex-wrap items-center gap-2">
-				<Filter className="text-muted-foreground size-4" />
+				<Filter className="text-con-mid size-4" />
 				{(['all', 'active', 'learned', 'skipped'] as const).map((filter) => (
 					<Button
 						key={filter}
@@ -405,7 +405,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 				</table>
 			</div>
 
-			<p className="text-muted-foreground text-xs">
+			<p className="text-con-mid text-xs">
 				Showing {sortedCards.length} of {allPhraseRows.length} phrases
 			</p>
 		</div>
@@ -446,7 +446,7 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 				</span>
 				<ChevronRight
 					className={cn(
-						'text-muted-foreground size-4 shrink-0 transition-transform',
+						'text-con-mid size-4 shrink-0 transition-transform',
 						open && 'rotate-90'
 					)}
 				/>
@@ -457,7 +457,7 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 				<div className="space-y-3 border-t px-3 pt-2 pb-3">
 					{/* Stats row */}
 					<div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-						<span className="text-muted-foreground">
+						<span className="text-con-mid">
 							Status:{' '}
 							<span
 								className={cn(
@@ -469,28 +469,26 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 								{row.status}
 							</span>
 						</span>
-						<span className="text-muted-foreground">
+						<span className="text-con-mid">
 							Next review:{' '}
 							{isSkipped ? (
 								<span className="font-medium">—</span>
 							) : reviewedToday ? (
-								<span className="text-primary-foresoft font-medium">
-									Reviewed today!
-								</span>
+								<span className="text-lum-7 font-medium">Reviewed today!</span>
 							) : (
 								<span
 									className={cn(
 										'font-medium tabular-nums',
-										dueInfo?.color ?? 'text-foreground'
+										dueInfo?.color ?? 'text-con-mhigh'
 									)}
 								>
 									{dueInfo?.label ?? 'n/a'}
 								</span>
 							)}
 						</span>
-						<span className="text-muted-foreground">
+						<span className="text-con-mid">
 							Difficulty:{' '}
-							<span className="text-foreground font-medium tabular-nums">
+							<span className="text-con-mhigh font-medium tabular-nums">
 								{difficultyDisplay ?? '—'}
 							</span>
 						</span>
@@ -502,7 +500,7 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 						<Link
 							to="/learn/$lang/phrases/$id"
 							params={{ lang, id: row.phrase_id }}
-							className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
+							className="text-con-mid hover:text-con-mhigh inline-flex items-center gap-1 text-xs transition-colors"
 						>
 							<ExternalLink className="size-3" />
 							View phrase
@@ -543,8 +541,8 @@ function SortableHeader({
 			<button
 				onClick={() => onSort(field)}
 				className={cn(
-					'hover:text-foreground flex w-full items-center gap-1.5 px-3 py-2.5 font-medium transition-colors',
-					isActive ? 'text-foreground' : 'text-muted-foreground'
+					'hover:text-con-mhigh flex w-full items-center gap-1.5 px-3 py-2.5 font-medium transition-colors',
+					isActive ? 'text-con-mhigh' : 'text-con-mid'
 				)}
 			>
 				{label}
@@ -601,9 +599,9 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 			{/* Next Review */}
 			<td className="px-3 py-2 text-center">
 				{isSkipped ? (
-					<span className="text-muted-foreground/50 text-xs">—</span>
+					<span className="text-con-low text-xs">—</span>
 				) : reviewedToday ? (
-					<span className="text-primary-foresoft text-sm font-medium">
+					<span className="text-lum-7 text-sm font-medium">
 						Reviewed today!
 					</span>
 				) : dueInfo ? (
@@ -611,7 +609,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 						{dueInfo.label}
 					</span>
 				) : (
-					<span className="text-muted-foreground/50 text-xs">n/a</span>
+					<span className="text-con-low text-xs">n/a</span>
 				)}
 			</td>
 
@@ -622,7 +620,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 						{difficultyDisplay}
 					</span>
 				) : (
-					<span className="text-muted-foreground/50 text-xs">—</span>
+					<span className="text-con-low text-xs">—</span>
 				)}
 			</td>
 

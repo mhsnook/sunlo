@@ -115,7 +115,7 @@ export function AddTranslationsDialog({
 						For the phrase &ldquo;{phrase.text}&rdquo;
 					</DialogDescription>
 				</DialogHeader>
-				<div className="text-muted-foreground space-y-2 text-sm">
+				<div className="text-con-mid space-y-2 text-sm">
 					<p>Please check to make sure you're not entering a duplicate.</p>
 					<ol className="space-y-2">
 						{(phrase.translations ?? []).map((trans) => (
@@ -238,7 +238,7 @@ function TranslationListItem({ trans }: { trans: TranslationType }) {
 			) : (
 				<>
 					<span
-						className={`flex-1 ${trans.archived ? 'text-muted-foreground line-through' : ''}`}
+						className={`flex-1 ${trans.archived ? 'text-con-mid line-through' : ''}`}
 					>
 						{trans.text}
 					</span>
@@ -263,7 +263,7 @@ function TranslationListItem({ trans }: { trans: TranslationType }) {
 								{trans.archived ? (
 									<Undo2 className="size-3" />
 								) : (
-									<Archive className="text-destructive hover:text-destructive size-3" />
+									<Archive className="text-lum-6 text-chroma-high text-hue-danger hover:text-lum-6 hover:text-chroma-high hover:text-hue-danger size-3" />
 								)}
 							</Button>
 						</>

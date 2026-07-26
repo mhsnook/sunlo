@@ -33,7 +33,7 @@ export function ChatPage({ languageLabel }: Props) {
 					<Link
 						to="/chats"
 						data-testid="chat-back-link"
-						className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
+						className="text-con-mid hover:text-con-mhigh inline-flex w-fit items-center gap-1 text-sm"
 					>
 						<ArrowLeft className="h-3 w-3" />
 						All languages
@@ -41,7 +41,7 @@ export function ChatPage({ languageLabel }: Props) {
 					<h1 className="text-2xl font-semibold">
 						Chat with the {languageLabel ?? lang} phrasebook
 					</h1>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						Ask in plain English — the chat surfaces flashcards that match what
 						you want to say. Tap the + on a card to collect it, then use your
 						selection to pivot to similar phrases.
@@ -57,7 +57,7 @@ export function ChatPage({ languageLabel }: Props) {
 				{turns.length === 0 ? (
 					<div
 						data-testid="chat-empty-state"
-						className="text-muted-foreground my-8 text-center text-sm"
+						className="text-con-mid my-8 text-center text-sm"
 					>
 						Try: <em>&ldquo;what do I say if I'm going to the store?&rdquo;</em>
 					</div>

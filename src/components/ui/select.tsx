@@ -33,7 +33,7 @@ const SelectTrigger = ({
 		<SelectPrimitive.Trigger
 			data-slot="select-trigger"
 			className={cn(
-				'ring-offset-background data-[placeholder]:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-2xl px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
+				'ring-offset-background data-[placeholder]:text-con-mid focus:ring-ring flex h-10 w-full items-center justify-between rounded-2xl px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
 				className
 			)}
 			{...props}
@@ -95,7 +95,7 @@ const SelectContent = ({
 			<SelectPrimitive.Popup
 				data-slot="select-content"
 				className={cn(
-					'bg-popover text-popover-foreground data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--available-height) min-w-[8rem] origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border shadow-md',
+					'bg-popover text-con-mhigh data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--available-height) min-w-[8rem] origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border shadow-md',
 					className
 				)}
 				{...props}
@@ -127,7 +127,7 @@ const SelectItem = ({
 	<SelectPrimitive.Item
 		data-slot="select-item"
 		className={cn(
-			'focus:hue-accent focus:bg-lum-2 focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-2xl py-1.5 pr-2 pl-8 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+			'focus:hue-accent focus:bg-lum-2 focus:text-lum-10 focus:text-chroma-mlow focus:text-hue-accent relative flex w-full cursor-default items-center rounded-2xl py-1.5 pr-2 pl-8 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
 			className
 		)}
 		{...props}
@@ -147,7 +147,7 @@ const SelectSeparator = ({
 }: SelectPrimitive.Separator.Props) => (
 	<SelectPrimitive.Separator
 		data-slot="select-separator"
-		className={cn('bg-muted -mx-1 my-1 h-px', className)}
+		className={cn('bg-lum-2 -mx-1 my-1 h-px', className)}
 		{...props}
 	/>
 )

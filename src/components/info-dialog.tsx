@@ -37,7 +37,7 @@ export function InfoDialog({ title, description, children }: InfoDialogProps) {
 	const trigger = (
 		<button
 			onClick={() => setOpen(true)}
-			className="text-muted-foreground hover:text-foreground inline-flex cursor-pointer items-center rounded-full p-1 transition-colors"
+			className="text-con-mid hover:text-con-mhigh inline-flex cursor-pointer items-center rounded-full p-1 transition-colors"
 			aria-label={`More info about ${title}`}
 		>
 			<Info className="size-4" />

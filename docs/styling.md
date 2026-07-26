@@ -50,9 +50,9 @@ Property prefixes: `bg-`, `text-`, `border-`, `border-b-`, `from-`, `to-` (gradi
 | Value  | Light mode   | Dark mode    | Meaning                          |
 | ------ | ------------ | ------------ | -------------------------------- |
 | `none` | 1.00 (white) | 0.00 (black) | The page color — zero contrast   |
-| `1`    | 0.95         | 0.185        | Lightest usable surface / page   |
-| `2`    | 0.915        | 0.215        | Subtle surface / **card**        |
-| `3`    | 0.85         | 0.268        | Raised surface / border          |
+| `1`    | 0.95         | 0.185        | The page (`body`)                |
+| `2`    | 0.915        | 0.215        | Subtle raised fill               |
+| `3`    | 0.85         | 0.268        | Border / raised surface          |
 | `5`    | 0.676        | 0.412        | Mid                              |
 | `7`    | 0.481        | 0.593        | Prominent (buttons, muted text)  |
 | `9`    | 0.254        | 0.805        | Strong text                      |
@@ -75,6 +75,13 @@ Arbitrary luminance is a _direct_ L (`n/100`) and still auto-flips: `bg-lum-[93]
 | `mhigh` | 0.13 | Prominent accents                  |
 | `high`  | 0.17 | Vivid colors                       |
 | `max`   | 0.25 | Fullest color the hue can display  |
+
+The root uses `chroma-mid` (`__root.tsx`), so unless you set otherwise, all your
+colours will have this middle saturation.
+
+The library's `:root` defaults every property to `chroma-low` (0.02, effectively
+grey), which is what Base UI portals get — they mount into `<body>`, outside the
+root route's element.
 
 Arbitrary chroma is `n/100`: `border-chroma-[6]` → chroma 0.06. We keep the library's per-hue scale but soften **`--chroma-taper`** to `8` in `globals.css` — the default (`3`) desaturates light surfaces so hard that backgrounds and language badges read as gray. Lower it toward `3` to mute light surfaces further; raise it to flatten. (Semantic tokens like `primary` use `chroma-max` _raw_, bypassing scale + taper, so the brand stays vivid regardless.)
 
@@ -115,17 +122,76 @@ Defined in `globals.css`, these bridge the OKLCH scale with traditional Tailwind
 | `accent-foreground`                    | lum-10, chroma-mlow, hue-accent | Auto-flips; used as body text (language names)                        |
 | `foreground`, `muted-foreground`, etc. | Static per-mode                 | Defined in `:root` and `.dark` blocks                                 |
 
+### Cards are white paper on a tinted page
+
+A card is pure white on a 0.96 page in light mode, and _darker_ than the page in
+dark mode (0.20 vs 0.22) — it recedes toward the pole both ways, matching no
+`lum-N`. The only stop below `lum-1` is the pure pole, which in dark mode is
+black. So `bg-card` and `bg-popover` stay semantic tokens.
+
+### What `con-*` measures against
+
+`text-con-*` reads `--bg-l`, which only the `bg-lum-*` utilities set. Two
+surfaces don't set it:
+
+- **Gradients.** `from-lum-*`/`to-lum-*` write `--gf-l`/`--gt-l`. `text-con-high`
+  on a gradient tile measures the page instead and inverts — dark text on
+  mid-purple. Use `text-primary-foreground`, or add a `bg-lum-N` matching the
+  first stop.
+- **Semantic tokens**, including `bg-card`. Inside a white card, `con-*` measures
+  the page's 0.95 rather than 1.0 — off by 0.05, invisible.
+
+`:root` defaults `--bg-l` to `lum-5`, so an element with no `bg-lum-*` ancestor
+at all resolves `text-con-mhigh` to L 0.256. `body` sets `bg-lum-1`, so this only
+bites inside portals.
+
 ### When to use what
 
-- **Semantic tokens** (`text-primary`, `bg-card`, `border-border`): UI primitives that use the same color everywhere.
+- **Standard text** → `text-con-mhigh`.
+- **Muted text** → `text-con-mid`, and `mlow`/`low` fainter still.
+- **Emphasis** → `text-con-high`, or `text-con-max` for the pure pole.
 - **Cascade seeder + `lum` inside** (`hue-success chroma-mlow` at the top, `bg-lum-2` / `text-lum-9` below): the default shape for a colored component — declare its character once, speak luminance within. Portable: drop it under a different seeder (a danger context, a lang-themed subtree) and it takes on that character.
 - **Explicit per-property axes** (`bg-lum-2 bg-chroma-mlow bg-hue-info`): one-off colored elements, or shared components used in many contexts where you want the color pinned rather than inherited.
 - **Adjustments** (`hover:bg-lum-up-1`): hover/focus/active state changes.
 - **Avoid `dark:` prefixes** — the scale and semantic tokens auto-flip. Reserve `dark:` for genuinely exceptional cases (e.g. a marketing page with custom gradients).
 - **Avoid opacity tints** (`bg-primary/10`) — the `lum/chroma/hue` utilities don't support the `/opacity` modifier; use a luminance step (`bg-lum-2`) instead for consistent appearance across monitors.
 
+### Properties with no utility
+
+`tailwind-oklch` ships utilities for `bg-` `text-` `border-` `border-b-` `from-`
+`to-` `decoration-` `shadow-` `accent-`, plus `con-` for `text`/`border`/
+`outline`. There is **no** `ring-` `ring-offset-` `fill-` `stroke-` `divide-`
+`via-` `placeholder-` `caret-`, and no `border-s-`/`border-e-`.
+
+Those properties keep using semantic tokens. To keep them consistent with the
+axes anyway, `globals.css` **derives the tokens from the ramp**:
+
+```css
+--border: oklch(var(--lum-3) var(--chroma-low) var(--hue-primary));
+--ring: oklch(var(--lum-6) var(--chroma-max) var(--hue-primary));
+```
+
+Two things to know about these:
+
+- They have **no `.dark` counterpart** and must not get one. `.dark` is set on
+  `documentElement`, the same element as `:root`, so `var(--lum-3)` already
+  resolves to the dark value there. Re-declaring them in `.dark` would win on
+  source order and defeat the derivation.
+- Chroma is **raw** here (no per-hue `--cscale-*`, no taper), same as the brand
+  tokens. Keep the values low or they read more saturated than a utility at the
+  same nominal stop. For reference a `chroma-max` _utility_ on `hue-primary`
+  paints 0.25 × 0.86 = 0.215.
+- Like any `:root` declaration reading `var(--hue-*)`, they resolve **once** at
+  `:root` and so do not follow per-language hue in themed subtrees. That matches
+  the static definitions they replaced. See `lang-theme.ts` for why, and use
+  `getLangThemeCss()` (never a bare `--hue-primary`) when you do need a subtree
+  to take a language's hue.
+
 ### Caveats
 
+- **Never pair `dark:` with a `lum` class.** `lum` already auto-flips, so
+  `dark:from-lum-5` is either redundant or fighting the system. A `dark:` variant
+  on a color is a signal that something needs rethinking, not translating.
 - **Portals break the cascade.** Base UI dialogs/popovers/dropdowns render into a portal, not under their trigger's DOM ancestor. Portal content must re-seed its own `hue`/`chroma`; never rely on inheritance across a portal boundary.
 - **Shared components inherit their context.** That's the feature (it's how `button.tsx` shares its `solids`/`softs` classes across hue variants), but when pruning axes from a shared component, check every render context — keep axes explicit unless the context-sensitivity is wanted.
 

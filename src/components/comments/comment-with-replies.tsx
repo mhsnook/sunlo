@@ -60,7 +60,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		<div
 			className={`${
 				isFocused
-					? 'border-primary bg-card/50 rounded border border-s-2'
+					? 'border-lum-5 border-chroma-max bg-card/50 rounded border border-s-2'
 					: hasHighlightedReply
 						? 'border-lum-4 border-chroma-mlow bg-card/50 rounded border border-s-2'
 						: ''
@@ -129,7 +129,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					</div>
 				)}
 
-				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
+				<div className="text-con-mid mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
 
 					{replyCount === 0 && !showSubthread && (
@@ -194,7 +194,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							data-name="add-reply-inline"
 						>
 							<TinySelfAvatar className="h-6 w-6 shrink-0" />
-							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">
+							<p className="bg-card/50 hover:bg-card/50 text-con-mlow w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">
 								Type your reply here...
 							</p>
 						</Link>
@@ -225,7 +225,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`mt-2 py-2 ${isHighlighted ? 'border-primary -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
+			className={`mt-2 py-2 ${isHighlighted ? 'border-lum-5 border-chroma-max -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
 			data-testid="comment-reply"
 		>
 			<div className="flex items-center justify-between">
@@ -279,7 +279,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 				</div>
 			)}
 
-			<div className="text-muted-foreground ms-8 mt-2 mb-1 flex items-center gap-2 pb-1">
+			<div className="text-con-mid ms-8 mt-2 mb-1 flex items-center gap-2 pb-1">
 				<Upvote comment={comment} />
 			</div>
 		</div>

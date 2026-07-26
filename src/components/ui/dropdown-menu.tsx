@@ -41,7 +41,7 @@ const DropdownMenuSubTrigger = ({
 	<MenuPrimitive.SubmenuTrigger
 		data-slot="dropdown-menu-sub-trigger"
 		className={cn(
-			'focus:bg-lum-1 focus:bg-chroma-mlow data-[popup-open]:bg-primary flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+			'focus:bg-lum-1 focus:bg-chroma-mlow data-[popup-open]:bg-lum-5 data-[popup-open]:bg-chroma-max flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 			inset && 'pl-8',
 			className
 		)}
@@ -63,7 +63,7 @@ const DropdownMenuSubContent = ({
 			<MenuPrimitive.Popup
 				data-slot="dropdown-menu-sub-content"
 				className={cn(
-					'bg-popover text-popover-foreground data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-lg',
+					'bg-popover text-con-mhigh data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-lg',
 					className
 				)}
 				{...props}
@@ -90,7 +90,7 @@ const DropdownMenuContent = ({
 			<MenuPrimitive.Popup
 				data-slot="dropdown-menu-content"
 				className={cn(
-					'bg-popover text-popover-foreground data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-md',
+					'bg-popover text-con-mhigh data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-md',
 					className
 				)}
 				{...props}
@@ -190,7 +190,7 @@ const DropdownMenuSeparator = ({
 }: MenuPrimitive.Separator.Props) => (
 	<MenuPrimitive.Separator
 		data-slot="dropdown-menu-separator"
-		className={cn('bg-muted -mx-1 my-1 h-px', className)}
+		className={cn('bg-lum-2 -mx-1 my-1 h-px', className)}
 		{...props}
 	/>
 )

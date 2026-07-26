@@ -18,7 +18,7 @@ export function ChatTurnView({ turn }: Props) {
 			<div className="flex justify-end">
 				<div
 					data-testid="chat-user-message"
-					className="bg-lum-2 bg-chroma-mlow text-foreground max-w-[85%] rounded-2xl px-4 py-2 text-sm"
+					className="bg-lum-2 bg-chroma-mlow text-con-mhigh max-w-[85%] rounded-2xl px-4 py-2 text-sm"
 				>
 					{turn.query.kind === 'text' ? (
 						turn.query.text
@@ -30,16 +30,13 @@ export function ChatTurnView({ turn }: Props) {
 
 			<div data-testid="chat-assistant-message" className="flex flex-col gap-2">
 				{isPending ? (
-					<div
-						data-testid="chat-pending"
-						className="text-muted-foreground text-sm"
-					>
+					<div data-testid="chat-pending" className="text-con-mid text-sm">
 						Thinking…
 					</div>
 				) : turn.results!.length === 0 ? (
 					<div
 						data-testid="chat-empty-results"
-						className="text-muted-foreground text-sm"
+						className="text-con-mid text-sm"
 					>
 						No matches yet — try rephrasing.
 					</div>

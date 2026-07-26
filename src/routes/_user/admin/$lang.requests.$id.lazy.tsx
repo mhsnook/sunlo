@@ -92,7 +92,7 @@ function AdminRequestDetail() {
 				<h3 className="text-lg font-semibold">Details</h3>
 				<dl className="text-sm">
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
+						<dt className="text-con-mid min-w-[100px] shrink-0">
 							Requested by
 						</dt>
 						<dd>
@@ -103,25 +103,19 @@ function AdminRequestDetail() {
 						</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Created
-						</dt>
+						<dt className="text-con-mid min-w-[100px] shrink-0">Created</dt>
 						<dd>{ago(request.created_at)}</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Upvotes
-						</dt>
+						<dt className="text-con-mid min-w-[100px] shrink-0">Upvotes</dt>
 						<dd className="inline-flex items-center gap-1">
 							<ThumbsUp className="h-3 w-3" />
 							{request.upvote_count ?? 0}
 						</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Request ID
-						</dt>
-						<dd className="text-muted-foreground font-mono text-xs break-all">
+						<dt className="text-con-mid min-w-[100px] shrink-0">Request ID</dt>
+						<dd className="text-con-mid font-mono text-xs break-all">
 							{request.id}
 						</dd>
 					</div>
@@ -174,15 +168,13 @@ function MessageSection({
 			</div>
 			<dl className="text-sm">
 				<div className="flex items-baseline gap-2 py-1">
-					<dt className="text-muted-foreground min-w-[100px] shrink-0">
-						Message ID
-					</dt>
-					<dd className="text-muted-foreground font-mono text-xs break-all">
+					<dt className="text-con-mid min-w-[100px] shrink-0">Message ID</dt>
+					<dd className="text-con-mid font-mono text-xs break-all">
 						{messageId}
 					</dd>
 				</div>
 				<div className="flex items-baseline gap-2 py-1">
-					<dt className="text-muted-foreground min-w-[100px] shrink-0">Tags</dt>
+					<dt className="text-con-mid min-w-[100px] shrink-0">Tags</dt>
 					<dd className="flex flex-wrap items-center gap-1">
 						{tags?.map((tag) => (
 							<Badge
@@ -205,7 +197,7 @@ function MessageSection({
 							</Badge>
 						))}
 						{!tags?.length && (
-							<span className="text-muted-foreground italic">No tags</span>
+							<span className="text-con-mid italic">No tags</span>
 						)}
 						{isAdmin && (
 							<AddTagPopover
@@ -246,7 +238,7 @@ function AddTagPopover({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent align="start" className="w-64 p-2">
-				<p className="text-muted-foreground px-2 pb-2 text-xs">
+				<p className="text-con-mid px-2 pb-2 text-xs">
 					Toggle tags for this message
 				</p>
 				<ul className="flex flex-col">
@@ -319,7 +311,7 @@ function RelatedRequestsSection({
 
 	return (
 		<div className="space-y-1 pt-2">
-			<h4 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+			<h4 className="text-con-mid text-xs font-semibold tracking-wider uppercase">
 				Other requests on this message ({siblings.length})
 			</h4>
 			<ul className="divide-y border" data-testid="related-requests-list">
@@ -361,7 +353,7 @@ function AttachedPhrasesSection({
 				Phrases attached ({links?.length ?? 0})
 			</h3>
 			{!links?.length ? (
-				<p className="text-muted-foreground italic">
+				<p className="text-con-mid italic">
 					No phrases have been suggested as answers yet.
 				</p>
 			) : (
@@ -528,7 +520,7 @@ function ArchiveRequestButton({
 			{request.deleted ? (
 				<Undo2 className="size-4" />
 			) : (
-				<Archive className="text-destructive size-4" />
+				<Archive className="text-lum-6 text-chroma-high text-hue-danger size-4" />
 			)}
 		</Button>
 	)

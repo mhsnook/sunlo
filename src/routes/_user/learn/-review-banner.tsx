@@ -36,17 +36,16 @@ export function ReviewBanner({
 
 					<div className="space-y-1">
 						<h2 className="text-lg leading-tight font-bold @md:text-xl">
-							<span className="text-primary-foresoft">{focusDue}</span>{' '}
-							{focus.language} {focusDue === 1 ? 'card' : 'cards'} ready for
-							review
+							<span className="text-lum-7">{focusDue}</span> {focus.language}{' '}
+							{focusDue === 1 ? 'card' : 'cards'} ready for review
 						</h2>
-						<p className="text-muted-foreground text-sm">
+						<p className="text-con-mid text-sm">
 							About {estMinutes} {estMinutes === 1 ? 'minute' : 'minutes'}.
 							Consistency beats cramming —{' '}
 							{activeDays > 0 ? (
 								<>
 									you&apos;ve studied{' '}
-									<span className="text-foreground font-medium">
+									<span className="text-con-mhigh font-medium">
 										{activeDays} of the last 7 days
 									</span>
 									.

@@ -280,7 +280,7 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 				)}
 			</div>
 
-			<div className="bg-background border-t">
+			<div className="bg-lum-1 border-t">
 				{showQuickFilters && (
 					<QuickFiltersPanel
 						languages={sortedLanguages}
@@ -295,7 +295,7 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 
 				{(filters.length > 0 || typeFilters.size > 0) && (
 					<div className="flex flex-wrap items-center gap-2 px-4 pt-3">
-						<span className="text-muted-foreground text-xs">Active:</span>
+						<span className="text-con-mid text-xs">Active:</span>
 						{filters.map((f) => (
 							<FilterPill
 								key={`${f.type}-${f.value}`}
@@ -318,7 +318,7 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 						))}
 						<button
 							onClick={clearAll}
-							className="s-link text-muted-foreground cursor-pointer text-xs"
+							className="s-link text-con-mid cursor-pointer text-xs"
 						>
 							Clear all
 						</button>
@@ -327,7 +327,7 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 
 				{parsed.suggestions.length > 0 && (
 					<div className="flex flex-wrap items-center gap-2 px-4 pt-2">
-						<span className="text-muted-foreground text-xs">Add filter:</span>
+						<span className="text-con-mid text-xs">Add filter:</span>
 						{parsed.suggestions.map((s) => (
 							<FilterPill
 								key={`${s.type}-${s.value}`}
@@ -342,7 +342,7 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 
 				{hasActiveSearch && (
 					<div className="flex flex-wrap items-center gap-2 px-4 pt-2">
-						<span className="text-muted-foreground text-xs">Show:</span>
+						<span className="text-con-mid text-xs">Show:</span>
 						{(
 							[
 								{
@@ -382,7 +382,7 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 							<SlidersHorizontal className="size-4" />
 						</Button>
 						<div className="relative flex-1">
-							<Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
+							<Search className="text-con-mid absolute start-3 top-1/2 size-4 -translate-y-1/2" />
 							<Input
 								data-testid="search-input"
 								value={inputText}
@@ -392,7 +392,7 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 							/>
 						</div>
 					</div>
-					<p className="text-muted-foreground ms-12 mt-1.5 text-xs">
+					<p className="text-con-mid ms-12 mt-1.5 text-xs">
 						Try: &lsquo;hello in spanish&rsquo; or &lsquo;calling a cab in
 						kannada&rsquo;
 					</p>
@@ -408,7 +408,7 @@ function SystemMessage({ children }: { children: ReactNode }) {
 			<div className="bg-lum-2 bg-chroma-mlow mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">
 				<Sparkles className="text-lum-7 text-chroma-high size-3.5" />
 			</div>
-			<p className="text-muted-foreground pt-1 text-sm">{children}</p>
+			<p className="text-con-mid pt-1 text-sm">{children}</p>
 		</div>
 	)
 }
@@ -429,8 +429,8 @@ function FilterPill({
 			className={cn(
 				'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
 				active
-					? 'bg-primary-foresoft text-primary-foreground border-transparent'
-					: 'border-border text-muted-foreground hover:border-lum-5 hover:border-chroma-mlow hover:text-foreground'
+					? 'bg-lum-7 text-con-high border-transparent'
+					: 'border-lum-3 text-con-mid hover:border-lum-5 hover:border-chroma-mlow hover:text-con-mhigh'
 			)}
 		>
 			{children}
@@ -442,11 +442,11 @@ function EmptyResults() {
 	return (
 		<div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
 			<div className="hue-neutral bg-lum-2 bg-chroma-mlow mx-auto flex size-24 items-center justify-center rounded-full">
-				<SearchX className="hue-neutral text-lum-5 text-chroma-mid size-12" />
+				<SearchX className="hue-neutral text-lum-5 size-12" />
 			</div>
 			<div className="space-y-1">
 				<p className="text-lg font-semibold">No results found</p>
-				<p className="text-muted-foreground mx-auto max-w-xs text-sm">
+				<p className="text-con-mid mx-auto max-w-xs text-sm">
 					Nothing matched your search. Try different keywords, remove a filter,
 					or explore a new language.
 				</p>
@@ -466,7 +466,7 @@ function TypeBadge({ type }: { type: SearchEntityType }) {
 		)
 
 	return (
-		<span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs capitalize">
+		<span className="text-con-mid flex shrink-0 items-center gap-1 text-xs capitalize">
 			{icon}
 			{type}
 		</span>
@@ -490,7 +490,7 @@ function PhraseResultRow({
 		<Link
 			to="/learn/$lang/phrases/$id"
 			params={{ lang: phrase.lang, id: phrase.id }}
-			className="hover:bg-muted/50 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors"
+			className="hover:bg-lum-2 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors"
 		>
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
@@ -500,7 +500,7 @@ function PhraseResultRow({
 					</span>
 				</div>
 				{translations.length > 0 && (
-					<p className="text-muted-foreground mt-1 truncate text-sm">
+					<p className="text-con-mid mt-1 truncate text-sm">
 						{translations
 							.slice(0, 2)
 							.map((t) => t.text)
@@ -520,7 +520,7 @@ function PhraseResultRow({
 			<div className="flex shrink-0 items-start gap-3">
 				{(phrase.count_learners ?? 0) > 0 && (
 					<span
-						className="text-muted-foreground/60 mt-0.5 flex items-center gap-0.5 text-xs"
+						className="text-con-mlow mt-0.5 flex items-center gap-0.5 text-xs"
 						title={`${phrase.count_learners} learner${phrase.count_learners !== 1 ? 's' : ''}`}
 					>
 						<Users size={10} />
@@ -552,7 +552,7 @@ function EntityResultRow({
 	const subtitle =
 		type === 'playlist' ? (entity as PhrasePlaylistType).description : null
 	const linkClass =
-		'hover:bg-muted/50 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors'
+		'hover:bg-lum-2 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors'
 
 	const body = (
 		<>
@@ -562,14 +562,12 @@ function EntityResultRow({
 					<span className="truncate font-semibold">{title}</span>
 				</div>
 				{subtitle && (
-					<p className="text-muted-foreground mt-1 truncate text-sm">
-						{subtitle}
-					</p>
+					<p className="text-con-mid mt-1 truncate text-sm">{subtitle}</p>
 				)}
 			</div>
 			<div className="flex shrink-0 items-start gap-3">
 				{entity.upvote_count > 0 && (
-					<span className="text-muted-foreground/60 mt-0.5 flex items-center gap-0.5 text-xs">
+					<span className="text-con-mlow mt-0.5 flex items-center gap-0.5 text-xs">
 						<ArrowUp size={10} />
 						{entity.upvote_count}
 					</span>
@@ -622,7 +620,7 @@ function WelcomeState({
 					<MessageCircle className="text-lum-7 text-chroma-high size-8" />
 				</div>
 				<h2 className="h3">What are you looking for?</h2>
-				<p className="text-muted-foreground mx-auto max-w-sm text-sm">
+				<p className="text-con-mid mx-auto max-w-sm text-sm">
 					Search phrases, playlists, and requests across all languages, or pick
 					a language and category to explore.
 				</p>
@@ -630,7 +628,7 @@ function WelcomeState({
 
 			{availableLanguages.length > 0 && (
 				<div className="w-full max-w-md space-y-2">
-					<h3 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+					<h3 className="text-con-mid text-xs font-medium tracking-wider uppercase">
 						Languages
 					</h3>
 					<div className="flex flex-wrap gap-1.5">
@@ -649,7 +647,7 @@ function WelcomeState({
 
 			{tags.length > 0 && (
 				<div className="w-full max-w-md space-y-2">
-					<h3 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+					<h3 className="text-con-mid text-xs font-medium tracking-wider uppercase">
 						Categories
 					</h3>
 					<div className="flex flex-wrap gap-1.5">
@@ -704,7 +702,7 @@ function QuickFiltersPanel({
 			</div>
 
 			<div className="space-y-2">
-				<h4 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+				<h4 className="text-con-mid text-xs font-medium tracking-wider uppercase">
 					Languages
 				</h4>
 				<div className="flex flex-wrap gap-1.5">
@@ -737,7 +735,7 @@ function QuickFiltersPanel({
 
 			{displayTags.length > 0 && (
 				<div className="space-y-2">
-					<h4 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+					<h4 className="text-con-mid text-xs font-medium tracking-wider uppercase">
 						Categories{langFilter ? '' : ' (select a language to narrow)'}
 					</h4>
 					<div className="flex flex-wrap gap-1.5">

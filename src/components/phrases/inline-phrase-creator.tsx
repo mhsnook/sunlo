@@ -178,7 +178,7 @@ function InlinePhraseForm({
 	return (
 		<div
 			data-testid="inline-phrase-creator"
-			className={`bg-muted/30 rounded-lg border p-4 ${animate ? 'animate-in fade-in duration-300' : ''}`}
+			className={`bg-lum-2 rounded-lg border p-4 ${animate ? 'animate-in fade-in duration-300' : ''}`}
 		>
 			<div className="mb-3 flex items-center justify-between">
 				<h4 className="font-medium">Create New Phrase</h4>
@@ -234,7 +234,7 @@ function InlinePhraseForm({
 					</form.AppField>
 					<Label
 						htmlFor="inline-only-reverse"
-						className="text-muted-foreground cursor-pointer text-sm font-normal"
+						className="text-con-mid cursor-pointer text-sm font-normal"
 					>
 						Only recall reviews make sense
 					</Label>

@@ -12,7 +12,7 @@ const Command = ({
 	<CommandPrimitive
 		data-slot="command"
 		className={cn(
-			'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md',
+			'bg-popover text-con-mhigh flex h-full w-full flex-col overflow-hidden rounded-md',
 			className
 		)}
 		{...props}
@@ -28,7 +28,7 @@ const CommandDialog = ({
 	return (
 		<Dialog {...props}>
 			<DialogContent className="overflow-hidden p-0 shadow-lg">
-				<Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+				<Command className="[&_[cmdk-group-heading]]:text-con-mid [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
 					{children}
 				</Command>
 			</DialogContent>
@@ -45,7 +45,7 @@ const CommandInput = ({
 		<CommandPrimitive.Input
 			data-slot="command-input"
 			className={cn(
-				'placeholder:text-muted-foreground flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+				'placeholder:text-con-mid flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
 				className
 			)}
 			{...props}
@@ -81,7 +81,7 @@ const CommandGroup = ({
 	<CommandPrimitive.Group
 		data-slot="command-group"
 		className={cn(
-			'text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium',
+			'text-con-mhigh [&_[cmdk-group-heading]]:text-con-mid overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium',
 			className
 		)}
 		{...props}
@@ -94,7 +94,7 @@ const CommandSeparator = ({
 }: React.ComponentProps<typeof CommandPrimitive.Separator>) => (
 	<CommandPrimitive.Separator
 		data-slot="command-separator"
-		className={cn('bg-border -mx-1 h-px', className)}
+		className={cn('bg-lum-3 -mx-1 h-px', className)}
 		{...props}
 	/>
 )
@@ -106,7 +106,7 @@ const CommandItem = ({
 	<CommandPrimitive.Item
 		data-slot="command-item"
 		className={cn(
-			"data-[selected='true']:bg-lum-2 data-[selected='true']:bg-chroma-low data-[selected='true']:bg-hue-accent data-[selected=true]:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+			"data-[selected='true']:bg-lum-2 data-[selected='true']:bg-chroma-low data-[selected='true']:bg-hue-accent data-[selected=true]:text-lum-10 data-[selected=true]:text-chroma-mlow data-[selected=true]:text-hue-accent relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
 			className
 		)}
 		{...props}
@@ -119,10 +119,7 @@ const CommandShortcut = ({
 }: React.HTMLAttributes<HTMLSpanElement>) => {
 	return (
 		<span
-			className={cn(
-				'text-muted-foreground ml-auto text-xs tracking-widest',
-				className
-			)}
+			className={cn('text-con-mid ml-auto text-xs tracking-widest', className)}
 			{...props}
 		/>
 	)

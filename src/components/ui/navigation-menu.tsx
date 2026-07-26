@@ -49,7 +49,7 @@ const NavigationMenuItem = ({
 )
 
 const navigationMenuTriggerStyle = cva(
-	'data-[popup-open]:hue-accent data-active:hue-accent group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-lum-3 data-active:bg-chroma-mid data-[popup-open]:bg-lum-3 data-[popup-open]:bg-chroma-mid'
+	'data-[popup-open]:hue-accent data-active:hue-accent group inline-flex h-10 w-max items-center justify-center rounded-md bg-lum-1 px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-lum-10 hover:text-chroma-mlow hover:text-hue-accent focus:bg-accent focus:text-lum-10 focus:text-chroma-mlow focus:text-hue-accent focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-lum-3 data-[popup-open]:bg-lum-3'
 )
 
 const NavigationMenuTrigger = ({
@@ -116,7 +116,7 @@ const NavigationMenuViewport = ({
 			className={cn('isolate z-50', className)}
 			{...props}
 		>
-			<NavigationMenuPrimitive.Popup className="bg-popover text-popover-foreground data-[open]:animate-in data-[closed]:animate-out data-[closed]:zoom-out-95 data-[open]:zoom-in-90 relative overflow-hidden rounded-md border shadow-lg">
+			<NavigationMenuPrimitive.Popup className="bg-popover text-con-mhigh data-[open]:animate-in data-[closed]:animate-out data-[closed]:zoom-out-95 data-[open]:zoom-in-90 relative overflow-hidden rounded-md border shadow-lg">
 				<NavigationMenuPrimitive.Viewport
 					data-slot="navigation-menu-viewport"
 					className="relative size-full overflow-hidden"
@@ -138,7 +138,7 @@ const NavigationMenuIndicator = ({
 		)}
 		{...props}
 	>
-		<div className="bg-border relative top-[60%] size-2 rotate-45 rounded-tl-sm shadow-md" />
+		<div className="bg-lum-3 relative top-[60%] size-2 rotate-45 rounded-tl-sm shadow-md" />
 	</NavigationMenuPrimitive.Icon>
 )
 

@@ -66,7 +66,7 @@ function NotificationGroup({
 	return (
 		<Card>
 			<CardHeader className="flex-row items-center justify-between pb-2">
-				<CardTitle className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+				<CardTitle className="text-con-mid text-sm font-medium tracking-wide uppercase">
 					{title}
 				</CardTitle>
 				{action}
@@ -88,10 +88,10 @@ function EmptyState() {
 		>
 			<CardContent className="flex flex-col items-center gap-3 py-12 text-center">
 				<div className="hue-neutral bg-lum-2 flex h-16 w-16 items-center justify-center rounded-full">
-					<BellOff className="text-muted-foreground h-8 w-8" />
+					<BellOff className="text-con-mid h-8 w-8" />
 				</div>
 				<h3 className="text-lg font-semibold">No notifications yet</h3>
-				<p className="text-muted-foreground max-w-xs text-sm">
+				<p className="text-con-mid max-w-xs text-sm">
 					When people comment on your requests, translate your phrases, or
 					upvote your content, you'll see it here.
 				</p>

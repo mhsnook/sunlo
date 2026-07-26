@@ -49,7 +49,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					<Markdown>{request.prompt}</Markdown>
 				</div>
 
-				<p className="text-muted-foreground mt-4 text-sm">
+				<p className="text-con-mid mt-4 text-sm">
 					{links?.length || 'No'} answer{links?.length === 1 ? '' : 's'}{' '}
 					{links?.length ? '' : 'yet'}
 				</p>

@@ -15,7 +15,7 @@ const variants = {
 	default: 'hue-primary chroma-mlow bg-lum-2 border-lum-4',
 	problem:
 		'hue-danger bg-lum-[97] bg-chroma-[3] border-lum-[88] border-chroma-[6]',
-	ghost: 'border text-muted-foreground bg-muted',
+	ghost: 'border text-con-mid bg-lum-2',
 }
 
 const iconCircleVariants = {

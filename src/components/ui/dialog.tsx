@@ -102,7 +102,7 @@ const DialogContent = ({
 				{!hideClose && (
 					<DialogPrimitive.Close
 						data-testid="close-dialog-button"
-						className="bg-card/50 text-foreground/70 hover:text-foreground focus:ring-ring absolute top-4 right-4 z-20 rounded-sm p-1 backdrop-blur-sm transition-colors focus:ring-2 focus:outline-hidden disabled:pointer-events-none"
+						className="bg-card/50 text-lum-7 hover:text-con-mhigh focus:ring-ring absolute top-4 right-4 z-20 rounded-sm p-1 backdrop-blur-sm transition-colors focus:ring-2 focus:outline-hidden disabled:pointer-events-none"
 					>
 						<X className="size-4" />
 						<span className="sr-only">Close</span>
@@ -141,7 +141,7 @@ const DialogTitle = ({ className, ...props }: DialogPrimitive.Title.Props) => (
 		data-slot="dialog-title"
 		tabIndex={-1}
 		className={cn(
-			'text-foreground/90 text-lg leading-none font-semibold tracking-tight focus:outline-hidden',
+			'text-con-mhigh text-lg leading-none font-semibold tracking-tight focus:outline-hidden',
 			className
 		)}
 		{...props}
@@ -154,7 +154,7 @@ const DialogDescription = ({
 }: DialogPrimitive.Description.Props) => (
 	<DialogPrimitive.Description
 		data-slot="dialog-description"
-		className={cn('text-muted-foreground text-sm', className)}
+		className={cn('text-con-mid text-sm', className)}
 		{...props}
 	/>
 )

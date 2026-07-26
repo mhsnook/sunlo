@@ -130,17 +130,17 @@ export function WhenComplete() {
 					<div className="flex h-full flex-col items-center justify-center gap-6 pb-16">
 						<SuccessCheckmark />
 						<CardTitle className="text-center">Review Complete!</CardTitle>
-						<p className="text-muted-foreground text-center">
+						<p className="text-con-mid text-center">
 							You reviewed {stats.reviewed} card
 							{stats.reviewed === 1 ? '' : 's'} today.
 						</p>
 						{stats.firstTryTotal > 0 && (
-							<p className="text-muted-foreground text-center">
-								<span className="text-primary font-medium">
+							<p className="text-con-mid text-center">
+								<span className="text-lum-5 text-chroma-max font-medium">
 									{stats.firstTrySuccess}
 								</span>{' '}
 								recalled on first try
-								<span className="text-primary font-medium">
+								<span className="text-lum-5 text-chroma-max font-medium">
 									{' '}
 									(
 									{Math.round(
@@ -151,7 +151,7 @@ export function WhenComplete() {
 								{stats.complete > stats.firstTrySuccess && (
 									<>
 										, {stats.complete} total
-										<span className="text-primary font-medium">
+										<span className="text-lum-5 text-chroma-max font-medium">
 											{' '}
 											({Math.round((stats.complete / stats.reviewed) * 100)}%)
 										</span>

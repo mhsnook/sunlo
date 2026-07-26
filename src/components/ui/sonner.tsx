@@ -40,7 +40,7 @@ export function toastSuccess(message: string) {
 		() => (
 			<div
 				data-testid="toast-success"
-				className={`${ephemeralClass} border-lum-5 border-chroma-mid border-hue-success bg-lum-2 bg-chroma-mlow bg-hue-success text-lum-8 text-chroma-mid text-hue-success`}
+				className={`${ephemeralClass} border-lum-5 border-hue-success bg-lum-2 bg-chroma-mlow bg-hue-success text-lum-8 text-hue-success`}
 			>
 				<CheckCircle className="hue-success text-lum-6 text-chroma-mhigh size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
@@ -60,7 +60,7 @@ export function toastNeutral(message: string, options?: { icon?: string }) {
 		() => (
 			<div
 				data-testid="toast-neutral"
-				className={`${ephemeralClass} border-border/60 bg-card/95 text-card-foreground`}
+				className={`${ephemeralClass} border-lum-3 bg-card/95 text-con-mhigh`}
 			>
 				{options?.icon && (
 					<span className="shrink-0 text-lg">{options.icon}</span>
@@ -82,7 +82,7 @@ export function toastInfo(message: string) {
 		(t) => (
 			<div
 				data-testid="toast-info"
-				className={`${persistentClass} border-lum-5 border-chroma-mid border-hue-info bg-lum-2 bg-chroma-mlow bg-hue-info text-lum-8 text-chroma-mid text-hue-info`}
+				className={`${persistentClass} border-lum-5 border-hue-info bg-lum-2 bg-chroma-mlow bg-hue-info text-lum-8 text-hue-info`}
 			>
 				<Info className="hue-info text-lum-6 text-chroma-mhigh size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
@@ -123,7 +123,7 @@ export function toastError(message: string) {
 		(t) => (
 			<div
 				data-testid="toast-error"
-				className={`${persistentClass} border-lum-5 border-chroma-mid border-hue-danger bg-lum-2 bg-chroma-mlow bg-hue-danger text-lum-8 text-chroma-mid text-hue-danger`}
+				className={`${persistentClass} border-lum-5 border-hue-danger bg-lum-2 bg-chroma-mlow bg-hue-danger text-lum-8 text-hue-danger`}
 			>
 				<AlertCircle className="hue-danger text-lum-6 text-chroma-mhigh size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>

@@ -28,32 +28,32 @@ const notificationConfig: Record<
 	request_commented: {
 		Icon: MessageSquareQuote,
 		action: 'commented on your request',
-		iconClass: 'text-lum-7 text-chroma-mid bg-lum-2',
+		iconClass: 'text-lum-7 bg-lum-2',
 	},
 	comment_replied: {
 		Icon: MessagesSquare,
 		action: 'replied to your comment',
-		iconClass: 'hue-info text-lum-7 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-info text-lum-7 bg-lum-2',
 	},
 	phrase_translated: {
 		Icon: Languages,
 		action: 'added a translation to your phrase',
-		iconClass: 'hue-success text-lum-7 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-success text-lum-7 bg-lum-2',
 	},
 	phrase_referenced: {
 		Icon: Link2,
 		action: 'referenced your phrase as an answer',
-		iconClass: 'hue-accent text-lum-7 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-accent text-lum-7 bg-lum-2',
 	},
 	request_upvoted: {
 		Icon: ThumbsUp,
 		action: 'upvoted your request',
-		iconClass: 'hue-warning text-lum-7 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-warning text-lum-7 bg-lum-2',
 	},
 	change_suggested: {
 		Icon: MessageSquareQuote,
 		action: 'suggested a change to your content',
-		iconClass: 'hue-neutral text-lum-7 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-neutral text-lum-7 bg-lum-2',
 	},
 }
 
@@ -153,12 +153,10 @@ export function NotificationItem({
 				<div className="flex items-start justify-between gap-2">
 					<div>
 						<UidPermalinkInline uid={notification.actor_uid} />
-						<p className="text-muted-foreground mt-0.5 text-sm">
-							{config.action}
-						</p>
+						<p className="text-con-mid mt-0.5 text-sm">{config.action}</p>
 					</div>
 					<div className="flex shrink-0 items-center gap-2">
-						<span className="text-muted-foreground text-xs whitespace-nowrap">
+						<span className="text-con-mid text-xs whitespace-nowrap">
 							{ago(notification.created_at)}
 						</span>
 						{isUnread && (
@@ -169,7 +167,7 @@ export function NotificationItem({
 								aria-label="Mark as read"
 								onClick={() => markAsRead.mutate(notification.id)}
 							>
-								<div className="bg-primary h-2.5 w-2.5 rounded-full" />
+								<div className="bg-lum-5 bg-chroma-max h-2.5 w-2.5 rounded-full" />
 							</Button>
 						)}
 					</div>

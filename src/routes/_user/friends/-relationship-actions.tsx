@@ -11,61 +11,59 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 	const userId = useUserId()
 	const action = useFriendRequestAction(uid_for)
 	const { data: relationship } = useOneRelation(uid_for)
-	return (
-		!userId ? null
-		: !relationship?.status || relationship.status === 'unconnected' ?
-			<Button onClick={() => action.mutate('invite')}>
-				Add friend{' '}
-				{action.isPending ?
-					<IconSizedLoader />
-				:	<ThumbsUp />}
+	return !userId ? null : !relationship?.status ||
+	  relationship.status === 'unconnected' ? (
+		<Button onClick={() => action.mutate('invite')}>
+			Add friend {action.isPending ? <IconSizedLoader /> : <ThumbsUp />}
+		</Button>
+	) : relationship.status === 'friends' ? (
+		<ConfirmDestructiveActionDialog
+			title="Would you like to remove this friendship?"
+			description="You won't be able to see each other's decks or progress any more."
+		>
+			<Button
+				variant="soft"
+				className="hover:bg-lum-3 hover:bg-chroma-mlow hover:bg-hue-danger"
+			>
+				<UserCheck />
+				Friends
 			</Button>
-		: relationship.status === 'friends' ?
+			<Button variant="red" onClick={() => action.mutate('remove')}>
+				<UserMinus />
+				Unfriend
+			</Button>
+		</ConfirmDestructiveActionDialog>
+	) : relationship.status === 'pending' && !relationship.isMostRecentByMe ? (
+		<div className="flex flex-row items-center justify-center gap-2">
+			<Button onClick={() => action.mutate('accept')}>
+				Confirm friends {action.isPending ? <IconSizedLoader /> : <ThumbsUp />}
+			</Button>
 			<ConfirmDestructiveActionDialog
-				title="Would you like to remove this friendship?"
-				description="You won't be able to see each other's decks or progress any more."
+				title="Decline this friend request?"
+				description="You can still invite them to be friends later."
 			>
-				<Button variant="soft" className="hover:bg-destructive/30">
-					<UserCheck />
-					Friends
+				<Button variant="neutral">
+					<X />
 				</Button>
-				<Button variant="red" onClick={() => action.mutate('remove')}>
-					<UserMinus />
-					Unfriend
+				<Button variant="red" onClick={() => action.mutate('decline')}>
+					Confirm
 				</Button>
 			</ConfirmDestructiveActionDialog>
-		: relationship.status === 'pending' && !relationship.isMostRecentByMe ?
-			<div className="flex flex-row items-center justify-center gap-2">
-				<Button onClick={() => action.mutate('accept')}>
-					Confirm friends{' '}
-					{action.isPending ?
-						<IconSizedLoader />
-					:	<ThumbsUp />}
-				</Button>
-				<ConfirmDestructiveActionDialog
-					title="Decline this friend request?"
-					description="You can still invite them to be friends later."
-				>
-					<Button variant="neutral">
-						<X />
-					</Button>
-					<Button variant="red" onClick={() => action.mutate('decline')}>
-						Confirm
-					</Button>
-				</ConfirmDestructiveActionDialog>
-			</div>
-		: relationship.status === 'pending' && relationship.isMostRecentByMe ?
-			<ConfirmDestructiveActionDialog
-				title="Cancel your friend request?"
-				description=""
+		</div>
+	) : relationship.status === 'pending' && relationship.isMostRecentByMe ? (
+		<ConfirmDestructiveActionDialog
+			title="Cancel your friend request?"
+			description=""
+		>
+			<Button
+				variant="soft"
+				className="hover:bg-lum-3 hover:bg-chroma-mlow hover:bg-hue-danger"
 			>
-				<Button variant="soft" className="hover:bg-destructive/30">
-					<UserCheck /> Requested
-				</Button>
-				<Button variant="red" onClick={() => action.mutate('cancel')}>
-					Cancel request
-				</Button>
-			</ConfirmDestructiveActionDialog>
-		:	null
-	)
+				<UserCheck /> Requested
+			</Button>
+			<Button variant="red" onClick={() => action.mutate('cancel')}>
+				Cancel request
+			</Button>
+		</ConfirmDestructiveActionDialog>
+	) : null
 }

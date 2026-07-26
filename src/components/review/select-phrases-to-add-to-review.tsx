@@ -34,10 +34,9 @@ export function SelectPhrasesToAddToReview({
 		)
 	// Toggle card selection
 	const toggleCardSelection = (pid1: string) => {
-		const updatedRecs =
-			!algoRecsSelected.includes(pid1) ?
-				[...algoRecsSelected, pid1]
-			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
+		const updatedRecs = !algoRecsSelected.includes(pid1)
+			? [...algoRecsSelected, pid1]
+			: algoRecsSelected.filter((pid2) => pid1 !== pid2)
 		setAlgoRecsSelected(updatedRecs)
 	}
 
@@ -66,7 +65,7 @@ export function SelectPhrasesToAddToReview({
 	return (
 		<DrawerContent aria-describedby="drawer-description">
 			<div className="@container relative mx-auto w-full max-w-prose overflow-y-auto px-1 pb-10">
-				<DrawerHeader className="bg-background sticky top-0">
+				<DrawerHeader className="bg-lum-1 sticky top-0">
 					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
 						<Sparkles className="h-5 w-5 text-purple-500" />
 						Recommended for you ({algoRecsSelected.length} selected)
@@ -84,7 +83,7 @@ export function SelectPhrasesToAddToReview({
 									<s.Icon className="inline size-6" /> {s.description}
 								</p>
 								<div className="grid gap-3 @lg:grid-cols-2">
-									{algoRecsFiltered[s.key].length > 0 ?
+									{algoRecsFiltered[s.key].length > 0 ? (
 										algoRecsFiltered[s.key].map((pid) => {
 											return (
 												<TapCardToSelect
@@ -96,10 +95,11 @@ export function SelectPhrasesToAddToReview({
 												/>
 											)
 										})
-									:	<p className="text-muted-foreground">
+									) : (
+										<p className="text-con-mid">
 											Sorry, all out of recommendations today
 										</p>
-									}
+									)}
 								</div>
 							</div>
 						)

@@ -9,7 +9,8 @@ import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
 
 const linkActiveProps = {
-	className: 'hue-accent bg-lum-2 bg-chroma-mlow text-accent-foreground',
+	className:
+		'hue-accent bg-lum-2 bg-chroma-mlow text-lum-10 text-chroma-mlow text-hue-accent',
 }
 
 export function ChatsSidebar() {
@@ -31,7 +32,7 @@ export function ChatsSidebar() {
 						<ChatSkeleton />
 					</>
 				) : !entries?.length ? (
-					<p className="text-muted-foreground p-4 text-sm">
+					<p className="text-con-mid p-4 text-sm">
 						You have no friends to chat with yet.
 					</p>
 				) : (
@@ -65,7 +66,7 @@ function ChatEntryItem({ entry }: { entry: ChatEntry }) {
 			data-key={uid}
 			to="/friends/chats/$friendUid"
 			params={{ friendUid: uid }}
-			className="hover:hue-accent hover:bg-lum-2 hover:bg-chroma-mlow hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all"
+			className="hover:hue-accent hover:bg-lum-2 hover:bg-chroma-mlow hover:text-lum-10 hover:text-chroma-mlow hover:text-hue-accent flex items-center gap-3 rounded-2xl px-3 py-2 transition-all"
 			activeProps={linkActiveProps}
 		>
 			<Avatar className="h-8 w-8">
@@ -85,11 +86,11 @@ function ChatEntryItem({ entry }: { entry: ChatEntry }) {
 							{unreadCount}
 						</Badge>
 					) : hasPendingRequest ? (
-						<div className="bg-primary h-2.5 w-2.5 rounded-full" />
+						<div className="bg-lum-5 bg-chroma-max h-2.5 w-2.5 rounded-full" />
 					) : null}
 				</div>
 				{hasPendingRequest ? (
-					<p className="text-muted-foreground line-clamp-1 text-xs">
+					<p className="text-con-mid line-clamp-1 text-xs">
 						<UserPlus className="me-1 inline size-3" />
 						Wants to connect • {ago(mostRecentActivity)}
 					</p>
@@ -97,9 +98,7 @@ function ChatEntryItem({ entry }: { entry: ChatEntry }) {
 					<p
 						className={cn(
 							'line-clamp-2 text-xs',
-							isUnreadPreview
-								? 'text-foreground font-medium'
-								: 'text-muted-foreground'
+							isUnreadPreview ? 'text-con-mhigh font-medium' : 'text-con-mid'
 						)}
 					>
 						{previewMessage ? (

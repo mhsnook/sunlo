@@ -297,8 +297,8 @@ function RouteComponent() {
 
 				{/* Search Input */}
 				<div className="p-3">
-					<div className="bg-muted/50 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
-						<Search className="text-muted-foreground size-5 shrink-0" />
+					<div className="bg-lum-2 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
+						<Search className="text-con-mid size-5 shrink-0" />
 						<input
 							ref={inputRef}
 							type="text"
@@ -306,14 +306,14 @@ function RouteComponent() {
 							placeholder="Search phrases, playlists, requests..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							className="placeholder:text-muted-foreground flex-1 bg-transparent text-base outline-none"
+							className="placeholder:text-con-mid flex-1 bg-transparent text-base outline-none"
 							data-testid="chat-recommend-search-input"
 						/>
 						{query && (
 							<button
 								type="button"
 								onClick={() => setQuery('')}
-								className="text-muted-foreground hover:text-foreground"
+								className="text-con-mid hover:text-con-mhigh"
 							>
 								<X className="size-4" />
 							</button>
@@ -361,13 +361,13 @@ function RouteComponent() {
 					{showResults ? (
 						isLoading ? (
 							<div
-								className="text-muted-foreground px-4 py-8 text-center text-sm"
+								className="text-con-mid px-4 py-8 text-center text-sm"
 								data-testid="chat-recommend-loading"
 							>
 								Searching…
 							</div>
 						) : results.length === 0 ? (
-							<div className="text-muted-foreground px-4 py-8 text-center text-sm">
+							<div className="text-con-mid px-4 py-8 text-center text-sm">
 								No results found
 							</div>
 						) : (
@@ -382,7 +382,7 @@ function RouteComponent() {
 							))
 						)
 					) : (
-						<div className="text-muted-foreground px-4 py-8 text-center text-sm">
+						<div className="text-con-mid px-4 py-8 text-center text-sm">
 							Search for something to send
 						</div>
 					)}
@@ -399,7 +399,7 @@ function RouteComponent() {
 							/>
 						) : (
 							<div className="space-y-3">
-								<p className="text-muted-foreground text-sm">
+								<p className="text-con-mid text-sm">
 									Select a language above to create a new phrase.
 								</p>
 								<Button
@@ -462,18 +462,16 @@ function SendableResult({
 			<div className="min-w-0 flex-1">
 				<p className="truncate text-sm font-medium">{result.title}</p>
 				{result.subtitle && (
-					<p className="text-muted-foreground truncate text-xs">
-						{result.subtitle}
-					</p>
+					<p className="text-con-mid truncate text-xs">{result.subtitle}</p>
 				)}
 			</div>
 			{showType && (
-				<span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
+				<span className="text-con-mid flex shrink-0 items-center gap-1 text-xs">
 					{typeIcon}
 					{typeLabel}
 				</span>
 			)}
-			<Send className="text-muted-foreground size-4 shrink-0" />
+			<Send className="text-con-mid size-4 shrink-0" />
 		</button>
 	)
 }

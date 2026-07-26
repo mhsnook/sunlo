@@ -25,12 +25,18 @@ export function CoverImageField({ label = 'Cover Image' }: { label?: string }) {
 
 	return (
 		<div className="flex flex-col gap-1">
-			<Label className={showError ? 'text-destructive' : ''}>{label}</Label>
+			<Label
+				className={
+					showError ? 'text-lum-6 text-chroma-high text-hue-danger' : ''
+				}
+			>
+				{label}
+			</Label>
 			<div className="flex flex-col gap-2">
 				<Label
 					htmlFor="coverImageUploadInput"
 					className={cn(
-						'group border-lum-4 border-chroma-mlow hover:border-primary hover:bg-lum-2 hover:bg-chroma-mlow relative isolate flex h-32 flex-col items-center justify-center rounded-2xl border text-center',
+						'group border-lum-4 border-chroma-mlow hover:border-lum-5 hover:border-chroma-max hover:bg-lum-2 hover:bg-chroma-mlow relative isolate flex h-32 flex-col items-center justify-center rounded-2xl border text-center',
 						url && 'h-auto'
 					)}
 				>
@@ -53,12 +59,10 @@ export function CoverImageField({ label = 'Cover Image' }: { label?: string }) {
 							) : (
 								<>
 									<ImageIcon className="mx-auto mb-2 size-6" />
-									<span className="text-muted-foreground text-sm">
+									<span className="text-con-mid text-sm">
 										Drag & drop or click to upload a cover image
 									</span>
-									<span className="text-muted-foreground text-xs">
-										(optional)
-									</span>
+									<span className="text-con-mid text-xs">(optional)</span>
 								</>
 							)}
 						</div>
@@ -83,7 +87,7 @@ export function CoverImageField({ label = 'Cover Image' }: { label?: string }) {
 							field.handleChange(null)
 							field.handleBlur()
 						}}
-						className="text-muted-foreground hover:text-destructive self-start"
+						className="text-con-mid hover:text-lum-6 hover:text-chroma-high hover:text-hue-danger self-start"
 					>
 						<X className="me-1 h-4 w-4" />
 						Remove image

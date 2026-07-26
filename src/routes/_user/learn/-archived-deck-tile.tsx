@@ -55,10 +55,10 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 						<LangBadge lang={deck.lang} />
 
 						<div className="space-y-0.5">
-							<h3 className="text-muted-foreground text-lg leading-tight font-semibold">
+							<h3 className="text-con-mid text-lg leading-tight font-semibold">
 								{deck.language}
 							</h3>
-							<p className="text-muted-foreground text-xs">
+							<p className="text-con-mid text-xs">
 								{totalCards === 0
 									? 'no cards'
 									: `${totalCards} ${totalCards === 1 ? 'card' : 'cards'}`}
@@ -112,16 +112,14 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 
 						<DialogClose
 							data-testid="cancel-restore-button"
-							className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-mid hover:bg-lum-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+							className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 hover:bg-lum-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 						>
 							<Archive className="size-6" />
 							<div>
 								<div className="text-base leading-tight font-semibold">
 									No, keep archived
 								</div>
-								<div className="text-muted-foreground text-xs">
-									Leave it where it is
-								</div>
+								<div className="text-con-mid text-xs">Leave it where it is</div>
 							</div>
 						</DialogClose>
 					</div>

@@ -14,7 +14,11 @@ export default function TranslationLanguageField({
 
 	return (
 		<div className="flex flex-col gap-1">
-			<Label className={showError ? 'text-destructive' : ''}>
+			<Label
+				className={
+					showError ? 'text-lum-6 text-chroma-high text-hue-danger' : ''
+				}
+			>
 				Translation language
 			</Label>
 			<LanguagePicker

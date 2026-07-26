@@ -169,7 +169,7 @@ function SectionLabel({ id, children }: { id?: string; children: ReactNode }) {
 	return (
 		<h2
 			id={id}
-			className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
+			className="text-con-mid text-xs font-semibold tracking-wider uppercase"
 		>
 			{children}
 		</h2>
@@ -194,7 +194,7 @@ function WelcomeHeader({
 				<h1 className="text-2xl leading-tight font-bold @md:text-3xl">
 					Welcome back{username ? <>, {username}</> : null}
 				</h1>
-				<p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
+				<p className="text-con-mid mt-1 text-sm">{subtitle}</p>
 			</div>
 			<Link
 				to="/learn/$lang/phrases/new"
@@ -213,7 +213,7 @@ function NoDecks() {
 	return (
 		<div className="space-y-6 py-6 text-center">
 			<GarlicBroccoli />
-			<p className="text-muted-foreground mb-4">
+			<p className="text-con-mid mb-4">
 				You aren't learning any languages yet...
 			</p>
 
@@ -229,7 +229,7 @@ function AllDecksArchived() {
 	return (
 		<div className="py-12 text-center">
 			<h3 className="mb-2 text-lg font-bold">No Active Decks</h3>
-			<p className="text-muted-foreground mb-4">
+			<p className="text-con-mid mb-4">
 				All your decks have been archived. Restore some to start studying, or
 				start learning a new language deck.
 			</p>
@@ -260,7 +260,7 @@ function BrowsePrompt() {
 		>
 			<GarlicBroccoli />
 			<h2 className="text-xl font-bold">Welcome to Sunlo</h2>
-			<p className="text-muted-foreground mb-4">
+			<p className="text-con-mid mb-4">
 				Explore community-created flashcards and language learning content.
 			</p>
 

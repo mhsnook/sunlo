@@ -142,14 +142,14 @@ function Byline({
 	if (size === 'sm')
 		return (
 			<div className="inline-flex flex-row items-center gap-2">
-				<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
+				<Avatar className="bg-lum-10 text-lum-1 h-6 w-6 rounded-lg">
 					<AvatarFallback seed={name} className="text-[10px] font-bold">
 						{initials}
 					</AvatarFallback>
 				</Avatar>
 				<div className="flex flex-row items-center gap-1.5 text-sm">
 					<span className="font-medium">{name}</span>
-					<span className="text-muted-foreground">
+					<span className="text-con-mid">
 						{action} / <time>{time}</time>
 					</span>
 				</div>
@@ -157,14 +157,14 @@ function Byline({
 		)
 	return (
 		<div className="flex flex-row items-center gap-3">
-			<Avatar className="bg-foreground text-background rounded-2xl">
+			<Avatar className="bg-lum-10 text-lum-1 rounded-2xl">
 				<AvatarFallback seed={name} className="font-bold">
 					{initials}
 				</AvatarFallback>
 			</Avatar>
 			<div className="text-sm">
 				<span className="font-medium">{name}</span>
-				<div className="text-muted-foreground">
+				<div className="text-con-mid">
 					{action} <time>{time}</time>
 				</div>
 			</div>
@@ -186,7 +186,7 @@ function BookmarkToggle() {
 		>
 			<Bookmark
 				className={
-					saved ? 'text-primary fill-current/50' : 'text-muted-foreground'
+					saved ? 'text-lum-5 text-chroma-max fill-current/50' : 'text-con-mid'
 				}
 			/>
 		</Button>
@@ -269,7 +269,7 @@ function ReplyItem({
 			<div className="ms-8 mt-1">
 				<Markdown>{content}</Markdown>
 			</div>
-			<div className="text-muted-foreground ms-8 mt-2 flex items-center gap-2">
+			<div className="text-con-mid ms-8 mt-2 flex items-center gap-2">
 				<UpvoteButton count={1} />
 			</div>
 		</div>
@@ -307,7 +307,7 @@ function ShowcaseRequestThread() {
 				</CardContent>
 				<CardFooter className="flex flex-col gap-4 border-t py-4">
 					<div className="flex w-full flex-row items-center gap-2">
-						<Avatar className="bg-foreground text-background h-8 w-8 shrink-0 rounded-lg">
+						<Avatar className="bg-lum-10 text-lum-1 h-8 w-8 shrink-0 rounded-lg">
 							<AvatarFallback
 								seed="showcase-self"
 								className="text-[10px] font-bold"
@@ -315,11 +315,11 @@ function ShowcaseRequestThread() {
 								You
 							</AvatarFallback>
 						</Avatar>
-						<p className="bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
+						<p className="bg-card/50 text-con-mlow w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
 							Add a comment or suggest a card...
 						</p>
 					</div>
-					<div className="text-muted-foreground flex w-full flex-wrap items-center gap-4 text-sm">
+					<div className="text-con-mid flex w-full flex-wrap items-center gap-4 text-sm">
 						<span className="flex items-center gap-1">
 							<ThumbsUp className="size-4" /> 4
 						</span>
@@ -360,7 +360,7 @@ function ShowcaseRequestThread() {
 							/>
 						))}
 					</div>
-					<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
+					<div className="text-con-mid mt-3 flex items-center gap-4 text-sm">
 						<UpvoteButton count={6} defaultVoted />
 						<Button variant="ghost" size="sm">
 							<Reply className="me-1 size-4" /> Reply
@@ -384,7 +384,7 @@ function ShowcaseRequestThread() {
 							}
 						</Markdown>
 					</div>
-					<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
+					<div className="text-con-mid mt-3 flex items-center gap-4 text-sm">
 						<UpvoteButton count={3} />
 						<Button variant="soft" size="sm">
 							<ChevronDown className="me-1 size-4" /> 2 replies
@@ -420,13 +420,11 @@ function ShowcaseDeckDialog() {
 			data-testid="showcase-deck-dialog"
 		>
 			<div className="flex flex-col space-y-1.5 border-b pb-4">
-				<h3 className="text-foreground/90 text-lg leading-none font-semibold tracking-tight">
+				<h3 className="text-con-mhigh text-lg leading-none font-semibold tracking-tight">
 					Sunese
 				</h3>
-				<p className="text-muted-foreground text-sm">
-					<span className="text-primary-foresoft font-medium">
-						24 cards due
-					</span>
+				<p className="text-con-mid text-sm">
+					<span className="text-lum-7 font-medium">24 cards due</span>
 					{' · '}83 total
 				</p>
 			</div>
@@ -443,13 +441,13 @@ function ShowcaseDeckDialog() {
 						</div>
 					</div>
 				</div>
-				<div className="border-lum-3 bg-lum-2 bg-chroma-mlow text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
+				<div className="border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
 					<Logs className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
 							Browse deck
 						</div>
-						<div className="text-muted-foreground text-xs">
+						<div className="text-con-mid text-xs">
 							Feed, phrases, stats & settings
 						</div>
 					</div>
@@ -500,7 +498,7 @@ function ShowcaseReviewCard() {
 					</div>
 					<Separator />
 					<div className="w-full space-y-3">
-						<h3 className="text-muted-foreground text-center text-sm font-medium tracking-wide uppercase">
+						<h3 className="text-con-mid text-center text-sm font-medium tracking-wide uppercase">
 							Translations
 						</h3>
 						{REVIEW_TRANSLATIONS.map((t) => (
@@ -555,7 +553,7 @@ function ShowcaseButtonsAndType() {
 			data-testid="showcase-buttons-type"
 		>
 			<div className="space-y-2">
-				<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+				<p className="text-con-mid text-xs font-medium tracking-wide uppercase">
 					Button variants
 				</p>
 				<div className="flex flex-wrap gap-2">
@@ -577,7 +575,7 @@ function ShowcaseButtonsAndType() {
 			</div>
 			<Separator />
 			<div className="space-y-2">
-				<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+				<p className="text-con-mid text-xs font-medium tracking-wide uppercase">
 					Toasts
 				</p>
 				<div className="flex flex-wrap gap-2">
@@ -613,7 +611,7 @@ function ShowcaseButtonsAndType() {
 			</div>
 			<Separator />
 			<div className="space-y-1.5">
-				<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+				<p className="text-con-mid text-xs font-medium tracking-wide uppercase">
 					Type scale
 				</p>
 				<p className="text-2xl font-bold">Display heading</p>
@@ -622,7 +620,7 @@ function ShowcaseButtonsAndType() {
 					Body copy at the base size — the default for reading.
 				</p>
 				<p className="text-sm">Small print for captions and metadata.</p>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Muted grey for secondary, lower-priority text.
 				</p>
 				<p className="text-base">
@@ -644,7 +642,7 @@ const cardStatusShowcaseStates: Array<{
 	dot: string
 	soft?: boolean
 }> = [
-	{ choice: 'active', dot: 'bg-primary', soft: true },
+	{ choice: 'active', dot: 'bg-lum-5 bg-chroma-max', soft: true },
 	{ choice: 'learned', dot: 'hue-success bg-lum-5 bg-chroma-high' },
 	{ choice: 'skipped', dot: 'hue-neutral bg-lum-5' },
 	{ choice: 'nocard', dot: 'hue-neutral bg-lum-4' },
@@ -719,7 +717,7 @@ function StaticCardStatusPopup({ items }: { items: Array<ShowableActions> }) {
 	return (
 		<div
 			aria-hidden="true"
-			className="bg-popover text-popover-foreground inline-block min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-md"
+			className="bg-popover text-con-mhigh inline-block min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-md"
 		>
 			{items.map((choice) => {
 				const { Icon, iconClassName, action, actionSecond } =
@@ -831,7 +829,7 @@ function ShowcaseFilterMenu() {
 						variant="ghost"
 						size="sm"
 						aria-label="Filter feed content"
-						className="text-muted-foreground gap-1 text-xs"
+						className="text-con-mid gap-1 text-xs"
 					/>
 				}
 			>
@@ -988,7 +986,7 @@ function ShowcaseChoiceTileGroup() {
 							<BookA className="size-5 shrink-0" />
 							<div>
 								<span className="block font-medium">{label}</span>
-								<span className="text-muted-foreground text-sm">{sub}</span>
+								<span className="text-con-mid text-sm">{sub}</span>
 							</div>
 						</ChoiceTile>
 					))}
@@ -1037,12 +1035,7 @@ function ChatBubble({
 							</AvatarFallback>
 						</Avatar>
 					)}
-					<p
-						className={cn(
-							'text-muted-foreground grow text-xs',
-							isMine && 'text-end'
-						)}
-					>
+					<p className={cn('text-con-mid grow text-xs', isMine && 'text-end')}>
 						{isMine ? (
 							<>
 								{label} &middot; {time}
@@ -1086,7 +1079,7 @@ function ChatPhrasePreview({
 					<CardTitle className="text-lg">{text}</CardTitle>
 					<LangBadge lang={lang} />
 				</div>
-				<p className="text-muted-foreground">{translation}</p>
+				<p className="text-con-mid">{translation}</p>
 			</CardContent>
 		</CardlikeFlashcard>
 	)
@@ -1103,7 +1096,7 @@ function ShowcaseChatBubbles() {
 				</Avatar>
 				<div className="flex-1">
 					<p className="leading-tight font-semibold">Priya L.</p>
-					<p className="text-muted-foreground text-xs">Friends</p>
+					<p className="text-con-mid text-xs">Friends</p>
 				</div>
 			</div>
 			<div className="flex-1 overflow-y-auto p-4">
@@ -1235,21 +1228,21 @@ function ShowcaseIntroCallout() {
 	return (
 		<div className="space-y-2">
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-primary mt-0.5 size-4 shrink-0" />
+				<Info className="text-lum-5 text-chroma-max mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
-					<span className="text-foreground/80">
+					<span className="text-lum-8">
 						Quick reminder: reviews use a 4 am cutoff, so cards due "today" stay
 						available until tomorrow morning.
 					</span>{' '}
-					<button className="text-primary underline hover:no-underline">
+					<button className="text-lum-5 text-chroma-max underline hover:no-underline">
 						Learn more
 					</button>
 				</div>
 			</div>
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-primary mt-0.5 size-4 shrink-0" />
+				<Info className="text-lum-5 text-chroma-max mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
-					<span className="text-foreground/80">
+					<span className="text-lum-8">
 						No "show more" link when the callout stands on its own.
 					</span>
 				</div>
@@ -1311,9 +1304,9 @@ function ShowcaseAvatarSizes() {
 								{s.initials}
 							</AvatarFallback>
 						</Avatar>
-						<span className="text-muted-foreground text-xs">{s.label}</span>
+						<span className="text-con-mid text-xs">{s.label}</span>
 					</dt>
-					<dd className="text-muted-foreground text-sm">{s.usage}</dd>
+					<dd className="text-con-mid text-sm">{s.usage}</dd>
 				</div>
 			))}
 		</dl>
@@ -1329,7 +1322,7 @@ function SmolShowcaseBlock({
 }) {
 	return (
 		<div className="mb-6 break-inside-avoid space-y-2">
-			<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+			<h3 className="text-con-mid text-xs font-medium tracking-wide uppercase">
 				{label}
 			</h3>
 			{children}
@@ -1342,7 +1335,7 @@ function SmolShowcase() {
 		<section className="@container space-y-6">
 			<div className="space-y-1">
 				<h2 className="text-lg font-semibold">Pickers, menus & callouts</h2>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Smaller building blocks shown in isolation — dropdowns, tabs, the
 					language picker, the send-in-chat friend picker, and the three callout
 					variants.
@@ -1358,9 +1351,7 @@ function SmolShowcase() {
 				<SmolShowcaseBlock label="Context menu">
 					<div className="flex items-center gap-2">
 						<ShowcaseContextMenu />
-						<span className="text-muted-foreground text-sm">
-							Click for menu items
-						</span>
+						<span className="text-con-mid text-sm">Click for menu items</span>
 					</div>
 				</SmolShowcaseBlock>
 				<SmolShowcaseBlock label="Filter dropdown">
@@ -1387,7 +1378,7 @@ function SocialShowcase() {
 		<section className="@container space-y-6">
 			<div className="space-y-1">
 				<h2 className="text-lg font-semibold">Profiles, chat & onboarding</h2>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Avatar sizes, friend-relationship pills, the chat bubble pair, and the
 					inline intro callout — each shown across the states the app uses.
 				</p>
@@ -1418,7 +1409,7 @@ function ComponentShowcase() {
 		<section className="@container space-y-6">
 			<div className="space-y-1">
 				<h2 className="text-lg font-semibold">Components in context</h2>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Real UI components assembled with a made-up language ({SHOWCASE_LANG})
 					and placeholder content — a request thread, the deck dialog, and a
 					card mid-review.
@@ -1427,26 +1418,26 @@ function ComponentShowcase() {
 
 			<div className="grid gap-6 @3xl:grid-cols-2">
 				<div className="space-y-2">
-					<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+					<h3 className="text-con-mid text-xs font-medium tracking-wide uppercase">
 						Request thread
 					</h3>
 					<ShowcaseRequestThread />
 				</div>
 				<div className="space-y-6">
 					<div className="space-y-2">
-						<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+						<h3 className="text-con-mid text-xs font-medium tracking-wide uppercase">
 							Deck dialog
 						</h3>
 						<ShowcaseDeckDialog />
 					</div>
 					<div className="space-y-2">
-						<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+						<h3 className="text-con-mid text-xs font-medium tracking-wide uppercase">
 							Card in review
 						</h3>
 						<ShowcaseReviewCard />
 					</div>
 					<div className="space-y-2">
-						<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+						<h3 className="text-con-mid text-xs font-medium tracking-wide uppercase">
 							Buttons & type
 						</h3>
 						<ShowcaseButtonsAndType />
@@ -1521,7 +1512,7 @@ function ThemesPage() {
 
 			<header className="space-y-2">
 				<h1 className="text-2xl font-bold">Per-language palette</h1>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					{LANG_HUES.length} hand-picked OKLCH stops, walked over languages in
 					popularity order ({'learners × phrases_to_learn'}). Stop walk: 6, 0,
 					4, 8, 2, 7, 1, 5, 9, 3 — adjacent ranks always land far apart on the
@@ -1544,7 +1535,7 @@ function ThemesPage() {
 						Reset page hue
 					</Button>
 				</div>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Click any swatch to theme the whole page with that hue.
 				</p>
 				<div className="grid grid-cols-4 gap-2 @md:grid-cols-6 @3xl:grid-cols-11">
@@ -1562,10 +1553,10 @@ function ThemesPage() {
 								className={cn(
 									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
 									isActive
-										? 'border-primary ring-primary ring-2'
+										? 'border-lum-5 border-chroma-max ring-primary ring-2'
 										: s.brand
-											? 'border-primary'
-											: 'hover:border-border border-transparent'
+											? 'border-lum-5 border-chroma-max'
+											: 'hover:border-lum-3 border-transparent'
 								)}
 								style={{ '--hue-primary': s.hue } as CSSProperties}
 							>
@@ -1574,13 +1565,13 @@ function ThemesPage() {
 									<span
 										className={cn(
 											'flex items-center gap-0.5',
-											s.brand && 'text-primary-foresoft font-semibold'
+											s.brand && 'text-lum-7 font-semibold'
 										)}
 									>
 										{s.brand && <Star className="size-3" />}
 										{s.brand ? 'Brand' : s.label}
 									</span>
-									<span className="text-muted-foreground">{s.hue}°</span>
+									<span className="text-con-mid">{s.hue}°</span>
 								</span>
 							</button>
 						)
@@ -1592,19 +1583,19 @@ function ThemesPage() {
 				<summary className="cursor-pointer text-lg font-semibold">
 					Popularity walk
 				</summary>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Languages in popularity order. The stop column should read 6, 0, 4, 8,
 					2, 7, 1, 5, 9, 3, 6, 0, 4 …
 				</p>
 				<div className="grid grid-cols-1 gap-1 @md:grid-cols-2 @lg:grid-cols-3">
 					{ranked.map((lang, i) => (
 						<div key={lang.lang} className="flex items-center gap-2 text-sm">
-							<span className="text-muted-foreground w-6 text-end text-xs tabular-nums">
+							<span className="text-con-mid w-6 text-end text-xs tabular-nums">
 								{i + 1}
 							</span>
 							<LangBadge lang={lang.lang} />
 							<span className="flex-1 truncate">{lang.name}</span>
-							<span className="text-muted-foreground text-xs tabular-nums">
+							<span className="text-con-mid text-xs tabular-nums">
 								#{getLangHueIndex(lang.lang)} · {getLangHue(lang.lang)}°
 							</span>
 						</div>
@@ -1618,7 +1609,7 @@ function ThemesPage() {
 				</summary>
 				{grouped.map((group) => (
 					<div key={group.hue} className="space-y-2">
-						<div className="text-muted-foreground text-xs">
+						<div className="text-con-mid text-xs">
 							stop #{group.index} · hue {group.hue}° · {group.langs.length}{' '}
 							{group.langs.length === 1 ? 'language' : 'languages'}
 						</div>
@@ -1632,7 +1623,7 @@ function ThemesPage() {
 									>
 										<LangBadge lang={opt.value} />
 										<span>{opt.label}</span>
-										<span className="text-muted-foreground text-xs tabular-nums">
+										<span className="text-con-mid text-xs tabular-nums">
 											#{pop + 1}
 										</span>
 									</div>

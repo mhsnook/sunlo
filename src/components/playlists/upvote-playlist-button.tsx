@@ -31,7 +31,7 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 	}
 
 	return (
-		<div className="text-muted-foreground flex flex-row items-center gap-2 text-sm">
+		<div className="text-con-mid flex flex-row items-center gap-2 text-sm">
 			<Button
 				variant={hasUpvoted ? 'soft' : 'ghost'}
 				aria-label={hasUpvoted ? 'Remove vote' : 'Vote up this playlist'}

@@ -31,8 +31,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 				<CardHeader className="border-b-lum-4 border-b-chroma-mlow mx-4 mb-4 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
 						<span className="flex items-center gap-1">
-							<MessageCircleHeart className="text-muted-foreground" /> Phrase
-							request
+							<MessageCircleHeart className="text-con-mid" /> Phrase request
 						</span>
 						<LangBadge lang={request.lang} />
 					</CardTitle>
@@ -40,7 +39,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 				<CardContent className="space-y-2 p-4 pt-0">
 					<p>&ldquo;{request.prompt}&rdquo;</p>
 					{isLoadingPhrases ? null : (
-						<p className="text-muted-foreground text-sm">
+						<p className="text-con-mid text-sm">
 							{links?.length} answer{links?.length === 1 ? '' : 's'}
 						</p>
 					)}

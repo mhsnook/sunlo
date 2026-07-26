@@ -73,7 +73,7 @@ function GettingStartedPage() {
 				<h1 className="d1">Welcome to Sunlo</h1>
 				<div className="mx-auto inline-flex shrink flex-row items-center gap-4">
 					<SuccessCheckmarkTrans />
-					<p className="text-muted-foreground max-w-80 text-start text-2xl font-extralight text-balance">
+					<p className="text-con-mid max-w-80 text-start text-2xl font-extralight text-balance">
 						Thanks for confirming your email. Let&apos;s get you set up.
 					</p>
 				</div>

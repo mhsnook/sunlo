@@ -70,11 +70,11 @@ function ConnectionErrorScreen({ error }: { error: Error }) {
 					Please check your internet connection and try again.
 				</p>
 				{isDev ? (
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						<strong>Dev tip:</strong> make sure Docker Desktop is running and
-						<code className="bg-muted mx-1 rounded px-1">supabase start</code>
+						<code className="bg-lum-2 mx-1 rounded px-1">supabase start</code>
 						has finished, then confirm your{' '}
-						<code className="bg-muted rounded px-1">.env</code> values match the
+						<code className="bg-lum-2 rounded px-1">.env</code> values match the
 						CLI output.
 					</p>
 				) : null}

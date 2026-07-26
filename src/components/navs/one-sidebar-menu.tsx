@@ -13,7 +13,7 @@ import { TinyBadge } from '@/components/ui/badge'
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const
 const activeProps = {
-	className: 'text-primary-foresoft',
+	className: 'text-lum-7',
 } as const
 
 export default function OneSidebarMenu({
@@ -47,9 +47,7 @@ export default function OneSidebarMenu({
 							>
 								{!item.Icon ? null : <item.Icon />}
 								<span>{item.title ?? item.name}</span>
-								{item.useBadge ?
-									<TinyBadge useBadge={item.useBadge} />
-								:	null}
+								{item.useBadge ? <TinyBadge useBadge={item.useBadge} /> : null}
 							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>

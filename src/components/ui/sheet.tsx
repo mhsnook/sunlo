@@ -36,7 +36,7 @@ const SheetOverlay = ({
 )
 
 const sheetVariants = cva(
-	'fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[open]:animate-in data-[closed]:animate-out data-[closed]:duration-300 data-[open]:duration-500',
+	'fixed z-50 gap-4 bg-lum-1 p-6 shadow-lg transition ease-in-out data-[open]:animate-in data-[closed]:animate-out data-[closed]:duration-300 data-[open]:duration-500',
 	{
 		variants: {
 			side: {
@@ -71,7 +71,7 @@ const SheetContent = ({
 			{...props}
 		>
 			{children}
-			<SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[open]:bg-secondary absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+			<SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[open]:bg-lum-2 absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
 				<X className="size-4" />
 				<span className="sr-only">Close</span>
 			</SheetPrimitive.Close>
@@ -108,7 +108,7 @@ const SheetFooter = ({
 const SheetTitle = ({ className, ...props }: SheetPrimitive.Title.Props) => (
 	<SheetPrimitive.Title
 		data-slot="sheet-title"
-		className={cn('text-foreground text-lg font-semibold', className)}
+		className={cn('text-con-mhigh text-lg font-semibold', className)}
 		{...props}
 	/>
 )
@@ -119,7 +119,7 @@ const SheetDescription = ({
 }: SheetPrimitive.Description.Props) => (
 	<SheetPrimitive.Description
 		data-slot="sheet-description"
-		className={cn('text-muted-foreground text-sm', className)}
+		className={cn('text-con-mid text-sm', className)}
 		{...props}
 	/>
 )

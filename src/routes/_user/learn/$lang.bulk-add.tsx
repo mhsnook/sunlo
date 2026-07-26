@@ -69,7 +69,7 @@ const genId = () => `staged-${++nextId}`
 
 function Kbd({ children }: { children: ReactNode }) {
 	return (
-		<kbd className="bg-muted text-muted-foreground rounded border px-1.5 py-0.5 text-[10px] leading-none font-medium">
+		<kbd className="bg-lum-2 text-con-mid rounded border px-1.5 py-0.5 text-[10px] leading-none font-medium">
 			{children}
 		</kbd>
 	)
@@ -292,7 +292,7 @@ function BulkAddPhrasesPage() {
 						<div className="hidden items-center gap-3 rounded-lg border border-dashed p-4 @xl:flex">
 							<div className="flex-1">
 								<p className="text-sm font-medium">Have a spreadsheet?</p>
-								<p className="text-muted-foreground text-xs">
+								<p className="text-con-mid text-xs">
 									Paste tab-separated data to import many phrases at once.
 								</p>
 							</div>
@@ -314,7 +314,7 @@ function BulkAddPhrasesPage() {
 										<Button
 											variant="ghost"
 											size="sm"
-											className="text-destructive text-xs"
+											className="text-lum-6 text-chroma-high text-hue-danger text-xs"
 											onClick={() => setStagedPhrases([])}
 											data-testid="clear-staged-phrases"
 										>
@@ -387,14 +387,14 @@ function BulkAddPhrasesPage() {
 							</div>
 						) : (
 							<div
-								className="bg-muted/30 flex flex-1 flex-col items-center justify-center gap-3 rounded-lg text-center"
+								className="bg-lum-2 flex flex-1 flex-col items-center justify-center gap-3 rounded-lg text-center"
 								data-testid="empty-state-hint"
 							>
-								<p className="text-muted-foreground text-sm">
+								<p className="text-con-mid text-sm">
 									Type a phrase and translation above, then press{' '}
 									<Kbd>Enter</Kbd> to add it to the list.
 								</p>
-								<p className="text-muted-foreground text-sm">
+								<p className="text-con-mid text-sm">
 									Use <Kbd>Tab</Kbd> to move between fields. Press{' '}
 									<Kbd>Esc</Kbd> to clear.
 								</p>
@@ -476,7 +476,7 @@ function InlineAddBar({
 		<div data-testid="inline-add-bar" className="space-y-2">
 			<div className="flex flex-col gap-2 @lg:flex-row">
 				<div className="flex-1 space-y-2">
-					<span className="text-muted-foreground border-muted inline-flex h-7 items-center rounded-2xl border px-3 text-xs">
+					<span className="text-con-mid border-lum-2 inline-flex h-7 items-center rounded-2xl border px-3 text-xs">
 						{languages[lang]}
 					</span>
 					<Input
@@ -522,11 +522,11 @@ function InlineAddBar({
 				</div>
 			</div>
 			<div className="flex items-center justify-end gap-2 @lg:justify-between">
-				<p className="text-muted-foreground hidden items-center gap-1.5 text-xs @lg:flex">
+				<p className="text-con-mid hidden items-center gap-1.5 text-xs @lg:flex">
 					<Kbd>Tab</Kbd> next field
-					<span className="text-muted-foreground/50 mx-1">&middot;</span>
+					<span className="text-con-low mx-1">&middot;</span>
 					<Kbd>Enter</Kbd> add phrase
-					<span className="text-muted-foreground/50 mx-1">&middot;</span>
+					<span className="text-con-low mx-1">&middot;</span>
 					<Kbd>Esc</Kbd> clear
 				</p>
 				<Button
@@ -559,7 +559,7 @@ function StagedPhraseRow({
 }) {
 	return (
 		<div
-			className="group hover:bg-muted/30 flex items-center gap-2 px-3 py-2"
+			className="group hover:bg-lum-2 flex items-center gap-2 px-3 py-2"
 			data-testid={`staged-row-${phrase.id}`}
 		>
 			<div className="flex min-w-0 flex-1 flex-col gap-0.5 @lg:flex-row @lg:items-baseline @lg:gap-2">
@@ -569,11 +569,9 @@ function StagedPhraseRow({
 				>
 					{phrase.phrase_text}
 				</span>
-				<span className="text-muted-foreground hidden shrink-0 @lg:inline">
-					&rarr;
-				</span>
+				<span className="text-con-mid hidden shrink-0 @lg:inline">&rarr;</span>
 				<span
-					className="text-muted-foreground truncate text-sm @lg:w-1/2 @lg:shrink-0"
+					className="text-con-mid truncate text-sm @lg:w-1/2 @lg:shrink-0"
 					data-testid="staged-translation-text"
 				>
 					{phrase.translations.map((t) => t.text).join(', ')}
@@ -584,7 +582,7 @@ function StagedPhraseRow({
 					{phrase.tags.map((tag) => (
 						<span
 							key={tag}
-							className="bg-muted truncate rounded px-1.5 py-0.5 text-xs"
+							className="bg-lum-2 truncate rounded px-1.5 py-0.5 text-xs"
 						>
 							{tag}
 						</span>
@@ -610,7 +608,7 @@ function StagedPhraseRow({
 					data-testid="remove-staged-phrase"
 					onClick={onRemove}
 				>
-					<Trash2 className="text-destructive size-3.5" />
+					<Trash2 className="text-lum-6 text-chroma-high text-hue-danger size-3.5" />
 				</Button>
 			</div>
 		</div>
@@ -726,7 +724,7 @@ function EditPhraseDialog({
 									disabled={translations.length <= 1}
 									aria-label="Remove translation"
 								>
-									<Trash2 className="text-destructive size-3.5" />
+									<Trash2 className="text-lum-6 text-chroma-high text-hue-danger size-3.5" />
 								</Button>
 							</div>
 						))}

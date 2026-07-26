@@ -97,9 +97,9 @@ export function MultiSelectCreatable({
 										<Check
 											className={cn(
 												'mr-2 h-4 w-4',
-												selected.includes(option.value) ? 'opacity-100' : (
-													'opacity-0'
-												)
+												selected.includes(option.value)
+													? 'opacity-100'
+													: 'opacity-0'
 											)}
 										/>
 										{option.label}
@@ -119,7 +119,7 @@ export function MultiSelectCreatable({
 							className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
 							onClick={() => handleRemove(value)}
 						>
-							<X className="text-muted-foreground hover:text-foreground h-3 w-3" />
+							<X className="text-con-mid hover:text-con-mhigh h-3 w-3" />
 						</button>
 					</Badge>
 				))}

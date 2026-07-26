@@ -103,7 +103,7 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 									variant="ghost"
 									size="sm"
 									data-testid="contributions-filter-button"
-									className="text-muted-foreground gap-1 text-xs @md:hidden"
+									className="text-con-mid gap-1 text-xs @md:hidden"
 								/>
 							}
 						>

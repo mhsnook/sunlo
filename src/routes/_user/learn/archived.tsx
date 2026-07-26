@@ -25,9 +25,9 @@ function Page() {
 				data-testid="archived-page-empty"
 			>
 				<div className="py-12 text-center">
-					<Archive className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+					<Archive className="text-con-mid mx-auto mb-4 h-12 w-12" />
 					<h3 className="mb-2 text-lg font-medium">No archived decks</h3>
-					<p className="text-muted-foreground">
+					<p className="text-con-mid">
 						When you archive decks, they'll appear here for easy restoration.
 					</p>
 					<Link
@@ -51,11 +51,11 @@ function Page() {
 			<header className="space-y-1">
 				<div className="flex items-center justify-between gap-2">
 					<h1 className="text-2xl leading-tight font-bold">Archived decks</h1>
-					<span className="text-muted-foreground text-xs">
+					<span className="text-con-mid text-xs">
 						{archivedDecks.length} archived
 					</span>
 				</div>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Hidden from your main view. Restore any anytime — your progress is
 					preserved.
 				</p>

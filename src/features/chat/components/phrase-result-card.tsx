@@ -30,11 +30,7 @@ export function PhraseResultCard({ phrase }: Props) {
 					{phrase.text}
 				</div>
 				{phrase.translations.map((t) => (
-					<div
-						key={t.id}
-						className="text-muted-foreground text-sm"
-						lang={t.lang}
-					>
+					<div key={t.id} className="text-con-mid text-sm" lang={t.lang}>
 						{t.text}
 					</div>
 				))}

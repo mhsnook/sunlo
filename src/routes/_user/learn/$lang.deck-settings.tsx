@@ -132,7 +132,7 @@ function FancyChoiceButton<V extends string | number>({
 			<span
 				className={cn(
 					'transition-color mr-3 flex aspect-square place-items-center rounded-xl p-2',
-					selected ? 'bg-primary-foresoft text-primary-foreground' : ''
+					selected ? 'bg-lum-7 text-con-high' : ''
 				)}
 			>
 				<option.Icon className="size-5" />
@@ -207,30 +207,24 @@ function DailyGoalSection({
 						</p>
 						<div className="mx-2 space-y-3">
 							<div className="bg-lum-1 flex items-start gap-3 rounded-2xl px-4 py-3">
-								<Cat className="text-primary mt-0.5 size-7 shrink-0" />
+								<Cat className="text-lum-5 text-chroma-max mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Relaxed — 10 new cards</p>
-									<p className="text-foreground/70">
-										~45 total reviews per day
-									</p>
+									<p className="text-lum-7">~45 total reviews per day</p>
 								</div>
 							</div>
 							<div className="bg-lum-1 flex items-start gap-3 rounded-2xl px-4 py-3">
-								<IceCreamBowl className="text-primary mt-0.5 size-7 shrink-0" />
+								<IceCreamBowl className="text-lum-5 text-chroma-max mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Standard — 15 new cards</p>
-									<p className="text-foreground/70">
-										~80 total reviews per day
-									</p>
+									<p className="text-lum-7">~80 total reviews per day</p>
 								</div>
 							</div>
 							<div className="bg-lum-1 flex items-start gap-3 rounded-2xl px-4 py-3">
-								<Rocket className="text-primary mt-0.5 size-7 shrink-0" />
+								<Rocket className="text-lum-5 text-chroma-max mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Serious — 20 new cards</p>
-									<p className="text-foreground/70">
-										~125 total reviews per day
-									</p>
+									<p className="text-lum-7">~125 total reviews per day</p>
 								</div>
 							</div>
 						</div>
@@ -380,12 +374,12 @@ function PreferredTranslationLanguageSection({
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Choose which language translations are shown first when studying this
 					deck. If not set, your profile default will be used.
 				</p>
 				{profileDefaultLang && (
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						Your profile default:{' '}
 						<strong>
 							{languages[profileDefaultLang] ?? profileDefaultLang}
@@ -482,11 +476,11 @@ function ReviewAnswerModeSection({
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Override your profile default for this deck. If not set, your profile
 					setting will be used.
 				</p>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					{hasOverride
 						? 'Overriding the profile default: '
 						: 'Currently using profile default: '}

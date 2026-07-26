@@ -56,14 +56,14 @@ function BrowsePage() {
 						replace: true,
 					})
 				}
-				className="border-lum-4 border-chroma-mlow hover:border-primary bg-card/50 flex h-12 w-full items-center gap-3 rounded-2xl border px-4 transition-colors"
+				className="border-lum-4 border-chroma-mlow hover:border-lum-5 hover:border-chroma-max bg-card/50 flex h-12 w-full items-center gap-3 rounded-2xl border px-4 transition-colors"
 				data-testid="browse-search-trigger"
 			>
-				<Search className="text-muted-foreground size-5" />
-				<span className="text-muted-foreground flex-1 text-start text-base">
+				<Search className="text-con-mid size-5" />
+				<span className="text-con-mid flex-1 text-start text-base">
 					Search...
 				</span>
-				<kbd className="bg-muted text-muted-foreground rounded-lg border px-2 py-0.5 text-xs">
+				<kbd className="bg-lum-2 text-con-mid rounded-lg border px-2 py-0.5 text-xs">
 					Ctrl+K
 				</kbd>
 			</button>
@@ -71,7 +71,7 @@ function BrowsePage() {
 			{/* Go to language feed dropdown + auth buttons */}
 			<div className="flex flex-row items-center justify-around gap-4 @xl:justify-between">
 				<div className="flex flex-col items-center gap-3 @xl:flex-row">
-					<span className="text-muted-foreground">Browse a language:</span>
+					<span className="text-con-mid">Browse a language:</span>
 					<LanguagePicker
 						value=""
 						setValue={(lang) => {
@@ -154,12 +154,12 @@ function StatsSection() {
 			{stats.map((stat) => (
 				<Card key={stat.label} className="bg-card/30">
 					<CardContent className="flex flex-row items-center gap-4 p-6">
-						<div className="bg-lum-2 bg-chroma-mlow text-primary rounded-full p-3">
+						<div className="bg-lum-2 bg-chroma-mlow text-lum-5 text-chroma-max rounded-full p-3">
 							<stat.icon className="size-6" />
 						</div>
 						<div>
 							<p className="text-2xl font-bold">{stat.value}</p>
-							<p className="text-muted-foreground text-sm">{stat.label}</p>
+							<p className="text-con-mid text-sm">{stat.label}</p>
 						</div>
 					</CardContent>
 				</Card>
@@ -206,7 +206,7 @@ function LanguagesSection() {
 				<div className="mb-4 flex flex-row items-start justify-between">
 					<div>
 						<h2 className="text-2xl font-bold">Most Active Languages</h2>
-						<p className="text-muted-foreground">
+						<p className="text-con-mid">
 							Start learning with our most popular language communities
 						</p>
 					</div>
@@ -281,7 +281,7 @@ function LanguageCard({
 					<LangBadge lang={lang} />
 					<div>
 						<h3 className="font-semibold">{name}</h3>
-						<span className="text-muted-foreground flex items-center gap-1 text-xs">
+						<span className="text-con-mid flex items-center gap-1 text-xs">
 							<TrendingUp className="size-3" />
 							Active
 						</span>
@@ -289,27 +289,27 @@ function LanguageCard({
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-2 pb-4">
-				<div className="text-muted-foreground flex items-center justify-between text-sm">
+				<div className="text-con-mid flex items-center justify-between text-sm">
 					<span className="flex items-center gap-2">
 						<Users className="size-4" /> Learners
 					</span>
-					<span className="text-foreground font-medium">
+					<span className="text-con-mhigh font-medium">
 						{learners.toLocaleString()}
 					</span>
 				</div>
-				<div className="text-muted-foreground flex items-center justify-between text-sm">
+				<div className="text-con-mid flex items-center justify-between text-sm">
 					<span className="flex items-center gap-2">
 						<MessageSquare className="size-4" /> Requests
 					</span>
-					<span className="text-foreground font-medium">
+					<span className="text-con-mhigh font-medium">
 						{requests.toLocaleString()}
 					</span>
 				</div>
-				<div className="text-muted-foreground flex items-center justify-between text-sm">
+				<div className="text-con-mid flex items-center justify-between text-sm">
 					<span className="flex items-center gap-2">
 						<WalletCards className="size-4" /> Flashcards
 					</span>
-					<span className="text-foreground font-medium">
+					<span className="text-con-mhigh font-medium">
 						{phrases.toLocaleString()}
 					</span>
 				</div>
@@ -351,13 +351,13 @@ function LanguageListItem({
 				<span className="font-medium">{name}</span>
 			</div>
 			<div className="flex items-center gap-6">
-				<span className="text-muted-foreground text-sm">
+				<span className="text-con-mid text-sm">
 					{learners.toLocaleString()} learners
 				</span>
-				<span className="text-muted-foreground text-sm">
+				<span className="text-con-mid text-sm">
 					{requests.toLocaleString()} requests
 				</span>
-				<span className="text-muted-foreground text-sm">
+				<span className="text-con-mid text-sm">
 					{phrases.toLocaleString()} phrases
 				</span>
 				<Link
@@ -385,7 +385,7 @@ function PopularRequestsSection() {
 		<section>
 			<div className="mb-4">
 				<h2 className="text-2xl font-bold">Popular Requests</h2>
-				<p className="text-muted-foreground">
+				<p className="text-con-mid">
 					See what our community is learning right now
 				</p>
 			</div>
@@ -410,7 +410,7 @@ function RequestCard({
 				<div className="flex items-center gap-2">
 					<LangBadge lang={request.lang} />
 					<Flagged>
-						<span className="text-muted-foreground flex items-center gap-1 text-sm">
+						<span className="text-con-mid flex items-center gap-1 text-sm">
 							<Star className="size-3 fill-current" />
 							{((request.upvote_count ?? 0) / 10 + 4).toFixed(1)}
 						</span>
@@ -419,12 +419,12 @@ function RequestCard({
 			</CardHeader>
 			<CardContent className="pb-4">
 				<p className="line-clamp-2 font-medium">{request.prompt}</p>
-				<p className="text-muted-foreground mt-1 text-sm">
+				<p className="text-con-mid mt-1 text-sm">
 					{languages[request.lang] ?? request.lang}
 				</p>
 			</CardContent>
 			<CardFooter className="flex items-center justify-between pt-0">
-				<span className="text-muted-foreground text-sm">
+				<span className="text-con-mid text-sm">
 					{request.upvote_count ?? 0} upvotes
 				</span>
 				<Link
@@ -466,7 +466,7 @@ function TrendingPlaylistsSection() {
 		<section>
 			<div className="mb-4">
 				<h2 className="text-2xl font-bold">Trending Playlists</h2>
-				<p className="text-muted-foreground">
+				<p className="text-con-mid">
 					Curated flashcard sets from YouTube videos and other media
 				</p>
 			</div>
@@ -511,7 +511,7 @@ function PlaylistCard({
 			<CardContent className="flex-1 pb-4">
 				<h3 className="line-clamp-2 font-semibold">{playlist.title}</h3>
 				{playlist.description && (
-					<p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+					<p className="text-con-mid mt-1 line-clamp-2 text-sm">
 						{playlist.description}
 					</p>
 				)}
@@ -520,7 +520,7 @@ function PlaylistCard({
 						href={playlist.href}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="text-muted-foreground mt-2 flex items-center gap-1 text-xs hover:underline"
+						className="text-con-mid mt-2 flex items-center gap-1 text-xs hover:underline"
 					>
 						<ExternalLink className="size-3" />
 						{new URL(playlist.href).hostname}
@@ -531,11 +531,11 @@ function PlaylistCard({
 				<div className="flex w-full items-center justify-between text-sm">
 					<div className="text-center">
 						<p className="font-semibold">{phraseCount}</p>
-						<p className="text-muted-foreground text-xs">Cards</p>
+						<p className="text-con-mid text-xs">Cards</p>
 					</div>
 					<div className="text-center">
 						<p className="font-semibold">{playlist.upvote_count}</p>
-						<p className="text-muted-foreground text-xs">Upvotes</p>
+						<p className="text-con-mid text-xs">Upvotes</p>
 					</div>
 				</div>
 				<Link
@@ -554,7 +554,7 @@ function CTASection() {
 	return (
 		<section className="bg-lum-1 rounded-lg border p-8 text-center">
 			<h2 className="text-2xl font-bold">Ready to start learning?</h2>
-			<p className="text-muted-foreground mt-2">
+			<p className="text-con-mid mt-2">
 				Join our community of language learners today
 			</p>
 			<div className="mt-6 flex flex-row items-center justify-center gap-4">

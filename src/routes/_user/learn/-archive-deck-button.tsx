@@ -63,7 +63,7 @@ export function ArchiveDeckButton({
 						disabled={!archived}
 						data-testid="restore-deck-button"
 					>
-						<ArchiveRestore className="text-primary h-4 w-4" />
+						<ArchiveRestore className="text-lum-5 text-chroma-max h-4 w-4" />
 						Restore deck
 					</Button>
 				) : (

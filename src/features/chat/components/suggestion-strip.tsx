@@ -41,15 +41,13 @@ export function SuggestionStrip() {
 	return (
 		<div
 			data-testid="chat-suggestion-strip"
-			className="text-muted-foreground flex flex-row items-center justify-between gap-2 px-1 py-0.5 text-xs"
+			className="text-con-mid flex flex-row items-center justify-between gap-2 px-1 py-0.5 text-xs"
 		>
 			<span>
-				<span className="text-muted-foreground/70 font-mono">
-					1 of {total}:{' '}
-				</span>
+				<span className="text-con-mlow font-mono">1 of {total}: </span>
 				<span lang={lang}>{current.fromMatch}</span>
-				<span className="text-muted-foreground/70"> → </span>
-				<span lang={lang} className="text-foreground font-medium">
+				<span className="text-con-mlow"> → </span>
+				<span lang={lang} className="text-con-mhigh font-medium">
 					{current.to}
 				</span>
 				?

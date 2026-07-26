@@ -46,7 +46,7 @@ export function FeedFilterMenu() {
 						size="sm"
 						aria-label="Filter feed content"
 						data-testid="feed-filter-button"
-						className="text-muted-foreground gap-1 text-xs"
+						className="text-con-mid gap-1 text-xs"
 					/>
 				}
 			>

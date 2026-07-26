@@ -62,7 +62,7 @@ function SampleBlock({
 			<div className="bg-lum-2 bg-chroma-mlow border-b px-4 py-2">
 				<div className="flex items-center justify-between">
 					<p className="text-sm font-medium">{label}</p>
-					<p className="text-muted-foreground text-xs">
+					<p className="text-con-mid text-xs">
 						{fontFamily.split(',')[0]} · {weight} / {boldWeight}
 					</p>
 				</div>
@@ -71,26 +71,24 @@ function SampleBlock({
 				{/* Request-card replica */}
 				<div className="bg-lum-2 bg-chroma-mlow rounded-2xl border p-4">
 					<div className="flex items-start gap-3">
-						<div className="bg-lum-4 bg-chroma-mid text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm">
+						<div className="bg-lum-4 text-con-high flex size-10 shrink-0 items-center justify-center rounded-full text-sm">
 							Y
 						</div>
 						<div className="flex-1">
 							<p style={boldStyle}>Yemm</p>
-							<p className="text-muted-foreground text-sm">
-								posted a Request 5 mo ago
-							</p>
+							<p className="text-con-mid text-sm">posted a Request 5 mo ago</p>
 						</div>
 						<Badge variant="outline">HIN</Badge>
 					</div>
 					<p className="mt-3">
 						hey, i&apos;m introducing my friend to coworkers, how do i say:
 					</p>
-					<blockquote className="bg-lum-3 bg-chroma-mid mt-3 rounded-md border-s-4 px-4 py-3 italic">
+					<blockquote className="bg-lum-3 mt-3 rounded-md border-s-4 px-4 py-3 italic">
 						<span style={boldStyle}>This is maria</span> hello
 					</blockquote>
 					<p className="mt-3">i want to be informal but polite.</p>
 					<Separator className="my-3" />
-					<div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
+					<div className="text-con-mid flex flex-wrap items-center gap-4 text-sm">
 						<span className="flex items-center gap-1">
 							<ThumbsUp className="size-4" /> 2
 						</span>
@@ -127,7 +125,7 @@ function SampleBlock({
 						<em style={boldStyle}>Bold italic:</em>{' '}
 						<em style={boldStyle}>emphasized and strong.</em>
 					</p>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						Small muted line: 1234567890 · O0 Il1 · &quot;curly quotes&quot; vs
 						&apos;single&apos; vs `backtick`
 					</p>
@@ -136,19 +134,19 @@ function SampleBlock({
 				{/* Numerics & ID-ish strings */}
 				<div className="grid grid-cols-3 gap-2 text-sm">
 					<div className="rounded border p-2">
-						<p className="text-muted-foreground text-xs">Streak</p>
+						<p className="text-con-mid text-xs">Streak</p>
 						<p className="text-2xl" style={boldStyle}>
 							7
 						</p>
 					</div>
 					<div className="rounded border p-2">
-						<p className="text-muted-foreground text-xs">Accuracy</p>
+						<p className="text-con-mid text-xs">Accuracy</p>
 						<p className="text-2xl" style={boldStyle}>
 							87%
 						</p>
 					</div>
 					<div className="rounded border p-2">
-						<p className="text-muted-foreground text-xs">Cards</p>
+						<p className="text-con-mid text-xs">Cards</p>
 						<p className="text-2xl" style={boldStyle}>
 							142
 						</p>
@@ -198,7 +196,7 @@ function Slider({
 				step={step}
 				value={value}
 				onChange={(e) => onChange(Number(e.target.value))}
-				className="bg-muted h-2 flex-1 cursor-pointer appearance-none rounded-full"
+				className="bg-lum-2 h-2 flex-1 cursor-pointer appearance-none rounded-full"
 			/>
 			<input
 				type="number"
@@ -208,7 +206,7 @@ function Slider({
 				step={step}
 				value={value}
 				onChange={(e) => onChange(Number(e.target.value))}
-				className="bg-input text-foreground w-20 rounded border px-2 py-1 text-sm"
+				className="bg-lum-2 text-con-mhigh w-20 rounded border px-2 py-1 text-sm"
 			/>
 		</div>
 	)
@@ -290,7 +288,7 @@ function TypographyLab() {
 			<div className="flex items-start justify-between">
 				<div>
 					<h1 className="text-3xl font-bold">Typography Lab</h1>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						Compare Atkinson Hyperlegible (current) with Atkinson Hyperlegible
 						Next (variable). Tweak weight live.
 					</p>
@@ -381,15 +379,13 @@ function TypographyLab() {
 				<h2 className="text-lg font-semibold">
 					Weight ladder · {rightFont.short}
 				</h2>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Each row is the same paragraph at a different variable-axis weight.
 				</p>
 				<div className="space-y-2" style={{ fontFamily: rightFont.family }}>
 					{weightLadder(rightFont.min, rightFont.max).map((w) => (
 						<div key={w} className="flex items-baseline gap-4 border-b pb-1.5">
-							<span className="text-muted-foreground w-12 shrink-0 text-xs">
-								{w}
-							</span>
+							<span className="text-con-mid w-12 shrink-0 text-xs">{w}</span>
 							<span style={{ fontWeight: w }}>
 								The quick brown fox jumps over the lazy dog — 0123456789
 							</span>

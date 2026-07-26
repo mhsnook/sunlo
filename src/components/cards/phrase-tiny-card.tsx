@@ -38,7 +38,7 @@ export const PhraseTinyCard = ({
 			>
 				<div className="line-clamp-3">
 					<p className="font-semibold">{phrase.text}</p>{' '}
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						{phrase.translations_mine?.[0]?.text.length
 							? phrase.translations_mine[0].text
 							: phrase.translations?.[0]?.text}
@@ -62,7 +62,7 @@ export const PhraseTinyCard = ({
 			>
 				<div className="line-clamp-3">
 					<p className="font-semibold">{phrase.text}</p>{' '}
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						{phrase.translations_mine?.[0]?.text.length
 							? phrase.translations_mine[0].text
 							: phrase.translations?.[0]?.text}

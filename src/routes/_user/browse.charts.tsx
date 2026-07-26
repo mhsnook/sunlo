@@ -58,7 +58,7 @@ function ChartsPage() {
 			<Card>
 				<CardHeader>
 					<h2 className="text-xl font-bold">Languages by Content</h2>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						Comparing phrase counts and active learners across languages
 					</p>
 				</CardHeader>
@@ -70,7 +70,7 @@ function ChartsPage() {
 			{/* Language Selector for per-language charts */}
 			{availableLanguages.length > 0 && (
 				<div className="flex flex-col items-start gap-2 @md:flex-row @md:items-center">
-					<span className="text-muted-foreground text-sm font-medium">
+					<span className="text-con-mid text-sm font-medium">
 						Explore data for:
 					</span>
 					<Select
@@ -104,7 +104,7 @@ function ChartsPage() {
 					<Card>
 						<CardHeader>
 							<h2 className="text-xl font-bold">Topics & Tags</h2>
-							<p className="text-muted-foreground text-sm">
+							<p className="text-con-mid text-sm">
 								What subjects are covered in this language's library? Larger
 								blocks = more phrases tagged with that topic.
 							</p>
@@ -118,7 +118,7 @@ function ChartsPage() {
 					<Card>
 						<CardHeader>
 							<h2 className="text-xl font-bold">Difficulty Distribution</h2>
-							<p className="text-muted-foreground text-sm">
+							<p className="text-con-mid text-sm">
 								How are phrases spread across difficulty levels? Based on
 								aggregate FSRS review data from all learners.
 							</p>
@@ -132,7 +132,7 @@ function ChartsPage() {
 					<Card>
 						<CardHeader>
 							<h2 className="text-xl font-bold">Difficulty vs Popularity</h2>
-							<p className="text-muted-foreground text-sm">
+							<p className="text-con-mid text-sm">
 								Each bubble is a phrase. X-axis shows difficulty (FSRS), Y-axis
 								shows learner count, and bubble size reflects memory stability.
 								Hover for details.
@@ -148,10 +148,8 @@ function ChartsPage() {
 			{/* Empty state */}
 			{!availableLanguages.length && (
 				<div className="py-12 text-center">
-					<BarChart3 className="text-muted-foreground mx-auto mb-4 size-12" />
-					<p className="text-muted-foreground text-lg">
-						No library data available yet.
-					</p>
+					<BarChart3 className="text-con-mid mx-auto mb-4 size-12" />
+					<p className="text-con-mid text-lg">No library data available yet.</p>
 					<Link to="/browse" className={buttonVariants({ variant: 'soft' })}>
 						Browse Languages
 					</Link>

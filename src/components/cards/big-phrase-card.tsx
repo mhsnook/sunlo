@@ -114,9 +114,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									<div className="flex flex-row items-baseline gap-2">
 										<h3 className="text-lg font-semibold">Translations</h3>
 										{phrase.translations_mine?.length ? null : (
-											<span className="text-muted-foreground italic">
-												No tags
-											</span>
+											<span className="text-con-mid italic">No tags</span>
 										)}
 									</div>
 									<AddTranslationsDialog
@@ -153,7 +151,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									</CollapsibleTrigger>
 									<CollapsibleContent className="space-y-3">
 										{phrase.translations_other.map((trans) => (
-											<div key={trans.id} className="bg-muted rounded-lg p-3">
+											<div key={trans.id} className="bg-lum-2 rounded-lg p-3">
 												<div className="flex items-center justify-between">
 													<p className="text-md">{trans.text}</p>
 													<Badge variant="outline">
@@ -178,14 +176,14 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									</Badge>
 								))}
 								{!phrase.tags?.length && (
-									<span className="text-muted-foreground italic">No tags</span>
+									<span className="text-con-mid italic">No tags</span>
 								)}
 							</div>
 							<AddTags phrase={phrase} />
 						</div>
 						<Separator />
 						<div className="flex flex-row items-center gap-2">
-							<div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
+							<div className="text-con-mid flex flex-wrap gap-3 text-sm">
 								<span title="Shows the average difficulty for this phrase across all learners">
 									Difficulty:{' '}
 									{!phrase.avg_difficulty ? (
@@ -342,9 +340,9 @@ function RelatedCardsSection({ pid, lang }: { pid: uuid; lang: string }) {
 function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 	if (item.type === 'playlist') {
 		return (
-			<div className="bg-muted/50 space-y-2 rounded-lg p-3">
+			<div className="bg-lum-2 space-y-2 rounded-lg p-3">
 				<div className="flex items-start gap-2">
-					<ListMusic className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+					<ListMusic className="text-con-mid mt-0.5 h-4 w-4 shrink-0" />
 					<div className="inline min-w-0 flex-1">
 						<span>Playlist: </span>
 						<Link
@@ -355,9 +353,7 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 							{item.title}
 						</Link>
 						{item.description && (
-							<p className="text-muted-foreground mt-1 text-sm">
-								{item.description}
-							</p>
+							<p className="text-con-mid mt-1 text-sm">{item.description}</p>
 						)}
 						<div className="mt-2">
 							<UidPermalinkInline uid={item.uid} timeValue={item.created_at} />
@@ -375,9 +371,9 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 
 	// Comment type
 	return (
-		<div className="bg-muted/50 space-y-2 rounded-lg p-3">
+		<div className="bg-lum-2 space-y-2 rounded-lg p-3">
 			<div className="flex items-start gap-2">
-				<MessagesSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+				<MessagesSquare className="text-con-mid mt-0.5 h-4 w-4 shrink-0" />
 				<div className="inline min-w-0 flex-1">
 					<span>Thread: </span>
 					<Link

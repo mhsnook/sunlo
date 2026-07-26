@@ -27,11 +27,11 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 			to={'/learn/$lang/playlists/$playlistId'}
 			params={{ lang: playlist.lang, playlistId: id }}
 		>
-			<div className="bg-card text-card-foreground @container relative z-10 flex flex-col gap-3 rounded-lg border py-0 shadow-sm">
+			<div className="bg-card text-con-mhigh @container relative z-10 flex flex-col gap-3 rounded-lg border py-0 shadow-sm">
 				<CardHeader className="border-b-lum-4 border-b-chroma-mlow mx-4 mb-0 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
 						<span className="flex items-center gap-1">
-							<ListMusic className="text-muted-foreground" /> Playlist
+							<ListMusic className="text-con-mid" /> Playlist
 						</span>
 						<div className="flex items-center gap-2">
 							{!isLoadingPhrases && (
@@ -47,7 +47,7 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 				<CardContent className="space-y-2 p-4 pt-0">
 					<p className="font-medium">{playlist.title}</p>
 					{playlist.description && (
-						<p className="text-muted-foreground line-clamp-2 text-sm">
+						<p className="text-con-mid line-clamp-2 text-sm">
 							{playlist.description}
 						</p>
 					)}

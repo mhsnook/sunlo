@@ -29,7 +29,9 @@ export function TextareaInput({
 			{label && (
 				<Label
 					htmlFor={field.name}
-					className={showError ? 'text-destructive' : ''}
+					className={
+						showError ? 'text-lum-6 text-chroma-high text-hue-danger' : ''
+					}
 				>
 					{label}
 				</Label>
@@ -42,12 +44,13 @@ export function TextareaInput({
 				onBlur={field.handleBlur}
 				aria-invalid={showError}
 				data-testid={toTestId(field.name)}
-				className={cn(showError && 'bg-destructive/20', className)}
+				className={cn(
+					showError && 'bg-lum-2 bg-chroma-mlow bg-hue-danger',
+					className
+				)}
 				{...textareaProps}
 			/>
-			{description && (
-				<p className="text-muted-foreground text-sm">{description}</p>
-			)}
+			{description && <p className="text-con-mid text-sm">{description}</p>}
 			{showError && <ErrorList errors={meta.errors} />}
 		</div>
 	)

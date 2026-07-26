@@ -31,10 +31,7 @@ export function FriendsFeed() {
 
 	if ((friends?.length ?? 0) === 0) {
 		return (
-			<div
-				className="text-muted-foreground text-sm"
-				data-testid="friends-feed-empty"
-			>
+			<div className="text-con-mid text-sm" data-testid="friends-feed-empty">
 				<p className="italic">Add friends to see what they're learning.</p>
 				<Link
 					to="/friends/chats"
@@ -51,18 +48,13 @@ export function FriendsFeed() {
 
 	if (isLoading && groups.length === 0) {
 		return (
-			<p className="text-muted-foreground text-sm italic">
-				Loading recent activity…
-			</p>
+			<p className="text-con-mid text-sm italic">Loading recent activity…</p>
 		)
 	}
 
 	if (groups.length === 0) {
 		return (
-			<div
-				className="text-muted-foreground text-sm"
-				data-testid="friends-feed-quiet"
-			>
+			<div className="text-con-mid text-sm" data-testid="friends-feed-quiet">
 				<p className="italic">Your friends haven't posted anything yet.</p>
 			</div>
 		)
@@ -113,7 +105,7 @@ function FriendGroup({ group }: { group: FriendGroupType }) {
 					params={{ uid: group.uid }}
 					className="shrink-0"
 				>
-					<Avatar className="bg-foreground text-background mt-0.5 size-8 rounded-lg">
+					<Avatar className="bg-lum-10 text-lum-1 mt-0.5 size-8 rounded-lg">
 						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
 						<AvatarFallback seed={group.uid} className="text-[10px] font-bold">
 							{username.slice(0, 2)}
@@ -122,11 +114,11 @@ function FriendGroup({ group }: { group: FriendGroupType }) {
 				</Link>
 
 				<div className="min-w-0 flex-1 space-y-1">
-					<div className="text-muted-foreground flex flex-wrap items-baseline gap-x-1.5 text-sm">
+					<div className="text-con-mid flex flex-wrap items-baseline gap-x-1.5 text-sm">
 						<Link
 							to="/friends/$uid"
 							params={{ uid: group.uid }}
-							className="text-foreground font-medium hover:underline"
+							className="text-con-mhigh font-medium hover:underline"
 						>
 							{username}
 						</Link>
@@ -207,16 +199,16 @@ function ActivityLine({ item }: { item: FeedActivityType }) {
 				params={meta.params}
 				className="-mx-2 flex items-center gap-1.5 truncate rounded-lg px-2 py-0.5 text-sm"
 			>
-				<Icon className="text-muted-foreground size-3.5 shrink-0" />
-				<span className="text-muted-foreground shrink-0">
+				<Icon className="text-con-mid size-3.5 shrink-0" />
+				<span className="text-con-mid shrink-0">
 					{meta.verb} {meta.kind}
 				</span>
 				{meta.preview ? (
 					<>
-						<span className="text-muted-foreground shrink-0" aria-hidden>
+						<span className="text-con-mid shrink-0" aria-hidden>
 							·
 						</span>
-						<span className="text-foreground truncate font-medium">
+						<span className="text-con-mhigh truncate font-medium">
 							{meta.preview}
 						</span>
 					</>

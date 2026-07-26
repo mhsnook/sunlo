@@ -15,7 +15,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 	const countAnswers = counts?.countLinks ?? 0
 	return (
 		<div className="@container flex w-full flex-row items-center justify-between gap-2">
-			<div className="text-muted-foreground flex flex-row items-center gap-4 text-sm font-normal @xl:gap-6">
+			<div className="text-con-mid flex flex-row items-center gap-4 text-sm font-normal @xl:gap-6">
 				<UpvoteRequest request={request} />
 
 				{/*

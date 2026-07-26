@@ -67,16 +67,12 @@ function AdminMessageDetail() {
 		<div className="space-y-6" data-testid="admin-message-detail">
 			<header className="space-y-1">
 				<h1 className="text-2xl font-bold">Message</h1>
-				<p className="text-muted-foreground font-mono text-xs break-all">
-					{message.id}
-				</p>
+				<p className="text-con-mid font-mono text-xs break-all">{message.id}</p>
 			</header>
 
 			<dl className="text-sm">
 				<div className="flex items-baseline gap-2 py-1">
-					<dt className="text-muted-foreground min-w-[100px] shrink-0">
-						Created
-					</dt>
+					<dt className="text-con-mid min-w-[100px] shrink-0">Created</dt>
 					<dd>{ago(message.created_at)}</dd>
 				</div>
 			</dl>
@@ -110,7 +106,7 @@ function AdminMessageDetail() {
 						</Badge>
 					))}
 					{!tags?.length && (
-						<span className="text-muted-foreground italic">No tags</span>
+						<span className="text-con-mid italic">No tags</span>
 					)}
 					{isAdmin && (
 						<AddTagPopover
@@ -128,7 +124,7 @@ function AdminMessageDetail() {
 					Linked requests ({requests?.length ?? 0})
 				</h2>
 				{!requests?.length ? (
-					<p className="text-muted-foreground italic">
+					<p className="text-con-mid italic">
 						No requests are linked to this message.
 					</p>
 				) : (
@@ -142,7 +138,7 @@ function AdminMessageDetail() {
 							>
 								<LangBadge lang={req.lang} />
 								<span className="min-w-0 flex-1 truncate">{req.prompt}</span>
-								<span className="text-muted-foreground hidden text-xs @md:inline">
+								<span className="text-con-mid hidden text-xs @md:inline">
 									{ago(req.created_at)}
 								</span>
 								<Link
@@ -187,7 +183,7 @@ function AddTagPopover({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent align="start" className="w-64 p-2">
-				<p className="text-muted-foreground px-2 pb-2 text-xs">
+				<p className="text-con-mid px-2 pb-2 text-xs">
 					Toggle tags for this message
 				</p>
 				<ul className="flex flex-col">

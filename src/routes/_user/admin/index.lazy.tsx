@@ -38,7 +38,7 @@ function AdminIndex() {
 
 			<header>
 				<h1 className="text-2xl font-bold">Content Management</h1>
-				<p className="text-muted-foreground mt-1 text-sm">
+				<p className="text-con-mid mt-1 text-sm">
 					Select a language to manage its phrases and requests.
 				</p>
 			</header>
@@ -48,7 +48,7 @@ function AdminIndex() {
 			) : (
 				<>
 					<section className="space-y-3">
-						<h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+						<h2 className="text-con-mid text-xs font-semibold tracking-wider uppercase">
 							Popular languages
 						</h2>
 						<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @xl:grid-cols-3">
@@ -64,13 +64,13 @@ function AdminIndex() {
 											<h3 className="text-lg leading-tight font-semibold">
 												{lang.name}
 											</h3>
-											<p className="text-muted-foreground text-xs">
+											<p className="text-con-mid text-xs">
 												{lang.phrases_to_learn ?? 0} phrases
 												{' · '}
 												{lang.learners ?? 0} learners
 											</p>
 										</div>
-										<ChevronsRight className="text-muted-foreground h-5 w-5 shrink-0" />
+										<ChevronsRight className="text-con-mid h-5 w-5 shrink-0" />
 									</Card>
 								</Link>
 							))}
@@ -78,7 +78,7 @@ function AdminIndex() {
 					</section>
 
 					<section className="space-y-3">
-						<h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+						<h2 className="text-con-mid text-xs font-semibold tracking-wider uppercase">
 							Or find a language
 						</h2>
 						<div className="max-w-sm">

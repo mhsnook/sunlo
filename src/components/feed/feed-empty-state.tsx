@@ -37,7 +37,7 @@ export function FeedEmptyState({
 		const Icon = action.icon
 
 		return (
-			<div className="text-muted-foreground my-6 ms-2 space-y-3">
+			<div className="text-con-mid my-6 ms-2 space-y-3">
 				<p className="italic">
 					No {filterLabels[filterType]} in this feed yet.
 				</p>
@@ -64,7 +64,7 @@ export function FeedEmptyState({
 	// Completely empty feed
 	if (feedTab === 'friends') {
 		return (
-			<div className="text-muted-foreground my-6 ms-2 space-y-3">
+			<div className="text-con-mid my-6 ms-2 space-y-3">
 				<p className="italic">
 					<Users className="me-1.5 mb-0.5 inline size-4" />
 					Nothing from friends yet. Maybe you need to add some?
@@ -89,11 +89,11 @@ export function FeedEmptyState({
 	}
 
 	return (
-		<div className="text-muted-foreground my-6 ms-2 space-y-3">
+		<div className="text-con-mid my-6 ms-2 space-y-3">
 			<p className="italic">
-				{feedTab === 'popular' ?
-					'Nothing popular yet. You might have to lead the way!'
-				:	'This feed is empty.'}
+				{feedTab === 'popular'
+					? 'Nothing popular yet. You might have to lead the way!'
+					: 'This feed is empty.'}
 			</p>
 			<Link
 				className={buttonVariants({ variant: 'soft', size: 'sm' })}

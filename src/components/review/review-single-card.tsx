@@ -181,7 +181,7 @@ export function ReviewSingleCard({
 	// Translations display - consistent styling with header like big-phrase-card
 	const translationsDisplay = (
 		<div className="w-full space-y-3">
-			<h3 className="text-muted-foreground text-center text-sm font-medium tracking-wide uppercase">
+			<h3 className="text-con-mid text-center text-sm font-medium tracking-wide uppercase">
 				Translations
 			</h3>
 			{phrase.translations_mine?.map((trans: TranslationType) => (
@@ -245,7 +245,7 @@ export function ReviewSingleCard({
 					</div>
 				</CardContent>
 			</CardlikeFlashcard>
-			<div className="from-background sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-80% to-transparent pt-6 pb-3">
+			<div className="from-lum-1 sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-80% to-transparent pt-6 pb-3">
 				{!showAnswers ? (
 					<Button
 						data-testid="reveal-answer-button"

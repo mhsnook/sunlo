@@ -101,7 +101,7 @@ function AdminRequestsIndex() {
 		<div className="space-y-4" data-testid="admin-requests-table">
 			<div className="flex flex-col gap-3 @md:flex-row @md:items-center @md:justify-between">
 				<div className="relative">
-					<Search className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+					<Search className="text-con-mid pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 					<Input
 						placeholder="Search requests..."
 						value={search}
@@ -121,7 +121,7 @@ function AdminRequestsIndex() {
 				</Button>
 			</div>
 
-			<p className="text-muted-foreground text-sm">
+			<p className="text-con-mid text-sm">
 				{filtered.length} request{filtered.length !== 1 ? 's' : ''}
 			</p>
 
@@ -194,9 +194,7 @@ function AdminRequestsIndex() {
 			</div>
 
 			{filtered.length === 0 && (
-				<p className="text-muted-foreground py-8 text-center">
-					No requests found.
-				</p>
+				<p className="text-con-mid py-8 text-center">No requests found.</p>
 			)}
 		</div>
 	)
@@ -219,7 +217,7 @@ function RequestTableRow({
 			<td className="max-w-[400px] truncate px-3 py-2">
 				<span className="flex items-center gap-2">
 					{request.deleted && (
-						<Archive className="text-muted-foreground h-3 w-3 shrink-0" />
+						<Archive className="text-con-mid h-3 w-3 shrink-0" />
 					)}
 					{request.prompt}
 				</span>
@@ -230,9 +228,7 @@ function RequestTableRow({
 					{request.upvote_count ?? 0}
 				</span>
 			</td>
-			<td className="text-muted-foreground px-3 py-2">
-				{ago(request.created_at)}
-			</td>
+			<td className="text-con-mid px-3 py-2">{ago(request.created_at)}</td>
 			<td className="px-3 py-2 text-end">
 				<Link
 					to="/admin/$lang/requests/$id"
@@ -268,21 +264,21 @@ function RequestCardRow({
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
 					{request.deleted && (
-						<Archive className="text-muted-foreground h-3 w-3 shrink-0" />
+						<Archive className="text-con-mid h-3 w-3 shrink-0" />
 					)}
 					<p className="truncate font-medium">{request.prompt}</p>
 				</div>
 				<div className="mt-1 flex items-center gap-3">
-					<span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+					<span className="text-con-mid inline-flex items-center gap-1 text-xs">
 						<ThumbsUp className="h-3 w-3" />
 						{request.upvote_count ?? 0}
 					</span>
-					<span className="text-muted-foreground text-xs">
+					<span className="text-con-mid text-xs">
 						{ago(request.created_at)}
 					</span>
 				</div>
 			</div>
-			<ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+			<ChevronRight className="text-con-mid h-4 w-4 shrink-0" />
 		</Link>
 	)
 }

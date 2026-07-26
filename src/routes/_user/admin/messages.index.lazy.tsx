@@ -261,7 +261,7 @@ function AdminMessagesPage() {
 		<div className="space-y-6" data-testid="admin-messages-page">
 			<header className="space-y-1">
 				<h1 className="text-2xl font-bold">Messages</h1>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Each message is the cross-language thing behind a request. Tag, edit
 					vocabulary, and bulk-add seed content.
 				</p>
@@ -279,7 +279,7 @@ function AdminMessagesPage() {
 			<div className="space-y-3">
 				<div className="flex flex-col gap-3 @md:flex-row @md:items-center @md:justify-between">
 					<div className="relative max-w-md grow">
-						<Search className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+						<Search className="text-con-mid pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 						<Input
 							placeholder="Filter by request text..."
 							value={search}
@@ -289,7 +289,7 @@ function AdminMessagesPage() {
 						/>
 					</div>
 					<div className="flex shrink-0 items-center gap-2">
-						<p className="text-muted-foreground text-sm">
+						<p className="text-con-mid text-sm">
 							{rows.length} of {rawRows?.length ?? 0}
 						</p>
 					</div>
@@ -338,7 +338,7 @@ function TagsStrip({
 			data-testid="admin-messages-tags-strip"
 		>
 			<div className="flex items-center justify-between">
-				<h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+				<h2 className="text-con-mid text-xs font-semibold tracking-wider uppercase">
 					Tags
 				</h2>
 				{isAdmin && (
@@ -380,7 +380,7 @@ function TagsStrip({
 						data-key={tag.slug}
 					>
 						{tag.label}
-						<span className="text-muted-foreground text-xs">
+						<span className="text-con-mid text-xs">
 							({tagCounts.get(tag.slug) ?? 0})
 						</span>
 					</button>
@@ -437,7 +437,7 @@ function NewTagButton() {
 			</PopoverTrigger>
 			<PopoverContent align="end" className="w-80 space-y-3">
 				<div className="space-y-1">
-					<label htmlFor={slugId} className="text-muted-foreground text-xs">
+					<label htmlFor={slugId} className="text-con-mid text-xs">
 						Slug (immutable)
 					</label>
 					<Input
@@ -449,7 +449,7 @@ function NewTagButton() {
 					/>
 				</div>
 				<div className="space-y-1">
-					<label htmlFor={labelId} className="text-muted-foreground text-xs">
+					<label htmlFor={labelId} className="text-con-mid text-xs">
 						Label
 					</label>
 					<Input
@@ -461,7 +461,7 @@ function NewTagButton() {
 					/>
 				</div>
 				<div className="space-y-1">
-					<label htmlFor={descId} className="text-muted-foreground text-xs">
+					<label htmlFor={descId} className="text-con-mid text-xs">
 						Description (optional)
 					</label>
 					<Textarea
@@ -513,7 +513,7 @@ function EditTagsDialog({ tagCounts }: { tagCounts: Map<string, number> }) {
 					</DialogDescription>
 				</DialogHeader>
 				{rows.length === 0 ? (
-					<p className="text-muted-foreground py-4 text-center text-sm italic">
+					<p className="text-con-mid py-4 text-center text-sm italic">
 						No tags yet.
 					</p>
 				) : (
@@ -596,9 +596,9 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 		>
 			{isEditing ? (
 				<div className="space-y-2">
-					<p className="text-muted-foreground font-mono text-xs">{tag.slug}</p>
+					<p className="text-con-mid font-mono text-xs">{tag.slug}</p>
 					<div className="space-y-1">
-						<label htmlFor={labelId} className="text-muted-foreground text-xs">
+						<label htmlFor={labelId} className="text-con-mid text-xs">
 							Label
 						</label>
 						<Input
@@ -613,7 +613,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 						/>
 					</div>
 					<div className="space-y-1">
-						<label htmlFor={descId} className="text-muted-foreground text-xs">
+						<label htmlFor={descId} className="text-con-mid text-xs">
 							Description
 						</label>
 						<Textarea
@@ -648,20 +648,16 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 					<div className="min-w-0 flex-1">
 						<div className="flex items-baseline gap-2">
 							<span className="font-semibold">{tag.label}</span>
-							<span className="text-muted-foreground text-xs">({count})</span>
+							<span className="text-con-mid text-xs">({count})</span>
 							{tag.archived ? (
 								<Badge variant="secondary" className="gap-1 text-xs">
 									<Archive className="size-3" /> Archived
 								</Badge>
 							) : null}
 						</div>
-						<p className="text-muted-foreground font-mono text-xs">
-							{tag.slug}
-						</p>
+						<p className="text-con-mid font-mono text-xs">{tag.slug}</p>
 						{tag.description ? (
-							<p className="text-muted-foreground mt-1 text-sm">
-								{tag.description}
-							</p>
+							<p className="text-con-mid mt-1 text-sm">{tag.description}</p>
 						) : null}
 					</div>
 					<div className="flex shrink-0 gap-1">
@@ -696,7 +692,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 										aria-label={`Archive ${tag.label}`}
 										data-testid="archive-tag-button"
 									>
-										<Archive className="text-destructive size-3.5" />
+										<Archive className="text-lum-6 text-chroma-high text-hue-danger size-3.5" />
 									</Button>
 								</AlertDialogTrigger>
 								<AlertDialogContent>
@@ -800,18 +796,18 @@ function BulkAddSection({
 					<Plus className="h-4 w-4" />
 					Bulk add ({prompts.length} parsed)
 				</span>
-				<ChevronsUpDown className="text-muted-foreground h-4 w-4" />
+				<ChevronsUpDown className="text-con-mid h-4 w-4" />
 			</button>
 			{open && (
 				<div className="space-y-3 pt-2">
 					<div className="flex flex-col gap-2 @md:flex-row @md:items-center">
-						<p className="text-muted-foreground text-xs">Language</p>
+						<p className="text-con-mid text-xs">Language</p>
 						<div className="max-w-xs grow">
 							<SelectOneLanguage value={lang} setValue={setLang} />
 						</div>
 					</div>
 					<div className="flex flex-col gap-2 @md:flex-row @md:items-center">
-						<p className="text-muted-foreground text-xs">Tag (optional)</p>
+						<p className="text-con-mid text-xs">Tag (optional)</p>
 						<Popover open={tagPickerOpen} onOpenChange={setTagPickerOpen}>
 							<PopoverTrigger asChild>
 								<Button
@@ -836,7 +832,7 @@ function BulkAddSection({
 									}}
 									data-testid="bulk-add-tag-none"
 								>
-									<span className="text-muted-foreground italic">No tag</span>
+									<span className="text-con-mid italic">No tag</span>
 								</button>
 								<ul className="max-h-64 overflow-y-auto">
 									{allTags.map((tag) => (
@@ -973,7 +969,7 @@ function SelectionBar({
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent align="start" className="w-72 space-y-2">
-					<p className="text-muted-foreground text-xs">
+					<p className="text-con-mid text-xs">
 						Pick a tag to add to all {selected.size} selected, or remove from
 						them.
 					</p>
@@ -1034,11 +1030,7 @@ function MessagesTable({
 		rows.length > 0 && rows.every((r) => selected.has(r.message_id))
 
 	if (rows.length === 0) {
-		return (
-			<p className="text-muted-foreground py-8 text-center">
-				No messages match.
-			</p>
-		)
+		return <p className="text-con-mid py-8 text-center">No messages match.</p>
 	}
 
 	return (
@@ -1055,7 +1047,7 @@ function MessagesTable({
 						aria-label="Select all visible"
 						data-testid="select-all-visible"
 					/>
-					<span className="text-muted-foreground font-semibold tracking-wide uppercase">
+					<span className="text-con-mid font-semibold tracking-wide uppercase">
 						Select all visible
 					</span>
 				</div>
@@ -1108,9 +1100,7 @@ function MessageRowItem({
 			<div className="min-w-0 flex-1 space-y-1">
 				<div className="flex items-center gap-2">
 					<LangBadge lang={row.lang} />
-					<span className="text-muted-foreground text-xs">
-						{ago(row.created_at)}
-					</span>
+					<span className="text-con-mid text-xs">{ago(row.created_at)}</span>
 				</div>
 				<p className="text-sm">{row.prompt}</p>
 				{tags.length > 0 && (

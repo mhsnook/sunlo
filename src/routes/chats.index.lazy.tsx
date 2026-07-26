@@ -39,7 +39,7 @@ function ChatsIndexPage() {
 		>
 			<header className="flex flex-col gap-2">
 				<h1 className="text-2xl font-semibold">Chat with the phrasebook</h1>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Pick a language. Each conversation has its own cart and selection.
 				</p>
 			</header>
@@ -62,7 +62,7 @@ function ChatsIndexPage() {
 							className="bg-card/50 hover:bg-lum-2 hover:bg-chroma-mlow block w-full rounded border p-3 text-left text-sm"
 						>
 							<div className="font-medium">{language.name}</div>
-							<div className="text-muted-foreground font-mono text-xs uppercase">
+							<div className="text-con-mid font-mono text-xs uppercase">
 								{language.lang} · {language.phrases_to_learn} phrases
 							</div>
 						</button>
@@ -81,9 +81,7 @@ function ChatsIndexPage() {
 								<Search className="h-4 w-4" />
 								More languages…
 							</div>
-							<div className="text-muted-foreground text-xs">
-								{rest.length} more
-							</div>
+							<div className="text-con-mid text-xs">{rest.length} more</div>
 						</button>
 					</li>
 				)}
@@ -112,7 +110,7 @@ function ChatsIndexPage() {
 								}}
 							>
 								<span>{language.name}</span>
-								<span className="text-muted-foreground ml-auto font-mono text-xs uppercase">
+								<span className="text-con-mid ml-auto font-mono text-xs uppercase">
 									{language.lang}
 								</span>
 							</CommandItem>

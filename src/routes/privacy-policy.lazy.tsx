@@ -14,7 +14,7 @@ export const Route = createLazyFileRoute('/privacy-policy')({
 
 function Page() {
 	return (
-		<main className="bg-background text-foreground px-2 py-6 @md:px-[5%]">
+		<main className="bg-lum-1 text-con-mhigh px-2 py-6 @md:px-[5%]">
 			<Card className="prose dark:prose-invert">
 				<CardHeader>
 					<CardTitle>Privacy Policy</CardTitle>
@@ -24,7 +24,7 @@ function Page() {
 					<Callout className="py-1">
 						<div>
 							<p>
-								<strong className="text-foreground">tl;dr:</strong> In order to
+								<strong className="text-con-mhigh">tl;dr:</strong> In order to
 								create an account you need to enter an email address, and
 								logging in leaves a cookie on your device. But other than this
 								we are not collecting or tracking any other personal

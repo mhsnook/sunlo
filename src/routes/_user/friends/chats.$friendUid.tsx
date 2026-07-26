@@ -104,11 +104,11 @@ function ChatPage() {
 				</Link>
 				<div className="flex-1">
 					<p className="font-semibold">{relUsername}</p>
-					<p className="text-muted-foreground text-xs">
+					<p className="text-con-mid text-xs">
 						{relation.status === 'friends' ? (
 							'Friends'
 						) : relation.status === 'pending' && !relation.isMostRecentByMe ? (
-							<span className="text-primary inline-flex items-center gap-1">
+							<span className="text-lum-5 text-chroma-max inline-flex items-center gap-1">
 								<UserPlus className="size-3" /> Wants to connect
 							</span>
 						) : relation.status === 'pending' ? (
@@ -165,7 +165,7 @@ function ChatPage() {
 												)}
 												<p
 													className={cn(
-														'text-muted-foreground grow text-xs',
+														'text-con-mid grow text-xs',
 														isMine && 'text-end'
 													)}
 												>
@@ -217,13 +217,13 @@ function ChatPage() {
 					</div>
 				) : relation.status === 'pending' && !relation.isMostRecentByMe ? (
 					<div className="flex flex-col items-center gap-2 py-2">
-						<p className="text-muted-foreground text-sm">
+						<p className="text-con-mid text-sm">
 							{relUsername} wants to connect
 						</p>
 						<RelationshipActions uid_for={friendUid} />
 					</div>
 				) : (
-					<p className="text-muted-foreground p-2 text-center text-sm italic">
+					<p className="text-con-mid p-2 text-center text-sm italic">
 						{relation.status === 'pending'
 							? 'Waiting for them to accept your request.'
 							: 'You must be friends to chat.'}
@@ -238,7 +238,7 @@ function ChatPage() {
 const EmptyChat = ({ profile }: { profile: PublicProfileType }) => (
 	<div className="flex flex-col items-center justify-center gap-6 py-10">
 		<p className="text-xl font-bold">{profile.username}</p>
-		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
+		<div className="bg-lum-5 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
 			{profile.avatar_path ? (
 				<img
 					src={avatarUrlify(profile.avatar_path, 128)}

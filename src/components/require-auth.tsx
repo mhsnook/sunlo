@@ -61,7 +61,7 @@ function AuthGate({ message }: { message: string }) {
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-6">
-					<p className="text-muted-foreground">{message}</p>
+					<p className="text-con-mid">{message}</p>
 					<LoginCardBody />
 				</CardContent>
 			</Card>

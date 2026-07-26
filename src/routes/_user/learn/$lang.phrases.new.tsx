@@ -259,34 +259,34 @@ function AddPhraseTab() {
 								{({ phraseText, translationText, onlyReverse }) =>
 									phraseText || translationText ? (
 										<div className="space-y-3 pt-2">
-											<Label className="text-muted-foreground text-sm">
+											<Label className="text-con-mid text-sm">
 												Review card previews
 											</Label>
 											<div className="grid gap-3 @lg:grid-cols-2">
 												<div
 													className={`bg-card rounded-lg border p-3 transition-opacity ${onlyReverse ? 'opacity-40' : ''}`}
 												>
-													<div className="text-muted-foreground mb-2 flex items-center justify-between text-xs font-medium tracking-wide uppercase">
+													<div className="text-con-mid mb-2 flex items-center justify-between text-xs font-medium tracking-wide uppercase">
 														<span className="inline-flex items-center gap-1">
 															Recognition Review{' '}
 															<Lightbulb className="size-3" />
 														</span>
 														{onlyReverse && (
-															<span className="text-muted-foreground text-xs normal-case">
+															<span className="text-con-mid text-xs normal-case">
 																(disabled)
 															</span>
 														)}
 													</div>
 													<div className="space-y-2">
-														<div className="text-foreground font-medium">
+														<div className="text-con-mhigh font-medium">
 															{phraseText || (
-																<span className="text-muted-foreground italic">
+																<span className="text-con-mid italic">
 																	Phrase text...
 																</span>
 															)}
 														</div>
 														<Separator />
-														<div className="text-muted-foreground text-sm">
+														<div className="text-con-mid text-sm">
 															{translationText || (
 																<span className="italic">Translation...</span>
 															)}
@@ -295,19 +295,19 @@ function AddPhraseTab() {
 												</div>
 
 												<div className="bg-card rounded-lg border p-3">
-													<div className="text-muted-foreground mb-2 inline-flex items-center gap-1 text-xs font-medium tracking-wide uppercase">
+													<div className="text-con-mid mb-2 inline-flex items-center gap-1 text-xs font-medium tracking-wide uppercase">
 														Recall Review <Brain className="size-3" />
 													</div>
 													<div className="space-y-2">
-														<div className="text-foreground font-medium">
+														<div className="text-con-mhigh font-medium">
 															{translationText || (
-																<span className="text-muted-foreground italic">
+																<span className="text-con-mid italic">
 																	Translation...
 																</span>
 															)}
 														</div>
 														<Separator />
-														<div className="text-muted-foreground text-sm">
+														<div className="text-con-mid text-sm">
 															{phraseText || (
 																<span className="italic">Phrase text...</span>
 															)}
@@ -332,7 +332,7 @@ function AddPhraseTab() {
 												</form.AppField>
 												<Label
 													htmlFor="only_reverse"
-													className="text-muted-foreground cursor-pointer text-sm font-normal"
+													className="text-con-mid cursor-pointer text-sm font-normal"
 												>
 													Only recall reviews make sense for this phrase
 												</Label>

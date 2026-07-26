@@ -60,14 +60,14 @@ function StatsContent({
 			<header className="flex items-center justify-between gap-3">
 				<LangBadge lang={phrase.lang} />
 				{card?.created_at ? (
-					<span className="text-muted-foreground text-xs">
+					<span className="text-con-mid text-xs">
 						Added to deck {ago(card.created_at)}
 					</span>
 				) : null}
 			</header>
 
 			{!hasReviews || !card ? (
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					{!card
 						? "This phrase isn't in your deck yet."
 						: "No reviews yet — it'll show up here after your first one."}
@@ -106,7 +106,7 @@ function RetrievabilityBar({ value }: { value: number }) {
 			<div className="flex items-baseline justify-between gap-2">
 				<div className="flex flex-col">
 					<span className="text-sm font-medium">Memory freshness</span>
-					<span className="text-muted-foreground text-xs">{label}</span>
+					<span className="text-con-mid text-xs">{label}</span>
 				</div>
 				<span className="text-3xl font-bold tabular-nums">{pct}%</span>
 			</div>
@@ -179,7 +179,7 @@ function ReviewTimeline({ reviews }: { reviews: Array<CardReviewType> }) {
 		<section className="space-y-2">
 			<div className="flex items-baseline justify-between">
 				<h3 className="text-sm font-medium">Review history</h3>
-				<span className="text-muted-foreground text-xs">
+				<span className="text-con-mid text-xs">
 					{reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
 				</span>
 			</div>
@@ -188,7 +188,7 @@ function ReviewTimeline({ reviews }: { reviews: Array<CardReviewType> }) {
 				{reviews.map((r) => (
 					<span
 						key={r.id}
-						className={cn('size-4 rounded', SCORE_BG[r.score] ?? 'bg-muted')}
+						className={cn('size-4 rounded', SCORE_BG[r.score] ?? 'bg-lum-2')}
 						title={`${SCORE_LABEL[r.score] ?? 'Review'} · ${ago(r.created_at)}`}
 					/>
 				))}
@@ -197,11 +197,9 @@ function ReviewTimeline({ reviews }: { reviews: Array<CardReviewType> }) {
 			{showSparkline && (
 				<>
 					<div className="flex items-baseline justify-between">
-						<span className="text-muted-foreground text-xs">
-							Difficulty trend
-						</span>
+						<span className="text-con-mid text-xs">Difficulty trend</span>
 						{lastDifficulty !== null && (
-							<span className="text-muted-foreground text-xs">
+							<span className="text-con-mid text-xs">
 								Currently {difficultyLabel(lastDifficulty)}
 							</span>
 						)}
@@ -290,7 +288,7 @@ function StatTile({
 				className
 			)}
 		>
-			<span className="text-muted-foreground text-xs">{label}</span>
+			<span className="text-con-mid text-xs">{label}</span>
 			<span className="font-semibold">{value}</span>
 		</div>
 	)

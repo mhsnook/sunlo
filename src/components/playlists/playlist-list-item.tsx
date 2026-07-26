@@ -137,7 +137,7 @@ export function PlaylistItem({
 	return (
 		<div
 			style={{ viewTransitionName: `playlist-${playlist.id}` } as CSSProperties}
-			className="bg-card text-card-foreground @container flex flex-col gap-3 rounded-lg border p-6 shadow-sm"
+			className="bg-card text-con-mhigh @container flex flex-col gap-3 rounded-lg border p-6 shadow-sm"
 		>
 			<div className="flex flex-row items-start justify-between gap-2">
 				<div className="flex flex-col gap-1">
@@ -172,7 +172,7 @@ export function PlaylistItem({
 				<h2 className="h2 my-0">{playlist.title}</h2>
 			</div>
 			{playlist.description && (
-				<p className="text-muted-foreground text-sm">{playlist.description}</p>
+				<p className="text-con-mid text-sm">{playlist.description}</p>
 			)}
 
 			{/* Cover image (shown when URL is not embeddable) */}
@@ -194,7 +194,7 @@ export function PlaylistItem({
 			{/* Track list of linked phrases */}
 			{!compact && (
 				<div
-					className="text-muted-foreground flex flex-col gap-1 text-sm"
+					className="text-con-mid flex flex-col gap-1 text-sm"
 					data-testid="playlist-phrase-list"
 				>
 					{data?.map(({ phrase }, index) => (
@@ -202,9 +202,9 @@ export function PlaylistItem({
 							key={phrase.id}
 							to="/learn/$lang/phrases/$id"
 							params={{ lang: phrase.lang, id: phrase.id }}
-							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
+							className="hover:text-con-mhigh hover:bg-lum-2 flex items-center gap-2 rounded px-2 py-1 transition-colors"
 						>
-							<span className="text-muted-foreground/50 w-6 text-end text-xs">
+							<span className="text-con-low w-6 text-end text-xs">
 								{index + 1}
 							</span>
 							<span
@@ -222,7 +222,7 @@ export function PlaylistItem({
 								&rdquo;
 							</span>
 							{phrase.translations && phrase.translations.length > 0 && (
-								<span className="text-muted-foreground/70 ms-auto text-xs whitespace-nowrap">
+								<span className="text-con-mlow ms-auto text-xs whitespace-nowrap">
 									{phrase.translations.length} translation
 									{phrase.translations.length === 1 ? '' : 's'}
 								</span>
@@ -236,7 +236,7 @@ export function PlaylistItem({
 						<button
 							type="button"
 							onClick={() => setShowAddPhrase(true)}
-							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
+							className="hover:text-con-mhigh hover:bg-lum-2 flex items-center gap-2 rounded px-2 py-1 transition-colors"
 							data-testid="add-phrase-to-playlist-button"
 						>
 							<span className="flex w-6 justify-end">
@@ -279,12 +279,12 @@ export function PlaylistItem({
 				</Button>
 			)}
 
-			<div className="text-muted-foreground flex items-center justify-between gap-4 text-sm">
+			<div className="text-con-mid flex items-center justify-between gap-4 text-sm">
 				<div className="flex items-center gap-4">
 					<UpvotePlaylist playlist={playlist} />
 					{playlist.href ? (
 						<a
-							className="hover:text-foreground flex items-center gap-1 underline"
+							className="hover:text-con-mhigh flex items-center gap-1 underline"
 							href={playlist.href}
 							target="_blank"
 							rel="noopener noreferrer"
@@ -320,6 +320,9 @@ function PhraseBookmarkBadge({ phraseId }: { phraseId: string }) {
 	const { data: card } = useMyCard(phraseId)
 	if (!card?.status || !['active', 'learned'].includes(card.status)) return null
 	return (
-		<Bookmark className="text-primary shrink-0 fill-current/50" size={12} />
+		<Bookmark
+			className="text-lum-5 text-chroma-max shrink-0 fill-current/50"
+			size={12}
+		/>
 	)
 }

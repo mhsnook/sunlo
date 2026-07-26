@@ -48,7 +48,7 @@ function ThemeSection() {
 		<div className="space-y-4" data-testid="theme-preference">
 			<div className="space-y-2">
 				<Label>Appearance</Label>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Choose light, dark, or follow your system setting.
 				</p>
 			</div>
@@ -106,7 +106,7 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 		<div className="space-y-4" data-testid="font-preference">
 			<div className="space-y-2">
 				<Label>Font Style</Label>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Choose a font that works best for you. The dyslexia-friendly font
 					(OpenDyslexic) may help with readability.
 				</p>
@@ -121,7 +121,7 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 					<BookA className="size-5 shrink-0" />
 					<div>
 						<span className="font-atkinson block font-medium">Default</span>
-						<span className="text-muted-foreground font-atkinson text-sm">
+						<span className="text-con-mid font-atkinson text-sm">
 							Atkinson Hyperlegible
 						</span>
 					</div>
@@ -137,7 +137,7 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 						<span className="font-dyslexic block font-medium">
 							Dyslexia-friendly
 						</span>
-						<span className="font-dyslexic text-muted-foreground text-sm">
+						<span className="font-dyslexic text-con-mid text-sm">
 							OpenDyslexic
 						</span>
 					</div>
@@ -169,7 +169,7 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 		<div className="space-y-4" data-testid="sound-preference">
 			<div className="space-y-2">
 				<Label>Review sounds</Label>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Play a brief sound when you submit a review score.
 				</p>
 			</div>
@@ -246,7 +246,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					<Grid2x2 className="size-5 shrink-0" />
 					<div>
 						<span className="block font-medium">Show 4 answer choices</span>
-						<span className="text-muted-foreground text-sm">
+						<span className="text-con-mid text-sm">
 							Again, Hard, Good, Easy
 						</span>
 					</div>
@@ -260,9 +260,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					<Columns2 className="size-5 shrink-0" />
 					<div>
 						<span className="block font-medium">Show 2 answer choices</span>
-						<span className="text-muted-foreground text-sm">
-							Try Again, Correct!
-						</span>
+						<span className="text-con-mid text-sm">Try Again, Correct!</span>
 					</div>
 				</ChoiceTile>
 			</div>

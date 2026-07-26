@@ -56,7 +56,7 @@ function HrefInput({
 	return (
 		<div>
 			<div className="flex items-center gap-2">
-				<LinkIcon className="text-muted-foreground ms-2 h-4 w-4 shrink-0" />
+				<LinkIcon className="text-con-mid ms-2 h-4 w-4 shrink-0" />
 				<Input
 					type="url"
 					placeholder="Timestamp link (optional)"
@@ -211,7 +211,7 @@ export function ManagePlaylistPhrasesDialog({
 							phrasesData.map((item, index) => (
 								<div
 									key={item.link.id}
-									className="bg-muted/30 rounded border p-3"
+									className="bg-lum-2 rounded border p-3"
 									data-testid="manage-phrase-card"
 								>
 									<div className="flex items-start gap-2">
@@ -272,7 +272,7 @@ export function ManagePlaylistPhrasesDialog({
 								</div>
 							))
 						) : (
-							<p className="text-muted-foreground py-8 text-center">
+							<p className="text-con-mid py-8 text-center">
 								No phrases in this playlist yet. Add some below!
 							</p>
 						)}

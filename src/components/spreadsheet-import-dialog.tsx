@@ -187,7 +187,7 @@ export function SpreadsheetImportDialog({
 										Separate multiple tags with commas inside a cell.
 									</p>
 								</div>
-								<p className="text-muted-foreground text-sm">
+								<p className="text-con-mid text-sm">
 									Any column that can&rsquo;t be identified is skipped by
 									default &mdash; you can reassign it on the next screen.
 								</p>
@@ -255,7 +255,7 @@ function PasteStep({
 				className="font-mono text-sm"
 				data-testid="spreadsheet-paste-textarea"
 			/>
-			<p className="text-muted-foreground text-xs">
+			<p className="text-con-mid text-xs">
 				Tip: Headers like &ldquo;translation (eng)&rdquo; or
 				&ldquo;English&rdquo; will auto-detect the translation language.
 			</p>
@@ -319,7 +319,7 @@ function MapAndReviewStep({
 				<div className="overflow-x-auto rounded border">
 					<table className="w-full text-sm">
 						<thead>
-							<tr className="bg-muted/50">
+							<tr className="bg-lum-2">
 								{headers.map((header, i) => (
 									<th
 										key={`col-${i}-${header}`}
@@ -338,7 +338,7 @@ function MapAndReviewStep({
 										className="px-3 py-2"
 									>
 										{mapping.role === 'phrase' ? (
-											<span className="text-muted-foreground text-xs font-medium">
+											<span className="text-con-mid text-xs font-medium">
 												Phrase ({languages[lang]})
 											</span>
 										) : (
@@ -349,7 +349,7 @@ function MapAndReviewStep({
 														role: e.target.value as ColumnRole,
 													})
 												}
-												className="bg-card border-input w-full rounded-2xl border px-2 py-1.5 text-sm"
+												className="bg-card border-lum-3 w-full rounded-2xl border px-2 py-1.5 text-sm"
 												data-testid={`column-role-${i}`}
 											>
 												<option value="skip">Skip</option>
@@ -403,12 +403,12 @@ function MapAndReviewStep({
 								checked={allIncluded}
 								onCheckedChange={(checked) => toggleAllRows(checked === true)}
 							/>
-							<span className="text-muted-foreground text-xs">Select all</span>
+							<span className="text-con-mid text-xs">Select all</span>
 						</div>
 					</div>
 					<div className="max-h-64 overflow-y-auto rounded border">
 						<table className="w-full text-sm">
-							<thead className="bg-muted/50 sticky top-0">
+							<thead className="bg-lum-2 sticky top-0">
 								<tr>
 									<th className="w-8 px-2 py-1.5" aria-label="Select row" />
 									<th className="px-2 py-1.5 text-start font-medium">Phrase</th>
@@ -463,7 +463,7 @@ function MapAndReviewStep({
 												{translationTexts.map((t, i) => (
 													<div
 														key={`tr-${i}-${t}`}
-														className="text-muted-foreground text-xs"
+														className="text-con-mid text-xs"
 													>
 														{t}
 													</div>
@@ -475,7 +475,7 @@ function MapAndReviewStep({
 														{tagTexts.map((t, i) => (
 															<span
 																key={`tag-${i}-${t}`}
-																className="bg-muted inline-block rounded px-1.5 py-0.5 text-xs"
+																className="bg-lum-2 inline-block rounded px-1.5 py-0.5 text-xs"
 															>
 																{t}
 															</span>
@@ -518,12 +518,12 @@ function ValidationMessages({
 	return (
 		<>
 			{translationCount === 0 && (
-				<p className="text-destructive text-sm">
+				<p className="text-lum-6 text-chroma-high text-hue-danger text-sm">
 					Please mark at least one column as &ldquo;Translation&rdquo;
 				</p>
 			)}
 			{translationsWithoutLang > 0 && (
-				<p className="text-destructive text-sm">
+				<p className="text-lum-6 text-chroma-high text-hue-danger text-sm">
 					Please select a language for all translation columns
 				</p>
 			)}

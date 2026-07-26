@@ -89,13 +89,13 @@ function WelcomePage() {
 			{/* Welcome Header */}
 			<header className="space-y-4 text-center">
 				<div className="from-lum-3 from-chroma-mlow to-lum-1 to-chroma-low mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
-					<Sparkles className="text-primary size-10" />
+					<Sparkles className="text-lum-5 text-chroma-max size-10" />
 				</div>
 				<div>
 					<h1 className="d1">
 						Welcome, <em>{profile?.username}</em>!
 					</h1>
-					<p className="text-muted-foreground mt-2 text-lg text-balance">
+					<p className="text-con-mid mt-2 text-lg text-balance">
 						You&apos;re all set up and ready to start your language learning
 						journey.
 					</p>
@@ -108,7 +108,7 @@ function WelcomePage() {
 				data-testid="sunlo-welcome-explainer"
 			>
 				<h2 className="mb-4 text-xl font-bold">What is Sunlo?</h2>
-				<p className="text-muted-foreground mb-6">
+				<p className="text-con-mid mb-6">
 					Sunlo is a social flashcard app that helps you learn languages through
 					community-powered content. Here&apos;s how it works:
 				</p>
@@ -204,7 +204,7 @@ function WelcomePage() {
 			<section className="bg-card/50 flex flex-col items-center gap-4 rounded-lg border p-6 @md:flex-row @md:justify-between">
 				<div>
 					<h2 className="text-xl font-bold">Explore a Language</h2>
-					<p className="text-muted-foreground">
+					<p className="text-con-mid">
 						Browse phrases, playlists, and requests in any language
 					</p>
 				</div>
@@ -261,7 +261,7 @@ function WelcomePage() {
 					</Link>
 				)}
 
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					You can always come back to this page from your profile.
 				</p>
 			</div>
@@ -280,12 +280,12 @@ function FeatureItem({
 }) {
 	return (
 		<div className="flex gap-3">
-			<div className="bg-lum-2 bg-chroma-mlow text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
+			<div className="bg-lum-2 bg-chroma-mlow text-lum-5 text-chroma-max flex size-10 shrink-0 items-center justify-center rounded-full">
 				<Icon className="size-5" />
 			</div>
 			<div>
 				<h3 className="font-semibold">{title}</h3>
-				<p className="text-muted-foreground text-sm">{description}</p>
+				<p className="text-con-mid text-sm">{description}</p>
 			</div>
 		</div>
 	)
@@ -336,7 +336,7 @@ function ActionCard({
 					<div
 						className={cn(
 							'flex size-10 items-center justify-center rounded-full',
-							isPrimary ? 'bg-primary text-primary-foreground' : 'bg-muted'
+							isPrimary ? 'bg-lum-5 bg-chroma-max text-con-high' : 'bg-lum-2'
 						)}
 					>
 						<Icon className="size-5" />
@@ -345,7 +345,7 @@ function ActionCard({
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-4">
-				<p className="text-muted-foreground text-sm">{description}</p>
+				<p className="text-con-mid text-sm">{description}</p>
 				{disabled ? (
 					<Button variant="soft" disabled className="w-full">
 						{linkText}
@@ -430,10 +430,10 @@ function BrowseRequestsDialog({
 								type="button"
 								className="bg-card hover:bg-lum-2 flex flex-col gap-2 rounded-lg border border-dashed p-4 text-start transition-colors"
 							>
-								<span className="bg-muted text-muted-foreground inline-flex w-fit items-center justify-center rounded-md px-2.5 py-1">
+								<span className="bg-lum-2 text-con-mid inline-flex w-fit items-center justify-center rounded-md px-2.5 py-1">
 									<List className="size-4" />
 								</span>
-								<span className="text-muted-foreground text-sm leading-tight font-semibold">
+								<span className="text-con-mid text-sm leading-tight font-semibold">
 									More languages
 								</span>
 							</button>
@@ -479,10 +479,10 @@ function RequestsYouCanHelp() {
 	return (
 		<section>
 			<div className="mb-4 flex items-center gap-2">
-				<Globe className="text-primary size-5" />
+				<Globe className="text-lum-5 text-chroma-max size-5" />
 				<h2 className="text-xl font-bold">Requests You Can Help With</h2>
 			</div>
-			<p className="text-muted-foreground mb-4">
+			<p className="text-con-mid mb-4">
 				People are looking for translations in languages you know. Can you help?
 			</p>
 
@@ -492,12 +492,12 @@ function RequestsYouCanHelp() {
 						key={request.id}
 						to="/learn/$lang/requests/$id"
 						params={{ lang: request.lang, id: request.id }}
-						className="hover:bg-muted/50 flex items-start gap-3 rounded-lg border p-4 transition-colors"
+						className="hover:bg-lum-2 flex items-start gap-3 rounded-lg border p-4 transition-colors"
 					>
 						<LangBadge lang={request.lang} />
 						<div className="min-w-0 flex-1">
 							<p className="line-clamp-2 font-medium">{request.prompt}</p>
-							<p className="text-muted-foreground mt-1 text-sm">
+							<p className="text-con-mid mt-1 text-sm">
 								{languages[request.lang]} &middot; {request.upvote_count ?? 0}{' '}
 								upvotes
 							</p>

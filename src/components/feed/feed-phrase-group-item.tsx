@@ -37,14 +37,14 @@ export function PhraseSummaryLine({
 			<Link
 				to="/learn/$lang/phrases/$id"
 				params={{ lang: item.lang, id: item.id }}
-				className="group-hover:text-foreground inline-flex min-w-0 flex-1 items-center gap-2 font-medium"
+				className="group-hover:text-con-mhigh inline-flex min-w-0 flex-1 items-center gap-2 font-medium"
 				data-name="feed-phrase-link"
 				data-key={item.id}
 				// Only link if it's from the feed; otherwise assume it's not meant to be interactive
 				disabled={!('payload' in item)}
 			>
 				{card?.status && ['active', 'learned'].includes(card.status) ? (
-					<span className="bg-primary inline-flex shrink-0 items-center justify-center rounded p-0.5">
+					<span className="bg-lum-5 bg-chroma-max inline-flex shrink-0 items-center justify-center rounded p-0.5">
 						<MessageSquareQuote size={12} className="text-white" />
 					</span>
 				) : (
@@ -52,7 +52,7 @@ export function PhraseSummaryLine({
 				)}
 				<span className="truncate">&ldquo;{phraseText}&rdquo;</span>
 				{translationCount > 0 && (
-					<span className="text-muted-foreground/70 group-hover:text-foreground shrink-0 text-xs whitespace-nowrap">
+					<span className="text-con-mlow group-hover:text-con-mhigh shrink-0 text-xs whitespace-nowrap">
 						({translationCount} translation{translationCount === 1 ? '' : 's'})
 					</span>
 				)}
@@ -60,7 +60,7 @@ export function PhraseSummaryLine({
 
 			{(phrase.count_learners ?? 0) > 0 && (
 				<span
-					className="text-muted-foreground/70 flex shrink-0 items-center gap-1 text-xs whitespace-nowrap"
+					className="text-con-mlow flex shrink-0 items-center gap-1 text-xs whitespace-nowrap"
 					title={`${phrase.count_learners} ${phrase.count_learners === 1 ? 'person is' : 'people are'} learning this phrase`}
 				>
 					<Users size={12} />
@@ -77,7 +77,7 @@ export function FeedPhraseGroupItem({ items }: { items: FeedActivityType[] }) {
 	const firstItem = items[0]
 
 	return (
-		<div className="text-muted-foreground flex flex-col gap-2 rounded-lg p-3 text-sm">
+		<div className="text-con-mid flex flex-col gap-2 rounded-lg p-3 text-sm">
 			<div className="flex flex-row items-center gap-2">
 				<UidPermalinkInline
 					uid={firstItem.uid}
@@ -87,7 +87,7 @@ export function FeedPhraseGroupItem({ items }: { items: FeedActivityType[] }) {
 					timeLinkParams={{ lang: firstItem.lang, id: firstItem.id }}
 				/>
 			</div>
-			<div className="bg-background flex flex-col gap-1 rounded p-2">
+			<div className="bg-lum-1 flex flex-col gap-1 rounded p-2">
 				{items.map((item) => (
 					<PhraseSummaryLine key={item.id} item={item} />
 				))}

@@ -23,7 +23,7 @@ function FriendsHomePage() {
 					<h1 className="text-2xl leading-tight font-bold @md:text-3xl">
 						Friends
 					</h1>
-					<p className="text-muted-foreground mt-1 text-sm">
+					<p className="text-con-mid mt-1 text-sm">
 						Recent activity from people you've connected with.
 					</p>
 				</div>
@@ -55,7 +55,7 @@ function FriendsHomePage() {
 			>
 				<h2
 					id="friends-feed-heading"
-					className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
+					className="text-con-mid text-xs font-semibold tracking-wider uppercase"
 				>
 					Recent from friends
 				</h2>

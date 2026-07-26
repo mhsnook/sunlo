@@ -198,9 +198,7 @@ export function AddTags({
 									)
 								)
 							) : (
-								<p className="text-muted-foreground text-sm italic">
-									No tags yet.
-								</p>
+								<p className="text-con-mid text-sm italic">No tags yet.</p>
 							)}
 						</div>
 					</div>
@@ -276,7 +274,7 @@ function RemovableTagBadge({
 			{tag.name}
 			<button
 				onClick={removeTag}
-				className="hover:text-destructive -me-1 rounded-full p-0.5"
+				className="hover:text-lum-6 hover:text-chroma-high hover:text-hue-danger -me-1 rounded-full p-0.5"
 			>
 				<X className="size-3" />
 			</button>

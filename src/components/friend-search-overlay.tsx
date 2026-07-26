@@ -47,7 +47,7 @@ export default function FriendSearchOverlay({
 				{/* Heading */}
 				<div className="px-4 pt-4 pb-0">
 					<DialogTitle
-						className={`text-muted-foreground ${hasQuery ? 'text-sm' : 'text-xl'} font-medium`}
+						className={`text-con-mid ${hasQuery ? 'text-sm' : 'text-xl'} font-medium`}
 					>
 						Search for friends
 					</DialogTitle>
@@ -55,8 +55,8 @@ export default function FriendSearchOverlay({
 
 				{/* Search Input */}
 				<search className="p-3">
-					<div className="bg-muted/50 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
-						<Search className="text-muted-foreground size-5 shrink-0" />
+					<div className="bg-lum-2 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
+						<Search className="text-con-mid size-5 shrink-0" />
 						<input
 							ref={inputRef}
 							type="text"
@@ -64,14 +64,14 @@ export default function FriendSearchOverlay({
 							placeholder="Search by username..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							className={`${hasQuery ? 'text-base' : 'p-2 text-xl'} placeholder:text-muted-foreground flex-1 bg-transparent outline-none`}
+							className={`${hasQuery ? 'text-base' : 'p-2 text-xl'} placeholder:text-con-mid flex-1 bg-transparent outline-none`}
 							data-testid="friend-search-input"
 						/>
 						{query && (
 							<button
 								type="button"
 								onClick={() => setQuery('')}
-								className="text-muted-foreground hover:text-foreground"
+								className="text-con-mid hover:text-con-mhigh"
 							>
 								<X className="size-4" />
 							</button>
@@ -95,7 +95,7 @@ export default function FriendSearchOverlay({
 							</Callout>
 						) : (
 							<>
-								<p className="text-muted-foreground ms-1 text-sm italic">
+								<p className="text-con-mid ms-1 text-sm italic">
 									{filteredResults.length} result
 									{filteredResults.length === 1 ? '' : 's'}
 								</p>

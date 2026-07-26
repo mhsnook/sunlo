@@ -54,7 +54,7 @@ export function BrowseSection({
 				<h2 className="text-lg font-bold">
 					{title}
 					{count != null ? (
-						<span className="text-muted-foreground ms-2 text-sm font-normal">
+						<span className="text-con-mid ms-2 text-sm font-normal">
 							{count}
 						</span>
 					) : null}
@@ -95,9 +95,7 @@ function AddedPill({ added }: { added: boolean }) {
 		<span
 			className={cn(
 				'flex items-center gap-1 text-xs font-medium',
-				added
-					? 'hue-success text-lum-5 text-chroma-high'
-					: 'text-primary-foresoft'
+				added ? 'hue-success text-lum-5 text-chroma-high' : 'text-lum-7'
 			)}
 		>
 			{added ? (
@@ -143,7 +141,7 @@ export function SetTile({
 		<Link
 			to="/learn/$lang/playlists/$playlistId"
 			params={{ lang, playlistId: playlist.id }}
-			className="bg-card/50 hover:border-primary block rounded border p-4 transition-colors"
+			className="bg-card/50 hover:border-lum-5 hover:border-chroma-max block rounded border p-4 transition-colors"
 			data-testid="browse-set-tile"
 			data-key={playlist.id}
 		>
@@ -151,7 +149,7 @@ export function SetTile({
 				<h3 className="font-semibold">{playlist.title}</h3>
 				<AddedPill added={added} />
 			</div>
-			<div className="text-muted-foreground mt-1 flex items-end justify-between gap-2 text-sm">
+			<div className="text-con-mid mt-1 flex items-end justify-between gap-2 text-sm">
 				<p className="line-clamp-1">
 					{playlist.description ?? 'Flashcard set'}
 				</p>
@@ -193,11 +191,11 @@ export function TagSetTile({
 				type="button"
 				onClick={() => setOpen((o) => !o)}
 				aria-expanded={open}
-				className="hover:border-primary flex w-full flex-col gap-1 rounded p-4 text-start transition-colors"
+				className="hover:border-lum-5 hover:border-chroma-max flex w-full flex-col gap-1 rounded p-4 text-start transition-colors"
 			>
 				<div className="flex w-full items-start justify-between gap-2">
 					<div className="flex items-center gap-2">
-						<MessagesSquare className="text-muted-foreground size-4 shrink-0" />
+						<MessagesSquare className="text-con-mid size-4 shrink-0" />
 						<h3 className="font-semibold">{tagSet.label}</h3>
 						<Badge variant="secondary" size="sm">
 							Topic
@@ -205,7 +203,7 @@ export function TagSetTile({
 					</div>
 					<AddedPill added={added} />
 				</div>
-				<div className="text-muted-foreground flex w-full items-end justify-between gap-2 text-sm">
+				<div className="text-con-mid flex w-full items-end justify-between gap-2 text-sm">
 					<p className="line-clamp-1">
 						{tagSet.description ?? 'Phrases from tagged requests'}
 					</p>
@@ -274,7 +272,7 @@ export function NewCardTile({ pid }: { pid: uuid }) {
 			{primary ? <p className="mt-3 font-medium">{primary.text}</p> : null}
 
 			{rest.length > 0 ? (
-				<div className="text-muted-foreground mt-3 space-y-1 border-t pt-3 text-sm">
+				<div className="text-con-mid mt-3 space-y-1 border-t pt-3 text-sm">
 					{rest.map((t) => (
 						<p key={t.id}>{t.text}</p>
 					))}

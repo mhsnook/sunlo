@@ -51,7 +51,7 @@ function highlight(text: string, query: string): ReactNode {
 	return (
 		<>
 			{text.slice(0, i)}
-			<mark className="hue-warning bg-lum-3 bg-chroma-mid text-lum-8 text-chroma-high rounded-[3px] px-px">
+			<mark className="hue-warning bg-lum-3 text-lum-8 text-chroma-high rounded-[3px] px-px">
 				{text.slice(i, i + query.length)}
 			</mark>
 			{text.slice(i + query.length)}
@@ -95,11 +95,11 @@ function FriendRow({
 			</span>
 			<span className="flex shrink-0 flex-col items-end gap-1">
 				{friend.status === 'pending' ? (
-					<span className="bg-lum-3 bg-chroma-mid text-lum-7 text-chroma-high inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
+					<span className="bg-lum-3 text-lum-7 text-chroma-high inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
 						<UserPlus className="size-2.5" /> Pending
 					</span>
 				) : timestamp ? (
-					<span className="text-muted-foreground text-xs">{timestamp}</span>
+					<span className="text-con-mid text-xs">{timestamp}</span>
 				) : null}
 			</span>
 			<span
@@ -107,8 +107,8 @@ function FriendRow({
 				className={cn(
 					'flex size-[22px] shrink-0 items-center justify-center rounded-md border-[1.5px] transition-colors',
 					selected
-						? 'bg-primary border-primary text-primary-foreground'
-						: 'border-border bg-card group-hover:border-primary-foresoft'
+						? 'bg-lum-5 bg-chroma-max border-lum-5 border-chroma-max text-con-high'
+						: 'border-lum-3 bg-card group-hover:border-lum-7'
 				)}
 			>
 				<Check
@@ -139,7 +139,7 @@ export function SharePreviewChip({
 			<span className="min-w-0 flex-1">
 				<span className="block truncate font-bold">{title}</span>
 				{subtitle ? (
-					<span className="text-muted-foreground block truncate text-sm italic">
+					<span className="text-con-mid block truncate text-sm italic">
 						{subtitle}
 					</span>
 				) : null}
@@ -223,11 +223,11 @@ function PickerBody({
 		return (
 			<div className="flex flex-col">
 				{preview ? <div className="pt-1">{preview}</div> : null}
-				<div className="text-muted-foreground px-6 py-9 text-center">
+				<div className="text-con-mid px-6 py-9 text-center">
 					<span className="bg-lum-3 bg-chroma-mlow text-lum-6 text-chroma-high mb-3.5 inline-flex size-14 items-center justify-center rounded-full">
 						<Users className="size-7" />
 					</span>
-					<h3 className="text-foreground mb-1.5 text-base font-bold">
+					<h3 className="text-con-mhigh mb-1.5 text-base font-bold">
 						No friends yet
 					</h3>
 					<p className="mx-auto mb-4 max-w-xs text-sm leading-relaxed">
@@ -251,7 +251,7 @@ function PickerBody({
 			{/* Sticky search */}
 			<div className="bg-popover sticky top-0 z-5 border-b px-3.5 pt-3 pb-2.5">
 				<div className="hue-neutral bg-lum-1 focus-within:bg-card focus-within:border-ring focus-within:ring-ring/25 flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition focus-within:ring-2">
-					<Search className="text-muted-foreground size-4 shrink-0" />
+					<Search className="text-con-mid size-4 shrink-0" />
 					<input
 						ref={searchRef}
 						value={search}
@@ -259,14 +259,14 @@ function PickerBody({
 						placeholder="Search by username…"
 						aria-label="Search friends"
 						data-testid="friend-search"
-						className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 border-0 bg-transparent outline-hidden"
+						className="text-con-mhigh placeholder:text-con-mid min-w-0 flex-1 border-0 bg-transparent outline-hidden"
 					/>
 					{query ? (
 						<button
 							type="button"
 							onClick={() => setSearch('')}
 							aria-label="Clear search"
-							className="text-muted-foreground hover:text-foreground flex p-0.5"
+							className="text-con-mid hover:text-con-mhigh flex p-0.5"
 						>
 							<X className="size-3.5" />
 						</button>
@@ -277,10 +277,10 @@ function PickerBody({
 			{/* Scrollable list */}
 			<div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
 				{filtered.length === 0 ? (
-					<div className="text-muted-foreground px-4 py-8 text-center text-sm">
+					<div className="text-con-mid px-4 py-8 text-center text-sm">
 						<div>
 							No friend named{' '}
-							<span className="text-foreground font-bold">“{query}”</span>
+							<span className="text-con-mhigh font-bold">“{query}”</span>
 						</div>
 						<Link
 							to="/friends"
@@ -309,10 +309,10 @@ function PickerBody({
 
 			{/* Sticky footer with confirm CTA */}
 			<div className="bg-popover flex items-center gap-3 border-t px-3.5 py-3">
-				<span className="text-muted-foreground text-sm">
+				<span className="text-con-mid text-sm">
 					{count > 0 ? (
 						<>
-							<strong className="text-foreground font-bold">{count}</strong>{' '}
+							<strong className="text-con-mhigh font-bold">{count}</strong>{' '}
 							selected
 						</>
 					) : (
@@ -345,7 +345,7 @@ function AuthPrompt({ title, message }: { title: string; message: string }) {
 				<h2 className="text-lg leading-none font-semibold tracking-tight">
 					{title}
 				</h2>
-				<p className="text-muted-foreground mt-2 text-sm">{message}</p>
+				<p className="text-con-mid mt-2 text-sm">{message}</p>
 			</div>
 			<LoginSignupButtons />
 		</div>
@@ -442,7 +442,7 @@ export function FriendPickerDialog({
 								<DialogPrimitive.Close
 									aria-label="Close"
 									data-testid="close-friend-picker"
-									className="hue-neutral hover:hue-neutral bg-lum-3 hover:bg-lum-4 text-foreground ms-auto flex size-8 items-center justify-center rounded-md transition-colors"
+									className="hue-neutral hover:hue-neutral bg-lum-3 hover:bg-lum-4 text-con-mhigh ms-auto flex size-8 items-center justify-center rounded-md transition-colors"
 								>
 									<X className="size-4" />
 								</DialogPrimitive.Close>

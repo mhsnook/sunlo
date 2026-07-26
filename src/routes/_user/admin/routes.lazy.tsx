@@ -93,13 +93,13 @@ function RoutesIntrospection() {
 		<main style={style} className="space-y-4" data-testid="admin-routes-page">
 			<header>
 				<h1 className="text-2xl font-bold">Route tree</h1>
-				<p className="text-muted-foreground mt-1 text-sm">
+				<p className="text-con-mid mt-1 text-sm">
 					{counts.total} routes · {counts.lazy} lazy · {counts.titleBar}{' '}
 					titleBar · {counts.appnav} appnav · {counts.ctxmenu} contextMenu ·{' '}
 					{counts.search} search · {counts.focus} focusMode · {counts.wide}{' '}
 					wideContent · {counts.fixed} fixedHeight
 				</p>
-				<p className="text-muted-foreground mt-1 text-xs">
+				<p className="text-con-mid mt-1 text-xs">
 					Everything read from <code>staticData</code>. Dynamic titleBar values
 					(functions of params / isAuth) are shown as <em>(fn)</em>.
 				</p>
@@ -115,8 +115,8 @@ function RoutesIntrospection() {
 
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
-					<thead className="bg-background sticky top-0 z-10 shadow-[0_1px_0_var(--border)]">
-						<tr className="text-muted-foreground text-left text-xs tracking-wider uppercase">
+					<thead className="bg-lum-1 sticky top-0 z-10 shadow-[0_1px_0_var(--border)]">
+						<tr className="text-con-mid text-left text-xs tracking-wider uppercase">
 							<Th>Route id</Th>
 							<Th>load</Th>
 							<Th>titleBar</Th>
@@ -170,7 +170,7 @@ function LoadCell({ isLazy }: { isLazy: boolean }) {
 					'inline-block rounded px-1.5 py-0.5 font-mono',
 					isLazy
 						? 'hue-info bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-high'
-						: 'hue-neutral bg-lum-2 bg-chroma-mlow text-muted-foreground'
+						: 'hue-neutral bg-lum-2 bg-chroma-mlow text-con-mid'
 				)}
 			>
 				{isLazy ? 'lazy' : 'eager'}
@@ -184,7 +184,7 @@ function BoolCell({ on }: { on: boolean }) {
 		<td
 			className={cn(
 				'px-2 py-1.5 text-center',
-				on ? 'hue-success text-lum-7 text-chroma-high' : 'text-muted-foreground'
+				on ? 'hue-success text-lum-7 text-chroma-high' : 'text-con-mid'
 			)}
 		>
 			{on ? '✓' : '·'}
@@ -194,7 +194,7 @@ function BoolCell({ on }: { on: boolean }) {
 
 function SearchCell({ scope }: { scope: SearchScope | undefined }) {
 	if (scope === undefined)
-		return <td className="text-muted-foreground px-2 py-1.5 text-center">·</td>
+		return <td className="text-con-mid px-2 py-1.5 text-center">·</td>
 	return (
 		<td className="hue-success text-lum-7 text-chroma-high px-2 py-1.5 text-center font-mono text-xs">
 			{scope}
@@ -204,15 +204,13 @@ function SearchCell({ scope }: { scope: SearchScope | undefined }) {
 
 function TitleBarCell({ tb }: { tb: TitleBarStatic | undefined }) {
 	if (tb === undefined)
-		return <td className="text-muted-foreground px-2 py-1.5 text-xs">·</td>
+		return <td className="text-con-mid px-2 py-1.5 text-xs">·</td>
 	if (typeof tb === 'function')
-		return <td className="text-muted-foreground px-2 py-1.5 text-xs">(fn)</td>
+		return <td className="text-con-mid px-2 py-1.5 text-xs">(fn)</td>
 	return (
 		<td className="px-2 py-1.5 text-xs">
 			<div className="font-medium">{tb.title}</div>
-			{tb.subtitle ? (
-				<div className="text-muted-foreground">{tb.subtitle}</div>
-			) : null}
+			{tb.subtitle ? <div className="text-con-mid">{tb.subtitle}</div> : null}
 		</td>
 	)
 }
@@ -223,7 +221,7 @@ function fmtList(arr: string[]): string {
 
 function NavCell({ list }: { list: NavList | undefined }) {
 	if (list === undefined)
-		return <td className="text-muted-foreground px-2 py-1.5 text-xs">·</td>
+		return <td className="text-con-mid px-2 py-1.5 text-xs">·</td>
 	// Flat array shape: string[] — same for both auth states.
 	if (typeof list[0] === 'string' || list.length === 0)
 		return (
@@ -237,10 +235,10 @@ function NavCell({ list }: { list: NavList | undefined }) {
 	return (
 		<td className="px-2 py-1.5 font-mono text-xs">
 			<div>
-				<span className="text-muted-foreground">auth:</span> {fmtList(authArr)}
+				<span className="text-con-mid">auth:</span> {fmtList(authArr)}
 			</div>
 			<div>
-				<span className="text-muted-foreground">unauth:</span>{' '}
+				<span className="text-con-mid">unauth:</span>{' '}
 				{unauthArr === null ? '(hidden)' : fmtList(unauthArr)}
 			</div>
 		</td>

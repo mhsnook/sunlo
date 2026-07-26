@@ -75,7 +75,7 @@ function SectionHead({
 	count: string | number
 }) {
 	return (
-		<div className="text-muted-foreground flex items-center gap-2 px-1 py-2 font-mono text-[10.5px] font-bold tracking-widest uppercase">
+		<div className="text-con-mid flex items-center gap-2 px-1 py-2 font-mono text-[10.5px] font-bold tracking-widest uppercase">
 			<span>{label}</span>
 			<span className="ml-auto font-normal tracking-wide">{count}</span>
 		</div>
@@ -97,7 +97,7 @@ function LangTile({
 	return (
 		<button
 			type="button"
-			className="bg-card border-border hover:border-primary/40 flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl border p-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm"
+			className="bg-card border-lum-3 hover:border-lum-4 hover:border-chroma-mlow flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl border p-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm"
 			style={getLangThemeCss(code)}
 			onClick={() => onPick(code)}
 		>
@@ -106,7 +106,7 @@ function LangTile({
 				{isPrimary ? (
 					<Star className="size-3.5 shrink-0 fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400" />
 				) : isSelected ? (
-					<Check className="text-primary size-3.5 shrink-0" />
+					<Check className="text-lum-5 text-chroma-max size-3.5 shrink-0" />
 				) : null}
 			</div>
 			<div className="truncate text-sm leading-tight font-bold tracking-tight">
@@ -133,14 +133,16 @@ function LangRow({
 		<button
 			type="button"
 			data-key={code}
-			className="hover:bg-lum-2 focus-visible:bg-lum-2 text-foreground flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
+			className="hover:bg-lum-2 focus-visible:bg-lum-2 text-con-mhigh flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
 			onClick={() => onPick(code)}
 		>
 			<span className="min-w-0 flex-1 truncate text-sm font-semibold">
 				<Highlight text={label} q={q} />
 			</span>
 			<LangBadge lang={code} className="shrink-0 text-[10px]" />
-			{isSelected && <Check className="text-primary size-3.5 shrink-0" />}
+			{isSelected && (
+				<Check className="text-lum-5 text-chroma-max size-3.5 shrink-0" />
+			)}
 		</button>
 	)
 }
@@ -278,9 +280,9 @@ function PickerBody({
 	return (
 		<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 			{/* Search — pinned at top */}
-			<div className="bg-popover border-border shrink-0 border-b px-3.5 pt-3 pb-2.5">
-				<div className="bg-muted/60 border-border focus-within:border-ring focus-within:ring-ring/20 focus-within:bg-card flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all focus-within:ring-2">
-					<Search className="text-muted-foreground size-4 shrink-0" />
+			<div className="bg-popover border-lum-3 shrink-0 border-b px-3.5 pt-3 pb-2.5">
+				<div className="bg-lum-2 border-lum-3 focus-within:border-ring focus-within:ring-ring/20 focus-within:bg-card flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all focus-within:ring-2">
+					<Search className="text-con-mid size-4 shrink-0" />
 					<input
 						ref={searchRef}
 						value={search}
@@ -288,12 +290,12 @@ function PickerBody({
 						placeholder="Search 100+ languages…"
 						aria-label="Search language"
 						data-testid="language-search-input"
-						className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 border-0 bg-transparent text-sm outline-none"
+						className="text-con-mhigh placeholder:text-con-mid min-w-0 flex-1 border-0 bg-transparent text-sm outline-none"
 					/>
 					{q ? (
 						<button
 							type="button"
-							className="text-muted-foreground hover:text-foreground p-0.5"
+							className="text-con-mid hover:text-con-mhigh p-0.5"
 							onClick={() => setSearch('')}
 							aria-label="Clear"
 						>
@@ -307,18 +309,18 @@ function PickerBody({
 			<div className="min-h-0 flex-1 overflow-y-auto px-3.5 pb-4">
 				{isFiltering ? (
 					filteredAll.length === 0 ? (
-						<div className="text-muted-foreground px-4 py-8 text-center text-sm">
+						<div className="text-con-mid px-4 py-8 text-center text-sm">
 							<div>
 								No matches for{' '}
-								<span className="text-foreground font-bold">"{q}"</span>
+								<span className="text-con-mhigh font-bold">"{q}"</span>
 							</div>
 							<div className="mt-1.5 text-xs">
 								Try the ISO 639-3 code, like{' '}
-								<code className="bg-muted rounded px-1 py-0.5 font-mono">
+								<code className="bg-lum-2 rounded px-1 py-0.5 font-mono">
 									fra
 								</code>{' '}
 								or{' '}
-								<code className="bg-muted rounded px-1 py-0.5 font-mono">
+								<code className="bg-lum-2 rounded px-1 py-0.5 font-mono">
 									tam
 								</code>
 								.
@@ -356,7 +358,7 @@ function PickerBody({
 								</div>
 							</section>
 						))}
-						<div className="border-border mx-1 my-3 border-t border-dashed" />
+						<div className="border-lum-3 mx-1 my-3 border-t border-dashed" />
 						<section>
 							<SectionHead label="All languages" count="A — Z" />
 							<AllLanguagesList
@@ -395,10 +397,12 @@ export function LanguagePickerTrigger({
 			className={cn(
 				// Match the at-rest + hover border treatment of <Input>/<Textarea>
 				'flex w-full items-center gap-2.5 rounded-2xl border bg-card/50 px-3.5 py-2.5 text-left text-sm font-sans inset-shadow-sm',
-				'ring-offset-background cursor-pointer hover:border-primary',
+				'ring-offset-background cursor-pointer hover:border-lum-5 hover:border-chroma-max',
 				'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
-				hasError ? 'border-destructive' : 'border-lum-4 border-chroma-mlow',
-				!value && 'text-muted-foreground',
+				hasError
+					? 'border-lum-6 border-chroma-high border-hue-danger'
+					: 'border-lum-4 border-chroma-mlow',
+				!value && 'text-con-mid',
 				className
 			)}
 			{...props}
@@ -406,15 +410,15 @@ export function LanguagePickerTrigger({
 			{value ? (
 				<>
 					<LangBadge lang={value} />
-					<span className="text-foreground font-semibold">{name}</span>
+					<span className="text-con-mhigh font-semibold">{name}</span>
 				</>
 			) : (
 				<>
-					<Globe className="text-muted-foreground size-4" />
+					<Globe className="text-con-mid size-4" />
 					<span>{placeholder}</span>
 				</>
 			)}
-			<ChevronsUpDown className="text-muted-foreground ml-auto size-4 shrink-0" />
+			<ChevronsUpDown className="text-con-mid ml-auto size-4 shrink-0" />
 		</button>
 	)
 }
@@ -548,7 +552,7 @@ export function LanguagePicker({
 	}
 
 	const footer = confirmMode ? (
-		<div className="border-border bg-popover shrink-0 border-t p-3.5">
+		<div className="border-lum-3 bg-popover shrink-0 border-t p-3.5">
 			<Button
 				className="w-full"
 				size="lg"
@@ -568,12 +572,12 @@ export function LanguagePicker({
 			<Drawer open={open} onOpenChange={handleOpenChange}>
 				<DrawerTrigger asChild>{trigger}</DrawerTrigger>
 				{/* bg-popover (pure white) to match the desktop popover chrome —
-				    the shared DrawerContent default bg-background is hue-tinted */}
+				    the shared DrawerContent default bg-lum-1 is hue-tinted */}
 				<DrawerContent className="bg-popover flex max-h-[90svh] flex-col">
-					<div className="border-border flex shrink-0 items-center justify-between border-b px-4 pb-3">
+					<div className="border-lum-3 flex shrink-0 items-center justify-between border-b px-4 pb-3">
 						<DrawerTitle>{title}</DrawerTitle>
 						<DrawerClose
-							className="bg-muted text-foreground hover:bg-muted/80 flex size-8 items-center justify-center rounded-xl"
+							className="bg-lum-2 text-con-mhigh hover:bg-lum-2 flex size-8 items-center justify-center rounded-xl"
 							aria-label="Close"
 						>
 							<X className="size-4" />
@@ -594,7 +598,7 @@ export function LanguagePicker({
 			<Dialog open={open} onOpenChange={handleOpenChange}>
 				<DialogTrigger asChild>{trigger}</DialogTrigger>
 				<DialogContent className="bg-popover flex max-h-[85vh] w-full max-w-md flex-col gap-0 overflow-hidden rounded-xl p-0">
-					<DialogHeader className="border-border shrink-0 border-b px-4 py-3 pr-12">
+					<DialogHeader className="border-lum-3 shrink-0 border-b px-4 py-3 pr-12">
 						<DialogTitle>{title}</DialogTitle>
 						<DialogDescription className="sr-only">
 							{description}

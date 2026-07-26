@@ -31,11 +31,9 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 						<LangBadge lang={phrase.lang} />
 					</div>
 					{chosenTranslation ? (
-						<p className="text-muted-foreground">{chosenTranslation.text}</p>
+						<p className="text-con-mid">{chosenTranslation.text}</p>
 					) : (
-						<p className="text-muted-foreground text-sm italic">
-							No translations yet
-						</p>
+						<p className="text-con-mid text-sm italic">No translations yet</p>
 					)}
 				</CardContent>
 			</CardlikeFlashcard>

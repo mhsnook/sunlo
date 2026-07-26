@@ -269,7 +269,7 @@ function PhrasePickerPanel({
 			{!showCreateForm && (
 				<div className="flex-none border-b p-4 pb-3 sm:px-6 sm:py-4">
 					<div className="relative">
-						<Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+						<Search className="text-con-mid absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 						<Input
 							type="text"
 							placeholder="Search phrases..."
@@ -305,7 +305,7 @@ function PhrasePickerPanel({
 									Create new phrase
 								</Button>
 								{!filteredPhrases?.length ? (
-									<p className="text-muted-foreground py-8 text-center">
+									<p className="text-con-mid py-8 text-center">
 										No phrases found
 									</p>
 								) : (
@@ -318,7 +318,7 @@ function PhrasePickerPanel({
 												data-testid="phrase-picker-item"
 												data-key={phrase.id}
 												onClick={() => addPhrase(phrase.id)}
-												className="hover:bg-muted/50 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors"
+												className="hover:bg-lum-2 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors"
 											>
 												<PhraseTinyCard pid={phrase.id} nonInteractive />
 											</button>
@@ -354,7 +354,7 @@ function AttachedPhraseCards({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="bg-background/80 border-border absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
+							className="bg-lum-1 border-lum-3 absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
 							data-testid="remove-phrase-button"
 							onClick={() => onRemovePhrase(pid)}
 						>
@@ -370,7 +370,7 @@ function AttachedPhraseCards({
 							...prev,
 							attaching: true,
 						})}
-						className="border-lum-3 text-muted-foreground hover:bg-lum-2 hover:text-lum-7 hover:text-chroma-mid hover:border-lum-5 hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
+						className="border-lum-3 text-con-mid hover:bg-lum-2 hover:text-lum-7 hover:border-lum-5 hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
 					>
 						<Plus className="h-6 w-6" />
 					</Link>
@@ -395,7 +395,7 @@ function AttachedPhraseCards({
 
 export function MarkdownHint() {
 	return (
-		<p className="text-muted-foreground text-xs">
+		<p className="text-con-mid text-xs">
 			Supports markdown like `&gt;` for blockquote, <em>_italics_</em>,{' '}
 			<strong>**bold**</strong>
 		</p>

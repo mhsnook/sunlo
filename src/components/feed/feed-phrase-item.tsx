@@ -14,7 +14,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 	if (item.type !== 'phrase' || !phrase) return null
 
 	return (
-		<div className="text-muted-foreground flex flex-col gap-1 px-2 py-2 text-sm">
+		<div className="text-con-mid flex flex-col gap-1 px-2 py-2 text-sm">
 			<div className="flex flex-col gap-2">
 				<UidPermalinkInline
 					uid={item.uid}
@@ -23,37 +23,37 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 					timeLinkTo="/learn/$lang/phrases/$id"
 					timeLinkParams={{ lang: item.lang, id: item.id }}
 				/>
-				<div className="bg-background flex flex-row items-center gap-2 rounded-lg p-3">
+				<div className="bg-lum-1 flex flex-row items-center gap-2 rounded-lg p-3">
 					<PhraseSummaryLine item={item} />
 				</div>
 			</div>
 
 			{/* @@TODO -- IT's possible this is entirely dead code at the moment */}
 			{source && (
-				<div className="text-muted-foreground/70 ml-2 text-xs italic">
-					{source.type === 'request' ?
+				<div className="text-con-mlow ml-2 text-xs italic">
+					{source.type === 'request' ? (
 						<>
 							for{' '}
 							<Link
 								to="/learn/$lang/requests/$id"
 								params={{ lang: item.lang, id: source.id }}
-								className="hover:text-foreground underline"
+								className="hover:text-con-mhigh underline"
 							>
 								request
 							</Link>
 						</>
-					: source.type === 'playlist' ?
+					) : source.type === 'playlist' ? (
 						<>
 							in{' '}
 							<Link
 								to="/learn/$lang/playlists/$playlistId"
 								params={{ lang: item.lang, playlistId: source.id }}
-								className="hover:text-foreground underline"
+								className="hover:text-con-mhigh underline"
 							>
 								{source.title}
 							</Link>
 						</>
-					:	null}
+					) : null}
 				</div>
 			)}
 		</div>

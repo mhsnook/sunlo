@@ -59,7 +59,7 @@ function NewDeckFormInner() {
 						<div className="space-y-1.5">
 							{hasActive && (
 								<>
-									<p className="text-muted-foreground text-sm">
+									<p className="text-con-mid text-sm">
 										You're currently learning
 									</p>
 									<div
@@ -75,7 +75,7 @@ function NewDeckFormInner() {
 							{archivedCount > 0 && (
 								<Link
 									to="/learn/archived"
-									className="text-muted-foreground hover:text-foreground inline-block text-xs underline-offset-2 hover:underline"
+									className="text-con-mid hover:text-con-mhigh inline-block text-xs underline-offset-2 hover:underline"
 									data-testid="archived-decks-link"
 								>
 									{hasActive

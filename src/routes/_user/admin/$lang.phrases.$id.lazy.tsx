@@ -96,9 +96,7 @@ function AdminPhraseDetail() {
 				<h3 className="text-lg font-semibold">Details</h3>
 				<dl className="text-sm">
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Added by
-						</dt>
+						<dt className="text-con-mid min-w-[100px] shrink-0">Added by</dt>
 						<dd>
 							{phrase.added_by ? (
 								<UidPermalink
@@ -106,29 +104,23 @@ function AdminPhraseDetail() {
 									timeValue={phrase.created_at}
 								/>
 							) : (
-								<span className="text-muted-foreground italic">Unknown</span>
+								<span className="text-con-mid italic">Unknown</span>
 							)}
 						</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Created
-						</dt>
+						<dt className="text-con-mid min-w-[100px] shrink-0">Created</dt>
 						<dd>{ago(phrase.created_at)}</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Learners
-						</dt>
+						<dt className="text-con-mid min-w-[100px] shrink-0">Learners</dt>
 						<dd className="inline-flex items-center gap-1">
 							<Users className="h-3 w-3" />
 							{phrase.count_learners ?? 0}
 						</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Difficulty
-						</dt>
+						<dt className="text-con-mid min-w-[100px] shrink-0">Difficulty</dt>
 						<dd>
 							{phrase.avg_difficulty != null
 								? `${phrase.avg_difficulty.toFixed(1)} / 10`
@@ -136,17 +128,13 @@ function AdminPhraseDetail() {
 						</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Phrase ID
-						</dt>
-						<dd className="text-muted-foreground font-mono text-xs break-all">
+						<dt className="text-con-mid min-w-[100px] shrink-0">Phrase ID</dt>
+						<dd className="text-con-mid font-mono text-xs break-all">
 							{phrase.id}
 						</dd>
 					</div>
 					<div className="flex items-baseline gap-2 py-1">
-						<dt className="text-muted-foreground min-w-[100px] shrink-0">
-							Public page
-						</dt>
+						<dt className="text-con-mid min-w-[100px] shrink-0">Public page</dt>
 						<dd>
 							<Link
 								to="/learn/$lang/phrases/$id"
@@ -182,7 +170,7 @@ function AdminPhraseDetail() {
 						))}
 					</div>
 				) : (
-					<p className="text-muted-foreground italic">No tags</p>
+					<p className="text-con-mid italic">No tags</p>
 				)}
 			</div>
 
@@ -212,7 +200,7 @@ function AdminPhraseDetail() {
 						))}
 					</div>
 				) : (
-					<p className="text-muted-foreground italic">No translations</p>
+					<p className="text-con-mid italic">No translations</p>
 				)}
 			</div>
 		</div>
@@ -343,7 +331,7 @@ function AdminTranslationRow({
 
 	return (
 		<div
-			className={`bg-muted/50 rounded-lg p-3 ${translation.archived ? 'opacity-60' : ''}`}
+			className={`bg-lum-2 rounded-lg p-3 ${translation.archived ? 'opacity-60' : ''}`}
 		>
 			<div className="flex items-center gap-2">
 				<Badge variant="outline">{languages[translation.lang]}</Badge>
@@ -405,7 +393,7 @@ function AdminTranslationRow({
 								{translation.archived ? (
 									<Undo2 className="size-3.5" />
 								) : (
-									<Archive className="text-destructive size-3.5" />
+									<Archive className="text-lum-6 text-chroma-high text-hue-danger size-3.5" />
 								)}
 							</Button>
 						)}

@@ -3,7 +3,10 @@ import { cn } from '@/lib/utils'
 const SuccessCheckmark = ({ className = '' }) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
-		className={cn('bg-background text-primary size-16 rounded-full', className)}
+		className={cn(
+			'bg-lum-1 text-lum-5 text-chroma-max size-16 rounded-full',
+			className
+		)}
 		viewBox="0 0 20 20"
 		fill="currentColor"
 	>
@@ -19,7 +22,7 @@ const SuccessCheckmarkTrans = ({ className = '' }) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		className={cn(
-			'text-primary size-16 rounded-full bg-transparent',
+			'text-lum-5 text-chroma-max size-16 rounded-full bg-transparent',
 			className
 		)}
 		viewBox="0 0 20 20"

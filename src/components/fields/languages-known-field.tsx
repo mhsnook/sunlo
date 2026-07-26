@@ -63,7 +63,7 @@ export function LanguagesKnownField() {
 	return (
 		<div className="space-y-2" data-testid="languages-known">
 			<Label>Languages You Know</Label>
-			<p className="text-muted-foreground text-sm italic">
+			<p className="text-con-mid text-sm italic">
 				This tells the app which translations to show you. It is visible to your
 				friends.
 			</p>
@@ -102,7 +102,7 @@ export function LanguagesKnownField() {
 								</Button>
 							</div>
 							<div
-								className="text-foreground min-w-0 flex-1 px-2 text-sm @lg:text-base"
+								className="text-con-mhigh min-w-0 flex-1 px-2 text-sm @lg:text-base"
 								data-testid="language-name"
 							>
 								{languages[item.lang] ?? item.lang}
@@ -143,7 +143,7 @@ export function LanguagesKnownField() {
 								aria-label="Remove language"
 								data-testid="remove-language"
 							>
-								<Trash2 className="text-destructive size-4" />
+								<Trash2 className="text-lum-6 text-chroma-high text-hue-danger size-4" />
 							</Button>
 						</div>
 					</Card>

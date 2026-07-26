@@ -91,7 +91,7 @@ export function SelectPhrasesForComment({
 			type="button"
 			disabled={isMaxReached}
 			data-testid="open-phrase-picker"
-			className="border-lum-3 text-muted-foreground hover:bg-lum-2 hover:text-lum-7 hover:text-chroma-mid hover:border-lum-5 hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors disabled:pointer-events-none disabled:opacity-50"
+			className="border-lum-3 text-con-mid hover:bg-lum-2 hover:text-lum-7 hover:border-lum-5 hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors disabled:pointer-events-none disabled:opacity-50"
 		>
 			<Plus className="h-6 w-6" />
 		</button>
@@ -128,7 +128,7 @@ export function SelectPhrasesForComment({
 					</DialogDescription>
 					{!showCreateForm && (
 						<div className="relative mt-2">
-							<Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+							<Search className="text-con-mid absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 							<Input
 								type="text"
 								placeholder="Search phrases..."
@@ -162,7 +162,7 @@ export function SelectPhrasesForComment({
 										Create new phrase
 									</Button>
 									{!filteredPhrases?.length ? (
-										<p className="text-muted-foreground py-8 text-center">
+										<p className="text-con-mid py-8 text-center">
 											No phrases found
 										</p>
 									) : (
@@ -178,7 +178,7 @@ export function SelectPhrasesForComment({
 													onClick={() => handleToggle(phrase.id)}
 													data-name="phrase-picker-item"
 													data-key={phrase.id}
-													className="hover:bg-muted/50 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+													className="hover:bg-lum-2 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 												>
 													<PhraseTinyCard pid={phrase.id} nonInteractive />
 												</button>

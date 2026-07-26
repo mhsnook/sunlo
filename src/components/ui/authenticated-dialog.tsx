@@ -72,7 +72,7 @@ export function AuthenticatedDialog({
 						<DialogDescription>{authMessage}</DialogDescription>
 					</DialogHeader>
 					<div className="flex flex-col gap-4">
-						<p className="text-muted-foreground text-sm">
+						<p className="text-con-mid text-sm">
 							Create an account to join the community and contribute to the
 							language learning content.
 						</p>
@@ -117,7 +117,7 @@ export function AuthenticatedDialogContent({
 				<DialogDescription>{authMessage}</DialogDescription>
 			</DialogHeader>
 			<div className="flex flex-col gap-4">
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					Create an account to join the community and contribute to the language
 					learning content.
 				</p>

@@ -167,7 +167,7 @@ export const Route = createFileRoute('/_user/learn/$lang/feed')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 const feedTabClass =
-	'data-[active]:bg-transparent data-[active]:shadow-none data-[active]:border-none data-[active]:text-foreground text-muted-foreground rounded-none border-none px-2 py-1 text-xs font-medium'
+	'data-[active]:bg-transparent data-[active]:shadow-none data-[active]:border-none data-[active]:text-con-mhigh text-con-mid rounded-none border-none px-2 py-1 text-xs font-medium'
 
 function DeckFeedPage() {
 	const navigate = Route.useNavigate()
@@ -190,7 +190,7 @@ function DeckFeedPage() {
 					<FeedComposer lang={params.lang} />
 					<div className="mb-3 flex items-center justify-between">
 						<div className="flex items-center gap-1">
-							<Logs className="text-muted-foreground ms-1 size-3.5" />
+							<Logs className="text-con-mid ms-1 size-3.5" />
 							<TabsList className="h-auto gap-0 border-none bg-transparent p-0 shadow-none inset-shadow-none">
 								<TabsTrigger value="newest" className={feedTabClass}>
 									Newest
@@ -294,7 +294,7 @@ function RecentFeed() {
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
 					) : (
-						<p className="text-muted-foreground my-6 ms-6 italic">
+						<p className="text-con-mid my-6 ms-6 italic">
 							This is the end of the feed... how about{' '}
 							<Link
 								to="/friends/invite"
@@ -383,7 +383,7 @@ function FriendsFeed() {
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
 					) : (
-						<p className="text-muted-foreground my-6 ms-6 italic">
+						<p className="text-con-mid my-6 ms-6 italic">
 							This is the end of the feed... how about{' '}
 							<Link
 								to="/friends/invite"
@@ -454,7 +454,7 @@ function PopularFeed() {
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
 					) : (
-						<p className="text-muted-foreground my-6 ms-6 italic">
+						<p className="text-con-mid my-6 ms-6 italic">
 							This is the end of the feed... how about{' '}
 							<Link
 								to="/friends/invite"

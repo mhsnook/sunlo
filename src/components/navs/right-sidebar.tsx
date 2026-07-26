@@ -24,7 +24,7 @@ export function RightSidebar() {
 		<aside className="sticky top-4 hidden w-(--sidebar-width) shrink-0 self-start ps-8 pt-4 @3xl:block">
 			{!links?.length ? null : (
 				<div className="space-y-1">
-					<p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">
+					<p className="text-con-mid mb-3 text-xs font-medium tracking-wide uppercase">
 						Quick Actions
 					</p>
 					{links.map(({ link, title, Icon }) => (

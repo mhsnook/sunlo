@@ -126,7 +126,7 @@ function RequestThreadPage() {
 							data-testid="open-comment-dialog"
 						>
 							<TinySelfAvatar className="grow-o shrink-0" />
-							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
+							<p className="bg-card/50 hover:bg-card/50 text-con-mlow w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
 								Add a comment or suggest a card...
 							</p>
 						</Link>
@@ -188,10 +188,7 @@ function AnswersOnlyToggle({ answersOnly }: { answersOnly: boolean }) {
 				}}
 				data-testid="answers-only-toggle"
 			/>
-			<label
-				htmlFor={id}
-				className="text-muted-foreground cursor-pointer text-sm"
-			>
+			<label htmlFor={id} className="text-con-mid cursor-pointer text-sm">
 				Only show comments with answers
 			</label>
 		</div>
@@ -217,13 +214,13 @@ function AnswersOnlyView() {
 	return (
 		<>
 			<div className="my-4 space-y-3">
-				<p className="text-muted-foreground px-4 text-sm">
+				<p className="text-con-mid px-4 text-sm">
 					Showing {phraseIds.length} flashcard
 					{phraseIds.length !== 1 ? 's' : ''} suggested.
 				</p>
 				<div className="grid divide-y border">
 					{!phraseIds.length && (
-						<div className="text-muted-foreground py-8 text-center">
+						<div className="text-con-mid py-8 text-center">
 							<p>No answers yet. Be the first to add one!</p>
 						</div>
 					)}
@@ -255,7 +252,7 @@ function AnswersOnlyView() {
 				</div>
 			</div>
 			{phraseIds.length ? (
-				<p className="text-muted-foreground mb-6 px-4 text-xs italic">
+				<p className="text-con-mid mb-6 px-4 text-xs italic">
 					This is the end of the thread.
 				</p>
 			) : null}
@@ -289,7 +286,7 @@ function TopLevelComments({
 	return (
 		<>
 			<div className="my-4 space-y-3">
-				<p className="text-muted-foreground px-4 text-sm">
+				<p className="text-con-mid px-4 text-sm">
 					Showing {comments.length} comment
 					{comments.length !== 1 ? 's' : ''}.
 				</p>
@@ -302,14 +299,14 @@ function TopLevelComments({
 						/>
 					))}
 					{!comments.length && (
-						<div className="text-muted-foreground py-8 text-center">
+						<div className="text-con-mid py-8 text-center">
 							<p>No comments yet. Be the first to comment!</p>
 						</div>
 					)}
 				</div>
 			</div>
 			{comments.length ? (
-				<p className="text-muted-foreground mb-6 px-4 text-xs italic">
+				<p className="text-con-mid mb-6 px-4 text-xs italic">
 					This is the end of the thread.
 				</p>
 			) : null}

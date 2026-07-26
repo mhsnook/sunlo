@@ -66,7 +66,7 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		done: 'Card added',
 		failed: 'There was an error updating this card',
 		Icon: Bookmark,
-		iconClassName: 'text-primary fill-current/50',
+		iconClassName: 'text-lum-5 text-chroma-max fill-current/50',
 	},
 	learned: {
 		name: 'Learned',
@@ -135,7 +135,7 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 // full icon family in `statusStrings`; the trigger is intentionally flat —
 // one shape, one size, just hue swapping with the state.
 const triggerDotClass: Record<ShowableActions, string> = {
-	active: 'bg-primary',
+	active: 'bg-lum-5 bg-chroma-max',
 	learned: 'hue-success bg-lum-5 bg-chroma-high',
 	skipped: 'hue-neutral bg-lum-5',
 	nocard: 'hue-neutral bg-lum-4',
@@ -282,27 +282,21 @@ export function CardStatusDropdown({
 						<>
 							<DropdownMenuItem
 								onClick={() => pickStatus('active')}
-								className={
-									card.status === 'active' ? 'bg-lum-1 bg-chroma-mid' : ''
-								}
+								className={card.status === 'active' ? 'bg-lum-1' : ''}
 								data-testid="activate-card-option"
 							>
 								<StatusSpan choice="active" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => pickStatus('learned')}
-								className={
-									card.status === 'learned' ? 'bg-lum-1 bg-chroma-mid' : ''
-								}
+								className={card.status === 'learned' ? 'bg-lum-1' : ''}
 								data-testid="set-learned-option"
 							>
 								<StatusSpan choice="learned" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={() => pickStatus('skipped')}
-								className={
-									card.status === 'skipped' ? 'bg-lum-1 bg-chroma-mid' : ''
-								}
+								className={card.status === 'skipped' ? 'bg-lum-1' : ''}
 								data-testid="ignore-card-option"
 							>
 								<StatusSpan choice="skipped" />
@@ -375,8 +369,8 @@ export function CardStatusHeart({
 				<Bookmark
 					className={
 						card?.status === 'active'
-							? 'text-primary fill-current/50'
-							: 'text-muted-foreground'
+							? 'text-lum-5 text-chroma-max fill-current/50'
+							: 'text-con-mid'
 					}
 				/>
 			</Button>
@@ -507,14 +501,14 @@ function StartLearningDialog({
 
 					<DialogClose
 						data-testid="cancel-start-learning-button"
-						className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-mid hover:bg-lum-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+						className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 hover:bg-lum-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 					>
 						<Bookmark className="size-6" />
 						<div>
 							<div className="text-base leading-tight font-semibold">
 								No, not now
 							</div>
-							<div className="text-muted-foreground text-xs">
+							<div className="text-con-mid text-xs">
 								Just browsing — leave my decks alone
 							</div>
 						</div>

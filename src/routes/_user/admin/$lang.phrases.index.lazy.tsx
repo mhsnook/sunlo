@@ -96,7 +96,7 @@ function AdminPhrasesIndex() {
 		<div className="space-y-4" data-testid="admin-phrases-table">
 			<div className="flex flex-col gap-3 @md:flex-row @md:items-center @md:justify-between">
 				<div className="relative">
-					<Search className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+					<Search className="text-con-mid pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 					<Input
 						placeholder="Search phrases..."
 						value={search}
@@ -116,7 +116,7 @@ function AdminPhrasesIndex() {
 				</Button>
 			</div>
 
-			<p className="text-muted-foreground text-sm">
+			<p className="text-con-mid text-sm">
 				{filtered.length} phrase{filtered.length !== 1 ? 's' : ''}
 			</p>
 
@@ -186,9 +186,7 @@ function AdminPhrasesIndex() {
 			</div>
 
 			{filtered.length === 0 && (
-				<p className="text-muted-foreground py-8 text-center">
-					No phrases found.
-				</p>
+				<p className="text-con-mid py-8 text-center">No phrases found.</p>
 			)}
 		</div>
 	)
@@ -211,7 +209,7 @@ function PhraseTableRow({
 			<td className="max-w-[300px] truncate px-3 py-2">
 				<span className="flex items-center gap-2">
 					{phrase.archived && (
-						<Archive className="text-muted-foreground h-3 w-3 shrink-0" />
+						<Archive className="text-con-mid h-3 w-3 shrink-0" />
 					)}
 					{phrase.text}
 				</span>
@@ -231,9 +229,7 @@ function PhraseTableRow({
 					{phrase.count_learners ?? 0}
 				</span>
 			</td>
-			<td className="text-muted-foreground px-3 py-2">
-				{ago(phrase.created_at)}
-			</td>
+			<td className="text-con-mid px-3 py-2">{ago(phrase.created_at)}</td>
 			<td className="px-3 py-2 text-end">
 				<Link
 					to="/admin/$lang/phrases/$id"
@@ -269,18 +265,16 @@ function PhraseCardRow({
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
 					{phrase.archived && (
-						<Archive className="text-muted-foreground h-3 w-3 shrink-0" />
+						<Archive className="text-con-mid h-3 w-3 shrink-0" />
 					)}
 					<p className="truncate font-medium">{phrase.text}</p>
 				</div>
 				<div className="mt-1 flex items-center gap-3">
-					<span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+					<span className="text-con-mid inline-flex items-center gap-1 text-xs">
 						<Users className="h-3 w-3" />
 						{phrase.count_learners ?? 0}
 					</span>
-					<span className="text-muted-foreground text-xs">
-						{ago(phrase.created_at)}
-					</span>
+					<span className="text-con-mid text-xs">{ago(phrase.created_at)}</span>
 				</div>
 				{phrase.tags && phrase.tags.length > 0 && (
 					<div className="mt-1.5 flex flex-wrap gap-1">
@@ -292,7 +286,7 @@ function PhraseCardRow({
 					</div>
 				)}
 			</div>
-			<ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+			<ChevronRight className="text-con-mid h-4 w-4 shrink-0" />
 		</Link>
 	)
 }

@@ -25,7 +25,7 @@ export function SelectionBar() {
 			className="bg-lum-2 flex flex-col gap-2 rounded border p-2"
 		>
 			<div className="flex flex-row items-center justify-between gap-2">
-				<span className="text-muted-foreground text-xs font-medium">
+				<span className="text-con-mid text-xs font-medium">
 					{selection.length} selected for next pivot
 				</span>
 				<Button
@@ -53,7 +53,7 @@ export function SelectionBar() {
 							data-testid="chat-selection-remove-button"
 							aria-label="Remove from selection"
 							onClick={() => removeFromSelection(lang, phrase.id)}
-							className="hover:text-foreground text-muted-foreground"
+							className="hover:text-con-mhigh text-con-mid"
 						>
 							<X className="h-3 w-3" />
 						</button>

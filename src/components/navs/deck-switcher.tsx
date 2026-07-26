@@ -80,7 +80,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 								/>
 							}
 						>
-							<div className="bg-primary rounded-squircle text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-xl">
+							<div className="bg-lum-5 bg-chroma-max rounded-squircle text-con-high flex aspect-square size-8 items-center justify-center rounded-xl">
 								<WalletCards />
 							</div>
 							<div className="grid flex-1 text-start text-sm leading-tight">
@@ -96,7 +96,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 							side={isMobile ? 'bottom' : 'right'}
 							sideOffset={4}
 						>
-							<DropdownMenuLabel className="text-muted-foreground text-xs">
+							<DropdownMenuLabel className="text-con-mid text-xs">
 								Decks
 							</DropdownMenuLabel>
 							{deckMenuData?.map((deck) => (
@@ -126,24 +126,20 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 									/>
 								}
 							>
-								<div className="bg-background flex size-6 items-center justify-center rounded border">
+								<div className="bg-lum-1 flex size-6 items-center justify-center rounded border">
 									<Home />
 								</div>
-								<div className="text-muted-foreground font-medium">
-									All decks
-								</div>
+								<div className="text-con-mid font-medium">All decks</div>
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								data-testid="new-deck-menu-item"
 								className="cursor-pointer gap-2 p-2"
 								render={<Link to="/learn/add-deck" onClick={setClosedMobile} />}
 							>
-								<div className="bg-background flex size-6 items-center justify-center rounded border">
+								<div className="bg-lum-1 flex size-6 items-center justify-center rounded border">
 									<Plus />
 								</div>
-								<div className="text-muted-foreground font-medium">
-									New deck
-								</div>
+								<div className="text-con-mid font-medium">New deck</div>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -173,7 +169,7 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 							/>
 						}
 					>
-						<div className="bg-primary-foresoft text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
+						<div className="bg-lum-7 text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
 							<Globe />
 						</div>
 						<div className="grid flex-1 text-start text-sm leading-tight">
@@ -189,7 +185,7 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 						side={isMobile ? 'bottom' : 'right'}
 						sideOffset={4}
 					>
-						<DropdownMenuLabel className="text-muted-foreground text-xs">
+						<DropdownMenuLabel className="text-con-mid text-xs">
 							Popular Languages
 						</DropdownMenuLabel>
 						{topLanguages.map((langItem) => (
@@ -214,7 +210,7 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 						{otherLanguages.length > 0 && (
 							<>
 								<DropdownMenuSeparator />
-								<DropdownMenuLabel className="text-muted-foreground text-xs">
+								<DropdownMenuLabel className="text-con-mid text-xs">
 									All Languages
 								</DropdownMenuLabel>
 								{otherLanguages.map((langItem) => (
@@ -243,12 +239,10 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 							className="cursor-pointer gap-2 p-2"
 							render={<Link to="/browse" onClick={setClosedMobile} />}
 						>
-							<div className="bg-background flex size-6 items-center justify-center rounded border">
+							<div className="bg-lum-1 flex size-6 items-center justify-center rounded border">
 								<Home />
 							</div>
-							<div className="text-muted-foreground font-medium">
-								Browse all
-							</div>
+							<div className="text-con-mid font-medium">Browse all</div>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

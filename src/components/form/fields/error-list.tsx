@@ -12,5 +12,9 @@ function messageOf(err: FieldErrorLike): string | null {
 export function ErrorList({ errors }: { errors: Array<FieldErrorLike> }) {
 	const messages = errors.map(messageOf).filter((m): m is string => !!m)
 	if (messages.length === 0) return null
-	return <p className="text-destructive mt-2 text-sm">{messages.join('. ')}</p>
+	return (
+		<p className="text-lum-6 text-chroma-high text-hue-danger mt-2 text-sm">
+			{messages.join('. ')}
+		</p>
+	)
 }

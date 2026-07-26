@@ -249,7 +249,7 @@ function NewPlaylistPageContent() {
 							{selectedPhrases.map((phrase, index) => (
 								<div
 									key={phrase.phrase_id}
-									className="bg-muted/30 rounded border p-3"
+									className="bg-lum-2 rounded border p-3"
 								>
 									<div className="flex items-start gap-2">
 										<div className="flex flex-col gap-1">
@@ -281,7 +281,7 @@ function NewPlaylistPageContent() {
 											<PhraseTinyCard pid={phrase.phrase_id} nonInteractive />
 
 											<div className="mt-2 flex items-center gap-2">
-												<LinkIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+												<LinkIcon className="text-con-mid h-4 w-4 flex-shrink-0" />
 												<Input
 													type="url"
 													placeholder="Timestamp link (optional)"

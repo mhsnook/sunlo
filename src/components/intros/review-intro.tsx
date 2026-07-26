@@ -21,7 +21,7 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 			<div className="space-y-4">
 				<div className="space-y-2">
 					<p className="font-medium">Your first few days:</p>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						Today you'll see your first batch of new cards. Each day after,
 						you'll get more new cards plus reviews of ones you've seen before.
 						It might seem light at first, but it builds up quickly!
@@ -30,7 +30,7 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 
 				<div className="space-y-2">
 					<p className="font-medium">How spaced repetition works:</p>
-					<ul className="text-muted-foreground ml-4 list-disc space-y-1 text-sm">
+					<ul className="text-con-mid ml-4 list-disc space-y-1 text-sm">
 						<li>
 							Cards you know well appear less often (days or weeks between
 							reviews)
@@ -44,7 +44,7 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 
 				<div className="space-y-2">
 					<p className="font-medium">Recognition and recall:</p>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-con-mid text-sm">
 						Most phrases use both sides. <strong>Recognition</strong> shows the
 						phrase and asks what it means — training your ear.{' '}
 						<strong>Recall</strong> shows the meaning and asks what to say —
@@ -54,7 +54,7 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 
 				<div className="space-y-2">
 					<p className="font-medium">Two-stage reviews:</p>
-					<ol className="text-muted-foreground ml-4 list-decimal space-y-1 text-sm">
+					<ol className="text-con-mid ml-4 list-decimal space-y-1 text-sm">
 						<li>
 							<strong>Stage 1:</strong> Browse through all cards for the day,
 							marking how well you know each one
@@ -68,7 +68,7 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 
 				<div className="bg-lum-1 rounded-lg border p-3 text-sm">
 					<p className="font-medium">Tip: Consistency beats intensity</p>
-					<p className="text-muted-foreground mt-1">
+					<p className="text-con-mid mt-1">
 						10 minutes every day is better than an hour once a week. Try to
 						review at the same time each day to build a habit.
 					</p>

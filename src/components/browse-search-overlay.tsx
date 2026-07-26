@@ -163,7 +163,7 @@ export default function BrowseSearchOverlay({
 				{/* Heading */}
 				<div className="px-4 pt-4 pb-0">
 					<DialogTitle
-						className={`text-muted-foreground ${hasQuery ? 'text-sm' : 'text-xl'} font-medium`}
+						className={`text-con-mid ${hasQuery ? 'text-sm' : 'text-xl'} font-medium`}
 					>
 						Search the public library
 					</DialogTitle>
@@ -171,8 +171,8 @@ export default function BrowseSearchOverlay({
 
 				{/* Search Input */}
 				<search className="p-3">
-					<div className="bg-muted/50 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
-						<Search className="text-muted-foreground size-5 shrink-0" />
+					<div className="bg-lum-2 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
+						<Search className="text-con-mid size-5 shrink-0" />
 						<input
 							ref={inputRef}
 							type="text"
@@ -180,7 +180,7 @@ export default function BrowseSearchOverlay({
 							placeholder="Search phrases, playlists, requests..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							className={`${hasQuery ? 'text-base' : 'p-2 text-xl'} placeholder:text-muted-foreground flex-1 bg-transparent outline-none`}
+							className={`${hasQuery ? 'text-base' : 'p-2 text-xl'} placeholder:text-con-mid flex-1 bg-transparent outline-none`}
 							data-testid="browse-search-input"
 							onKeyDown={handleKeyDown}
 						/>
@@ -188,7 +188,7 @@ export default function BrowseSearchOverlay({
 							<button
 								type="button"
 								onClick={() => setQuery('')}
-								className="text-muted-foreground hover:text-foreground"
+								className="text-con-mid hover:text-con-mhigh"
 							>
 								<X className="size-4" />
 							</button>
@@ -207,8 +207,8 @@ export default function BrowseSearchOverlay({
 								className={cn(
 									'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
 									selectedLangs.includes(l.code)
-										? 'bg-primary-foresoft text-primary-foreground border-transparent'
-										: 'border-border text-muted-foreground hover:border-lum-5 hover:border-chroma-mlow hover:text-foreground'
+										? 'chroma-mhigh bg-lum-6 text-con-high border-transparent'
+										: 'border-lum-3 text-con-mid hover:border-lum-5 hover:border-chroma-mlow hover:text-con-mhigh'
 								)}
 							>
 								{l.name}
@@ -223,7 +223,7 @@ export default function BrowseSearchOverlay({
 								// oxlint-disable-next-line jsx-no-jsx-as-prop
 								<button
 									type="button"
-									className="border-border text-muted-foreground hover:border-lum-5 hover:border-chroma-mlow hover:text-foreground flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+									className="border-lum-3 text-con-mid hover:border-lum-5 hover:border-chroma-mlow hover:text-con-mhigh flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
 								>
 									<Plus className="size-3" />
 									more
@@ -241,7 +241,7 @@ export default function BrowseSearchOverlay({
 						data-testid="browse-search-results"
 					>
 						{results.length === 0 ? (
-							<div className="text-muted-foreground px-4 py-8 text-center text-sm">
+							<div className="text-con-mid px-4 py-8 text-center text-sm">
 								No results found
 							</div>
 						) : (
@@ -259,7 +259,7 @@ export default function BrowseSearchOverlay({
 
 				{/* Footer — only after typing */}
 				{hasQuery && (
-					<div className="text-muted-foreground bg-muted/30 flex items-center gap-4 border-t px-4 py-2 text-xs max-sm:hidden">
+					<div className="text-con-mid bg-lum-2 flex items-center gap-4 border-t px-4 py-2 text-xs max-sm:hidden">
 						<span className="inline-flex items-center gap-1">
 							<ArrowUp className="size-3" />
 							<ArrowDown className="size-3" />
@@ -282,7 +282,7 @@ export default function BrowseSearchOverlay({
 										? selectedLangs.join(',')
 										: undefined,
 							}}
-							className="hover:text-foreground ms-auto inline-flex items-center gap-1 font-medium"
+							className="hover:text-con-mhigh ms-auto inline-flex items-center gap-1 font-medium"
 							onClick={onClose}
 						>
 							View all results
@@ -319,10 +319,10 @@ function SearchResultLink({
 			<div className="min-w-0 flex-1">
 				<p className="truncate text-sm font-medium">{title}</p>
 				{subtitle && (
-					<p className="text-muted-foreground truncate text-xs">{subtitle}</p>
+					<p className="text-con-mid truncate text-xs">{subtitle}</p>
 				)}
 			</div>
-			<span className="text-muted-foreground shrink-0 text-xs capitalize">
+			<span className="text-con-mid shrink-0 text-xs capitalize">
 				{item.type}
 			</span>
 		</>

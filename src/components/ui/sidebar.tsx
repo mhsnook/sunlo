@@ -328,7 +328,7 @@ const SidebarInput = ({
 			data-slot="sidebar-input"
 			data-sidebar="input"
 			className={cn(
-				'bg-background focus-visible:ring-sidebar-ring h-8 w-full shadow-none focus-visible:ring-2',
+				'bg-lum-1 focus-visible:ring-sidebar-ring h-8 w-full shadow-none focus-visible:ring-2',
 				className
 			)}
 			{...props}
@@ -499,9 +499,9 @@ const sidebarMenuButtonVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: 'hover:bg-sidebar-accent hover:text-primary-foresoft',
+				default: 'hover:bg-sidebar-accent hover:text-lum-7',
 				outline:
-					'bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]',
+					'bg-lum-1 shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]',
 			},
 			size: {
 				default: 'h-8 text-sm',

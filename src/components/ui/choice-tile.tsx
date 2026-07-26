@@ -32,7 +32,7 @@ export function ChoiceTile({
 				'disabled:cursor-not-allowed disabled:opacity-60',
 				selected
 					? 'bg-lum-1 bg-chroma-mlow border-lum-3 border-chroma-mlow'
-					: 'border-input hover:bg-lum-1 hover:bg-chroma-mlow hover:border-lum-5 hover:border-chroma-mlow',
+					: 'border-lum-3 hover:bg-lum-1 hover:bg-chroma-mlow hover:border-lum-5 hover:border-chroma-mlow',
 				className
 			)}
 			{...props}

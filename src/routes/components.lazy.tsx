@@ -383,7 +383,7 @@ function ComponentsPage() {
 								<div className="grid gap-4">
 									<div className="space-y-2">
 										<h4 className="leading-none font-medium">Dimensions</h4>
-										<p className="text-muted-foreground text-sm">
+										<p className="text-con-mid text-sm">
 											Set the dimensions for the layer.
 										</p>
 									</div>

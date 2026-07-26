@@ -57,18 +57,19 @@ function PreviewCard({
 			}
 		>
 			<CardContent className="flex flex-col items-center justify-center gap-3 p-4">
-				{isReverse ?
+				{isReverse ? (
 					<>
 						{translationsDisplay}
 						<Separator />
 						{phraseDisplay}
 					</>
-				:	<>
+				) : (
+					<>
 						{phraseDisplay}
 						<Separator />
 						{translationsDisplay}
 					</>
-				}
+				)}
 			</CardContent>
 		</CardlikeFlashcard>
 	)
@@ -92,9 +93,7 @@ export function NewCardsPreview({
 	// the user_card_plus view's "most recent review" join, which can be shaped
 	// by prior same-day (phase-3) reviews.
 	const newEntriesSet = new Set<ManifestEntry>(newCardEntries ?? [])
-	const unreviewedInOrder = manifest.filter((entry) =>
-		newEntriesSet.has(entry)
-	)
+	const unreviewedInOrder = manifest.filter((entry) => newEntriesSet.has(entry))
 
 	if (unreviewedInOrder.length === 0) {
 		// No unreviewed cards to preview - show helpful guidance
@@ -104,14 +103,14 @@ export function NewCardsPreview({
 					<h2 className="mb-2 text-xl font-semibold">
 						No new cards in today&apos;s review
 					</h2>
-					<p className="text-muted-foreground">
+					<p className="text-con-mid">
 						You&apos;ve got {manifest.length} scheduled review
 						{manifest.length === 1 ? '' : 's'} ready to go, but no fresh cards
 						to learn today.
 					</p>
 				</div>
 
-				<div className="bg-muted/50 space-y-3 rounded-lg p-4">
+				<div className="bg-lum-2 space-y-3 rounded-lg p-4">
 					<p className="text-sm font-medium">
 						Keep your momentum going with new cards:
 					</p>
@@ -152,14 +151,14 @@ export function NewCardsPreview({
 					</div>
 				</div>
 
-				<div className="text-muted-foreground text-center text-sm">
+				<div className="text-con-mid text-center text-sm">
 					<p>
 						Or just proceed with your {manifest.length} scheduled card
 						{manifest.length === 1 ? '' : 's'} - either way is fine!
 					</p>
 				</div>
 
-				<div className="bg-background sticky bottom-0 -mx-2 -mb-2 flex justify-center px-2 py-4">
+				<div className="bg-lum-1 sticky bottom-0 -mx-2 -mb-2 flex justify-center px-2 py-4">
 					<Button
 						onClick={handleStartReview}
 						size="lg"
@@ -176,11 +175,11 @@ export function NewCardsPreview({
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex flex-col items-center gap-2 py-4 text-center">
-				<div className="bg-foreground/80 text-background flex items-center gap-2 rounded-full px-4 py-2">
+				<div className="bg-lum-9 text-lum-1 flex items-center gap-2 rounded-full px-4 py-2">
 					<Eye className="size-5" />
 					<span className="font-medium">Preview Unreviewed Cards</span>
 				</div>
-				<p className="text-muted-foreground max-w-md text-sm">
+				<p className="text-con-mid max-w-md text-sm">
 					Here are today&apos;s {unreviewedInOrder.length} new card
 					{unreviewedInOrder.length === 1 ? '' : 's'} you&apos;ve never seen
 					before. Take a moment to look them over once before you begin.
@@ -196,7 +195,7 @@ export function NewCardsPreview({
 				})}
 			</div>
 
-			<div className="bg-muted sticky bottom-0 -mx-2 -mb-2 flex justify-center border-t px-2 py-4">
+			<div className="bg-lum-2 sticky bottom-0 -mx-2 -mb-2 flex justify-center border-t px-2 py-4">
 				<Button
 					onClick={handleStartReview}
 					size="lg"

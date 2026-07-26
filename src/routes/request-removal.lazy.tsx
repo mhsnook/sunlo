@@ -13,7 +13,7 @@ export const Route = createLazyFileRoute('/request-removal')({
 
 function RequestRemovalPage() {
 	return (
-		<main className="bg-background text-foreground px-2 py-6 @md:px-[5%]">
+		<main className="bg-lum-1 text-con-mhigh px-2 py-6 @md:px-[5%]">
 			<Card className="prose dark:prose-invert">
 				<CardHeader>
 					<CardTitle>Request Removal</CardTitle>

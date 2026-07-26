@@ -26,7 +26,7 @@ export function ActivityChart({ lang }: { lang: string }) {
 	return (
 		data?.length && (
 			<div className="my-4">
-				<h4 className="text-muted-foreground mb-2 text-center font-semibold">
+				<h4 className="text-con-mid mb-2 text-center font-semibold">
 					Your Recent Reviews
 				</h4>
 				<ChartContainer config={chartConfig} className="h-[200px] w-full">

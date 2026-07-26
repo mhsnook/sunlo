@@ -35,7 +35,7 @@ export const Route = createLazyFileRoute('/microcopy')({
 // ---------------------------------------------------------------------------
 
 function IconCell({ Icon }: { Icon?: LucideIcon }) {
-	if (!Icon) return <span className="text-muted-foreground text-xs">—</span>
+	if (!Icon) return <span className="text-con-mid text-xs">—</span>
 	return <Icon className="size-4" />
 }
 
@@ -49,16 +49,14 @@ function SectionHeading({
 	return (
 		<div className="space-y-1">
 			<h2 className="text-xl font-bold">{title}</h2>
-			<p className="text-muted-foreground text-sm">{description}</p>
+			<p className="text-con-mid text-sm">{description}</p>
 		</div>
 	)
 }
 
 function SourceLink({ file }: { file: string }) {
 	return (
-		<code className="text-muted-foreground block text-[11px] leading-tight">
-			{file}
-		</code>
+		<code className="text-con-mid block text-[11px] leading-tight">{file}</code>
 	)
 }
 
@@ -80,7 +78,7 @@ function NavLinksSection() {
 				title="Navigation Links"
 				description="From hooks/links.ts — each link has a name (short, with-icon) and title (long, standalone)"
 			/>
-			<p className="text-muted-foreground text-xs">
+			<p className="text-con-mid text-xs">
 				Source: <code>src/hooks/links.ts</code>
 			</p>
 
@@ -89,7 +87,7 @@ function NavLinksSection() {
 				<div className="overflow-x-auto">
 					<table className="w-full text-sm">
 						<thead>
-							<tr className="text-muted-foreground border-b text-left text-xs">
+							<tr className="text-con-mid border-b text-left text-xs">
 								<th className="p-2">Icon</th>
 								<th className="p-2">name (short)</th>
 								<th className="p-2">title (long)</th>
@@ -105,9 +103,7 @@ function NavLinksSection() {
 											<IconCell Icon={l.Icon} />
 										</td>
 										<td className="p-2 font-medium">{l.name}</td>
-										<td className="text-muted-foreground p-2">
-											{l.title ?? '—'}
-										</td>
+										<td className="text-con-mid p-2">{l.title ?? '—'}</td>
 										<td className="p-2">
 											<code className="text-xs">{key}</code>
 										</td>
@@ -122,14 +118,12 @@ function NavLinksSection() {
 			<div className="space-y-2">
 				<h3 className="text-sm font-semibold">
 					Language-Specific Links{' '}
-					<span className="text-muted-foreground font-normal">
-						(showing Tamil)
-					</span>
+					<span className="text-con-mid font-normal">(showing Tamil)</span>
 				</h3>
 				<div className="overflow-x-auto">
 					<table className="w-full text-sm">
 						<thead>
-							<tr className="text-muted-foreground border-b text-left text-xs">
+							<tr className="text-con-mid border-b text-left text-xs">
 								<th className="p-2">Icon</th>
 								<th className="p-2">name (short)</th>
 								<th className="p-2">title (long)</th>
@@ -145,9 +139,7 @@ function NavLinksSection() {
 											<IconCell Icon={l.Icon} />
 										</td>
 										<td className="p-2 font-medium">{l.name}</td>
-										<td className="text-muted-foreground p-2">
-											{l.title ?? '—'}
-										</td>
+										<td className="text-con-mid p-2">{l.title ?? '—'}</td>
 										<td className="p-2">
 											<code className="text-xs">{key}</code>
 										</td>
@@ -175,7 +167,7 @@ function CardStatusSection() {
 				title="Card Status Actions"
 				description="From card-status-dropdown.tsx — each status has short/long/action/actionSecond/done labels plus an icon"
 			/>
-			<p className="text-muted-foreground text-xs">
+			<p className="text-con-mid text-xs">
 				Source: <code>src/components/card-pieces/card-status-dropdown.tsx</code>
 			</p>
 
@@ -194,19 +186,17 @@ function CardStatusSection() {
 							</CardHeader>
 							<CardContent className="space-y-1 text-sm">
 								<div className="grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-0.5">
-									<span className="text-muted-foreground text-xs">name</span>
+									<span className="text-con-mid text-xs">name</span>
 									<span className="font-medium">{s.name}</span>
-									<span className="text-muted-foreground text-xs">title</span>
+									<span className="text-con-mid text-xs">title</span>
 									<span>{s.title}</span>
-									<span className="text-muted-foreground text-xs">action</span>
+									<span className="text-con-mid text-xs">action</span>
 									<span>{s.action}</span>
-									<span className="text-muted-foreground text-xs">
-										actionSecond
-									</span>
+									<span className="text-con-mid text-xs">actionSecond</span>
 									<span className="text-xs">{s.actionSecond}</span>
-									<span className="text-muted-foreground text-xs">done</span>
+									<span className="text-con-mid text-xs">done</span>
 									<span>{s.done}</span>
-									<span className="text-muted-foreground text-xs">failed</span>
+									<span className="text-con-mid text-xs">failed</span>
 									<span className="text-xs">{s.failed}</span>
 								</div>
 							</CardContent>
@@ -341,7 +331,7 @@ function CreateActionsSection() {
 					<CardContent>
 						<table className="w-full text-sm">
 							<thead>
-								<tr className="text-muted-foreground border-b text-left text-xs">
+								<tr className="text-con-mid border-b text-left text-xs">
 									<th className="p-1.5">Context</th>
 									<th className="p-1.5">Icon</th>
 									<th className="p-1.5">Label</th>
@@ -351,9 +341,7 @@ function CreateActionsSection() {
 							<tbody>
 								{action.contexts.map((ctx) => (
 									<tr key={ctx.where} className="border-b last:border-0">
-										<td className="text-muted-foreground p-1.5 text-xs">
-											{ctx.where}
-										</td>
+										<td className="text-con-mid p-1.5 text-xs">{ctx.where}</td>
 										<td className="p-1.5">
 											<IconCell Icon={ctx.Icon} />
 										</td>
@@ -447,7 +435,7 @@ function ShareActionsSection() {
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="text-muted-foreground border-b text-left text-xs">
+						<tr className="text-con-mid border-b text-left text-xs">
 							<th className="p-2">Action</th>
 							<th className="p-2">Icon</th>
 							<th className="p-2">Label</th>
@@ -458,9 +446,7 @@ function ShareActionsSection() {
 					<tbody>
 						{shareActions.map((a) => (
 							<tr key={a.source} className="border-b">
-								<td className="text-muted-foreground p-2 text-xs">
-									{a.action}
-								</td>
+								<td className="text-con-mid p-2 text-xs">{a.action}</td>
 								<td className="p-2">
 									<IconCell Icon={a.Icon} />
 								</td>
@@ -563,7 +549,7 @@ function EditActionsSection() {
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="text-muted-foreground border-b text-left text-xs">
+						<tr className="text-con-mid border-b text-left text-xs">
 							<th className="p-2">Action</th>
 							<th className="p-2">Trigger icon</th>
 							<th className="p-2">Submit label</th>
@@ -574,9 +560,7 @@ function EditActionsSection() {
 					<tbody>
 						{editActions.map((a) => (
 							<tr key={`${a.action}-${a.source}`} className="border-b">
-								<td className="text-muted-foreground p-2 text-xs">
-									{a.action}
-								</td>
+								<td className="text-con-mid p-2 text-xs">{a.action}</td>
 								<td className="p-2">
 									<IconCell Icon={a.triggerIcon} />
 								</td>
@@ -672,7 +656,7 @@ function DestructiveActionsSection() {
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="text-muted-foreground border-b text-left text-xs">
+						<tr className="text-con-mid border-b text-left text-xs">
 							<th className="p-2">Action</th>
 							<th className="p-2">Icon</th>
 							<th className="p-2">Trigger label</th>
@@ -683,9 +667,7 @@ function DestructiveActionsSection() {
 					<tbody>
 						{destructiveActions.map((a) => (
 							<tr key={a.action} className="border-b">
-								<td className="text-muted-foreground p-2 text-xs">
-									{a.action}
-								</td>
+								<td className="text-con-mid p-2 text-xs">{a.action}</td>
 								<td className="p-2">
 									<IconCell Icon={a.triggerIcon} />
 								</td>
@@ -789,7 +771,7 @@ function AuthActionsSection() {
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="text-muted-foreground border-b text-left text-xs">
+						<tr className="text-con-mid border-b text-left text-xs">
 							<th className="p-2">Context</th>
 							<th className="p-2">Icon</th>
 							<th className="p-2">Label</th>
@@ -800,9 +782,7 @@ function AuthActionsSection() {
 					<tbody>
 						{authActions.map((a) => (
 							<tr key={`${a.context}-${a.label}`} className="border-b">
-								<td className="text-muted-foreground p-2 text-xs">
-									{a.context}
-								</td>
+								<td className="text-con-mid p-2 text-xs">{a.context}</td>
 								<td className="p-2">
 									<IconCell Icon={a.Icon} />
 								</td>
@@ -884,7 +864,7 @@ function FriendActionsSection() {
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="text-muted-foreground border-b text-left text-xs">
+						<tr className="text-con-mid border-b text-left text-xs">
 							<th className="p-2">State</th>
 							<th className="p-2">Icon</th>
 							<th className="p-2">Button label</th>
@@ -895,7 +875,7 @@ function FriendActionsSection() {
 					<tbody>
 						{friendActions.map((a) => (
 							<tr key={a.state} className="border-b">
-								<td className="text-muted-foreground p-2 text-xs">{a.state}</td>
+								<td className="text-con-mid p-2 text-xs">{a.state}</td>
 								<td className="p-2">
 									<IconCell Icon={a.Icon} />
 								</td>
@@ -1051,7 +1031,7 @@ function AriaLabelsSection() {
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="text-muted-foreground border-b text-left text-xs">
+						<tr className="text-con-mid border-b text-left text-xs">
 							<th className="p-2">Action</th>
 							<th className="p-2">aria-label</th>
 							<th className="p-2">Source</th>
@@ -1061,9 +1041,7 @@ function AriaLabelsSection() {
 					<tbody>
 						{iconOnlyButtons.map((a) => (
 							<tr key={`${a.action}-${a.source}`} className="border-b">
-								<td className="text-muted-foreground p-2 text-xs">
-									{a.action}
-								</td>
+								<td className="text-con-mid p-2 text-xs">{a.action}</td>
 								<td className="p-2 font-medium">{a.ariaLabel}</td>
 								<td className="p-2">
 									<SourceLink file={a.source} />
@@ -1077,7 +1055,7 @@ function AriaLabelsSection() {
 									{a.ariaLabel === '(none)' && (
 										<Badge
 											variant="outline"
-											className="border-destructive text-destructive text-[10px]"
+											className="border-lum-6 border-chroma-high border-hue-danger text-lum-6 text-chroma-high text-hue-danger text-[10px]"
 										>
 											Missing
 										</Badge>
@@ -1189,9 +1167,7 @@ function InconsistenciesSection() {
 							</Badge>
 							<div className="min-w-0">
 								<p className="text-sm font-medium">{issue.issue}</p>
-								<p className="text-muted-foreground text-xs">
-									{issue.examples}
-								</p>
+								<p className="text-con-mid text-xs">{issue.examples}</p>
 								<p className="mt-1 text-xs">
 									<span className="font-medium">Recommendation:</span>{' '}
 									{issue.recommendation}
@@ -1214,7 +1190,7 @@ function MicrocopyPage() {
 		<div className="@container mx-auto max-w-5xl space-y-10 p-4 pb-20">
 			<div>
 				<h1 className="text-3xl font-bold">Microcopy Inventory</h1>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					All user-facing action labels, button text, and icons in one place.
 					Sections marked &ldquo;live&rdquo; import data from source. Reference
 					sections document what exists and where.

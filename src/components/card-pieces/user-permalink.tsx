@@ -55,7 +55,7 @@ export function UidPermalink({
 					<span className="font-medium">{data.username}</span>
 				</Link>
 				{timeValue && (
-					<div className="text-muted-foreground">
+					<div className="text-con-mid">
 						{timeLinkTo ? (
 							<Link
 								to={timeLinkTo}
@@ -64,9 +64,7 @@ export function UidPermalink({
 								title={fullTimestamp(timeValue)}
 								className="s-link-hidden"
 							>
-								{action && (
-									<span className="text-muted-foreground"> {action} </span>
-								)}
+								{action && <span className="text-con-mid"> {action} </span>}
 								<time dateTime={timeValue}>{ago(timeValue)}</time>
 							</Link>
 						) : (
@@ -123,7 +121,7 @@ export function UidPermalinkInline({
 					<span className="font-medium">{data.username}</span>
 				</Link>
 				{timeValue && (
-					<div className="text-muted-foreground">
+					<div className="text-con-mid">
 						{timeLinkTo ? (
 							<Link
 								to={timeLinkTo}
@@ -132,10 +130,8 @@ export function UidPermalinkInline({
 								title={fullTimestamp(timeValue)}
 								className="s-link-hidden hover:underline"
 							>
-								{action && (
-									<span className="text-muted-foreground">{action} </span>
-								)}
-								/ <time dateTime={timeValue}>{ago(timeValue)}</time>
+								{action && <span className="text-con-mid">{action} </span>}/{' '}
+								<time dateTime={timeValue}>{ago(timeValue)}</time>
 							</Link>
 						) : (
 							<time dateTime={timeValue} title={fullTimestamp(timeValue)}>

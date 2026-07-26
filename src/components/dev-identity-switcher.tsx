@@ -145,12 +145,12 @@ function Switcher() {
 					className="w-72 p-2"
 					data-testid="dev-identity-switcher-content"
 				>
-					<div className="text-muted-foreground mb-2 px-2 text-xs">
+					<div className="text-con-mid mb-2 px-2 text-xs">
 						Dev only · password = <code>password</code>
 					</div>
 					{TEAMS.map((team) => (
 						<div key={team.tag} className="mb-2 last:mb-0">
-							<div className="text-muted-foreground px-2 pt-1 pb-0.5 text-xs font-semibold">
+							<div className="text-con-mid px-2 pt-1 pb-0.5 text-xs font-semibold">
 								{team.name}
 							</div>
 							{team.actors.map((a) => {
@@ -170,13 +170,10 @@ function Switcher() {
 										<span className="truncate">
 											<span className="font-mono text-xs">{a.role}</span>
 											{a.username ? (
-												<span className="text-muted-foreground">
-													{' '}
-													· {a.username}
-												</span>
+												<span className="text-con-mid"> · {a.username}</span>
 											) : null}
 										</span>
-										<span className="text-muted-foreground truncate text-xs">
+										<span className="text-con-mid truncate text-xs">
 											{a.email
 												.replace('sunloapp', '')
 												.replace('@gmail.com', '')}

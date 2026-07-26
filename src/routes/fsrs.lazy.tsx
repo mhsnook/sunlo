@@ -326,7 +326,7 @@ function ForgettingCurveChart({
 						key={`curve-${s.index}`}
 						d={buildPath(pts)}
 						fill="none"
-						className="text-accent"
+						className="text-lum-5 text-chroma-max text-hue-accent"
 						stroke="currentColor"
 						strokeWidth={4}
 						strokeLinecap="round"
@@ -389,7 +389,7 @@ function ForgettingCurveChart({
 				x2={PAD.left}
 				y1={PAD.top - 4}
 				y2={PAD.top + PLOT.h}
-				className="text-foreground"
+				className="text-con-mhigh"
 				stroke="currentColor"
 				strokeWidth={2.5}
 			/>
@@ -398,7 +398,7 @@ function ForgettingCurveChart({
 				x2={PAD.left + PLOT.w}
 				y1={PAD.top + PLOT.h}
 				y2={PAD.top + PLOT.h}
-				className="text-foreground"
+				className="text-con-mhigh"
 				stroke="currentColor"
 				strokeWidth={2.5}
 			/>
@@ -427,7 +427,7 @@ function ForgettingCurveChart({
 
 function ChartLegend() {
 	return (
-		<div className="text-muted-foreground mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+		<div className="text-con-mid mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
 			{([1, 2, 3, 4] as Array<Score>).map((s) => (
 				<span key={s} className={SCORE_META[s].text}>
 					{SCORE_META[s].glyph} {SCORE_META[s].label}
@@ -464,9 +464,7 @@ function RangeControl({
 		<div className="space-y-1">
 			<div className="flex items-center justify-between">
 				<Label htmlFor={id}>{label}</Label>
-				<span className="text-muted-foreground text-sm tabular-nums">
-					{display}
-				</span>
+				<span className="text-con-mid text-sm tabular-nums">{display}</span>
 			</div>
 			<input
 				id={id}
@@ -527,7 +525,7 @@ function FsrsPage() {
 		<main className="@container mx-auto max-w-5xl space-y-6 p-4 pb-20">
 			<div className="space-y-1">
 				<h1 className="text-3xl font-bold">How FSRS Works</h1>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-con-mid text-sm">
 					The forgetting curve for a whole sequence of reviews, drawn from the
 					real FSRS v5 functions in{' '}
 					<code className="text-xs">src/features/review/fsrs.ts</code>. Each
@@ -580,14 +578,12 @@ function FsrsPage() {
 						<div className="space-y-2">
 							<div className="flex items-center justify-between">
 								<Label>Review sequence</Label>
-								<span className="text-muted-foreground text-xs">
-									grade each review
-								</span>
+								<span className="text-con-mid text-xs">grade each review</span>
 							</div>
 							<div className="space-y-1.5">
 								{reviews.map((r, i) => (
 									<div key={r.id} className="flex items-center gap-2">
-										<span className="text-muted-foreground w-16 shrink-0 text-xs">
+										<span className="text-con-mid w-16 shrink-0 text-xs">
 											{i === 0 ? 'Learn' : `Review ${i}`}
 										</span>
 										<div className="flex flex-1 gap-1">
@@ -600,7 +596,7 @@ function FsrsPage() {
 														'flex-1 rounded-2xl border px-1 py-1 text-xs transition-colors',
 														r.score === opt
 															? `${SCORE_META[opt].activeBtn} font-medium`
-															: 'hover:hue-neutral border-border text-muted-foreground hover:bg-lum-2'
+															: 'hover:hue-neutral border-lum-3 text-con-mid hover:bg-lum-2'
 													)}
 												>
 													{SCORE_META[opt].label}
@@ -612,7 +608,7 @@ function FsrsPage() {
 											onClick={() => removeReview(r.id)}
 											aria-label={`Remove review ${i}`}
 											disabled={reviews.length <= 1}
-											className="hover:hue-danger text-muted-foreground hover:text-lum-5 hover:text-chroma-high disabled:opacity-40"
+											className="hover:hue-danger text-con-mid hover:text-lum-5 hover:text-chroma-high disabled:opacity-40"
 										>
 											<X className="size-4" />
 										</button>
@@ -665,7 +661,7 @@ function FsrsPage() {
 					<CardContent>
 						<table className="w-full text-sm">
 							<thead>
-								<tr className="text-muted-foreground border-b text-left text-xs">
+								<tr className="text-con-mid border-b text-left text-xs">
 									<th className="py-1.5">#</th>
 									<th className="py-1.5">Grade</th>
 									<th className="py-1.5">Day</th>

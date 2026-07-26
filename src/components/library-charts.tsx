@@ -138,7 +138,7 @@ export function DifficultyPopularityScatter({ lang }: { lang: string }) {
 
 	if (!scatterData.length) {
 		return (
-			<p className="text-muted-foreground py-12 text-center">
+			<p className="text-con-mid py-12 text-center">
 				No difficulty data available for {languages[lang] ?? lang} yet. Phrases
 				need reviews to generate difficulty scores.
 			</p>
@@ -189,7 +189,7 @@ export function DifficultyPopularityScatter({ lang }: { lang: string }) {
 						const d = payload[0]?.payload as (typeof scatterData)[0]
 						if (!d) return null
 						return (
-							<div className="bg-background rounded border p-2 text-xs shadow-lg">
+							<div className="bg-lum-1 rounded border p-2 text-xs shadow-lg">
 								<p className="mb-1 font-medium">{d.text}</p>
 								<p>
 									Difficulty: <span className="font-mono">{d.difficulty}</span>
@@ -372,7 +372,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 
 	if (!treemapData.length) {
 		return (
-			<p className="text-muted-foreground py-12 text-center">
+			<p className="text-con-mid py-12 text-center">
 				No tags available for {languages[lang] ?? lang} yet.
 			</p>
 		)
@@ -406,21 +406,23 @@ export function TagTreemap({ lang }: { lang: string }) {
 			</ResponsiveContainer>
 			{tooltip && (
 				<div
-					className="bg-background pointer-events-none fixed z-50 rounded-lg border px-3 py-2 text-sm shadow-xl"
+					className="bg-lum-1 pointer-events-none fixed z-50 rounded-lg border px-3 py-2 text-sm shadow-xl"
 					style={{
 						left: tooltip.x + 12,
 						top: tooltip.y - 10,
 					}}
 				>
 					<p className="font-semibold">{tooltip.item.name}</p>
-					<p className="text-muted-foreground">
+					<p className="text-con-mid">
 						{tooltip.item.size} phrases (
 						{totalTagged > 0
 							? ((tooltip.item.size / totalTagged) * 100).toFixed(1)
 							: 0}
 						%)
 					</p>
-					<p className="text-primary mt-1 text-xs">Click to browse phrases</p>
+					<p className="text-lum-5 text-chroma-max mt-1 text-xs">
+						Click to browse phrases
+					</p>
 				</div>
 			)}
 		</div>
@@ -486,7 +488,7 @@ export function DifficultyHistogram({ lang }: { lang: string }) {
 
 	if (!histogramData.length || histogramData.every((d) => d.count === 0)) {
 		return (
-			<p className="text-muted-foreground py-12 text-center">
+			<p className="text-con-mid py-12 text-center">
 				No difficulty data available for {languages[lang] ?? lang} yet. Phrases
 				need reviews to generate difficulty scores.
 			</p>
@@ -581,10 +583,10 @@ export function LibrarySummaryStats() {
 					key={stat.label}
 					className="bg-card rounded border p-3 text-center"
 				>
-					<p className="text-primary text-2xl font-bold tabular-nums">
+					<p className="text-lum-5 text-chroma-max text-2xl font-bold tabular-nums">
 						{stat.value.toLocaleString()}
 					</p>
-					<p className="text-muted-foreground text-xs">{stat.label}</p>
+					<p className="text-con-mid text-xs">{stat.label}</p>
 				</div>
 			))}
 		</div>

@@ -9,7 +9,7 @@ const Card = ({
 	<div
 		data-slot="card"
 		className={cn(
-			'bg-card/50 text-card-foreground rounded-lg border shadow-xs',
+			'bg-card/50 text-con-mhigh rounded-lg border shadow-xs',
 			className
 		)}
 		{...props}
@@ -51,7 +51,7 @@ const CardDescription = ({
 }: React.HTMLAttributes<HTMLParagraphElement>) => (
 	<p
 		data-slot="card-description"
-		className={cn('text-muted-foreground text-sm', className)}
+		className={cn('text-con-mid text-sm', className)}
 		{...props}
 	/>
 )

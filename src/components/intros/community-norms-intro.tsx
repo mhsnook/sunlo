@@ -22,7 +22,7 @@ export function CommunityNormsIntro({
 			actionTestId="affirm-community-norms-button"
 		>
 			<div className="space-y-4">
-				<p className="text-muted-foreground">
+				<p className="text-con-mid">
 					Sunlo is built by and for language learners. We're a community of
 					people helping each other connect across cultures. Here's what we ask
 					of everyone:
@@ -56,7 +56,7 @@ export function CommunityNormsIntro({
 
 				<div className="bg-lum-1 bg-chroma-low bg-hue-primary rounded-lg border p-4 text-sm">
 					<p className="font-medium">What this means in practice:</p>
-					<ul className="text-muted-foreground mt-2 ml-4 list-disc space-y-1">
+					<ul className="text-con-mid mt-2 ml-4 list-disc space-y-1">
 						<li>Don't add joke translations or misleading content</li>
 						<li>Credit native speakers who help you</li>
 						<li>Flag content that seems wrong rather than just ignoring it</li>
@@ -82,12 +82,12 @@ function NormItem({
 }) {
 	return (
 		<div className="flex gap-3">
-			<div className="bg-lum-2 bg-chroma-mlow text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
+			<div className="bg-lum-2 bg-chroma-mlow text-lum-5 text-chroma-max flex size-10 shrink-0 items-center justify-center rounded-full">
 				<Icon className="size-5" />
 			</div>
 			<div>
 				<p className="font-medium">{title}</p>
-				<p className="text-muted-foreground text-sm">{description}</p>
+				<p className="text-con-mid text-sm">{description}</p>
 			</div>
 		</div>
 	)

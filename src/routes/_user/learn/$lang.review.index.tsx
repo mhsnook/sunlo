@@ -475,7 +475,7 @@ function ReviewPageContent() {
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<p className="text-muted-foreground max-w-2xl text-lg">
+					<p className="text-con-mid max-w-2xl text-lg">
 						Your personalized review session is prepared and waiting for you.
 						Here's what to expect...
 					</p>
@@ -497,7 +497,7 @@ function ReviewPageContent() {
 											<BookOpen />
 											{totalCardsForToday}
 										</p>
-										<p className="text-muted-foreground">
+										<p className="text-con-mid">
 											{forwardCount > 0 && reverseCount > 0 ? (
 												<>
 													{forwardCount} recognition + {reverseCount} recall,
@@ -520,7 +520,7 @@ function ReviewPageContent() {
 											<CalendarClock />
 											<span>{dueCardCount}</span>
 										</p>
-										<p className="text-muted-foreground">
+										<p className="text-con-mid">
 											{dueCardCount === 0
 												? 'scheduled based on past reviews'
 												: phraseBreakdown(
@@ -540,7 +540,7 @@ function ReviewPageContent() {
 											<MessageSquarePlus />
 											<span>{newCardCount}</span>
 										</p>
-										<p className="text-muted-foreground">
+										<p className="text-con-mid">
 											{newCardCount === 0
 												? 'new cards to learn'
 												: phraseBreakdown(
@@ -555,7 +555,7 @@ function ReviewPageContent() {
 								<Card className="grow basis-40">
 									<CardHeader className="pb-2">
 										<CardTitle className="flex items-center gap-2 text-xl">
-											<MessageSquare className="text-primary" />
+											<MessageSquare className="text-lum-5 text-chroma-max" />
 											Sources
 										</CardTitle>
 									</CardHeader>
@@ -564,32 +564,24 @@ function ReviewPageContent() {
 											name="friend_recommendations"
 											className="flex items-center justify-between"
 										>
-											<span className="text-muted-foreground">
-												Friend recs:
-											</span>
+											<span className="text-con-mid">Friend recs:</span>
 											<Badge variant="outline">
 												{friendRecsSelected.length}
 											</Badge>
 										</Flagged>
 										<div className="flex items-center justify-between">
-											<span className="text-muted-foreground">
-												Sunlo's recs:
-											</span>
+											<span className="text-con-mid">Sunlo's recs:</span>
 											<Badge variant="outline">{algoRecsSelected.length}</Badge>
 										</div>
 										<div className="flex items-center justify-between">
-											<span className="text-muted-foreground">
-												From your deck:
-											</span>
+											<span className="text-con-mid">From your deck:</span>
 											<Badge variant="outline">
 												{cardsUnreviewedActiveSelected.length}
 											</Badge>
 										</div>
 
 										<div className="flex items-center justify-between">
-											<span className="text-muted-foreground">
-												Public library:
-											</span>
+											<span className="text-con-mid">Public library:</span>
 											<Badge variant="outline">
 												{libraryPhrasesSelected.length}
 											</Badge>

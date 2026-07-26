@@ -32,7 +32,7 @@ export function CartButton() {
 					{cart.length > 0 && (
 						<span
 							data-testid="chat-cart-badge"
-							className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.65rem] font-medium"
+							className="bg-lum-5 bg-chroma-max text-con-high absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.65rem] font-medium"
 						>
 							{cart.length}
 						</span>
@@ -66,7 +66,7 @@ export function CartButton() {
 					{cart.length === 0 ? (
 						<p
 							data-testid="chat-cart-empty"
-							className="text-muted-foreground py-4 text-center text-sm"
+							className="text-con-mid py-4 text-center text-sm"
 						>
 							Your cart is empty.
 						</p>
@@ -86,7 +86,7 @@ export function CartButton() {
 										{phrase.translations[0] && (
 											<span
 												lang={phrase.translations[0].lang}
-												className="text-muted-foreground text-xs"
+												className="text-con-mid text-xs"
 											>
 												{phrase.translations[0].text}
 											</span>
