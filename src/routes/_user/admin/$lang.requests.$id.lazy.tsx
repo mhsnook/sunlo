@@ -451,12 +451,18 @@ function EditableRequestPrompt({
 					value={editText}
 					onChange={(e) => setEditText(e.target.value)}
 					className="min-h-[100px]"
+					data-testid="admin-edit-prompt-textarea"
 					onKeyDown={(e) => {
 						if (e.key === 'Escape') handleCancel()
 					}}
 				/>
 				<div className="flex gap-2">
-					<Button size="sm" variant="default" onClick={handleSave}>
+					<Button
+						size="sm"
+						variant="default"
+						onClick={handleSave}
+						data-testid="admin-edit-prompt-save"
+					>
 						<Check className="me-1 h-4 w-4" />
 						Save
 					</Button>
@@ -479,6 +485,7 @@ function EditableRequestPrompt({
 					variant="ghost"
 					className="size-7 shrink-0"
 					onClick={() => setIsEditing(true)}
+					data-testid="admin-edit-prompt-button"
 				>
 					<Pencil className="size-3.5" />
 				</Button>
@@ -515,6 +522,7 @@ function ArchiveRequestButton({
 			className="shrink-0"
 			onClick={toggleArchive}
 			disabled={disabled}
+			data-testid="admin-archive-request-button"
 			aria-label={request.deleted ? 'Restore request' : 'Archive request'}
 		>
 			{request.deleted ? (

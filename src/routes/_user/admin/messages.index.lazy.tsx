@@ -794,6 +794,7 @@ function BulkAddSection({
 				type="button"
 				className="flex w-full items-center justify-between"
 				onClick={() => setOpen((v) => !v)}
+				data-testid="bulk-add-toggle"
 			>
 				<span className="inline-flex items-center gap-2 text-sm font-semibold">
 					<Plus className="h-4 w-4" />
