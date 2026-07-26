@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { createLazyFileRoute, Link } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import { and, eq, not } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
@@ -34,10 +33,7 @@ import {
 	messageTagLinksCollection,
 	phraseRequestsCollection,
 } from '@/features/requests/collections'
-import {
-	PhraseRequestSchema,
-	type PhraseRequestType,
-} from '@/features/requests/schemas'
+import { type PhraseRequestType } from '@/features/requests/schemas'
 import {
 	useMessageTags,
 	useMessageTagsForMessage,
@@ -45,7 +41,6 @@ import {
 } from '@/features/requests/hooks'
 import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { useAuth } from '@/lib/use-auth'
-import supabase from '@/lib/supabase-client'
 import { ago } from '@/lib/dayjs'
 import type { uuid } from '@/types/main'
 
@@ -425,37 +420,23 @@ function EditableRequestPrompt({
 	const [isEditing, setIsEditing] = useState(false)
 	const [editText, setEditText] = useState(request.prompt)
 
-	const updateRequest = useMutation({
-		mutationFn: async (newPrompt: string) => {
-			const { data } = await supabase
-				.from('phrase_request')
-				.update({ prompt: newPrompt })
-				.eq('id', request.id)
-				.throwOnError()
-				.select()
-			if (!data) throw new Error('Failed to update request')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			phraseRequestsCollection.utils.writeUpdate(
-				PhraseRequestSchema.parse(data)
-			)
-			setIsEditing(false)
-			toastSuccess('Request updated')
-		},
-		onError: (error) => {
-			toastError('Failed to update request')
-			console.error(error)
-		},
-	})
-
 	const handleSave = () => {
 		const trimmed = editText.trim()
-		if (trimmed && trimmed !== request.prompt) {
-			updateRequest.mutate(trimmed)
-		} else {
+		if (!trimmed || trimmed === request.prompt) {
 			setIsEditing(false)
+			return
 		}
+		const tx = phraseRequestsCollection.update(request.id, (draft) => {
+			draft.prompt = trimmed
+		})
+		setIsEditing(false)
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Request updated'),
+			(error: unknown) => {
+				toastError('Failed to update request')
+				console.error(error)
+			}
+		)
 	}
 
 	const handleCancel = () => {
@@ -475,12 +456,7 @@ function EditableRequestPrompt({
 					}}
 				/>
 				<div className="flex gap-2">
-					<Button
-						size="sm"
-						variant="default"
-						onClick={handleSave}
-						disabled={updateRequest.isPending}
-					>
+					<Button size="sm" variant="default" onClick={handleSave}>
 						<Check className="me-1 h-4 w-4" />
 						Save
 					</Button>
@@ -518,36 +494,27 @@ function ArchiveRequestButton({
 	request: PhraseRequestType
 	disabled?: boolean
 }) {
-	const toggleArchive = useMutation({
-		mutationFn: async () => {
-			const { data } = await supabase
-				.from('phrase_request')
-				.update({ deleted: !request.deleted })
-				.eq('id', request.id)
-				.throwOnError()
-				.select()
-			if (!data) throw new Error('Failed to update request')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			phraseRequestsCollection.utils.writeUpdate(
-				PhraseRequestSchema.parse(data)
-			)
-			toastSuccess(request.deleted ? 'Request restored' : 'Request archived')
-		},
-		onError: (error) => {
-			toastError('Failed to update request')
-			console.error(error)
-		},
-	})
+	const toggleArchive = () => {
+		const wasDeleted = request.deleted
+		const tx = phraseRequestsCollection.update(request.id, (draft) => {
+			draft.deleted = !wasDeleted
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess(wasDeleted ? 'Request restored' : 'Request archived'),
+			(error: unknown) => {
+				toastError('Failed to update request')
+				console.error(error)
+			}
+		)
+	}
 
 	return (
 		<Button
 			size="icon"
 			variant="ghost"
 			className="shrink-0"
-			onClick={() => toggleArchive.mutate()}
-			disabled={disabled || toggleArchive.isPending}
+			onClick={toggleArchive}
+			disabled={disabled}
 			aria-label={request.deleted ? 'Restore request' : 'Archive request'}
 		>
 			{request.deleted ? (

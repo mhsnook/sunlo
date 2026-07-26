@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { createLazyFileRoute, Link } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
+import { createOptimisticAction } from '@tanstack/db'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	Archive,
@@ -74,6 +74,84 @@ type MessageRow = {
 	lang: string
 	request_id: string
 }
+
+// Bulk-insert phrase_request rows (a DB trigger auto-creates one message per
+// request and fills message_id) plus optional tag links. The message_id is
+// server-generated, so the optimistic requests carry client ids only; the
+// confirmed rows (now with message_id) are synced in the mutationFn, along
+// with their message + tag-link rows.
+const bulkAddMessages = createOptimisticAction<{
+	requestIds: Array<string>
+	prompts: Array<string>
+	lang: string
+	userId: string
+	tagSlug: string | null
+}>({
+	onMutate: ({ requestIds, prompts, lang, userId }) => {
+		const now = new Date().toISOString()
+		prompts.forEach((prompt, i) => {
+			phraseRequestsCollection.insert({
+				id: requestIds[i],
+				created_at: now,
+				requester_uid: userId,
+				lang,
+				prompt,
+				upvote_count: 0,
+				deleted: false,
+			})
+		})
+	},
+	mutationFn: async ({ requestIds, prompts, lang, userId, tagSlug }) => {
+		const { data: requests } = await supabase
+			.from('phrase_request')
+			.insert(
+				prompts.map((prompt, i) => ({
+					id: requestIds[i],
+					prompt,
+					lang,
+					requester_uid: userId,
+				}))
+			)
+			.select()
+			.throwOnError()
+		const insertedRequests = requests ?? []
+
+		let insertedLinks: Array<{ message_id: string; tag_slug: string }> = []
+		if (tagSlug && insertedRequests.length > 0) {
+			const { data: links } = await supabase
+				.from('message_tag_link')
+				.insert(
+					insertedRequests
+						.filter((r) => r.message_id)
+						.map((r) => ({
+							message_id: r.message_id as string,
+							tag_slug: tagSlug,
+						}))
+				)
+				.select()
+				.throwOnError()
+			insertedLinks = links ?? []
+		}
+
+		// Sync confirmed rows (server filled message_id) before the optimistic
+		// state drops at the end of mutationFn.
+		for (const row of insertedRequests) {
+			const parsed = PhraseRequestSchema.parse(row)
+			phraseRequestsCollection.utils.writeInsert(parsed)
+			if (parsed.message_id) {
+				messagesCollection.utils.writeInsert({
+					id: parsed.message_id,
+					created_at: parsed.created_at,
+				})
+			}
+		}
+		for (const link of insertedLinks) {
+			messageTagLinksCollection.utils.writeInsert(
+				MessageTagLinkSchema.parse(link)
+			)
+		}
+	},
+})
 
 function AdminMessagesPage() {
 	const { isAdmin, userId } = useAuth()
@@ -675,71 +753,37 @@ function BulkAddSection({
 
 	const selectedTag = allTags.find((t) => t.slug === tagSlug) ?? null
 
-	const bulkAdd = useMutation({
-		mutationFn: async () => {
-			if (!userId) throw new Error('Not authenticated')
-			if (!lang) throw new Error('Pick a language first')
-			if (prompts.length === 0) throw new Error('No prompts to add')
-			const { data: requests } = await supabase
-				.from('phrase_request')
-				.insert(
-					prompts.map((prompt) => ({
-						prompt,
-						lang,
-						requester_uid: userId,
-					}))
+	const runBulkAdd = () => {
+		if (!userId) {
+			toastError('Not authenticated')
+			return
+		}
+		if (!lang) {
+			toastError('Pick a language first')
+			return
+		}
+		if (prompts.length === 0) {
+			toastError('No prompts to add')
+			return
+		}
+		const requestIds = prompts.map(() => crypto.randomUUID())
+		const tx = bulkAddMessages({ requestIds, prompts, lang, userId, tagSlug })
+		tx.isPersisted.promise.then(
+			() => {
+				toastSuccess(
+					`Added ${prompts.length} message${prompts.length === 1 ? '' : 's'}` +
+						(tagSlug ? ` tagged "${tagSlug}"` : '')
 				)
-				.select()
-				.throwOnError()
-			const insertedRequests = requests ?? []
-
-			let insertedLinks: { message_id: string; tag_slug: string }[] = []
-			if (tagSlug && insertedRequests.length > 0) {
-				const { data: links } = await supabase
-					.from('message_tag_link')
-					.insert(
-						insertedRequests
-							.filter((r) => r.message_id)
-							.map((r) => ({
-								message_id: r.message_id as string,
-								tag_slug: tagSlug,
-							}))
-					)
-					.select()
-					.throwOnError()
-				insertedLinks = links ?? []
-			}
-			return { requests: insertedRequests, links: insertedLinks }
-		},
-		onSuccess: ({ requests, links }) => {
-			for (const row of requests) {
-				const parsed = PhraseRequestSchema.parse(row)
-				phraseRequestsCollection.utils.writeInsert(parsed)
-				if (parsed.message_id) {
-					messagesCollection.utils.writeInsert({
-						id: parsed.message_id,
-						created_at: parsed.created_at,
-					})
-				}
-			}
-			for (const link of links) {
-				messageTagLinksCollection.utils.writeInsert(
-					MessageTagLinkSchema.parse(link)
+				setText('')
+			},
+			(err: unknown) => {
+				toastError(
+					err instanceof Error ? err.message : 'Failed to bulk-add messages'
 				)
+				console.error(err)
 			}
-			toastSuccess(
-				`Added ${requests.length} message${requests.length === 1 ? '' : 's'}` +
-					(tagSlug ? ` tagged "${tagSlug}"` : '')
-			)
-			setText('')
-		},
-		onError: (err: unknown) => {
-			toastError(
-				err instanceof Error ? err.message : 'Failed to bulk-add messages'
-			)
-			console.error(err)
-		},
-	})
+		)
+	}
 
 	return (
 		<section
@@ -827,10 +871,8 @@ function BulkAddSection({
 					<div className="flex items-center justify-end gap-2">
 						<Button
 							size="sm"
-							onClick={() => bulkAdd.mutate()}
-							disabled={
-								bulkAdd.isPending || prompts.length === 0 || !lang || !userId
-							}
+							onClick={runBulkAdd}
+							disabled={prompts.length === 0 || !lang || !userId}
 							data-testid="bulk-add-submit"
 						>
 							Add {prompts.length} message{prompts.length === 1 ? '' : 's'}
