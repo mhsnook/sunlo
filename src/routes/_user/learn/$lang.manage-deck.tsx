@@ -56,9 +56,9 @@ const statusIcon = {
 } as const
 
 const statusColors = {
-	active: 'text-lum-8 text-chroma-high',
-	learned: 'hue-success text-lum-8 text-chroma-high',
-	skipped: 'hue-neutral text-lum-6 text-chroma-mid',
+	active: 'text-lum-7 text-chroma-high',
+	learned: 'hue-success text-lum-7 text-chroma-high',
+	skipped: 'hue-neutral text-lum-5 text-chroma-mid',
 } as const
 
 const statusBgColors = {
@@ -94,13 +94,13 @@ function getDueInfo(item: DueCheckable): {
 		const overdue = Math.abs(daysUntilDue)
 		return {
 			label: overdue === 1 ? 'Overdue 1d' : `Overdue ${overdue}d`,
-			color: 'hue-danger text-lum-8 text-chroma-high',
+			color: 'hue-danger text-lum-7 text-chroma-high',
 		}
 	}
 	if (daysUntilDue === 0)
 		return {
 			label: 'Due today',
-			color: 'hue-warning text-lum-8 text-chroma-high',
+			color: 'hue-warning text-lum-7 text-chroma-high',
 		}
 	return {
 		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,

@@ -612,7 +612,7 @@ function FsrsPage() {
 											onClick={() => removeReview(r.id)}
 											aria-label={`Remove review ${i}`}
 											disabled={reviews.length <= 1}
-											className="hover:hue-danger text-muted-foreground hover:text-lum-6 hover:text-chroma-high disabled:opacity-40"
+											className="hover:hue-danger text-muted-foreground hover:text-lum-5 hover:text-chroma-high disabled:opacity-40"
 										>
 											<X className="size-4" />
 										</button>

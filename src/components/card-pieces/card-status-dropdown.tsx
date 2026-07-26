@@ -136,7 +136,7 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 // one shape, one size, just hue swapping with the state.
 const triggerDotClass: Record<ShowableActions, string> = {
 	active: 'bg-primary',
-	learned: 'hue-success bg-lum-6 bg-chroma-high',
+	learned: 'hue-success bg-lum-5 bg-chroma-high',
 	skipped: 'hue-neutral bg-lum-5',
 	nocard: 'hue-neutral bg-lum-4',
 	nodeck: 'hue-neutral bg-lum-4',
@@ -480,7 +480,7 @@ function StartLearningDialog({
 						onClick={() => void handleConfirm()}
 						disabled={pending}
 						data-testid="confirm-start-learning-button"
-						className="from-lum-6 from-chroma-mhigh to-lum-7 text-primary-foreground hover:from-lum-7 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+						className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground hover:from-lum-6 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
 					>
 						{isUnarchive ? (
 							<ArchiveRestore className="size-6" />
@@ -507,7 +507,7 @@ function StartLearningDialog({
 
 					<DialogClose
 						data-testid="cancel-start-learning-button"
-						className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-8 text-chroma-mid hover:bg-lum-down-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+						className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-mid hover:bg-lum-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 					>
 						<Bookmark className="size-6" />
 						<div>

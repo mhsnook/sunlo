@@ -44,7 +44,7 @@ function ReviewRemainingLink({
 			<span className="text-xs font-medium group-hover:underline">
 				{languages[lang]}
 			</span>
-			<span className="text-lum-6 text-chroma-mlow group-hover:text-lum-up-1 text-xs font-bold">
+			<span className="text-lum-5 text-chroma-mlow group-hover:text-lum-up-1 text-xs font-bold">
 				{remaining} left
 			</span>
 		</Link>
@@ -136,7 +136,7 @@ function CalloutContent({
 				to="/learn/$lang/review"
 				params={{ lang: activeReviews[0].lang }}
 				onClick={setClosedMobile}
-				className="text-lum-6 text-chroma-mid hover:bg-lum-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
+				className="text-lum-5 text-chroma-mid hover:bg-lum-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
 				aria-label="Active review in progress"
 			>
 				<Rocket className="h-4 w-4" />
@@ -151,7 +151,7 @@ function CalloutContent({
 			<div className={calloutCard}>
 				<div className="flex items-center gap-2">
 					<div className={iconCircle}>
-						<Rocket className="text-lum-6 text-chroma-mid h-4 w-4" />
+						<Rocket className="text-lum-5 text-chroma-mid h-4 w-4" />
 					</div>
 					<div className="flex-1">
 						<p className="text-sm font-semibold">{remaining} cards left</p>
@@ -181,7 +181,7 @@ function CalloutContent({
 		<div className={calloutCard}>
 			<div className="flex items-center gap-2">
 				<div className={iconCircle}>
-					<Rocket className="text-lum-6 text-chroma-mid h-4 w-4" />
+					<Rocket className="text-lum-5 text-chroma-mid h-4 w-4" />
 				</div>
 				<span className="text-sm font-semibold">Finish your review</span>
 			</div>

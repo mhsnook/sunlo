@@ -61,7 +61,7 @@ function InviteFriendPage() {
 						<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
-									<div className="bg-lum-2 bg-chroma-mlow group-hover:bg-lum-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<div className="bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
 										<Share className="text-primary h-6 w-6" />
 									</div>
 									<div>
@@ -81,7 +81,7 @@ function InviteFriendPage() {
 						<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
-									<div className="hue-accent bg-lum-2 bg-chroma-mlow group-hover:bg-lum-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<div className="hue-accent bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
 										<Copy className="text-accent-foreground h-6 w-6" />
 									</div>
 									<div>
@@ -95,7 +95,7 @@ function InviteFriendPage() {
 								</div>
 								<CopyLinkButton
 									size="lg"
-									className="hue-accent border-lum-4 border-chroma-mid bg-lum-2 bg-chroma-mlow text-accent-foresoft hover:bg-lum-up-1 w-full"
+									className="hue-accent border-lum-4 border-chroma-mid bg-lum-2 bg-chroma-mlow text-accent-foresoft hover:bg-lum-3 w-full"
 									variant="soft"
 									url={share.url}
 								/>
@@ -121,8 +121,8 @@ function InviteFriendPage() {
 							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
-								<div className="hue-info bg-lum-2 bg-chroma-mlow group-hover:bg-lum-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<Mail className="hue-info text-lum-7 text-chroma-high h-6 w-6" />
+								<div className="hue-info bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<Mail className="hue-info text-lum-6 text-chroma-high h-6 w-6" />
 								</div>
 								<div>
 									<h3 className="text-foreground font-semibold">Email</h3>
@@ -140,8 +140,8 @@ function InviteFriendPage() {
 							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
-								<div className="hue-success bg-lum-2 bg-chroma-mlow group-hover:bg-lum-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<MessageSquare className="hue-success text-lum-7 text-chroma-high h-6 w-6" />
+								<div className="hue-success bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<MessageSquare className="hue-success text-lum-6 text-chroma-high h-6 w-6" />
 								</div>
 								<div>
 									<h3 className="text-foreground font-semibold">WhatsApp</h3>
@@ -158,8 +158,8 @@ function InviteFriendPage() {
 								className="group border-border/50 col-span-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 							>
 								<div className="flex items-center space-x-3">
-									<div className="hue-warning bg-lum-2 bg-chroma-mlow group-hover:bg-lum-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Copy className="hue-warning text-lum-7 text-chroma-high h-6 w-6" />
+									<div className="hue-warning bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+										<Copy className="hue-warning text-lum-6 text-chroma-high h-6 w-6" />
 									</div>
 									<div>
 										<h3 className="text-foreground text-lg font-semibold">

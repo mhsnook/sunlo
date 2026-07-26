@@ -96,7 +96,7 @@ function AddedPill({ added }: { added: boolean }) {
 			className={cn(
 				'flex items-center gap-1 text-xs font-medium',
 				added
-					? 'hue-success text-lum-6 text-chroma-high'
+					? 'hue-success text-lum-5 text-chroma-high'
 					: 'text-primary-foresoft'
 			)}
 		>

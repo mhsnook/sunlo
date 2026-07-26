@@ -11,7 +11,7 @@ const badgeVariants = cva(
 			variant: {
 				default: 'border-transparent bg-primary text-primary-foreground',
 				secondary:
-					'hue-neutral border-lum-3 bg-lum-2 text-lum-6 text-chroma-mid',
+					'hue-neutral border-lum-3 bg-lum-2 text-lum-5 text-chroma-mid',
 				destructive:
 					'border-transparent bg-destructive text-destructive-foreground',
 				success: 'border-transparent bg-green-600 text-green-100',
@@ -71,7 +71,7 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 			variant="lang"
 			className={cn(
 				!ready &&
-					'!bg-lum-2 !bg-chroma-low !bg-hue-neutral !text-lum-8 !text-chroma-mid !text-hue-neutral !border-lum-3 !border-chroma-low !border-hue-neutral',
+					'!bg-lum-2 !bg-chroma-low !bg-hue-neutral !text-lum-7 !text-chroma-mid !text-hue-neutral !border-lum-3 !border-chroma-low !border-hue-neutral',
 				className
 			)}
 			style={style}

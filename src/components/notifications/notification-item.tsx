@@ -28,32 +28,32 @@ const notificationConfig: Record<
 	request_commented: {
 		Icon: MessageSquareQuote,
 		action: 'commented on your request',
-		iconClass: 'text-lum-8 text-chroma-mid bg-lum-2',
+		iconClass: 'text-lum-7 text-chroma-mid bg-lum-2',
 	},
 	comment_replied: {
 		Icon: MessagesSquare,
 		action: 'replied to your comment',
-		iconClass: 'hue-info text-lum-8 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-info text-lum-7 text-chroma-mid bg-lum-2',
 	},
 	phrase_translated: {
 		Icon: Languages,
 		action: 'added a translation to your phrase',
-		iconClass: 'hue-success text-lum-8 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-success text-lum-7 text-chroma-mid bg-lum-2',
 	},
 	phrase_referenced: {
 		Icon: Link2,
 		action: 'referenced your phrase as an answer',
-		iconClass: 'hue-accent text-lum-8 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-accent text-lum-7 text-chroma-mid bg-lum-2',
 	},
 	request_upvoted: {
 		Icon: ThumbsUp,
 		action: 'upvoted your request',
-		iconClass: 'hue-warning text-lum-8 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-warning text-lum-7 text-chroma-mid bg-lum-2',
 	},
 	change_suggested: {
 		Icon: MessageSquareQuote,
 		action: 'suggested a change to your content',
-		iconClass: 'hue-neutral text-lum-8 text-chroma-mid bg-lum-2',
+		iconClass: 'hue-neutral text-lum-7 text-chroma-mid bg-lum-2',
 	},
 }
 

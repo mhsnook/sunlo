@@ -45,38 +45,38 @@ Property prefixes: `bg-`, `text-`, `border-`, `border-b-`, `from-`, `to-` (gradi
 
 ### Luminance scale (`lum`)
 
-`{prop}-lum-{1–10 | none | max}`. Numbered stops measure contrast with the page; the pure poles sit _outside_ the numbers. The scale auto-flips between light and dark mode. **These are our tuned values** — `globals.css` overrides tailwind-oklch's default ramp with Sunlo's prior scale (see the restore note below):
+`{prop}-lum-{1–10 | none | max}`. Numbered stops ride v0.7.0's **front-loaded** curve (fine steps near the page, opening toward the foreground) and measure contrast with the page; the pure poles sit _outside_ the numbers. The scale auto-flips between light and dark mode — **we use the library's native ramp** (it reads better than our old flat scale):
 
-| Value  | Light mode   | Dark mode    | Meaning                           |
-| ------ | ------------ | ------------ | --------------------------------- |
-| `none` | 1.00 (white) | 0.00 (black) | The page color — zero contrast    |
-| `1`    | 0.95         | 0.12         | Lightest surface (blends w/ page) |
-| `2`    | 0.91         | 0.20         | Subtle surface / **card**         |
-| `3`    | 0.85         | 0.28         | Raised surface / border           |
-| `5`    | 0.71         | 0.44         | Mid                               |
-| `7`    | 0.54         | 0.60         | Prominent                         |
-| `9`    | 0.34         | 0.76         | Strong text                       |
-| `10`   | 0.15         | 0.92         | Strong foreground / max text      |
-| `max`  | 0.00 (black) | 1.00 (white) | Full contrast                     |
+| Value  | Light mode   | Dark mode    | Meaning                          |
+| ------ | ------------ | ------------ | -------------------------------- |
+| `none` | 1.00 (white) | 0.00 (black) | The page color — zero contrast   |
+| `1`    | 0.92         | 0.185        | Lightest usable surface          |
+| `2`    | 0.887        | 0.215        | Subtle surface / **card**        |
+| `3`    | 0.831        | 0.268        | Raised surface / border          |
+| `5`    | 0.676        | 0.412        | Mid                              |
+| `7`    | 0.481        | 0.593        | Prominent (buttons, muted text)  |
+| `9`    | 0.254        | 0.805        | Strong text                      |
+| `10`   | 0.13         | 0.92         | Strong foreground (near the max) |
+| `max`  | 0.00 (black) | 1.00 (white) | Full contrast                    |
 
 Arbitrary luminance is a _direct_ L (`n/100`) and still auto-flips: `bg-lum-[93]` → L=0.93 in light, 0.07 in dark. (Note `lum-1…10` is a curved contrast ramp; `lum-[n]` is a raw L — two tools sharing a prefix.)
 
-> **Restore note (v0.7.0):** the axis was renamed `lc`→`lum` and renumbered (poles moved out to `none`/`max`; a card is now `lum-2`, `lc-base`→`lum-1`, `lc-fore`→`lum-10`). v0.7.0's own front-loaded ramp darkened our buttons, so `globals.css` pins `--lum-1…10` (light + `.dark`) back to Sunlo's prior values — the class numbering is +1-indexed for v0.7.0, and these overrides map `lum-N` onto our old `lc-(N-1)` so it cancels out. Retune the ramp there, never by hand-editing classes.
+> **Migration note (v0.7.0):** the axis was renamed `lc`→`lum` and renumbered — poles moved out to `none`/`max`, a card is now `lum-2` (`lc-base`→`lum-1`, `lc-fore`→`lum-10`). Roughly, an old `lc-N` maps to `lum-N`; only the lightest surfaces shifted up a notch so `lc-0`/`lc-1` stay distinct. Retune the ramp in `globals.css` (`--lum-2: …`), never by hand-editing classes.
 
 ### Chroma stops (`chroma`)
 
-`{prop}-chroma-{low | mlow | mid | mhigh | high | max}`, or the seeder `chroma-{…}`. v0.7.0 scales base chroma **per hue** (`--cscale-*`) and **tapers it toward white** (`--chroma-taper`); both together washed out our light surfaces, so `globals.css` flattens the per-hue scale (`--cscale-*: 1`) and pushes the taper up (`40`, so only true near-white loses chroma) and pins these base values back to Sunlo's prior scale:
+`{prop}-chroma-{low | mlow | mid | mhigh | high | max}`, or the seeder `chroma-{…}`. These are _base_ values, **scaled per hue** (each hue's `--cscale-*` normalizes perceived saturation across hues) and **tapered toward white** (chroma eases to 0 near the light pole), so painted chroma is usually a bit below the base:
 
-| Name    | Base (tuned) | Use for                            |
-| ------- | ------------ | ---------------------------------- |
-| `low`   | 0.02         | Backgrounds, muted surfaces        |
-| `mlow`  | 0.06         | Tinted backgrounds, subtle borders |
-| `mid`   | 0.12         | Medium saturation                  |
-| `mhigh` | 0.18         | Prominent accents                  |
-| `high`  | 0.25         | Vivid colors                       |
-| `max`   | 0.25         | Fullest color the hue can display  |
+| Name    | Base | Use for                            |
+| ------- | ---- | ---------------------------------- |
+| `low`   | 0.02 | Backgrounds, muted surfaces        |
+| `mlow`  | 0.05 | Tinted backgrounds, subtle borders |
+| `mid`   | 0.09 | Medium saturation                  |
+| `mhigh` | 0.13 | Prominent accents                  |
+| `high`  | 0.17 | Vivid colors                       |
+| `max`   | 0.25 | Fullest color the hue can display  |
 
-Arbitrary chroma is `n/100`: `border-chroma-[6]` → chroma 0.06. To lean back into v0.7.0's perceptual chroma, drop these overrides in `globals.css`.
+Arbitrary chroma is `n/100`: `border-chroma-[6]` → chroma 0.06. We keep the library's per-hue scale but soften **`--chroma-taper`** to `8` in `globals.css` — the default (`3`) desaturates light surfaces so hard that backgrounds and language badges read as gray. Lower it toward `3` to mute light surfaces further; raise it to flatten. (Semantic tokens like `primary` use `chroma-max` _raw_, bypassing scale + taper, so the brand stays vivid regardless.)
 
 ### Available hues (`hue`)
 
@@ -93,6 +93,8 @@ className = 'text-lum-8 group-hover:text-lum-down-1' // one step less
 
 `{bg,text}-lum-up-{1–5}` / `-down-{1–5}`. Adjustments **don't compound**: a nudge always measures from the nearest ancestor's absolute `lum-N`, never from an already-nudged value.
 
+> ⚠️ **Don't put `bg-lum-up/down` on the same element that sets a base `bg-lum-N`** (e.g. `bg-lum-8 hover:bg-lum-up-1`). v0.7.0's bg nudge rewrites `--bg-l`, which the base's `--bg-anchor-l: var(--bg-l)` then references back — a custom-property cycle that voids `background-color` to **transparent**. For a hover on a coloured surface, use an absolute stop instead (`bg-lum-8 hover:bg-lum-9`). Text nudges are safe (they don't rewrite `--tx-l`), and `bg-lum-up` is fine on an element whose anchor comes from an _ancestor_.
+
 To let an element pick a luminance that contrasts with **its own background** — light _or_ dark, no `dark:` — use `con-*` (`text-con-*`, `border-con-*`, `outline-con-*`), with words reading as _how much_ contrast (faint → stark): `low mlow mid mhigh high max`. `max` clamps to pure black/white.
 
 ```typescript
@@ -106,10 +108,10 @@ Defined in `globals.css`, these bridge the OKLCH scale with traditional Tailwind
 
 | Token                                  | Definition                      | Notes                                                                 |
 | -------------------------------------- | ------------------------------- | --------------------------------------------------------------------- |
-| `primary`                              | lum-6, chroma-max, hue-primary  | Auto-flips                                                            |
-| `primary-foresoft`                     | lum-8, chroma-max, hue-primary  | Auto-flips; the "interactive purple" for links, soft buttons, borders |
+| `primary`                              | lum-5, chroma-max, hue-primary  | Auto-flips                                                            |
+| `primary-foresoft`                     | lum-7, chroma-max, hue-primary  | Auto-flips; the "interactive purple" for links, soft buttons, borders |
 | `primary-foreground`                   | Fixed L=0.93                    | Always near-white — for text ON primary surfaces only                 |
-| `accent` / `accent-foresoft`           | lum-6/8, chroma-max, hue-accent | Auto-flips                                                            |
+| `accent` / `accent-foresoft`           | lum-5/7, chroma-max, hue-accent | Auto-flips                                                            |
 | `accent-foreground`                    | lum-10, chroma-mlow, hue-accent | Auto-flips; used as body text (language names)                        |
 | `foreground`, `muted-foreground`, etc. | Static per-mode                 | Defined in `:root` and `.dark` blocks                                 |
 

@@ -4,9 +4,12 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Slot } from '@/lib/slot'
 
-const solids = 'bg-lum-8 bg-chroma-mhigh text-white hover:bg-lum-up-1'
+// Hover uses an absolute lum stop (one step), not bg-lum-up/down: on an element
+// that also sets a base bg-lum-N, the nudge's --bg-l ↔ --bg-anchor-l reference
+// forms a custom-property cycle and the background resolves to transparent.
+const solids = 'bg-lum-7 bg-chroma-mhigh text-white hover:bg-lum-8'
 const softs =
-	'bg-lum-2 bg-chroma-mlow text-lum-8 text-chroma-mid hover:bg-lum-down-1 hover:text-lum-up-1'
+	'bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-mid hover:bg-lum-1 hover:text-lum-up-1'
 
 const buttonVariants = cva(
 	'border border-transparent shadow inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
@@ -18,9 +21,9 @@ const buttonVariants = cva(
 				red: `hue-danger ${solids}`,
 				'red-soft': `hue-danger ${softs}`,
 				neutral: 'hover:bg-lum-up-1 hover:bg-chroma-mlow',
-				ghost: 'text-lum-7 hover:bg-lum-1 hover:text-lum-8',
+				ghost: 'text-lum-6 hover:bg-lum-1 hover:text-lum-7',
 				'badge-outline':
-					'hue-neutral rounded border-border text-lum-9 text-chroma-mid bg-lum-1 hover:border-primary',
+					'hue-neutral rounded border-border text-lum-8 text-chroma-mid bg-lum-1 hover:border-primary',
 				'dashed-w-full':
 					'w-full border-2 border-dashed border-lum-3 hover:border-border shadow-none hover:shadow',
 			},

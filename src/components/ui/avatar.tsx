@@ -33,7 +33,7 @@ const AvatarFallback = ({
 		data-slot="avatar-fallback"
 		className={cn(
 			'flex h-full w-full items-center justify-center',
-			seed ? 'bg-lum-6 bg-chroma-mhigh text-primary-foreground' : 'bg-muted',
+			seed ? 'bg-lum-5 bg-chroma-mhigh text-primary-foreground' : 'bg-muted',
 			className
 		)}
 		style={

@@ -31,7 +31,7 @@ export function OnboardingNudge() {
 				to="/getting-started"
 				onClick={setClosedMobile}
 				data-testid="onboarding-nudge"
-				className="text-lum-6 text-chroma-mid hover:bg-lum-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
+				className="text-lum-5 text-chroma-mid hover:bg-lum-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
 				aria-label="Continue setting up your account"
 			>
 				<Sparkles className="h-4 w-4" />
@@ -46,7 +46,7 @@ export function OnboardingNudge() {
 		>
 			<div className="flex items-start gap-2">
 				<div className="rounded-lg bg-white p-1.5">
-					<Sparkles className="text-lum-6 text-chroma-mid h-4 w-4" />
+					<Sparkles className="text-lum-5 text-chroma-mid h-4 w-4" />
 				</div>
 				<div className="flex-1">
 					<p className="text-sm font-semibold">Continue setup</p>

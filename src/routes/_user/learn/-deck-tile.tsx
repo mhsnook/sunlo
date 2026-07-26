@@ -104,7 +104,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang/review"
 								params={{ lang: deck.lang }}
 								data-testid="start-practice-link"
-								className="from-lum-6 from-chroma-mhigh to-lum-7 text-primary-foreground hover:from-lum-7 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground hover:from-lum-6 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								{dueToday === 0 ? (
 									<CircleCheck className="size-6" />
@@ -129,7 +129,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang"
 								params={{ lang: deck.lang }}
 								data-testid="deck-link"
-								className="border-lum-3 bg-lum-2 bg-chroma-mlow text-primary-foresoft hover:bg-lum-down-1 hover:text-lum-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="border-lum-3 bg-lum-2 bg-chroma-mlow text-primary-foresoft hover:bg-lum-1 hover:text-lum-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								<Logs className="size-6" />
 								<div>

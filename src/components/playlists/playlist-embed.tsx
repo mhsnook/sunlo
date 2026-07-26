@@ -134,7 +134,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 				href={href}
 				target="_blank"
 				rel="noopener noreferrer"
-				className="hue-neutral bg-lum-2 bg-chroma-mlow text-lum-8 text-chroma-mid hover:bg-lum-3 hover:bg-chroma-mlow flex items-center gap-2 rounded-2xl px-4 py-3 text-sm no-underline transition-colors"
+				className="hue-neutral bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-mid hover:bg-lum-3 hover:bg-chroma-mlow flex items-center gap-2 rounded-2xl px-4 py-3 text-sm no-underline transition-colors"
 			>
 				<ExternalLink className="size-4 shrink-0" />
 				<span>

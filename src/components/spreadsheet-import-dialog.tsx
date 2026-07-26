@@ -154,7 +154,7 @@ export function SpreadsheetImportDialog({
 								</p>
 								<div className="space-y-2 ps-1">
 									<p>
-										<strong className="text-lum-8 text-chroma-mhigh">
+										<strong className="text-lum-7 text-chroma-mhigh">
 											Phrase
 										</strong>{' '}
 										&mdash; the word or sentence in your learning language.
@@ -165,7 +165,7 @@ export function SpreadsheetImportDialog({
 										).
 									</p>
 									<p>
-										<strong className="hue-accent text-lum-8 text-chroma-mhigh">
+										<strong className="hue-accent text-lum-7 text-chroma-mhigh">
 											Translation
 										</strong>{' '}
 										&mdash; put the language name or 3-letter code in the header
@@ -180,7 +180,7 @@ export function SpreadsheetImportDialog({
 										). You can have multiple translation columns.
 									</p>
 									<p>
-										<strong className="hue-info text-lum-8 text-chroma-mhigh">
+										<strong className="hue-info text-lum-7 text-chroma-mhigh">
 											Tags
 										</strong>{' '}
 										&mdash; optional. Include &ldquo;tag&rdquo; in the header.

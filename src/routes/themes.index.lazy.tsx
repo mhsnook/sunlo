@@ -432,7 +432,7 @@ function ShowcaseDeckDialog() {
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-				<div className="from-lum-6 from-chroma-mhigh to-lum-7 text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
+				<div className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
 					<Rocket className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -645,7 +645,7 @@ const cardStatusShowcaseStates: Array<{
 	soft?: boolean
 }> = [
 	{ choice: 'active', dot: 'bg-primary', soft: true },
-	{ choice: 'learned', dot: 'hue-success bg-lum-6 bg-chroma-high' },
+	{ choice: 'learned', dot: 'hue-success bg-lum-5 bg-chroma-high' },
 	{ choice: 'skipped', dot: 'hue-neutral bg-lum-5' },
 	{ choice: 'nocard', dot: 'hue-neutral bg-lum-4' },
 	{ choice: 'nodeck', dot: 'hue-neutral bg-lum-4' },

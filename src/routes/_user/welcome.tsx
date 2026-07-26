@@ -411,7 +411,7 @@ function BrowseRequestsDialog({
 							onClick={() => handleLang(lang.lang)}
 							className="bg-card hover:bg-lum-2 flex flex-col gap-2 rounded-lg border p-4 text-start transition-colors"
 						>
-							<span className="from-lum-6 from-chroma-mhigh to-lum-7 text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
+							<span className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
 								{lang.lang.toUpperCase()}
 							</span>
 							<span className="text-sm leading-tight font-semibold">

@@ -40,9 +40,9 @@ export function toastSuccess(message: string) {
 		() => (
 			<div
 				data-testid="toast-success"
-				className={`${ephemeralClass} border-lum-5 border-chroma-mid border-hue-success bg-lum-2 bg-chroma-mlow bg-hue-success text-lum-9 text-chroma-mid text-hue-success`}
+				className={`${ephemeralClass} border-lum-5 border-chroma-mid border-hue-success bg-lum-2 bg-chroma-mlow bg-hue-success text-lum-8 text-chroma-mid text-hue-success`}
 			>
-				<CheckCircle className="hue-success text-lum-7 text-chroma-mhigh size-5 shrink-0" />
+				<CheckCircle className="hue-success text-lum-6 text-chroma-mhigh size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
 			</div>
 		),
@@ -82,15 +82,15 @@ export function toastInfo(message: string) {
 		(t) => (
 			<div
 				data-testid="toast-info"
-				className={`${persistentClass} border-lum-5 border-chroma-mid border-hue-info bg-lum-2 bg-chroma-mlow bg-hue-info text-lum-9 text-chroma-mid text-hue-info`}
+				className={`${persistentClass} border-lum-5 border-chroma-mid border-hue-info bg-lum-2 bg-chroma-mlow bg-hue-info text-lum-8 text-chroma-mid text-hue-info`}
 			>
-				<Info className="hue-info text-lum-7 text-chroma-mhigh size-5 shrink-0" />
+				<Info className="hue-info text-lum-6 text-chroma-mhigh size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
 				<div className="flex shrink-0 items-center gap-1">
 					<Button
 						variant="ghost"
 						size="icon"
-						className="hue-info hover:hue-info text-lum-7 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
+						className="hue-info hover:hue-info text-lum-6 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onClick={copyToClipboard(message)}
 						aria-label="Copy message"
@@ -100,7 +100,7 @@ export function toastInfo(message: string) {
 					<Button
 						variant="ghost"
 						size="icon"
-						className="hue-info hover:hue-info text-lum-7 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
+						className="hue-info hover:hue-info text-lum-6 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
 						onClick={() => toast.dismiss(t)}
 						aria-label="Dismiss"
 					>
@@ -123,15 +123,15 @@ export function toastError(message: string) {
 		(t) => (
 			<div
 				data-testid="toast-error"
-				className={`${persistentClass} border-lum-5 border-chroma-mid border-hue-danger bg-lum-2 bg-chroma-mlow bg-hue-danger text-lum-9 text-chroma-mid text-hue-danger`}
+				className={`${persistentClass} border-lum-5 border-chroma-mid border-hue-danger bg-lum-2 bg-chroma-mlow bg-hue-danger text-lum-8 text-chroma-mid text-hue-danger`}
 			>
-				<AlertCircle className="hue-danger text-lum-7 text-chroma-mhigh size-5 shrink-0" />
+				<AlertCircle className="hue-danger text-lum-6 text-chroma-mhigh size-5 shrink-0" />
 				<span className="flex-1 text-sm">{message}</span>
 				<div className="flex shrink-0 items-center gap-1">
 					<Button
 						variant="ghost"
 						size="icon"
-						className="hue-danger hover:hue-danger text-lum-7 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
+						className="hue-danger hover:hue-danger text-lum-6 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onClick={copyToClipboard(message)}
 						aria-label="Copy error"
@@ -141,7 +141,7 @@ export function toastError(message: string) {
 					<Button
 						variant="ghost"
 						size="icon"
-						className="hue-danger hover:hue-danger text-lum-7 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
+						className="hue-danger hover:hue-danger text-lum-6 text-chroma-mhigh hover:bg-lum-3 hover:bg-chroma-mlow size-7"
 						onClick={() => toast.dismiss(t)}
 						aria-label="Dismiss"
 					>
