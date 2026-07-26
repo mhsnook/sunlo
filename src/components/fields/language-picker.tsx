@@ -97,7 +97,7 @@ function LangTile({
 	return (
 		<button
 			type="button"
-			className="bg-card border-lum-3 hover:border-lum-4 hover:border-chroma-mlow flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl border p-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm"
+			className="bg-card border-con-low hover:border-con-mlow hover:border-chroma-mlow flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl border p-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm"
 			style={getLangThemeCss(code)}
 			onClick={() => onPick(code)}
 		>
@@ -106,7 +106,7 @@ function LangTile({
 				{isPrimary ? (
 					<Star className="size-3.5 shrink-0 fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400" />
 				) : isSelected ? (
-					<Check className="text-lum-5 text-chroma-max size-3.5 shrink-0" />
+					<Check className="text-con-mid text-chroma-max size-3.5 shrink-0" />
 				) : null}
 			</div>
 			<div className="truncate text-sm leading-tight font-bold tracking-tight">
@@ -141,7 +141,7 @@ function LangRow({
 			</span>
 			<LangBadge lang={code} className="shrink-0 text-[10px]" />
 			{isSelected && (
-				<Check className="text-lum-5 text-chroma-max size-3.5 shrink-0" />
+				<Check className="text-con-mid text-chroma-max size-3.5 shrink-0" />
 			)}
 		</button>
 	)
@@ -280,7 +280,7 @@ function PickerBody({
 	return (
 		<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 			{/* Search — pinned at top */}
-			<div className="bg-popover border-lum-3 shrink-0 border-b px-3.5 pt-3 pb-2.5">
+			<div className="bg-popover border-con-low shrink-0 border-b px-3.5 pt-3 pb-2.5">
 				<div className="bg-lum-2 border-lum-3 focus-within:border-ring focus-within:ring-ring/20 focus-within:bg-card flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all focus-within:ring-2">
 					<Search className="text-con-mid size-4 shrink-0" />
 					<input
@@ -358,7 +358,7 @@ function PickerBody({
 								</div>
 							</section>
 						))}
-						<div className="border-lum-3 mx-1 my-3 border-t border-dashed" />
+						<div className="border-con-low mx-1 my-3 border-t border-dashed" />
 						<section>
 							<SectionHead label="All languages" count="A — Z" />
 							<AllLanguagesList
@@ -397,11 +397,11 @@ export function LanguagePickerTrigger({
 			className={cn(
 				// Match the at-rest + hover border treatment of <Input>/<Textarea>
 				'flex w-full items-center gap-2.5 rounded-2xl border bg-card/50 px-3.5 py-2.5 text-left text-sm font-sans inset-shadow-sm',
-				'ring-offset-background cursor-pointer hover:border-lum-5 hover:border-chroma-max',
+				'ring-offset-background cursor-pointer hover:border-con-mlow hover:border-chroma-max',
 				'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
 				hasError
-					? 'border-lum-6 border-chroma-high border-hue-danger'
-					: 'border-lum-4 border-chroma-mlow',
+					? 'border-con-mid border-chroma-high border-hue-danger'
+					: 'border-con-mlow border-chroma-mlow',
 				!value && 'text-con-mid',
 				className
 			)}
@@ -552,7 +552,7 @@ export function LanguagePicker({
 	}
 
 	const footer = confirmMode ? (
-		<div className="border-lum-3 bg-popover shrink-0 border-t p-3.5">
+		<div className="border-con-low bg-popover shrink-0 border-t p-3.5">
 			<Button
 				className="w-full"
 				size="lg"
@@ -574,10 +574,10 @@ export function LanguagePicker({
 				{/* bg-popover (pure white) to match the desktop popover chrome —
 				    the shared DrawerContent default bg-lum-1 is hue-tinted */}
 				<DrawerContent className="bg-popover flex max-h-[90svh] flex-col">
-					<div className="border-lum-3 flex shrink-0 items-center justify-between border-b px-4 pb-3">
+					<div className="border-con-low flex shrink-0 items-center justify-between border-b px-4 pb-3">
 						<DrawerTitle>{title}</DrawerTitle>
 						<DrawerClose
-							className="bg-lum-2 text-con-mhigh hover:bg-lum-2 flex size-8 items-center justify-center rounded-xl"
+							className="bg-lum-2 text-lum-9 hover:bg-lum-2 flex size-8 items-center justify-center rounded-xl"
 							aria-label="Close"
 						>
 							<X className="size-4" />
@@ -598,7 +598,7 @@ export function LanguagePicker({
 			<Dialog open={open} onOpenChange={handleOpenChange}>
 				<DialogTrigger asChild>{trigger}</DialogTrigger>
 				<DialogContent className="bg-popover flex max-h-[85vh] w-full max-w-md flex-col gap-0 overflow-hidden rounded-xl p-0">
-					<DialogHeader className="border-lum-3 shrink-0 border-b px-4 py-3 pr-12">
+					<DialogHeader className="border-con-low shrink-0 border-b px-4 py-3 pr-12">
 						<DialogTitle>{title}</DialogTitle>
 						<DialogDescription className="sr-only">
 							{description}

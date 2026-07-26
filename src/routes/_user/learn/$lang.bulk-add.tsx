@@ -69,7 +69,7 @@ const genId = () => `staged-${++nextId}`
 
 function Kbd({ children }: { children: ReactNode }) {
 	return (
-		<kbd className="bg-lum-2 text-con-mid rounded border px-1.5 py-0.5 text-[10px] leading-none font-medium">
+		<kbd className="bg-lum-2 text-lum-7 rounded border px-1.5 py-0.5 text-[10px] leading-none font-medium">
 			{children}
 		</kbd>
 	)
@@ -314,7 +314,7 @@ function BulkAddPhrasesPage() {
 										<Button
 											variant="ghost"
 											size="sm"
-											className="text-lum-6 text-chroma-high text-hue-danger text-xs"
+											className="text-con-mhigh text-chroma-high text-hue-danger text-xs"
 											onClick={() => setStagedPhrases([])}
 											data-testid="clear-staged-phrases"
 										>
@@ -476,7 +476,7 @@ function InlineAddBar({
 		<div data-testid="inline-add-bar" className="space-y-2">
 			<div className="flex flex-col gap-2 @lg:flex-row">
 				<div className="flex-1 space-y-2">
-					<span className="text-con-mid border-lum-2 inline-flex h-7 items-center rounded-2xl border px-3 text-xs">
+					<span className="text-con-mid border-con-low inline-flex h-7 items-center rounded-2xl border px-3 text-xs">
 						{languages[lang]}
 					</span>
 					<Input
@@ -608,7 +608,7 @@ function StagedPhraseRow({
 					data-testid="remove-staged-phrase"
 					onClick={onRemove}
 				>
-					<Trash2 className="text-lum-6 text-chroma-high text-hue-danger size-3.5" />
+					<Trash2 className="text-con-mhigh text-chroma-high text-hue-danger size-3.5" />
 				</Button>
 			</div>
 		</div>
@@ -724,7 +724,7 @@ function EditPhraseDialog({
 									disabled={translations.length <= 1}
 									aria-label="Remove translation"
 								>
-									<Trash2 className="text-lum-6 text-chroma-high text-hue-danger size-3.5" />
+									<Trash2 className="text-con-mhigh text-chroma-high text-hue-danger size-3.5" />
 								</Button>
 							</div>
 						))}

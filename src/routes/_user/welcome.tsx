@@ -89,7 +89,7 @@ function WelcomePage() {
 			{/* Welcome Header */}
 			<header className="space-y-4 text-center">
 				<div className="from-lum-3 from-chroma-mlow to-lum-1 to-chroma-low mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
-					<Sparkles className="text-lum-5 text-chroma-max size-10" />
+					<Sparkles className="text-con-mid text-chroma-max size-10" />
 				</div>
 				<div>
 					<h1 className="d1">
@@ -280,7 +280,7 @@ function FeatureItem({
 }) {
 	return (
 		<div className="flex gap-3">
-			<div className="bg-lum-2 bg-chroma-mlow text-lum-5 text-chroma-max flex size-10 shrink-0 items-center justify-center rounded-full">
+			<div className="bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-max flex size-10 shrink-0 items-center justify-center rounded-full">
 				<Icon className="size-5" />
 			</div>
 			<div>
@@ -328,7 +328,7 @@ function ActionCard({
 		<Card
 			className={cn(
 				'transition-shadow hover:shadow-md',
-				isPrimary && 'border-lum-5 border-chroma-mlow bg-lum-1'
+				isPrimary && 'border-lum-3 border-chroma-mlow bg-lum-1'
 			)}
 		>
 			<CardHeader className="pb-2">
@@ -336,7 +336,7 @@ function ActionCard({
 					<div
 						className={cn(
 							'flex size-10 items-center justify-center rounded-full',
-							isPrimary ? 'bg-lum-5 bg-chroma-max text-con-high' : 'bg-lum-2'
+							isPrimary ? 'bg-lum-5 bg-chroma-max text-lum-none' : 'bg-lum-2'
 						)}
 					>
 						<Icon className="size-5" />
@@ -430,7 +430,7 @@ function BrowseRequestsDialog({
 								type="button"
 								className="bg-card hover:bg-lum-2 flex flex-col gap-2 rounded-lg border border-dashed p-4 text-start transition-colors"
 							>
-								<span className="bg-lum-2 text-con-mid inline-flex w-fit items-center justify-center rounded-md px-2.5 py-1">
+								<span className="bg-lum-2 text-lum-7 inline-flex w-fit items-center justify-center rounded-md px-2.5 py-1">
 									<List className="size-4" />
 								</span>
 								<span className="text-con-mid text-sm leading-tight font-semibold">
@@ -479,7 +479,7 @@ function RequestsYouCanHelp() {
 	return (
 		<section>
 			<div className="mb-4 flex items-center gap-2">
-				<Globe className="text-lum-5 text-chroma-max size-5" />
+				<Globe className="text-con-mid text-chroma-max size-5" />
 				<h2 className="text-xl font-bold">Requests You Can Help With</h2>
 			</div>
 			<p className="text-con-mid mb-4">

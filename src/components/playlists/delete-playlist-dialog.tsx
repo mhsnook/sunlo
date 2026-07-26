@@ -67,7 +67,7 @@ export function DeletePlaylistDialog({
 					<AlertDialogAction
 						onClick={handleDelete}
 						data-testid="confirm-delete-button"
-						className="bg-lum-6 bg-chroma-high bg-hue-danger text-con-high"
+						className="bg-lum-6 bg-chroma-high bg-hue-danger text-lum-none"
 					>
 						Delete
 					</AlertDialogAction>

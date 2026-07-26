@@ -4,7 +4,7 @@ export function UnderConstructionNotice() {
 	return (
 		<section className="mx-auto w-full max-w-172 px-4 py-8">
 			<div className="container mx-auto max-w-4xl">
-				<div className="border-lum-3 border-chroma-mlow from-lum-1 relative overflow-hidden rounded-2xl border bg-gradient-to-br to-indigo-200/20 p-6 shadow-sm sm:p-8 dark:to-indigo-900/20">
+				<div className="border-con-low border-chroma-mlow from-lum-1 relative overflow-hidden rounded-2xl border bg-gradient-to-br to-indigo-200/20 p-6 shadow-sm sm:p-8 dark:to-indigo-900/20">
 					{/* Subtle background pattern */}
 					<div className="bg-grid-small absolute inset-0 opacity-5" />
 

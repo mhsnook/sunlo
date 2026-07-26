@@ -131,14 +131,21 @@ const AXIS_HUE_CSS = Object.fromEntries(
 	AXIS_HUE_VARS.map((v) => [v, 'var(--hue-primary)'])
 ) as CSSProperties
 
-export function getLangThemeCss(lang: string): CSSProperties {
-	const hue = getLangHue(lang)
+// Theme a subtree with one hue. Use this rather than an inline `--hue-primary`:
+// on any element below :root a bare hue override is ignored, because the axis
+// vars resolved var(--hue-primary) once at :root and inherit that fixed value.
+// Setting them on documentElement is the exception — there they recompute.
+export function getHueThemeCss(hue: number): CSSProperties {
 	return {
 		'--hue-primary': hue,
 		'--hue-accent': hue,
 		'--hue-neutral': hue,
 		...AXIS_HUE_CSS,
 	} as CSSProperties
+}
+
+export function getLangThemeCss(lang: string): CSSProperties {
+	return getHueThemeCss(getLangHue(lang))
 }
 
 // Hook variant of getLangThemeCss that returns an empty style object

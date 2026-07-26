@@ -39,7 +39,7 @@ function InvalidCredentialsError() {
 			<span className="bg-lum-5 flex size-7 shrink-0 items-center justify-center rounded-full">
 				<X className="size-4 text-white" aria-hidden={true} />
 			</span>
-			<strong className="text-lum-7">
+			<strong className="text-con-mhigh">
 				Incorrect email or password. Try again?
 			</strong>
 		</div>

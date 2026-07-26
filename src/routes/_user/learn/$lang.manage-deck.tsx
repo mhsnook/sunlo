@@ -56,9 +56,9 @@ const statusIcon = {
 } as const
 
 const statusColors = {
-	active: 'text-lum-7 text-chroma-high',
-	learned: 'hue-success text-lum-7 text-chroma-high',
-	skipped: 'hue-neutral text-lum-5',
+	active: 'text-con-mhigh text-chroma-high',
+	learned: 'hue-success text-con-mhigh text-chroma-high',
+	skipped: 'hue-neutral text-con-mid',
 } as const
 
 const statusBgColors = {
@@ -94,13 +94,13 @@ function getDueInfo(item: DueCheckable): {
 		const overdue = Math.abs(daysUntilDue)
 		return {
 			label: overdue === 1 ? 'Overdue 1d' : `Overdue ${overdue}d`,
-			color: 'hue-danger text-lum-7 text-chroma-high',
+			color: 'hue-danger text-con-mhigh text-chroma-high',
 		}
 	}
 	if (daysUntilDue === 0)
 		return {
 			label: 'Due today',
-			color: 'hue-warning text-lum-7 text-chroma-high',
+			color: 'hue-warning text-con-mhigh text-chroma-high',
 		}
 	return {
 		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,
@@ -474,7 +474,9 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 							{isSkipped ? (
 								<span className="font-medium">—</span>
 							) : reviewedToday ? (
-								<span className="text-lum-7 font-medium">Reviewed today!</span>
+								<span className="text-con-mhigh font-medium">
+									Reviewed today!
+								</span>
 							) : (
 								<span
 									className={cn(
@@ -601,7 +603,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 				{isSkipped ? (
 					<span className="text-con-low text-xs">—</span>
 				) : reviewedToday ? (
-					<span className="text-lum-7 text-sm font-medium">
+					<span className="text-con-mhigh text-sm font-medium">
 						Reviewed today!
 					</span>
 				) : dueInfo ? (

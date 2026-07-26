@@ -245,7 +245,7 @@ export function ReviewSingleCard({
 					</div>
 				</CardContent>
 			</CardlikeFlashcard>
-			<div className="from-lum-1 sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-80% to-transparent pt-6 pb-3">
+			<div className="from-lum-1 sticky bottom-0 z-10 flex flex-col items-center bg-linear-to-t from-80% to-transparent pt-6 pb-3">
 				{!showAnswers ? (
 					<Button
 						data-testid="reveal-answer-button"

@@ -24,8 +24,8 @@ chroma-mlow · chroma-high · …                     seeds chroma for descendan
 ;<div className="hue-success chroma-mlow">
 	{/* …then speak luminance inside */}
 	<div className="bg-lum-2">
-		<span className="text-lum-9">…</span>
-		<hr className="border-lum-4" />
+		<span className="text-con-mhigh">…</span>
+		<hr className="border-con-low" />
 	</div>
 </div>
 ```
@@ -36,8 +36,8 @@ Each property has the full trio; set only the axes that differ from what's inher
 
 ```typescript
 className = 'bg-lum-2 bg-chroma-mlow bg-hue-primary' // all three explicit
-className = 'text-lum-7 text-chroma-high text-hue-info'
-className = 'border-lum-4 border-chroma-mlow border-hue-primary'
+className = 'text-con-mid text-chroma-high text-hue-info'
+className = 'border-con-low border-chroma-mlow border-hue-primary'
 className = 'hover:bg-lum-3' // luminance only; chroma+hue inherited
 ```
 
@@ -47,17 +47,17 @@ Property prefixes: `bg-`, `text-`, `border-`, `border-b-`, `from-`, `to-` (gradi
 
 `{prop}-lum-{1–10 | none | max}`. Numbered stops ride v0.7.0's **front-loaded** curve (fine steps near the page, opening toward the foreground) and measure contrast with the page; the pure poles sit _outside_ the numbers. The scale auto-flips between light and dark mode — **we use the library's native ramp**, with the top three light-mode stops lifted a little (`globals.css`, `@theme`) so the page and lightest cards don't read too dark; the dark half is untouched:
 
-| Value  | Light mode   | Dark mode    | Meaning                          |
-| ------ | ------------ | ------------ | -------------------------------- |
-| `none` | 1.00 (white) | 0.00 (black) | The page color — zero contrast   |
-| `1`    | 0.95         | 0.185        | The page (`body`)                |
-| `2`    | 0.915        | 0.215        | Subtle raised fill               |
-| `3`    | 0.85         | 0.268        | Border / raised surface          |
-| `5`    | 0.676        | 0.412        | Mid                              |
-| `7`    | 0.481        | 0.593        | Prominent (buttons, muted text)  |
-| `9`    | 0.254        | 0.805        | Strong text                      |
-| `10`   | 0.13         | 0.92         | Strong foreground (near the max) |
-| `max`  | 0.00 (black) | 1.00 (white) | Full contrast                    |
+| Value  | Light mode   | Dark mode    | Meaning                        |
+| ------ | ------------ | ------------ | ------------------------------ |
+| `none` | 1.00 (white) | 0.00 (black) | The page color — zero contrast |
+| `1`    | 0.95         | 0.185        | The page (`body`)              |
+| `2`    | 0.915        | 0.215        | Subtle raised fill             |
+| `3`    | 0.85         | 0.268        | Border / raised surface        |
+| `5`    | 0.676        | 0.412        | Mid — solid brand fills        |
+| `7`    | 0.481        | 0.593        | Prominent fills                |
+| `9`    | 0.254        | 0.805        | Strong                         |
+| `10`   | 0.13         | 0.92         | Near the max                   |
+| `max`  | 0.00 (black) | 1.00 (white) | Full contrast                  |
 
 Arbitrary luminance is a _direct_ L (`n/100`) and still auto-flips: `bg-lum-[93]` → L=0.93 in light, 0.07 in dark. (Note `lum-1…10` is a curved contrast ramp; `lum-[n]` is a raw L — two tools sharing a prefix.)
 
@@ -147,9 +147,30 @@ bites inside portals.
 
 ### When to use what
 
-- **Standard text** → `text-con-mhigh`.
-- **Muted text** → `text-con-mid`, and `mlow`/`low` fainter still.
-- **Emphasis** → `text-con-high`, or `text-con-max` for the pure pole.
+**When an element sets its own `bg-lum-*`, state its text and border with `lum-*`
+too. Everywhere else, use `con-*`.** An element that paints its own background
+already knows what it sits on, and can put its text on either side of it:
+
+```typescript
+className = 'bg-lum-6 text-lum-none' // knows its surface: says both
+className = 'bg-lum-2 text-lum-7 border-lum-3'
+className = 'text-con-mhigh border-con-low' // surface came from elsewhere
+```
+
+`con-*` only ever reads `--bg-l`, and only `bg-lum-*` sets it — so on a
+self-backgrounded element `con-*` is measuring against a luminance you chose one
+class earlier, and its direction is forced. `--con-flip` is the midpoint between
+`lum-5` and `lum-6` (0.63 light, 0.455 dark): a surface at `lum-5` or lighter
+takes dark text, `lum-6` or darker takes light.
+
+- **Standard text** → `text-con-mhigh`; **muted** → `text-con-mid`, with
+  `mlow`/`low` fainter; **emphasis** → `text-con-high`.
+- **Borders** → `border-con-low`, `border-con-mlow` visible, `mid` strong.
+- **Backgrounds** → `bg-lum-1` (page), `bg-lum-2` (raised fill), and up.
+
+`border-b-con-*` does not exist — only `border-con-*` and `outline-con-*` — so a
+bottom-only border stays on `border-b-lum-*`.
+
 - **Cascade seeder + `lum` inside** (`hue-success chroma-mlow` at the top, `bg-lum-2` / `text-lum-9` below): the default shape for a colored component — declare its character once, speak luminance within. Portable: drop it under a different seeder (a danger context, a lang-themed subtree) and it takes on that character.
 - **Explicit per-property axes** (`bg-lum-2 bg-chroma-mlow bg-hue-info`): one-off colored elements, or shared components used in many contexts where you want the color pinned rather than inherited.
 - **Adjustments** (`hover:bg-lum-up-1`): hover/focus/active state changes.

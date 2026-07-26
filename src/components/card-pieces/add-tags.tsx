@@ -274,7 +274,7 @@ function RemovableTagBadge({
 			{tag.name}
 			<button
 				onClick={removeTag}
-				className="hover:text-lum-6 hover:text-chroma-high hover:text-hue-danger -me-1 rounded-full p-0.5"
+				className="hover:text-con-mhigh hover:text-chroma-high hover:text-hue-danger -me-1 rounded-full p-0.5"
 			>
 				<X className="size-3" />
 			</button>

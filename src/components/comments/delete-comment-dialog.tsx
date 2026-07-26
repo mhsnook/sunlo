@@ -57,7 +57,7 @@ export function DeleteCommentDialog({
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
 						onClick={deleteComment}
-						className="bg-lum-6 bg-chroma-high bg-hue-danger text-con-high"
+						className="bg-lum-6 bg-chroma-high bg-hue-danger text-lum-none"
 						data-testid="confirm-delete-comment-button"
 					>
 						Delete

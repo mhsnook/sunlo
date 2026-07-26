@@ -56,14 +56,14 @@ function BrowsePage() {
 						replace: true,
 					})
 				}
-				className="border-lum-4 border-chroma-mlow hover:border-lum-5 hover:border-chroma-max bg-card/50 flex h-12 w-full items-center gap-3 rounded-2xl border px-4 transition-colors"
+				className="border-con-mlow border-chroma-mlow hover:border-con-mlow hover:border-chroma-max bg-card/50 flex h-12 w-full items-center gap-3 rounded-2xl border px-4 transition-colors"
 				data-testid="browse-search-trigger"
 			>
 				<Search className="text-con-mid size-5" />
 				<span className="text-con-mid flex-1 text-start text-base">
 					Search...
 				</span>
-				<kbd className="bg-lum-2 text-con-mid rounded-lg border px-2 py-0.5 text-xs">
+				<kbd className="bg-lum-2 text-lum-7 rounded-lg border px-2 py-0.5 text-xs">
 					Ctrl+K
 				</kbd>
 			</button>
@@ -154,7 +154,7 @@ function StatsSection() {
 			{stats.map((stat) => (
 				<Card key={stat.label} className="bg-card/30">
 					<CardContent className="flex flex-row items-center gap-4 p-6">
-						<div className="bg-lum-2 bg-chroma-mlow text-lum-5 text-chroma-max rounded-full p-3">
+						<div className="bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-max rounded-full p-3">
 							<stat.icon className="size-6" />
 						</div>
 						<div>

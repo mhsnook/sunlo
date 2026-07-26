@@ -60,9 +60,9 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		<div
 			className={`${
 				isFocused
-					? 'border-lum-5 border-chroma-max bg-card/50 rounded border border-s-2'
+					? 'border-con-mlow border-chroma-max bg-card/50 rounded border border-s-2'
 					: hasHighlightedReply
-						? 'border-lum-4 border-chroma-mlow bg-card/50 rounded border border-s-2'
+						? 'border-con-mlow border-chroma-mlow bg-card/50 rounded border border-s-2'
 						: ''
 			} p-4`}
 			data-comment-id={comment.id}
@@ -225,7 +225,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`mt-2 py-2 ${isHighlighted ? 'border-lum-5 border-chroma-max -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
+			className={`mt-2 py-2 ${isHighlighted ? 'border-con-mlow border-chroma-max -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
 			data-testid="comment-reply"
 		>
 			<div className="flex items-center justify-between">

@@ -354,7 +354,7 @@ function AttachedPhraseCards({
 							type="button"
 							variant="ghost"
 							size="icon"
-							className="bg-lum-1 border-lum-3 absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
+							className="bg-lum-1 border-lum-2 absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
 							data-testid="remove-phrase-button"
 							onClick={() => onRemovePhrase(pid)}
 						>
@@ -370,7 +370,7 @@ function AttachedPhraseCards({
 							...prev,
 							attaching: true,
 						})}
-						className="border-lum-3 text-con-mid hover:bg-lum-2 hover:text-lum-7 hover:border-lum-5 hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
+						className="border-con-low text-con-mid hover:bg-lum-2 hover:text-con-mhigh hover:border-con-mlow hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
 					>
 						<Plus className="h-6 w-6" />
 					</Link>

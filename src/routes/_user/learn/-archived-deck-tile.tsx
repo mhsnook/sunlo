@@ -112,7 +112,7 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 
 						<DialogClose
 							data-testid="cancel-restore-button"
-							className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 hover:bg-lum-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+							className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-9 hover:bg-lum-1 hover:text-lum-10 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 						>
 							<Archive className="size-6" />
 							<div>

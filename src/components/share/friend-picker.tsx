@@ -51,7 +51,7 @@ function highlight(text: string, query: string): ReactNode {
 	return (
 		<>
 			{text.slice(0, i)}
-			<mark className="hue-warning bg-lum-3 text-lum-8 text-chroma-high rounded-[3px] px-px">
+			<mark className="hue-warning bg-lum-3 text-lum-9 text-chroma-high rounded-[3px] px-px">
 				{text.slice(i, i + query.length)}
 			</mark>
 			{text.slice(i + query.length)}
@@ -95,7 +95,7 @@ function FriendRow({
 			</span>
 			<span className="flex shrink-0 flex-col items-end gap-1">
 				{friend.status === 'pending' ? (
-					<span className="bg-lum-3 text-lum-7 text-chroma-high inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
+					<span className="bg-lum-3 text-lum-9 text-chroma-high inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase">
 						<UserPlus className="size-2.5" /> Pending
 					</span>
 				) : timestamp ? (
@@ -107,8 +107,8 @@ function FriendRow({
 				className={cn(
 					'flex size-[22px] shrink-0 items-center justify-center rounded-md border-[1.5px] transition-colors',
 					selected
-						? 'bg-lum-5 bg-chroma-max border-lum-5 border-chroma-max text-con-high'
-						: 'border-lum-3 bg-card group-hover:border-lum-7'
+						? 'bg-lum-5 bg-chroma-max border-lum-7 border-chroma-max text-lum-none'
+						: 'border-con-low bg-card group-hover:border-con-mid'
 				)}
 			>
 				<Check
@@ -132,8 +132,8 @@ export function SharePreviewChip({
 	subtitle?: ReactNode
 }) {
 	return (
-		<div className="bg-lum-1 bg-chroma-mlow border-lum-3 border-chroma-mlow border-l-primary mx-3.5 flex items-center gap-2.5 rounded-lg border border-l-4 px-3 py-2.5">
-			<span className="hue-accent text-lum-6 text-chroma-high flex shrink-0">
+		<div className="bg-lum-1 bg-chroma-mlow border-lum-2 border-chroma-mlow border-l-primary mx-3.5 flex items-center gap-2.5 rounded-lg border border-l-4 px-3 py-2.5">
+			<span className="hue-accent text-con-mhigh text-chroma-high flex shrink-0">
 				{icon}
 			</span>
 			<span className="min-w-0 flex-1">
@@ -224,7 +224,7 @@ function PickerBody({
 			<div className="flex flex-col">
 				{preview ? <div className="pt-1">{preview}</div> : null}
 				<div className="text-con-mid px-6 py-9 text-center">
-					<span className="bg-lum-3 bg-chroma-mlow text-lum-6 text-chroma-high mb-3.5 inline-flex size-14 items-center justify-center rounded-full">
+					<span className="bg-lum-3 bg-chroma-mlow text-lum-9 text-chroma-high mb-3.5 inline-flex size-14 items-center justify-center rounded-full">
 						<Users className="size-7" />
 					</span>
 					<h3 className="text-con-mhigh mb-1.5 text-base font-bold">
@@ -442,7 +442,7 @@ export function FriendPickerDialog({
 								<DialogPrimitive.Close
 									aria-label="Close"
 									data-testid="close-friend-picker"
-									className="hue-neutral hover:hue-neutral bg-lum-3 hover:bg-lum-4 text-con-mhigh ms-auto flex size-8 items-center justify-center rounded-md transition-colors"
+									className="hue-neutral hover:hue-neutral bg-lum-3 hover:bg-lum-4 text-lum-9 ms-auto flex size-8 items-center justify-center rounded-md transition-colors"
 								>
 									<X className="size-4" />
 								</DialogPrimitive.Close>

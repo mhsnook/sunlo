@@ -66,7 +66,7 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		done: 'Card added',
 		failed: 'There was an error updating this card',
 		Icon: Bookmark,
-		iconClassName: 'text-lum-5 text-chroma-max fill-current/50',
+		iconClassName: 'text-con-mid text-chroma-max fill-current/50',
 	},
 	learned: {
 		name: 'Learned',
@@ -369,7 +369,7 @@ export function CardStatusHeart({
 				<Bookmark
 					className={
 						card?.status === 'active'
-							? 'text-lum-5 text-chroma-max fill-current/50'
+							? 'text-con-mid text-chroma-max fill-current/50'
 							: 'text-con-mid'
 					}
 				/>
@@ -501,7 +501,7 @@ function StartLearningDialog({
 
 					<DialogClose
 						data-testid="cancel-start-learning-button"
-						className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 hover:bg-lum-1 hover:text-lum-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+						className="hue-neutral border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-9 hover:bg-lum-1 hover:text-lum-10 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
 					>
 						<Bookmark className="size-6" />
 						<div>

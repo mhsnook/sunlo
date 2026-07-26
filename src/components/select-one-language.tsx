@@ -48,7 +48,7 @@ export function SelectOneLanguage({
 						size={size}
 						aria-expanded={open}
 						aria-controls={id}
-						className={`placeholder:text-con-mid text-con-mhigh justify-between border font-normal ${hasError ? 'border-lum-6 border-chroma-high border-hue-danger' : ''}`}
+						className={`placeholder:text-con-mid text-con-mhigh justify-between border font-normal ${hasError ? 'border-con-mid border-chroma-high border-hue-danger' : ''}`}
 					>
 						{value
 							? allLanguageOptions.find((language) => language.value === value)

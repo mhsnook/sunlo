@@ -8,8 +8,7 @@ import { Slot } from '@/lib/slot'
 // that also sets a base bg-lum-N, the nudge's --bg-l ↔ --bg-anchor-l reference
 // forms a custom-property cycle and the background resolves to transparent.
 const solids = 'bg-lum-6 text-lum-none chroma-high hover:bg-lum-7'
-const softs =
-	'bg-lum-2 chroma-mlow text-con-mlow hover:bg-lum-3 hover:text-con-high'
+const softs = 'bg-lum-2 chroma-mlow text-lum-7 hover:bg-lum-3 hover:text-lum-10'
 
 const buttonVariants = cva(
 	'border border-transparent shadow inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
@@ -20,12 +19,12 @@ const buttonVariants = cva(
 				soft: `hue-primary ${softs}`,
 				red: `hue-danger ${solids}`,
 				'red-soft': `hue-danger ${softs}`,
-				neutral: 'hover:bg-lum-up-1 hover:bg-chroma-mlow',
-				ghost: 'text-lum-6 hover:bg-lum-1 hover:text-lum-7',
+				neutral: 'hover:bg-lum-up-1 bg-chroma-mlow',
+				ghost: 'text-con-mhigh hover:bg-lum-1 hover:text-con-mhigh',
 				'badge-outline':
-					'hue-neutral rounded border-lum-3 text-lum-8 bg-lum-1 hover:border-lum-5 hover:border-chroma-max',
+					'hue-neutral rounded border-lum-2 text-lum-9 bg-lum-1 hover:border-lum-3 hover:border-chroma-max',
 				'dashed-w-full':
-					'w-full border-2 border-dashed border-lum-3 hover:border-lum-3 shadow-none hover:shadow',
+					'w-full border-2 border-dashed border-con-low hover:border-con-low shadow-none hover:shadow',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2 text-md',

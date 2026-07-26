@@ -1055,7 +1055,7 @@ function AriaLabelsSection() {
 									{a.ariaLabel === '(none)' && (
 										<Badge
 											variant="outline"
-											className="border-lum-6 border-chroma-high border-hue-danger text-lum-6 text-chroma-high text-hue-danger text-[10px]"
+											className="border-con-mid border-chroma-high border-hue-danger text-con-mhigh text-chroma-high text-hue-danger text-[10px]"
 										>
 											Missing
 										</Badge>

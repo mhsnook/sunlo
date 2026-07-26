@@ -71,7 +71,7 @@ function SampleBlock({
 				{/* Request-card replica */}
 				<div className="bg-lum-2 bg-chroma-mlow rounded-2xl border p-4">
 					<div className="flex items-start gap-3">
-						<div className="bg-lum-4 text-con-high flex size-10 shrink-0 items-center justify-center rounded-full text-sm">
+						<div className="bg-lum-4 text-lum-10 flex size-10 shrink-0 items-center justify-center rounded-full text-sm">
 							Y
 						</div>
 						<div className="flex-1">
@@ -206,7 +206,7 @@ function Slider({
 				step={step}
 				value={value}
 				onChange={(e) => onChange(Number(e.target.value))}
-				className="bg-lum-2 text-con-mhigh w-20 rounded border px-2 py-1 text-sm"
+				className="bg-lum-2 text-lum-9 w-20 rounded border px-2 py-1 text-sm"
 			/>
 		</div>
 	)

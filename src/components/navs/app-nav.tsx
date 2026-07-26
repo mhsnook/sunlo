@@ -23,13 +23,13 @@ import { resolveNavList } from '@/types/route-static-data'
 import { useAuth } from '@/lib/use-auth'
 
 const activeProps = {
-	className: 'border-lum-5 border-chroma-max text-lum-7',
+	className: 'border-con-mlow border-chroma-max text-con-mhigh',
 } as const
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const
 const inactiveProps = {
 	className:
-		'border-transparent text-con-mid hover:text-lum-7 hover:text-chroma-mhigh',
+		'border-transparent text-con-mid hover:text-con-mhigh hover:text-chroma-mhigh',
 } as const
 
 export function AppNav() {
@@ -55,7 +55,7 @@ export function AppNav() {
 			<div ref={ref}></div>
 
 			<div
-				className={`bg-lum-1 bg-chroma-low bg-hue-neutral sticky z-30 mt-1 border-b transition-colors ${entry?.isIntersecting === false ? 'border-lum-3' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
+				className={`bg-lum-1 bg-hue-neutral sticky z-30 mt-1 border-b transition-colors ${entry?.isIntersecting === false ? 'border-con-low' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
 				style={{ viewTransitionName: 'appnav' }}
 			>
 				<div className="w-0 grow scrollbar-none overflow-x-auto">

@@ -263,7 +263,7 @@ function TranslationListItem({ trans }: { trans: TranslationType }) {
 								{trans.archived ? (
 									<Undo2 className="size-3" />
 								) : (
-									<Archive className="text-lum-6 text-chroma-high text-hue-danger hover:text-lum-6 hover:text-chroma-high hover:text-hue-danger size-3" />
+									<Archive className="text-con-mhigh text-chroma-high text-hue-danger hover:text-con-mhigh hover:text-chroma-high hover:text-hue-danger size-3" />
 								)}
 							</Button>
 						</>

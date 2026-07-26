@@ -250,7 +250,7 @@ function ForgettingCurveChart({
 						x2={PAD.left + PLOT.w}
 						y1={toY(r)}
 						y2={toY(r)}
-						className="hue-neutral text-lum-3"
+						className="hue-neutral text-con-low"
 						stroke="currentColor"
 						strokeWidth={1}
 					/>
@@ -273,7 +273,7 @@ function ForgettingCurveChart({
 						x2={toX(s.endDay)}
 						y1={PAD.top}
 						y2={PAD.top + PLOT.h}
-						className="hue-neutral text-lum-2"
+						className="hue-neutral text-con-low"
 						stroke="currentColor"
 						strokeWidth={1}
 					/>
@@ -306,7 +306,7 @@ function ForgettingCurveChart({
 						key={`tail-${s.index}`}
 						d={buildPath(pts)}
 						fill="none"
-						className="hue-accent text-lum-4 text-chroma-mlow"
+						className="hue-accent text-con-mlow text-chroma-mlow"
 						stroke="currentColor"
 						strokeWidth={1.5}
 					/>
@@ -326,7 +326,7 @@ function ForgettingCurveChart({
 						key={`curve-${s.index}`}
 						d={buildPath(pts)}
 						fill="none"
-						className="text-lum-5 text-chroma-max text-hue-accent"
+						className="text-con-mid text-chroma-max text-hue-accent"
 						stroke="currentColor"
 						strokeWidth={4}
 						strokeLinecap="round"
@@ -596,7 +596,7 @@ function FsrsPage() {
 														'flex-1 rounded-2xl border px-1 py-1 text-xs transition-colors',
 														r.score === opt
 															? `${SCORE_META[opt].activeBtn} font-medium`
-															: 'hover:hue-neutral border-lum-3 text-con-mid hover:bg-lum-2'
+															: 'hover:hue-neutral border-con-low text-con-mid hover:bg-lum-2'
 													)}
 												>
 													{SCORE_META[opt].label}
@@ -608,7 +608,7 @@ function FsrsPage() {
 											onClick={() => removeReview(r.id)}
 											aria-label={`Remove review ${i}`}
 											disabled={reviews.length <= 1}
-											className="hover:hue-danger text-con-mid hover:text-lum-5 hover:text-chroma-high disabled:opacity-40"
+											className="hover:hue-danger text-con-mid hover:text-con-mid hover:text-chroma-high disabled:opacity-40"
 										>
 											<X className="size-4" />
 										</button>

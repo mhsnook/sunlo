@@ -154,7 +154,7 @@ export function SpreadsheetImportDialog({
 								</p>
 								<div className="space-y-2 ps-1">
 									<p>
-										<strong className="text-lum-7 text-chroma-mhigh">
+										<strong className="text-con-mhigh text-chroma-mhigh">
 											Phrase
 										</strong>{' '}
 										&mdash; the word or sentence in your learning language.
@@ -165,7 +165,7 @@ export function SpreadsheetImportDialog({
 										).
 									</p>
 									<p>
-										<strong className="hue-accent text-lum-7 text-chroma-mhigh">
+										<strong className="hue-accent text-con-mhigh text-chroma-mhigh">
 											Translation
 										</strong>{' '}
 										&mdash; put the language name or 3-letter code in the header
@@ -180,7 +180,7 @@ export function SpreadsheetImportDialog({
 										). You can have multiple translation columns.
 									</p>
 									<p>
-										<strong className="hue-info text-lum-7 text-chroma-mhigh">
+										<strong className="hue-info text-con-mhigh text-chroma-mhigh">
 											Tags
 										</strong>{' '}
 										&mdash; optional. Include &ldquo;tag&rdquo; in the header.
@@ -349,7 +349,7 @@ function MapAndReviewStep({
 														role: e.target.value as ColumnRole,
 													})
 												}
-												className="bg-card border-lum-3 w-full rounded-2xl border px-2 py-1.5 text-sm"
+												className="bg-card border-con-low w-full rounded-2xl border px-2 py-1.5 text-sm"
 												data-testid={`column-role-${i}`}
 											>
 												<option value="skip">Skip</option>
@@ -518,12 +518,12 @@ function ValidationMessages({
 	return (
 		<>
 			{translationCount === 0 && (
-				<p className="text-lum-6 text-chroma-high text-hue-danger text-sm">
+				<p className="text-con-mhigh text-chroma-high text-hue-danger text-sm">
 					Please mark at least one column as &ldquo;Translation&rdquo;
 				</p>
 			)}
 			{translationsWithoutLang > 0 && (
-				<p className="text-lum-6 text-chroma-high text-hue-danger text-sm">
+				<p className="text-con-mhigh text-chroma-high text-hue-danger text-sm">
 					Please select a language for all translation columns
 				</p>
 			)}

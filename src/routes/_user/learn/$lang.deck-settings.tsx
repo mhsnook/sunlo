@@ -132,7 +132,7 @@ function FancyChoiceButton<V extends string | number>({
 			<span
 				className={cn(
 					'transition-color mr-3 flex aspect-square place-items-center rounded-xl p-2',
-					selected ? 'bg-lum-7 text-con-high' : ''
+					selected ? 'bg-lum-7 text-lum-none' : ''
 				)}
 			>
 				<option.Icon className="size-5" />
@@ -207,24 +207,24 @@ function DailyGoalSection({
 						</p>
 						<div className="mx-2 space-y-3">
 							<div className="bg-lum-1 flex items-start gap-3 rounded-2xl px-4 py-3">
-								<Cat className="text-lum-5 text-chroma-max mt-0.5 size-7 shrink-0" />
+								<Cat className="text-con-mid text-chroma-max mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Relaxed — 10 new cards</p>
-									<p className="text-lum-7">~45 total reviews per day</p>
+									<p className="text-con-mhigh">~45 total reviews per day</p>
 								</div>
 							</div>
 							<div className="bg-lum-1 flex items-start gap-3 rounded-2xl px-4 py-3">
-								<IceCreamBowl className="text-lum-5 text-chroma-max mt-0.5 size-7 shrink-0" />
+								<IceCreamBowl className="text-con-mid text-chroma-max mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Standard — 15 new cards</p>
-									<p className="text-lum-7">~80 total reviews per day</p>
+									<p className="text-con-mhigh">~80 total reviews per day</p>
 								</div>
 							</div>
 							<div className="bg-lum-1 flex items-start gap-3 rounded-2xl px-4 py-3">
-								<Rocket className="text-lum-5 text-chroma-max mt-0.5 size-7 shrink-0" />
+								<Rocket className="text-con-mid text-chroma-max mt-0.5 size-7 shrink-0" />
 								<div>
 									<p className="font-semibold">Serious — 20 new cards</p>
-									<p className="text-lum-7">~125 total reviews per day</p>
+									<p className="text-con-mhigh">~125 total reviews per day</p>
 								</div>
 							</div>
 						</div>

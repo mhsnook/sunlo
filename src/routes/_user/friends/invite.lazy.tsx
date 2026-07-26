@@ -39,7 +39,7 @@ function InviteFriendPage() {
 			data-testid="invite-friend-page"
 		>
 			<div className="text-center">
-				<div className="bg-lum-2 bg-chroma-mlow text-lum-5 text-chroma-max mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
+				<div className="bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-max mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
 					<Sparkles className="h-4 w-4" />
 					<span>Grow your learning network</span>
 				</div>
@@ -58,11 +58,11 @@ function InviteFriendPage() {
 				share.can ? (
 					<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
 						{/* Quick Share */}
-						<Card className="group border-lum-2 transition-all duration-300 hover:shadow-lg">
+						<Card className="group border-con-low transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
 									<div className="bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Share className="text-lum-5 text-chroma-max h-6 w-6" />
+										<Share className="text-con-mid text-chroma-max h-6 w-6" />
 									</div>
 									<div>
 										<h3 className="text-con-mhigh text-lg font-semibold">
@@ -78,11 +78,11 @@ function InviteFriendPage() {
 						</Card>
 
 						{/* Copy Link */}
-						<Card className="group border-lum-2 transition-all duration-300 hover:shadow-lg">
+						<Card className="group border-con-low transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
 									<div className="hue-accent bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Copy className="text-lum-10 text-chroma-mlow text-hue-accent h-6 w-6" />
+										<Copy className="text-con-high text-chroma-mlow text-hue-accent h-6 w-6" />
 									</div>
 									<div>
 										<h3 className="text-con-mhigh text-lg font-semibold">
@@ -95,7 +95,7 @@ function InviteFriendPage() {
 								</div>
 								<CopyLinkButton
 									size="lg"
-									className="hue-accent border-lum-4 bg-lum-2 bg-chroma-mlow text-lum-7 text-hue-accent hover:bg-lum-3 w-full"
+									className="hue-accent border-lum-4 bg-lum-2 bg-chroma-mlow text-lum-9 text-hue-accent hover:bg-lum-3 w-full"
 									variant="soft"
 									url={share.url}
 								/>
@@ -106,7 +106,7 @@ function InviteFriendPage() {
 			}
 
 			{/* Sharing Methods */}
-			<Card className="border-lum-2 shadow-sm">
+			<Card className="border-con-low shadow-sm">
 				<CardHeader className="my-0 pt-8 pb-0">
 					<h2 className="text-con-mhigh text-center text-2xl font-bold">
 						Choose Your Method
@@ -118,11 +118,11 @@ function InviteFriendPage() {
 						<a
 							href={`mailto:?subject=${encodeURIComponent(share.data.title)}&body=${encodeURIComponent(share.data.text)}`}
 							aria-label="Send via email"
-							className="group border-lum-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
+							className="group border-con-low rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
 								<div className="hue-info bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<Mail className="hue-info text-lum-6 text-chroma-high h-6 w-6" />
+									<Mail className="hue-info text-con-mhigh text-chroma-high h-6 w-6" />
 								</div>
 								<div>
 									<h3 className="text-con-mhigh font-semibold">Email</h3>
@@ -135,11 +135,11 @@ function InviteFriendPage() {
 						<a
 							href={`whatsapp://send?text=${encodeURIComponent(share.data.text)}`}
 							aria-label="Share on WhatsApp"
-							className="group border-lum-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
+							className="group border-con-low rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
 								<div className="hue-success bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<MessageSquare className="hue-success text-lum-6 text-chroma-high h-6 w-6" />
+									<MessageSquare className="hue-success text-con-mhigh text-chroma-high h-6 w-6" />
 								</div>
 								<div>
 									<h3 className="text-con-mhigh font-semibold">WhatsApp</h3>
@@ -151,11 +151,11 @@ function InviteFriendPage() {
 							<button
 								onClick={share.copyUrl}
 								aria-label="Copy shareable invite link"
-								className="group border-lum-2 col-span-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
+								className="group border-con-low col-span-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 							>
 								<div className="flex items-center space-x-3">
 									<div className="hue-warning bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Copy className="hue-warning text-lum-6 text-chroma-high h-6 w-6" />
+										<Copy className="hue-warning text-con-mhigh text-chroma-high h-6 w-6" />
 									</div>
 									<div>
 										<h3 className="text-con-mhigh text-lg font-semibold">
@@ -173,7 +173,7 @@ function InviteFriendPage() {
 			</Card>
 
 			{/* QR Code */}
-			<Card className="border-lum-2 shadow-sm" data-testid="invite-qr-card">
+			<Card className="border-con-low shadow-sm" data-testid="invite-qr-card">
 				<CardContent className="flex flex-col items-center gap-6 p-8 @lg:flex-row @lg:items-center @lg:gap-8">
 					<div
 						className="flex aspect-square items-center justify-center rounded-2xl bg-white p-4 shadow"
@@ -188,7 +188,7 @@ function InviteFriendPage() {
 						/>
 					</div>
 					<div className="flex-1 space-y-3 text-center @lg:text-start">
-						<div className="hue-accent bg-lum-2 bg-chroma-mlow text-lum-7 text-hue-accent inline-flex items-center space-x-2 rounded-full px-3 py-1 text-sm font-medium">
+						<div className="hue-accent bg-lum-2 bg-chroma-mlow text-lum-9 text-hue-accent inline-flex items-center space-x-2 rounded-full px-3 py-1 text-sm font-medium">
 							<QrCode className="h-4 w-4" />
 							<span>Scan to invite</span>
 						</div>

@@ -155,7 +155,7 @@ function Logger({
 function DestructiveTriangle() {
 	return (
 		<TriangleAlert
-			className="text-lum-5 text-chroma-mhigh"
+			className="text-con-mid text-chroma-mhigh"
 			aria-hidden={true}
 		/>
 	)

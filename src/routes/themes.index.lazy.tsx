@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
 import {
+	getHueThemeCss,
 	getLangHue,
 	getLangHueIndex,
 	getLangPopularityIndex,
@@ -142,7 +143,7 @@ function Byline({
 	if (size === 'sm')
 		return (
 			<div className="inline-flex flex-row items-center gap-2">
-				<Avatar className="bg-lum-10 text-lum-1 h-6 w-6 rounded-lg">
+				<Avatar className="bg-lum-10 text-lum-none h-6 w-6 rounded-lg">
 					<AvatarFallback seed={name} className="text-[10px] font-bold">
 						{initials}
 					</AvatarFallback>
@@ -157,7 +158,7 @@ function Byline({
 		)
 	return (
 		<div className="flex flex-row items-center gap-3">
-			<Avatar className="bg-lum-10 text-lum-1 rounded-2xl">
+			<Avatar className="bg-lum-10 text-lum-none rounded-2xl">
 				<AvatarFallback seed={name} className="font-bold">
 					{initials}
 				</AvatarFallback>
@@ -186,7 +187,9 @@ function BookmarkToggle() {
 		>
 			<Bookmark
 				className={
-					saved ? 'text-lum-5 text-chroma-max fill-current/50' : 'text-con-mid'
+					saved
+						? 'text-con-mid text-chroma-max fill-current/50'
+						: 'text-con-mid'
 				}
 			/>
 		</Button>
@@ -280,7 +283,7 @@ function ShowcaseRequestThread() {
 	return (
 		<div className="space-y-4" data-testid="showcase-request">
 			<CardlikeRequest>
-				<CardHeader className="border-lum-3 py-3 @md:py-6">
+				<CardHeader className="border-con-low py-3 @md:py-6">
 					<div className="flex flex-row items-center justify-between gap-2">
 						<Byline
 							initials="PL"
@@ -307,7 +310,7 @@ function ShowcaseRequestThread() {
 				</CardContent>
 				<CardFooter className="flex flex-col gap-4 border-t py-4">
 					<div className="flex w-full flex-row items-center gap-2">
-						<Avatar className="bg-lum-10 text-lum-1 h-8 w-8 shrink-0 rounded-lg">
+						<Avatar className="bg-lum-10 text-lum-none h-8 w-8 shrink-0 rounded-lg">
 							<AvatarFallback
 								seed="showcase-self"
 								className="text-[10px] font-bold"
@@ -424,7 +427,7 @@ function ShowcaseDeckDialog() {
 					Sunese
 				</h3>
 				<p className="text-con-mid text-sm">
-					<span className="text-lum-7 font-medium">24 cards due</span>
+					<span className="text-con-mhigh font-medium">24 cards due</span>
 					{' · '}83 total
 				</p>
 			</div>
@@ -441,7 +444,7 @@ function ShowcaseDeckDialog() {
 						</div>
 					</div>
 				</div>
-				<div className="border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
+				<div className="border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-9 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
 					<Logs className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -1163,7 +1166,7 @@ function ProfilePill({
 }) {
 	return (
 		<div className="flex w-full flex-row items-center gap-4">
-			<div className="hover:bg-lum-2 hover:bg-chroma-mlow hover:border-lum-3 hover:border-chroma-mlow flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2">
+			<div className="hover:bg-lum-2 hover:bg-chroma-mlow hover:border-con-low hover:border-chroma-mlow flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2">
 				<Avatar className="size-8">
 					<AvatarFallback seed={seed} className="text-xs font-bold">
 						{username.slice(0, 2).toUpperCase()}
@@ -1228,21 +1231,21 @@ function ShowcaseIntroCallout() {
 	return (
 		<div className="space-y-2">
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-lum-5 text-chroma-max mt-0.5 size-4 shrink-0" />
+				<Info className="text-con-mid text-chroma-max mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
-					<span className="text-lum-8">
+					<span className="text-con-mhigh">
 						Quick reminder: reviews use a 4 am cutoff, so cards due "today" stay
 						available until tomorrow morning.
 					</span>{' '}
-					<button className="text-lum-5 text-chroma-max underline hover:no-underline">
+					<button className="text-con-mid text-chroma-max underline hover:no-underline">
 						Learn more
 					</button>
 				</div>
 			</div>
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-lum-5 text-chroma-max mt-0.5 size-4 shrink-0" />
+				<Info className="text-con-mid text-chroma-max mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
-					<span className="text-lum-8">
+					<span className="text-con-mhigh">
 						No "show more" link when the callout stands on its own.
 					</span>
 				</div>
@@ -1553,19 +1556,19 @@ function ThemesPage() {
 								className={cn(
 									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
 									isActive
-										? 'border-lum-5 border-chroma-max ring-primary ring-2'
+										? 'border-con-mlow border-chroma-max ring-primary ring-2'
 										: s.brand
-											? 'border-lum-5 border-chroma-max'
-											: 'hover:border-lum-3 border-transparent'
+											? 'border-con-mlow border-chroma-max'
+											: 'hover:border-con-low border-transparent'
 								)}
-								style={{ '--hue-primary': s.hue } as CSSProperties}
+								style={getHueThemeCss(s.hue)}
 							>
 								<div className="bg-lum-2 bg-chroma-mlow h-10 w-full rounded" />
 								<span className="flex flex-col items-center text-center leading-tight">
 									<span
 										className={cn(
 											'flex items-center gap-0.5',
-											s.brand && 'text-lum-7 font-semibold'
+											s.brand && 'text-con-mhigh font-semibold'
 										)}
 									>
 										{s.brand && <Star className="size-3" />}

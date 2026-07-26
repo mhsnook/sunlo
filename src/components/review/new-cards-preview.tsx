@@ -175,7 +175,7 @@ export function NewCardsPreview({
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex flex-col items-center gap-2 py-4 text-center">
-				<div className="bg-lum-9 text-lum-1 flex items-center gap-2 rounded-full px-4 py-2">
+				<div className="bg-lum-9 text-lum-none flex items-center gap-2 rounded-full px-4 py-2">
 					<Eye className="size-5" />
 					<span className="font-medium">Preview Unreviewed Cards</span>
 				</div>

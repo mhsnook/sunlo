@@ -52,7 +52,7 @@ export function PhraseSummaryLine({
 				)}
 				<span className="truncate">&ldquo;{phraseText}&rdquo;</span>
 				{translationCount > 0 && (
-					<span className="text-con-mlow group-hover:text-con-mhigh shrink-0 text-xs whitespace-nowrap">
+					<span className="text-con-mlow group-hover:text-con-mid shrink-0 text-xs whitespace-nowrap">
 						({translationCount} translation{translationCount === 1 ? '' : 's'})
 					</span>
 				)}

@@ -95,7 +95,7 @@ function AddedPill({ added }: { added: boolean }) {
 		<span
 			className={cn(
 				'flex items-center gap-1 text-xs font-medium',
-				added ? 'hue-success text-lum-5 text-chroma-high' : 'text-lum-7'
+				added ? 'hue-success text-con-mid text-chroma-high' : 'text-con-mhigh'
 			)}
 		>
 			{added ? (
@@ -141,7 +141,7 @@ export function SetTile({
 		<Link
 			to="/learn/$lang/playlists/$playlistId"
 			params={{ lang, playlistId: playlist.id }}
-			className="bg-card/50 hover:border-lum-5 hover:border-chroma-max block rounded border p-4 transition-colors"
+			className="bg-card/50 hover:border-con-mlow hover:border-chroma-max block rounded border p-4 transition-colors"
 			data-testid="browse-set-tile"
 			data-key={playlist.id}
 		>
@@ -191,7 +191,7 @@ export function TagSetTile({
 				type="button"
 				onClick={() => setOpen((o) => !o)}
 				aria-expanded={open}
-				className="hover:border-lum-5 hover:border-chroma-max flex w-full flex-col gap-1 rounded p-4 text-start transition-colors"
+				className="hover:border-con-mlow hover:border-chroma-max flex w-full flex-col gap-1 rounded p-4 text-start transition-colors"
 			>
 				<div className="flex w-full items-start justify-between gap-2">
 					<div className="flex items-center gap-2">

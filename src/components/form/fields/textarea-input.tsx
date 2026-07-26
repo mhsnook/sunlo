@@ -30,7 +30,7 @@ export function TextareaInput({
 				<Label
 					htmlFor={field.name}
 					className={
-						showError ? 'text-lum-6 text-chroma-high text-hue-danger' : ''
+						showError ? 'text-con-mhigh text-chroma-high text-hue-danger' : ''
 					}
 				>
 					{label}

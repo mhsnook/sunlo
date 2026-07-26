@@ -57,7 +57,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 										{dueToday > 0 ? (
 											<>
 												{' · '}
-												<span className="text-lum-7 font-medium">
+												<span className="text-con-mhigh font-medium">
 													{dueToday} due
 												</span>
 											</>
@@ -86,7 +86,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								'This deck is empty — time to start adding phrases.'
 							) : dueToday > 0 ? (
 								<>
-									<span className="text-lum-7 font-medium">
+									<span className="text-con-mhigh font-medium">
 										{dueToday} {dueToday === 1 ? 'card' : 'cards'} due
 									</span>
 									{' · '}
@@ -129,7 +129,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang"
 								params={{ lang: deck.lang }}
 								data-testid="deck-link"
-								className="border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-7 hover:bg-lum-1 hover:text-lum-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-9 hover:bg-lum-1 hover:text-lum-10 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								<Logs className="size-6" />
 								<div>
@@ -209,7 +209,7 @@ export function AddDeckTile() {
 			data-testid="add-deck-tile"
 			className="block h-full transition-all duration-200 hover:-translate-y-0.5"
 		>
-			<Card className="border-lum-4 text-con-mid hover:text-lum-7 hover:border-lum-7 flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
+			<Card className="border-con-mlow text-con-mid hover:text-con-mhigh hover:border-con-mid flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
 				<span className="text-2xl leading-none">+</span>
 				<span className="text-xs font-medium">Start a new deck</span>
 			</Card>

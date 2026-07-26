@@ -16,7 +16,7 @@ export default function TranslationLanguageField({
 		<div className="flex flex-col gap-1">
 			<Label
 				className={
-					showError ? 'text-lum-6 text-chroma-high text-hue-danger' : ''
+					showError ? 'text-con-mhigh text-chroma-high text-hue-danger' : ''
 				}
 			>
 				Translation language

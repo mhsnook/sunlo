@@ -13,7 +13,7 @@ import { TinyBadge } from '@/components/ui/badge'
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const
 const activeProps = {
-	className: 'text-lum-7',
+	className: 'text-con-mhigh',
 } as const
 
 export default function OneSidebarMenu({

@@ -143,7 +143,7 @@ export function LanguagesKnownField() {
 								aria-label="Remove language"
 								data-testid="remove-language"
 							>
-								<Trash2 className="text-lum-6 text-chroma-high text-hue-danger size-4" />
+								<Trash2 className="text-con-mhigh text-chroma-high text-hue-danger size-4" />
 							</Button>
 						</div>
 					</Card>

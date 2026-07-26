@@ -105,7 +105,7 @@ function FriendGroup({ group }: { group: FriendGroupType }) {
 					params={{ uid: group.uid }}
 					className="shrink-0"
 				>
-					<Avatar className="bg-lum-10 text-lum-1 mt-0.5 size-8 rounded-lg">
+					<Avatar className="bg-lum-10 text-lum-none mt-0.5 size-8 rounded-lg">
 						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
 						<AvatarFallback seed={group.uid} className="text-[10px] font-bold">
 							{username.slice(0, 2)}

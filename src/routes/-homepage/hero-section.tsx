@@ -58,7 +58,7 @@ export function HeroSection() {
 					<div className="mb-16 text-center">
 						{/* Feature highlights */}
 						<div className="mx-auto mb-12 grid max-w-4xl gap-6 md:grid-cols-3">
-							<Card className="border-lum-2 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="border-con-low bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
 								<div className="flex flex-col items-center text-center">
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-700/70 dark:bg-green-400/30">
 										<BookOpen className="h-6 w-6 text-green-300 dark:text-green-200" />
@@ -72,7 +72,7 @@ export function HeroSection() {
 								</div>
 							</Card>
 
-							<Card className="border-lum-2 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="border-con-low bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
 								<div className="flex flex-col items-center text-center">
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-700/70 dark:bg-blue-400/30">
 										<Users className="h-6 w-6 text-blue-300 dark:text-blue-200" />
@@ -86,7 +86,7 @@ export function HeroSection() {
 								</div>
 							</Card>
 
-							<Card className="border-lum-2 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="border-con-low bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
 								<div className="flex flex-col items-center text-center">
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-700/70 dark:bg-yellow-400/30">
 										<Heart className="h-6 w-6 text-yellow-300 dark:text-yellow-200" />
@@ -109,7 +109,7 @@ export function HeroSection() {
 								to="/browse"
 								className={cn(
 									buttonVariants({ size: 'lg', variant: 'soft' }),
-									'group border-lum-3 border-chroma-mlow hover:border-lum-6 hover:bg-lum-2 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
+									'group border-con-low border-chroma-mlow hover:border-con-mid hover:bg-lum-2 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>
 								<Compass className="opacity-60 transition-opacity group-hover:opacity-100" />{' '}
@@ -130,7 +130,7 @@ export function HeroSection() {
 								to="/login"
 								className={cn(
 									buttonVariants({ size: 'lg', variant: 'soft' }),
-									'group border-lum-3 border-chroma-mlow hover:border-lum-6 hover:bg-lum-2 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
+									'group border-con-low border-chroma-mlow hover:border-con-mid hover:bg-lum-2 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>
 								<LogIn className="opacity-60 transition-opacity group-hover:opacity-100" />{' '}

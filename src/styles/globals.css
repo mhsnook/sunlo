@@ -42,14 +42,17 @@
 	   top out at 0.55, which puts standard text at L=0.40 on our 0.95 page: grey,
 	   not black. Text L on the page, light / dark:
 
-	     low   0.30 → 0.65 / 0.485    decorative, not for reading
-	     mlow  0.41 → 0.54 / 0.595    faint
+	     low   0.14 → 0.81 / 0.325    borders, hairlines, barely-there text
+	     mlow  0.24 → 0.71 / 0.425    visible borders, faint text
 	     mid   0.52 → 0.43 / 0.705    muted
 	     mhigh 0.63 → 0.32 / 0.815    standard text
 	     high  0.73 → 0.22 / 0.915    emphasis
+
+	   The gap between mlow and mid is the jump from border contrast to reading
+	   contrast — the two live in different regimes and one scale serves both.
 	*/
-	--con-low: 0.3;
-	--con-mlow: 0.41;
+	--con-low: 0.14;
+	--con-mlow: 0.24;
 	--con-mid: 0.52;
 	--con-mhigh: 0.63;
 	--con-high: 0.73;
@@ -328,10 +331,10 @@
 }
 
 @utility s-link {
-	@apply decoration-lum-7 decoration-chroma-mid hover:decoration-lum-5 text-lum-7 text-chroma-mid cursor-pointer underline decoration-dashed decoration-1 underline-offset-2 transition-all hover:decoration-solid hover:decoration-2 hover:underline-offset-1;
+	@apply decoration-lum-7 decoration-chroma-mid hover:decoration-lum-5 text-con-mhigh text-chroma-mid cursor-pointer underline decoration-dashed decoration-1 underline-offset-2 transition-all hover:decoration-solid hover:decoration-2 hover:underline-offset-1;
 }
 @utility s-link-muted {
-	@apply decoration-lum-5 decoration-chroma-mid text-lum-7 text-chroma-mid underline underline-offset-2 opacity-70 transition-all hover:gap-1 hover:underline-offset-3 hover:opacity-90;
+	@apply decoration-lum-5 decoration-chroma-mid text-con-mhigh text-chroma-mid underline underline-offset-2 opacity-70 transition-all hover:gap-1 hover:underline-offset-3 hover:opacity-90;
 }
 @utility s-link-hidden {
 	@apply decoration-lum-3 decoration-chroma-mlow flex-shrink-0 underline-offset-4 hover:underline;
@@ -359,7 +362,7 @@
 	@apply my-2 text-lg font-bold;
 }
 @utility s-language-name {
-	@apply text-lum-10 text-chroma-mlow text-hue-accent font-semibold italic;
+	@apply text-con-high text-chroma-mlow text-hue-accent font-semibold italic;
 }
 
 @utility rounded-squircle {

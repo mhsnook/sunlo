@@ -520,7 +520,7 @@ function ArchiveRequestButton({
 			{request.deleted ? (
 				<Undo2 className="size-4" />
 			) : (
-				<Archive className="text-lum-6 text-chroma-high text-hue-danger size-4" />
+				<Archive className="text-con-mhigh text-chroma-high text-hue-danger size-4" />
 			)}
 		</Button>
 	)

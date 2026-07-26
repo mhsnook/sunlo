@@ -9,13 +9,13 @@ const badgeVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: 'border-transparent bg-lum-5 bg-chroma-max text-con-high',
-				secondary: 'hue-neutral border-lum-3 bg-lum-2 text-lum-5',
+				default: 'border-transparent bg-lum-5 bg-chroma-max text-lum-none',
+				secondary: 'hue-neutral border-lum-3 bg-lum-2 text-lum-7',
 				destructive:
-					'border-transparent bg-lum-6 bg-chroma-high bg-hue-danger text-con-high',
+					'border-transparent bg-lum-6 bg-chroma-high bg-hue-danger text-lum-none',
 				success: 'border-transparent bg-green-600 text-green-100',
-				outline: 'text-lum-7 border-lum-3 bg-lum-1',
-				lang: 'bg-lum-3 border-lum-4 text-con-mhigh chroma-mid font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
+				outline: 'text-lum-9 border-lum-2 bg-lum-1',
+				lang: 'bg-lum-3 border-lum-4 text-lum-8 font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
 			},
 			size: {
 				lg: 'px-3 py-1 gap-2 [&>svg]:h-4 [&>svg]:w-4 [&>button]:h-5 [&>button]:w-5',
@@ -72,7 +72,7 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 			variant="lang"
 			className={cn(
 				!ready &&
-					'!bg-lum-2 !bg-chroma-low !bg-hue-neutral !text-lum-7 !text-chroma-mid !text-hue-neutral !border-lum-3 !border-chroma-low !border-hue-neutral',
+					'!bg-lum-2 !bg-chroma-low !bg-hue-neutral !text-con-mid !text-chroma-mid !text-hue-neutral !border-con-low !border-chroma-low !border-hue-neutral',
 				className
 			)}
 			style={style}

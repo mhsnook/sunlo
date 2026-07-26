@@ -14,7 +14,7 @@ export const Route = createLazyFileRoute('/privacy-policy')({
 
 function Page() {
 	return (
-		<main className="bg-lum-1 text-con-mhigh px-2 py-6 @md:px-[5%]">
+		<main className="bg-lum-1 text-lum-9 px-2 py-6 @md:px-[5%]">
 			<Card className="prose dark:prose-invert">
 				<CardHeader>
 					<CardTitle>Privacy Policy</CardTitle>
