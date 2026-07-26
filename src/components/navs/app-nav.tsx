@@ -23,7 +23,7 @@ import { resolveNavList } from '@/types/route-static-data'
 import { useAuth } from '@/lib/use-auth'
 
 const activeProps = {
-	className: 'border-con-mlow border-chroma-max text-con-mhigh',
+	className: 'border-lum-4 border-chroma-max text-con-mhigh',
 } as const
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const

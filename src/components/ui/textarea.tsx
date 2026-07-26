@@ -9,7 +9,7 @@ const Textarea = ({
 	return (
 		<textarea
 			className={cn(
-				'border-con-mlow border-chroma-mlow hover:border-con-mlow hover:border-chroma-max bg-card/50 ring-offset-background placeholder:text-con-mid text-con-mhigh focus-visible:ring-ring flex min-h-[80px] w-full rounded-2xl border px-3 py-2 text-sm inset-shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+				'border-lum-4 border-chroma-mlow hover:border-lum-4 hover:border-chroma-max bg-card/50 ring-offset-background placeholder:text-con-mid text-con-mhigh focus-visible:ring-ring flex min-h-[80px] w-full rounded-2xl border px-3 py-2 text-sm inset-shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
 				className
 			)}
 			data-slot="textarea"

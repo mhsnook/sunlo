@@ -370,7 +370,7 @@ function AttachedPhraseCards({
 							...prev,
 							attaching: true,
 						})}
-						className="border-con-low text-con-mid hover:bg-lum-2 hover:text-con-mhigh hover:border-con-mlow hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
+						className="border-lum-3 text-con-mid hover:bg-lum-2 hover:text-con-mhigh hover:border-lum-4 hover:border-chroma-mlow flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
 					>
 						<Plus className="h-6 w-6" />
 					</Link>

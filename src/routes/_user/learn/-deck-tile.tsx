@@ -209,7 +209,7 @@ export function AddDeckTile() {
 			data-testid="add-deck-tile"
 			className="block h-full transition-all duration-200 hover:-translate-y-0.5"
 		>
-			<Card className="border-con-mlow text-con-mid hover:text-con-mhigh hover:border-con-mid flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
+			<Card className="border-lum-4 text-con-mid hover:text-con-mhigh hover:border-lum-6 flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
 				<span className="text-2xl leading-none">+</span>
 				<span className="text-xs font-medium">Start a new deck</span>
 			</Card>

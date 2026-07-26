@@ -111,7 +111,7 @@ function SignOutSection() {
 		<div className="flex justify-end pt-2">
 			<Button
 				variant="ghost"
-				className="hue-danger hover:hue-danger text-con-mhigh text-chroma-mhigh hover:text-con-mhigh hover:text-chroma-high"
+				className="hue-danger hover:hue-danger text-chroma-mhigh hover:text-con-mhigh hover:text-chroma-high"
 				onClick={() => signOut.mutate()}
 				data-testid="profile-signout-button"
 				disabled={signOut.isPending}

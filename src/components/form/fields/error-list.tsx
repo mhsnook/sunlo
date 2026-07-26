@@ -13,7 +13,7 @@ export function ErrorList({ errors }: { errors: Array<FieldErrorLike> }) {
 	const messages = errors.map(messageOf).filter((m): m is string => !!m)
 	if (messages.length === 0) return null
 	return (
-		<p className="text-con-mhigh text-chroma-high text-hue-danger mt-2 text-sm">
+		<p className="text-chroma-high text-hue-danger mt-2 text-sm">
 			{messages.join('. ')}
 		</p>
 	)

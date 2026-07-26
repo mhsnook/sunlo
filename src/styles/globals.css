@@ -389,7 +389,7 @@
 		@apply border-border;
 	}
 	body {
-		@apply bg-lum-1 bg-chroma-low bg-hue-neutral text-foreground;
+		@apply bg-lum-1 bg-chroma-low bg-hue-neutral text-con-mhigh;
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);

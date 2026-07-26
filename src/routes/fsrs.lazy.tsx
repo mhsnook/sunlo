@@ -596,7 +596,7 @@ function FsrsPage() {
 														'flex-1 rounded-2xl border px-1 py-1 text-xs transition-colors',
 														r.score === opt
 															? `${SCORE_META[opt].activeBtn} font-medium`
-															: 'hover:hue-neutral border-con-low text-con-mid hover:bg-lum-2'
+															: 'hover:hue-neutral border-lum-3 text-con-mid hover:bg-lum-2'
 													)}
 												>
 													{SCORE_META[opt].label}

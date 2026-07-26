@@ -24,11 +24,7 @@ export function AvatarEditorField() {
 
 	return (
 		<div className="flex flex-col gap-1">
-			<Label
-				className={
-					showError ? 'text-con-mhigh text-chroma-high text-hue-danger' : ''
-				}
-			>
+			<Label className={showError ? 'text-chroma-high text-hue-danger' : ''}>
 				Profile picture
 			</Label>
 			<div className="flex flex-col gap-2">

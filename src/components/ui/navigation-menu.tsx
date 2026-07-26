@@ -116,7 +116,7 @@ const NavigationMenuViewport = ({
 			className={cn('isolate z-50', className)}
 			{...props}
 		>
-			<NavigationMenuPrimitive.Popup className="bg-popover text-con-mhigh data-[open]:animate-in data-[closed]:animate-out data-[closed]:zoom-out-95 data-[open]:zoom-in-90 relative overflow-hidden rounded-md border shadow-lg">
+			<NavigationMenuPrimitive.Popup className="bg-popover data-[open]:animate-in data-[closed]:animate-out data-[closed]:zoom-out-95 data-[open]:zoom-in-90 relative overflow-hidden rounded-md border shadow-lg">
 				<NavigationMenuPrimitive.Viewport
 					data-slot="navigation-menu-viewport"
 					className="relative size-full overflow-hidden"

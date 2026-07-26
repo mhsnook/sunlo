@@ -476,7 +476,7 @@ function InlineAddBar({
 		<div data-testid="inline-add-bar" className="space-y-2">
 			<div className="flex flex-col gap-2 @lg:flex-row">
 				<div className="flex-1 space-y-2">
-					<span className="text-con-mid border-con-low inline-flex h-7 items-center rounded-2xl border px-3 text-xs">
+					<span className="text-con-mid border-lum-3 inline-flex h-7 items-center rounded-2xl border px-3 text-xs">
 						{languages[lang]}
 					</span>
 					<Input

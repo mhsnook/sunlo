@@ -24,12 +24,12 @@ function Page() {
 					<Callout className="py-1">
 						<div>
 							<p>
-								<strong className="text-con-mhigh">tl;dr:</strong> In order to
-								create an account you need to enter an email address, and
-								logging in leaves a cookie on your device. But other than this
-								we are not collecting or tracking any other personal
-								information; we aren&apos;t selling or providing your data to
-								anyone else, and we reserve zero rights to do so in the future.
+								<strong className="">tl;dr:</strong> In order to create an
+								account you need to enter an email address, and logging in
+								leaves a cookie on your device. But other than this we are not
+								collecting or tracking any other personal information; we
+								aren&apos;t selling or providing your data to anyone else, and
+								we reserve zero rights to do so in the future.
 							</p>
 							<p className="mt-0">
 								Your <em>user name and avatar</em> are public to help you find

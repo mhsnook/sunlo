@@ -430,7 +430,7 @@ function FilterPill({
 				'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
 				active
 					? 'bg-lum-7 text-lum-none border-transparent'
-					: 'border-con-low text-con-mid hover:border-con-mlow hover:border-chroma-mlow hover:text-con-mhigh'
+					: 'border-lum-3 text-con-mid hover:border-lum-4 hover:border-chroma-mlow hover:text-con-mhigh'
 			)}
 		>
 			{children}

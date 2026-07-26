@@ -20,7 +20,7 @@ const buttonVariants = cva(
 				red: `hue-danger ${solids}`,
 				'red-soft': `hue-danger ${softs}`,
 				neutral: 'hover:bg-lum-up-1 bg-chroma-mlow',
-				ghost: 'text-con-mhigh hover:bg-lum-1 hover:text-con-mhigh',
+				ghost: 'hover:bg-lum-1 hover:text-con-mhigh',
 				'badge-outline':
 					'hue-neutral rounded border-lum-2 text-lum-9 bg-lum-1 hover:border-lum-3 hover:border-chroma-max',
 				'dashed-w-full':

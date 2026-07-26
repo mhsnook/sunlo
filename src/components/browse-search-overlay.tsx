@@ -208,7 +208,7 @@ export default function BrowseSearchOverlay({
 									'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
 									selectedLangs.includes(l.code)
 										? 'chroma-mhigh bg-lum-6 text-lum-none border-transparent'
-										: 'border-con-low text-con-mid hover:border-con-mlow hover:border-chroma-mlow hover:text-con-mhigh'
+										: 'border-lum-3 text-con-mid hover:border-lum-4 hover:border-chroma-mlow hover:text-con-mhigh'
 								)}
 							>
 								{l.name}
@@ -223,7 +223,7 @@ export default function BrowseSearchOverlay({
 								// oxlint-disable-next-line jsx-no-jsx-as-prop
 								<button
 									type="button"
-									className="border-con-low text-con-mid hover:border-con-mlow hover:border-chroma-mlow hover:text-con-mhigh flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+									className="border-lum-3 text-con-mid hover:border-lum-4 hover:border-chroma-mlow hover:text-con-mhigh flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
 								>
 									<Plus className="size-3" />
 									more
