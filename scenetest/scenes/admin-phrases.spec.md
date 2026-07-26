@@ -82,3 +82,22 @@ friend:
 - see admin-phrase-detail
 - see admin-not-authorized-warning
 - notSee admin-archive-button
+
+# admin can restore an archived phrase from the detail page
+
+// The phrase starts archived (via setup); the detail page shows the restore
+// button, and clicking it flips archived back to false.
+
+setup: supabase.from('admin_user').upsert({ uid: '[learner.key]' })
+setup: supabase.from('phrase').update({ archived: true }).eq('id', '[team.partial_nocard_phrase]')
+cleanup: supabase.from('admin_user').delete().eq('uid', '[learner.key]')
+cleanup: supabase.from('phrase').update({ archived: false }).eq('id', '[team.partial_nocard_phrase]')
+
+learner:
+
+- login
+- openTo /admin/[team.lang_partial]/phrases/[team.partial_nocard_phrase]
+- up
+- see admin-phrase-detail
+- click admin-unarchive-button
+- seeToast toast-success
