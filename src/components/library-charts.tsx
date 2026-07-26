@@ -1,3 +1,8 @@
+import {
+	CHART_SERIES_A,
+	CHART_SERIES_B,
+	SCATTER_COLORS,
+} from '@/lib/chart-colors'
 import { useMemo, useState, useCallback, type MouseEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useLiveQuery } from '@tanstack/react-db'
@@ -41,11 +46,11 @@ import languages from '@/lib/languages'
 const langChartConfig = {
 	phrases: {
 		label: 'Phrases',
-		color: 'var(--chart-1)',
+		color: CHART_SERIES_A,
 	},
 	learners: {
 		label: 'Learners',
-		color: 'var(--chart-2)',
+		color: CHART_SERIES_B,
 	},
 } satisfies ChartConfig
 
@@ -112,14 +117,6 @@ export function LanguageComparisonChart() {
 }
 
 // ─── Chart 2: Difficulty vs Popularity Scatter ──────────────────
-
-const SCATTER_COLORS = [
-	'oklch(0.6 0.2 295)',
-	'oklch(0.6 0.15 185)',
-	'oklch(0.65 0.18 55)',
-	'oklch(0.55 0.2 310)',
-	'oklch(0.6 0.18 130)',
-]
 
 export function DifficultyPopularityScatter({ lang }: { lang: string }) {
 	const { data: allPhrases } = useLangPhrasesRaw(lang)
@@ -434,7 +431,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 const histogramConfig = {
 	count: {
 		label: 'Phrases',
-		color: 'var(--chart-1)',
+		color: CHART_SERIES_A,
 	},
 } satisfies ChartConfig
 

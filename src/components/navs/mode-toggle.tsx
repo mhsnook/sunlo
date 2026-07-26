@@ -29,7 +29,7 @@ export function ModeToggle() {
 						render={
 							<SidebarMenuButton
 								size="lg"
-								className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow group-data-[collapsible=icon]:p-2!"
+								className="data-[popup-open]:bg-lum-2 data-[popup-open]:text-lum-9 rounded-xl shadow group-data-[collapsible=icon]:p-2!"
 							/>
 						}
 					>

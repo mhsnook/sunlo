@@ -76,7 +76,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 								<SidebarMenuButton
 									data-testid="deck-switcher-button"
 									size="lg"
-									className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
+									className="data-[popup-open]:bg-lum-2 data-[popup-open]:text-lum-9 rounded-xl shadow"
 								/>
 							}
 						>
@@ -165,11 +165,11 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 						render={
 							<SidebarMenuButton
 								size="lg"
-								className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
+								className="data-[popup-open]:bg-lum-2 data-[popup-open]:text-lum-9 rounded-xl shadow"
 							/>
 						}
 					>
-						<div className="bg-lum-7 text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
+						<div className="bg-lum-7 text-lum-1 rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
 							<Globe />
 						</div>
 						<div className="grid flex-1 text-start text-sm leading-tight">

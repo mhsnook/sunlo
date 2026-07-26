@@ -33,12 +33,11 @@ export function RightSidebar() {
 							{...link}
 							className={cn(
 								'flex w-full flex-row items-center gap-3 rounded-lg px-3 py-2 text-sm',
-								'text-sidebar-foreground transition-colors',
-								'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+								'text-con-mhigh transition-colors',
+								'hover:bg-lum-2 hover:text-lum-9'
 							)}
 							activeProps={{
-								className:
-									'bg-sidebar-accent/50 text-sidebar-accent-foreground font-medium',
+								className: 'bg-lum-2 text-lum-9 font-medium',
 							}}
 						>
 							{Icon && <Icon className="size-4 shrink-0" />}

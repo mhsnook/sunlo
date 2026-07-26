@@ -1,3 +1,4 @@
+import { CHART_SERIES_A, CHART_SERIES_B } from '@/lib/chart-colors'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import {
 	ChartContainer,
@@ -12,11 +13,11 @@ import { useDeckActivityChartData } from '@/features/deck/hooks'
 const chartConfig = {
 	total: {
 		label: 'Total Reviews',
-		color: 'var(--chart-1)',
+		color: CHART_SERIES_A,
 	},
 	positive: {
 		label: 'Positive',
-		color: 'var(--chart-2)',
+		color: CHART_SERIES_B,
 	},
 } satisfies ChartConfig
 

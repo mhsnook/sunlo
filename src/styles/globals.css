@@ -61,10 +61,10 @@
 /* Tokens derived from the lum ramp. These auto-flip with no `.dark` counterpart:
    `.dark` is set on documentElement, the same element as `:root`, so the
    library's dark `--lum-*` values are what these var() calls resolve against.
-   They exist for the properties tailwind-oklch has no utility for — `ring-*`,
-   `ring-offset-*`, `fill-*`, `stroke-*`, `divide-*`, `via-*` — plus the one
-   direct `var(--border)` consumer (admin/routes.lazy.tsx). Each mirrors the
-   stop its utility-based equivalent uses, so retuning the ramp moves both.
+   They exist only for the properties tailwind-oklch has no utility for —
+   `ring-*`, `ring-offset-*`, `fill-*`, `stroke-*`, `divide-*`, `via-*`. Each
+   mirrors the stop its utility-based equivalent uses, so retuning the ramp
+   moves both.
 
    Chroma is raw here (no per-hue scale, no taper) — same as the brand tokens
    below — so keep these values low or they read more saturated than a utility
@@ -72,11 +72,9 @@
 :root {
 	--background: oklch(var(--lum-1) var(--chroma-low) var(--hue-primary));
 	--foreground: oklch(var(--lum-9) var(--chroma-mlow) var(--hue-primary));
-	--border: oklch(var(--lum-3) var(--chroma-low) var(--hue-primary));
 	--input: oklch(var(--lum-2) var(--chroma-low) var(--hue-neutral));
 	--muted: oklch(var(--lum-2) var(--chroma-low) var(--hue-neutral));
 	--muted-foreground: oklch(var(--lum-7) var(--chroma-low) var(--hue-neutral));
-	--secondary: oklch(var(--lum-2) var(--chroma-low) var(--hue-neutral));
 	--ring: oklch(var(--lum-6) var(--chroma-max) var(--hue-primary));
 
 	/* Static tokens: light mode (default).
@@ -86,25 +84,7 @@
 	   the only stop below `lum-1` is the pure pole, which would make dark-mode
 	   cards pure black. */
 	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.15 0.02 var(--hue-neutral));
 	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.15 0.02 var(--hue-neutral));
-	--secondary-foreground: oklch(0.22 0.03 var(--hue-neutral));
-	--destructive: oklch(0.55 0.18 25);
-	--destructive-foreground: oklch(0.98 0.005 250);
-	--chart-1: oklch(0.55 0.22 295);
-	--chart-2: oklch(0.55 0.1 185);
-	--chart-3: oklch(0.38 0.05 240);
-	--chart-4: oklch(0.78 0.14 85);
-	--chart-5: oklch(0.75 0.16 55);
-	--sidebar-background: oklch(0.98 0 0);
-	--sidebar-foreground: oklch(0.35 0.01 var(--hue-neutral));
-	--sidebar-primary: oklch(0.2 0.01 var(--hue-neutral));
-	--sidebar-primary-foreground: oklch(0.98 0 0);
-	--sidebar-accent: oklch(0.97 0.005 var(--hue-accent));
-	--sidebar-accent-foreground: oklch(0.2 0.01 260);
-	--sidebar-border: oklch(0.93 0.005 var(--hue-neutral));
-	--sidebar-ring: oklch(0.6 0.22 var(--hue-neutral));
 	--shadow-color-1: rgba(0, 0, 0, 0.05);
 	--shadow-color-2: rgba(0, 0, 0, 0.1);
 	--shadow-color-3: rgba(0, 0, 0, 0.25);
@@ -114,30 +94,12 @@
    Keep luminance within tailwind-oklch's 0.185–0.92 numbered range to avoid
    blown-out whites. Target ≤0.87 for body text, ≤0.84 for secondary. */
 .dark {
-	/* No dark counterparts for background/foreground/border/input/muted/
-	   muted-foreground/secondary/ring — those are derived from `--lum-*` in
-	   `:root` and flip on their own. Re-declaring them here would win on source
-	   order and defeat the derivation. */
+	/* No dark counterparts for background/foreground/input/muted/muted-foreground/
+	   ring — those are derived from `--lum-*` in `:root` and flip on their own.
+	   Re-declaring them here would win on source order and defeat the
+	   derivation. */
 	--card: oklch(0.2 0.05 var(--hue-neutral));
-	--card-foreground: oklch(0.84 0.04 var(--hue-primary));
 	--popover: oklch(0.15 0.03 var(--hue-neutral));
-	--popover-foreground: oklch(0.84 0.005 var(--hue-neutral));
-	--secondary-foreground: oklch(0.84 0.005 var(--hue-neutral));
-	--destructive: oklch(0.42 0.18 25);
-	--destructive-foreground: oklch(0.92 0.005 250);
-	--chart-1: oklch(0.5 0.18 295);
-	--chart-2: oklch(0.58 0.1 170);
-	--chart-3: oklch(0.68 0.16 55);
-	--chart-4: oklch(0.58 0.18 310);
-	--chart-5: oklch(0.58 0.18 355);
-	--sidebar-background: oklch(0.2 0.01 var(--hue-neutral));
-	--sidebar-foreground: oklch(0.84 0.005 var(--hue-neutral));
-	--sidebar-primary: oklch(0.55 0.18 var(--hue-neutral));
-	--sidebar-primary-foreground: oklch(0.92 0 0);
-	--sidebar-accent: oklch(0.25 0.005 var(--hue-accent));
-	--sidebar-accent-foreground: oklch(0.84 0.005 var(--hue-accent));
-	--sidebar-border: oklch(0.25 0.005 var(--hue-primary));
-	--sidebar-ring: oklch(0.6 0.22 var(--hue-neutral));
 	--shadow-color-1: rgba(255, 255, 255, 0.05);
 	--shadow-color-2: rgba(255, 255, 255, 0.1);
 	--shadow-color-3: rgba(255, 255, 255, 0.25);
@@ -188,38 +150,13 @@
 
 	/* Accent tokens — foreground auto-flips because it's used as body
 	   text (language names, links), not just on colored surfaces. */
-	--color-accent-foreground: oklch(
-		var(--lum-10) var(--chroma-mlow) var(--hue-accent)
-	);
-	--color-accent-foresoft: oklch(
-		var(--lum-7) var(--chroma-max) var(--hue-accent)
-	);
 	--color-accent: oklch(var(--lum-5) var(--chroma-max) var(--hue-accent));
-	--color-accent-invert: oklch(
-		var(--lum-2) var(--chroma-mid) var(--hue-accent)
-	);
 
 	/* Static tokens — separate light/dark definitions above */
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
-	--color-destructive: var(--destructive);
-	--color-destructive-foreground: var(--destructive-foreground);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
 	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
 	--color-card: var(--card);
-	--color-card-foreground: var(--card-foreground);
-	--color-border: var(--border);
-
-	--color-sidebar: var(--sidebar-background);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--sidebar-ring);
 
 	--radius: 0.3rem;
 	--radius-lg: var(--radius);
@@ -315,7 +252,7 @@
 }
 
 .moving-glass-card {
-	@apply border-border/10 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10;
+	@apply border-lum-2 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10;
 }
 
 @utility w-app {
@@ -386,7 +323,7 @@
 }
 @layer base {
 	* {
-		@apply border-border;
+		@apply border-lum-3;
 	}
 	body {
 		@apply bg-lum-1 bg-chroma-low bg-hue-neutral text-con-mhigh;
