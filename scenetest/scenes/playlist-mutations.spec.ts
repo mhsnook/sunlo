@@ -315,8 +315,9 @@ test('learner reorders phrases in their playlist', async ({ actor, team }) => {
 			.click('manage-phrases-button')
 			.up()
 			.see('manage-phrases-dialog')
-			// First card (Alpha, order 1) moves down, swapping orders with Beta.
-			.click('move-phrase-down-button')
+			// Two cards render two down-buttons; #1 is the first card (Alpha,
+			// order 1), which swaps orders with Beta when moved down.
+			.click('move-phrase-down-button #1')
 			.up()
 
 		// Reorder has no success toast, so wait for the swapped orders to persist.
