@@ -7,11 +7,11 @@ import { useState } from 'react'
 
 /* ── OKLCH single-axis utilities × tailwind-merge ──────────────────────────
    Our color utilities decompose into three same-prefix classes per property
-   (`bg-lc-7 bg-chroma-mhi`). Out of the box tailwind-merge
+   (`bg-lum-8 bg-chroma-mhigh`). Out of the box tailwind-merge
    treats those as conflicting `bg-*` utilities and keeps only the last one,
    silently dropping two of the three axes. Register each (property × axis) as
-   its own conflict group so the axes are independent: two `bg-lc-*` still
-   collapse to the last, but `bg-lc-*` and `bg-chroma-*` coexist. */
+   its own conflict group so the axes are independent: two `bg-lum-*` still
+   collapse to the last, but `bg-lum-*` and `bg-chroma-*` coexist. */
 const HUES = new Set([
 	'primary',
 	'accent',
@@ -21,28 +21,44 @@ const HUES = new Set([
 	'info',
 	'neutral',
 ])
-const CHROMAS = new Set(['lo', 'mlo', 'mid', 'mhi', 'hi'])
+const CHROMAS = new Set(['low', 'mlow', 'mid', 'mhigh', 'high', 'max'])
+const CONS = new Set(['low', 'mlow', 'mid', 'mhigh', 'high', 'max'])
 const isArbitrary = (v: string) => v.startsWith('[') && v.endsWith(']')
 const isHue = (v: string) => HUES.has(v) || isArbitrary(v)
 const isChroma = (v: string) => CHROMAS.has(v) || isArbitrary(v)
-const isLc = (v: string) =>
-	/^(?:\d+|base|fore|none|full|up-[123]|down-[123]|\[\d+\])$/.test(v)
+const isCon = (v: string) => CONS.has(v) || isArbitrary(v)
+const isLum = (v: string) =>
+	/^(?:\d+|none|max|up-[1-5]|down-[1-5]|\[\d+\])$/.test(v)
 
 type ClassGroups = NonNullable<
 	ConfigExtension<string, string>['extend']
 >['classGroups']
 const oklchClassGroups: ClassGroups = {}
-for (const p of ['bg', 'text', 'border', 'from', 'to']) {
-	oklchClassGroups[`ok-${p}-lc`] = [{ [p]: [{ lc: [isLc] }] }]
+// decoration/accent/shadow paint their own distinct color properties too
+for (const p of [
+	'bg',
+	'text',
+	'border',
+	'from',
+	'to',
+	'decoration',
+	'accent',
+	'shadow',
+]) {
+	oklchClassGroups[`ok-${p}-lum`] = [{ [p]: [{ lum: [isLum] }] }]
 	oklchClassGroups[`ok-${p}-chroma`] = [{ [p]: [{ chroma: [isChroma] }] }]
 	oklchClassGroups[`ok-${p}-hue`] = [{ [p]: [{ hue: [isHue] }] }]
 }
 // border-b sets border-bottom-color — a separate property from border-color
-oklchClassGroups['ok-border-b-lc'] = [{ border: [{ b: [{ lc: [isLc] }] }] }]
+oklchClassGroups['ok-border-b-lum'] = [{ border: [{ b: [{ lum: [isLum] }] }] }]
 oklchClassGroups['ok-border-b-chroma'] = [
 	{ border: [{ b: [{ chroma: [isChroma] }] }] },
 ]
 oklchClassGroups['ok-border-b-hue'] = [{ border: [{ b: [{ hue: [isHue] }] }] }]
+// con-* picks a luminance that contrasts with the element's own background
+oklchClassGroups['ok-text-con'] = [{ text: [{ con: [isCon] }] }]
+oklchClassGroups['ok-border-con'] = [{ border: [{ con: [isCon] }] }]
+oklchClassGroups['ok-outline-con'] = [{ outline: [{ con: [isCon] }] }]
 // cascade seeders (apply no property, set an axis for all descendants)
 oklchClassGroups['ok-seed-hue'] = [{ hue: [isHue] }]
 oklchClassGroups['ok-seed-chroma'] = [{ chroma: [isChroma] }]

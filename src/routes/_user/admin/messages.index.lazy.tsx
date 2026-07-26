@@ -827,8 +827,8 @@ function BulkAddSection({
 								<button
 									type="button"
 									className={cn(
-										'hover:hue-neutral hover:bg-lc-1 block w-full rounded p-2 text-start text-sm',
-										tagSlug === null && 'bg-lc-1 bg-chroma-mlo'
+										'hover:hue-neutral hover:bg-lum-2 block w-full rounded p-2 text-start text-sm',
+										tagSlug === null && 'bg-lum-2 bg-chroma-mlow'
 									)}
 									onClick={() => {
 										setTagSlug(null)
@@ -844,8 +844,8 @@ function BulkAddSection({
 											<button
 												type="button"
 												className={cn(
-													'hover:hue-neutral hover:bg-lc-1 block w-full rounded p-2 text-start text-sm',
-													tagSlug === tag.slug && 'bg-lc-1 bg-chroma-mlo'
+													'hover:hue-neutral hover:bg-lum-2 block w-full rounded p-2 text-start text-sm',
+													tagSlug === tag.slug && 'bg-lum-2 bg-chroma-mlow'
 												)}
 												onClick={() => {
 													setTagSlug(tag.slug)
@@ -959,7 +959,7 @@ function SelectionBar({
 
 	return (
 		<div
-			className="bg-lc-1 bg-chroma-mlo flex flex-wrap items-center gap-3 rounded border p-3"
+			className="bg-lum-2 bg-chroma-mlow flex flex-wrap items-center gap-3 rounded border p-3"
 			data-testid="admin-messages-selection-bar"
 		>
 			<span className="text-sm font-semibold">
@@ -1048,7 +1048,7 @@ function MessagesTable({
 			data-name="message-row"
 		>
 			{isAdmin && (
-				<div className="hue-neutral bg-lc-1 flex items-center gap-2 border-b px-3 py-2 text-xs">
+				<div className="hue-neutral bg-lum-2 flex items-center gap-2 border-b px-3 py-2 text-xs">
 					<Checkbox
 						checked={allVisibleSelected}
 						onCheckedChange={toggleVisibleAll}
@@ -1091,7 +1091,7 @@ function MessageRowItem({
 		<li
 			className={cn(
 				'flex items-start gap-3 p-3',
-				isSelected && 'bg-lc-1 bg-chroma-mlo'
+				isSelected && 'bg-lum-2 bg-chroma-mlow'
 			)}
 			data-testid="message-row"
 			data-key={row.message_id}
@@ -1126,7 +1126,7 @@ function MessageRowItem({
 								{isAdmin ? (
 									<button
 										type="button"
-										className="hover:text-chroma-hi ms-1 -me-1 inline-flex items-center"
+										className="hover:text-chroma-high ms-1 -me-1 inline-flex items-center"
 										onClick={() => detachTag(row.message_id, tag.slug)}
 										aria-label={`Remove ${tag.label}`}
 									>

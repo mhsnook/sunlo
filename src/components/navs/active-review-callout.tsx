@@ -44,7 +44,7 @@ function ReviewRemainingLink({
 			<span className="text-xs font-medium group-hover:underline">
 				{languages[lang]}
 			</span>
-			<span className="text-lc-5 text-chroma-mlo group-hover:text-lc-up-1 text-xs font-bold">
+			<span className="text-lum-6 text-chroma-mlow group-hover:text-lum-up-1 text-xs font-bold">
 				{remaining} left
 			</span>
 		</Link>
@@ -113,7 +113,7 @@ export function ActiveReviewCallout({
 }
 
 const calloutCard =
-	'border-lc-[87] border-chroma-[6] bg-lc-[93] bg-chroma-[4] mx-2 mb-2 rounded-xl border p-3'
+	'border-lum-[87] border-chroma-[6] bg-lum-[93] bg-chroma-[4] mx-2 mb-2 rounded-xl border p-3'
 const iconCircle = 'rounded-lg bg-white p-1.5'
 
 function CalloutContent({
@@ -136,7 +136,7 @@ function CalloutContent({
 				to="/learn/$lang/review"
 				params={{ lang: activeReviews[0].lang }}
 				onClick={setClosedMobile}
-				className="text-lc-5 text-chroma-mid hover:bg-lc-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
+				className="text-lum-6 text-chroma-mid hover:bg-lum-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
 				aria-label="Active review in progress"
 			>
 				<Rocket className="h-4 w-4" />
@@ -151,7 +151,7 @@ function CalloutContent({
 			<div className={calloutCard}>
 				<div className="flex items-center gap-2">
 					<div className={iconCircle}>
-						<Rocket className="text-lc-5 text-chroma-mid h-4 w-4" />
+						<Rocket className="text-lum-6 text-chroma-mid h-4 w-4" />
 					</div>
 					<div className="flex-1">
 						<p className="text-sm font-semibold">{remaining} cards left</p>
@@ -181,7 +181,7 @@ function CalloutContent({
 		<div className={calloutCard}>
 			<div className="flex items-center gap-2">
 				<div className={iconCircle}>
-					<Rocket className="text-lc-5 text-chroma-mid h-4 w-4" />
+					<Rocket className="text-lum-6 text-chroma-mid h-4 w-4" />
 				</div>
 				<span className="text-sm font-semibold">Finish your review</span>
 			</div>

@@ -154,33 +154,33 @@ export function SpreadsheetImportDialog({
 								</p>
 								<div className="space-y-2 ps-1">
 									<p>
-										<strong className="text-lc-7 text-chroma-mhi">
+										<strong className="text-lum-8 text-chroma-mhigh">
 											Phrase
 										</strong>{' '}
 										&mdash; the word or sentence in your learning language.
 										Include the word &ldquo;phrase&rdquo; in the header (e.g.{' '}
-										<code className="bg-lc-1 bg-chroma-mlo rounded px-1.5 py-0.5 text-sm">
+										<code className="bg-lum-2 bg-chroma-mlow rounded px-1.5 py-0.5 text-sm">
 											phrase
 										</code>
 										).
 									</p>
 									<p>
-										<strong className="hue-accent text-lc-7 text-chroma-mhi">
+										<strong className="hue-accent text-lum-8 text-chroma-mhigh">
 											Translation
 										</strong>{' '}
 										&mdash; put the language name or 3-letter code in the header
 										(e.g.{' '}
-										<code className="hue-accent bg-lc-1 bg-chroma-mlo rounded px-1.5 py-0.5 text-sm">
+										<code className="hue-accent bg-lum-2 bg-chroma-mlow rounded px-1.5 py-0.5 text-sm">
 											translation (eng)
 										</code>{' '}
 										or{' '}
-										<code className="hue-accent bg-lc-1 bg-chroma-mlo rounded px-1.5 py-0.5 text-sm">
+										<code className="hue-accent bg-lum-2 bg-chroma-mlow rounded px-1.5 py-0.5 text-sm">
 											English
 										</code>
 										). You can have multiple translation columns.
 									</p>
 									<p>
-										<strong className="hue-info text-lc-7 text-chroma-mhi">
+										<strong className="hue-info text-lum-8 text-chroma-mhigh">
 											Tags
 										</strong>{' '}
 										&mdash; optional. Include &ldquo;tag&rdquo; in the header.

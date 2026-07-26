@@ -2,7 +2,7 @@
 @import '@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css';
 @import '@fontsource/opendyslexic/index.css';
 @import 'tailwindcss';
-@import './oklch.css';
+@import 'tailwind-oklch';
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
@@ -10,11 +10,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Override plugin default hues to match Sunlo's palette */
+/* Override plugin default hues to match Sunlo's palette. tailwind-oklch has
+   no neutral hue of its own (a neutral is the absence of chroma), so we define
+   both the hue and its per-hue chroma scale for our `hue-neutral` utilities. */
 @theme {
 	--hue-primary: 300;
 	--hue-accent: 175;
 	--hue-neutral: 270;
+	--cscale-neutral: 1;
 }
 
 /* Static tokens: light mode (default) */
@@ -53,7 +56,7 @@
 }
 
 /* Static tokens: dark mode
-   Keep luminance within the plugin's 0.12–0.92 range to avoid
+   Keep luminance within the plugin's 0.185–0.92 numbered range to avoid
    blown-out whites. Target ≤0.87 for body text, ≤0.84 for secondary. */
 .dark {
 	--background: oklch(0.22 0.03 var(--hue-primary));
@@ -121,21 +124,29 @@
 	--color-foreground: var(--foreground);
 
 	/* "On-primary" text — always near-white regardless of mode.
-	   These surfaces (l-5, l-7) are always saturated and mid-to-dark,
+	   These surfaces (lum-6, lum-8) are always saturated and mid-to-dark,
 	   so the text must sit at the opposite (light) end. Fixed L=0.93
-	   avoids pure-white harshness while providing strong contrast. */
+	   avoids pure-white harshness while providing strong contrast.
+	   Chroma uses chroma-max (0.25) raw — these tokens bypass the utility
+	   per-hue scale/taper, so we pin the vivid brand saturation directly. */
 	--color-primary-foreground: oklch(0.93 0.02 var(--hue-primary));
-	--color-primary-foresoft: oklch(var(--l-7) var(--c-hi) var(--hue-primary));
-	--color-primary: oklch(var(--l-5) var(--c-hi) var(--hue-primary));
+	--color-primary-foresoft: oklch(
+		var(--lum-8) var(--chroma-max) var(--hue-primary)
+	);
+	--color-primary: oklch(var(--lum-6) var(--chroma-max) var(--hue-primary));
 
 	/* Accent tokens — foreground auto-flips because it's used as body
 	   text (language names, links), not just on colored surfaces. */
 	--color-accent-foreground: oklch(
-		var(--l-fore) var(--c-mlo) var(--hue-accent)
+		var(--lum-10) var(--chroma-mlow) var(--hue-accent)
 	);
-	--color-accent-foresoft: oklch(var(--l-7) var(--c-hi) var(--hue-accent));
-	--color-accent: oklch(var(--l-5) var(--c-hi) var(--hue-accent));
-	--color-accent-invert: oklch(var(--l-1) var(--c-mid) var(--hue-accent));
+	--color-accent-foresoft: oklch(
+		var(--lum-8) var(--chroma-max) var(--hue-accent)
+	);
+	--color-accent: oklch(var(--lum-6) var(--chroma-max) var(--hue-accent));
+	--color-accent-invert: oklch(
+		var(--lum-2) var(--chroma-mhigh) var(--hue-accent)
+	);
 
 	/* Static tokens — separate light/dark definitions above */
 	--color-secondary: var(--secondary);
@@ -327,7 +338,7 @@
 		@apply border-border;
 	}
 	body {
-		@apply bg-lc-base bg-chroma-lo bg-hue-neutral text-foreground;
+		@apply bg-lum-1 bg-chroma-low bg-hue-neutral text-foreground;
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);

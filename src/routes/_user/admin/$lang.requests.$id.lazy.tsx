@@ -195,7 +195,7 @@ function MessageSection({
 								{isAdmin ? (
 									<button
 										type="button"
-										className="hover:text-chroma-hi ms-1 -me-1 inline-flex items-center"
+										className="hover:text-chroma-high ms-1 -me-1 inline-flex items-center"
 										aria-label={`Remove ${tag.label}`}
 										onClick={() => detachTag(messageId, tag.slug)}
 									>
@@ -255,7 +255,7 @@ function AddTagPopover({
 						return (
 							<li key={tag.slug}>
 								<label
-									className="hover:hue-neutral hover:bg-lc-1 flex cursor-pointer items-center gap-2 rounded p-2 text-sm"
+									className="hover:hue-neutral hover:bg-lum-2 flex cursor-pointer items-center gap-2 rounded p-2 text-sm"
 									data-testid="admin-request-tag-option"
 									data-key={tag.slug}
 								>

@@ -2,7 +2,7 @@
 
 ## OKLCH Color System
 
-This project uses a **vendored, single-axis OKLCH color system** — `src/styles/oklch.css` (forked from `mhsnook/tailwind-oklch@112de8e`, MIT; no npm dependency, no JS plugin). Every color is composed from three independent axes: **luminance contrast** (`lc`), **chroma** (`chroma`), and **hue** (`hue`). The system auto-flips between light and dark mode, so you almost never write `dark:`.
+This project uses the **`tailwind-oklch`** cascade-first OKLCH color system (npm, `^0.7.0`, MIT; pure CSS, no JS plugin — `@import 'tailwind-oklch'` in `globals.css`). Every color is composed from three independent axes: **luminance** (`lum`), **chroma** (`chroma`), and **hue** (`hue`). The system auto-flips between light and dark mode, so you almost never write `dark:`.
 
 The guiding idea: **each class states one fact about one axis.** Hue and chroma flow _down the cascade_ from container seeders, so most elements only ever say what their luminance is.
 
@@ -14,101 +14,113 @@ There are two kinds of class:
 
 ```
 hue-primary · hue-danger · hue-success · …     seeds hue for descendants
-chroma-mlo · chroma-hi · …                     seeds chroma for descendants
+chroma-mlow · chroma-high · …                     seeds chroma for descendants
 ```
 
 **Per-property setters** apply exactly one CSS property from one axis. Luminance is the one you set constantly; chroma and hue inherit from a seeder (or the `:root` default) unless set explicitly:
 
 ```typescript
 // A "generally green, generally lowkey" component: seed once at the top…
-;<div className="hue-success chroma-mlo">
+;<div className="hue-success chroma-mlow">
 	{/* …then speak luminance inside */}
-	<div className="bg-lc-1">
-		<span className="text-lc-8">…</span>
-		<hr className="border-lc-3" />
+	<div className="bg-lum-2">
+		<span className="text-lum-9">…</span>
+		<hr className="border-lum-4" />
 	</div>
 </div>
 ```
 
-Because `:root` already seeds `hue-primary` + low chroma, a brand-colored surface often needs only `bg-lc-1`. Per-language dynamic theming keeps working automatically — it overrides the `--hue-*` variables everything resolves through.
+Because `:root` already seeds `hue-primary` + low chroma, a brand-colored surface often needs only `bg-lum-2`. Per-language dynamic theming keeps working automatically — it overrides the `--hue-*` variables everything resolves through.
 
 Each property has the full trio; set only the axes that differ from what's inherited:
 
 ```typescript
-className = 'bg-lc-1 bg-chroma-mlo bg-hue-primary' // all three explicit
-className = 'text-lc-6 text-chroma-hi text-hue-info'
-className = 'border-lc-3 border-chroma-mlo border-hue-primary'
-className = 'hover:bg-lc-2' // luminance only; chroma+hue inherited
+className = 'bg-lum-2 bg-chroma-mlow bg-hue-primary' // all three explicit
+className = 'text-lum-7 text-chroma-high text-hue-info'
+className = 'border-lum-4 border-chroma-mlow border-hue-primary'
+className = 'hover:bg-lum-3' // luminance only; chroma+hue inherited
 ```
 
 Property prefixes: `bg-`, `text-`, `border-`, `border-b-`, `from-`, `to-` (gradient stops).
 
-### Luminance contrast scale (`lc`)
+### Luminance scale (`lum`)
 
-`{prop}-lc-{0–10 | base | fore | none | full}`. The scale auto-flips between light and dark mode:
+`{prop}-lum-{1–10 | none | max}`. Numbered stops ride a **front-loaded** curve (fine steps near the page, opening toward the foreground) and measure contrast with the page; the pure poles sit _outside_ the numbers. The scale auto-flips between light and dark mode:
 
-| Value         | Light mode        | Dark mode         | Meaning          |
-| ------------- | ----------------- | ----------------- | ---------------- |
-| `0` / `base`  | 0.95 (near white) | 0.12 (near black) | Blends with page |
-| `1`           | 0.91              | 0.20              | Subtle tint      |
-| `5`           | 0.63              | 0.52              | Mid-contrast     |
-| `7`           | 0.44              | 0.68              | Prominent        |
-| `10` / `fore` | 0.15 (near black) | 0.92 (near white) | Maximum contrast |
-| `none`        | 1.0 (white)       | 0.0 (black)       | Beyond base      |
-| `full`        | 0.0 (black)       | 1.0 (white)       | Beyond fore      |
+| Value  | Light mode   | Dark mode    | Meaning                          |
+| ------ | ------------ | ------------ | -------------------------------- |
+| `none` | 1.00 (white) | 0.00 (black) | The page color — zero contrast   |
+| `1`    | 0.92         | 0.185        | Lightest usable surface          |
+| `2`    | 0.887        | 0.215        | Subtle surface / **card**        |
+| `3`    | 0.831        | 0.268        | Raised surface / border          |
+| `5`    | 0.676        | 0.412        | Mid                              |
+| `7`    | 0.481        | 0.593        | Prominent                        |
+| `9`    | 0.254        | 0.805        | Strong text                      |
+| `10`   | 0.13         | 0.92         | Strong foreground (near the max) |
+| `max`  | 0.00 (black) | 1.00 (white) | Full contrast                    |
 
-Arbitrary luminance auto-flips too: `bg-lc-[93]` → L=0.93 in light, 0.07 in dark.
+Arbitrary luminance is a _direct_ L (`n/100`) and still auto-flips: `bg-lum-[93]` → L=0.93 in light, 0.07 in dark. (Note `lum-1…10` is a curved contrast ramp; `lum-[n]` is a raw L — two tools sharing a prefix.)
+
+> **Reindex note (v0.7.0):** the old `lc` scale was renumbered. Surfaces shifted up a notch — the everyday `bg-lc-1` card is now `bg-lum-2`; `lc-base`→`lum-1`, `lc-fore`→`lum-10`, `lc-none/full`→`lum-none/max`. Because the ramp is formula-driven, retune any stop in `globals.css` (`--lum-2: …`) rather than hand-editing values.
 
 ### Chroma stops (`chroma`)
 
-`{prop}-chroma-{lo | mlo | mid | mhi | hi}`, or the seeder `chroma-{…}`:
+`{prop}-chroma-{low | mlow | mid | mhigh | high | max}`, or the seeder `chroma-{…}`. These are _base_ values, **scaled per hue** (each hue carries a `--cscale-*` multiplier so a stop looks about equally saturated across hues) and **tapered toward white** (chroma eases to 0 near the light pole). So the painted chroma is usually less than the raw base below:
 
-| Name  | Value | Use for                            |
-| ----- | ----- | ---------------------------------- |
-| `lo`  | 0.02  | Backgrounds, muted surfaces        |
-| `mlo` | 0.06  | Tinted backgrounds, subtle borders |
-| `mid` | 0.12  | Medium saturation                  |
-| `mhi` | 0.18  | Prominent accents                  |
-| `hi`  | 0.25  | Vivid, saturated colors            |
+| Name    | Base | Use for                            |
+| ------- | ---- | ---------------------------------- |
+| `low`   | 0.02 | Backgrounds, muted surfaces        |
+| `mlow`  | 0.05 | Tinted backgrounds, subtle borders |
+| `mid`   | 0.09 | Medium saturation                  |
+| `mhigh` | 0.13 | Prominent accents                  |
+| `high`  | 0.17 | Vivid colors                       |
+| `max`   | 0.25 | Fullest color the hue can display  |
 
 Arbitrary chroma is `n/100`: `border-chroma-[6]` → chroma 0.06.
 
 ### Available hues (`hue`)
 
-`{prop}-hue-{…}` or the seeder `hue-{…}`. App palette (overridden in `globals.css`): `primary` (300), `accent` (175), `neutral` (270); plus `success` (145), `warning` (55), `danger` (15), `info` (220). Dynamic per-language hue is applied as an inline `--hue-*` style variable, not a utility.
+`{prop}-hue-{…}` or the seeder `hue-{…}`. App palette (overridden in `globals.css`): `primary` (300), `accent` (175), `neutral` (270); plus `success` (145), `warning` (55), `danger` (15), `info` (220). `tailwind-oklch` has **no neutral hue** of its own (a neutral is the absence of chroma), so `globals.css` defines both `--hue-neutral` and its `--cscale-neutral`. Dynamic per-language hue is applied as inline `--hue-*` / axis-var style (`lang-theme.ts`), not a utility.
 
-### Relative adjustments
+### Relative adjustments and self-solving contrast
 
-Nudge off the _inherited/current_ luminance without rewriting it — ideal for hover/active states:
+Nudge off the _nearest absolute_ luminance without rewriting it — ideal for hover/active states (**`bg` and `text` only**; gradients/borders have no `up`/`down`):
 
 ```typescript
-className = 'bg-lc-1 hover:bg-lc-up-1' // one step more contrast on hover
-className = 'text-lc-7 group-hover:text-lc-down-1' // one step less
+className = 'bg-lum-2 hover:bg-lum-up-1' // one step more contrast on hover
+className = 'text-lum-8 group-hover:text-lum-down-1' // one step less
 ```
 
-`{prop}-lc-up-{1|2|3}` / `{prop}-lc-down-{1|2|3}`. Adjustments **don't compound**: a grandchild's `lc-up-1` nudges from the nearest ancestor's _set_ luminance, not from a parent's already-nudged value.
+`{bg,text}-lum-up-{1–5}` / `-down-{1–5}`. Adjustments **don't compound**: a nudge always measures from the nearest ancestor's absolute `lum-N`, never from an already-nudged value.
+
+To let an element pick a luminance that contrasts with **its own background** — light _or_ dark, no `dark:` — use `con-*` (`text-con-*`, `border-con-*`, `outline-con-*`), with words reading as _how much_ contrast (faint → stark): `low mlow mid mhigh high max`. `max` clamps to pure black/white.
+
+```typescript
+className = 'text-con-high' // stark against whatever surface this lands on
+className = 'border-con-mlow' // a soft step off the surface
+```
 
 ### Semantic color tokens
 
-Defined in `globals.css`, these bridge the OKLCH scale with traditional Tailwind tokens:
+Defined in `globals.css`, these bridge the OKLCH scale with traditional Tailwind tokens. Being raw `oklch()`, they **bypass the per-hue scale/taper**, so brand chroma is pinned at `chroma-max` (0.25) directly:
 
-| Token                                  | Definition                | Notes                                                                 |
-| -------------------------------------- | ------------------------- | --------------------------------------------------------------------- |
-| `primary`                              | L=5, C=hi, hue-primary    | Auto-flips                                                            |
-| `primary-foresoft`                     | L=7, C=hi, hue-primary    | Auto-flips; the "interactive purple" for links, soft buttons, borders |
-| `primary-foreground`                   | Fixed L=0.93              | Always near-white — for text ON primary surfaces only                 |
-| `accent` / `accent-foresoft`           | L=5/7, C=hi, hue-accent   | Auto-flips                                                            |
-| `accent-foreground`                    | L=fore, C=mlo, hue-accent | Auto-flips; used as body text (language names)                        |
-| `foreground`, `muted-foreground`, etc. | Static per-mode           | Defined in `:root` and `.dark` blocks                                 |
+| Token                                  | Definition                      | Notes                                                                 |
+| -------------------------------------- | ------------------------------- | --------------------------------------------------------------------- |
+| `primary`                              | lum-6, chroma-max, hue-primary  | Auto-flips                                                            |
+| `primary-foresoft`                     | lum-8, chroma-max, hue-primary  | Auto-flips; the "interactive purple" for links, soft buttons, borders |
+| `primary-foreground`                   | Fixed L=0.93                    | Always near-white — for text ON primary surfaces only                 |
+| `accent` / `accent-foresoft`           | lum-6/8, chroma-max, hue-accent | Auto-flips                                                            |
+| `accent-foreground`                    | lum-10, chroma-mlow, hue-accent | Auto-flips; used as body text (language names)                        |
+| `foreground`, `muted-foreground`, etc. | Static per-mode                 | Defined in `:root` and `.dark` blocks                                 |
 
 ### When to use what
 
 - **Semantic tokens** (`text-primary`, `bg-card`, `border-border`): UI primitives that use the same color everywhere.
-- **Cascade seeder + `lc` inside** (`hue-success chroma-mlo` at the top, `bg-lc-1` / `text-lc-8` below): the default shape for a colored component — declare its character once, speak luminance within. Portable: drop it under a different seeder (a danger context, a lang-themed subtree) and it takes on that character.
-- **Explicit per-property axes** (`bg-lc-1 bg-chroma-mlo bg-hue-info`): one-off colored elements, or shared components used in many contexts where you want the color pinned rather than inherited.
-- **Adjustments** (`hover:bg-lc-up-1`): hover/focus/active state changes.
+- **Cascade seeder + `lum` inside** (`hue-success chroma-mlow` at the top, `bg-lum-2` / `text-lum-9` below): the default shape for a colored component — declare its character once, speak luminance within. Portable: drop it under a different seeder (a danger context, a lang-themed subtree) and it takes on that character.
+- **Explicit per-property axes** (`bg-lum-2 bg-chroma-mlow bg-hue-info`): one-off colored elements, or shared components used in many contexts where you want the color pinned rather than inherited.
+- **Adjustments** (`hover:bg-lum-up-1`): hover/focus/active state changes.
 - **Avoid `dark:` prefixes** — the scale and semantic tokens auto-flip. Reserve `dark:` for genuinely exceptional cases (e.g. a marketing page with custom gradients).
-- **Avoid opacity tints** (`bg-primary/10`) — the `lc/chroma/hue` utilities don't support the `/opacity` modifier; use a luminance step (`bg-lc-1`) instead for consistent appearance across monitors.
+- **Avoid opacity tints** (`bg-primary/10`) — the `lum/chroma/hue` utilities don't support the `/opacity` modifier; use a luminance step (`bg-lum-2`) instead for consistent appearance across monitors.
 
 ### Caveats
 

@@ -118,8 +118,11 @@ export function useLangPopularityReady(): boolean {
 const AXIS_HUE_VARS = [
 	'--bg-h',
 	'--tx-h',
+	'--dc-h',
 	'--bd-h',
 	'--bdb-h',
+	'--ac-h',
+	'--sh-h',
 	'--gf-h',
 	'--gt-h',
 ] as const

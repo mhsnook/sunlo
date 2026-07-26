@@ -405,8 +405,8 @@ export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 function SystemMessage({ children }: { children: ReactNode }) {
 	return (
 		<div className="flex items-start gap-2.5">
-			<div className="bg-lc-1 bg-chroma-mlo mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">
-				<Sparkles className="text-lc-7 text-chroma-hi size-3.5" />
+			<div className="bg-lum-2 bg-chroma-mlow mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">
+				<Sparkles className="text-lum-8 text-chroma-high size-3.5" />
 			</div>
 			<p className="text-muted-foreground pt-1 text-sm">{children}</p>
 		</div>
@@ -430,7 +430,7 @@ function FilterPill({
 				'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
 				active
 					? 'bg-primary-foresoft text-primary-foreground border-transparent'
-					: 'border-border text-muted-foreground hover:border-lc-4 hover:border-chroma-mlo hover:text-foreground'
+					: 'border-border text-muted-foreground hover:border-lum-5 hover:border-chroma-mlow hover:text-foreground'
 			)}
 		>
 			{children}
@@ -441,8 +441,8 @@ function FilterPill({
 function EmptyResults() {
 	return (
 		<div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-			<div className="hue-neutral bg-lc-1 bg-chroma-mlo mx-auto flex size-24 items-center justify-center rounded-full">
-				<SearchX className="hue-neutral text-lc-5 text-chroma-mid size-12" />
+			<div className="hue-neutral bg-lum-2 bg-chroma-mlow mx-auto flex size-24 items-center justify-center rounded-full">
+				<SearchX className="hue-neutral text-lum-6 text-chroma-mid size-12" />
 			</div>
 			<div className="space-y-1">
 				<p className="text-lg font-semibold">No results found</p>
@@ -618,8 +618,8 @@ function WelcomeState({
 	return (
 		<div className="flex h-full flex-col items-center justify-center space-y-8 p-6">
 			<div className="space-y-3 text-center">
-				<div className="bg-lc-1 bg-chroma-mlo mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
-					<MessageCircle className="text-lc-7 text-chroma-hi size-8" />
+				<div className="bg-lum-2 bg-chroma-mlow mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
+					<MessageCircle className="text-lum-8 text-chroma-high size-8" />
 				</div>
 				<h2 className="h3">What are you looking for?</h2>
 				<p className="text-muted-foreground mx-auto max-w-sm text-sm">

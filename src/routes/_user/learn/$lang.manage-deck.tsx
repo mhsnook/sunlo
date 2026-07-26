@@ -56,15 +56,15 @@ const statusIcon = {
 } as const
 
 const statusColors = {
-	active: 'text-lc-7 text-chroma-hi',
-	learned: 'hue-success text-lc-7 text-chroma-hi',
-	skipped: 'hue-neutral text-lc-5 text-chroma-mid',
+	active: 'text-lum-8 text-chroma-high',
+	learned: 'hue-success text-lum-8 text-chroma-high',
+	skipped: 'hue-neutral text-lum-6 text-chroma-mid',
 } as const
 
 const statusBgColors = {
-	active: 'bg-lc-1',
-	learned: 'hue-success bg-lc-1',
-	skipped: 'hue-neutral bg-lc-1',
+	active: 'bg-lum-2',
+	learned: 'hue-success bg-lum-2',
+	skipped: 'hue-neutral bg-lum-2',
 } as const
 
 const DEFAULT_RETENTION = 0.9
@@ -94,13 +94,13 @@ function getDueInfo(item: DueCheckable): {
 		const overdue = Math.abs(daysUntilDue)
 		return {
 			label: overdue === 1 ? 'Overdue 1d' : `Overdue ${overdue}d`,
-			color: 'hue-danger text-lc-7 text-chroma-hi',
+			color: 'hue-danger text-lum-8 text-chroma-high',
 		}
 	}
 	if (daysUntilDue === 0)
 		return {
 			label: 'Due today',
-			color: 'hue-warning text-lc-7 text-chroma-hi',
+			color: 'hue-warning text-lum-8 text-chroma-high',
 		}
 	return {
 		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,
@@ -364,7 +364,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 			<div className="hidden overflow-x-auto rounded-lg border @md:block">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="hue-neutral bg-lc-1 border-b">
+						<tr className="hue-neutral bg-lum-2 border-b">
 							<SortableHeader
 								label="Phrase"
 								field="phrase"
@@ -428,7 +428,7 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 		<div
 			className={cn(
 				'rounded-lg border transition-colors',
-				open ? 'hue-neutral bg-lc-0' : 'hover:hue-neutral hover:bg-lc-0',
+				open ? 'hue-neutral bg-lum-1' : 'hover:hue-neutral hover:bg-lum-1',
 				isSkipped && 'opacity-50'
 			)}
 			data-testid="manage-deck-row"
@@ -568,7 +568,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 	return (
 		<tr
 			className={cn(
-				'hover:hue-neutral hover:bg-lc-0 border-b transition-colors last:border-b-0',
+				'hover:hue-neutral hover:bg-lum-1 border-b transition-colors last:border-b-0',
 				isSkipped && 'opacity-50'
 			)}
 			data-testid="manage-deck-row"

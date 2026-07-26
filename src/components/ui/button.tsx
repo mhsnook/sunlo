@@ -4,9 +4,9 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Slot } from '@/lib/slot'
 
-const solids = 'bg-lc-7 bg-chroma-mhi text-white hover:bg-lc-up-1'
+const solids = 'bg-lum-8 bg-chroma-mhigh text-white hover:bg-lum-up-1'
 const softs =
-	'bg-lc-1 bg-chroma-mlo text-lc-7 text-chroma-mid hover:bg-lc-down-1 hover:text-lc-up-1'
+	'bg-lum-2 bg-chroma-mlow text-lum-8 text-chroma-mid hover:bg-lum-down-1 hover:text-lum-up-1'
 
 const buttonVariants = cva(
 	'border border-transparent shadow inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
@@ -17,12 +17,12 @@ const buttonVariants = cva(
 				soft: `hue-primary ${softs}`,
 				red: `hue-danger ${solids}`,
 				'red-soft': `hue-danger ${softs}`,
-				neutral: 'hover:bg-lc-up-1 hover:bg-chroma-mlo',
-				ghost: 'text-lc-6 hover:bg-lc-0 hover:text-lc-7',
+				neutral: 'hover:bg-lum-up-1 hover:bg-chroma-mlow',
+				ghost: 'text-lum-7 hover:bg-lum-1 hover:text-lum-8',
 				'badge-outline':
-					'hue-neutral rounded border-border text-lc-8 text-chroma-mid bg-lc-0 hover:border-primary',
+					'hue-neutral rounded border-border text-lum-9 text-chroma-mid bg-lum-1 hover:border-primary',
 				'dashed-w-full':
-					'w-full border-2 border-dashed border-lc-2 hover:border-border shadow-none hover:shadow',
+					'w-full border-2 border-dashed border-lum-3 hover:border-border shadow-none hover:shadow',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2 text-md',
