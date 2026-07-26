@@ -582,3 +582,194 @@ test('an invalid timestamp link is rejected and not saved', async ({
 		if (phraseId) await supabase.from('phrase').delete().eq('id', phraseId)
 	}
 })
+
+test('bulk-add re-activates a previously-skipped card', async ({
+	actor,
+	team,
+}) => {
+	// Covers addPhrasesToDeck's update branch: a phrase already carrying a
+	// skipped card is flipped back to active rather than inserted.
+	const lang = team.tags!.lang_full
+	const learner = await actor('learner')
+	const nonce = Date.now().toString(36)
+	const title = `Playlist for reactivate ${nonce}`
+	let playlistId = ''
+	let phraseId = ''
+
+	try {
+		const { data: playlist } = await supabase
+			.from('phrase_playlist')
+			.insert({ lang, title, uid: learner.key })
+			.select()
+			.single()
+			.throwOnError()
+		playlistId = playlist!.id
+		const { data: phrase } = await supabase
+			.from('phrase')
+			.insert({
+				lang,
+				text: `Reactivate phrase ${nonce}`,
+				added_by: learner.key,
+			})
+			.select()
+			.single()
+			.throwOnError()
+		phraseId = phrase!.id
+		await supabase
+			.from('playlist_phrase_link')
+			.insert({
+				playlist_id: playlistId,
+				phrase_id: phraseId,
+				uid: learner.key,
+				order: 1,
+			})
+			.throwOnError()
+		// Seed skipped cards for both directions (only_reverse defaults false, so
+		// directionsForPhrase → forward + reverse). Skipped keeps the phrase in
+		// "not in deck" so the bulk-add button appears.
+		await supabase
+			.from('user_card')
+			.insert([
+				{
+					uid: learner.key,
+					phrase_id: phraseId,
+					lang,
+					status: 'skipped',
+					direction: 'forward',
+				},
+				{
+					uid: learner.key,
+					phrase_id: phraseId,
+					lang,
+					status: 'skipped',
+					direction: 'reverse',
+				},
+			])
+			.throwOnError()
+
+		await learner
+			.openTo('/login')
+			.typeInto('email-input', learner.email!)
+			.typeInto('password-input', learner.password!)
+			.click('submit-button')
+			.notSee('login-form')
+			.openTo(`/learn/${lang}/playlists/${playlistId}`)
+			.up()
+			.see('playlist-detail-page')
+			.click('bulk-add-playlist-to-deck')
+			.up()
+
+		const activated = await pollUntil(async () => {
+			const { data } = await supabase
+				.from('user_card')
+				.select('status')
+				.eq('uid', learner.key)
+				.eq('phrase_id', phraseId)
+			return (
+				(data?.length ?? 0) === 2 && data!.every((c) => c.status === 'active')
+			)
+		})
+		assert.ok(activated, 'both skipped cards should flip to active')
+	} finally {
+		if (phraseId)
+			await supabase.from('user_card').delete().eq('phrase_id', phraseId)
+		if (playlistId) {
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlistId)
+			await supabase.from('phrase_playlist').delete().eq('id', playlistId)
+		}
+		if (phraseId) await supabase.from('phrase').delete().eq('id', phraseId)
+	}
+})
+
+test('learner creates and links a new phrase from the playlist page', async ({
+	actor,
+	team,
+}) => {
+	// Covers linkPhrase: the list-item's inline creator makes a phrase and links
+	// it to the playlist in one flow.
+	const lang = team.tags!.lang_full
+	const learner = await actor('learner')
+	const nonce = Date.now().toString(36)
+	const title = `Playlist for create-link ${nonce}`
+	const phraseText = `Created-and-linked ${nonce}`
+	let playlistId = ''
+	let phraseId = ''
+
+	try {
+		const { data: playlist } = await supabase
+			.from('phrase_playlist')
+			.insert({ lang, title, uid: learner.key })
+			.select()
+			.single()
+			.throwOnError()
+		playlistId = playlist!.id
+
+		await learner
+			.openTo('/login')
+			.typeInto('email-input', learner.email!)
+			.typeInto('password-input', learner.password!)
+			.click('submit-button')
+			.notSee('login-form')
+			.openTo(`/learn/${lang}/playlists/${playlistId}`)
+			.up()
+			.see('playlist-detail-page')
+			.click('add-phrase-to-playlist-button')
+			.up()
+			.see('inline-phrase-creator')
+			.typeInto('inline-phrase-creator phrase-text-input', phraseText)
+			.typeInto(
+				'inline-phrase-creator translation-text-input',
+				`translation ${nonce}`
+			)
+			.click('inline-phrase-creator submit-button')
+			.up()
+
+		// linkPhrase persists a playlist_phrase_link pointing at the new phrase.
+		const linked = await pollUntil(async () => {
+			const { data } = await supabase
+				.from('playlist_phrase_link')
+				.select('phrase_id')
+				.eq('playlist_id', playlistId)
+			return (data?.length ?? 0) === 1
+		})
+		assert.ok(linked, 'the created phrase should be linked to the playlist')
+
+		const { data: links } = await supabase
+			.from('playlist_phrase_link')
+			.select('phrase_id')
+			.eq('playlist_id', playlistId)
+			.throwOnError()
+		phraseId = links![0].phrase_id
+		const { data: created } = await supabase
+			.from('phrase')
+			.select('text')
+			.eq('id', phraseId)
+			.single()
+			.throwOnError()
+		assert.equal(
+			created?.text,
+			phraseText,
+			'the linked phrase is the one created'
+		)
+	} finally {
+		// The inline creator also makes a translation and (deck present) cards.
+		if (phraseId) {
+			await supabase.from('user_card').delete().eq('phrase_id', phraseId)
+			await supabase
+				.from('phrase_translation')
+				.delete()
+				.eq('phrase_id', phraseId)
+		}
+		if (playlistId) {
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlistId)
+			await supabase.from('phrase_playlist').delete().eq('id', playlistId)
+		}
+		if (phraseId) await supabase.from('phrase').delete().eq('id', phraseId)
+	}
+})
