@@ -17,6 +17,43 @@
 	--hue-primary: 300;
 	--hue-accent: 175;
 	--hue-neutral: 270;
+
+	/* ── Restore Sunlo's prior OKLCH scale ────────────────────────────────
+	   v0.7.0's front-loaded luminance ramp + per-hue chroma scaling + chroma
+	   taper together darkened our buttons and desaturated our light surfaces
+	   (gray backgrounds/badges). We pin the ramp and chroma stops back to our
+	   previous values, flatten the per-hue scale (cscale = 1), and push the
+	   taper up so only true white loses chroma. Drop these overrides to lean
+	   back into v0.7.0's perceptual defaults.
+
+	   Our classes are +1-indexed for v0.7.0's numbering (a card is `lum-2`);
+	   these light values map lum-N onto our old lc-(N-1), so the shift cancels
+	   and everything renders at its original luminance. Dark values live in the
+	   `.dark` block below. */
+	--lum-1: 0.95;
+	--lum-2: 0.91;
+	--lum-3: 0.85;
+	--lum-4: 0.78;
+	--lum-5: 0.71;
+	--lum-6: 0.63;
+	--lum-7: 0.54;
+	--lum-8: 0.44;
+	--lum-9: 0.34;
+	--lum-10: 0.15;
+
+	--chroma-mlow: 0.06;
+	--chroma-mid: 0.12;
+	--chroma-mhigh: 0.18;
+	--chroma-high: 0.25;
+	/* Taper only bites above L≈0.975, so every real surface keeps its tint
+	   while pure white still resolves to zero chroma. */
+	--chroma-taper: 40;
+	--cscale-primary: 1;
+	--cscale-accent: 1;
+	--cscale-success: 1;
+	--cscale-warning: 1;
+	--cscale-danger: 1;
+	--cscale-info: 1;
 	--cscale-neutral: 1;
 }
 
@@ -56,9 +93,22 @@
 }
 
 /* Static tokens: dark mode
-   Keep luminance within the plugin's 0.185–0.92 numbered range to avoid
-   blown-out whites. Target ≤0.87 for body text, ≤0.84 for secondary. */
+   Keep luminance within our 0.12–0.92 numbered range to avoid blown-out
+   whites. Target ≤0.87 for body text, ≤0.84 for secondary. */
 .dark {
+	/* Dark half of the restored luminance ramp (see the @theme note above) —
+	   lum-N maps onto our old dark lc-(N-1). */
+	--lum-1: 0.12;
+	--lum-2: 0.2;
+	--lum-3: 0.28;
+	--lum-4: 0.36;
+	--lum-5: 0.44;
+	--lum-6: 0.52;
+	--lum-7: 0.6;
+	--lum-8: 0.68;
+	--lum-9: 0.76;
+	--lum-10: 0.92;
+
 	--background: oklch(0.22 0.03 var(--hue-primary));
 	--foreground: oklch(0.84 0.04 var(--hue-primary));
 	--card: oklch(0.2 0.05 var(--hue-neutral));
@@ -145,7 +195,7 @@
 	);
 	--color-accent: oklch(var(--lum-6) var(--chroma-max) var(--hue-accent));
 	--color-accent-invert: oklch(
-		var(--lum-2) var(--chroma-mhigh) var(--hue-accent)
+		var(--lum-2) var(--chroma-mid) var(--hue-accent)
 	);
 
 	/* Static tokens — separate light/dark definitions above */
