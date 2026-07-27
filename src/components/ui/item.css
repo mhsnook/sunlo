@@ -1,0 +1,47 @@
+/* Item styling, co-located with item.tsx and registered by an @import in
+   styles/globals.css. Two independent pieces: the row itself, and its leading
+   media slot. */
+
+@utility item {
+	@apply [a]:hover:hue-accent [a]:hover:bg-lum-2 [a]:hover:bg-chroma-mlow focus-visible:border-con-mid focus-visible:outline-con-mhigh flex flex-wrap items-center rounded-md border border-transparent text-sm inset-shadow-sm transition-colors duration-100 focus-visible:ring-[3px] [a]:transition-colors;
+}
+
+@utility item-variant-default {
+	@apply bg-transparent;
+}
+@utility item-variant-outline {
+	@apply border-con-low;
+}
+@utility item-variant-muted {
+	@apply bg-lum-2;
+}
+
+@utility item-size-default {
+	@apply gap-4 p-4;
+}
+@utility item-size-sm {
+	@apply gap-2.5 px-4 py-3;
+}
+
+@utility item-media {
+	@apply flex shrink-0 items-center justify-center gap-2 group-has-[data-slot=item-description]/item:translate-y-0.5 group-has-[data-slot=item-description]/item:self-start;
+	& svg {
+		@apply pointer-events-none;
+	}
+}
+
+@utility item-media-default {
+	@apply bg-transparent;
+}
+@utility item-media-icon {
+	@apply bg-lum-2 size-8 rounded-sm border;
+	& svg:not([class*='size-']) {
+		@apply size-4;
+	}
+}
+@utility item-media-image {
+	@apply size-10 overflow-hidden rounded-sm;
+	& img {
+		@apply size-full object-cover;
+	}
+}

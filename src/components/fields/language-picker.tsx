@@ -97,7 +97,7 @@ function LangTile({
 	return (
 		<button
 			type="button"
-			className="bg-card border-con-low hover:border-con-mlow hover:border-chroma-mlow flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl border p-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm"
+			className="border-con-low hover:border-con-mlow hover:border-chroma-mlow flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl border p-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm"
 			style={getLangThemeCss(code)}
 			onClick={() => onPick(code)}
 		>

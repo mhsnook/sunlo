@@ -384,7 +384,7 @@ function AttachedPhraseCards({
 				...prev,
 				attaching: true,
 			})}
-			className={cn('btn btn-size-sm btn-variant-soft', 'w-full')}
+			className="btn btn-size-sm btn-variant-soft w-full"
 			data-testid="attach-phrase-button"
 		>
 			<Paperclip className="h-4 w-4" />

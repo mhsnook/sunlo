@@ -1,51 +1,57 @@
 import * as React from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
 import { OctagonMinus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getLangThemeCss, useLangPopularityReady } from '@/lib/lang-theme'
 
-const badgeVariants = cva(
-	'rounded inline-flex items-center border transition-colors focus:outline-2 focus:outline-con-high focus:outline-offset-2 shadow-xs inset-shadow-xs',
-	{
-		variants: {
-			variant: {
-				default: 'border-transparent bg-lum-5 bg-chroma-max text-lum-none',
-				secondary: 'hue-neutral border-lum-3 bg-lum-2 text-lum-7',
-				destructive:
-					'border-transparent bg-lum-6 bg-chroma-high bg-hue-danger text-lum-none',
-				success: 'border-transparent bg-green-600 text-green-100',
-				outline: 'text-lum-9 border-lum-2 bg-lum-1',
-				lang: 'bg-lum-3 border-lum-4 text-lum-8 font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
-			},
-			size: {
-				lg: 'px-3 py-1 gap-2 [&>svg]:h-4 [&>svg]:w-4 [&>button]:h-5 [&>button]:w-5',
-				md: 'px-2.5 py-0.5 text-xs gap-1.5 h-6 [&>svg]:h-4 [&>svg]:w-4',
-				sm: 'px-1 py-0 text-[0.5rem] gap-1 [&>svg]:h-3 [&>svg]:w-3',
-			},
-		},
-		defaultVariants: {
-			variant: 'default',
-			size: 'md',
-		},
-	}
-)
+// Styles live in badge.css, next to this file.
+const sizes = {
+	lg: 'badge-size-lg',
+	md: 'badge-size-md',
+	sm: 'badge-size-sm',
+} as const
 
-export interface BadgeProps
-	extends
-		React.HTMLAttributes<HTMLDivElement>,
-		VariantProps<typeof badgeVariants> {}
+// How loud, never what colour.
+const variants = {
+	default: 'badge-variant-default',
+	secondary: 'badge-variant-secondary',
+	outline: 'badge-variant-outline',
+	lang: 'badge-variant-lang',
+} as const
 
-function Badge({ className, variant, size, ...props }: BadgeProps) {
+const hues = {
+	primary: 'hue-primary',
+	accent: 'hue-accent',
+	neutral: 'hue-neutral',
+	success: 'hue-success',
+	warning: 'hue-warning',
+	danger: 'hue-danger',
+	info: 'hue-info',
+} as const
+
+export type BadgeVariant = keyof typeof variants
+export type BadgeSize = keyof typeof sizes
+export type BadgeHue = keyof typeof hues
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+	variant?: BadgeVariant | null
+	size?: BadgeSize | null
+	hue?: BadgeHue | null
+}
+
+function Badge({ className, variant, size, hue, ...props }: BadgeProps) {
 	return (
 		<span
-			className={cn(badgeVariants({ variant, size }), className)}
+			className={cn(
+				`badge ${sizes[size ?? 'md']} ${variants[variant ?? 'default']} ${hue ? hues[hue] : ''}`,
+				className
+			)}
 			{...props}
 		/>
 	)
 }
 
 const OctogonMinusDangerBadge = () => (
-	<Badge variant="destructive" className="p-2">
+	<Badge hue="danger" className="p-2">
 		<OctagonMinus />
 	</Badge>
 )
@@ -70,9 +76,10 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 	return (
 		<Badge
 			variant="lang"
+			hue={ready ? undefined : 'neutral'}
 			className={cn(
 				!ready &&
-					'!bg-lum-2 !bg-chroma-low !bg-hue-neutral !text-con-mid !text-chroma-mid !text-hue-neutral !border-lum-3 !border-chroma-low !border-hue-neutral',
+					'bg-lum-2! bg-chroma-low! text-con-mid! text-chroma-mid! border-lum-3! border-chroma-low!',
 				className
 			)}
 			style={style}
@@ -82,4 +89,4 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 	)
 }
 
-export { badgeVariants, Badge, OctogonMinusDangerBadge, TinyBadge, LangBadge }
+export { Badge, OctogonMinusDangerBadge, TinyBadge, LangBadge }

@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { NavigationMenu as NavigationMenuPrimitive } from '@base-ui/react/navigation-menu'
-import { cva } from 'class-variance-authority'
 import { ChevronDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -48,9 +47,8 @@ const NavigationMenuItem = ({
 	/>
 )
 
-const navigationMenuTriggerStyle = cva(
+const navigationMenuTriggerStyle =
 	'data-[popup-open]:hue-accent data-active:hue-accent group inline-flex h-10 w-max items-center justify-center rounded-md bg-lum-1 px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-lum-10 hover:text-chroma-mlow hover:text-hue-accent focus:bg-accent focus:text-lum-10 focus:text-chroma-mlow focus:text-hue-accent focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-lum-3 data-[popup-open]:bg-lum-3'
-)
 
 const NavigationMenuTrigger = ({
 	className,
@@ -59,12 +57,12 @@ const NavigationMenuTrigger = ({
 }: NavigationMenuPrimitive.Trigger.Props) => (
 	<NavigationMenuPrimitive.Trigger
 		data-slot="navigation-menu-trigger"
-		className={cn(navigationMenuTriggerStyle(), 'group', className)}
+		className={cn(navigationMenuTriggerStyle, 'group', className)}
 		{...props}
 	>
 		{children}{' '}
 		<ChevronDown
-			className="relative top-[1px] ml-1 size-3 transition duration-200 group-data-[popup-open]:rotate-180"
+			className="relative top-px ml-1 size-3 transition duration-200 group-data-popup-open:rotate-180"
 			aria-hidden="true"
 		/>
 	</NavigationMenuPrimitive.Trigger>
@@ -77,7 +75,7 @@ const NavigationMenuContent = ({
 	<NavigationMenuPrimitive.Content
 		data-slot="navigation-menu-content"
 		className={cn(
-			'data-[open]:animate-in data-[closed]:animate-out data-[open]:fade-in data-[closed]:fade-out top-0 left-0 w-full @3xl:absolute @3xl:w-auto',
+			'data-open:animate-in data-closed:animate-out data-open:fade-in data-closed:fade-out top-0 left-0 w-full @3xl:absolute @3xl:w-auto',
 			className
 		)}
 		{...props}
@@ -116,7 +114,7 @@ const NavigationMenuViewport = ({
 			className={cn('isolate z-50', className)}
 			{...props}
 		>
-			<NavigationMenuPrimitive.Popup className="bg-popover data-[open]:animate-in data-[closed]:animate-out data-[closed]:zoom-out-95 data-[open]:zoom-in-90 relative overflow-hidden rounded-md border shadow-lg">
+			<NavigationMenuPrimitive.Popup className="bg-popover data-open:animate-in data-closed:animate-out data-closed:zoom-out-95 data-open:zoom-in-90 relative overflow-hidden rounded-md border shadow-lg">
 				<NavigationMenuPrimitive.Viewport
 					data-slot="navigation-menu-viewport"
 					className="relative size-full overflow-hidden"

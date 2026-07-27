@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Slot } from '@/lib/slot'
-import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
@@ -31,26 +30,16 @@ function ItemSeparator({
 	)
 }
 
-const itemVariants = cva(
-	'[a]:hover:hue-accent inset-shadow-sm group/item [a]:hover:bg-lum-2 [a]:hover:bg-chroma-mlow focus-visible:border-con-mid focus-visible:outline-con-mhigh [a]:transition-colors flex flex-wrap items-center rounded-md border border-transparent text-sm transition-colors duration-100 focus-visible:ring-[3px]',
-	{
-		variants: {
-			variant: {
-				default: 'bg-transparent',
-				outline: 'border-con-low',
-				muted: 'bg-lum-2',
-			},
-			size: {
-				default: 'gap-4 p-4 ',
-				sm: 'gap-2.5 px-4 py-3',
-			},
-		},
-		defaultVariants: {
-			variant: 'default',
-			size: 'default',
-		},
-	}
-)
+const itemVariants = {
+	default: 'item-variant-default',
+	outline: 'item-variant-outline',
+	muted: 'item-variant-muted',
+} as const
+
+const itemSizes = {
+	default: 'item-size-default',
+	sm: 'item-size-sm',
+} as const
 
 function Item({
 	className,
@@ -58,47 +47,44 @@ function Item({
 	size = 'default',
 	asChild = false,
 	...props
-}: React.ComponentProps<'div'> &
-	VariantProps<typeof itemVariants> & { asChild?: boolean }) {
+}: React.ComponentProps<'div'> & {
+	variant?: keyof typeof itemVariants
+	size?: keyof typeof itemSizes
+	asChild?: boolean
+}) {
 	const Comp = asChild ? Slot : 'div'
 	return (
 		<Comp
 			data-slot="item"
 			data-variant={variant}
 			data-size={size}
-			className={cn(itemVariants({ variant, size, className }))}
+			className={cn(
+				`group/item item ${itemVariants[variant]} ${itemSizes[size]}`,
+				className
+			)}
 			{...props}
 		/>
 	)
 }
 
-const itemMediaVariants = cva(
-	'flex shrink-0 items-center justify-center gap-2 group-has-[[data-slot=item-description]]/item:translate-y-0.5 group-has-[[data-slot=item-description]]/item:self-start [&_svg]:pointer-events-none',
-	{
-		variants: {
-			variant: {
-				default: 'bg-transparent',
-				icon: "bg-lum-2 size-8 rounded-sm border [&_svg:not([class*='size-'])]:size-4",
-				image:
-					'size-10 overflow-hidden rounded-sm [&_img]:size-full [&_img]:object-cover',
-			},
-		},
-		defaultVariants: {
-			variant: 'default',
-		},
-	}
-)
+const itemMediaVariants = {
+	default: 'item-media-default',
+	icon: 'item-media-icon',
+	image: 'item-media-image',
+} as const
 
 function ItemMedia({
 	className,
 	variant = 'default',
 	...props
-}: React.ComponentProps<'div'> & VariantProps<typeof itemMediaVariants>) {
+}: React.ComponentProps<'div'> & {
+	variant?: keyof typeof itemMediaVariants
+}) {
 	return (
 		<div
 			data-slot="item-media"
 			data-variant={variant}
-			className={cn(itemMediaVariants({ variant, className }))}
+			className={cn(`item-media ${itemMediaVariants[variant]}`, className)}
 			{...props}
 		/>
 	)

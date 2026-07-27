@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Dialog as SheetPrimitive } from '@base-ui/react/dialog'
-import { cva, type VariantProps } from 'class-variance-authority'
 import { X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -27,7 +26,7 @@ const SheetOverlay = ({
 }: SheetPrimitive.Backdrop.Props) => (
 	<SheetPrimitive.Backdrop
 		className={cn(
-			'data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 fixed inset-0 z-40 bg-black/80',
+			'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 z-40 bg-black/80',
 			className
 		)}
 		{...props}
@@ -35,27 +34,15 @@ const SheetOverlay = ({
 	/>
 )
 
-const sheetVariants = cva(
-	'fixed z-50 gap-4 bg-lum-1 p-6 shadow-lg transition ease-in-out data-[open]:animate-in data-[closed]:animate-out data-[closed]:duration-300 data-[open]:duration-500',
-	{
-		variants: {
-			side: {
-				top: 'inset-x-0 top-0 border-b data-[closed]:slide-out-to-top data-[open]:slide-in-from-top',
-				bottom:
-					'inset-x-0 bottom-0 border-t data-[closed]:slide-out-to-bottom data-[open]:slide-in-from-bottom',
-				left: 'inset-y-0 left-0 h-full w-3/4 border-r data-[closed]:slide-out-to-left data-[open]:slide-in-from-left sm:max-w-sm',
-				right:
-					'inset-y-0 right-0 h-full w-3/4  border-l data-[closed]:slide-out-to-right data-[open]:slide-in-from-right sm:max-w-sm',
-			},
-		},
-		defaultVariants: {
-			side: 'right',
-		},
-	}
-)
-
-interface SheetContentProps
-	extends SheetPrimitive.Popup.Props, VariantProps<typeof sheetVariants> {}
+const sides = {
+	top: 'sheet-side-top',
+	bottom: 'sheet-side-bottom',
+	left: 'sheet-side-left',
+	right: 'sheet-side-right',
+} as const
+interface SheetContentProps extends SheetPrimitive.Popup.Props {
+	side?: keyof typeof sides
+}
 
 const SheetContent = ({
 	side = 'right',
@@ -67,7 +54,7 @@ const SheetContent = ({
 		<SheetOverlay />
 		<SheetPrimitive.Popup
 			data-slot="sheet-content"
-			className={cn(sheetVariants({ side }), className)}
+			className={cn(`sheet ${sides[side]}`, className)}
 			{...props}
 		>
 			{children}

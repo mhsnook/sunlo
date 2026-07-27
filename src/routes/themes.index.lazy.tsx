@@ -889,7 +889,7 @@ function ShowcaseCallouts() {
 					Tinted in the primary hue — for guidance, tips, and friendly nudges.
 				</p>
 			</Callout>
-			<Callout variant="problem" size="sm" alert Icon={OctagonMinus}>
+			<Callout hue="danger" size="sm" alert Icon={OctagonMinus}>
 				<p className="font-medium">Problem callout</p>
 				<p className="text-sm">
 					Carries the danger hue and an alert role — for errors and blocked
@@ -1290,7 +1290,7 @@ function ShowcaseAvatarSizes() {
 		initials: string
 	}> = [
 		{
-			cls: 'size-6',
+			cls: 'size-6 text-xs',
 			label: '6',
 			usage:
 				'Inline bylines and the nav-user dropdown trigger — small comment / reply rows.',
@@ -1298,7 +1298,7 @@ function ShowcaseAvatarSizes() {
 			initials: 'PL',
 		},
 		{
-			cls: 'size-8',
+			cls: 'size-8 text-sm',
 			label: '8',
 			usage:
 				'Workhorse size: feed bylines, chat message bubbles, profile pills.',

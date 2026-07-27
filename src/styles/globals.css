@@ -6,6 +6,10 @@
 
 /* Component styles, co-located next to the components they belong to. */
 @import '../components/ui/button.css';
+@import '../components/ui/badge.css';
+@import '../components/ui/sheet.css';
+@import '../components/ui/item.css';
+@import '../components/ui/sidebar.css';
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
@@ -280,7 +284,7 @@
 }
 
 @utility w-app {
-	@apply w-full max-w-[40rem];
+	@apply w-full max-w-160;
 }
 
 @utility scrollbar-none {
@@ -290,15 +294,12 @@
 		display: none;
 	}
 }
-
 @utility s-link {
-	@apply decoration-lum-7 decoration-chroma-mid hover:decoration-lum-5 text-con-mhigh text-chroma-mid cursor-pointer underline decoration-dashed decoration-1 underline-offset-2 transition-all hover:decoration-solid hover:decoration-2 hover:underline-offset-1;
+	@apply decoration-chroma-mid hover:decoration-lum-5 cursor-pointer underline decoration-dashed decoration-1 underline-offset-2 transition-all hover:decoration-solid hover:decoration-2 hover:underline-offset-1;
 }
-@utility s-link-muted {
-	@apply decoration-lum-5 decoration-chroma-mid text-con-mhigh text-chroma-mid underline underline-offset-2 opacity-70 transition-all hover:gap-1 hover:underline-offset-3 hover:opacity-90;
-}
+
 @utility s-link-hidden {
-	@apply decoration-lum-3 decoration-chroma-mlow flex-shrink-0 underline-offset-4 hover:underline;
+	@apply decoration-lum-3 decoration-chroma-mlow shrink-0 underline-offset-4 hover:underline;
 }
 
 @utility d1 {

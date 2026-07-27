@@ -1,19 +1,19 @@
 /* Sheet styling, co-located with sheet.tsx and registered by an @import in
-   styles/globals.css. One axis: which edge the sheet slides in from. */
+   styles/globals.css. One axis: which edge it slides in from. */
 
 @utility sheet {
-	@apply bg-lum-1 data-[open]:animate-in data-[closed]:animate-out fixed z-50 gap-4 p-6 shadow-lg transition ease-in-out data-[closed]:duration-300 data-[open]:duration-500;
+	@apply bg-lum-1 data-open:animate-in data-closed:animate-out fixed z-50 gap-4 p-6 shadow-lg transition ease-in-out data-closed:duration-300 data-open:duration-500;
 }
 
 @utility sheet-side-top {
-	@apply data-[closed]:slide-out-to-top data-[open]:slide-in-from-top inset-x-0 top-0 border-b;
+	@apply data-closed:slide-out-to-top data-open:slide-in-from-top inset-x-0 top-0 border-b;
 }
 @utility sheet-side-bottom {
-	@apply data-[closed]:slide-out-to-bottom data-[open]:slide-in-from-bottom inset-x-0 bottom-0 border-t;
+	@apply data-closed:slide-out-to-bottom data-open:slide-in-from-bottom inset-x-0 bottom-0 border-t;
 }
 @utility sheet-side-left {
-	@apply data-[closed]:slide-out-to-left data-[open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm;
+	@apply data-closed:slide-out-to-left data-open:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm;
 }
 @utility sheet-side-right {
-	@apply data-[closed]:slide-out-to-right data-[open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm;
+	@apply data-closed:slide-out-to-right data-open:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm;
 }

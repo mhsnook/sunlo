@@ -36,7 +36,7 @@ export function FriendsFeed() {
 				<Link
 					to="/friends/chats"
 					search={{ search: true }}
-					className="s-link-muted mt-2 inline-flex items-center gap-1"
+					className="s-link mt-2 inline-flex items-center gap-1 opacity-70 hover:opacity-90"
 				>
 					<UserPlus className="size-4" />
 					Find friends

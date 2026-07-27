@@ -1,23 +1,17 @@
 import * as React from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-const labelVariants = cva(
+const labelClasses =
 	'text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-1 pe-1'
-)
 
-const Label = ({
-	className,
-	ref,
-	...props
-}: React.ComponentProps<'label'> & VariantProps<typeof labelVariants>) => {
+const Label = ({ className, ref, ...props }: React.ComponentProps<'label'>) => {
 	return (
 		// oxlint-disable-next-line jsx-a11y/label-has-associated-control -- htmlFor passed via ...props
 		<label
 			ref={ref}
 			data-slot="label"
-			className={cn(labelVariants(), className)}
+			className={cn(labelClasses, className)}
 			{...props}
 		/>
 	)

@@ -40,7 +40,7 @@ function SetNewPasswordPage() {
 					<CardTitle>This reset link didn't work</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<Callout variant="problem" alert>
+					<Callout hue="danger" alert>
 						<p>
 							{recoveryLinkError ??
 								'This password reset link is invalid or has expired.'}

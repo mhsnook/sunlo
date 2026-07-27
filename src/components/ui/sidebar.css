@@ -1,0 +1,29 @@
+/* Sidebar menu-button styling, co-located with sidebar.tsx and registered by an
+   @import in styles/globals.css. */
+
+@utility sidebar-menu-button {
+	@apply outline-con-high hover:bg-lum-2 hover:text-lum-9 active:bg-lum-2 active:text-lum-9 data-[active=true]:bg-lum-2 data-[active=true]:text-lum-9 data-[popup-open]:hover:bg-lum-2 data-[popup-open]:hover:text-lum-9 flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! focus-visible:outline-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium;
+	& > span:last-child {
+		@apply truncate;
+	}
+	& > svg {
+		@apply size-4 shrink-0;
+	}
+}
+
+@utility sidebar-menu-button-variant-default {
+	@apply hover:bg-lum-2 hover:text-con-mhigh;
+}
+@utility sidebar-menu-button-variant-outline {
+	@apply bg-lum-1 shadow-lum-3 hover:bg-lum-2 hover:text-lum-9 hover:shadow-lum-6 shadow-[0_0_0_1px] hover:shadow-[0_0_0_1px];
+}
+
+@utility sidebar-menu-button-size-default {
+	@apply h-8 text-sm;
+}
+@utility sidebar-menu-button-size-sm {
+	@apply h-7 text-xs;
+}
+@utility sidebar-menu-button-size-lg {
+	@apply h-12 text-sm group-data-[collapsible=icon]:p-0!;
+}

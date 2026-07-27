@@ -55,7 +55,7 @@ export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 			There are no smart recommendations for you at this time. Check back later
 			or consider{' '}
 			<Link
-				className="s-link-muted"
+				className="s-link opacity-70 hover:opacity-90"
 				to="/learn/$lang/requests/new"
 				params={{ lang }}
 			>

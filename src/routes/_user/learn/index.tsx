@@ -150,7 +150,7 @@ function AuthenticatedHome({
 				</div>
 				{hasArchived ? (
 					<Link
-						className="s-link-muted inline-flex items-center gap-1 text-xs"
+						className="s-link inline-flex items-center gap-1 text-xs opacity-70 hover:opacity-90"
 						to="/learn/archived"
 						data-testid="view-archived-decks-link"
 					>

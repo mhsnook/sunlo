@@ -266,7 +266,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 function PhraseNotFound() {
 	const router = useRouter()
 	return (
-		<Callout variant="problem" Icon={OctagonMinus}>
+		<Callout hue="danger" Icon={OctagonMinus}>
 			<p>We couldn't find that phrase. Please check your link and try again.</p>
 			<Button
 				variant="neutral"

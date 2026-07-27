@@ -49,17 +49,17 @@
    sets a base bg-lum-N, the nudge's --bg-l ↔ --bg-anchor-l reference forms a
    custom-property cycle and the background resolves to transparent. */
 @utility btn-variant-default {
-	@apply bg-lum-6 chroma-high text-lum-none hover:bg-lum-7;
+	@apply bg-lum-6 border-lum-7 chroma-high text-lum-none hover:bg-lum-7;
 }
 @utility btn-variant-soft {
-	@apply bg-lum-2 chroma-mid text-lum-7 hover:bg-lum-3 hover:text-lum-9;
+	@apply bg-lum-2 border-lum-3 chroma-mid text-lum-7 hover:bg-lum-3 hover:text-lum-8;
 }
 @utility btn-variant-neutral {
-	@apply bg-chroma-low hover:bg-lum-up-1 text-con-mid hover:text-con-mhigh;
+	@apply chroma-low bg-lum-1 hover:bg-lum-2 text-con-mid hover:text-con-mhigh border-lum-2;
 }
 @utility btn-variant-ghost {
-	@apply hover:bg-lum-1 text-con-mid hover:text-con-mhigh;
+	@apply hover:bg-lum-1 hover:border-lum-1;
 }
 @utility btn-variant-dashed-w-full {
-	@apply border-con-low hover:border-con-low w-full border-2 border-dashed shadow-none hover:shadow;
+	@apply border-con-low w-full border-2 border-dashed shadow-none hover:shadow;
 }

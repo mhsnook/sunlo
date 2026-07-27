@@ -1,0 +1,44 @@
+/* Badge styling, co-located with badge.tsx and registered by an @import in
+   styles/globals.css.
+
+   Like buttons: a variant says how loud, a size says how big, and colour comes
+   from whichever hue is in scope. No variant names a hue. */
+
+@utility badge {
+	@apply focus:outline-con-high inline-flex items-center rounded border shadow-xs inset-shadow-xs transition-colors focus:outline-2 focus:outline-offset-2;
+}
+
+@utility badge-size-lg {
+	@apply gap-2 px-3 py-1;
+	& > svg {
+		@apply h-4 w-4;
+	}
+	& > button {
+		@apply h-5 w-5;
+	}
+}
+@utility badge-size-md {
+	@apply h-6 gap-1.5 px-2.5 py-0.5 text-xs;
+	& > svg {
+		@apply h-4 w-4;
+	}
+}
+@utility badge-size-sm {
+	@apply gap-1 px-1 py-0 text-[0.5rem];
+	& > svg {
+		@apply h-3 w-3;
+	}
+}
+
+@utility badge-variant-default {
+	@apply bg-lum-5 bg-chroma-high text-lum-none border-transparent;
+}
+@utility badge-variant-secondary {
+	@apply border-lum-3 bg-lum-2 text-lum-7;
+}
+@utility badge-variant-outline {
+	@apply border-lum-2 bg-lum-1 text-lum-9;
+}
+@utility badge-variant-lang {
+	@apply chroma-mid bg-lum-3 border-lum-4 text-lum-8 w-fit items-end font-mono font-bold tracking-wider uppercase transition-colors duration-700;
+}

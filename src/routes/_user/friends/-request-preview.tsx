@@ -16,9 +16,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 
 	if (isLoading) return <Loader className="my-6" />
 	if (!request)
-		return (
-			<Callout variant="problem">Can't seem to find that request...</Callout>
-		)
+		return <Callout hue="danger">Can't seem to find that request...</Callout>
 
 	return (
 		<Link

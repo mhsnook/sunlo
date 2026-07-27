@@ -1156,11 +1156,12 @@ function InconsistenciesSection() {
 							<Badge
 								variant={
 									issue.priority === 'high'
-										? 'destructive'
+										? 'default'
 										: issue.priority === 'medium'
 											? 'secondary'
 											: 'outline'
 								}
+								hue={issue.priority === 'high' ? 'danger' : undefined}
 								className="mt-0.5 shrink-0"
 							>
 								{issue.priority}

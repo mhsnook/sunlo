@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Slot } from '@/lib/slot'
-import { cva, VariantProps } from 'class-variance-authority'
 import { PanelLeft, X } from 'lucide-react'
 
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -494,27 +493,16 @@ const SidebarMenuItem = ({
 )
 SidebarMenuItem.displayName = 'SidebarMenuItem'
 
-const sidebarMenuButtonVariants = cva(
-	'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-con-high transition-[width,height,padding] hover:bg-lum-2 hover:text-lum-9 focus-visible:outline-2 active:bg-lum-2 active:text-lum-9 disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-lum-2 data-[active=true]:font-medium data-[active=true]:text-lum-9 data-[popup-open]:hover:bg-lum-2 data-[popup-open]:hover:text-lum-9 group-data-[collapsible=icon]:size-8! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0', // group-data-[collapsible=icon]:p-2!
-	{
-		variants: {
-			variant: {
-				default: 'hover:bg-lum-2 hover:text-con-mhigh',
-				outline:
-					'bg-lum-1 shadow-[0_0_0_1px] shadow-lum-3 hover:bg-lum-2 hover:text-lum-9 hover:shadow-[0_0_0_1px] hover:shadow-lum-6',
-			},
-			size: {
-				default: 'h-8 text-sm',
-				sm: 'h-7 text-xs',
-				lg: 'h-12 text-sm group-data-[collapsible=icon]:p-0!',
-			},
-		},
-		defaultVariants: {
-			variant: 'default',
-			size: 'default',
-		},
-	}
-)
+const menuButtonVariants = {
+	default: 'sidebar-menu-button-variant-default',
+	outline: 'sidebar-menu-button-variant-outline',
+} as const
+
+const menuButtonSizes = {
+	default: 'sidebar-menu-button-size-default',
+	sm: 'sidebar-menu-button-size-sm',
+	lg: 'sidebar-menu-button-size-lg',
+} as const
 
 const SidebarMenuButton = ({
 	asChild = false,
@@ -528,7 +516,9 @@ const SidebarMenuButton = ({
 	asChild?: boolean
 	isActive?: boolean
 	tooltip?: string | React.ComponentProps<typeof TooltipContent>
-} & VariantProps<typeof sidebarMenuButtonVariants>) => {
+	variant?: keyof typeof menuButtonVariants
+	size?: keyof typeof menuButtonSizes
+}) => {
 	const Comp = asChild ? Slot : 'button'
 	const { isMobile, state } = useSidebar()
 
@@ -538,7 +528,10 @@ const SidebarMenuButton = ({
 			data-sidebar="menu-button"
 			data-size={size}
 			data-active={isActive}
-			className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+			className={cn(
+				`peer/menu-button sidebar-menu-button ${menuButtonVariants[variant]} ${menuButtonSizes[size]}`,
+				className
+			)}
 			{...props}
 		/>
 	)

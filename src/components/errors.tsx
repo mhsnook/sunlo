@@ -28,7 +28,7 @@ export function ShowError({
 	return (
 		<Callout
 			className={className}
-			variant="problem"
+			hue="danger"
 			size="sm"
 			alert
 			Icon={DestructiveTriangle}
@@ -71,7 +71,7 @@ export const ShowErrorDontLog = memo(function ShowAndLogError({
 	return (
 		<Callout
 			className={className}
-			variant="problem"
+			hue="danger"
 			size="sm"
 			alert
 			Icon={DestructiveTriangle}

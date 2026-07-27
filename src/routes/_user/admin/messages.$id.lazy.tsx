@@ -57,7 +57,7 @@ function AdminMessageDetail() {
 
 	if (!message) {
 		return (
-			<Callout variant="problem">
+			<Callout hue="danger">
 				<p>Message not found.</p>
 			</Callout>
 		)

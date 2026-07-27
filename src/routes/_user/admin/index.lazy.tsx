@@ -27,7 +27,7 @@ function AdminIndex() {
 		<main style={style} className="space-y-8" data-testid="admin-index-page">
 			{!isAdmin && (
 				<div data-testid="admin-not-authorized-warning">
-					<Callout variant="problem" Icon={ShieldAlert}>
+					<Callout hue="danger" Icon={ShieldAlert}>
 						<p>
 							You are logged in as <strong>{userEmail}</strong> who is not an
 							admin user; the forms on this page will not work.

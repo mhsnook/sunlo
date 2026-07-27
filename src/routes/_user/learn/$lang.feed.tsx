@@ -299,7 +299,7 @@ function RecentFeed() {
 							<Link
 								to="/friends/invite"
 								from={Route.fullPath}
-								className="s-link-muted"
+								className="s-link opacity-70 hover:opacity-90"
 							>
 								inviting a friend
 							</Link>{' '}
@@ -388,7 +388,7 @@ function FriendsFeed() {
 							<Link
 								to="/friends/invite"
 								from={Route.fullPath}
-								className="s-link-muted"
+								className="s-link opacity-70 hover:opacity-90"
 							>
 								inviting a friend
 							</Link>{' '}
@@ -459,7 +459,7 @@ function PopularFeed() {
 							<Link
 								to="/friends/invite"
 								from={Route.fullPath}
-								className="s-link-muted"
+								className="s-link opacity-70 hover:opacity-90"
 							>
 								inviting a friend
 							</Link>{' '}

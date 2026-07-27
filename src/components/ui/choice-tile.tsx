@@ -27,12 +27,13 @@ export function ChoiceTile({
 			data-selected={selected || undefined}
 			aria-pressed={selected}
 			className={cn(
-				'cursor-pointer rounded-2xl border-2 transition-colors',
-				'focus-visible:outline-2 focus-visible:outline-con-high focus-visible:outline-offset-2',
+				'rounded-2xl border-2 transition-colors',
+				'focus-visible:outline-2 focus-visible:outline-offset-2',
 				'disabled:cursor-not-allowed disabled:opacity-60',
+				'text-con-mid',
 				selected
-					? 'bg-lum-1 bg-chroma-mlow border-lum-2 border-chroma-mlow'
-					: 'border-con-low hover:bg-lum-1 hover:bg-chroma-mlow hover:border-con-mlow hover:border-chroma-mlow',
+					? 'bg-lum-6 border-lum-2 chroma-mhigh'
+					: 'hover:bg-lum-up-1 cursor-pointer chroma-mlow',
 				className
 			)}
 			{...props}
