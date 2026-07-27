@@ -10,7 +10,6 @@ import {
 	UserPlus,
 } from 'lucide-react'
 
-import { buttonVariants } from '@/components/ui/button'
 import { GarlicBroccoli } from '@/components/garlic'
 import { useDecks } from '@/features/deck/hooks'
 import { useProfile } from '@/features/profile/hooks'
@@ -200,7 +199,7 @@ function WelcomeHeader({
 				to="/learn/$lang/phrases/new"
 				params={{ lang: addPhraseLang }}
 				data-testid="add-phrase-button"
-				className={buttonVariants({ variant: 'soft' })}
+				className="btn btn-size-default btn-variant-soft"
 			>
 				<Plus />
 				Add a phrase
@@ -217,7 +216,10 @@ function NoDecks() {
 				You aren't learning any languages yet...
 			</p>
 
-			<Link to="/learn/add-deck" className={buttonVariants({ size: 'lg' })}>
+			<Link
+				to="/learn/add-deck"
+				className="btn btn-size-lg btn-variant-default"
+			>
 				<Archive size={14} /> Start learning
 				<ChevronsRight className="h-6 w-5" />
 			</Link>
@@ -235,14 +237,17 @@ function AllDecksArchived() {
 			</p>
 
 			<div className="mx-auto grid max-w-100 grid-cols-1 gap-4">
-				<Link to="/learn/add-deck" className={buttonVariants({ size: 'lg' })}>
+				<Link
+					to="/learn/add-deck"
+					className="btn btn-size-lg btn-variant-default"
+				>
 					<HeartPlus size={14} /> Start a new language{' '}
 					<ChevronsRight className="h-6 w-5" />
 				</Link>
 				<Link
 					to="/learn/archived"
 					data-testid="view-archived-decks-link"
-					className={buttonVariants({ variant: 'neutral', size: 'lg' })}
+					className="btn btn-size-lg btn-variant-neutral"
 				>
 					<Archive size={14} /> View archived decks{' '}
 					<ChevronsRight className="h-6 w-5" />
@@ -265,21 +270,15 @@ function BrowsePrompt() {
 			</p>
 
 			<div className="mx-auto grid max-w-100 grid-cols-1 gap-4">
-				<Link to="/signup" className={buttonVariants({ size: 'lg' })}>
+				<Link to="/signup" className="btn btn-size-lg btn-variant-default">
 					<UserPlus size={14} /> Create an account
 					<ChevronsRight className="h-6 w-5" />
 				</Link>
-				<Link
-					to="/login"
-					className={buttonVariants({ variant: 'soft', size: 'lg' })}
-				>
+				<Link to="/login" className="btn btn-size-lg btn-variant-soft">
 					<LogIn size={14} /> Log in
 					<ChevronsRight className="h-6 w-5" />
 				</Link>
-				<Link
-					to="/browse"
-					className={buttonVariants({ variant: 'neutral', size: 'lg' })}
-				>
+				<Link to="/browse" className="btn btn-size-lg btn-variant-neutral">
 					<Compass size={14} /> Browse languages
 					<ChevronsRight className="h-6 w-5" />
 				</Link>

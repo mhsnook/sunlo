@@ -43,27 +43,6 @@ export interface ButtonVariantProps {
 	hue?: ButtonHue | null
 }
 
-/**
- * Class list for a button without the component — a `<Link>` styled as one,
- * mostly. Each axis lands on its own class, so nothing here can conflict and
- * there is nothing to merge; extra classes are appended as given.
- */
-export function buttonVariants({
-	variant,
-	size,
-	hue,
-	className,
-}: ButtonVariantProps & { className?: string } = {}) {
-	const classes = [
-		'btn',
-		sizes[size ?? 'default'],
-		variants[variant ?? 'default'],
-		hue ? hues[hue] : '',
-		className ?? '',
-	]
-	return classes.filter(Boolean).join(' ')
-}
-
 export interface ButtonProps
 	extends React.ButtonHTMLAttributes<HTMLButtonElement>, ButtonVariantProps {
 	asChild?: boolean
@@ -80,7 +59,7 @@ const Button = ({
 	const Comp = asChild ? Slot : 'button'
 	return (
 		<Comp
-			className={buttonVariants({ variant, size, hue, className })}
+			className={`btn ${sizes[size ?? 'default']} ${variants[variant ?? 'default']} ${hue ? hues[hue] : ''} ${className ?? ''}`}
 			data-slot="button"
 			{...props}
 		/>

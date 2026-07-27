@@ -4,7 +4,6 @@ import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
-import { buttonVariants } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_user/profile/change-email-confirm')({
 	component: ChangeEmailConfirmPage,
@@ -31,7 +30,7 @@ function ChangeEmailConfirmPage() {
 				<CardTitle>Change your registered email</CardTitle>
 			</CardHeader>
 			<CardContent>
-				{data.error ?
+				{data.error ? (
 					<ShowError>
 						<div className="flex flex-col gap-2">
 							<p className="font-bold">Error: {data.error}</p>
@@ -48,14 +47,15 @@ function ChangeEmailConfirmPage() {
 								<Link
 									to="/profile/change-email"
 									from={Route.fullPath}
-									className={buttonVariants({ variant: 'soft' })}
+									className="btn btn-size-default btn-variant-soft"
 								>
 									Try the change-email form again
 								</Link>
 							</p>
 						</div>
 					</ShowError>
-				:	<Callout Icon={SuccessCheckmarkTrans}>
+				) : (
+					<Callout Icon={SuccessCheckmarkTrans}>
 						<p>Success!</p>
 						<p>
 							You've changed your email to <strong>{data.userEmail}</strong>.
@@ -66,7 +66,7 @@ function ChangeEmailConfirmPage() {
 							</Link>
 						</p>
 					</Callout>
-				}
+				)}
 			</CardContent>
 		</>
 	)

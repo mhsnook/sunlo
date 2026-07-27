@@ -3,7 +3,6 @@ import { Loader } from '@/components/ui/loader'
 import { useLangPlaylists } from '@/features/playlists/hooks'
 import type { CSSProperties } from 'react'
 import languages from '@/lib/languages'
-import { buttonVariants } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/')({
@@ -23,14 +22,15 @@ function RouteComponent() {
 				<Link
 					to="/learn/$lang/playlists/new"
 					from={Route.fullPath}
-					className={buttonVariants()}
+					className="btn btn-size-default btn-variant-default"
 				>
 					<Plus /> Create playlist
 				</Link>
 			</div>
-			{isLoading ?
+			{isLoading ? (
 				<Loader />
-			:	<div className="divide-y border" data-testid="playlist-list">
+			) : (
+				<div className="divide-y border" data-testid="playlist-list">
 					{playlists?.map((p) => (
 						<Link
 							key={p.id}
@@ -47,7 +47,7 @@ function RouteComponent() {
 						</Link>
 					))}
 				</div>
-			}
+			)}
 		</main>
 	)
 }

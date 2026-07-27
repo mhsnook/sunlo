@@ -2,7 +2,6 @@ import { type CSSProperties } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Search, Share } from 'lucide-react'
 
-import { buttonVariants } from '@/components/ui/button'
 import { FriendsFeed } from './-friends-feed'
 
 export const Route = createFileRoute('/_user/friends/')({
@@ -31,7 +30,7 @@ function FriendsHomePage() {
 					<Link
 						from="/friends"
 						search={{ search: true }}
-						className={buttonVariants({ variant: 'soft' })}
+						className="btn btn-size-default btn-variant-soft"
 						data-testid="friends-find-link"
 					>
 						<Search className="size-4" />
@@ -39,7 +38,7 @@ function FriendsHomePage() {
 					</Link>
 					<Link
 						to="/friends/invite"
-						className={buttonVariants({ variant: 'soft' })}
+						className="btn btn-size-default btn-variant-soft"
 						data-testid="friends-invite-link"
 					>
 						<Share className="size-4" />

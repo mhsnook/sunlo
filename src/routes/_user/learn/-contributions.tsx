@@ -9,7 +9,7 @@ import {
 	MessagesSquare,
 	type LucideIcon,
 } from 'lucide-react'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -165,7 +165,7 @@ function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 			<p className="text-lg">You haven't made any requests yet.</p>
 			{lang ? (
 				<Link
-					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					className="btn btn-size-default btn-variant-soft mt-4"
 					to="/learn/$lang/requests/new"
 					params={{ lang }}
 				>
@@ -174,7 +174,7 @@ function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 				</Link>
 			) : (
 				<Link
-					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					className="btn btn-size-default btn-variant-soft mt-4"
 					to="/learn"
 				>
 					Choose a language deck to make a request for
@@ -199,7 +199,7 @@ function PhrasesTab(props: { lang?: string; uid: uuid }) {
 			<p className="text-lg">This person hasn't made any requests yet.</p>
 			{props.lang && (
 				<Link
-					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					className="btn btn-size-default btn-variant-soft mt-4"
 					to="/learn/$lang/phrases/new"
 					params={{ lang: props.lang }}
 				>
@@ -233,7 +233,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 			<p className="text-lg">This user hasn't made any playlists yet.</p>
 			{props.lang ? (
 				<Link
-					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					className="btn btn-size-default btn-variant-soft mt-4"
 					to="/learn/$lang/playlists"
 					params={{ lang: props.lang }}
 				>
@@ -242,7 +242,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 				</Link>
 			) : (
 				<Link
-					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					className="btn btn-size-default btn-variant-soft mt-4"
 					to="/learn"
 				>
 					Choose a language deck to make a playlist for
@@ -295,7 +295,7 @@ function AnswersTab(props: { lang?: string; uid: uuid }) {
 			</p>
 			{props.lang && (
 				<Link
-					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					className="btn btn-size-default btn-variant-soft mt-4"
 					to="/learn/$lang/feed"
 					params={{ lang: props.lang }}
 				>
@@ -327,7 +327,7 @@ function CommentsTab(props: { lang?: string; uid: uuid }) {
 			<p className="text-lg">This user hasn't made any comments yet.</p>
 			{props.lang && (
 				<Link
-					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					className="btn btn-size-default btn-variant-soft mt-4"
 					to="/learn/$lang/feed"
 					params={{ lang: props.lang }}
 				>

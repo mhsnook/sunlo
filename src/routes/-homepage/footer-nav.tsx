@@ -2,7 +2,6 @@ import { Github, Heart, Shield, Users, LogIn, UserPlus } from 'lucide-react'
 import BlueskyLogo from '@/components/svg/bluesky-logo'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
 
 export function FooterNavigation() {
 	return (
@@ -80,7 +79,7 @@ export function FooterNavigation() {
 							<div className="space-y-3">
 								<Link
 									className={cn(
-										buttonVariants(),
+										'btn btn-size-default btn-variant-default',
 										'font-space-grotesk from-lum-5 from-chroma-max hover:to-lum-5 hover:to-chroma-max w-full transform bg-gradient-to-r to-indigo-500 font-semibold text-white shadow-lg transition-all duration-300 hover:from-purple-700 hover:shadow-xl'
 									)}
 									to="/signup"
@@ -90,7 +89,7 @@ export function FooterNavigation() {
 								</Link>
 								<Link
 									className={cn(
-										buttonVariants({ variant: 'soft' }),
+										'btn btn-size-default btn-variant-soft',
 										'font-space-grotesk w-full border-2 border-slate-600 bg-transparent font-semibold text-slate-300 transition-all duration-300 hover:bg-slate-800 hover:text-white'
 									)}
 									to="/login"

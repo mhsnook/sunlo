@@ -27,7 +27,7 @@ import {
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
 	Dialog,
@@ -352,12 +352,7 @@ function TagsStrip({
 				<button
 					type="button"
 					onClick={() => setActiveTagSlug(null)}
-					className={cn(
-						buttonVariants({
-							variant: activeTagSlug == null ? 'soft' : 'ghost',
-							size: 'sm',
-						})
-					)}
+					className={cn('btn btn-size-sm btn-variant-default')}
 					data-testid="tag-filter-all"
 				>
 					All
@@ -369,13 +364,7 @@ function TagsStrip({
 						onClick={() =>
 							setActiveTagSlug(activeTagSlug === tag.slug ? null : tag.slug)
 						}
-						className={cn(
-							buttonVariants({
-								variant: activeTagSlug === tag.slug ? 'soft' : 'ghost',
-								size: 'sm',
-							}),
-							'gap-1'
-						)}
+						className={cn('btn btn-size-sm btn-variant-default', 'gap-1')}
 						data-testid="tag-filter-chip"
 						data-key={tag.slug}
 					>
@@ -1131,7 +1120,7 @@ function MessageRowItem({
 			<Link
 				to="/admin/$lang/requests/$id"
 				params={{ lang: row.lang, id: row.request_id }}
-				className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+				className="btn btn-size-sm btn-variant-ghost"
 				aria-label="Open admin request page"
 				data-testid="row-open-request"
 			>

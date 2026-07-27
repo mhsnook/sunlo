@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { PasswordResetForm } from '@/components/password-reset-form'
 import { useAuth } from '@/lib/use-auth'
@@ -52,13 +51,13 @@ function SetNewPasswordPage() {
 						<Link
 							to="/forgot-password"
 							data-testid="request-new-link"
-							className={buttonVariants({ variant: 'default' })}
+							className="btn btn-size-default btn-variant-default"
 						>
 							Request a new link
 						</Link>
 						<Link
 							to="/login"
-							className={buttonVariants({ variant: 'neutral' })}
+							className="btn btn-size-default btn-variant-neutral"
 						>
 							Back to login
 						</Link>

@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Rocket } from 'lucide-react'
 
-import { buttonVariants } from '@/components/ui/button'
 import type { DeckMetaType } from '@/features/deck/schemas'
 import { useLangActiveDays } from './-deck-ranking'
 
@@ -62,10 +61,7 @@ export function ReviewBanner({
 					to="/learn/$lang/review"
 					params={{ lang: focus.lang }}
 					data-testid="start-review-button"
-					className={buttonVariants({
-						variant: 'default',
-						className: 'shrink-0',
-					})}
+					className="btn btn-size-default btn-variant-default shrink-0"
 				>
 					<Rocket />
 					Start review

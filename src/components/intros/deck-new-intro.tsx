@@ -3,7 +3,6 @@ import { Construction, Contact, Logs, MessageSquarePlus } from 'lucide-react'
 import { IntroSheet } from '@/components/intro-sheet'
 import { IntroCallout } from '@/components/intro-callout'
 import { useLanguageMeta } from '@/features/languages/hooks'
-import { buttonVariants } from '@/components/ui/button'
 import languages from '@/lib/languages'
 
 interface DeckNewIntroProps {
@@ -72,21 +71,18 @@ export function DeckNewIntro({ open, onClose }: DeckNewIntroProps) {
 					<Link
 						to="/learn/$lang/feed"
 						params={{ lang: lang ?? '' }}
-						className={buttonVariants({ variant: 'soft', size: 'sm' })}
+						className="btn btn-size-sm btn-variant-soft"
 					>
 						<Logs className="size-4" /> Browse Feed
 					</Link>
 					<Link
 						to="/learn/$lang/phrases/new"
 						params={{ lang: lang ?? '' }}
-						className={buttonVariants({ variant: 'soft', size: 'sm' })}
+						className="btn btn-size-sm btn-variant-soft"
 					>
 						<MessageSquarePlus className="size-4" /> Add Phrase
 					</Link>
-					<Link
-						to="/friends"
-						className={buttonVariants({ variant: 'soft', size: 'sm' })}
-					>
+					<Link to="/friends" className="btn btn-size-sm btn-variant-soft">
 						<Contact className="size-4" /> Invite Friends
 					</Link>
 				</div>

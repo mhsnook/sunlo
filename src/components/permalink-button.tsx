@@ -1,6 +1,5 @@
 import { EllipsisVertical } from 'lucide-react'
-import { buttonVariants, type ButtonVariantProps } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Button, type ButtonVariantProps } from '@/components/ui/button'
 import { Link, LinkProps } from '@tanstack/react-router'
 
 export default function PermalinkButton({
@@ -18,11 +17,13 @@ export default function PermalinkButton({
 	link?: boolean
 } & LinkProps &
 	ButtonVariantProps) {
-	return !to ? null : (
+	if (!to) return null
+
+	const anchor = (
 		<Link
 			to={to}
 			params={params}
-			className={cn(link ? '' : buttonVariants({ variant, size }), className)}
+			className={className}
 			preload="intent"
 			{...props}
 		>
@@ -40,5 +41,15 @@ export default function PermalinkButton({
 				</span>
 			)}
 		</Link>
+	)
+
+	// asChild rather than a class string: variant and size arrive as props here,
+	// and Slot merges the button's classes onto the Link.
+	return link ? (
+		anchor
+	) : (
+		<Button asChild variant={variant} size={size}>
+			{anchor}
+		</Button>
 	)
 }

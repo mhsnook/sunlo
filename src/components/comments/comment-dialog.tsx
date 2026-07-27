@@ -7,7 +7,7 @@ import { Paperclip, Plus, Search, X } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import type { uuid } from '@/types/main'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
@@ -384,7 +384,7 @@ function AttachedPhraseCards({
 				...prev,
 				attaching: true,
 			})}
-			className={cn(buttonVariants({ variant: 'soft', size: 'sm' }), 'w-full')}
+			className={cn('btn btn-size-sm btn-variant-soft', 'w-full')}
 			data-testid="attach-phrase-button"
 		>
 			<Paperclip className="h-4 w-4" />

@@ -12,7 +12,6 @@ import { publicProfilesCollection } from '@/features/profile/collections'
 import { WithPhrase } from '@/components/with-phrase'
 import { useUserId } from '@/lib/use-auth'
 import { type RequestCommentType } from '@/features/requests/schemas'
-import { buttonVariants } from '@/components/ui/button'
 
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { Upvote } from './upvote-comment-button'
@@ -95,7 +94,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 										focus: comment.id,
 										mode: 'edit' as const,
 									})}
-									className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+									className="btn btn-size-icon btn-variant-ghost"
 									aria-label="Edit comment"
 									data-testid="edit-comment-button"
 								>
@@ -134,10 +133,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 					{replyCount === 0 && !showSubthread && (
 						<Link
-							className={buttonVariants({
-								variant: 'ghost',
-								size: 'sm',
-							})}
+							className="btn btn-size-sm btn-variant-ghost"
 							to={'.'}
 							search={(search) => ({
 								...search,
@@ -153,10 +149,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 					{replyCount > 0 && (
 						<Link
-							className={buttonVariants({
-								variant: showSubthread ? 'soft' : 'ghost',
-								size: 'sm',
-							})}
+							className="btn btn-size-sm btn-variant-default"
 							to={'.'}
 							search={(search) => {
 								if (showSubthread) {
@@ -248,7 +241,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 									focus: comment.id,
 									mode: 'edit' as const,
 								})}
-								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+								className="btn btn-size-icon btn-variant-ghost"
 								aria-label="Edit reply"
 								data-testid="edit-reply-button"
 							>

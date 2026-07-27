@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ListMusic, MessageCircleHeart, MessageSquareQuote } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import {
 	Dialog,
 	DialogDescription,
@@ -45,7 +45,7 @@ export function FeedComposer({ lang }: { lang: string }) {
 						to="/learn/$lang/phrases/new"
 						params={{ lang }}
 						data-testid="feed-composer-phrase-btn"
-						className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+						className="btn btn-size-sm btn-variant-ghost"
 					>
 						<MessageSquareQuote className="size-4" />
 						<span>Phrase</span>
@@ -54,7 +54,7 @@ export function FeedComposer({ lang }: { lang: string }) {
 						to="/learn/$lang/playlists/new"
 						params={{ lang }}
 						data-testid="feed-composer-playlist-btn"
-						className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+						className="btn btn-size-sm btn-variant-ghost"
 					>
 						<ListMusic className="size-4" />
 						<span>Playlist</span>

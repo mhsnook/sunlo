@@ -5,7 +5,6 @@ import { PhraseRequestType } from '@/features/requests/schemas'
 import { CardDescription, CardHeader } from '@/components/ui/card'
 import { UidPermalink } from '../card-pieces/user-permalink'
 import { LangBadge } from '@/components/ui/badge'
-import { buttonVariants } from '@/components/ui/button'
 import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { UpdateRequestDialog } from './update-request-dialog'
@@ -37,7 +36,7 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 						<Link
 							to="/admin/$lang/requests/$id"
 							params={{ lang: request.lang, id: request.id }}
-							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+							className="btn btn-size-icon btn-variant-ghost"
 							aria-label="Manage request (admin)"
 							data-testid="admin-request-gear-link"
 						>

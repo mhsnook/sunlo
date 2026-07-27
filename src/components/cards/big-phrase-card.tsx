@@ -12,7 +12,6 @@ import {
 
 import type { uuid } from '@/types/main'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import {
 	Collapsible,
@@ -131,7 +130,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 											className="flex flex-row items-baseline justify-start gap-2 space-y-2 rounded"
 										>
 											<LangBadge lang={trans.lang} />
-											<p className="text-md">{trans.text}</p>
+											<p>{trans.text}</p>
 										</div>
 									))}
 							</div>
@@ -139,7 +138,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 									<CollapsibleTrigger
 										className={cn(
-											buttonVariants({ variant: 'soft', size: 'sm' }),
+											'btn btn-size-sm btn-variant-soft',
 											isOpen ? 'my-3' : 'mt-3'
 										)}
 									>
@@ -153,7 +152,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 										{phrase.translations_other.map((trans) => (
 											<div key={trans.id} className="bg-lum-2 rounded-lg p-3">
 												<div className="flex items-center justify-between">
-													<p className="text-md">{trans.text}</p>
+													<p>{trans.text}</p>
 													<Badge variant="outline">
 														{languages[trans.lang]}
 													</Badge>
@@ -414,7 +413,7 @@ function AdminGearLink({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 		<Link
 			to="/admin/$lang/phrases/$id"
 			params={{ lang, id: phraseId }}
-			className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+			className="btn btn-size-icon btn-variant-ghost"
 			aria-label="Manage phrase (admin)"
 			data-testid="admin-gear-link"
 		>

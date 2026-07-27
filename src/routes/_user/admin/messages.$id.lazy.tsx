@@ -4,7 +4,7 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ExternalLink, Plus, X } from 'lucide-react'
 
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useAuth } from '@/lib/use-auth'
@@ -144,10 +144,7 @@ function AdminMessageDetail() {
 								<Link
 									to="/admin/$lang/requests/$id"
 									params={{ lang: req.lang, id: req.id }}
-									className={buttonVariants({
-										variant: 'ghost',
-										size: 'sm',
-									})}
+									className="btn btn-size-sm btn-variant-ghost"
 									aria-label="Open admin request page"
 								>
 									<ExternalLink className="h-3 w-3" />

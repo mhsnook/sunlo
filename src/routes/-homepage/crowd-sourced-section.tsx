@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
 
 export function CrowdSourcedSection() {
 	return (
@@ -170,7 +169,7 @@ export function CrowdSourcedSection() {
 								<Link
 									to="/browse"
 									className={cn(
-										buttonVariants({ size: 'lg' }),
+										'btn btn-size-lg btn-variant-default',
 										'bg-emerald-600 font-semibold text-white/80 transition-all duration-300 hover:bg-emerald-700'
 									)}
 								>

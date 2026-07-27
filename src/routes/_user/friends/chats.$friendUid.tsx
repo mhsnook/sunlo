@@ -18,7 +18,6 @@ import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
-import { buttonVariants } from '@/components/ui/button'
 import { ago } from '@/lib/dayjs'
 import { RequestPreview } from '@/routes/_user/friends/-request-preview'
 import { PlaylistPreview } from '@/routes/_user/friends/-playlist-preview'
@@ -210,7 +209,7 @@ function ChatPage() {
 								placeholder="Send a phrase, playlist, or request..."
 								className="cursor-pointer"
 							/>
-							<span className={buttonVariants({ size: 'icon' })}>
+							<span className="btn btn-size-icon btn-variant-default">
 								<Send className="h-4 w-4" />
 							</span>
 						</Link>
@@ -253,7 +252,7 @@ const EmptyChat = ({ profile }: { profile: PublicProfileType }) => (
 		</div>
 		<p>
 			<Link
-				className={buttonVariants({ variant: 'neutral' })}
+				className="btn btn-size-default btn-variant-neutral"
 				to="/friends/$uid"
 				from={Route.fullPath}
 				params={{ uid: profile.uid }}

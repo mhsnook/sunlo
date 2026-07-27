@@ -3,7 +3,6 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, ChevronsRight, HeartPlus } from 'lucide-react'
 
 import { useDecks } from '@/features/deck/hooks'
-import { buttonVariants } from '@/components/ui/button'
 import { ArchivedDeckTile } from './-archived-deck-tile'
 
 export const Route = createFileRoute('/_user/learn/archived')({
@@ -32,7 +31,7 @@ function Page() {
 					</p>
 					<Link
 						to="/learn"
-						className={buttonVariants({ variant: 'soft', className: 'mt-6' })}
+						className="btn btn-size-default btn-variant-soft mt-6"
 					>
 						<HeartPlus size={14} /> Back to learning
 						<ChevronsRight className="h-5 w-4" />

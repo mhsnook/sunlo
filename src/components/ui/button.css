@@ -17,7 +17,7 @@
 }
 
 @utility btn-size-default {
-	@apply h-10 gap-2 rounded-2xl px-5 py-2 text-base;
+	@apply h-10 gap-2 rounded-2xl px-5 py-2;
 	& svg {
 		@apply size-4;
 	}

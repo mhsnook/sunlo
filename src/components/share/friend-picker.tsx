@@ -22,7 +22,7 @@ import { agoShort } from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 import type { uuid } from '@/types/main'
 import { UserAvatar } from '@/components/ui/user-avatar'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { LoginSignupButtons } from '@/components/ui/authenticated-dialog'
 import { IconSizedLoader, Loader } from '@/components/ui/loader'
 
@@ -236,7 +236,7 @@ function PickerBody({
 					</p>
 					<Link
 						to="/friends"
-						className={cn(buttonVariants({ variant: 'default' }), 'gap-2')}
+						className={cn('btn btn-size-default btn-variant-default', 'gap-2')}
 					>
 						<UserPlus className="size-4" /> Invite a friend
 					</Link>
@@ -284,10 +284,7 @@ function PickerBody({
 						</div>
 						<Link
 							to="/friends"
-							className={cn(
-								buttonVariants({ variant: 'soft', size: 'sm' }),
-								'mt-3.5 gap-2'
-							)}
+							className={cn('btn btn-size-sm btn-variant-soft', 'mt-3.5 gap-2')}
 						>
 							<UserPlus className="size-3.5" /> Invite to Sunlo
 						</Link>

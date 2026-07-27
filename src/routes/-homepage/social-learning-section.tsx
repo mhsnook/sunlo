@@ -12,7 +12,6 @@ import {
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
 
 export function SocialLearningSection() {
 	const [isForFriends, setIsForFriends] = useState(false)
@@ -72,9 +71,9 @@ export function SocialLearningSection() {
 												sent you a phrase pack
 											</div>
 											<div className="text-xs text-rose-200">
-												{isForFriends ?
-													`"Essential Kannada now that you've moved"`
-												:	'"Essential Punjabi for your trip"'}
+												{isForFriends
+													? `"Essential Kannada now that you've moved"`
+													: '"Essential Punjabi for your trip"'}
 											</div>
 										</div>
 										<Gift className="h-4 w-4 text-rose-300" />
@@ -90,9 +89,9 @@ export function SocialLearningSection() {
 												is practicing with you
 											</div>
 											<div className="text-xs text-rose-200">
-												{isForFriends ?
-													`"Let's learn all the swear words!"`
-												:	`"Let's learn all the best food words!"`}
+												{isForFriends
+													? `"Let's learn all the swear words!"`
+													: `"Let's learn all the best food words!"`}
 											</div>
 										</div>
 										<Users className="h-4 w-4 text-orange-300" />
@@ -108,9 +107,9 @@ export function SocialLearningSection() {
 												shared a memory tip
 											</div>
 											<div className="text-xs text-rose-200">
-												{isForFriends ?
-													'"These drinking songs are fun asf"'
-												:	'"These folk songs are super catchy!"'}
+												{isForFriends
+													? '"These drinking songs are fun asf"'
+													: '"These folk songs are super catchy!"'}
 											</div>
 										</div>
 										<Share className="h-4 w-4 text-pink-300" />
@@ -122,7 +121,7 @@ export function SocialLearningSection() {
 								<Link
 									to="/friends/invite"
 									className={cn(
-										buttonVariants({ size: 'lg' }),
+										'btn btn-size-lg btn-variant-default',
 										'bg-rose-700 font-semibold text-white/90 transition-all duration-300 hover:bg-rose-800'
 									)}
 								>
@@ -180,9 +179,9 @@ export function SocialLearningSection() {
 											Personalized Gifts
 										</h3>
 										<p className="text-rose-100">
-											{isForFriends ?
-												'Friends and colleagues '
-											:	'Family members '}
+											{isForFriends
+												? 'Friends and colleagues '
+												: 'Family members '}
 											can send you custom phrase packs, cultural tips, and
 											learning resources tailored to your interests.
 										</p>
@@ -219,7 +218,7 @@ export function SocialLearningSection() {
 								<Link
 									to="/signup"
 									className={cn(
-										buttonVariants(),
+										'btn btn-size-default btn-variant-default',
 										'border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:from-green-700'
 									)}
 								>
@@ -231,7 +230,7 @@ export function SocialLearningSection() {
 									target="_blank"
 									rel="noopener noreferrer"
 									className={cn(
-										buttonVariants({ variant: 'soft' }),
+										'btn btn-size-default btn-variant-soft',
 										'border-2 border-white/30 bg-transparent px-8 py-6 text-lg font-semibold text-white hover:bg-white/10'
 									)}
 								>

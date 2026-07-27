@@ -27,7 +27,6 @@ import { SelectPhrasesForComment } from '@/components/comments/select-phrases-fo
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { PhraseSummaryLine } from '../feed/feed-phrase-group-item'
 import { DialogClose } from '@/components/ui/dialog'
-import { buttonVariants } from '../ui/button'
 
 /** Controlled href input that validates on blur and only fires the mutation when valid */
 function HrefInput({
@@ -315,7 +314,9 @@ export function ManagePlaylistPhrasesDialog({
 							triggerText="Add existing phrases"
 						/>
 					</div>
-					<DialogClose className={buttonVariants()}>Finish</DialogClose>
+					<DialogClose className="btn btn-size-default btn-variant-default">
+						Finish
+					</DialogClose>
 				</div>
 			</DialogContent>
 		</Dialog>

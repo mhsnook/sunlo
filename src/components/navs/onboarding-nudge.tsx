@@ -4,7 +4,6 @@ import { useProfile } from '@/features/profile/hooks'
 import { myProfileCollection } from '@/features/profile/collections'
 import { FLAG_NEEDS_ONBOARDING } from '@/features/profile/schemas'
 import { useSidebar } from '@/components/ui/sidebar'
-import { buttonVariants } from '@/components/ui/button'
 
 // Soft pull toward /getting-started for users who have a profile row but
 // have not picked a username + languages yet. Replaces the old hard
@@ -69,11 +68,7 @@ export function OnboardingNudge() {
 				to="/getting-started"
 				onClick={setClosedMobile}
 				data-testid="onboarding-nudge-cta"
-				className={buttonVariants({
-					variant: 'default',
-					size: 'sm',
-					className: 'mt-2 w-full',
-				})}
+				className="btn btn-size-sm btn-variant-default mt-2 w-full"
 			>
 				Continue
 			</Link>

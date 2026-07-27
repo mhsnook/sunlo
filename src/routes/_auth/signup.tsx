@@ -8,7 +8,6 @@ import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
-import { buttonVariants } from '@/components/ui/button'
 import {
 	Card,
 	CardContent,
@@ -169,7 +168,7 @@ function SignUp() {
 								</form.AppForm>
 								<Link
 									to="/login"
-									className={buttonVariants({ variant: 'neutral' })}
+									className="btn btn-size-default btn-variant-neutral"
 								>
 									Already have an account?
 								</Link>

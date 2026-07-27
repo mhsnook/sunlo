@@ -5,7 +5,6 @@ import { useDecks } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import { hoursUntil4am, todayString } from '@/lib/utils'
 import { useSidebar } from '@/components/ui/sidebar'
-import { buttonVariants } from '@/components/ui/button'
 import languages from '@/lib/languages'
 
 interface ActiveReview {
@@ -164,11 +163,7 @@ function CalloutContent({
 					to="/learn/$lang/review"
 					params={{ lang }}
 					onClick={setClosedMobile}
-					className={buttonVariants({
-						variant: 'default',
-						size: 'sm',
-						className: 'mt-2 w-full',
-					})}
+					className="btn btn-size-sm btn-variant-default mt-2 w-full"
 				>
 					Continue review
 				</Link>

@@ -3,7 +3,6 @@ import { MessagesSquare, User } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useOnePublicProfile } from '@/features/social/public-profile'
-import { buttonVariants } from '@/components/ui/button'
 import { RelationshipActions } from './-relationship-actions'
 import { avatarUrlify } from '@/lib/hooks'
 import { UserContributions } from '../learn/-contributions'
@@ -68,7 +67,7 @@ function ProfilePage() {
 							<RelationshipActions uid_for={uid} />
 							{profile.relation?.status === 'friends' && (
 								<Link
-									className={buttonVariants({ variant: 'soft' })}
+									className="btn btn-size-default btn-variant-soft"
 									to="/friends/chats/$friendUid"
 									from={Route.fullPath}
 									params={{ friendUid: profile.uid }}

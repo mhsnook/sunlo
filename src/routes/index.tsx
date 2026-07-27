@@ -8,7 +8,6 @@ import { SocialLearningSection } from './-homepage/social-learning-section'
 import { FooterNavigation } from './-homepage/footer-nav'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { useProfile } from '@/features/profile/hooks'
-import { buttonVariants } from '@/components/ui/button'
 import { cn, isNativeAppUserAgent } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -58,7 +57,7 @@ function BrowseLink() {
 	return (
 		<Link
 			className={cn(
-				buttonVariants({ variant: 'ghost', size: 'icon' }),
+				'btn btn-size-icon btn-variant-ghost',
 				'border-con-low h-12 w-12 rounded-full border bg-white/10 text-slate-800 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:text-slate-200 dark:hover:bg-black/50'
 			)}
 			from={Route.fullPath}
@@ -81,7 +80,7 @@ function UserLogin() {
 		return (
 			<Link
 				className={cn(
-					buttonVariants({ variant: 'ghost', size: 'icon' }),
+					'btn btn-size-icon btn-variant-ghost',
 					'border-con-low h-12 w-12 rounded-full border bg-white/10 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50'
 				)}
 				from={Route.fullPath}

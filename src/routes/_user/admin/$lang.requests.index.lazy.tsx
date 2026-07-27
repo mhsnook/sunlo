@@ -15,7 +15,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader } from '@/components/ui/loader'
-import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/use-auth'
 import { phraseRequestsCollection } from '@/features/requests/collections'
@@ -233,7 +232,7 @@ function RequestTableRow({
 				<Link
 					to="/admin/$lang/requests/$id"
 					params={{ lang, id: request.id }}
-					className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+					className="btn btn-size-icon btn-variant-ghost"
 					aria-label="View request details"
 					data-testid="admin-request-detail-link"
 				>

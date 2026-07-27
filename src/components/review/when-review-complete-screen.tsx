@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import {
 	useReviewActions,
@@ -165,7 +165,7 @@ export function WhenComplete() {
 							<Link
 								to="/learn/$lang/feed"
 								params={{ lang }}
-								className={buttonVariants({ variant: 'default', size: 'lg' })}
+								className="btn btn-size-lg btn-variant-default"
 							>
 								<Newspaper className="mr-2 h-4 w-4" />
 								Back to Feed
@@ -173,7 +173,7 @@ export function WhenComplete() {
 							<Link
 								to="/learn/$lang/phrases/new"
 								params={{ lang }}
-								className={buttonVariants({ variant: 'neutral', size: 'lg' })}
+								className="btn btn-size-lg btn-variant-neutral"
 							>
 								<Plus className="mr-2 h-4 w-4" />
 								Add New Phrase
@@ -182,22 +182,14 @@ export function WhenComplete() {
 								<Link
 									to="/learn/$lang/stats"
 									params={{ lang }}
-									className={buttonVariants({
-										variant: 'soft',
-										size: 'lg',
-										className: 'flex-1',
-									})}
+									className="btn btn-size-lg btn-variant-soft flex-1"
 								>
 									<BarChart3 className="mr-2 h-4 w-4" />
 									Stats
 								</Link>
 								<Link
 									to="/browse"
-									className={buttonVariants({
-										variant: 'soft',
-										size: 'lg',
-										className: 'flex-1',
-									})}
+									className="btn btn-size-lg btn-variant-soft flex-1"
 								>
 									<Search className="mr-2 h-4 w-4" />
 									Browse

@@ -12,7 +12,6 @@ import {
 import { UnderConstructionNotice } from './under-construction'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
 
 export function HeroSection() {
 	return (
@@ -108,7 +107,7 @@ export function HeroSection() {
 							<Link
 								to="/browse"
 								className={cn(
-									buttonVariants({ size: 'lg', variant: 'soft' }),
+									'btn btn-size-lg btn-variant-soft',
 									'group border-con-low border-chroma-mlow hover:border-con-mid hover:bg-lum-2 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>
@@ -118,7 +117,7 @@ export function HeroSection() {
 							<Link
 								to="/signup"
 								className={cn(
-									buttonVariants({ size: 'lg' }),
+									'btn btn-size-lg btn-variant-default',
 									'group from-lum-5 from-chroma-max dark:from-primary dark:hover:to-primary w-full border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
 								)}
 							>
@@ -129,7 +128,7 @@ export function HeroSection() {
 							<Link
 								to="/login"
 								className={cn(
-									buttonVariants({ size: 'lg', variant: 'soft' }),
+									'btn btn-size-lg btn-variant-soft',
 									'group border-con-low border-chroma-mlow hover:border-con-mid hover:bg-lum-2 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>

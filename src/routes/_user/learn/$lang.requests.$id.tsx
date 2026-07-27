@@ -13,7 +13,6 @@ import { Markdown } from '@/components/my-markdown'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { MessageTagsRow } from '@/components/requests/message-tags-row'
-import { buttonVariants } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn, mapArrays } from '@/lib/utils'
 import type { CommentPhraseLinkType } from '@/features/requests/schemas'
@@ -134,7 +133,7 @@ function RequestThreadPage() {
 							to="."
 							search={(s) => ({ ...s, mode: 'search' })}
 							className={cn(
-								buttonVariants({ variant: 'soft', size: 'sm' }),
+								'btn btn-size-sm btn-variant-soft',
 								'shrink-0 border border-transparent'
 							)}
 							data-testid="open-flashcard-search"

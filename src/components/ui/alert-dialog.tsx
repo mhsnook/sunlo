@@ -2,7 +2,6 @@ import * as React from 'react'
 import { AlertDialog as AlertDialogPrimitive } from '@base-ui/react/alert-dialog'
 
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
 
 const AlertDialog = ({ ...props }: AlertDialogPrimitive.Root.Props) => (
 	<AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
@@ -115,7 +114,7 @@ const AlertDialogAction = ({
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
 	<button
 		data-slot="alert-dialog-action"
-		className={cn(buttonVariants(), className)}
+		className={cn('btn btn-size-default btn-variant-default', className)}
 		{...props}
 	/>
 )
@@ -127,7 +126,7 @@ const AlertDialogCancel = ({
 	<AlertDialogPrimitive.Close
 		data-slot="alert-dialog-cancel"
 		className={cn(
-			buttonVariants({ variant: 'neutral' }),
+			'btn btn-size-default btn-variant-neutral',
 			'mt-2 @xl:mt-0',
 			className
 		)}

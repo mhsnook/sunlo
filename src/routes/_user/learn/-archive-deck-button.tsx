@@ -12,7 +12,7 @@ import {
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
 import { decksCollection } from '@/features/deck/collections'
@@ -99,7 +99,7 @@ export function ArchiveDeckButton({
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
-					<AlertDialogCancel className={buttonVariants({ variant: 'neutral' })}>
+					<AlertDialogCancel className="btn btn-size-default btn-variant-neutral">
 						Cancel
 					</AlertDialogCancel>
 					{archived ? (
@@ -111,7 +111,7 @@ export function ArchiveDeckButton({
 						</AlertDialogAction>
 					) : (
 						<AlertDialogAction
-							className={buttonVariants({ hue: 'danger' })}
+							className="btn btn-size-default btn-variant-default hue-danger"
 							onClick={toggleArchived}
 							data-testid="confirm-archive-button"
 						>

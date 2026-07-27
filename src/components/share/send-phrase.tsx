@@ -1,12 +1,11 @@
 import { type ReactNode, useState } from 'react'
 import { Send } from 'lucide-react'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button, type ButtonVariantProps } from '@/components/ui/button'
 import { useSendToFriends } from '@/features/social'
 import {
 	PhrasePreviewChip,
 	FriendPickerDialog,
 } from '@/components/share/friend-picker'
-import { VariantProps } from 'class-variance-authority'
 import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
 function SendPhraseDialog({
@@ -52,7 +51,7 @@ export function SendPhraseToFriendButton({
 	link?: boolean
 	className?: string
 	text?: string
-} & VariantProps<typeof buttonVariants>) {
+} & ButtonVariantProps) {
 	const [open, setOpen] = useState(false)
 
 	const trigger = link ? (

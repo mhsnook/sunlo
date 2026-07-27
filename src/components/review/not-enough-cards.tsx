@@ -1,6 +1,5 @@
 import { MessageCircleWarningIcon } from 'lucide-react'
 import Callout from '@/components/ui/callout'
-import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 
 export function NotEnoughCards({
@@ -30,7 +29,7 @@ export function NotEnoughCards({
 			</p>
 			<div className="my-2 flex flex-wrap gap-2 [&>*]:flex-1">
 				<Link
-					className={buttonVariants({ variant: 'soft' })}
+					className="btn btn-size-default btn-variant-soft"
 					to="/learn/$lang/feed"
 					params={{ lang }}
 				>
@@ -38,7 +37,7 @@ export function NotEnoughCards({
 				</Link>
 
 				<Link
-					className={buttonVariants({ variant: 'soft' })}
+					className="btn btn-size-default btn-variant-soft"
 					to="/learn/$lang/phrases/new"
 					params={{ lang }}
 				>

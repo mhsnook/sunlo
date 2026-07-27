@@ -2,7 +2,6 @@ import { Link } from '@tanstack/react-router'
 import { Brain, Clock, Target, BarChart3, Calendar, Zap } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
 
 export function SpacedRepetitionSection() {
 	return (
@@ -187,7 +186,7 @@ export function SpacedRepetitionSection() {
 						<Link
 							to="/signup"
 							className={cn(
-								buttonVariants({ size: 'lg' }),
+								'btn btn-size-lg btn-variant-default',
 								'from-lum-5 from-chroma-max bg-gradient-to-r to-violet-500 font-semibold text-white/80 shadow-lg transition-all duration-300 hover:from-purple-600 hover:to-violet-600 hover:shadow-xl'
 							)}
 						>

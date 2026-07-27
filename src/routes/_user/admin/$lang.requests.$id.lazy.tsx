@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Loader } from '@/components/ui/loader'
@@ -136,7 +136,7 @@ function AdminRequestDetail() {
 				<Link
 					to="/learn/$lang/requests/$id"
 					params={{ lang, id: request.id }}
-					className={buttonVariants({ variant: 'soft', size: 'sm' })}
+					className="btn btn-size-sm btn-variant-soft"
 				>
 					View public request page
 				</Link>
@@ -161,7 +161,7 @@ function MessageSection({
 				<Link
 					to="/admin/messages/$id"
 					params={{ id: messageId }}
-					className={buttonVariants({ variant: 'soft', size: 'sm' })}
+					className="btn btn-size-sm btn-variant-soft"
 				>
 					View this message <ExternalLink className="ms-1 h-3 w-3" />
 				</Link>
@@ -327,7 +327,7 @@ function RelatedRequestsSection({
 						<Link
 							to="/admin/$lang/requests/$id"
 							params={{ lang: req.lang, id: req.id }}
-							className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+							className="btn btn-size-sm btn-variant-ghost"
 							aria-label="Open admin page"
 						>
 							<ExternalLink className="h-3 w-3" />
@@ -393,7 +393,7 @@ function AttachedPhraseRow({
 			<Link
 				to="/admin/$lang/phrases/$id"
 				params={{ lang, id: phrase.id }}
-				className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+				className="btn btn-size-sm btn-variant-ghost"
 				aria-label="Open admin phrase page"
 			>
 				<ExternalLink className="h-3 w-3" />

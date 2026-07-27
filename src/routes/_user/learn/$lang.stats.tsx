@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { buttonVariants } from '@/components/ui/button'
 import {
 	Card,
 	CardContent,
@@ -163,7 +162,7 @@ function DeckSettings() {
 				<Link
 					to="/learn/$lang/deck-settings"
 					from={Route.fullPath}
-					className={buttonVariants({ variant: 'neutral' })}
+					className="btn btn-size-default btn-variant-neutral"
 				>
 					Update Settings
 				</Link>

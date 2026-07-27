@@ -11,7 +11,6 @@ import { Toasters } from '@/components/ui/sonner'
 import type { AuthState } from '@/lib/use-auth'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
-import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import '@/types/route-static-data'
 
@@ -69,13 +68,16 @@ function NotFoundComponent() {
 						<Button onClick={goBack} variant="soft">
 							Go Back
 						</Button>
-						<Link to="/" className={buttonVariants({ variant: 'soft' })}>
+						<Link to="/" className="btn btn-size-default btn-variant-soft">
 							Go home
 						</Link>
-						<Link to="/learn" className={buttonVariants({ variant: 'soft' })}>
+						<Link to="/learn" className="btn btn-size-default btn-variant-soft">
 							Learning dashboard
 						</Link>
-						<Link to="/profile" className={buttonVariants({ variant: 'soft' })}>
+						<Link
+							to="/profile"
+							className="btn btn-size-default btn-variant-soft"
+						>
 							Your profile
 						</Link>
 					</div>

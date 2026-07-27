@@ -1,8 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ListPlus, MessageSquarePlus, BookOpen, Users } from 'lucide-react'
 
-import { buttonVariants } from '@/components/ui/button'
-
 type FilterType = 'request' | 'playlist' | 'phrase'
 
 const filterLabels: Record<FilterType, string> = {
@@ -49,7 +47,7 @@ export function FeedEmptyState({
 				</p>
 				<div className="mt-4">
 					<Link
-						className={buttonVariants({ variant: 'soft', size: 'sm' })}
+						className="btn btn-size-sm btn-variant-soft"
 						to={action.to}
 						params={{ lang }}
 					>
@@ -70,14 +68,11 @@ export function FeedEmptyState({
 					Nothing from friends yet. Maybe you need to add some?
 				</p>
 				<div className="flex flex-wrap gap-2">
-					<Link
-						className={buttonVariants({ variant: 'soft', size: 'sm' })}
-						to="/friends"
-					>
+					<Link className="btn btn-size-sm btn-variant-soft" to="/friends">
 						Find friends
 					</Link>
 					<Link
-						className={buttonVariants({ variant: 'soft', size: 'sm' })}
+						className="btn btn-size-sm btn-variant-soft"
 						to="/learn/$lang/requests/new"
 						params={{ lang }}
 					>
@@ -96,7 +91,7 @@ export function FeedEmptyState({
 					: 'This feed is empty.'}
 			</p>
 			<Link
-				className={buttonVariants({ variant: 'soft', size: 'sm' })}
+				className="btn btn-size-sm btn-variant-soft"
 				to="/learn/$lang/requests/new"
 				params={{ lang }}
 			>

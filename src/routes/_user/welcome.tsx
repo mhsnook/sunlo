@@ -24,7 +24,7 @@ import { languagesCollection } from '@/features/languages/collections'
 import { useLanguagesSortedByLearners } from '@/features/languages/hooks'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { LangBadge } from '@/components/ui/badge'
 import {
 	Dialog,
@@ -235,7 +235,7 @@ function WelcomePage() {
 				{hasDecks ? (
 					<Link
 						to={'/learn'}
-						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
+						className={cn('btn btn-size-lg btn-variant-default', 'gap-2')}
 						data-testid="go-to-decks-link"
 					>
 						Go to My Decks
@@ -244,7 +244,7 @@ function WelcomePage() {
 				) : isLearner ? (
 					<Link
 						to={'/learn/add-deck'}
-						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
+						className={cn('btn btn-size-lg btn-variant-default', 'gap-2')}
 						data-testid="create-decks-button"
 					>
 						Create My First Deck
@@ -253,7 +253,7 @@ function WelcomePage() {
 				) : (
 					<Link
 						to={'/friends/chats'}
-						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
+						className={cn('btn btn-size-lg btn-variant-default', 'gap-2')}
 						data-testid="go-to-friends-link"
 					>
 						Find Friends
@@ -362,12 +362,7 @@ function ActionCard({
 					<Link
 						to={linkTo}
 						search={linkSearch}
-						className={cn(
-							buttonVariants({
-								variant: isPrimary ? 'default' : 'soft',
-							}),
-							'w-full'
-						)}
+						className={cn('btn btn-size-default btn-variant-default', 'w-full')}
 					>
 						{linkText}
 					</Link>
@@ -508,10 +503,7 @@ function RequestsYouCanHelp() {
 
 			{requestsToShow.length >= 4 && (
 				<div className="mt-4 text-center">
-					<Link
-						to="/browse"
-						className={buttonVariants({ variant: 'soft', size: 'sm' })}
-					>
+					<Link to="/browse" className="btn btn-size-sm btn-variant-soft">
 						See More Requests
 					</Link>
 				</div>

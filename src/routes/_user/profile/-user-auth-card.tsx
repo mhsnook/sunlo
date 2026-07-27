@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router'
 import { Label } from '@/components/ui/label'
-import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/use-auth'
 
@@ -18,7 +17,7 @@ export default function UserAuthCard() {
 				/>
 				<Link
 					to="/profile/change-email"
-					className={buttonVariants({ variant: 'neutral' })}
+					className="btn btn-size-default btn-variant-neutral"
 				>
 					Change
 				</Link>
@@ -29,7 +28,7 @@ export default function UserAuthCard() {
 
 				<Link
 					to="/profile/change-password"
-					className={buttonVariants({ variant: 'neutral' })}
+					className="btn btn-size-default btn-variant-neutral"
 				>
 					Change
 				</Link>

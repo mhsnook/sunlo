@@ -4,7 +4,6 @@ import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
-import { buttonVariants } from '@/components/ui/button'
 import { CardContent } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
@@ -76,7 +75,7 @@ export function PasswordResetForm() {
 						</form.AppForm>
 						<Link
 							to="/profile"
-							className={buttonVariants({ variant: 'neutral' })}
+							className="btn btn-size-default btn-variant-neutral"
 						>
 							Back to profile
 						</Link>

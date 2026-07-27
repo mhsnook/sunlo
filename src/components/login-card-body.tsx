@@ -5,7 +5,6 @@ import { X } from 'lucide-react'
 import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
-import { buttonVariants } from '@/components/ui/button'
 import supabase from '@/lib/supabase-client'
 import { useAppForm } from '@/components/form'
 
@@ -107,7 +106,7 @@ export function LoginCardBody({
 				<Link
 					to="/signup"
 					data-testid="login-signup-link"
-					className={buttonVariants({ variant: 'neutral' })}
+					className="btn btn-size-default btn-variant-neutral"
 				>
 					Create account
 				</Link>

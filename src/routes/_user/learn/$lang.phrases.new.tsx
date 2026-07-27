@@ -18,7 +18,6 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import languages from '@/lib/languages'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
-import { buttonVariants } from '@/components/ui/button'
 import {
 	phrasesCollection,
 	phraseTranslationsCollection,
@@ -379,7 +378,7 @@ function AddPhraseTab() {
 									to="/learn/$lang/feed"
 									params={{ lang }}
 									search={{ search: true }}
-									className={buttonVariants({ variant: 'soft' })}
+									className="btn btn-size-default btn-variant-soft"
 								>
 									<Search size={16} />
 									Search phrases
@@ -389,7 +388,7 @@ function AddPhraseTab() {
 									to="/learn/$lang/bulk-add"
 									from={Route.fullPath}
 									data-testid="bulk-add-link"
-									className={buttonVariants({ variant: 'soft' })}
+									className="btn btn-size-default btn-variant-soft"
 								>
 									Bulk add phrases
 								</Link>

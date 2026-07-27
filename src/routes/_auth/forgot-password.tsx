@@ -4,7 +4,6 @@ import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
-import { buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
@@ -89,7 +88,7 @@ function ForgotPasswordPage() {
 							</form.AppForm>
 							<Link
 								to="/login"
-								className={buttonVariants({ variant: 'neutral' })}
+								className="btn btn-size-default btn-variant-neutral"
 							>
 								Back to login
 							</Link>

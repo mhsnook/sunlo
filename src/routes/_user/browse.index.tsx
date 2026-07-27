@@ -29,7 +29,6 @@ import { useAuth } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { buttonVariants } from '@/components/ui/button'
 import { LangBadge, Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { LanguagePicker } from '@/components/fields/language-picker'
@@ -83,10 +82,13 @@ function BrowsePage() {
 				</div>
 				{!isAuth && (
 					<div className="flex flex-col items-stretch gap-2 @xl:flex-row @xl:items-center">
-						<Link to="/login" className={buttonVariants({ variant: 'soft' })}>
+						<Link to="/login" className="btn btn-size-default btn-variant-soft">
 							<LogIn /> Sign In
 						</Link>
-						<Link to="/signup" className={buttonVariants()}>
+						<Link
+							to="/signup"
+							className="btn btn-size-default btn-variant-default"
+						>
 							<UserPlus />
 							Get Started
 						</Link>
@@ -318,7 +320,7 @@ function LanguageCard({
 				<Link
 					to="/browse/$lang"
 					params={{ lang }}
-					className={cn(buttonVariants({ variant: 'soft' }), 'w-full')}
+					className={cn('btn btn-size-default btn-variant-soft', 'w-full')}
 					data-testid="explore-language-link"
 				>
 					Explore {languages[lang] ?? name}
@@ -363,7 +365,7 @@ function LanguageListItem({
 				<Link
 					to="/browse/$lang"
 					params={{ lang }}
-					className={buttonVariants({ variant: 'soft', size: 'sm' })}
+					className="btn btn-size-sm btn-variant-soft"
 				>
 					Explore
 				</Link>
@@ -430,7 +432,7 @@ function RequestCard({
 				<Link
 					to="/learn/$lang/requests/$id"
 					params={{ lang: request.lang, id: request.id }}
-					className={buttonVariants({ variant: 'soft', size: 'sm' })}
+					className="btn btn-size-sm btn-variant-soft"
 				>
 					View Details
 				</Link>
@@ -541,7 +543,7 @@ function PlaylistCard({
 				<Link
 					to="/learn/$lang/playlists/$playlistId"
 					params={{ lang: playlist.lang, playlistId: playlist.id }}
-					className={cn(buttonVariants({ variant: 'soft' }), 'w-full')}
+					className={cn('btn btn-size-default btn-variant-soft', 'w-full')}
 				>
 					Start Learning
 				</Link>
@@ -558,13 +560,10 @@ function CTASection() {
 				Join our community of language learners today
 			</p>
 			<div className="mt-6 flex flex-row items-center justify-center gap-4">
-				<Link to="/signup" className={buttonVariants({ size: 'lg' })}>
+				<Link to="/signup" className="btn btn-size-lg btn-variant-default">
 					Create Free Account
 				</Link>
-				<Link
-					to="/login"
-					className={buttonVariants({ variant: 'soft', size: 'lg' })}
-				>
+				<Link to="/login" className="btn btn-size-lg btn-variant-soft">
 					Learn More
 				</Link>
 			</div>

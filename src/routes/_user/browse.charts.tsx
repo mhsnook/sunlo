@@ -11,7 +11,6 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { buttonVariants } from '@/components/ui/button'
 import {
 	LanguageComparisonChart,
 	DifficultyPopularityScatter,
@@ -150,7 +149,7 @@ function ChartsPage() {
 				<div className="py-12 text-center">
 					<BarChart3 className="text-con-mid mx-auto mb-4 size-12" />
 					<p className="text-con-mid text-lg">No library data available yet.</p>
-					<Link to="/browse" className={buttonVariants({ variant: 'soft' })}>
+					<Link to="/browse" className="btn btn-size-default btn-variant-soft">
 						Browse Languages
 					</Link>
 				</div>

@@ -10,7 +10,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { buttonVariants } from '@/components/ui/button'
 
 /** The Log-in / Create-account button pair shown on any auth-gated surface. */
 export function LoginSignupButtons() {
@@ -19,11 +18,11 @@ export function LoginSignupButtons() {
 			<Link
 				to="/login"
 				search={{ redirectedFrom: window.location.href }}
-				className={buttonVariants({ variant: 'default' })}
+				className="btn btn-size-default btn-variant-default"
 			>
 				Log in
 			</Link>
-			<Link to="/signup" className={buttonVariants({ variant: 'neutral' })}>
+			<Link to="/signup" className="btn btn-size-default btn-variant-neutral">
 				Create account
 			</Link>
 		</div>
@@ -125,11 +124,14 @@ export function AuthenticatedDialogContent({
 					<Link
 						to="/login"
 						search={{ redirectedFrom: window.location.href }}
-						className={buttonVariants({ variant: 'default' })}
+						className="btn btn-size-default btn-variant-default"
 					>
 						Log in
 					</Link>
-					<Link to="/signup" className={buttonVariants({ variant: 'neutral' })}>
+					<Link
+						to="/signup"
+						className="btn btn-size-default btn-variant-neutral"
+					>
 						Create account
 					</Link>
 				</div>

@@ -7,7 +7,7 @@ import { ArrowRightLeft } from 'lucide-react'
 import type { PublicProfileType } from '@/features/profile/schemas'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import {
 	Card,
@@ -189,7 +189,7 @@ const ShowAccepted = ({
 						to="/friends/$uid"
 						from={Route.fullPath}
 						params={{ uid: friend.uid }}
-						className={buttonVariants({ variant: 'default' })}
+						className="btn btn-size-default btn-variant-default"
 					>
 						Check out their profile
 					</Link>

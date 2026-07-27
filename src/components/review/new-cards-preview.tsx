@@ -2,7 +2,7 @@ import { type CSSProperties } from 'react'
 import { Eye, Headphones, Library, Sparkles } from 'lucide-react'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { CardContent } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
@@ -118,10 +118,7 @@ export function NewCardsPreview({
 						<Link
 							to="/learn/$lang/playlists"
 							params={{ lang: lang! }}
-							className={buttonVariants({
-								variant: 'soft',
-								className: 'justify-start',
-							})}
+							className="btn btn-size-default btn-variant-soft justify-start"
 						>
 							<Library className="size-4" />
 							Browse playlists for curated phrases
@@ -129,10 +126,7 @@ export function NewCardsPreview({
 						<Link
 							to="/learn/$lang/feed"
 							params={{ lang: lang! }}
-							className={buttonVariants({
-								variant: 'soft',
-								className: 'justify-start',
-							})}
+							className="btn btn-size-default btn-variant-soft justify-start"
 						>
 							<Sparkles className="size-4" />
 							Check the feed for new content
@@ -140,10 +134,7 @@ export function NewCardsPreview({
 						<Link
 							to="/learn/$lang/phrases/new"
 							params={{ lang: lang! }}
-							className={buttonVariants({
-								variant: 'soft',
-								className: 'justify-start',
-							})}
+							className="btn btn-size-default btn-variant-soft justify-start"
 						>
 							<Headphones className="size-4" />
 							Add phrases from a podcast or video

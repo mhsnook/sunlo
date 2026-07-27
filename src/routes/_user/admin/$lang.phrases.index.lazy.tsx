@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader } from '@/components/ui/loader'
-import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/use-auth'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
@@ -234,7 +233,7 @@ function PhraseTableRow({
 				<Link
 					to="/admin/$lang/phrases/$id"
 					params={{ lang, id: phrase.id }}
-					className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+					className="btn btn-size-icon btn-variant-ghost"
 					aria-label="View phrase details"
 					data-testid="admin-phrase-detail-link"
 				>
