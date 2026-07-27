@@ -321,7 +321,7 @@ function PhraseBookmarkBadge({ phraseId }: { phraseId: string }) {
 	if (!card?.status || !['active', 'learned'].includes(card.status)) return null
 	return (
 		<Bookmark
-			className="text-con-mid chroma-max shrink-0 fill-current/50"
+			className="text-con-mid chroma-high shrink-0 fill-current/50"
 			size={12}
 		/>
 	)

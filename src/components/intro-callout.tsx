@@ -28,7 +28,7 @@ export function IntroCallout({
 				className
 			)}
 		>
-			<Info className="text-con-mid chroma-max mt-0.5 size-4 shrink-0" />
+			<Info className="text-con-mid chroma-high mt-0.5 size-4 shrink-0" />
 			<div className="flex-1">
 				<span>{children}</span>
 				{onShowMore && (
@@ -36,7 +36,7 @@ export function IntroCallout({
 						{' '}
 						<button
 							onClick={onShowMore}
-							className="text-con-mid chroma-max underline hover:no-underline"
+							className="text-con-mid chroma-high underline hover:no-underline"
 						>
 							{showMoreLabel}
 						</button>

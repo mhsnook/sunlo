@@ -326,7 +326,7 @@ function ForgettingCurveChart({
 						key={`curve-${s.index}`}
 						d={buildPath(pts)}
 						fill="none"
-						className="text-con-mid chroma-max hue-accent"
+						className="text-con-mid chroma-high hue-accent"
 						stroke="currentColor"
 						strokeWidth={4}
 						strokeLinecap="round"

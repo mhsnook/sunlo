@@ -44,7 +44,7 @@ export function PhraseSummaryLine({
 				disabled={!('payload' in item)}
 			>
 				{card?.status && ['active', 'learned'].includes(card.status) ? (
-					<span className="bg-lum-5 bg-chroma-max inline-flex shrink-0 items-center justify-center rounded p-0.5">
+					<span className="bg-lum-5 bg-chroma-high inline-flex shrink-0 items-center justify-center rounded p-0.5">
 						<MessageSquareQuote size={12} className="text-white" />
 					</span>
 				) : (

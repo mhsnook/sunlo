@@ -32,7 +32,7 @@ export function CartButton() {
 					{cart.length > 0 && (
 						<span
 							data-testid="chat-cart-badge"
-							className="bg-lum-5 bg-chroma-max text-lum-none absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.65rem] font-medium"
+							className="bg-lum-5 bg-chroma-high text-lum-none absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[0.65rem] font-medium"
 						>
 							{cart.length}
 						</span>

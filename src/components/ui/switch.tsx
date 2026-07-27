@@ -13,7 +13,7 @@ const Switch = ({ className, ...props }: SwitchPrimitive.Root.Props) => (
 	>
 		<SwitchPrimitive.Thumb
 			className={cn(
-				'pointer-events-none block size-4 translate-x-0.5 rounded-full bg-white/50 shadow-sm outline-0 transition-[translate,background-color] duration-200 ease-in-out data-[checked]:translate-x-4 data-[checked]:bg-lum-5 data-[checked]:bg-chroma-max'
+				'pointer-events-none block size-4 translate-x-0.5 rounded-full bg-white/50 shadow-sm outline-0 transition-[translate,background-color] duration-200 ease-in-out data-[checked]:translate-x-4 data-[checked]:bg-lum-5 data-[checked]:bg-chroma-high'
 			)}
 		/>
 	</SwitchPrimitive.Root>

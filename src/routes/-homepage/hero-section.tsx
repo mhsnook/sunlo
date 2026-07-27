@@ -15,16 +15,16 @@ import { cn } from '@/lib/utils'
 
 export function HeroSection() {
 	return (
-		<header className="from-lum-3 from-chroma-mlow to-lum-5 to-chroma-max relative min-h-screen overflow-hidden bg-gradient-to-br">
+		<header className="from-lum-3 from-chroma-mlow to-lum-5 to-chroma-high relative min-h-screen overflow-hidden bg-gradient-to-br">
 			{/* Subtle background pattern */}
 			<div className="absolute inset-0 opacity-10">
 				<div className="absolute inset-0 bg-[radial-gradient(circle,_oklch(var(--lum-max)_0_0)_1px,_transparent_1px)] bg-[length:24px_24px]"></div>
 			</div>
 
 			{/* Floating elements for visual interest */}
-			<div className="bg-lum-5 bg-chroma-max bg-hue-success absolute top-20 left-[5%] h-20 w-20 rounded-full opacity-40 blur-xl"></div>
-			<div className="bg-lum-5 bg-chroma-max bg-hue-warning absolute top-40 right-[5%] h-32 w-32 rounded-full opacity-30 blur-xl"></div>
-			<div className="bg-lum-5 bg-chroma-max bg-hue-info absolute bottom-40 left-[7%] h-24 w-24 rounded-full opacity-30 blur-xl"></div>
+			<div className="bg-lum-5 bg-chroma-high bg-hue-success absolute top-20 left-[5%] h-20 w-20 rounded-full opacity-40 blur-xl"></div>
+			<div className="bg-lum-5 bg-chroma-high bg-hue-warning absolute top-40 right-[5%] h-32 w-32 rounded-full opacity-30 blur-xl"></div>
+			<div className="bg-lum-5 bg-chroma-high bg-hue-info absolute bottom-40 left-[7%] h-24 w-24 rounded-full opacity-30 blur-xl"></div>
 
 			<div className="relative z-10 container mx-auto px-4 py-16">
 				<div className="mx-auto max-w-5xl">
@@ -40,11 +40,11 @@ export function HeroSection() {
 									className="drop-shadow-2xl"
 									fetchPriority="high"
 								/>
-								<div className="bg-lum-5 bg-chroma-max bg-hue-warning absolute -top-2 -right-2 h-6 w-6 animate-pulse rounded-full shadow-lg"></div>
+								<div className="bg-lum-5 bg-chroma-high bg-hue-warning absolute -top-2 -right-2 h-6 w-6 animate-pulse rounded-full shadow-lg"></div>
 							</div>
 						</div>
 
-						<h1 className="from-lum-10 to-lum-5 to-chroma-max mb-6 bg-gradient-to-r bg-clip-text text-6xl font-bold tracking-tight text-transparent md:text-8xl">
+						<h1 className="from-lum-10 to-lum-5 to-chroma-high mb-6 bg-gradient-to-r bg-clip-text text-6xl font-bold tracking-tight text-transparent md:text-8xl">
 							Sunlo
 						</h1>
 
@@ -118,7 +118,7 @@ export function HeroSection() {
 								to="/signup"
 								className={cn(
 									'btn btn-size-lg btn-variant-default',
-									'group from-lum-5 from-chroma-max w-full border-2 border-transparent bg-gradient-to-r to-lum-6 to-chroma-max text-lum-none hover:from-lum-6 hover:to-lum-7 px-8 text-lg font-semibold shadow-lg transition-all duration-300 hover:shadow-xl sm:w-auto'
+									'group from-lum-5 from-chroma-high w-full border-2 border-transparent bg-gradient-to-r to-lum-6 to-chroma-high text-lum-none hover:from-lum-6 hover:to-lum-7 px-8 text-lg font-semibold shadow-lg transition-all duration-300 hover:shadow-xl sm:w-auto'
 								)}
 							>
 								<UserPlus className="opacity-60 transition-opacity group-hover:opacity-100" />{' '}
@@ -144,7 +144,7 @@ export function HeroSection() {
 									{[0, 1, 2, 3, 4].map((i) => (
 										<Star
 											key={i}
-											className="text-lum-5 text-chroma-max text-hue-warning h-3 w-3 fill-current"
+											className="text-lum-5 text-chroma-high text-hue-warning h-3 w-3 fill-current"
 										/>
 									))}
 								</div>

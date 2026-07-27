@@ -286,7 +286,7 @@ function BrowseLanguagePage() {
 											className={cn(
 												'rounded-full px-4 py-1.5 text-sm transition-colors',
 												active
-													? 'bg-lum-5 bg-chroma-max text-lum-none'
+													? 'bg-lum-5 bg-chroma-high text-lum-none'
 													: 'hue-neutral hover:hue-neutral bg-lum-2 text-lum-9 hover:bg-lum-3'
 											)}
 										>
@@ -553,7 +553,7 @@ function BrowseTab({
 		<TabsTrigger
 			value={value}
 			data-testid={`browse-tab-${value}`}
-			className="data-[active]:border-lum-4 data-[active]:border-chroma-max text-con-mid data-[active]:text-con-mhigh rounded-none border-0 border-b-2 border-transparent px-1 pb-2 text-base data-[active]:bg-transparent data-[active]:shadow-none"
+			className="data-[active]:border-lum-4 data-[active]:border-chroma-high text-con-mid data-[active]:text-con-mhigh rounded-none border-0 border-b-2 border-transparent px-1 pb-2 text-base data-[active]:bg-transparent data-[active]:shadow-none"
 		>
 			{children}
 		</TabsTrigger>

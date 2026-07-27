@@ -185,7 +185,7 @@ function BookmarkToggle() {
 		>
 			<Bookmark
 				className={
-					saved ? 'text-con-mid chroma-max fill-current/50' : 'text-con-mid'
+					saved ? 'text-con-mid chroma-high fill-current/50' : 'text-con-mid'
 				}
 			/>
 		</Button>
@@ -666,7 +666,7 @@ const cardStatusShowcaseStates: Array<{
 	dot: string
 	soft?: boolean
 }> = [
-	{ choice: 'active', dot: 'bg-lum-5 bg-chroma-max', soft: true },
+	{ choice: 'active', dot: 'bg-lum-5 bg-chroma-high', soft: true },
 	{ choice: 'learned', dot: 'hue-success bg-lum-5 bg-chroma-high' },
 	{ choice: 'skipped', dot: 'hue-neutral bg-lum-5' },
 	{ choice: 'nocard', dot: 'hue-neutral bg-lum-4' },
@@ -1252,19 +1252,19 @@ function ShowcaseIntroCallout() {
 	return (
 		<div className="space-y-2">
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-con-mid chroma-max mt-0.5 size-4 shrink-0" />
+				<Info className="text-con-mid chroma-high mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span>
 						Quick reminder: reviews use a 4 am cutoff, so cards due "today" stay
 						available until tomorrow morning.
 					</span>{' '}
-					<button className="text-con-mid chroma-max underline hover:no-underline">
+					<button className="text-con-mid chroma-high underline hover:no-underline">
 						Learn more
 					</button>
 				</div>
 			</div>
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-con-mid chroma-max mt-0.5 size-4 shrink-0" />
+				<Info className="text-con-mid chroma-high mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span>No "show more" link when the callout stands on its own.</span>
 				</div>
@@ -1575,9 +1575,9 @@ function ThemesPage() {
 								className={cn(
 									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
 									isActive
-										? 'border-con-mlow border-chroma-max outline-con-high outline-2'
+										? 'border-con-mlow border-chroma-high outline-con-high outline-2'
 										: s.brand
-											? 'border-con-mlow border-chroma-max'
+											? 'border-con-mlow border-chroma-high'
 											: 'hover:border-con-low border-transparent'
 								)}
 								style={getHueThemeCss(s.hue)}

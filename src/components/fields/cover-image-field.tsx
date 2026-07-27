@@ -34,7 +34,7 @@ export function CoverImageField({ label = 'Cover Image' }: { label?: string }) {
 				<Label
 					htmlFor="coverImageUploadInput"
 					className={cn(
-						'group border-con-mlow border-chroma-mlow hover:border-con-mlow hover:border-chroma-max hover:bg-lum-2 hover:bg-chroma-mlow relative isolate flex h-32 flex-col items-center justify-center rounded-2xl border text-center',
+						'group border-con-mlow border-chroma-mlow hover:border-con-mlow hover:border-chroma-high hover:bg-lum-2 hover:bg-chroma-mlow relative isolate flex h-32 flex-col items-center justify-center rounded-2xl border text-center',
 						url && 'h-auto'
 					)}
 				>

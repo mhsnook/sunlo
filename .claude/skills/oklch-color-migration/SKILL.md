@@ -75,7 +75,7 @@ write one B needs.** They fail with a plausible-looking result, never an error.
 `twMerge` keeps only the last:
 
 ```js
-twMerge('bg-lum-5 bg-chroma-max bg-hue-danger') // -> 'bg-hue-danger'
+twMerge('bg-lum-5 bg-chroma-high bg-hue-danger') // -> 'bg-hue-danger'
 ```
 
 Only bites classes that flow through `cn()`, so `cva` primitives break while
@@ -90,11 +90,9 @@ Both emit `color` at `var(--tx-l)`. `con-*` computes from `--bg-l` and **never
 sets `--tx-l`**. Equal specificity, chroma sorts later, so it wins and paints at
 the `:root` default.
 
-```html
-<span class="text-con-mid text-chroma-max">
-	<!-- renders at lum-9, not con-mid -->
-	<span class="text-con-mid chroma-max"> <!-- correct --></span></span
->
+```
+text-con-mid text-chroma-high   renders at lum-9, not con-mid
+text-con-mid chroma-high        correct
 ```
 
 **Bare seeders never paint; per-property setters always do.** That is the whole
@@ -145,6 +143,11 @@ what colour. `red` and `red-soft` collapse into `default`/`soft` under
 prop to Button/Badge/Callout and removed it. `variant`/`size` earn props because
 `btn-variant-soft` means nothing on a `<div>`. Hue works on any element, so a
 prop is a second way to say the same thing. `className="hue-danger"`.
+
+**`chroma-max` is a bailout, not a brand level.** It is for pure colour — art,
+not UI. `high` is the loudest you normally want. Converting brand tokens is the
+moment this goes wrong: the old `--color-primary` pinned `chroma-max` raw, and
+translating that literally spreads it across hundreds of call sites.
 
 **Hoist hue to the component root.** An icon inside an info card doesn't need
 `hue-info` — it's inside the info card. Restating an axis at three depths is the

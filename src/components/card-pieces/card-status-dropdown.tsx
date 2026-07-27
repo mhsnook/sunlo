@@ -66,7 +66,7 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		done: 'Card added',
 		failed: 'There was an error updating this card',
 		Icon: Bookmark,
-		iconClassName: 'text-con-mid chroma-max fill-current/50',
+		iconClassName: 'text-con-mid chroma-high fill-current/50',
 	},
 	learned: {
 		name: 'Learned',
@@ -135,7 +135,7 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 // full icon family in `statusStrings`; the trigger is intentionally flat —
 // one shape, one size, just hue swapping with the state.
 const triggerDotClass: Record<ShowableActions, string> = {
-	active: 'bg-lum-5 bg-chroma-max',
+	active: 'bg-lum-5 bg-chroma-high',
 	learned: 'hue-success bg-lum-5 bg-chroma-high',
 	skipped: 'hue-neutral bg-lum-5',
 	nocard: 'hue-neutral bg-lum-4',
@@ -369,7 +369,7 @@ export function CardStatusHeart({
 				<Bookmark
 					className={
 						card?.status === 'active'
-							? 'text-con-mid chroma-max fill-current/50'
+							? 'text-con-mid chroma-high fill-current/50'
 							: 'text-con-mid'
 					}
 				/>

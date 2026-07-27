@@ -136,11 +136,11 @@ export function WhenComplete() {
 						</p>
 						{stats.firstTryTotal > 0 && (
 							<p className="text-con-mid text-center">
-								<span className="text-con-mid chroma-max font-medium">
+								<span className="text-con-mid chroma-high font-medium">
 									{stats.firstTrySuccess}
 								</span>{' '}
 								recalled on first try
-								<span className="text-con-mid chroma-max font-medium">
+								<span className="text-con-mid chroma-high font-medium">
 									{' '}
 									(
 									{Math.round(
@@ -151,7 +151,7 @@ export function WhenComplete() {
 								{stats.complete > stats.firstTrySuccess && (
 									<>
 										, {stats.complete} total
-										<span className="text-con-mid chroma-max font-medium">
+										<span className="text-con-mid chroma-high font-medium">
 											{' '}
 											({Math.round((stats.complete / stats.reviewed) * 100)}%)
 										</span>

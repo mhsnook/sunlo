@@ -82,7 +82,7 @@ function NormItem({
 }) {
 	return (
 		<div className="flex gap-3">
-			<div className="bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-max flex size-10 shrink-0 items-center justify-center rounded-full">
+			<div className="bg-lum-2 bg-chroma-mlow text-lum-7 text-chroma-high flex size-10 shrink-0 items-center justify-center rounded-full">
 				<Icon className="size-5" />
 			</div>
 			<div>

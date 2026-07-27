@@ -106,7 +106,7 @@ function LangTile({
 				{isPrimary ? (
 					<Star className="size-3.5 shrink-0 fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400" />
 				) : isSelected ? (
-					<Check className="text-con-mid chroma-max size-3.5 shrink-0" />
+					<Check className="text-con-mid chroma-high size-3.5 shrink-0" />
 				) : null}
 			</div>
 			<div className="truncate text-sm leading-tight font-bold tracking-tight">
@@ -141,7 +141,7 @@ function LangRow({
 			</span>
 			<LangBadge lang={code} className="shrink-0 text-[10px]" />
 			{isSelected && (
-				<Check className="text-con-mid chroma-max size-3.5 shrink-0" />
+				<Check className="text-con-mid chroma-high size-3.5 shrink-0" />
 			)}
 		</button>
 	)
@@ -397,7 +397,7 @@ export function LanguagePickerTrigger({
 			className={cn(
 				// Match the at-rest + hover border treatment of <Input>/<Textarea>
 				'flex w-full items-center gap-2.5 rounded-2xl border bg-card/50 px-3.5 py-2.5 text-left text-sm font-sans inset-shadow-sm',
-				'cursor-pointer hover:border-con-mlow hover:border-chroma-max',
+				'cursor-pointer hover:border-con-mlow hover:border-chroma-high',
 				'',
 				hasError
 					? 'border-con-mid border-chroma-high border-hue-danger'

@@ -107,7 +107,7 @@ function FriendRow({
 				className={cn(
 					'flex size-[22px] shrink-0 items-center justify-center rounded-md border-[1.5px] transition-colors',
 					selected
-						? 'bg-lum-5 bg-chroma-max border-lum-7 border-chroma-max text-lum-none'
+						? 'bg-lum-5 bg-chroma-high border-lum-7 border-chroma-high text-lum-none'
 						: 'border-con-low bg-card group-hover:border-con-mid'
 				)}
 			>

@@ -555,7 +555,7 @@ function ReviewPageContent() {
 								<Card className="grow basis-40">
 									<CardHeader className="pb-2">
 										<CardTitle className="flex items-center gap-2 text-xl">
-											<MessageSquare className="text-con-mid chroma-max" />
+											<MessageSquare className="text-con-mid chroma-high" />
 											Sources
 										</CardTitle>
 									</CardHeader>

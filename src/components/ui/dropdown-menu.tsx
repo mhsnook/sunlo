@@ -41,7 +41,7 @@ const DropdownMenuSubTrigger = ({
 	<MenuPrimitive.SubmenuTrigger
 		data-slot="dropdown-menu-sub-trigger"
 		className={cn(
-			'focus:bg-lum-1 focus:bg-chroma-mlow data-[popup-open]:bg-lum-5 data-[popup-open]:bg-chroma-max flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+			'focus:bg-lum-1 focus:bg-chroma-mlow data-[popup-open]:bg-lum-5 data-[popup-open]:bg-chroma-high flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 			inset && 'pl-8',
 			className
 		)}

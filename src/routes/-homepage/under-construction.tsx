@@ -11,7 +11,7 @@ export function UnderConstructionNotice() {
 					<div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-start">
 						{/* Icon - centered on mobile, left-aligned on larger screens */}
 						<div className="flex-shrink-0">
-							<div className="from-lum-5 from-chroma-max flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br to-purple-600 shadow-lg sm:h-16 sm:w-16">
+							<div className="from-lum-5 from-chroma-high flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br to-purple-600 shadow-lg sm:h-16 sm:w-16">
 								<Construction
 									aria-disabled={true}
 									className="h-7 w-7 text-purple-300 sm:h-8 sm:w-8"

@@ -167,7 +167,7 @@ export function NotificationItem({
 								aria-label="Mark as read"
 								onClick={() => markAsRead.mutate(notification.id)}
 							>
-								<div className="bg-lum-5 bg-chroma-max h-2.5 w-2.5 rounded-full" />
+								<div className="bg-lum-5 bg-chroma-high h-2.5 w-2.5 rounded-full" />
 							</Button>
 						)}
 					</div>

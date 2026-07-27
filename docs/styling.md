@@ -67,14 +67,14 @@ Arbitrary luminance is a _direct_ L (`n/100`) and still auto-flips: `bg-lum-[93]
 
 `{prop}-chroma-{low | mlow | mid | mhigh | high | max}`, or the seeder `chroma-{…}`. These are _base_ values, **scaled per hue** (each hue's `--cscale-*` normalizes perceived saturation across hues) and **tapered toward white** (chroma eases to 0 near the light pole), so painted chroma is usually a bit below the base:
 
-| Name    | Base | Use for                            |
-| ------- | ---- | ---------------------------------- |
-| `low`   | 0.02 | Backgrounds, muted surfaces        |
-| `mlow`  | 0.05 | Tinted backgrounds, subtle borders |
-| `mid`   | 0.09 | Medium saturation                  |
-| `mhigh` | 0.13 | Prominent accents                  |
-| `high`  | 0.17 | Vivid colors                       |
-| `max`   | 0.25 | Fullest color the hue can display  |
+| Name    | Base | Use for                                       |
+| ------- | ---- | --------------------------------------------- |
+| `low`   | 0.02 | Backgrounds, muted surfaces                   |
+| `mlow`  | 0.05 | Tinted backgrounds, subtle borders            |
+| `mid`   | 0.09 | Medium saturation                             |
+| `mhigh` | 0.13 | Prominent accents                             |
+| `high`  | 0.17 | Vivid colours — the loudest you normally want |
+| `max`   | 0.25 | Bailout for pure colour; rare                 |
 
 The root uses `chroma-mid` (`__root.tsx`), so unless you set otherwise, all your
 colours will have this middle saturation.
@@ -83,7 +83,7 @@ The library's `:root` defaults every property to `chroma-low` (0.02, effectively
 grey), which is what Base UI portals get — they mount into `<body>`, outside the
 root route's element.
 
-Arbitrary chroma is `n/100`: `border-chroma-[6]` → chroma 0.06. We keep the library's per-hue scale but soften **`--chroma-taper`** to `8` in `globals.css` — the default (`3`) desaturates light surfaces so hard that backgrounds and language badges read as gray. Lower it toward `3` to mute light surfaces further; raise it to flatten. (Semantic tokens like `primary` use `chroma-max` _raw_, bypassing scale + taper, so the brand stays vivid regardless.)
+`max` is a bailout, not a brand level — reach for `high` when you want something loud. Arbitrary chroma is `n/100`: `border-chroma-[6]` → chroma 0.06. We keep the library's per-hue scale but soften **`--chroma-taper`** to `8` in `globals.css` — the default (`3`) desaturates light surfaces so hard that backgrounds and language badges read as gray. Lower it toward `3` to mute light surfaces further; raise it to flatten.
 
 ### Available hues (`hue`)
 
@@ -109,18 +109,14 @@ className = 'text-con-high' // stark against whatever surface this lands on
 className = 'border-con-mlow' // a soft step off the surface
 ```
 
-### Semantic color tokens
+### Semantic colour tokens
 
-Defined in `globals.css`, these bridge the OKLCH scale with traditional Tailwind tokens. Being raw `oklch()`, they **bypass the per-hue scale/taper**, so brand chroma is pinned at `chroma-max` (0.25) directly:
+There are two, and they are deliberate: `card` and `popover`. Everything else
+that used to live here — `primary`, `accent`, `foreground`, `muted`, `border`,
+`ring`, `input`, the whole sidebar set — is gone, replaced by axis classes.
 
-| Token                                  | Definition                      | Notes                                                                 |
-| -------------------------------------- | ------------------------------- | --------------------------------------------------------------------- |
-| `primary`                              | lum-5, chroma-max, hue-primary  | Auto-flips                                                            |
-| `primary-foresoft`                     | lum-7, chroma-max, hue-primary  | Auto-flips; the "interactive purple" for links, soft buttons, borders |
-| `primary-foreground`                   | Fixed L=0.93                    | Always near-white — for text ON primary surfaces only                 |
-| `accent` / `accent-foresoft`           | lum-5/7, chroma-max, hue-accent | Auto-flips                                                            |
-| `accent-foreground`                    | lum-10, chroma-mlow, hue-accent | Auto-flips; used as body text (language names)                        |
-| `foreground`, `muted-foreground`, etc. | Static per-mode                 | Defined in `:root` and `.dark` blocks                                 |
+Don't add more. If you find yourself wanting one, the answer is almost always a
+`hue-*` class plus a `lum`/`con` stop.
 
 ### Cards are white paper on a tinted page
 
@@ -204,32 +200,18 @@ indicator, which is a different thing from focus and states its own
 
 `tailwind-oklch` ships utilities for `bg-` `text-` `border-` `border-b-` `from-`
 `to-` `decoration-` `shadow-` `accent-`, plus `con-` for `text`/`border`/
-`outline`. There is **no** `ring-` `ring-offset-` `fill-` `stroke-` `divide-`
-`via-` `placeholder-` `caret-`, and no `border-s-`/`border-e-`.
+`outline`. There is **no** `ring-` `ring-offset-` `divide-` `via-`
+`placeholder-` `caret-`, and no `border-s-`/`border-e-`.
 
-Those properties keep using semantic tokens. To keep them consistent with the
-axes anyway, `globals.css` **derives the tokens from the ramp**:
+`fill-` and `stroke-` we added ourselves, at the bottom of `globals.css`,
+mirroring the library's pattern including the per-hue scale and taper — charts
+paint SVG and needed them. For a lone icon you don't need them: `fill-current`
+picks up whatever `text-*` class is on the element.
 
-```css
---border: oklch(var(--lum-3) var(--chroma-low) var(--hue-primary));
---ring: oklch(var(--lum-6) var(--chroma-max) var(--hue-primary));
-```
-
-Two things to know about these:
-
-- They have **no `.dark` counterpart** and must not get one. `.dark` is set on
-  `documentElement`, the same element as `:root`, so `var(--lum-3)` already
-  resolves to the dark value there. Re-declaring them in `.dark` would win on
-  source order and defeat the derivation.
-- Chroma is **raw** here (no per-hue `--cscale-*`, no taper), same as the brand
-  tokens. Keep the values low or they read more saturated than a utility at the
-  same nominal stop. For reference a `chroma-max` _utility_ on `hue-primary`
-  paints 0.25 × 0.86 = 0.215.
-- Like any `:root` declaration reading `var(--hue-*)`, they resolve **once** at
-  `:root` and so do not follow per-language hue in themed subtrees. That matches
-  the static definitions they replaced. See `lang-theme.ts` for why, and use
-  `getLangThemeCss()` (never a bare `--hue-primary`) when you do need a subtree
-  to take a language's hue.
+For the rest, either restructure (focus rings became `outline-con-*`; a `via-`
+stop can usually go) or drop to an arbitrary value. `--lum-max` is useful there
+— it is black in light and white in dark, so `oklch(var(--lum-max) 0 0)`
+auto-flips inside an arbitrary value and replaces a `dark:` pair.
 
 ### Caveats
 

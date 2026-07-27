@@ -80,7 +80,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 								/>
 							}
 						>
-							<div className="bg-lum-5 bg-chroma-max rounded-squircle text-lum-none flex aspect-square size-8 items-center justify-center rounded-xl">
+							<div className="bg-lum-5 bg-chroma-high rounded-squircle text-lum-none flex aspect-square size-8 items-center justify-center rounded-xl">
 								<WalletCards />
 							</div>
 							<div className="grid flex-1 text-start text-sm leading-tight">
