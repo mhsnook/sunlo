@@ -3,7 +3,7 @@
    media slot. */
 
 @utility item {
-	@apply [a]:hover:hue-accent [a]:hover:bg-lum-2 [a]:hover:bg-chroma-mlow focus-visible:border-con-mid focus-visible:outline-con-mhigh flex flex-wrap items-center rounded-md border border-transparent text-sm inset-shadow-sm transition-colors duration-100 focus-visible:ring-[3px] [a]:transition-colors;
+	@apply [a]:hover:hue-accent [a]:hover:bg-lum-2 [a]:hover:bg-chroma-mlow focus-visible:border-con-mid flex flex-wrap items-center rounded-md border border-transparent text-sm inset-shadow-sm transition-colors duration-100 focus-visible:ring-[3px] [a]:transition-colors;
 }
 
 @utility item-variant-default {

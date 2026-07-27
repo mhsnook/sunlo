@@ -58,7 +58,7 @@ const SheetContent = ({
 			{...props}
 		>
 			{children}
-			<SheetPrimitive.Close className="focus:outline-con-high data-[open]:bg-lum-2 absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-2 focus:outline-offset-2 disabled:pointer-events-none">
+			<SheetPrimitive.Close className="data-[open]:bg-lum-2 absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
 				<X className="size-4" />
 				<span className="sr-only">Close</span>
 			</SheetPrimitive.Close>

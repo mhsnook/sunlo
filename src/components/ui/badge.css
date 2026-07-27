@@ -5,7 +5,7 @@
    from whichever hue is in scope. No variant names a hue. */
 
 @utility badge {
-	@apply focus:outline-con-high inline-flex items-center rounded border shadow-xs inset-shadow-xs transition-colors focus:outline-2 focus:outline-offset-2;
+	@apply inline-flex items-center rounded border shadow-xs inset-shadow-xs transition-colors focus:outline-offset-2;
 }
 
 @utility badge-size-lg {

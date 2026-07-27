@@ -28,7 +28,7 @@ export function ChoiceTile({
 			aria-pressed={selected}
 			className={cn(
 				'rounded-2xl border-2 transition-colors',
-				'focus-visible:outline-2 focus-visible:outline-offset-2',
+				'',
 				'disabled:cursor-not-allowed disabled:opacity-60',
 				'text-con-mid',
 				selected

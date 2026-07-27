@@ -326,10 +326,7 @@ const SidebarInput = ({
 		<Input
 			data-slot="sidebar-input"
 			data-sidebar="input"
-			className={cn(
-				'bg-lum-1 focus-visible:outline-con-high h-8 w-full shadow-none focus-visible:outline-2',
-				className
-			)}
+			className={cn('bg-lum-1 h-8 w-full shadow-none', className)}
 			{...props}
 		/>
 	)
@@ -423,7 +420,7 @@ const SidebarGroupLabel = ({
 			data-slot="sidebar-group-label"
 			data-sidebar="group-label"
 			className={cn(
-				'text-con-mid outline-con-high flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium transition-[margin,opa] duration-200 ease-linear focus-visible:outline-2 [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mid flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium transition-[margin,opa] duration-200 ease-linear [&>svg]:size-4 [&>svg]:shrink-0',
 				'group-data-[collapsible=icon]:-mt-4 group-data-[collapsible=icon]:opacity-0',
 				className
 			)}
@@ -445,7 +442,7 @@ const SidebarGroupAction = ({
 			data-slot="sidebar-group-action"
 			data-sidebar="group-action"
 			className={cn(
-				'text-con-mhigh outline-con-high hover:bg-lum-2 hover:text-lum-9 absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 transition-transform focus-visible:outline-2 [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mhigh hover:bg-lum-2 hover:text-lum-9 absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 transition-transform [&>svg]:size-4 [&>svg]:shrink-0',
 				// Increases the hit area of the button on mobile.
 				'after:absolute after:-inset-2 md:after:hidden',
 				'group-data-[collapsible=icon]:hidden',
@@ -576,7 +573,7 @@ const SidebarMenuAction = ({
 			data-slot="sidebar-menu-action"
 			data-sidebar="menu-action"
 			className={cn(
-				'text-con-mhigh outline-con-high hover:bg-lum-2 hover:text-lum-9 peer-hover/menu-button:text-lum-9 absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 transition-transform focus-visible:outline-2 [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mhigh hover:bg-lum-2 hover:text-lum-9 peer-hover/menu-button:text-lum-9 absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 transition-transform [&>svg]:size-4 [&>svg]:shrink-0',
 				// Increases the hit area of the button on mobile.
 				'after:absolute after:-inset-2 md:after:hidden',
 				'peer-data-[size=sm]/menu-button:top-1',
@@ -689,7 +686,7 @@ const SidebarMenuSubButton = ({
 			data-size={size}
 			data-active={isActive}
 			className={cn(
-				'text-con-mhigh outline-con-high hover:bg-lum-2 hover:text-lum-9 active:bg-lum-2 active:text-lum-9 [&>svg]:text-lum-9 flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 focus-visible:outline-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mhigh hover:bg-lum-2 hover:text-lum-9 active:bg-lum-2 active:text-lum-9 [&>svg]:text-lum-9 flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
 				'data-[active=true]:bg-lum-2 data-[active=true]:text-lum-9',
 				size === 'sm' && 'text-xs',
 				size === 'md' && 'text-sm',

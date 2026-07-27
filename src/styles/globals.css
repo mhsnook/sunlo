@@ -331,6 +331,19 @@
 	}
 }
 @layer base {
+	/* Focus rings are an accessibility affordance, not a per-component styling
+	   decision — so every focusable element gets the same one and components
+	   don't opt in. `con-high` measures against whatever surface the element
+	   sits on, and the hue follows context, so a focused control inside a
+	   language-themed subtree rings in that language's colour.
+
+	   Override placement (`outline-offset-*`) where a control needs it. Don't
+	   override the colour. */
+	:focus-visible {
+		--bd-c: var(--chroma-high);
+		@apply outline-con-high outline-2 outline-offset-2;
+	}
+
 	* {
 		@apply border-lum-3;
 	}

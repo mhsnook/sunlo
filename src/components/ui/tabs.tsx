@@ -21,7 +21,7 @@ const TabsTrigger = ({ className, ...props }: TabsPrimitive.Tab.Props) => (
 	<TabsPrimitive.Tab
 		data-slot="tabs-trigger"
 		className={cn(
-			'data-active:chroma-mid hover:text-con-high hover:bg-lum-2 data-active:bg-white/50 focus-visible:outline-con-high data-active:bg-lum-1 data-active:text-con-mhigh inline-flex cursor-pointer items-center justify-center rounded-2xl border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 data-active:cursor-default data-active:shadow-md data-active:border-lum-3 mb-px',
+			'data-active:chroma-mid hover:text-con-high hover:bg-lum-2 data-active:bg-white/50 data-active:bg-lum-1 data-active:text-con-mhigh inline-flex cursor-pointer items-center justify-center rounded-2xl border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 data-active:cursor-default data-active:shadow-md data-active:border-lum-3 mb-px',
 			className
 		)}
 		{...props}
@@ -31,10 +31,7 @@ const TabsTrigger = ({ className, ...props }: TabsPrimitive.Tab.Props) => (
 const TabsContent = ({ className, ...props }: TabsPrimitive.Panel.Props) => (
 	<TabsPrimitive.Panel
 		data-slot="tabs-content"
-		className={cn(
-			'focus-visible:outline-con-high mt-2 focus-visible:outline-2 focus-visible:outline-offset-2',
-			className
-		)}
+		className={cn('mt-2 ', className)}
 		{...props}
 	/>
 )

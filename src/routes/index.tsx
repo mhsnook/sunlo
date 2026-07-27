@@ -96,7 +96,7 @@ function UserLogin() {
 	// User is authenticated - show profile if loaded, otherwise show app link
 	return !isReady ? null : (
 		<Link
-			className="rounded-squircle focus-visible:outline-con-high border-con-low inline-flex aspect-square h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow transition-all duration-300 hover:bg-white/50 focus-visible:outline-2 focus-visible:outline-offset-2 dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"
+			className="rounded-squircle border-con-low inline-flex aspect-square h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"
 			from={Route.fullPath}
 			to="/learn"
 			data-testid="homepage-app-link"

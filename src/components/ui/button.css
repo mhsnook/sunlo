@@ -9,7 +9,7 @@
 
 @utility btn {
 	@apply inline-flex cursor-pointer items-center justify-center border border-transparent font-medium whitespace-nowrap shadow transition-colors transition-opacity;
-	@apply focus-visible:outline-con-high focus-visible:outline-2 focus-visible:outline-offset-2;
+	@apply focus-visible:outline-offset-2;
 	@apply disabled:pointer-events-none disabled:cursor-default disabled:opacity-50;
 	& svg {
 		@apply pointer-events-none shrink-0;

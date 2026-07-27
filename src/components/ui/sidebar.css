@@ -2,7 +2,7 @@
    @import in styles/globals.css. */
 
 @utility sidebar-menu-button {
-	@apply outline-con-high hover:bg-lum-2 hover:text-lum-9 active:bg-lum-2 active:text-lum-9 data-[active=true]:bg-lum-2 data-[active=true]:text-lum-9 data-[popup-open]:hover:bg-lum-2 data-[popup-open]:hover:text-lum-9 flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! focus-visible:outline-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium;
+	@apply hover:bg-lum-2 hover:text-lum-9 active:bg-lum-2 active:text-lum-9 data-[active=true]:bg-lum-2 data-[active=true]:text-lum-9 data-[popup-open]:hover:bg-lum-2 data-[popup-open]:hover:text-lum-9 flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:font-medium;
 	& > span:last-child {
 		@apply truncate;
 	}

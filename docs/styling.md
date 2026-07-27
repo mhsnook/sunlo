@@ -177,6 +177,29 @@ bottom-only border stays on `border-b-lum-*`.
 - **Avoid `dark:` prefixes** — the scale and semantic tokens auto-flip. Reserve `dark:` for genuinely exceptional cases (e.g. a marketing page with custom gradients).
 - **Avoid opacity tints** (`bg-primary/10`) — the `lum/chroma/hue` utilities don't support the `/opacity` modifier; use a luminance step (`bg-lum-2`) instead for consistent appearance across monitors.
 
+### Focus rings are global
+
+Every focusable element gets the same ring from a single `:focus-visible` rule
+in `globals.css`. Components do not opt in, and should not restate it:
+
+```css
+:focus-visible {
+	--bd-c: var(--chroma-high);
+	@apply outline-con-high outline-2 outline-offset-2;
+}
+```
+
+`con-high` measures against whatever surface the element sits on, and the hue
+follows context — so a focused control inside a language-themed subtree rings in
+that language's colour.
+
+Override **placement** (`outline-offset-*`) where a control needs it. Don't
+override the colour. Two cases legitimately opt out: an element that shows focus
+some other way (menu and command items use `focus:bg-*`, with
+`focus:outline-hidden` to suppress the ring), and an always-on **selection**
+indicator, which is a different thing from focus and states its own
+`outline-con-* outline-2`.
+
 ### Properties with no utility
 
 `tailwind-oklch` ships utilities for `bg-` `text-` `border-` `border-b-` `from-`
