@@ -66,7 +66,7 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 			variant="lang"
 			className={cn(
 				!ready &&
-					'bg-lum-2! bg-chroma-low! text-con-mid! text-chroma-mid! border-lum-3! border-chroma-low!',
+					'bg-lum-2! bg-chroma-low! text-con-mid! chroma-mid! border-lum-3! border-chroma-low!',
 				className
 			)}
 			style={style}

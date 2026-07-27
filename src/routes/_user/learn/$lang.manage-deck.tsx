@@ -56,8 +56,8 @@ const statusIcon = {
 } as const
 
 const statusColors = {
-	active: 'text-con-mhigh text-chroma-high',
-	learned: 'hue-success text-con-mhigh text-chroma-high',
+	active: 'text-con-mhigh chroma-high',
+	learned: 'hue-success text-con-mhigh chroma-high',
 	skipped: 'hue-neutral text-con-mid',
 } as const
 
@@ -94,13 +94,13 @@ function getDueInfo(item: DueCheckable): {
 		const overdue = Math.abs(daysUntilDue)
 		return {
 			label: overdue === 1 ? 'Overdue 1d' : `Overdue ${overdue}d`,
-			color: 'hue-danger text-con-mhigh text-chroma-high',
+			color: 'hue-danger text-con-mhigh chroma-high',
 		}
 	}
 	if (daysUntilDue === 0)
 		return {
 			label: 'Due today',
-			color: 'hue-warning text-con-mhigh text-chroma-high',
+			color: 'hue-warning text-con-mhigh chroma-high',
 		}
 	return {
 		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,
@@ -164,7 +164,7 @@ function useCardData(lang: string) {
 		return [...grouped.entries()]
 			.map(([pid, dirCards]) => {
 				const phrase = phraseMap.get(pid)
-				// Pick the most active status (active > learned > skipped)
+				// Pick the most active status (active> learned> skipped)
 				const status = dirCards.reduce(
 					(best, c) =>
 						statusPriority[c.status] < statusPriority[best] ? c.status : best,
@@ -603,9 +603,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 				{isSkipped ? (
 					<span className="text-con-low text-xs">—</span>
 				) : reviewedToday ? (
-					<span className="text-con-mhigh text-sm font-medium">
-						Reviewed today!
-					</span>
+					<span className="text-sm font-medium">Reviewed today!</span>
 				) : dueInfo ? (
 					<span className={cn('text-sm tabular-nums', dueInfo.color)}>
 						{dueInfo.label}

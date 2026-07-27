@@ -133,9 +133,7 @@ export function SharePreviewChip({
 }) {
 	return (
 		<div className="bg-lum-1 bg-chroma-mlow border-lum-2 border-chroma-mlow border-l-primary mx-3.5 flex items-center gap-2.5 rounded-lg border border-l-4 px-3 py-2.5">
-			<span className="hue-accent text-con-mhigh text-chroma-high flex shrink-0">
-				{icon}
-			</span>
+			<span className="hue-accent text-chroma-high flex shrink-0">{icon}</span>
 			<span className="min-w-0 flex-1">
 				<span className="block truncate font-bold">{title}</span>
 				{subtitle ? (

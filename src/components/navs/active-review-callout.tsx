@@ -43,7 +43,7 @@ function ReviewRemainingLink({
 			<span className="text-xs font-medium group-hover:underline">
 				{languages[lang]}
 			</span>
-			<span className="text-con-mid text-chroma-mlow group-hover:text-con-mhigh text-xs font-bold">
+			<span className="text-con-mid chroma-mlow group-hover:text-con-mhigh text-xs font-bold">
 				{remaining} left
 			</span>
 		</Link>

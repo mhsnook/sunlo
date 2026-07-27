@@ -208,9 +208,7 @@ function ActivityLine({ item }: { item: FeedActivityType }) {
 						<span className="text-con-mid shrink-0" aria-hidden>
 							·
 						</span>
-						<span className="text-con-mhigh truncate font-medium">
-							{meta.preview}
-						</span>
+						<span className="truncate font-medium">{meta.preview}</span>
 					</>
 				) : null}
 			</Link>

@@ -26,9 +26,7 @@ export function CoverImageField({ label = 'Cover Image' }: { label?: string }) {
 	return (
 		<div className="flex flex-col gap-1">
 			<Label
-				className={
-					showError ? 'text-con-mhigh text-chroma-high text-hue-danger' : ''
-				}
+				className={showError ? 'text-con-mhigh chroma-high hue-danger' : ''}
 			>
 				{label}
 			</Label>
@@ -87,7 +85,7 @@ export function CoverImageField({ label = 'Cover Image' }: { label?: string }) {
 							field.handleChange(null)
 							field.handleBlur()
 						}}
-						className="text-con-mid hover:text-con-mhigh hover:text-chroma-high hover:text-hue-danger self-start"
+						className="text-con-mid hover:text-con-mhigh hover:chroma-high hover:hue-danger self-start"
 					>
 						<X className="me-1 h-4 w-4" />
 						Remove image

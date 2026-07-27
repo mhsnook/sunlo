@@ -66,7 +66,7 @@ function ChatEntryItem({ entry }: { entry: ChatEntry }) {
 			data-key={uid}
 			to="/friends/chats/$friendUid"
 			params={{ friendUid: uid }}
-			className="hover:hue-accent hover:bg-lum-2 hover:bg-chroma-mlow hover:text-con-high hover:text-chroma-mlow hover:text-hue-accent flex items-center gap-3 rounded-2xl px-3 py-2 transition-all"
+			className="hover:hue-accent hover:bg-lum-2 hover:bg-chroma-mlow hover:text-con-high hover:chroma-mlow hover:hue-accent flex items-center gap-3 rounded-2xl px-3 py-2 transition-all"
 			activeProps={linkActiveProps}
 		>
 			<Avatar className="h-8 w-8">

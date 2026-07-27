@@ -43,7 +43,7 @@ function InviteFriendPage() {
 					<Sparkles className="h-4 w-4" />
 					<span>Grow your learning network</span>
 				</div>
-				<h1 className="text-con-mhigh mb-4 text-4xl font-bold text-balance @lg:text-5xl">
+				<h1 className="mb-4 text-4xl font-bold text-balance @lg:text-5xl">
 					Invite a Friend to Help
 				</h1>
 				<p className="text-con-mid mx-auto max-w-2xl text-xl text-pretty">
@@ -62,12 +62,10 @@ function InviteFriendPage() {
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
 									<div className="bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Share className="text-con-mid text-chroma-max h-6 w-6" />
+										<Share className="text-con-mid chroma-max h-6 w-6" />
 									</div>
 									<div>
-										<h3 className="text-con-mhigh text-lg font-semibold">
-											Quick Share
-										</h3>
+										<h3 className="text-lg font-semibold">Quick Share</h3>
 										<p className="text-con-mid text-sm">
 											Share instantly with one tap
 										</p>
@@ -82,12 +80,10 @@ function InviteFriendPage() {
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
 									<div className="hue-accent bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Copy className="text-con-high text-chroma-mlow text-hue-accent h-6 w-6" />
+										<Copy className="text-con-high chroma-mlow hue-accent h-6 w-6" />
 									</div>
 									<div>
-										<h3 className="text-con-mhigh text-lg font-semibold">
-											Copy Link
-										</h3>
+										<h3 className="text-lg font-semibold">Copy Link</h3>
 										<p className="text-con-mid text-sm">
 											Get a shareable invite link
 										</p>
@@ -108,9 +104,7 @@ function InviteFriendPage() {
 			{/* Sharing Methods */}
 			<Card className="border-con-low shadow-sm">
 				<CardHeader className="my-0 pt-8 pb-0">
-					<h2 className="text-con-mhigh text-center text-2xl font-bold">
-						Choose Your Method
-					</h2>
+					<h2 className="text-center text-2xl font-bold">Choose Your Method</h2>
 				</CardHeader>
 				<CardContent className="p-8">
 					<div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @xl:grid-cols-2">
@@ -122,10 +116,10 @@ function InviteFriendPage() {
 						>
 							<div className="flex items-center space-x-4">
 								<div className="hue-info bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<Mail className="hue-info text-con-mhigh text-chroma-high h-6 w-6" />
+									<Mail className="hue-info text-chroma-high h-6 w-6" />
 								</div>
 								<div>
-									<h3 className="text-con-mhigh font-semibold">Email</h3>
+									<h3 className="font-semibold">Email</h3>
 									<p className="text-con-mid text-sm">Send via email</p>
 								</div>
 							</div>
@@ -139,10 +133,10 @@ function InviteFriendPage() {
 						>
 							<div className="flex items-center space-x-4">
 								<div className="hue-success bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-									<MessageSquare className="hue-success text-con-mhigh text-chroma-high h-6 w-6" />
+									<MessageSquare className="hue-success text-chroma-high h-6 w-6" />
 								</div>
 								<div>
-									<h3 className="text-con-mhigh font-semibold">WhatsApp</h3>
+									<h3 className="font-semibold">WhatsApp</h3>
 									<p className="text-con-mid text-sm">Share on WhatsApp</p>
 								</div>
 							</div>
@@ -155,12 +149,10 @@ function InviteFriendPage() {
 							>
 								<div className="flex items-center space-x-3">
 									<div className="hue-warning bg-lum-2 bg-chroma-mlow group-hover:bg-lum-3 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
-										<Copy className="hue-warning text-con-mhigh text-chroma-high h-6 w-6" />
+										<Copy className="hue-warning text-chroma-high h-6 w-6" />
 									</div>
 									<div>
-										<h3 className="text-con-mhigh text-lg font-semibold">
-											Copy Link
-										</h3>
+										<h3 className="text-lg font-semibold">Copy Link</h3>
 										<p className="text-con-mid text-sm">
 											Get a shareable invite link
 										</p>
@@ -192,9 +184,7 @@ function InviteFriendPage() {
 							<QrCode className="h-4 w-4" />
 							<span>Scan to invite</span>
 						</div>
-						<h2 className="text-con-mhigh text-2xl font-bold">
-							Show them in person
-						</h2>
+						<h2 className="text-2xl font-bold">Show them in person</h2>
 						<p className="text-con-mid text-pretty">
 							Meeting up? Have them point their camera at this QR code to open
 							your invite link and join Sunlo.

@@ -306,7 +306,7 @@ function ForgettingCurveChart({
 						key={`tail-${s.index}`}
 						d={buildPath(pts)}
 						fill="none"
-						className="hue-accent text-con-mlow text-chroma-mlow"
+						className="hue-accent text-con-mlow chroma-mlow"
 						stroke="currentColor"
 						strokeWidth={1.5}
 					/>
@@ -326,7 +326,7 @@ function ForgettingCurveChart({
 						key={`curve-${s.index}`}
 						d={buildPath(pts)}
 						fill="none"
-						className="text-con-mid text-chroma-max text-hue-accent"
+						className="text-con-mid chroma-max hue-accent"
 						stroke="currentColor"
 						strokeWidth={4}
 						strokeLinecap="round"
@@ -389,7 +389,6 @@ function ForgettingCurveChart({
 				x2={PAD.left}
 				y1={PAD.top - 4}
 				y2={PAD.top + PLOT.h}
-				className="text-con-mhigh"
 				stroke="currentColor"
 				strokeWidth={2.5}
 			/>
@@ -398,7 +397,6 @@ function ForgettingCurveChart({
 				x2={PAD.left + PLOT.w}
 				y1={PAD.top + PLOT.h}
 				y2={PAD.top + PLOT.h}
-				className="text-con-mhigh"
 				stroke="currentColor"
 				strokeWidth={2.5}
 			/>
@@ -608,7 +606,7 @@ function FsrsPage() {
 											onClick={() => removeReview(r.id)}
 											aria-label={`Remove review ${i}`}
 											disabled={reviews.length <= 1}
-											className="hover:hue-danger text-con-mid hover:text-con-mid hover:text-chroma-high disabled:opacity-40"
+											className="hover:hue-danger text-con-mid hover:text-con-mid hover:chroma-high disabled:opacity-40"
 										>
 											<X className="size-4" />
 										</button>

@@ -102,7 +102,7 @@ export function LanguagesKnownField() {
 								</Button>
 							</div>
 							<div
-								className="text-con-mhigh min-w-0 flex-1 px-2 text-sm @lg:text-base"
+								className="min-w-0 flex-1 px-2 text-sm @lg:text-base"
 								data-testid="language-name"
 							>
 								{languages[item.lang] ?? item.lang}
@@ -143,7 +143,7 @@ export function LanguagesKnownField() {
 								aria-label="Remove language"
 								data-testid="remove-language"
 							>
-								<Trash2 className="text-con-mhigh text-chroma-high text-hue-danger size-4" />
+								<Trash2 className="text-chroma-high text-hue-danger size-4" />
 							</Button>
 						</div>
 					</Card>

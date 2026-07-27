@@ -89,7 +89,7 @@ function WelcomePage() {
 			{/* Welcome Header */}
 			<header className="space-y-4 text-center">
 				<div className="from-lum-3 from-chroma-mlow to-lum-1 to-chroma-low mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
-					<Sparkles className="text-con-mid text-chroma-max size-10" />
+					<Sparkles className="text-con-mid chroma-max size-10" />
 				</div>
 				<div>
 					<h1 className="d1">
@@ -474,7 +474,7 @@ function RequestsYouCanHelp() {
 	return (
 		<section>
 			<div className="mb-4 flex items-center gap-2">
-				<Globe className="text-con-mid text-chroma-max size-5" />
+				<Globe className="text-con-mid chroma-max size-5" />
 				<h2 className="text-xl font-bold">Requests You Can Help With</h2>
 			</div>
 			<p className="text-con-mid mb-4">

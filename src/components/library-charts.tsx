@@ -419,7 +419,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 							: 0}
 						%)
 					</p>
-					<p className="text-con-mid text-chroma-max mt-1 text-xs">
+					<p className="text-con-mid chroma-max mt-1 text-xs">
 						Click to browse phrases
 					</p>
 				</div>
@@ -582,7 +582,7 @@ export function LibrarySummaryStats() {
 					key={stat.label}
 					className="bg-card rounded border p-3 text-center"
 				>
-					<p className="text-con-mid text-chroma-max text-2xl font-bold tabular-nums">
+					<p className="text-con-mid chroma-max text-2xl font-bold tabular-nums">
 						{stat.value.toLocaleString()}
 					</p>
 					<p className="text-con-mid text-xs">{stat.label}</p>

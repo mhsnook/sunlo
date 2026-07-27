@@ -314,7 +314,7 @@ function BulkAddPhrasesPage() {
 										<Button
 											variant="ghost"
 											size="sm"
-											className="text-con-mhigh text-chroma-high text-hue-danger text-xs"
+											className="text-chroma-high text-hue-danger text-xs"
 											onClick={() => setStagedPhrases([])}
 											data-testid="clear-staged-phrases"
 										>
@@ -608,7 +608,7 @@ function StagedPhraseRow({
 					data-testid="remove-staged-phrase"
 					onClick={onRemove}
 				>
-					<Trash2 className="text-con-mhigh text-chroma-high text-hue-danger size-3.5" />
+					<Trash2 className="text-chroma-high text-hue-danger size-3.5" />
 				</Button>
 			</div>
 		</div>
@@ -724,7 +724,7 @@ function EditPhraseDialog({
 									disabled={translations.length <= 1}
 									aria-label="Remove translation"
 								>
-									<Trash2 className="text-con-mhigh text-chroma-high text-hue-danger size-3.5" />
+									<Trash2 className="text-chroma-high text-hue-danger size-3.5" />
 								</Button>
 							</div>
 						))}

@@ -137,7 +137,7 @@ export function PlaylistItem({
 	return (
 		<div
 			style={{ viewTransitionName: `playlist-${playlist.id}` } as CSSProperties}
-			className="bg-card text-con-mhigh @container flex flex-col gap-3 rounded-lg border p-6 shadow-sm"
+			className="bg-card @container flex flex-col gap-3 rounded-lg border p-6 shadow-sm"
 		>
 			<div className="flex flex-row items-start justify-between gap-2">
 				<div className="flex flex-col gap-1">
@@ -321,7 +321,7 @@ function PhraseBookmarkBadge({ phraseId }: { phraseId: string }) {
 	if (!card?.status || !['active', 'learned'].includes(card.status)) return null
 	return (
 		<Bookmark
-			className="text-con-mid text-chroma-max shrink-0 fill-current/50"
+			className="text-con-mid chroma-max shrink-0 fill-current/50"
 			size={12}
 		/>
 	)

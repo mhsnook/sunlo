@@ -154,9 +154,7 @@ export function SpreadsheetImportDialog({
 								</p>
 								<div className="space-y-2 ps-1">
 									<p>
-										<strong className="text-con-mhigh text-chroma-mhigh">
-											Phrase
-										</strong>{' '}
+										<strong className="text-chroma-mhigh">Phrase</strong>{' '}
 										&mdash; the word or sentence in your learning language.
 										Include the word &ldquo;phrase&rdquo; in the header (e.g.{' '}
 										<code className="bg-lum-2 bg-chroma-mlow rounded px-1.5 py-0.5 text-sm">
@@ -165,7 +163,7 @@ export function SpreadsheetImportDialog({
 										).
 									</p>
 									<p>
-										<strong className="hue-accent text-con-mhigh text-chroma-mhigh">
+										<strong className="hue-accent text-chroma-mhigh">
 											Translation
 										</strong>{' '}
 										&mdash; put the language name or 3-letter code in the header
@@ -180,9 +178,7 @@ export function SpreadsheetImportDialog({
 										). You can have multiple translation columns.
 									</p>
 									<p>
-										<strong className="hue-info text-con-mhigh text-chroma-mhigh">
-											Tags
-										</strong>{' '}
+										<strong className="hue-info text-chroma-mhigh">Tags</strong>{' '}
 										&mdash; optional. Include &ldquo;tag&rdquo; in the header.
 										Separate multiple tags with commas inside a cell.
 									</p>
@@ -518,12 +514,12 @@ function ValidationMessages({
 	return (
 		<>
 			{translationCount === 0 && (
-				<p className="text-con-mhigh text-chroma-high text-hue-danger text-sm">
+				<p className="text-chroma-high text-hue-danger text-sm">
 					Please mark at least one column as &ldquo;Translation&rdquo;
 				</p>
 			)}
 			{translationsWithoutLang > 0 && (
-				<p className="text-con-mhigh text-chroma-high text-hue-danger text-sm">
+				<p className="text-chroma-high text-hue-danger text-sm">
 					Please select a language for all translation columns
 				</p>
 			)}

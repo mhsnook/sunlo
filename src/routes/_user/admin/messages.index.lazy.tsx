@@ -681,7 +681,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 										aria-label={`Archive ${tag.label}`}
 										data-testid="archive-tag-button"
 									>
-										<Archive className="text-con-mhigh text-chroma-high text-hue-danger size-3.5" />
+										<Archive className="text-chroma-high text-hue-danger size-3.5" />
 									</Button>
 								</AlertDialogTrigger>
 								<AlertDialogContent>

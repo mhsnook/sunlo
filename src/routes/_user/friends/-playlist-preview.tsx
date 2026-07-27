@@ -32,7 +32,7 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 		>
 			<div
 				style={getLangThemeCss(playlist.lang)}
-				className="bg-card text-con-mhigh @container relative z-10 flex flex-col gap-3 rounded-lg border py-0 shadow-sm"
+				className="bg-card @container relative z-10 flex flex-col gap-3 rounded-lg border py-0 shadow-sm"
 			>
 				<CardHeader className="border-b-lum-4 border-b-chroma-mlow mx-4 mb-0 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">

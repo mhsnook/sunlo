@@ -35,9 +35,8 @@ export function ReviewBanner({
 
 					<div className="space-y-1">
 						<h2 className="text-lg leading-tight font-bold @md:text-xl">
-							<span className="text-con-mhigh">{focusDue}</span>{' '}
-							{focus.language} {focusDue === 1 ? 'card' : 'cards'} ready for
-							review
+							<span>{focusDue}</span> {focus.language}{' '}
+							{focusDue === 1 ? 'card' : 'cards'} ready for review
 						</h2>
 						<p className="text-con-mid text-sm">
 							About {estMinutes} {estMinutes === 1 ? 'minute' : 'minutes'}.

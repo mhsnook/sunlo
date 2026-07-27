@@ -277,7 +277,7 @@ function AddPhraseTab() {
 														)}
 													</div>
 													<div className="space-y-2">
-														<div className="text-con-mhigh font-medium">
+														<div className="font-medium">
 															{phraseText || (
 																<span className="text-con-mid italic">
 																	Phrase text...
@@ -298,7 +298,7 @@ function AddPhraseTab() {
 														Recall Review <Brain className="size-3" />
 													</div>
 													<div className="space-y-2">
-														<div className="text-con-mhigh font-medium">
+														<div className="font-medium">
 															{translationText || (
 																<span className="text-con-mid italic">
 																	Translation...

@@ -66,7 +66,7 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		done: 'Card added',
 		failed: 'There was an error updating this card',
 		Icon: Bookmark,
-		iconClassName: 'text-con-mid text-chroma-max fill-current/50',
+		iconClassName: 'text-con-mid chroma-max fill-current/50',
 	},
 	learned: {
 		name: 'Learned',
@@ -369,7 +369,7 @@ export function CardStatusHeart({
 				<Bookmark
 					className={
 						card?.status === 'active'
-							? 'text-con-mid text-chroma-max fill-current/50'
+							? 'text-con-mid chroma-max fill-current/50'
 							: 'text-con-mid'
 					}
 				/>

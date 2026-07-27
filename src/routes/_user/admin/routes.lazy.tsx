@@ -184,7 +184,7 @@ function BoolCell({ on }: { on: boolean }) {
 		<td
 			className={cn(
 				'px-2 py-1.5 text-center',
-				on ? 'hue-success text-con-mhigh text-chroma-high' : 'text-con-mid'
+				on ? 'hue-success text-con-mhigh chroma-high' : 'text-con-mid'
 			)}
 		>
 			{on ? '✓' : '·'}
@@ -196,7 +196,7 @@ function SearchCell({ scope }: { scope: SearchScope | undefined }) {
 	if (scope === undefined)
 		return <td className="text-con-mid px-2 py-1.5 text-center">·</td>
 	return (
-		<td className="hue-success text-con-mhigh text-chroma-high px-2 py-1.5 text-center font-mono text-xs">
+		<td className="hue-success text-chroma-high px-2 py-1.5 text-center font-mono text-xs">
 			{scope}
 		</td>
 	)

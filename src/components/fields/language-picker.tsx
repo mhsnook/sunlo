@@ -106,7 +106,7 @@ function LangTile({
 				{isPrimary ? (
 					<Star className="size-3.5 shrink-0 fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400" />
 				) : isSelected ? (
-					<Check className="text-con-mid text-chroma-max size-3.5 shrink-0" />
+					<Check className="text-con-mid chroma-max size-3.5 shrink-0" />
 				) : null}
 			</div>
 			<div className="truncate text-sm leading-tight font-bold tracking-tight">
@@ -133,7 +133,7 @@ function LangRow({
 		<button
 			type="button"
 			data-key={code}
-			className="hover:bg-lum-2 focus-visible:bg-lum-2 text-con-mhigh flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
+			className="hover:bg-lum-2 focus-visible:bg-lum-2 flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
 			onClick={() => onPick(code)}
 		>
 			<span className="min-w-0 flex-1 truncate text-sm font-semibold">
@@ -141,7 +141,7 @@ function LangRow({
 			</span>
 			<LangBadge lang={code} className="shrink-0 text-[10px]" />
 			{isSelected && (
-				<Check className="text-con-mid text-chroma-max size-3.5 shrink-0" />
+				<Check className="text-con-mid chroma-max size-3.5 shrink-0" />
 			)}
 		</button>
 	)
@@ -410,7 +410,7 @@ export function LanguagePickerTrigger({
 			{value ? (
 				<>
 					<LangBadge lang={value} />
-					<span className="text-con-mhigh font-semibold">{name}</span>
+					<span className="font-semibold">{name}</span>
 				</>
 			) : (
 				<>

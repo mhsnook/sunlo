@@ -393,7 +393,7 @@ function AdminTranslationRow({
 								{translation.archived ? (
 									<Undo2 className="size-3.5" />
 								) : (
-									<Archive className="text-con-mhigh text-chroma-high text-hue-danger size-3.5" />
+									<Archive className="text-chroma-high text-hue-danger size-3.5" />
 								)}
 							</Button>
 						)}

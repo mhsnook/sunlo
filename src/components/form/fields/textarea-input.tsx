@@ -29,9 +29,7 @@ export function TextareaInput({
 			{label && (
 				<Label
 					htmlFor={field.name}
-					className={
-						showError ? 'text-con-mhigh text-chroma-high text-hue-danger' : ''
-					}
+					className={showError ? 'text-con-mhigh chroma-high hue-danger' : ''}
 				>
 					{label}
 				</Label>

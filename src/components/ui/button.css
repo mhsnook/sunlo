@@ -58,7 +58,7 @@
 	@apply chroma-low bg-lum-1 hover:bg-lum-2 text-con-mid hover:text-con-mhigh border-lum-2;
 }
 @utility btn-variant-ghost {
-	@apply hover:bg-lum-1 hover:border-lum-1;
+	@apply hover:bg-lum-1 hover:border-lum-2;
 }
 @utility btn-variant-dashed-w-full {
 	@apply border-con-low w-full border-2 border-dashed shadow-none hover:shadow;

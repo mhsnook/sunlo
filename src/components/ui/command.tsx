@@ -106,7 +106,7 @@ const CommandItem = ({
 	<CommandPrimitive.Item
 		data-slot="command-item"
 		className={cn(
-			"data-[selected='true']:bg-lum-2 data-[selected='true']:bg-chroma-low data-[selected='true']:bg-hue-accent data-[selected=true]:text-con-high data-[selected=true]:text-chroma-mlow data-[selected=true]:text-hue-accent relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+			"data-[selected='true']:bg-lum-2 data-[selected='true']:bg-chroma-low data-[selected='true']:bg-hue-accent data-[selected=true]:text-con-high data-[selected=true]:chroma-mlow data-[selected=true]:hue-accent relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
 			className
 		)}
 		{...props}

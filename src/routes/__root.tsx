@@ -40,7 +40,7 @@ function RootComponent() {
 		<SidebarProvider>
 			{/* chroma-mid is the app's baseline saturation. Base UI portals mount
 			    into <body>, outside this element, so they don't get it. */}
-			<div className="chroma-mid @container mx-auto w-full">
+			<div className="chroma-mlow @container mx-auto w-full">
 				<Outlet />
 			</div>
 			<Toasters />

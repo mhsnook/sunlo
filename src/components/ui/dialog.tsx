@@ -61,7 +61,7 @@ const DialogOverlay = ({
 	<DialogPrimitive.Backdrop
 		data-slot="dialog-overlay"
 		className={cn(
-			'data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 fixed inset-0 z-50 bg-black/80',
+			'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 z-50 bg-black/80',
 			className
 		)}
 		{...props}
@@ -93,7 +93,7 @@ const DialogContent = ({
 					) ?? popupRef.current
 				}
 				className={cn(
-					'bg-card data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[min(50rem,96%)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded border p-6 shadow-lg duration-200',
+					'bg-card data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[min(50rem,96%)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded border p-6 shadow-lg duration-200',
 					className
 				)}
 				{...props}
@@ -102,7 +102,7 @@ const DialogContent = ({
 				{!hideClose && (
 					<DialogPrimitive.Close
 						data-testid="close-dialog-button"
-						className="bg-card/50 text-con-mhigh hover:text-con-mhigh focus:outline-con-high absolute top-4 right-4 z-20 rounded-sm p-1 backdrop-blur-sm transition-colors focus:outline-2 disabled:pointer-events-none"
+						className="bg-card/50 hover:text-con-mhigh focus:outline-con-high absolute top-4 right-4 z-20 rounded-sm p-1 backdrop-blur-sm transition-colors focus:outline-2 disabled:pointer-events-none"
 					>
 						<X className="size-4" />
 						<span className="sr-only">Close</span>

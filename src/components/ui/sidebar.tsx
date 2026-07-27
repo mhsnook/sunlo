@@ -161,7 +161,7 @@ const Sidebar = ({
 		return (
 			<div
 				className={cn(
-					'bg-lum-1 text-con-mhigh flex h-full w-(--sidebar-width) flex-col',
+					'bg-lum-1 chroma-low text-con-mid flex h-full w-(--sidebar-width) flex-col',
 					className
 				)}
 				data-slot="sidebar"
@@ -180,7 +180,7 @@ const Sidebar = ({
 					data-sidebar="sidebar"
 					data-mobile="true"
 					aria-describedby={undefined}
-					className="bg-lum-1 text-con-mhigh w-(--sidebar-width) p-0 [&>button]:hidden"
+					className="bg-lum-1 w-(--sidebar-width) p-0 [&>button]:hidden"
 					style={widthStyles}
 					side={side}
 				>
@@ -193,7 +193,7 @@ const Sidebar = ({
 	return (
 		<div
 			data-slot="sidebar"
-			className="group peer text-con-mhigh hidden shrink-0 md:block"
+			className="group peer hidden shrink-0 md:block"
 			data-state={state}
 			data-collapsible={state === 'collapsed' ? collapsible : ''}
 			data-variant={variant}

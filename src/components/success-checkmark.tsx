@@ -22,7 +22,7 @@ const SuccessCheckmarkTrans = ({ className = '' }) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		className={cn(
-			'text-con-mid text-chroma-max size-16 rounded-full bg-transparent',
+			'text-con-mid chroma-max size-16 rounded-full bg-transparent',
 			className
 		)}
 		viewBox="0 0 20 20"

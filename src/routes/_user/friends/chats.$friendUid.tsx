@@ -107,7 +107,7 @@ function ChatPage() {
 						{relation.status === 'friends' ? (
 							'Friends'
 						) : relation.status === 'pending' && !relation.isMostRecentByMe ? (
-							<span className="text-con-mid text-chroma-max inline-flex items-center gap-1">
+							<span className="text-con-mid chroma-max inline-flex items-center gap-1">
 								<UserPlus className="size-3" /> Wants to connect
 							</span>
 						) : relation.status === 'pending' ? (

@@ -26,7 +26,7 @@ function useChart() {
 	const context = React.useContext(ChartContext)
 
 	if (!context) {
-		throw new Error('useChart must be used within a <ChartContainer />')
+		throw new Error('useChart must be used within a <ChartContainer/>')
 	}
 
 	return context
@@ -205,8 +205,7 @@ const ChartTooltipContent = React.forwardRef<
 							color || item.payload.fill || item.color
 
 						return (
-							<div
-								// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+							<div // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 								key={item.dataKey}
 								className={cn(
 									'[&>svg]:text-con-mid flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
@@ -254,7 +253,7 @@ const ChartTooltipContent = React.forwardRef<
 												</span>
 											</div>
 											{item.value && (
-												<span className="text-con-mhigh font-mono font-medium tabular-nums">
+												<span className="font-mono font-medium tabular-nums">
 													{/* eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */}
 													{item.value.toLocaleString()}
 												</span>

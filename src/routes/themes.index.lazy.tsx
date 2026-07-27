@@ -91,9 +91,7 @@ export const Route = createLazyFileRoute('/themes/')({
 // Made-up language code + content so the showcase needs no real data.
 const SHOWCASE_LANG = 'sun'
 
-const REQUEST_PROMPT = `I'm visiting a friend's grandparents next week and want to greet them politely. How would I say:
-
-> Good evening — it's an honour to meet you.
+const REQUEST_PROMPT = `I'm visiting a friend's grandparents next week and want to greet them politely. How would I say:> Good evening — it's an honour to meet you.
 
 in a respectful, formal register?`
 
@@ -187,9 +185,7 @@ function BookmarkToggle() {
 		>
 			<Bookmark
 				className={
-					saved
-						? 'text-con-mid text-chroma-max fill-current/50'
-						: 'text-con-mid'
+					saved ? 'text-con-mid chroma-max fill-current/50' : 'text-con-mid'
 				}
 			/>
 		</Button>
@@ -423,7 +419,7 @@ function ShowcaseDeckDialog() {
 			data-testid="showcase-deck-dialog"
 		>
 			<div className="flex flex-col space-y-1.5 border-b pb-4">
-				<h3 className="text-con-mhigh text-lg leading-none font-semibold tracking-tight">
+				<h3 className="text-lg leading-none font-semibold tracking-tight">
 					Sunese
 				</h3>
 				<p className="text-con-mid text-sm">
@@ -745,7 +741,7 @@ function StaticCardStatusPopup({ items }: { items: Array<ShowableActions> }) {
 	return (
 		<div
 			aria-hidden="true"
-			className="bg-popover text-con-mhigh inline-block min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-md"
+			className="bg-popover inline-block min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-md"
 		>
 			{items.map((choice) => {
 				const { Icon, iconClassName, action, actionSecond } =
@@ -1256,23 +1252,21 @@ function ShowcaseIntroCallout() {
 	return (
 		<div className="space-y-2">
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-con-mid text-chroma-max mt-0.5 size-4 shrink-0" />
+				<Info className="text-con-mid chroma-max mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
-					<span className="text-con-mhigh">
+					<span>
 						Quick reminder: reviews use a 4 am cutoff, so cards due "today" stay
 						available until tomorrow morning.
 					</span>{' '}
-					<button className="text-con-mid text-chroma-max underline hover:no-underline">
+					<button className="text-con-mid chroma-max underline hover:no-underline">
 						Learn more
 					</button>
 				</div>
 			</div>
 			<div className="border-lum-4 border-chroma-mlow bg-lum-2 bg-chroma-mlow flex items-start gap-2 rounded border px-3 py-2 text-sm">
-				<Info className="text-con-mid text-chroma-max mt-0.5 size-4 shrink-0" />
+				<Info className="text-con-mid chroma-max mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
-					<span className="text-con-mhigh">
-						No "show more" link when the callout stands on its own.
-					</span>
+					<span>No "show more" link when the callout stands on its own.</span>
 				</div>
 			</div>
 		</div>
@@ -1307,7 +1301,7 @@ function ShowcaseAvatarSizes() {
 			cls: 'size-10',
 			label: '10 (default)',
 			usage:
-				'The bare <Avatar />: request-thread bylines and the chat-header avatar.',
+				'The bare <Avatar/>: request-thread bylines and the chat-header avatar.',
 			seed: 'theo',
 			initials: 'TK',
 		},

@@ -406,7 +406,7 @@ function SystemMessage({ children }: { children: ReactNode }) {
 	return (
 		<div className="flex items-start gap-2.5">
 			<div className="bg-lum-2 bg-chroma-mlow mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full">
-				<Sparkles className="text-con-mhigh text-chroma-high size-3.5" />
+				<Sparkles className="text-chroma-high size-3.5" />
 			</div>
 			<p className="text-con-mid pt-1 text-sm">{children}</p>
 		</div>
@@ -617,7 +617,7 @@ function WelcomeState({
 		<div className="flex h-full flex-col items-center justify-center space-y-8 p-6">
 			<div className="space-y-3 text-center">
 				<div className="bg-lum-2 bg-chroma-mlow mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
-					<MessageCircle className="text-con-mhigh text-chroma-high size-8" />
+					<MessageCircle className="text-chroma-high size-8" />
 				</div>
 				<h2 className="h3">What are you looking for?</h2>
 				<p className="text-con-mid mx-auto max-w-sm text-sm">

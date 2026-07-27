@@ -86,7 +86,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								'This deck is empty — time to start adding phrases.'
 							) : dueToday > 0 ? (
 								<>
-									<span className="text-con-mhigh font-medium">
+									<span className="font-medium">
 										{dueToday} {dueToday === 1 ? 'card' : 'cards'} due
 									</span>
 									{' · '}

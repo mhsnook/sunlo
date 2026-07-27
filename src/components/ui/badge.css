@@ -40,5 +40,5 @@
 	@apply border-lum-2 bg-lum-1 text-lum-9;
 }
 @utility badge-variant-lang {
-	@apply chroma-mid bg-lum-3 border-lum-4 text-lum-8 w-fit items-end font-mono font-bold tracking-wider uppercase transition-colors duration-700;
+	@apply chroma-mid bg-lum-3 border-lum-3 text-lum-8 w-fit items-end font-mono font-bold tracking-wider uppercase transition-colors duration-700;
 }

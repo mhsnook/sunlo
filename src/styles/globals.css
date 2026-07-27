@@ -335,7 +335,7 @@
 		@apply border-lum-3;
 	}
 	body {
-		@apply bg-lum-1 bg-chroma-low bg-hue-neutral text-con-mhigh;
+		@apply bg-lum-1 chroma-mlow bg-hue-neutral text-con-mid;
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);

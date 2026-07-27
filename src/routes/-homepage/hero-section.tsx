@@ -48,7 +48,7 @@ export function HeroSection() {
 							Sunlo
 						</h1>
 
-						<p className="text-con-mhigh mx-auto mb-8 max-w-2xl text-2xl font-extralight text-balance md:text-3xl">
+						<p className="mx-auto mb-8 max-w-2xl text-2xl font-extralight text-balance md:text-3xl">
 							Social language learning that brings people together
 						</p>
 					</div>
