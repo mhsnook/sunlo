@@ -1,65 +1,86 @@
 import * as React from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
 
-import { cn } from '@/lib/utils'
 import { Slot } from '@/lib/slot'
 
-// Hover uses an absolute lum stop (one step), not bg-lum-up/down: on an element
-// that also sets a base bg-lum-N, the nudge's --bg-l ↔ --bg-anchor-l reference
-// forms a custom-property cycle and the background resolves to transparent.
-const solids = 'bg-lum-6 text-lum-none chroma-high hover:bg-lum-7'
-const softs = 'bg-lum-2 chroma-mlow text-lum-7 hover:bg-lum-3 hover:text-lum-10'
+// Styles live in button.css, next to this file. Everything here is just
+// choosing which class names to emit.
+const sizes = {
+	default: 'btn-size-default',
+	sm: 'btn-size-sm',
+	lg: 'btn-size-lg',
+	icon: 'btn-size-icon',
+} as const
 
-const buttonVariants = cva(
-	'border border-transparent shadow inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-2 focus-visible:outline-con-high focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
-	{
-		variants: {
-			variant: {
-				default: `hue-primary ${solids}`,
-				soft: `hue-primary ${softs}`,
-				red: `hue-danger ${solids}`,
-				'red-soft': `hue-danger ${softs}`,
-				neutral: 'hover:bg-lum-up-1 bg-chroma-mlow',
-				ghost: 'hover:bg-lum-1 hover:text-con-mhigh',
-				'badge-outline':
-					'hue-neutral rounded border-lum-2 text-lum-9 bg-lum-1 hover:border-lum-3 hover:border-chroma-max',
-				'dashed-w-full':
-					'w-full border-2 border-dashed border-con-low hover:border-con-low shadow-none hover:shadow',
-			},
-			size: {
-				default: 'h-10 rounded-2xl px-5 py-2 gap-2 text-md',
-				sm: 'h-8 rounded-xl px-4 gap-1 [&_svg]:size-3 text-sm',
-				lg: 'rounded-2xl px-8 py-3 font-medium gap-3 [&_svg]:size-6 text-lg',
-				icon: 'size-8 rounded-xl rounded-squircle shrink-0 aspect-square text-sm',
-			},
-		},
-		defaultVariants: {
-			variant: 'default',
-			size: 'default',
-		},
-	}
-)
+// How loud, never what colour.
+const variants = {
+	default: 'btn-variant-default',
+	soft: 'btn-variant-soft',
+	neutral: 'btn-variant-neutral',
+	ghost: 'btn-variant-ghost',
+	'dashed-w-full': 'btn-variant-dashed-w-full',
+} as const
 
-export interface ButtonProps
-	extends
-		React.ButtonHTMLAttributes<HTMLButtonElement>,
-		VariantProps<typeof buttonVariants> {
-	asChild?: boolean
+// Straight from tailwind-oklch — no button-specific CSS needed. Omitting `hue`
+// inherits from context, which is what you usually want: a button inside a
+// language-themed subtree takes that language's colour on its own.
+const hues = {
+	primary: 'hue-primary',
+	accent: 'hue-accent',
+	neutral: 'hue-neutral',
+	success: 'hue-success',
+	warning: 'hue-warning',
+	danger: 'hue-danger',
+	info: 'hue-info',
+} as const
+
+export type ButtonVariant = keyof typeof variants
+export type ButtonSize = keyof typeof sizes
+export type ButtonHue = keyof typeof hues
+
+export interface ButtonVariantProps {
+	variant?: ButtonVariant | null
+	size?: ButtonSize | null
+	hue?: ButtonHue | null
 }
 
-export { buttonVariants }
+/**
+ * Class list for a button without the component — a `<Link>` styled as one,
+ * mostly. Each axis lands on its own class, so nothing here can conflict and
+ * there is nothing to merge; extra classes are appended as given.
+ */
+export function buttonVariants({
+	variant,
+	size,
+	hue,
+	className,
+}: ButtonVariantProps & { className?: string } = {}) {
+	const classes = [
+		'btn',
+		sizes[size ?? 'default'],
+		variants[variant ?? 'default'],
+		hue ? hues[hue] : '',
+		className ?? '',
+	]
+	return classes.filter(Boolean).join(' ')
+}
+
+export interface ButtonProps
+	extends React.ButtonHTMLAttributes<HTMLButtonElement>, ButtonVariantProps {
+	asChild?: boolean
+}
 
 const Button = ({
 	className,
 	variant,
 	size,
+	hue,
 	asChild = false,
 	...props
 }: ButtonProps) => {
 	const Comp = asChild ? Slot : 'button'
 	return (
 		<Comp
-			className={cn(buttonVariants({ variant, size }), className)}
+			className={buttonVariants({ variant, size, hue, className })}
 			data-slot="button"
 			{...props}
 		/>

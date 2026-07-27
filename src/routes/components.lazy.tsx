@@ -198,8 +198,10 @@ function ComponentsPage() {
 							</Button>
 							<Button variant="soft">Soft</Button>
 							<Button variant="neutral">Neutral</Button>
-							<Button variant="red">Red</Button>
-							<Button variant="red-soft">Red Soft</Button>
+							<Button hue="danger">Red</Button>
+							<Button variant="soft" hue="danger">
+								Red Soft
+							</Button>
 							<Button variant="ghost">Ghost</Button>
 						</div>
 					</CardContent>

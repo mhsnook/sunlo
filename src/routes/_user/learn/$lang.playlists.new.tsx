@@ -297,7 +297,8 @@ function NewPlaylistPageContent() {
 										<Button
 											type="button"
 											onClick={() => removePhrase(phrase.phrase_id)}
-											variant="red-soft"
+											variant="soft"
+											hue="danger"
 											size="icon"
 											aria-label="Remove phrase"
 										>

@@ -483,14 +483,14 @@ function ShowcaseReviewCard() {
 						variant="ghost"
 						size="icon"
 						aria-label="Open context menu"
-						className="absolute end-4 top-4"
+						className="absolute inset-e-4 top-4"
 						disabled
 					>
 						<MoreVertical />
 					</Button>
 					<Badge
 						variant="outline"
-						className="absolute start-4 top-4 gap-1 text-xs"
+						className="absolute inset-s-4 top-4 gap-1 text-xs"
 					>
 						Recognition <Lightbulb className="size-3" />
 					</Badge>
@@ -536,7 +536,7 @@ function ShowcaseReviewCard() {
 // Ghost button that toggles to its lit `soft` state — same pattern as
 // the upvote buttons in the request thread.
 function HighlightToggleButton() {
-	const [active, setActive] = useState(true)
+	const [active, setActive] = useState(false)
 	return (
 		<Button
 			variant={active ? 'soft' : 'ghost'}
@@ -544,7 +544,7 @@ function HighlightToggleButton() {
 			aria-pressed={active}
 			onClick={() => setActive((v) => !v)}
 		>
-			Highlight
+			Toggle
 		</Button>
 	)
 }
@@ -552,12 +552,16 @@ function HighlightToggleButton() {
 function ShowcaseButtonsAndType() {
 	return (
 		<div
-			className="bg-card max-w-md space-y-5 rounded border p-5 shadow-lg"
+			className="bg-card max-w-lg space-y-5 rounded border p-5 shadow-lg"
 			data-testid="showcase-buttons-type"
 		>
 			<div className="space-y-2">
 				<p className="text-con-mid text-xs font-medium tracking-wide uppercase">
 					Button variants
+				</p>
+				<p className="text-con-mid text-xs">
+					Each row of buttons has identical markup, with a different hue applied
+					to the parent.
 				</p>
 				<div className="flex flex-wrap gap-2">
 					<Button size="sm">Primary</Button>
@@ -567,13 +571,36 @@ function ShowcaseButtonsAndType() {
 					<Button size="sm" variant="neutral">
 						Neutral
 					</Button>
+					<Button size="sm" variant="ghost">
+						Ghost
+					</Button>
 					<HighlightToggleButton />
-					<Button size="sm" variant="red">
-						Red
+				</div>
+				<div className="hue-danger flex flex-wrap gap-2">
+					<Button size="sm">Danger</Button>
+					<Button size="sm" variant="soft">
+						Danger soft
 					</Button>
-					<Button size="sm" variant="red-soft">
-						Red soft
+					<Button size="sm" variant="neutral">
+						Neutral
 					</Button>
+					<Button size="sm" variant="ghost">
+						Ghost
+					</Button>
+					<HighlightToggleButton />
+				</div>
+				<div className="hue-success flex flex-wrap gap-2">
+					<Button size="sm">Success</Button>
+					<Button size="sm" variant="soft">
+						Success soft
+					</Button>
+					<Button size="sm" variant="neutral">
+						Neutral
+					</Button>
+					<Button size="sm" variant="ghost">
+						Ghost
+					</Button>
+					<HighlightToggleButton />
 				</div>
 			</div>
 			<Separator />

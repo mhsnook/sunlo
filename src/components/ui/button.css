@@ -1,0 +1,65 @@
+/* Button styling, co-located with button.tsx. Registered by a single @import in
+   styles/globals.css — Tailwind inlines imports before processing, so @utility
+   works from here and the classes tree-shake like any other.
+
+   `btn` is structure only. A size and a variant complete it, and colour comes
+   from whichever hue is in scope. Every axis is stated explicitly rather than
+   letting `btn` carry defaults, so nothing depends on which rule Tailwind emits
+   first — the Button component fills the defaults in. */
+
+@utility btn {
+	@apply inline-flex cursor-pointer items-center justify-center border border-transparent font-medium whitespace-nowrap shadow transition-colors transition-opacity;
+	@apply focus-visible:outline-con-high focus-visible:outline-2 focus-visible:outline-offset-2;
+	@apply disabled:pointer-events-none disabled:cursor-default disabled:opacity-50;
+	& svg {
+		@apply pointer-events-none shrink-0;
+	}
+}
+
+@utility btn-size-default {
+	@apply h-10 gap-2 rounded-2xl px-5 py-2 text-base;
+	& svg {
+		@apply size-4;
+	}
+}
+@utility btn-size-sm {
+	@apply h-8 gap-1 rounded-xl px-4 text-sm;
+	& svg {
+		@apply size-3;
+	}
+}
+@utility btn-size-lg {
+	@apply gap-3 rounded-2xl px-8 py-3 text-lg font-medium;
+	& svg {
+		@apply size-6;
+	}
+}
+@utility btn-size-icon {
+	@apply rounded-squircle aspect-square size-8 shrink-0 rounded-xl text-sm;
+	& svg {
+		@apply size-4;
+	}
+}
+
+/* A variant says only how loud a button is. It never names a colour — it states
+   luminance and chroma and lets the hue cascade in — so the same variant is red
+   under `hue-danger` and green under `hue-success`.
+
+   Hover uses an absolute lum stop, not bg-lum-up/down: on an element that also
+   sets a base bg-lum-N, the nudge's --bg-l ↔ --bg-anchor-l reference forms a
+   custom-property cycle and the background resolves to transparent. */
+@utility btn-variant-default {
+	@apply bg-lum-6 chroma-high text-lum-none hover:bg-lum-7;
+}
+@utility btn-variant-soft {
+	@apply bg-lum-2 chroma-mid text-lum-7 hover:bg-lum-3 hover:text-lum-9;
+}
+@utility btn-variant-neutral {
+	@apply bg-chroma-low hover:bg-lum-up-1 text-con-mid hover:text-con-mhigh;
+}
+@utility btn-variant-ghost {
+	@apply hover:bg-lum-1 text-con-mid hover:text-con-mhigh;
+}
+@utility btn-variant-dashed-w-full {
+	@apply border-con-low hover:border-con-low w-full border-2 border-dashed shadow-none hover:shadow;
+}

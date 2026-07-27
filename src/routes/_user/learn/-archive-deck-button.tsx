@@ -68,7 +68,8 @@ export function ArchiveDeckButton({
 					</Button>
 				) : (
 					<Button
-						variant="red-soft"
+						variant="soft"
+						hue="danger"
 						size="sm"
 						disabled={!!archived}
 						data-testid="archive-deck-button"
@@ -110,7 +111,7 @@ export function ArchiveDeckButton({
 						</AlertDialogAction>
 					) : (
 						<AlertDialogAction
-							className={buttonVariants({ variant: 'red' })}
+							className={buttonVariants({ hue: 'danger' })}
 							onClick={toggleArchived}
 							data-testid="confirm-archive-button"
 						>

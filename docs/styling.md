@@ -247,24 +247,41 @@ This project uses `@base-ui/react` (NOT Radix) for low-level primitives. Base UI
 <Input /> <Textarea /> <Button />
 ```
 
-## Button Variants
+## Buttons
 
-We use a deliberate set of button variants. Choose based on the action's role, not its visual weight:
+Three independent axes: **variant** (how loud), **size**, and **hue** (what
+colour). Styles live in `src/components/ui/button.css`, next to the component,
+registered by a single `@import` in `globals.css`.
 
-| Variant            | Role                                                                         | Example uses                                                                                              |
-| ------------------ | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `default`          | **Primary action** — the thing you most want the user to do                  | Save, Submit, Create account, Confirm                                                                     |
-| `neutral`          | **Paired counterpart** to default or red — cancel, go back, reset            | Cancel, Go back, Reset, Dismiss                                                                           |
-| `soft`             | **Optional initiation** — opens a flow the user may choose to start          | "Show translations", "Add to deck" (collapsible triggers, dialog openers that lead to a save/cancel pair) |
-| `ghost`            | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles                                    |
-| `red` / `red-soft` | **Destructive primary action** — paired with `neutral` for cancel            | Archive, Delete (confirmation dialogs)                                                                    |
-| `badge-outline`    | **Tag/badge-shaped toggles**                                                 | Filter chips, tag pickers                                                                                 |
-| `dashed-w-full`    | **Full-width "add new" affordance**                                          | "Add another translation" rows                                                                            |
+```typescript
+<Button>Save</Button>
+<Button variant="soft" size="sm">Show translations</Button>
+<Button hue="danger">Delete</Button>          // destructive
+<Button variant="soft" hue="danger">Archive</Button>
+```
+
+A variant never names a colour — it states luminance and chroma and lets the hue
+cascade in, so the same variant is red under `hue-danger` and green under
+`hue-success`. **Omitting `hue` inherits from context**, which is usually what
+you want: a button inside a language-themed subtree takes that language's colour
+on its own.
+
+| Variant         | Role                                                                         | Example uses                                                                                              |
+| --------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `default`       | **Primary action** — the thing you most want the user to do                  | Save, Submit, Create account, Confirm                                                                     |
+| `neutral`       | **Paired counterpart** to default — cancel, go back, reset                   | Cancel, Go back, Reset, Dismiss                                                                           |
+| `soft`          | **Optional initiation** — opens a flow the user may choose to start          | "Show translations", "Add to deck" (collapsible triggers, dialog openers that lead to a save/cancel pair) |
+| `ghost`         | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles                                    |
+| `dashed-w-full` | **Full-width "add new" affordance**                                          | "Add another translation" rows                                                                            |
+
+Sizes are `default`, `sm`, `lg`, `icon`. Hues are `primary`, `accent`,
+`neutral`, `success`, `warning`, `danger`, `info` — the same set the colour
+system uses everywhere else.
 
 **Key principles:**
 
 - **Default + neutral** is the standard button pair for forms and confirmation dialogs
-- **Red + neutral** replaces default + neutral when the primary action is destructive
+- **`hue="danger"` + neutral** replaces default + neutral when the primary action is destructive
 - **Soft** is for _optionally initiating_ a secondary flow (e.g. opening a dialog that itself has default/neutral buttons inside). It sits between ghost and default in visual weight
 - **Ghost** is the workhorse for icon buttons and utility actions. Use it for anything that should be tappable but visually quiet
 - **Ghost → soft for active state**: When a ghost button has a toggle/active state (e.g. bookmark saved, filter active), switch to `soft` to indicate the active state:

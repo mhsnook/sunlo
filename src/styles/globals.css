@@ -4,6 +4,9 @@
 @import 'tailwindcss';
 @import 'tailwind-oklch';
 
+/* Component styles, co-located next to the components they belong to. */
+@import '../components/ui/button.css';
+
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
 @plugin 'tailwindcss-animate';
