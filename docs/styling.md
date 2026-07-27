@@ -249,22 +249,24 @@ This project uses `@base-ui/react` (NOT Radix) for low-level primitives. Base UI
 
 ## Buttons
 
-Three independent axes: **variant** (how loud), **size**, and **hue** (what
-colour). Styles live in `src/components/ui/button.css`, next to the component,
-registered by a single `@import` in `globals.css`.
+Two props — **variant** (how loud) and **size** — with colour coming from a
+`hue-*` class.
 
 ```typescript
 <Button>Save</Button>
 <Button variant="soft" size="sm">Show translations</Button>
-<Button hue="danger">Delete</Button>          // destructive
-<Button variant="soft" hue="danger">Archive</Button>
+<Button className="hue-danger">Delete</Button>
+<Button variant="soft" className="hue-danger">Archive</Button>
 ```
 
 A variant never names a colour — it states luminance and chroma and lets the hue
 cascade in, so the same variant is red under `hue-danger` and green under
-`hue-success`. **Omitting `hue` inherits from context**, which is usually what
-you want: a button inside a language-themed subtree takes that language's colour
-on its own.
+`hue-success`. There is no `hue` prop: colour is a `hue-*` class like anywhere
+else in the system. Say nothing and it inherits from context, which is usually
+what you want — a button inside a language-themed subtree takes that language's
+colour on its own.
+
+The same is true of `<Badge>` and `<Callout>`.
 
 | Variant         | Role                                                                         | Example uses                                                                                              |
 | --------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -274,14 +276,17 @@ on its own.
 | `ghost`         | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles                                    |
 | `dashed-w-full` | **Full-width "add new" affordance**                                          | "Add another translation" rows                                                                            |
 
-Sizes are `default`, `sm`, `lg`, `icon`. Hues are `primary`, `accent`,
-`neutral`, `success`, `warning`, `danger`, `info` — the same set the colour
-system uses everywhere else.
+Sizes are `default`, `sm`, `lg`, `icon`.
+
+Styles live in `src/components/ui/button.css`, next to the component and
+registered by an @import in `globals.css`. Tailwind inlines imports before
+processing, so `@utility` works from there. Same for badge, sheet, item and
+sidebar.
 
 **Key principles:**
 
 - **Default + neutral** is the standard button pair for forms and confirmation dialogs
-- **`hue="danger"` + neutral** replaces default + neutral when the primary action is destructive
+- **`className="hue-danger"` + neutral** replaces default + neutral when the primary action is destructive
 - **Soft** is for _optionally initiating_ a secondary flow (e.g. opening a dialog that itself has default/neutral buttons inside). It sits between ghost and default in visual weight
 - **Ghost** is the workhorse for icon buttons and utility actions. Use it for anything that should be tappable but visually quiet
 - **Ghost → soft for active state**: When a ghost button has a toggle/active state (e.g. bookmark saved, filter active), switch to `soft` to indicate the active state:

@@ -60,7 +60,7 @@ function NotFoundComponent() {
 	}
 	return (
 		<div className="flex h-full w-full items-center justify-center p-4">
-			<Callout hue="danger" Icon={OctagonMinus}>
+			<Callout className="hue-danger" Icon={OctagonMinus}>
 				<div className="flex flex-col gap-4">
 					<h1 className="text-2xl">404: Page not found</h1>
 					<p>We did not find a page matching that URL</p>

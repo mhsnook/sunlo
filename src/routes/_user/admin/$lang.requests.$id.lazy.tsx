@@ -64,7 +64,7 @@ function AdminRequestDetail() {
 
 	if (!request) {
 		return (
-			<Callout hue="danger">
+			<Callout className="hue-danger">
 				<p>Request not found.</p>
 			</Callout>
 		)
@@ -76,7 +76,7 @@ function AdminRequestDetail() {
 				<div className="flex items-start justify-between gap-2">
 					<div className="min-w-0 flex-1 space-y-1">
 						{request.deleted && (
-							<Badge hue="danger" className="gap-1">
+							<Badge className="hue-danger gap-1">
 								<Archive className="size-3" /> Archived
 							</Badge>
 						)}

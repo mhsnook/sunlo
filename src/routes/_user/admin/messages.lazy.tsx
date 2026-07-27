@@ -18,7 +18,7 @@ function AdminMessagesLayout() {
 		<main style={style}>
 			{!isAdmin && (
 				<div data-testid="admin-not-authorized-warning" className="mb-6">
-					<Callout hue="danger" Icon={ShieldAlert}>
+					<Callout className="hue-danger" Icon={ShieldAlert}>
 						<p>
 							You are logged in as <strong>{userEmail}</strong> who is not an
 							admin user; mutations on this page will fail.

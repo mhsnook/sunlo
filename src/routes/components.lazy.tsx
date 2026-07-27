@@ -198,8 +198,8 @@ function ComponentsPage() {
 							</Button>
 							<Button variant="soft">Soft</Button>
 							<Button variant="neutral">Neutral</Button>
-							<Button hue="danger">Red</Button>
-							<Button variant="soft" hue="danger">
+							<Button className="hue-danger">Red</Button>
+							<Button className="hue-danger" variant="soft">
 								Red Soft
 							</Button>
 							<Button variant="ghost">Ghost</Button>

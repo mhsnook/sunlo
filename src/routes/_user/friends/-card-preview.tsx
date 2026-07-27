@@ -14,7 +14,11 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 
 	if (status === 'pending') return <Loader className="my-6" />
 	if (status === 'not-found' || !phrase)
-		return <Callout hue="danger">Can't seem to find that phrase...</Callout>
+		return (
+			<Callout className="hue-danger">
+				Can't seem to find that phrase...
+			</Callout>
+		)
 	return (
 		<Link
 			to={'/learn/$lang/phrases/$id'}

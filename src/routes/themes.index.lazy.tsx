@@ -889,7 +889,7 @@ function ShowcaseCallouts() {
 					Tinted in the primary hue — for guidance, tips, and friendly nudges.
 				</p>
 			</Callout>
-			<Callout hue="danger" size="sm" alert Icon={OctagonMinus}>
+			<Callout className="hue-danger" size="sm" alert Icon={OctagonMinus}>
 				<p className="font-medium">Problem callout</p>
 				<p className="text-sm">
 					Carries the danger hue and an alert role — for errors and blocked

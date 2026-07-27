@@ -57,7 +57,7 @@ function AdminMessageDetail() {
 
 	if (!message) {
 		return (
-			<Callout hue="danger">
+			<Callout className="hue-danger">
 				<p>Message not found.</p>
 			</Callout>
 		)

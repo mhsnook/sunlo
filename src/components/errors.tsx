@@ -1,6 +1,7 @@
 import { TriangleAlert } from 'lucide-react'
 import { memo, useEffect, type PropsWithChildren } from 'react'
 import Callout from '@/components/ui/callout'
+import { cn } from '@/lib/utils'
 import supabase from '@/lib/supabase-client'
 import { Json } from '@/types/supabase'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -27,8 +28,7 @@ export function ShowError({
 	if (show === null && !children) return null
 	return (
 		<Callout
-			className={className}
-			hue="danger"
+			className={cn('hue-danger', className)}
 			size="sm"
 			alert
 			Icon={DestructiveTriangle}
@@ -70,8 +70,7 @@ export const ShowErrorDontLog = memo(function ShowAndLogError({
 
 	return (
 		<Callout
-			className={className}
-			hue="danger"
+			className={cn('hue-danger', className)}
 			size="sm"
 			alert
 			Icon={DestructiveTriangle}

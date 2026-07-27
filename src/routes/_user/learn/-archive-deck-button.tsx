@@ -68,8 +68,8 @@ export function ArchiveDeckButton({
 					</Button>
 				) : (
 					<Button
+						className="hue-danger"
 						variant="soft"
-						hue="danger"
 						size="sm"
 						disabled={!!archived}
 						data-testid="archive-deck-button"

@@ -295,10 +295,10 @@ function NewPlaylistPageContent() {
 										</div>
 
 										<Button
+											className="hue-danger"
 											type="button"
 											onClick={() => removePhrase(phrase.phrase_id)}
 											variant="soft"
-											hue="danger"
 											size="icon"
 											aria-label="Remove phrase"
 										>

@@ -4,7 +4,6 @@ import type { ComponentType, HTMLAttributes, PropsWithChildren } from 'react'
 type CalloutProps = PropsWithChildren & {
 	variant?: keyof typeof variants
 	size?: keyof typeof sizes
-	hue?: keyof typeof hues
 	className?: string
 	alert?: boolean
 	Icon?: ComponentType
@@ -21,16 +20,6 @@ const iconCircleVariants = {
 	ghost: 'bg-chroma-low border-lum-3',
 }
 
-const hues = {
-	primary: 'hue-primary',
-	accent: 'hue-accent',
-	neutral: 'hue-neutral',
-	success: 'hue-success',
-	warning: 'hue-warning',
-	danger: 'hue-danger',
-	info: 'hue-info',
-}
-
 const sizes = {
 	default: 'py-[5%]',
 	sm: 'py-[5%] @lg:py-[3%]',
@@ -39,7 +28,6 @@ const sizes = {
 export default function Callout({
 	variant = 'default',
 	size = 'default',
-	hue,
 	alert = false,
 	Icon,
 	className,
@@ -54,7 +42,6 @@ export default function Callout({
 				'flex flex-col items-start gap-4 rounded border px-[5%] @lg:flex-row',
 				variants[variant],
 				sizes[size],
-				hue ? hues[hue] : '',
 				className
 			)}
 		>

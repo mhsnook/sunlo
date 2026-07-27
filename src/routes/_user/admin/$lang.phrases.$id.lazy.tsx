@@ -52,7 +52,7 @@ function AdminPhraseDetail() {
 
 	if (!phrase) {
 		return (
-			<Callout hue="danger">
+			<Callout className="hue-danger">
 				<p>Phrase not found.</p>
 			</Callout>
 		)
@@ -71,7 +71,7 @@ function AdminPhraseDetail() {
 								</Badge>
 							)}
 							{phrase.archived && (
-								<Badge hue="danger" className="gap-1">
+								<Badge className="hue-danger gap-1">
 									<Archive className="size-3" /> Archived
 								</Badge>
 							)}
@@ -336,7 +336,7 @@ function AdminTranslationRow({
 			<div className="flex items-center gap-2">
 				<Badge variant="outline">{languages[translation.lang]}</Badge>
 				{translation.archived && (
-					<Badge hue="danger" className="gap-1 text-xs">
+					<Badge className="hue-danger gap-1 text-xs">
 						<Archive className="size-3" /> Archived
 					</Badge>
 				)}

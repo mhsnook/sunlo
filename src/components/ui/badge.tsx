@@ -18,31 +18,19 @@ const variants = {
 	lang: 'badge-variant-lang',
 } as const
 
-const hues = {
-	primary: 'hue-primary',
-	accent: 'hue-accent',
-	neutral: 'hue-neutral',
-	success: 'hue-success',
-	warning: 'hue-warning',
-	danger: 'hue-danger',
-	info: 'hue-info',
-} as const
-
 export type BadgeVariant = keyof typeof variants
 export type BadgeSize = keyof typeof sizes
-export type BadgeHue = keyof typeof hues
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 	variant?: BadgeVariant | null
 	size?: BadgeSize | null
-	hue?: BadgeHue | null
 }
 
-function Badge({ className, variant, size, hue, ...props }: BadgeProps) {
+function Badge({ className, variant, size, ...props }: BadgeProps) {
 	return (
 		<span
 			className={cn(
-				`badge ${sizes[size ?? 'md']} ${variants[variant ?? 'default']} ${hue ? hues[hue] : ''}`,
+				`badge ${sizes[size ?? 'md']} ${variants[variant ?? 'default']}`,
 				className
 			)}
 			{...props}
@@ -51,7 +39,7 @@ function Badge({ className, variant, size, hue, ...props }: BadgeProps) {
 }
 
 const OctogonMinusDangerBadge = () => (
-	<Badge hue="danger" className="p-2">
+	<Badge className="hue-danger p-2">
 		<OctagonMinus />
 	</Badge>
 )
@@ -76,7 +64,6 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 	return (
 		<Badge
 			variant="lang"
-			hue={ready ? undefined : 'neutral'}
 			className={cn(
 				!ready &&
 					'bg-lum-2! bg-chroma-low! text-con-mid! text-chroma-mid! border-lum-3! border-chroma-low!',

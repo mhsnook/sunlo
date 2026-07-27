@@ -55,7 +55,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								<X className="size-6 p-0" />
 							</Button>
 							<Button
-								hue="danger"
+								className="hue-danger"
 								aria-label="Confirm: Decline friend request"
 								onClick={() => inviteResponseMutation.mutate('decline')}
 							>
@@ -83,7 +83,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 							<X className="size-6 p-0" />
 						</Button>
 						<Button
-							hue="danger"
+							className="hue-danger"
 							aria-label="Confirm: Cancel friend request"
 							onClick={() => inviteResponseMutation.mutate('cancel')}
 						>

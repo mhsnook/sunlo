@@ -28,7 +28,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 				<UserCheck />
 				Friends
 			</Button>
-			<Button hue="danger" onClick={() => action.mutate('remove')}>
+			<Button className="hue-danger" onClick={() => action.mutate('remove')}>
 				<UserMinus />
 				Unfriend
 			</Button>
@@ -45,7 +45,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 				<Button variant="neutral">
 					<X />
 				</Button>
-				<Button hue="danger" onClick={() => action.mutate('decline')}>
+				<Button className="hue-danger" onClick={() => action.mutate('decline')}>
 					Confirm
 				</Button>
 			</ConfirmDestructiveActionDialog>
@@ -61,7 +61,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 			>
 				<UserCheck /> Requested
 			</Button>
-			<Button hue="danger" onClick={() => action.mutate('cancel')}>
+			<Button className="hue-danger" onClick={() => action.mutate('cancel')}>
 				Cancel request
 			</Button>
 		</ConfirmDestructiveActionDialog>

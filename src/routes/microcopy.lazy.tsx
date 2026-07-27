@@ -25,6 +25,7 @@ import { statusStrings } from '@/components/card-pieces/card-status-dropdown'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export const Route = createLazyFileRoute('/microcopy')({
 	component: MicrocopyPage,
@@ -1161,8 +1162,10 @@ function InconsistenciesSection() {
 											? 'secondary'
 											: 'outline'
 								}
-								hue={issue.priority === 'high' ? 'danger' : undefined}
-								className="mt-0.5 shrink-0"
+								className={cn(
+									issue.priority === 'high' && 'hue-danger',
+									'mt-0.5 shrink-0'
+								)}
 							>
 								{issue.priority}
 							</Badge>

@@ -18,7 +18,11 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 
 	if (isLoading) return <Loader className="my-6" />
 	if (!playlist)
-		return <Callout hue="danger">Can't seem to find that playlist...</Callout>
+		return (
+			<Callout className="hue-danger">
+				Can't seem to find that playlist...
+			</Callout>
+		)
 
 	return (
 		<Link
