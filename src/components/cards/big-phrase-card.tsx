@@ -7,6 +7,7 @@ import {
 	ListMusic,
 	Users,
 	Settings,
+	OctagonMinus,
 } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -29,7 +30,6 @@ import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/share/send-phrase'
 import { cn } from '@/lib/utils'
-import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import {
 	UidPermalink,
 	UidPermalinkInline,
@@ -267,7 +267,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 function PhraseNotFound() {
 	const router = useRouter()
 	return (
-		<Callout variant="problem" Icon={DestructiveOctagon}>
+		<Callout variant="problem" Icon={OctagonMinus}>
 			<p>We couldn't find that phrase. Please check your link and try again.</p>
 			<Button
 				variant="neutral"

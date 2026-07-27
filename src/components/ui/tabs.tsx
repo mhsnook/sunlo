@@ -21,7 +21,7 @@ const TabsTrigger = ({ className, ...props }: TabsPrimitive.Tab.Props) => (
 	<TabsPrimitive.Tab
 		data-slot="tabs-trigger"
 		className={cn(
-			'data-[active]:border-lum-4 data-[active]:border-chroma-max ring-offset-background focus-visible:ring-ring data-[active]:bg-lum-1 data-[active]:text-con-mhigh inline-flex cursor-pointer items-center justify-center rounded-2xl border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[active]:cursor-default data-[active]:shadow-md',
+			'data-[active]:border-lum-4 data-[active]:border-chroma-max focus-visible:outline-con-high data-[active]:bg-lum-1 data-[active]:text-con-mhigh inline-flex cursor-pointer items-center justify-center rounded-2xl border border-transparent px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[active]:cursor-default data-[active]:shadow-md',
 			className
 		)}
 		{...props}
@@ -32,7 +32,7 @@ const TabsContent = ({ className, ...props }: TabsPrimitive.Panel.Props) => (
 	<TabsPrimitive.Panel
 		data-slot="tabs-content"
 		className={cn(
-			'ring-offset-background focus-visible:ring-ring mt-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
+			'focus-visible:outline-con-high mt-2 focus-visible:outline-2 focus-visible:outline-offset-2',
 			className
 		)}
 		{...props}

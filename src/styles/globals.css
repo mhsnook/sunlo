@@ -58,24 +58,15 @@
 	--con-high: 0.73;
 }
 
-/* Tokens derived from the lum ramp. These auto-flip with no `.dark` counterpart:
-   `.dark` is set on documentElement, the same element as `:root`, so the
-   library's dark `--lum-*` values are what these var() calls resolve against.
-   They exist only for the properties tailwind-oklch has no utility for —
-   `ring-*`, `ring-offset-*`, `fill-*`, `stroke-*`, `divide-*`, `via-*`. Each
-   mirrors the stop its utility-based equivalent uses, so retuning the ramp
-   moves both.
-
-   Chroma is raw here (no per-hue scale, no taper) — same as the brand tokens
-   below — so keep these values low or they read more saturated than a utility
-   at the same nominal stop. */
+/* Cascade defaults for the fill/stroke axes defined at the bottom of this file,
+   mirroring the library's own per-property defaults. */
 :root {
-	--background: oklch(var(--lum-1) var(--chroma-low) var(--hue-primary));
-	--foreground: oklch(var(--lum-9) var(--chroma-mlow) var(--hue-primary));
-	--input: oklch(var(--lum-2) var(--chroma-low) var(--hue-neutral));
-	--muted: oklch(var(--lum-2) var(--chroma-low) var(--hue-neutral));
-	--muted-foreground: oklch(var(--lum-7) var(--chroma-low) var(--hue-neutral));
-	--ring: oklch(var(--lum-6) var(--chroma-max) var(--hue-primary));
+	--fl-c: var(--chroma-low);
+	--fl-cs: var(--cscale-primary);
+	--fl-h: var(--hue-primary);
+	--st-c: var(--chroma-low);
+	--st-cs: var(--cscale-primary);
+	--st-h: var(--hue-primary);
 
 	/* Static tokens: light mode (default).
 	   `card` and `popover` stay pure white on purpose — a card is white paper on
@@ -90,14 +81,9 @@
 	--shadow-color-3: rgba(0, 0, 0, 0.25);
 }
 
-/* Static tokens: dark mode
-   Keep luminance within tailwind-oklch's 0.185–0.92 numbered range to avoid
-   blown-out whites. Target ≤0.87 for body text, ≤0.84 for secondary. */
+/* Dark mode. Only the surfaces that are deliberately off-ramp need a
+   counterpart here; everything else rides --lum-* and flips on its own. */
 .dark {
-	/* No dark counterparts for background/foreground/input/muted/muted-foreground/
-	   ring — those are derived from `--lum-*` in `:root` and flip on their own.
-	   Re-declaring them here would win on source order and defeat the
-	   derivation. */
 	--card: oklch(0.2 0.05 var(--hue-neutral));
 	--popover: oklch(0.15 0.03 var(--hue-neutral));
 	--shadow-color-1: rgba(255, 255, 255, 0.05);
@@ -131,10 +117,6 @@
 		0 20px 25px -5px var(--shadow-color-2),
 		0 8px 10px -6px var(--shadow-color-2);
 	--shadow-2xl: 0 25px 50px -12px var(--shadow-color-3);
-	--color-input: var(--input);
-	--color-ring: var(--ring);
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
 
 	/* "On-primary" text — always near-white regardless of mode.
 	   These surfaces (lum-5, lum-7) are always saturated and mid-to-dark,
@@ -153,8 +135,6 @@
 	--color-accent: oklch(var(--lum-5) var(--chroma-max) var(--hue-accent));
 
 	/* Static tokens — separate light/dark definitions above */
-	--color-muted: var(--muted);
-	--color-muted-foreground: var(--muted-foreground);
 	--color-popover: var(--popover);
 	--color-card: var(--card);
 
@@ -253,6 +233,47 @@
 
 .moving-glass-card {
 	@apply border-lum-2 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10;
+}
+
+/* tailwind-oklch has no fill/stroke utilities, and recharts paints SVG. These
+   mirror the library's own pattern — per-hue chroma scale, taper toward the
+   light pole — so chart ink sits on the same ramp as everything else. The
+   axis vars are registered in `:root` above alongside the library's. */
+@utility fill-lum-* {
+	--fl-l: --value(--lum-*);
+	fill: oklch(
+		var(--fl-l)
+			calc(
+				var(--fl-c) * var(--fl-cs) *
+					clamp(0, calc((1 - var(--fl-l)) * var(--chroma-taper)), 1)
+			)
+			var(--fl-h)
+	);
+}
+@utility fill-chroma-* {
+	--fl-c: --value(--chroma-*);
+}
+@utility fill-hue-* {
+	--fl-h: --value(--hue-*);
+	--fl-cs: --value(--cscale-*);
+}
+@utility stroke-lum-* {
+	--st-l: --value(--lum-*);
+	stroke: oklch(
+		var(--st-l)
+			calc(
+				var(--st-c) * var(--st-cs) *
+					clamp(0, calc((1 - var(--st-l)) * var(--chroma-taper)), 1)
+			)
+			var(--st-h)
+	);
+}
+@utility stroke-chroma-* {
+	--st-c: --value(--chroma-*);
+}
+@utility stroke-hue-* {
+	--st-h: --value(--hue-*);
+	--st-cs: --value(--cscale-*);
 }
 
 @utility w-app {

@@ -32,7 +32,7 @@ function ItemSeparator({
 }
 
 const itemVariants = cva(
-	'[a]:hover:hue-accent inset-shadow-sm group/item [a]:hover:bg-lum-2 [a]:hover:bg-chroma-mlow focus-visible:border-ring focus-visible:ring-ring/50 [a]:transition-colors flex flex-wrap items-center rounded-md border border-transparent text-sm outline-none transition-colors duration-100 focus-visible:ring-[3px]',
+	'[a]:hover:hue-accent inset-shadow-sm group/item [a]:hover:bg-lum-2 [a]:hover:bg-chroma-mlow focus-visible:border-con-mid focus-visible:outline-con-mhigh [a]:transition-colors flex flex-wrap items-center rounded-md border border-transparent text-sm transition-colors duration-100 focus-visible:ring-[3px]',
 	{
 		variants: {
 			variant: {

@@ -115,7 +115,7 @@ function RoutesIntrospection() {
 
 			<div className="overflow-x-auto">
 				<table className="w-full text-sm">
-					<thead className="bg-lum-1 sticky top-0 z-10 shadow-[0_1px_0_var(--muted)]">
+					<thead className="bg-lum-1 shadow-lum-3 sticky top-0 z-10 shadow-[0_1px_0]">
 						<tr className="text-con-mid text-left text-xs tracking-wider uppercase">
 							<Th>Route id</Th>
 							<Th>load</Th>

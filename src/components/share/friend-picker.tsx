@@ -250,7 +250,7 @@ function PickerBody({
 
 			{/* Sticky search */}
 			<div className="bg-popover sticky top-0 z-5 border-b px-3.5 pt-3 pb-2.5">
-				<div className="hue-neutral bg-lum-1 focus-within:bg-card focus-within:border-ring focus-within:ring-ring/25 flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition focus-within:ring-2">
+				<div className="hue-neutral bg-lum-1 focus-within:bg-card focus-within:border-con-mid focus-within:outline-con-mid flex items-center gap-2.5 rounded-2xl border px-3 py-2 transition focus-within:outline-2">
 					<Search className="text-con-mid size-4 shrink-0" />
 					<input
 						ref={searchRef}

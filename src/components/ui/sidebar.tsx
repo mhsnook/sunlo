@@ -328,7 +328,7 @@ const SidebarInput = ({
 			data-slot="sidebar-input"
 			data-sidebar="input"
 			className={cn(
-				'bg-lum-1 focus-visible:ring-ring h-8 w-full shadow-none focus-visible:ring-2',
+				'bg-lum-1 focus-visible:outline-con-high h-8 w-full shadow-none focus-visible:outline-2',
 				className
 			)}
 			{...props}
@@ -424,7 +424,7 @@ const SidebarGroupLabel = ({
 			data-slot="sidebar-group-label"
 			data-sidebar="group-label"
 			className={cn(
-				'text-con-mid ring-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opa] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mid outline-con-high flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium transition-[margin,opa] duration-200 ease-linear focus-visible:outline-2 [&>svg]:size-4 [&>svg]:shrink-0',
 				'group-data-[collapsible=icon]:-mt-4 group-data-[collapsible=icon]:opacity-0',
 				className
 			)}
@@ -446,7 +446,7 @@ const SidebarGroupAction = ({
 			data-slot="sidebar-group-action"
 			data-sidebar="group-action"
 			className={cn(
-				'text-con-mhigh ring-ring hover:bg-lum-2 hover:text-lum-9 absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mhigh outline-con-high hover:bg-lum-2 hover:text-lum-9 absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 transition-transform focus-visible:outline-2 [&>svg]:size-4 [&>svg]:shrink-0',
 				// Increases the hit area of the button on mobile.
 				'after:absolute after:-inset-2 md:after:hidden',
 				'group-data-[collapsible=icon]:hidden',
@@ -495,13 +495,13 @@ const SidebarMenuItem = ({
 SidebarMenuItem.displayName = 'SidebarMenuItem'
 
 const sidebarMenuButtonVariants = cva(
-	'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-ring transition-[width,height,padding] hover:bg-lum-2 hover:text-lum-9 focus-visible:ring-2 active:bg-lum-2 active:text-lum-9 disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-lum-2 data-[active=true]:font-medium data-[active=true]:text-lum-9 data-[popup-open]:hover:bg-lum-2 data-[popup-open]:hover:text-lum-9 group-data-[collapsible=icon]:size-8! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0', // group-data-[collapsible=icon]:p-2!
+	'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-con-high transition-[width,height,padding] hover:bg-lum-2 hover:text-lum-9 focus-visible:outline-2 active:bg-lum-2 active:text-lum-9 disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-lum-2 data-[active=true]:font-medium data-[active=true]:text-lum-9 data-[popup-open]:hover:bg-lum-2 data-[popup-open]:hover:text-lum-9 group-data-[collapsible=icon]:size-8! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0', // group-data-[collapsible=icon]:p-2!
 	{
 		variants: {
 			variant: {
 				default: 'hover:bg-lum-2 hover:text-con-mhigh',
 				outline:
-					'bg-lum-1 shadow-[0_0_0_1px_var(--muted)] hover:bg-lum-2 hover:text-lum-9 hover:shadow-[0_0_0_1px_var(--ring)]',
+					'bg-lum-1 shadow-[0_0_0_1px] shadow-lum-3 hover:bg-lum-2 hover:text-lum-9 hover:shadow-[0_0_0_1px] hover:shadow-lum-6',
 			},
 			size: {
 				default: 'h-8 text-sm',
@@ -583,7 +583,7 @@ const SidebarMenuAction = ({
 			data-slot="sidebar-menu-action"
 			data-sidebar="menu-action"
 			className={cn(
-				'text-con-mhigh ring-ring hover:bg-lum-2 hover:text-lum-9 peer-hover/menu-button:text-lum-9 absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mhigh outline-con-high hover:bg-lum-2 hover:text-lum-9 peer-hover/menu-button:text-lum-9 absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 transition-transform focus-visible:outline-2 [&>svg]:size-4 [&>svg]:shrink-0',
 				// Increases the hit area of the button on mobile.
 				'after:absolute after:-inset-2 md:after:hidden',
 				'peer-data-[size=sm]/menu-button:top-1',
@@ -696,7 +696,7 @@ const SidebarMenuSubButton = ({
 			data-size={size}
 			data-active={isActive}
 			className={cn(
-				'text-con-mhigh ring-ring hover:bg-lum-2 hover:text-lum-9 active:bg-lum-2 active:text-lum-9 [&>svg]:text-lum-9 flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+				'text-con-mhigh outline-con-high hover:bg-lum-2 hover:text-lum-9 active:bg-lum-2 active:text-lum-9 [&>svg]:text-lum-9 flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 focus-visible:outline-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
 				'data-[active=true]:bg-lum-2 data-[active=true]:text-lum-9',
 				size === 'sm' && 'text-xs',
 				size === 'md' && 'text-sm',

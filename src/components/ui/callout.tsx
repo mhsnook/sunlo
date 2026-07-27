@@ -10,18 +10,15 @@ type CalloutProps = PropsWithChildren & {
 }
 
 const variants = {
-	// Seed the component's character once (primary hue, low-key chroma); the
-	// interior — including the icon circle below — inherits it and speaks lc.
 	default: 'hue-primary chroma-mlow bg-lum-2 border-lum-4',
-	problem:
-		'hue-danger bg-lum-[97] bg-chroma-[3] border-lum-[88] border-chroma-[6]',
-	ghost: 'border text-lum-7 bg-lum-2',
+	problem: 'hue-danger bg-lum-2 chroma-mid border-lum-4',
+	ghost: 'text-lum-7 bg-lum-1 chroma-mlow',
 }
 
 const iconCircleVariants = {
-	default: 'bg-lum-[95]',
-	problem: 'border border-lum-[82] border-chroma-[9] bg-lum-none bg-chroma-low',
-	ghost: 'bg-lum-2 bg-chroma-low bg-hue-neutral',
+	default: '',
+	problem: 'hue-danger',
+	ghost: 'bg-chroma-low border-lum-3',
 }
 
 const sizes = {
@@ -52,7 +49,7 @@ export default function Callout({
 			{!Icon ? null : (
 				<div
 					className={cn(
-						'flex size-12 shrink-0 items-center justify-center rounded-2xl p-2 [&>svg]:size-6',
+						'bg-lum-1 flex size-12 shrink-0 items-center justify-center rounded-2xl p-2 [&>svg]:size-6 border',
 						iconCircleVariants[variant]
 					)}
 				>

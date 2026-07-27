@@ -16,7 +16,7 @@ import { buttonVariants } from '@/components/ui/button'
 
 export function HeroSection() {
 	return (
-		<header className="dark:from-lum-1 dark:to-muted from-lum-3 from-chroma-mlow via-background to-foresoft relative min-h-screen overflow-hidden bg-gradient-to-br dark:via-slate-800">
+		<header className="from-lum-3 from-chroma-mlow to-lum-5 to-chroma-max relative min-h-screen overflow-hidden bg-gradient-to-br">
 			{/* Subtle background pattern */}
 			<div className="absolute inset-0 opacity-20 dark:opacity-30">
 				<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(0,0,0,0.5)_1px,_transparent_1px)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle,_rgba(255,255,255,0.3)_1px,_transparent_1px)]"></div>

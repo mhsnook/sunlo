@@ -102,7 +102,7 @@ const DialogContent = ({
 				{!hideClose && (
 					<DialogPrimitive.Close
 						data-testid="close-dialog-button"
-						className="bg-card/50 text-con-mhigh hover:text-con-mhigh focus:ring-ring absolute top-4 right-4 z-20 rounded-sm p-1 backdrop-blur-sm transition-colors focus:ring-2 focus:outline-hidden disabled:pointer-events-none"
+						className="bg-card/50 text-con-mhigh hover:text-con-mhigh focus:outline-con-high absolute top-4 right-4 z-20 rounded-sm p-1 backdrop-blur-sm transition-colors focus:outline-2 disabled:pointer-events-none"
 					>
 						<X className="size-4" />
 						<span className="sr-only">Close</span>

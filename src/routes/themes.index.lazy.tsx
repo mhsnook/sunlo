@@ -21,6 +21,7 @@ import {
 	MonitorCog,
 	Moon,
 	MoreVertical,
+	OctagonMinus,
 	Reply,
 	Rocket,
 	Send,
@@ -56,7 +57,6 @@ import type { RelationsFullType } from '@/features/social/live'
 import Callout from '@/components/ui/callout'
 import { LanguagePicker } from '@/components/fields/language-picker'
 import { ChoiceTile } from '@/components/ui/choice-tile'
-import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -862,7 +862,7 @@ function ShowcaseCallouts() {
 					Tinted in the primary hue — for guidance, tips, and friendly nudges.
 				</p>
 			</Callout>
-			<Callout variant="problem" size="sm" alert Icon={DestructiveOctagon}>
+			<Callout variant="problem" size="sm" alert Icon={OctagonMinus}>
 				<p className="font-medium">Problem callout</p>
 				<p className="text-sm">
 					Carries the danger hue and an alert role — for errors and blocked

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { getLangThemeCss, useLangPopularityReady } from '@/lib/lang-theme'
 
 const badgeVariants = cva(
-	'rounded inline-flex items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 shadow-xs inset-shadow-xs',
+	'rounded inline-flex items-center border transition-colors focus:outline-2 focus:outline-con-high focus:outline-offset-2 shadow-xs inset-shadow-xs',
 	{
 		variants: {
 			variant: {

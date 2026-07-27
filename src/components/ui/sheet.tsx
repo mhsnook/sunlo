@@ -71,7 +71,7 @@ const SheetContent = ({
 			{...props}
 		>
 			{children}
-			<SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[open]:bg-lum-2 absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+			<SheetPrimitive.Close className="focus:outline-con-high data-[open]:bg-lum-2 absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-2 focus:outline-offset-2 disabled:pointer-events-none">
 				<X className="size-4" />
 				<span className="sr-only">Close</span>
 			</SheetPrimitive.Close>

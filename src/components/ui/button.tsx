@@ -11,7 +11,7 @@ const solids = 'bg-lum-6 text-lum-none chroma-high hover:bg-lum-7'
 const softs = 'bg-lum-2 chroma-mlow text-lum-7 hover:bg-lum-3 hover:text-lum-10'
 
 const buttonVariants = cva(
-	'border border-transparent shadow inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+	'border border-transparent shadow inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-2 focus-visible:outline-con-high focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 	{
 		variants: {
 			variant: {

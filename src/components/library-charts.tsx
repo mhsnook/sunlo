@@ -2,6 +2,8 @@ import {
 	CHART_SERIES_A,
 	CHART_SERIES_B,
 	SCATTER_COLORS,
+	CHART_INK,
+	CHART_PAGE,
 } from '@/lib/chart-colors'
 import { useMemo, useState, useCallback, type MouseEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
@@ -85,7 +87,7 @@ export function LanguageComparisonChart() {
 					type="number"
 					tickLine={false}
 					axisLine={false}
-					stroke="var(--muted-foreground)"
+					stroke={CHART_INK}
 				/>
 				<YAxis
 					type="category"
@@ -93,7 +95,7 @@ export function LanguageComparisonChart() {
 					tickLine={false}
 					axisLine={false}
 					width={80}
-					stroke="var(--muted-foreground)"
+					stroke={CHART_INK}
 					tick={{ fontSize: 12 }}
 				/>
 				<ChartTooltip
@@ -152,12 +154,12 @@ export function DifficultyPopularityScatter({ lang }: { lang: string }) {
 					name="Difficulty"
 					domain={[0, 10]}
 					tickLine={false}
-					stroke="var(--muted-foreground)"
+					stroke={CHART_INK}
 					label={{
 						value: 'Difficulty',
 						position: 'insideBottom',
 						offset: -10,
-						style: { fill: 'var(--muted-foreground)' },
+						style: { fill: CHART_INK },
 					}}
 				/>
 				<YAxis
@@ -165,12 +167,12 @@ export function DifficultyPopularityScatter({ lang }: { lang: string }) {
 					dataKey="learners"
 					name="Learners"
 					tickLine={false}
-					stroke="var(--muted-foreground)"
+					stroke={CHART_INK}
 					label={{
 						value: 'Learners',
 						angle: -90,
 						position: 'insideLeft',
-						style: { fill: 'var(--muted-foreground)' },
+						style: { fill: CHART_INK },
 					}}
 				/>
 				<ZAxis
@@ -270,7 +272,7 @@ function TreemapContent({
 				width={width}
 				height={height}
 				fill={fill}
-				stroke="var(--background)"
+				stroke={CHART_PAGE}
 				strokeWidth={2}
 				rx={3}
 			/>
@@ -382,7 +384,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 					data={treemapData}
 					dataKey="size"
 					aspectRatio={4 / 3}
-					stroke="var(--background)"
+					stroke={CHART_PAGE}
 					// oxlint-disable-next-line jsx-no-jsx-as-prop
 					content={
 						// oxlint-disable-next-line jsx-no-jsx-as-prop
@@ -500,19 +502,19 @@ export function DifficultyHistogram({ lang }: { lang: string }) {
 					dataKey="range"
 					tickLine={false}
 					axisLine={false}
-					stroke="var(--muted-foreground)"
+					stroke={CHART_INK}
 					label={{
 						value: 'Difficulty Score',
 						position: 'insideBottom',
 						offset: -10,
-						style: { fill: 'var(--muted-foreground)' },
+						style: { fill: CHART_INK },
 					}}
 				/>
 				<YAxis
 					allowDecimals={false}
 					tickLine={false}
 					axisLine={false}
-					stroke="var(--muted-foreground)"
+					stroke={CHART_INK}
 					width={40}
 				/>
 				<ChartTooltip

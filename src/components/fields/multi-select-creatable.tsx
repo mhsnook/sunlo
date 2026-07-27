@@ -116,7 +116,7 @@ export function MultiSelectCreatable({
 						{value}
 						<button
 							type="button"
-							className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+							className="focus:outline-con-high ml-1 rounded-full focus:outline-2 focus:outline-offset-2"
 							onClick={() => handleRemove(value)}
 						>
 							<X className="text-con-mid hover:text-con-mhigh h-3 w-3" />

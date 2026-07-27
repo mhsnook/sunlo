@@ -1,4 +1,4 @@
-import { CHART_SERIES_A, CHART_SERIES_B } from '@/lib/chart-colors'
+import { CHART_SERIES_A, CHART_SERIES_B, CHART_INK } from '@/lib/chart-colors'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import {
 	ChartContainer,
@@ -38,11 +38,11 @@ export function ActivityChart({ lang }: { lang: string }) {
 							tickLine={false}
 							tickMargin={10}
 							axisLine={false}
-							stroke="var(--muted-foreground)"
+							stroke={CHART_INK}
 						/>
 						<YAxis
 							allowDecimals={false}
-							stroke="var(--muted-foreground)"
+							stroke={CHART_INK}
 							tickLine={false}
 							axisLine={false}
 							width={24}

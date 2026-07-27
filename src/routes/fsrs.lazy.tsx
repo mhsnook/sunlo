@@ -258,7 +258,7 @@ function ForgettingCurveChart({
 						x={PAD.left - 12}
 						y={toY(r) + 4}
 						textAnchor="end"
-						className="fill-muted-foreground text-[13px]"
+						className="fill-lum-7 text-[13px]"
 					>
 						{Math.round(r * 100)}%
 					</text>
@@ -281,7 +281,7 @@ function ForgettingCurveChart({
 						x={toX(s.endDay)}
 						y={PAD.top + PLOT.h + 22}
 						textAnchor="middle"
-						className="fill-muted-foreground text-[12px]"
+						className="fill-lum-7 text-[12px]"
 					>
 						{s.endDay.toFixed(1)}
 					</text>
@@ -408,7 +408,7 @@ function ForgettingCurveChart({
 				x={PAD.left + PLOT.w / 2}
 				y={VB.h - 12}
 				textAnchor="middle"
-				className="fill-foreground text-[15px] font-semibold"
+				className="fill-lum-9 text-[15px] font-semibold"
 			>
 				Days
 			</text>
@@ -417,7 +417,7 @@ function ForgettingCurveChart({
 				y={22}
 				textAnchor="middle"
 				transform="rotate(-90)"
-				className="fill-foreground text-[15px] font-semibold"
+				className="fill-lum-9 text-[15px] font-semibold"
 			>
 				Retention
 			</text>

@@ -16,3 +16,11 @@ export const SCATTER_COLORS = [
 	series('var(--hue-danger)'),
 	series('280'),
 ]
+
+/** Axis labels, gridlines, tick text. */
+export const CHART_INK =
+	'oklch(var(--lum-7) var(--chroma-low) var(--hue-neutral))'
+
+/** The page colour, for stroking segments apart. */
+export const CHART_PAGE =
+	'oklch(var(--lum-1) var(--chroma-low) var(--hue-neutral))'

@@ -281,7 +281,7 @@ function PickerBody({
 		<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 			{/* Search — pinned at top */}
 			<div className="bg-popover border-con-low shrink-0 border-b px-3.5 pt-3 pb-2.5">
-				<div className="bg-lum-2 border-lum-3 focus-within:border-ring focus-within:ring-ring/20 focus-within:bg-card flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all focus-within:ring-2">
+				<div className="bg-lum-2 border-lum-3 focus-within:border-con-mid focus-within:outline-con-mid focus-within:bg-card flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all focus-within:outline-2">
 					<Search className="text-con-mid size-4 shrink-0" />
 					<input
 						ref={searchRef}
@@ -397,8 +397,8 @@ export function LanguagePickerTrigger({
 			className={cn(
 				// Match the at-rest + hover border treatment of <Input>/<Textarea>
 				'flex w-full items-center gap-2.5 rounded-2xl border bg-card/50 px-3.5 py-2.5 text-left text-sm font-sans inset-shadow-sm',
-				'ring-offset-background cursor-pointer hover:border-con-mlow hover:border-chroma-max',
-				'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
+				'cursor-pointer hover:border-con-mlow hover:border-chroma-max',
+				'focus-visible:outline-con-high focus-visible:outline-2 focus-visible:outline-offset-2',
 				hasError
 					? 'border-con-mid border-chroma-high border-hue-danger'
 					: 'border-con-mlow border-chroma-mlow',
