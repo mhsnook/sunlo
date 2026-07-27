@@ -171,7 +171,7 @@ export default function BrowseSearchOverlay({
 
 				{/* Search Input */}
 				<search className="p-3">
-					<div className="bg-lum-2 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
+					<div className="bg-lum-1 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
 						<Search className="text-con-mid size-5 shrink-0" />
 						<input
 							ref={inputRef}

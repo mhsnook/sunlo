@@ -104,7 +104,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang/review"
 								params={{ lang: deck.lang }}
 								data-testid="start-practice-link"
-								className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground hover:from-lum-6 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="from-lum-5 from-chroma-mhigh to-lum-6 text-lum-none hover:from-lum-6 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								{dueToday === 0 ? (
 									<CircleCheck className="size-6" />
@@ -115,7 +115,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 									<div className="text-base leading-tight font-semibold">
 										Daily practice
 									</div>
-									<div className="text-primary-foreground/80 text-xs">
+									<div className="text-lum-1 text-xs">
 										{dueToday > 0
 											? `${dueToday} ${dueToday === 1 ? 'card' : 'cards'} ready`
 											: 'Already finished for today'}

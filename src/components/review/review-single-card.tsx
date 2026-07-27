@@ -271,7 +271,7 @@ export function ReviewSingleCard({
 								className={cn(
 									'h-auto w-full rounded-2xl border-red-600! bg-red-600! py-6 text-2xl text-white hover:border-white! hover:bg-red-700!',
 									prevData?.score === 1 && reviewStage < 4
-										? 'ring-primary ring-2 ring-offset-3'
+										? 'outline-con-high outline-2 outline-offset-3'
 										: ''
 								)}
 							>
@@ -292,7 +292,7 @@ export function ReviewSingleCard({
 									prevData?.score === 3 ||
 										prevData?.score === 2 ||
 										prevData?.score === 4
-										? 'ring-primary ring-2 ring-offset-3'
+										? 'outline-con-high outline-2 outline-offset-3'
 										: ''
 								)}
 							>
@@ -317,7 +317,7 @@ export function ReviewSingleCard({
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none rounded-l-2xl border-red-600! bg-red-600! py-2 text-white hover:border-white! hover:bg-red-700!',
 									prevData?.score === 1 && reviewStage < 4
-										? 'ring-primary ring-2 ring-offset-3'
+										? 'outline-con-high outline-2 outline-offset-3'
 										: ''
 								)}
 							>
@@ -341,7 +341,7 @@ export function ReviewSingleCard({
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none border-gray-200! bg-gray-200! py-2 text-gray-700! hover:border-white! hover:bg-gray-300!',
 									prevData?.score === 2
-										? 'ring-primary ring-2 ring-offset-3'
+										? 'outline-con-high outline-2 outline-offset-3'
 										: ''
 								)}
 							>
@@ -365,7 +365,7 @@ export function ReviewSingleCard({
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none border-green-500! bg-green-500! py-2 text-white hover:border-white! hover:bg-green-600!',
 									prevData?.score === 3
-										? 'ring-primary ring-2 ring-offset-3'
+										? 'outline-con-high outline-2 outline-offset-3'
 										: ''
 								)}
 							>
@@ -387,7 +387,7 @@ export function ReviewSingleCard({
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none rounded-r-2xl border-blue-500 bg-blue-500! py-2 text-white hover:border-white! hover:bg-blue-600',
 									prevData?.score === 4
-										? 'ring-primary ring-2 ring-offset-3'
+										? 'outline-con-high outline-2 outline-offset-3'
 										: ''
 								)}
 								onClick={() => submitScore(4)}

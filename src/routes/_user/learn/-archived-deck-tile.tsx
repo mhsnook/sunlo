@@ -97,14 +97,14 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 							type="button"
 							onClick={restoreDeck}
 							data-testid="confirm-restore-button"
-							className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground hover:from-lum-6 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+							className="from-lum-5 from-chroma-mhigh to-lum-6 text-lum-none hover:from-lum-6 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
 						>
 							<ArchiveRestore className="size-6" />
 							<div>
 								<div className="text-base leading-tight font-semibold">
 									Yes, restore
 								</div>
-								<div className="text-primary-foreground/80 text-xs">
+								<div className="text-lum-1 text-xs">
 									Move back to your active decks
 								</div>
 							</div>

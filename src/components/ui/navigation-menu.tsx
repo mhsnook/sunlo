@@ -48,7 +48,7 @@ const NavigationMenuItem = ({
 )
 
 const navigationMenuTriggerStyle =
-	'data-[popup-open]:hue-accent data-active:hue-accent group inline-flex h-10 w-max items-center justify-center rounded-md bg-lum-1 px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-lum-10 hover:text-chroma-mlow hover:text-hue-accent focus:bg-accent focus:text-lum-10 focus:text-chroma-mlow focus:text-hue-accent focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-lum-3 data-[popup-open]:bg-lum-3'
+	'data-[popup-open]:hue-accent data-active:hue-accent group inline-flex h-10 w-max items-center justify-center rounded-md bg-lum-1 px-4 py-2 text-sm font-medium transition-colors hover:bg-lum-2 hover:bg-hue-accent hover:text-lum-10 hover:text-chroma-mlow hover:text-hue-accent focus:bg-lum-2 focus:bg-hue-accent focus:text-lum-10 focus:text-chroma-mlow focus:text-hue-accent focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-lum-3 data-[popup-open]:bg-lum-3'
 
 const NavigationMenuTrigger = ({
 	className,

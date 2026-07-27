@@ -7,6 +7,7 @@ import { Loader } from '@/components/ui/loader'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { LangBadge } from '@/components/ui/badge'
+import { getLangThemeCss } from '@/lib/lang-theme'
 
 export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -25,6 +26,7 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 			params={{ lang: phrase.lang, id: pid }}
 		>
 			<CardlikeFlashcard
+				style={getLangThemeCss(phrase.lang)}
 				className={`relative z-10 mb-0 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
 			>
 				<CardContent className="space-y-2 p-4">

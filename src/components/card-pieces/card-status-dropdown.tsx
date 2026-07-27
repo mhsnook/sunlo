@@ -474,7 +474,7 @@ function StartLearningDialog({
 						onClick={() => void handleConfirm()}
 						disabled={pending}
 						data-testid="confirm-start-learning-button"
-						className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground hover:from-lum-6 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+						className="from-lum-5 from-chroma-mhigh to-lum-6 text-lum-none hover:from-lum-6 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
 					>
 						{isUnarchive ? (
 							<ArchiveRestore className="size-6" />
@@ -491,7 +491,7 @@ function StartLearningDialog({
 										? 'Yes, restore and add'
 										: 'Yes, start and add'}
 							</div>
-							<div className="text-primary-foreground/80 text-xs">
+							<div className="text-lum-1 text-xs">
 								{isUnarchive
 									? 'Reactivate your deck and bookmark this phrase'
 									: `Create your ${language} deck and bookmark this phrase`}

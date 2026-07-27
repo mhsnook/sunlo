@@ -125,22 +125,6 @@
 		0 8px 10px -6px var(--shadow-color-2);
 	--shadow-2xl: 0 25px 50px -12px var(--shadow-color-3);
 
-	/* "On-primary" text — always near-white regardless of mode.
-	   These surfaces (lum-5, lum-7) are always saturated and mid-to-dark,
-	   so the text must sit at the opposite (light) end. Fixed L=0.93
-	   avoids pure-white harshness while providing strong contrast.
-	   Chroma uses chroma-max (0.25) raw — these tokens bypass the utility
-	   per-hue scale/taper, so we pin the vivid brand saturation directly. */
-	--color-primary-foreground: oklch(0.93 0.02 var(--hue-primary));
-	--color-primary-foresoft: oklch(
-		var(--lum-7) var(--chroma-max) var(--hue-primary)
-	);
-	--color-primary: oklch(var(--lum-5) var(--chroma-max) var(--hue-primary));
-
-	/* Accent tokens — foreground auto-flips because it's used as body
-	   text (language names, links), not just on colored surfaces. */
-	--color-accent: oklch(var(--lum-5) var(--chroma-max) var(--hue-accent));
-
 	/* Static tokens — separate light/dark definitions above */
 	--color-popover: var(--popover);
 	--color-card: var(--card);

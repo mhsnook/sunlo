@@ -21,7 +21,7 @@ export const CardlikeFlashcard = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
 	<Card
 		className={cn(
-			'bg-card border-con-mlow border-chroma-max @container rounded-lg border border-s-4 border-e-0 border-t-0 border-b-0 shadow-[7px_7px_12px_-3px_rgba(0,0,0,0.36)]',
+			'bg-card border-con-mlow border-chroma-mhigh @container rounded-lg border border-s-4 border-e-0 border-t-0 border-b-0 shadow-[7px_7px_12px_-3px_rgba(0,0,0,0.36)]',
 			className
 		)}
 		{...props}

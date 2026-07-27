@@ -8,6 +8,7 @@ import { useRequestLinksPhraseIds, useRequest } from '@/features/requests/hooks'
 import { LangBadge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { MessageCircleHeart } from 'lucide-react'
+import { getLangThemeCss } from '@/lib/lang-theme'
 
 export function RequestPreview({ id }: { id: uuid }) {
 	const { data: request, isLoading } = useRequest(id)
@@ -29,7 +30,10 @@ export function RequestPreview({ id }: { id: uuid }) {
 			data-testid="chat-request-preview"
 			data-key={id}
 		>
-			<CardlikeRequest className="relative z-10">
+			<CardlikeRequest
+				style={getLangThemeCss(request.lang)}
+				className="relative z-10"
+			>
 				<CardHeader className="border-b-lum-4 border-b-chroma-mlow mx-4 mb-4 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
 						<span className="flex items-center gap-1">

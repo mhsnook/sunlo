@@ -433,15 +433,13 @@ function ShowcaseDeckDialog() {
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-				<div className="from-lum-5 from-chroma-mhigh to-lum-6 text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
+				<div className="from-lum-5 from-chroma-mhigh to-lum-6 text-lum-none flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
 					<Rocket className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
 							Daily practice
 						</div>
-						<div className="text-primary-foreground/80 text-xs">
-							24 cards ready
-						</div>
+						<div className="text-lum-1 text-xs">24 cards ready</div>
 					</div>
 				</div>
 				<div className="border-lum-3 bg-lum-2 bg-chroma-mlow text-lum-9 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
@@ -1583,7 +1581,7 @@ function ThemesPage() {
 								className={cn(
 									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
 									isActive
-										? 'border-con-mlow border-chroma-max ring-primary ring-2'
+										? 'border-con-mlow border-chroma-max outline-con-high outline-2'
 										: s.brand
 											? 'border-con-mlow border-chroma-max'
 											: 'hover:border-con-low border-transparent'

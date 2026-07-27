@@ -84,7 +84,7 @@ function FriendRow({
 			onClick={() => onToggle(friend.uid)}
 			className={cn(
 				'group hover:bg-lum-1 hover:bg-chroma-mlow flex w-full items-center gap-3 rounded-2xl px-2.5 py-2 text-start outline -outline-offset-1 outline-transparent transition-colors',
-				selected && 'bg-lum-2 bg-chroma-mlow outline-primary-foresoft/40'
+				selected && 'bg-lum-2 bg-chroma-mlow outline-con-mlow'
 			)}
 		>
 			<UserAvatar profile={profile} className="size-10" />
