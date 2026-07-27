@@ -26,6 +26,9 @@ skills:
 - task: "Reviewing or improving codebase architecture — surfacing shallow modules, deepening seams, improving testability and AI-navigability"
   load: ".claude/skills/improve-codebase-architecture/SKILL.md"
 
+- task: "Converting colour classes in bulk, or debugging why an oklch class isn't painting what it says — silent var collisions, cn() dropping axes, hue not inheriting"
+  load: ".claude/skills/oklch-color-migration/SKILL.md"
+
 <!-- intent-skills:end -->
 
 docs:

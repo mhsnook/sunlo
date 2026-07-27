@@ -345,7 +345,7 @@
 	}
 
 	* {
-		@apply border-lum-3;
+		@apply border-lum-2;
 	}
 	body {
 		@apply bg-lum-1 chroma-mlow bg-hue-neutral text-con-mid;
