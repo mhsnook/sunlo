@@ -322,21 +322,29 @@ jobs:
             const path = require('path');
             const zlib = require('zlib');
 
-            // Measure the eager-load JS of a built dist/ dir: the entry <script>
-            // plus every <link rel="modulepreload"> chunk listed in index.html.
+            // Measure the eager-load assets of a built dist/ dir: the entry
+            // <script> plus every <link rel="modulepreload"> JS chunk, and the
+            // <link rel="stylesheet"> CSS — everything listed in index.html.
             const measure = (dist) => {
               const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
               const files = [...new Set(
-                [...html.matchAll(/assets\/[A-Za-z0-9._-]+\.js/g)].map((m) => m[0])
+                [...html.matchAll(/assets\/[A-Za-z0-9._-]+\.(?:js|css)/g)].map((m) => m[0])
               )];
               let eagerRaw = 0, eagerGz = 0;
+              let cssRaw = 0, cssGz = 0;
               let index = { raw: 0, gz: 0 };
               const vendors = {};
               for (const rel of files) {
                 const buf = fs.readFileSync(path.join(dist, rel));
                 const raw = buf.length, gz = zlib.gzipSync(buf).length;
-                eagerRaw += raw; eagerGz += gz;
                 const name = rel.slice('assets/'.length);
+                if (name.endsWith('.css')) {
+                  // CSS shipped in index.html is render-blocking on first paint,
+                  // so it's part of the eager cost but tracked on its own axis.
+                  cssRaw += raw; cssGz += gz;
+                  continue;
+                }
+                eagerRaw += raw; eagerGz += gz;
                 if (name.includes('-vendor-')) {
                   // strip Vite's trailing 8-char content hash for a stable key
                   vendors[name.replace(/-[A-Za-z0-9_-]{8}\.js$/, '')] = { file: name, raw, gz };
@@ -344,7 +352,7 @@ jobs:
                   index = { raw, gz };
                 }
               }
-              return { eagerRaw, eagerGz, index, vendors };
+              return { eagerRaw, eagerGz, cssRaw, cssGz, index, vendors };
             };
 
             const pr = measure('dist');
@@ -409,6 +417,10 @@ jobs:
               '**`index-*.js`** — the non-vendored entry chunk, re-downloaded on every deploy',
               '',
               table(pr.index.raw, pr.index.gz, base.index.raw, base.index.gz),
+              '',
+              '**CSS** — stylesheets linked in `index.html` (render-blocking on first paint)',
+              '',
+              table(pr.cssRaw, pr.cssGz, base.cssRaw, base.cssGz),
               '',
               vendorSection,
             ].join('\n');
