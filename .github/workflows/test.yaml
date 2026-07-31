@@ -164,7 +164,7 @@ jobs:
             };
 
             // formatter drift: informational; trend arrow + file lists capped at 50.
-            const formatSection = (d) => {
+            const formatSection = (d, prFiles) => {
               const newFiles = d.added.map(e => e.raw);
               const resolved = d.resolved.map(e => e.raw);
               const trend = d.pr < d.base ? '🟢' : d.pr > d.base ? '🔺' : '➖';
@@ -172,6 +172,19 @@ jobs:
                 (newFiles.length || resolved.length
                   ? ` (+${newFiles.length} new, −${resolved.length} reformatted)`
                   : ` (no change)`);
+              // Group the remaining drift by extension: 80 files that are all
+              // .sql migrations read very differently from 80 spread across .tsx
+              // and .ts — and a lone stray (say one .css) is easy to spot and fold in.
+              const byExt = (files) => {
+                const counts = {};
+                for (const f of files) {
+                  const name = f.slice(f.lastIndexOf('/') + 1);
+                  const dot = name.lastIndexOf('.');
+                  const ext = dot > 0 ? name.slice(dot) : '(no ext)';
+                  counts[ext] = (counts[ext] || 0) + 1;
+                }
+                return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+              };
               const block = (title, list) =>
                 `\n**${title} (${list.length}):**\n\`\`\`\n${list.slice(0, 50).join('\n')}` +
                 `${list.length > 50 ? `\n… and ${list.length - 50} more` : ''}\n\`\`\``;
@@ -182,21 +195,24 @@ jobs:
                 '',
                 summary,
               ];
+              const ext = byExt(prFiles);
+              if (ext.length) lines.push('', '**By type:** ' + ext.map(([e, n]) => '`' + e + '` ' + n).join(' · '));
               if (newFiles.length > 0) lines.push(block('Newly unformatted', newFiles));
               if (resolved.length > 0) lines.push(block('Reformatted / cleaned up', resolved));
               return lines.join('\n');
             };
 
+            const fmtPr = read('/tmp/pr-format.txt');
             const tsc  = differential(read('/tmp/base-errors.txt'), read('/tmp/pr-errors.txt'), tscParse,  true);
             const lint = differential(read('/tmp/base-lint.txt'),   read('/tmp/pr-lint.txt'),   lintParse, true);
-            const fmt  = differential(read('/tmp/base-format.txt'), read('/tmp/pr-format.txt'), fileParse, false);
+            const fmt  = differential(read('/tmp/base-format.txt'), fmtPr, fileParse, false);
 
             const marker = '### PR checks';
             const body = [
               marker, '',
               tscSection(tsc), '', '---', '',
               lintSection(lint), '', '---', '',
-              formatSection(fmt),
+              formatSection(fmt, fmtPr),
             ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
