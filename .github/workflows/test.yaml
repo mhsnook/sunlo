@@ -14,9 +14,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
-  typecheck:
+  pr-checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     if: github.event_name == 'pull_request'
     permissions:
       pull-requests: write
@@ -38,330 +38,171 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Collect PR branch errors
+      # Typecheck, lint, and formatter-drift all diff the PR against the base
+      # branch, so they share one job: the base branch is checked out and
+      # installed once here, not once per check. Each tool's commands are
+      # unchanged from when these were three jobs.
+      - name: Collect PR branch results
         run: |
           pnpm check 2>&1 | grep ': error TS' | sort > /tmp/pr-errors.txt || true
-
-      - name: Collect base branch errors
-        run: |
-          git worktree add /tmp/base-branch origin/${{ github.base_ref }}
-          cd /tmp/base-branch
-          pnpm install --frozen-lockfile --silent
-          pnpm check 2>&1 | grep ': error TS' | sort > /tmp/base-errors.txt || true
-          cd $GITHUB_WORKSPACE
-          git worktree remove --force /tmp/base-branch
-
-      - name: Comment on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const baseLines = fs.readFileSync('/tmp/base-errors.txt', 'utf8').trim().split('\n').filter(Boolean);
-            const prLines   = fs.readFileSync('/tmp/pr-errors.txt',   'utf8').trim().split('\n').filter(Boolean);
-
-            // Parse "file(line,col): error TS####: message" — tsc's default (non-pretty) format.
-            const parse = (raw) => {
-              const m = raw.match(/^(.+?)\((\d+),(\d+)\):\s*(error\s+TS\d+:\s*.*)$/);
-              if (!m) return { file: '', line: 0, col: 0, rest: raw, raw };
-              return { file: m[1], line: parseInt(m[2], 10), col: parseInt(m[3], 10), rest: m[4], raw };
-            };
-
-            const baseErrors = baseLines.map(parse);
-            const prErrors   = prLines.map(parse);
-            const baseSet = new Set(baseLines);
-            const prSet   = new Set(prLines);
-
-            // First pass: exact-match set difference.
-            const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
-            const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
-
-            // Second pass: pair "new" with "resolved" when same file + same column + same
-            // error code/message and line numbers within 10. Treat as a shifted (unchanged)
-            // error rather than a new one — an unrelated edit just bumped the line number.
-            // A changed column means the line itself was edited, so the error is fair game.
-            const PROXIMITY = 10;
-            const resolvedPool = [...resolvedCandidates];
-            const newErrors = [];
-            const moved = [];
-            for (const n of newCandidates) {
-              const idx = resolvedPool.findIndex(r =>
-                r.file === n.file &&
-                r.col === n.col &&
-                r.rest === n.rest &&
-                Math.abs(r.line - n.line) <= PROXIMITY
-              );
-              if (idx >= 0) {
-                moved.push({ from: resolvedPool[idx], to: n });
-                resolvedPool.splice(idx, 1);
-              } else {
-                newErrors.push(n);
-              }
-            }
-            const resolved = resolvedPool;
-
-            fs.writeFileSync('/tmp/tsc-new-count.txt', String(newErrors.length));
-
-            const movedNote = moved.length ? ` (${moved.length} shifted within ±${PROXIMITY} lines, not counted)` : '';
-            const summary = `**Before:** ${baseErrors.length} error(s) → **After:** ${prErrors.length} error(s)` +
-              (newErrors.length || resolved.length
-                ? ` (+${newErrors.length} new, −${resolved.length} resolved)${movedNote}`
-                : ` (no change)${movedNote}`);
-
-            const lines = ['### TypeScript type check', '', summary];
-            if (newErrors.length > 0)
-              lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.map(e => e.raw).join('\n')}\n\`\`\``);
-            if (resolved.length > 0)
-              lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.map(e => e.raw).join('\n')}\n\`\`\``);
-            const body = lines.join('\n');
-
-            const marker = '### TypeScript type check';
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.startsWith(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner, repo: context.repo.repo,
-                comment_id: existing.id, body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: context.issue.number, body,
-              });
-            }
-
-      - name: Fail on new errors
-        run: |
-          NEW=$(cat /tmp/tsc-new-count.txt 2>/dev/null || echo 0)
-          if [ "$NEW" -gt 0 ]; then
-            echo "❌ $NEW new type error(s) introduced — see PR comment for details"
-            exit 1
-          fi
-
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: github.event_name == 'pull_request'
-    permissions:
-      pull-requests: write
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Collect PR branch lint errors
-        run: |
           pnpm exec oxlint . -f unix > /tmp/pr-oxlint.txt 2>&1 || true
           pnpm exec eslint . -f unix > /tmp/pr-eslint.txt 2>&1 || true
           cat /tmp/pr-oxlint.txt /tmp/pr-eslint.txt \
             | grep -E '^[^:[:space:]][^:]*:[0-9]+:[0-9]+:' \
             | sort -u > /tmp/pr-lint.txt || true
-
-      - name: Collect base branch lint errors
-        run: |
-          git worktree add /tmp/base-branch origin/${{ github.base_ref }}
-          cd /tmp/base-branch
-          pnpm install --frozen-lockfile --silent
-          pnpm exec oxlint . -f unix > /tmp/base-oxlint.txt 2>&1 || true
-          pnpm exec eslint . -f unix > /tmp/base-eslint.txt 2>&1 || true
-          cat /tmp/base-oxlint.txt /tmp/base-eslint.txt \
-            | grep -E '^[^:[:space:]][^:]*:[0-9]+:[0-9]+:' \
-            | sort -u > /tmp/base-lint.txt || true
-          cd $GITHUB_WORKSPACE
-          git worktree remove --force /tmp/base-branch
-
-      - name: Comment on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const baseLines = fs.readFileSync('/tmp/base-lint.txt', 'utf8').trim().split('\n').filter(Boolean);
-            const prLines   = fs.readFileSync('/tmp/pr-lint.txt',   'utf8').trim().split('\n').filter(Boolean);
-
-            // Parse "file:line:col: message" — file paths in this repo have no colons.
-            const parse = (raw) => {
-              const m = raw.match(/^([^:]+):(\d+):(\d+):\s*(.*)$/);
-              if (!m) return { file: '', line: 0, col: 0, rest: raw, raw };
-              return { file: m[1], line: parseInt(m[2], 10), col: parseInt(m[3], 10), rest: m[4], raw };
-            };
-
-            const baseErrors = baseLines.map(parse);
-            const prErrors   = prLines.map(parse);
-            const baseSet = new Set(baseLines);
-            const prSet   = new Set(prLines);
-
-            // First pass: exact-match set difference.
-            const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
-            const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
-
-            // Second pass: pair a "new" with a "resolved" when same file + same column +
-            // same message text and line numbers within 10. Treat those as the same lint
-            // issue that just shifted (e.g. an unrelated edit pushed it up/down the file).
-            // A changed column means the line itself was edited, so the issue is fair game.
-            const PROXIMITY = 10;
-            const resolvedPool = [...resolvedCandidates];
-            const newErrors = [];
-            const moved = [];
-            for (const n of newCandidates) {
-              const idx = resolvedPool.findIndex(r =>
-                r.file === n.file &&
-                r.col === n.col &&
-                r.rest === n.rest &&
-                Math.abs(r.line - n.line) <= PROXIMITY
-              );
-              if (idx >= 0) {
-                moved.push({ from: resolvedPool[idx], to: n });
-                resolvedPool.splice(idx, 1);
-              } else {
-                newErrors.push(n);
-              }
-            }
-            const resolved = resolvedPool;
-
-            // Persist the new-error count so the fail step can read it without redoing this work.
-            fs.writeFileSync('/tmp/lint-new-count.txt', String(newErrors.length));
-
-            const movedNote = moved.length ? ` (${moved.length} shifted within ±${PROXIMITY} lines, not counted)` : '';
-            const summary = `**Before:** ${baseErrors.length} issue(s) → **After:** ${prErrors.length} issue(s)` +
-              (newErrors.length || resolved.length
-                ? ` (+${newErrors.length} new, −${resolved.length} resolved)${movedNote}`
-                : ` (no change)${movedNote}`);
-
-            const lines = ['### Lint (oxlint + eslint)', '', summary];
-            if (newErrors.length > 0)
-              lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.slice(0, 50).map(e => e.raw).join('\n')}\n${newErrors.length > 50 ? `… and ${newErrors.length - 50} more` : ''}\n\`\`\``);
-            if (resolved.length > 0)
-              lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.slice(0, 50).map(e => e.raw).join('\n')}\n${resolved.length > 50 ? `… and ${resolved.length - 50} more` : ''}\n\`\`\``);
-            const body = lines.join('\n');
-
-            const marker = '### Lint (oxlint + eslint)';
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body.startsWith(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner, repo: context.repo.repo,
-                comment_id: existing.id, body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: context.issue.number, body,
-              });
-            }
-
-      - name: Fail on new issues
-        run: |
-          NEW=$(cat /tmp/lint-new-count.txt 2>/dev/null || echo 0)
-          if [ "$NEW" -gt 0 ]; then
-            echo "❌ $NEW new lint issue(s) introduced — see PR comment for details"
-            exit 1
-          fi
-
-  format-drift:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: github.event_name == 'pull_request'
-    permissions:
-      pull-requests: write
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Count PR branch format drift
-        run: |
-          # Run the full formatter on a clean checkout, then the set of files git
-          # reports as modified IS exactly the set `pnpm format` would rewrite:
-          # oxfmt for code (TS/JS/CSS/MD/JSON), prettier for SQL. Run as two
-          # independent steps (not `&&`) so a failure in one still measures the
-          # other. Version-agnostic — no reliance on an oxfmt/prettier list flag.
+          # Formatter rewrites files, so it runs last; the modified set IS the drift.
           pnpm exec oxfmt . > /dev/null 2>&1 || true
           pnpm exec prettier --write 'supabase/**/*.sql' > /dev/null 2>&1 || true
           git diff --name-only | sort > /tmp/pr-format.txt
           git checkout -- .
 
-      - name: Count base branch format drift
+      - name: Collect base branch results
         run: |
           git worktree add /tmp/base-branch origin/${{ github.base_ref }}
           cd /tmp/base-branch
           pnpm install --frozen-lockfile --silent
+          pnpm check 2>&1 | grep ': error TS' | sort > /tmp/base-errors.txt || true
+          pnpm exec oxlint . -f unix > /tmp/base-oxlint.txt 2>&1 || true
+          pnpm exec eslint . -f unix > /tmp/base-eslint.txt 2>&1 || true
+          cat /tmp/base-oxlint.txt /tmp/base-eslint.txt \
+            | grep -E '^[^:[:space:]][^:]*:[0-9]+:[0-9]+:' \
+            | sort -u > /tmp/base-lint.txt || true
           pnpm exec oxfmt . > /dev/null 2>&1 || true
           pnpm exec prettier --write 'supabase/**/*.sql' > /dev/null 2>&1 || true
           git diff --name-only | sort > /tmp/base-format.txt
           cd $GITHUB_WORKSPACE
           git worktree remove --force /tmp/base-branch
 
-      - name: Comment on PR
+      - name: Comment results on PR
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const readList = (p) =>
-              fs.existsSync(p) ? fs.readFileSync(p, 'utf8').trim().split('\n').filter(Boolean) : [];
-            const baseFiles = readList('/tmp/base-format.txt');
-            const prFiles   = readList('/tmp/pr-format.txt');
-            const baseSet = new Set(baseFiles);
-            const prSet   = new Set(prFiles);
 
-            // A file either drifts (the formatter rewrites it) or it doesn't, so a
-            // plain set diff suffices — no line-proximity logic like lint/typecheck.
-            const newFiles = prFiles.filter(f => !baseSet.has(f));
-            const resolved = baseFiles.filter(f => !prSet.has(f));
+            // Each section below is the diff logic from its former standalone
+            // job, unchanged except that it now returns its section text (with a
+            // `####` sub-heading) instead of posting its own comment.
 
-            const delta = prFiles.length - baseFiles.length;
-            const trend = delta < 0 ? '🟢' : delta > 0 ? '🔺' : '➖';
-            const summary = `${trend} **Before:** ${baseFiles.length} file(s) → **After:** ${prFiles.length} file(s)` +
-              (newFiles.length || resolved.length
-                ? ` (+${newFiles.length} new, −${resolved.length} reformatted)`
-                : ` (no change)`);
+            const tscSection = () => {
+              const baseLines = fs.existsSync('/tmp/base-errors.txt') ? fs.readFileSync('/tmp/base-errors.txt', 'utf8').trim().split('\n').filter(Boolean) : [];
+              const prLines   = fs.existsSync('/tmp/pr-errors.txt')   ? fs.readFileSync('/tmp/pr-errors.txt',   'utf8').trim().split('\n').filter(Boolean) : [];
+              const parse = (raw) => {
+                const m = raw.match(/^(.+?)\((\d+),(\d+)\):\s*(error\s+TS\d+:\s*.*)$/);
+                if (!m) return { file: '', line: 0, col: 0, rest: raw, raw };
+                return { file: m[1], line: parseInt(m[2], 10), col: parseInt(m[3], 10), rest: m[4], raw };
+              };
+              const baseErrors = baseLines.map(parse);
+              const prErrors   = prLines.map(parse);
+              const baseSet = new Set(baseLines);
+              const prSet   = new Set(prLines);
+              const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
+              const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
+              const PROXIMITY = 10;
+              const resolvedPool = [...resolvedCandidates];
+              const newErrors = [];
+              const moved = [];
+              for (const n of newCandidates) {
+                const idx = resolvedPool.findIndex(r =>
+                  r.file === n.file && r.col === n.col && r.rest === n.rest &&
+                  Math.abs(r.line - n.line) <= PROXIMITY
+                );
+                if (idx >= 0) { moved.push({ from: resolvedPool[idx], to: n }); resolvedPool.splice(idx, 1); }
+                else { newErrors.push(n); }
+              }
+              const resolved = resolvedPool;
+              fs.writeFileSync('/tmp/tsc-new-count.txt', String(newErrors.length));
+              const movedNote = moved.length ? ` (${moved.length} shifted within ±${PROXIMITY} lines, not counted)` : '';
+              const summary = `**Before:** ${baseErrors.length} error(s) → **After:** ${prErrors.length} error(s)` +
+                (newErrors.length || resolved.length
+                  ? ` (+${newErrors.length} new, −${resolved.length} resolved)${movedNote}`
+                  : ` (no change)${movedNote}`);
+              const lines = ['#### TypeScript type check', '', summary];
+              if (newErrors.length > 0)
+                lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.map(e => e.raw).join('\n')}\n\`\`\``);
+              if (resolved.length > 0)
+                lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.map(e => e.raw).join('\n')}\n\`\`\``);
+              return lines.join('\n');
+            };
 
-            const block = (title, list) =>
-              `\n**${title} (${list.length}):**\n\`\`\`\n${list.slice(0, 50).join('\n')}` +
-              `${list.length > 50 ? `\n… and ${list.length - 50} more` : ''}\n\`\`\``;
+            const lintSection = () => {
+              const baseLines = fs.existsSync('/tmp/base-lint.txt') ? fs.readFileSync('/tmp/base-lint.txt', 'utf8').trim().split('\n').filter(Boolean) : [];
+              const prLines   = fs.existsSync('/tmp/pr-lint.txt')   ? fs.readFileSync('/tmp/pr-lint.txt',   'utf8').trim().split('\n').filter(Boolean) : [];
+              const parse = (raw) => {
+                const m = raw.match(/^([^:]+):(\d+):(\d+):\s*(.*)$/);
+                if (!m) return { file: '', line: 0, col: 0, rest: raw, raw };
+                return { file: m[1], line: parseInt(m[2], 10), col: parseInt(m[3], 10), rest: m[4], raw };
+              };
+              const baseErrors = baseLines.map(parse);
+              const prErrors   = prLines.map(parse);
+              const baseSet = new Set(baseLines);
+              const prSet   = new Set(prLines);
+              const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
+              const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
+              const PROXIMITY = 10;
+              const resolvedPool = [...resolvedCandidates];
+              const newErrors = [];
+              const moved = [];
+              for (const n of newCandidates) {
+                const idx = resolvedPool.findIndex(r =>
+                  r.file === n.file && r.col === n.col && r.rest === n.rest &&
+                  Math.abs(r.line - n.line) <= PROXIMITY
+                );
+                if (idx >= 0) { moved.push({ from: resolvedPool[idx], to: n }); resolvedPool.splice(idx, 1); }
+                else { newErrors.push(n); }
+              }
+              const resolved = resolvedPool;
+              fs.writeFileSync('/tmp/lint-new-count.txt', String(newErrors.length));
+              const movedNote = moved.length ? ` (${moved.length} shifted within ±${PROXIMITY} lines, not counted)` : '';
+              const summary = `**Before:** ${baseErrors.length} issue(s) → **After:** ${prErrors.length} issue(s)` +
+                (newErrors.length || resolved.length
+                  ? ` (+${newErrors.length} new, −${resolved.length} resolved)${movedNote}`
+                  : ` (no change)${movedNote}`);
+              const lines = ['#### Lint (oxlint + eslint)', '', summary];
+              if (newErrors.length > 0)
+                lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.slice(0, 50).map(e => e.raw).join('\n')}\n${newErrors.length > 50 ? `… and ${newErrors.length - 50} more` : ''}\n\`\`\``);
+              if (resolved.length > 0)
+                lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.slice(0, 50).map(e => e.raw).join('\n')}\n${resolved.length > 50 ? `… and ${resolved.length - 50} more` : ''}\n\`\`\``);
+              return lines.join('\n');
+            };
 
-            const lines = [
-              '### Formatter drift (`pnpm format`)',
-              '',
-              'Files `pnpm format` would still rewrite (oxfmt for code + prettier for SQL) — formatting debt to drive toward **0** over time by reformatting legacy files as you touch them.',
-              '',
-              summary,
-            ];
-            if (newFiles.length > 0) lines.push(block('Newly unformatted', newFiles));
-            if (resolved.length > 0) lines.push(block('Reformatted / cleaned up', resolved));
-            const body = lines.join('\n');
+            const formatSection = () => {
+              const readList = (p) =>
+                fs.existsSync(p) ? fs.readFileSync(p, 'utf8').trim().split('\n').filter(Boolean) : [];
+              const baseFiles = readList('/tmp/base-format.txt');
+              const prFiles   = readList('/tmp/pr-format.txt');
+              const baseSet = new Set(baseFiles);
+              const prSet   = new Set(prFiles);
+              const newFiles = prFiles.filter(f => !baseSet.has(f));
+              const resolved = baseFiles.filter(f => !prSet.has(f));
+              const delta = prFiles.length - baseFiles.length;
+              const trend = delta < 0 ? '🟢' : delta > 0 ? '🔺' : '➖';
+              const summary = `${trend} **Before:** ${baseFiles.length} file(s) → **After:** ${prFiles.length} file(s)` +
+                (newFiles.length || resolved.length
+                  ? ` (+${newFiles.length} new, −${resolved.length} reformatted)`
+                  : ` (no change)`);
+              const block = (title, list) =>
+                `\n**${title} (${list.length}):**\n\`\`\`\n${list.slice(0, 50).join('\n')}` +
+                `${list.length > 50 ? `\n… and ${list.length - 50} more` : ''}\n\`\`\``;
+              const lines = [
+                '#### Formatter drift (`pnpm format`)',
+                '',
+                'Files `pnpm format` would still rewrite (oxfmt for code + prettier for SQL) — formatting debt to drive toward **0** over time by reformatting legacy files as you touch them.',
+                '',
+                summary,
+              ];
+              if (newFiles.length > 0) lines.push(block('Newly unformatted', newFiles));
+              if (resolved.length > 0) lines.push(block('Reformatted / cleaned up', resolved));
+              return lines.join('\n');
+            };
 
-            const marker = '### Formatter drift (`pnpm format`)';
+            const marker = '### PR checks';
+            const body = [
+              marker, '',
+              tscSection(), '', '---', '',
+              lintSection(), '', '---', '',
+              formatSection(),
+            ].join('\n');
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner, repo: context.repo.repo,
               issue_number: context.issue.number,
@@ -378,6 +219,18 @@ jobs:
                 issue_number: context.issue.number, body,
               });
             }
+
+      - name: Fail on new errors or lint issues
+        run: |
+          TSC=$(cat /tmp/tsc-new-count.txt 2>/dev/null || echo 0)
+          LINT=$(cat /tmp/lint-new-count.txt 2>/dev/null || echo 0)
+          FAIL=0
+          if [ "$TSC" -gt 0 ]; then echo "❌ $TSC new type error(s)"; FAIL=1; fi
+          if [ "$LINT" -gt 0 ]; then echo "❌ $LINT new lint issue(s)"; FAIL=1; fi
+          if [ "$FAIL" -ne 0 ]; then
+            echo "See the '### PR checks' comment for details"
+            exit 1
+          fi
 
   bundle-size:
     runs-on: ubuntu-latest
