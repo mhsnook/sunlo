@@ -275,6 +275,110 @@ jobs:
             exit 1
           fi
 
+  format-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Count PR branch format drift
+        run: |
+          # Run the full formatter on a clean checkout, then the set of files git
+          # reports as modified IS exactly the set `pnpm format` would rewrite:
+          # oxfmt for code (TS/JS/CSS/MD/JSON), prettier for SQL. Run as two
+          # independent steps (not `&&`) so a failure in one still measures the
+          # other. Version-agnostic — no reliance on an oxfmt/prettier list flag.
+          pnpm exec oxfmt . > /dev/null 2>&1 || true
+          pnpm exec prettier --write 'supabase/**/*.sql' > /dev/null 2>&1 || true
+          git diff --name-only | sort > /tmp/pr-format.txt
+          git checkout -- .
+
+      - name: Count base branch format drift
+        run: |
+          git worktree add /tmp/base-branch origin/${{ github.base_ref }}
+          cd /tmp/base-branch
+          pnpm install --frozen-lockfile --silent
+          pnpm exec oxfmt . > /dev/null 2>&1 || true
+          pnpm exec prettier --write 'supabase/**/*.sql' > /dev/null 2>&1 || true
+          git diff --name-only | sort > /tmp/base-format.txt
+          cd $GITHUB_WORKSPACE
+          git worktree remove --force /tmp/base-branch
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const readList = (p) =>
+              fs.existsSync(p) ? fs.readFileSync(p, 'utf8').trim().split('\n').filter(Boolean) : [];
+            const baseFiles = readList('/tmp/base-format.txt');
+            const prFiles   = readList('/tmp/pr-format.txt');
+            const baseSet = new Set(baseFiles);
+            const prSet   = new Set(prFiles);
+
+            // A file either drifts (the formatter rewrites it) or it doesn't, so a
+            // plain set diff suffices — no line-proximity logic like lint/typecheck.
+            const newFiles = prFiles.filter(f => !baseSet.has(f));
+            const resolved = baseFiles.filter(f => !prSet.has(f));
+
+            const delta = prFiles.length - baseFiles.length;
+            const trend = delta < 0 ? '🟢' : delta > 0 ? '🔺' : '➖';
+            const summary = `${trend} **Before:** ${baseFiles.length} file(s) → **After:** ${prFiles.length} file(s)` +
+              (newFiles.length || resolved.length
+                ? ` (+${newFiles.length} new, −${resolved.length} reformatted)`
+                : ` (no change)`);
+
+            const block = (title, list) =>
+              `\n**${title} (${list.length}):**\n\`\`\`\n${list.slice(0, 50).join('\n')}` +
+              `${list.length > 50 ? `\n… and ${list.length - 50} more` : ''}\n\`\`\``;
+
+            const lines = [
+              '### Formatter drift (`pnpm format`)',
+              '',
+              'Files `pnpm format` would still rewrite (oxfmt for code + prettier for SQL) — formatting debt to drive toward **0** over time by reformatting legacy files as you touch them.',
+              '',
+              summary,
+            ];
+            if (newFiles.length > 0) lines.push(block('Newly unformatted', newFiles));
+            if (resolved.length > 0) lines.push(block('Reformatted / cleaned up', resolved));
+            const body = lines.join('\n');
+
+            const marker = '### Formatter drift (`pnpm format`)';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
+
   bundle-size:
     runs-on: ubuntu-latest
     timeout-minutes: 10
