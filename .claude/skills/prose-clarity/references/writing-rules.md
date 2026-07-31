@@ -1,6 +1,6 @@
 # ASD-STE100 Writing Rules — Summary and Sources
 
-This file summarizes the public, official description of ASD-STE100 (Simplified Technical English). It paraphrases rule *categories*; it does not reproduce the standard's text or its ~900-word dictionary verbatim. For the authoritative document, request the free download at the official site.
+This file summarizes the public, official description of ASD-STE100 (Simplified Technical English). It paraphrases rule _categories_; it does not reproduce the standard's text or its ~900-word dictionary verbatim. For the authoritative document, request the free download at the official site.
 
 ## What ASD-STE100 Is
 
@@ -15,31 +15,37 @@ ASD-STE100 is a controlled natural language, first released in 1986 (as AECMA Do
 ## Rule Categories (Paraphrased)
 
 **Word choice**
+
 - Use approved words only in their approved meaning and part of speech.
 - Each word maps to exactly one meaning — don't rely on context to disambiguate a word that has several dictionary senses.
 - Prefer the plainer, shorter, more common word over a formal or rare synonym.
 
 **Verb forms**
+
 - Permitted forms: infinitive, imperative, simple present, simple past, simple future, and past participle used only as an adjective.
 - No present perfect, past perfect, or other compound/auxiliary constructions ("we have received" is not allowed; "we received" is).
 - "-ing" forms are permitted only as a technical noun or as part of a technical noun, not as a verb form.
 
 **Voice**
+
 - Active voice is required for procedures and instructions.
 - Passive voice is allowed only in descriptive text, and only when the actor performing the action is genuinely unknown or irrelevant to the reader.
 
 **Sentence structure**
+
 - One instruction per sentence.
 - Maximum ~20 words per sentence for procedures/instructions; maximum ~25 words for descriptive text.
 - Do not omit sentence parts (verb, subject, article) just to shorten the sentence — the standard explicitly warns that this creates ambiguity rather than clarity.
 - Noun clusters (strings of nouns stacked as a modifier) are capped at 3 words.
 
 **Paragraph and document structure**
+
 - One topic per paragraph.
 - Maximum ~6 sentences per paragraph.
 - Use vertical (numbered or bulleted) lists for sequences, conditions, or complex enumerations instead of burying them in prose.
 
 **Safety instructions**
+
 - Safety-critical instructions must open with a clear command or condition, not be buried mid-sentence.
 
 ## Why This Skill Repurposes STE for Agent Output
