@@ -8,3 +8,6 @@ out
 src-tauri/target
 src-tauri/gen
 scenetest-reports
+
+# agent config
+.claude
