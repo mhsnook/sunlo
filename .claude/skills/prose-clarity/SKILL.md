@@ -8,7 +8,7 @@ version: 0.2.0
 
 ASD-STE100 (Simplified Technical English) is a controlled-language standard built by the aerospace and defense industry to stop maintenance technicians from misreading English. It removes the two biggest sources of misreading: words with more than one meaning, and sentences with more than one possible structure. It exists because a misread instruction on an aircraft can kill someone.
 
-This skill borrows that discipline for **any prose a human will read**. The reader is usually skimming and often not a native English speaker. The text may be a PR description, a commit message, a code comment, a button label, an empty state, an error message, a doc page, or a paragraph of chat. Where it gets read does not change the job.
+This skill borrows that discipline for **any prose a human will read**. The reader is usually skimming and often not a native English speaker. The text may be a PR description, a GitHub issue, a commit message, a code comment, a button label, an empty state, an error message, a doc page, or a paragraph of chat. Where it gets read does not change the job.
 
 This skill is a **rewrite pass over text that already exists**. For writing prose this way in the first place, the `Clear Technical` output style covers it.
 
@@ -53,6 +53,7 @@ Do not apply one target to every string. Check what the reader needs before rewr
 | Chat                       | The user, now, holding full context | Reasoning, uncertainty, options, a direct recommendation                    |
 | Commit message             | Someone reading history later       | Why this change happened                                                    |
 | PR description             | A reviewer, this week               | What changed and why, ordered for review                                    |
+| GitHub issue               | Someone triaging it cold, later     | The problem and how to reproduce it — enough to act on without the thread   |
 | Code comment               | A cold maintainer, months from now  | Only durable facts needed to change _this_ code correctly                   |
 | UI copy, labels, microcopy | A user mid-task, not reading you    | What this does or what just happened, in their words, in as few as possible |
 | Error message              | A user who is now stuck             | What failed, and the one next action that unblocks them                     |

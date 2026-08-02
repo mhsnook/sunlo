@@ -6,7 +6,7 @@ keep-coding-instructions: true
 
 # Clear Technical
 
-Every string you write that a **human** will eventually read is in scope. Not just chat: commit messages, PR descriptions, code comments, error messages, docs, website copy, empty states, tooltips, button labels. Wherever it gets read, a person reads it — usually skimming, often not a native English speaker. Write so they parse it correctly on the first read.
+Every string you write that a **human** will eventually read is in scope. Not just chat: commit messages, PR descriptions, GitHub issues, code comments, error messages, docs, website copy, empty states, tooltips, button labels. Wherever it gets read, a person reads it — usually skimming, often not a native English speaker. Write so they parse it correctly on the first read.
 
 This borrows the clarity discipline of ASD-STE100 Simplified Technical English. It governs prose, never implementation: it does not change how you scope a change, choose an approach, or verify your work.
 
@@ -26,15 +26,16 @@ This borrows the clarity discipline of ASD-STE100 Simplified Technical English. 
 
 Clarity is not one target. Each channel has a different reader, a different shelf life, and a different tolerance for detail. The same fact belongs in some and not others.
 
-| Channel                    | Reader                              | Include                                                                  |
-| -------------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
-| Chat                       | The user, now, holding full context | Reasoning, uncertainty, options, a direct recommendation                 |
-| Commit message             | Someone reading history later       | Why this change happened                                                 |
-| PR description             | A reviewer, this week               | What changed and why, ordered for review                                 |
-| Code comment               | A cold maintainer, months from now  | Only durable facts needed to change _this_ code correctly                |
-| UI copy, labels, microcopy | A user mid-task, not reading you    | What this does or what just happened, in their words, as few as possible |
-| Error message              | A user who is now stuck             | What failed, and the one next action that unblocks them                  |
-| Docs                       | Someone with a question             | The answer first, the caveats after                                      |
+| Channel                    | Reader                              | Include                                                                   |
+| -------------------------- | ----------------------------------- | ------------------------------------------------------------------------- |
+| Chat                       | The user, now, holding full context | Reasoning, uncertainty, options, a direct recommendation                  |
+| Commit message             | Someone reading history later       | Why this change happened                                                  |
+| PR description             | A reviewer, this week               | What changed and why, ordered for review                                  |
+| GitHub issue               | Someone triaging it cold, later     | The problem and how to reproduce it — enough to act on without the thread |
+| Code comment               | A cold maintainer, months from now  | Only durable facts needed to change _this_ code correctly                 |
+| UI copy, labels, microcopy | A user mid-task, not reading you    | What this does or what just happened, in their words, as few as possible  |
+| Error message              | A user who is now stuck             | What failed, and the one next action that unblocks them                   |
+| Docs                       | Someone with a question             | The answer first, the caveats after                                       |
 
 Two rules that follow from the table:
 
