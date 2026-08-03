@@ -2,76 +2,49 @@
 
 ## Colors
 
-Colors are ordinary Tailwind: a palette name and a shade number.
+Colors are stock Tailwind — a palette name and a shade number:
 
 ```typescript
 <div className="bg-primary-100 border-primary-200">
 	<span className="text-primary-800">…</span>
-	<button className="bg-primary-700 text-white hover:bg-primary-800">Save</button>
+	<button className="bg-primary-700 text-primary-50 hover:bg-primary-800">Save</button>
 </div>
 ```
 
-Seven **semantic palettes** are available — `primary`, `accent`, `neutral`, `success`, `warning`, `danger`, `info` — each with the standard 50–950 shades. Every one is an alias for a stock Tailwind palette, so `bg-danger-700` is `bg-red-700`: same value, same shade number. The aliases live in `src/styles/theme.css`.
+Alongside Tailwind's own palettes there are seven semantic ones, each an alias for a stock palette at the same shade numbers — `bg-danger-700` _is_ `bg-red-700`. Aliases live in `src/styles/theme.css`.
 
-| Semantic  | Stock palette | Semantic  | Stock palette |
-| --------- | ------------- | --------- | ------------- |
-| `primary` | `purple`      | `success` | `green`       |
-| `accent`  | `teal`        | `warning` | `amber`       |
-| `neutral` | `slate`       | `danger`  | `red`         |
-|           |               | `info`    | `blue`        |
+| Semantic  | Stock    | Semantic  | Stock   |
+| --------- | -------- | --------- | ------- |
+| `primary` | `purple` | `success` | `green` |
+| `accent`  | `teal`   | `warning` | `amber` |
+| `neutral` | `slate`  | `danger`  | `red`   |
+|           |          | `info`    | `blue`  |
 
-Two things are added on top, and nothing else.
+The ShadCN surface tokens (`bg-card`, `text-muted-foreground`, `border-border`) are built from these in `globals.css`. Prefer them for UI primitives that use one color everywhere.
 
-### 1. The shade scale flips in dark mode
+Two behaviours are worth knowing.
 
-50 and 950 swap, 100 and 900 swap, and so on down to 500, which mirrors itself. A shade number therefore means _how much contrast this has against the page_, not a fixed lightness:
+### Dark mode flips the shade scale
 
-| Shade | Light mode     | Dark mode      | Use for                 |
-| ----- | -------------- | -------------- | ----------------------- |
-| `50`  | near-white     | near-black     | Blends with the page    |
-| `100` | very pale tint | very dark tint | Subtle surface          |
-| `500` | mid            | mid            | Solid fills, dots       |
-| `700` | strong         | strong         | Buttons, prominent text |
-| `950` | near-black     | near-white     | Maximum-contrast text   |
+50 and 950 swap, 100 and 900 swap, down to 500 which mirrors itself. A shade number means _how much contrast against the page_, not a fixed lightness — so `bg-primary-100` is a subtle surface and `text-primary-800` is strong text in both modes. **Do not write `dark:` in app code.**
 
-So `bg-primary-100 text-primary-800` reads correctly in both modes and needs no `dark:` variant. **Do not write `dark:` in app code.**
+One consequence to design around: a solid fill inverts polarity. `bg-primary-700` is dark with pale text in light mode, and pale with dark text in dark mode. Pair it with `text-primary-50`, never `text-white`.
 
-Stock Tailwind palettes (`bg-purple-600`, `text-slate-300`) are untouched and do **not** flip. The marketing pages in `src/routes/-homepage/` use them directly with hand-written `dark:` variants, which is why the flip is scoped to the semantic names.
+Tailwind's own palettes do **not** flip. `bg-purple-600` is the same purple in both modes, which is why the marketing pages in `src/routes/-homepage/` can use them with hand-written `dark:` variants.
 
-### 2. `primary` and `accent` can be re-pointed
+### `primary` and `accent` are re-pointable
 
-Both resolve through `--p-*` and `--a-*` variables, so setting those on any element re-themes everything inside it — no per-element classes, no re-declaring anything. That is how per-language theming works:
+Both resolve through `--p-*` and `--a-*`, so setting those on an element re-themes its whole subtree. That is how per-language theming works:
 
 ```typescript
 import { getLangThemeCss } from '@/lib/lang-theme'
 
-// every bg-primary-*, text-accent-*, border-primary-* inside follows
 <div style={getLangThemeCss(lang)}>…</div>
 ```
 
-The dark-mode flip composes on top, because the flip is written against `--p-*`/`--a-*` rather than against a fixed palette. A re-pointed subtree still flips correctly.
+The flip is written against `--p-*`/`--a-*`, so a re-pointed subtree still flips. `src/lib/lang-theme.ts` owns which palette a language or avatar gets.
 
-`src/lib/lang-theme.ts` owns the palette assignment: `LANG_PALETTES` maps language stops to stock palettes, `AVATAR_PALETTES` does the same for placeholder avatars, and `getPaletteCss()` / `setPaletteOn()` apply one.
-
-Because those `var(--color-rose-500)` references are built at runtime, `globals.css` imports Tailwind with `theme(static)` so no palette gets tree-shaken out.
-
-### Semantic surface tokens
-
-The ShadCN token set (`bg-card`, `bg-background`, `text-muted-foreground`, `border-border`, `bg-primary`, `text-primary-foreground`) is still there and still preferred for UI primitives that use the same color everywhere. All of them are defined from the palettes in `globals.css`, so they flip too.
-
-One exception worth knowing: `--color-primary-foreground` reads from `--p-50` rather than `--color-primary-50`, so it stays at the pale end in both modes. It is text that sits ON a saturated primary surface, which is mid-dark either way.
-
-### When to use what
-
-- **Semantic tokens** (`bg-card`, `text-primary`): UI primitives with one color everywhere.
-- **Semantic palette + shade** (`bg-success-100`, `text-success-800`): the default for anything colored.
-- **Stock palettes** (`bg-purple-600`): marketing pages only, where the color is a deliberate one-off and you are willing to write `dark:` yourself.
-- **Opacity modifiers** (`bg-primary-600/50`) work normally.
-
-### Caveats
-
-- **Portals do not break anything anymore.** A Base UI dialog rendered into a portal sits outside its trigger's DOM ancestor, so it will not pick up a re-pointed `primary` from that subtree. It still gets the correct default palette and the correct dark-mode flip.
-- **`neutral` shadows Tailwind's own `neutral`.** `bg-neutral-100` is slate-tinted and flips. Reach for `gray`, `zinc`, or `stone` if you want a true stock grey.
+Note that `neutral` shadows Tailwind's own `neutral`: `bg-neutral-100` is slate-tinted and flips. Use `gray`, `zinc`, or `stone` for a true stock grey.
 
 ## Styling Conventions
 
