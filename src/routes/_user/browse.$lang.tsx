@@ -287,7 +287,7 @@ function BrowseLanguagePage() {
 												'rounded-full px-4 py-1.5 text-sm transition-colors',
 												active
 													? 'bg-primary text-primary-foreground'
-													: 'hue-neutral hover:hue-neutral bg-lc-1 text-lc-6 text-chroma-mid hover:bg-lc-2'
+													: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
 											)}
 										>
 											{tag.name}

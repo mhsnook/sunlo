@@ -208,7 +208,7 @@ export default function BrowseSearchOverlay({
 									'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
 									selectedLangs.includes(l.code)
 										? 'bg-primary-foresoft text-primary-foreground border-transparent'
-										: 'border-border text-muted-foreground hover:border-lc-4 hover:border-chroma-mlo hover:text-foreground'
+										: 'border-border text-muted-foreground hover:border-neutral-400 hover:text-foreground'
 								)}
 							>
 								{l.name}
@@ -223,7 +223,7 @@ export default function BrowseSearchOverlay({
 								// oxlint-disable-next-line jsx-no-jsx-as-prop
 								<button
 									type="button"
-									className="border-border text-muted-foreground hover:border-lc-4 hover:border-chroma-mlo hover:text-foreground flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+									className="border-border text-muted-foreground hover:text-foreground flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:border-neutral-400"
 								>
 									<Plus className="size-3" />
 									more
@@ -305,7 +305,7 @@ function SearchResultLink({
 	onMouseEnter: () => void
 }) {
 	const className =
-		'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-lc-up-2 data-[selected=true]:bg-lc-up-2'
+		'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-neutral-100 data-[selected=true]:bg-neutral-100'
 	const linkProps = {
 		'data-selected': isSelected,
 		className,

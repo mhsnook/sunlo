@@ -1,0 +1,191 @@
+/* palette.css — semantic color palettes on Tailwind's 50–950 shade scale.
+ *
+ * Seven palettes (primary, accent, neutral, success, warning, danger, info),
+ * each with the standard 50–950 shades, so components write ordinary Tailwind:
+ *
+ *   bg-primary-100 text-primary-800 border-primary-200 hover:bg-primary-200
+ *
+ * Two properties make that work without a single `dark:` prefix:
+ *
+ *   1. Shades flip with the mode. The luminance ramp below runs light→dark
+ *      in light mode and dark→light in dark mode, so a shade number always
+ *      means the same *contrast against the page*, never a fixed lightness.
+ *      50 blends into the page and 950 is maximum contrast, in both modes.
+ *
+ *   2. Hue stays late-bound. Every shade is an `oklch()` expression over
+ *      `--hue-*`, inlined into the utility class rather than resolved at
+ *      `:root`. An element that overrides `--hue-primary` — the per-language
+ *      theming in `src/lib/lang-theme.ts` — re-tints its whole subtree.
+ *
+ * To re-theme the app, change the ramps and hues here. Nothing else reads
+ * raw lightness or chroma values.
+ */
+
+/* ── Ramps ────────────────────────────────────────────────────────────────
+   Real custom properties (not `@theme` tokens) so `.dark` can override them
+   and every palette picks up the change at once. */
+
+:root {
+	/* Hues, in OKLCH degrees. Overridden per-language at runtime. */
+	--hue-primary: 300;
+	--hue-accent: 175;
+	--hue-neutral: 270;
+	--hue-success: 145;
+	--hue-warning: 55;
+	--hue-danger: 15;
+	--hue-info: 220;
+
+	/* Lightness per shade — light mode.
+	   A power curve (p≈1.3) from 0.95 down to 0.15: small steps near the
+	   light end, growing toward the dark end. Perception is more sensitive
+	   near white, so subtle surfaces need finer deltas up there. */
+	--l-50: 0.95;
+	--l-100: 0.91;
+	--l-200: 0.85;
+	--l-300: 0.78;
+	--l-400: 0.71;
+	--l-500: 0.63;
+	--l-600: 0.54;
+	--l-700: 0.44;
+	--l-800: 0.34;
+	--l-900: 0.23;
+	--l-950: 0.15;
+
+	/* Chroma per shade. Rises to a peak at 600 and tapers at both ends, so
+	   the pale shades read as tints and the dark shades stay in gamut.
+	   Chroma does not flip: a shade is equally saturated in both modes. */
+	--c-50: 0.015;
+	--c-100: 0.05;
+	--c-200: 0.09;
+	--c-300: 0.13;
+	--c-400: 0.17;
+	--c-500: 0.22;
+	--c-600: 0.23;
+	--c-700: 0.21;
+	--c-800: 0.17;
+	--c-900: 0.12;
+	--c-950: 0.07;
+
+	/* Chroma per shade — neutral palette. Enough of the brand hue to keep
+	   greys from looking dead, never enough to read as a color. */
+	--cn-50: 0.015;
+	--cn-100: 0.02;
+	--cn-200: 0.025;
+	--cn-300: 0.03;
+	--cn-400: 0.03;
+	--cn-500: 0.03;
+	--cn-600: 0.03;
+	--cn-700: 0.03;
+	--cn-800: 0.025;
+	--cn-900: 0.02;
+	--cn-950: 0.015;
+}
+
+/* Dark mode flips the lightness ramp. 50 is still the shade that blends
+   into the page and 950 is still maximum contrast — they just sit at the
+   other end of the lightness axis. The curve is linear here: dark surfaces
+   need even steps, because the eye is less sensitive near black. */
+.dark {
+	--l-50: 0.12;
+	--l-100: 0.2;
+	--l-200: 0.28;
+	--l-300: 0.36;
+	--l-400: 0.44;
+	--l-500: 0.52;
+	--l-600: 0.6;
+	--l-700: 0.68;
+	--l-800: 0.76;
+	--l-900: 0.84;
+	--l-950: 0.92;
+}
+
+/* ── Palettes ─────────────────────────────────────────────────────────────
+   `@theme inline` pastes these expressions straight into the utility class,
+   so `--hue-*` and the ramps both resolve on the element that carries the
+   class. That is what lets a language-themed subtree re-tint itself. */
+
+@theme inline {
+	--color-primary-50: oklch(var(--l-50) var(--c-50) var(--hue-primary));
+	--color-primary-100: oklch(var(--l-100) var(--c-100) var(--hue-primary));
+	--color-primary-200: oklch(var(--l-200) var(--c-200) var(--hue-primary));
+	--color-primary-300: oklch(var(--l-300) var(--c-300) var(--hue-primary));
+	--color-primary-400: oklch(var(--l-400) var(--c-400) var(--hue-primary));
+	--color-primary-500: oklch(var(--l-500) var(--c-500) var(--hue-primary));
+	--color-primary-600: oklch(var(--l-600) var(--c-600) var(--hue-primary));
+	--color-primary-700: oklch(var(--l-700) var(--c-700) var(--hue-primary));
+	--color-primary-800: oklch(var(--l-800) var(--c-800) var(--hue-primary));
+	--color-primary-900: oklch(var(--l-900) var(--c-900) var(--hue-primary));
+	--color-primary-950: oklch(var(--l-950) var(--c-950) var(--hue-primary));
+
+	--color-accent-50: oklch(var(--l-50) var(--c-50) var(--hue-accent));
+	--color-accent-100: oklch(var(--l-100) var(--c-100) var(--hue-accent));
+	--color-accent-200: oklch(var(--l-200) var(--c-200) var(--hue-accent));
+	--color-accent-300: oklch(var(--l-300) var(--c-300) var(--hue-accent));
+	--color-accent-400: oklch(var(--l-400) var(--c-400) var(--hue-accent));
+	--color-accent-500: oklch(var(--l-500) var(--c-500) var(--hue-accent));
+	--color-accent-600: oklch(var(--l-600) var(--c-600) var(--hue-accent));
+	--color-accent-700: oklch(var(--l-700) var(--c-700) var(--hue-accent));
+	--color-accent-800: oklch(var(--l-800) var(--c-800) var(--hue-accent));
+	--color-accent-900: oklch(var(--l-900) var(--c-900) var(--hue-accent));
+	--color-accent-950: oklch(var(--l-950) var(--c-950) var(--hue-accent));
+
+	--color-neutral-50: oklch(var(--l-50) var(--cn-50) var(--hue-neutral));
+	--color-neutral-100: oklch(var(--l-100) var(--cn-100) var(--hue-neutral));
+	--color-neutral-200: oklch(var(--l-200) var(--cn-200) var(--hue-neutral));
+	--color-neutral-300: oklch(var(--l-300) var(--cn-300) var(--hue-neutral));
+	--color-neutral-400: oklch(var(--l-400) var(--cn-400) var(--hue-neutral));
+	--color-neutral-500: oklch(var(--l-500) var(--cn-500) var(--hue-neutral));
+	--color-neutral-600: oklch(var(--l-600) var(--cn-600) var(--hue-neutral));
+	--color-neutral-700: oklch(var(--l-700) var(--cn-700) var(--hue-neutral));
+	--color-neutral-800: oklch(var(--l-800) var(--cn-800) var(--hue-neutral));
+	--color-neutral-900: oklch(var(--l-900) var(--cn-900) var(--hue-neutral));
+	--color-neutral-950: oklch(var(--l-950) var(--cn-950) var(--hue-neutral));
+
+	--color-success-50: oklch(var(--l-50) var(--c-50) var(--hue-success));
+	--color-success-100: oklch(var(--l-100) var(--c-100) var(--hue-success));
+	--color-success-200: oklch(var(--l-200) var(--c-200) var(--hue-success));
+	--color-success-300: oklch(var(--l-300) var(--c-300) var(--hue-success));
+	--color-success-400: oklch(var(--l-400) var(--c-400) var(--hue-success));
+	--color-success-500: oklch(var(--l-500) var(--c-500) var(--hue-success));
+	--color-success-600: oklch(var(--l-600) var(--c-600) var(--hue-success));
+	--color-success-700: oklch(var(--l-700) var(--c-700) var(--hue-success));
+	--color-success-800: oklch(var(--l-800) var(--c-800) var(--hue-success));
+	--color-success-900: oklch(var(--l-900) var(--c-900) var(--hue-success));
+	--color-success-950: oklch(var(--l-950) var(--c-950) var(--hue-success));
+
+	--color-warning-50: oklch(var(--l-50) var(--c-50) var(--hue-warning));
+	--color-warning-100: oklch(var(--l-100) var(--c-100) var(--hue-warning));
+	--color-warning-200: oklch(var(--l-200) var(--c-200) var(--hue-warning));
+	--color-warning-300: oklch(var(--l-300) var(--c-300) var(--hue-warning));
+	--color-warning-400: oklch(var(--l-400) var(--c-400) var(--hue-warning));
+	--color-warning-500: oklch(var(--l-500) var(--c-500) var(--hue-warning));
+	--color-warning-600: oklch(var(--l-600) var(--c-600) var(--hue-warning));
+	--color-warning-700: oklch(var(--l-700) var(--c-700) var(--hue-warning));
+	--color-warning-800: oklch(var(--l-800) var(--c-800) var(--hue-warning));
+	--color-warning-900: oklch(var(--l-900) var(--c-900) var(--hue-warning));
+	--color-warning-950: oklch(var(--l-950) var(--c-950) var(--hue-warning));
+
+	--color-danger-50: oklch(var(--l-50) var(--c-50) var(--hue-danger));
+	--color-danger-100: oklch(var(--l-100) var(--c-100) var(--hue-danger));
+	--color-danger-200: oklch(var(--l-200) var(--c-200) var(--hue-danger));
+	--color-danger-300: oklch(var(--l-300) var(--c-300) var(--hue-danger));
+	--color-danger-400: oklch(var(--l-400) var(--c-400) var(--hue-danger));
+	--color-danger-500: oklch(var(--l-500) var(--c-500) var(--hue-danger));
+	--color-danger-600: oklch(var(--l-600) var(--c-600) var(--hue-danger));
+	--color-danger-700: oklch(var(--l-700) var(--c-700) var(--hue-danger));
+	--color-danger-800: oklch(var(--l-800) var(--c-800) var(--hue-danger));
+	--color-danger-900: oklch(var(--l-900) var(--c-900) var(--hue-danger));
+	--color-danger-950: oklch(var(--l-950) var(--c-950) var(--hue-danger));
+
+	--color-info-50: oklch(var(--l-50) var(--c-50) var(--hue-info));
+	--color-info-100: oklch(var(--l-100) var(--c-100) var(--hue-info));
+	--color-info-200: oklch(var(--l-200) var(--c-200) var(--hue-info));
+	--color-info-300: oklch(var(--l-300) var(--c-300) var(--hue-info));
+	--color-info-400: oklch(var(--l-400) var(--c-400) var(--hue-info));
+	--color-info-500: oklch(var(--l-500) var(--c-500) var(--hue-info));
+	--color-info-600: oklch(var(--l-600) var(--c-600) var(--hue-info));
+	--color-info-700: oklch(var(--l-700) var(--c-700) var(--hue-info));
+	--color-info-800: oklch(var(--l-800) var(--c-800) var(--hue-info));
+	--color-info-900: oklch(var(--l-900) var(--c-900) var(--hue-info));
+	--color-info-950: oklch(var(--l-950) var(--c-950) var(--hue-info));
+}

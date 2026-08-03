@@ -154,37 +154,31 @@ export function SpreadsheetImportDialog({
 								</p>
 								<div className="space-y-2 ps-1">
 									<p>
-										<strong className="text-lc-7 text-chroma-mhi">
-											Phrase
-										</strong>{' '}
-										&mdash; the word or sentence in your learning language.
-										Include the word &ldquo;phrase&rdquo; in the header (e.g.{' '}
-										<code className="bg-lc-1 bg-chroma-mlo rounded px-1.5 py-0.5 text-sm">
+										<strong className="text-primary-700">Phrase</strong> &mdash;
+										the word or sentence in your learning language. Include the
+										word &ldquo;phrase&rdquo; in the header (e.g.{' '}
+										<code className="bg-primary-100 rounded px-1.5 py-0.5 text-sm">
 											phrase
 										</code>
 										).
 									</p>
 									<p>
-										<strong className="hue-accent text-lc-7 text-chroma-mhi">
-											Translation
-										</strong>{' '}
+										<strong className="text-accent-700">Translation</strong>{' '}
 										&mdash; put the language name or 3-letter code in the header
 										(e.g.{' '}
-										<code className="hue-accent bg-lc-1 bg-chroma-mlo rounded px-1.5 py-0.5 text-sm">
+										<code className="bg-accent-100 rounded px-1.5 py-0.5 text-sm">
 											translation (eng)
 										</code>{' '}
 										or{' '}
-										<code className="hue-accent bg-lc-1 bg-chroma-mlo rounded px-1.5 py-0.5 text-sm">
+										<code className="bg-accent-100 rounded px-1.5 py-0.5 text-sm">
 											English
 										</code>
 										). You can have multiple translation columns.
 									</p>
 									<p>
-										<strong className="hue-info text-lc-7 text-chroma-mhi">
-											Tags
-										</strong>{' '}
-										&mdash; optional. Include &ldquo;tag&rdquo; in the header.
-										Separate multiple tags with commas inside a cell.
+										<strong className="text-info-700">Tags</strong> &mdash;
+										optional. Include &ldquo;tag&rdquo; in the header. Separate
+										multiple tags with commas inside a cell.
 									</p>
 								</div>
 								<p className="text-muted-foreground text-sm">

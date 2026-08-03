@@ -10,12 +10,12 @@ const badgeVariants = cva(
 		variants: {
 			variant: {
 				default: 'border-transparent bg-primary text-primary-foreground',
-				secondary: 'hue-neutral border-lc-2 bg-lc-1 text-lc-5 text-chroma-mid',
+				secondary: 'border-neutral-200 bg-neutral-100 text-neutral-500',
 				destructive:
 					'border-transparent bg-destructive text-destructive-foreground',
 				success: 'border-transparent bg-green-600 text-green-100',
-				outline: 'text-primary-foresoft border-lc-2 bg-lc-0',
-				lang: 'bg-lc-1 bg-chroma-mlo text-lc-fore text-chroma-mlo border-lc-1 border-chroma-mlo font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
+				outline: 'text-primary-foresoft border-neutral-200 bg-neutral-50',
+				lang: 'bg-primary-100 text-primary-950 border-primary-100 font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
 			},
 			size: {
 				lg: 'px-3 py-1 gap-2 [&>svg]:h-4 [&>svg]:w-4 [&>button]:h-5 [&>button]:w-5',
@@ -69,8 +69,7 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 		<Badge
 			variant="lang"
 			className={cn(
-				!ready &&
-					'!bg-lc-1 !bg-chroma-lo !bg-hue-neutral !text-lc-7 !text-chroma-mid !text-hue-neutral !border-lc-2 !border-chroma-lo !border-hue-neutral',
+				!ready && '!bg-neutral-100 !text-neutral-700 !border-neutral-200',
 				className
 			)}
 			style={style}

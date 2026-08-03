@@ -30,7 +30,7 @@ export function AvatarEditorField() {
 			<div className="flex flex-col gap-2">
 				<Label
 					htmlFor="avatarUploadInput"
-					className="group border-lc-3 border-chroma-mlo hover:border-primary hover:bg-lc-1 hover:bg-chroma-mlo relative isolate flex h-40 flex-col items-center rounded-2xl border text-center"
+					className="group border-primary-300 hover:border-primary relative isolate flex h-40 flex-col items-center rounded-2xl border text-center hover:bg-neutral-100"
 				>
 					{!url ? null : (
 						<div className="z-10 mx-auto my-2 grid aspect-square size-36">

@@ -280,7 +280,7 @@ function ShowcaseRequestThread() {
 	return (
 		<div className="space-y-4" data-testid="showcase-request">
 			<CardlikeRequest>
-				<CardHeader className="border-lc-2 py-3 @md:py-6">
+				<CardHeader className="border-neutral-200 py-3 @md:py-6">
 					<div className="flex flex-row items-center justify-between gap-2">
 						<Byline
 							initials="PL"
@@ -432,7 +432,7 @@ function ShowcaseDeckDialog() {
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-				<div className="from-lc-5 from-chroma-mhi to-lc-6 text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
+				<div className="from-primary-500 to-primary-600 text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
 					<Rocket className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -443,7 +443,7 @@ function ShowcaseDeckDialog() {
 						</div>
 					</div>
 				</div>
-				<div className="border-lc-2 bg-lc-1 bg-chroma-mlo text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
+				<div className="bg-primary-100 text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border border-neutral-200 p-4 shadow">
 					<Logs className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -645,10 +645,10 @@ const cardStatusShowcaseStates: Array<{
 	soft?: boolean
 }> = [
 	{ choice: 'active', dot: 'bg-primary', soft: true },
-	{ choice: 'learned', dot: 'hue-success bg-lc-5 bg-chroma-hi' },
-	{ choice: 'skipped', dot: 'hue-neutral bg-lc-4' },
-	{ choice: 'nocard', dot: 'hue-neutral bg-lc-3' },
-	{ choice: 'nodeck', dot: 'hue-neutral bg-lc-3' },
+	{ choice: 'learned', dot: 'bg-success-500' },
+	{ choice: 'skipped', dot: 'bg-neutral-400' },
+	{ choice: 'nocard', dot: 'bg-neutral-300' },
+	{ choice: 'nodeck', dot: 'bg-neutral-300' },
 ]
 
 function CardStatusMenuItem({ choice }: { choice: ShowableActions }) {
@@ -1170,7 +1170,7 @@ function ProfilePill({
 }) {
 	return (
 		<div className="flex w-full flex-row items-center gap-4">
-			<div className="hover:bg-lc-1 hover:bg-chroma-mlo hover:border-lc-2 hover:border-chroma-mlo flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2">
+			<div className="flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2 hover:border-neutral-200 hover:bg-neutral-100">
 				<Avatar className="size-8">
 					<AvatarFallback seed={seed} className="text-xs font-bold">
 						{username.slice(0, 2).toUpperCase()}
@@ -1234,7 +1234,7 @@ function ShowcaseProfilePills() {
 function ShowcaseIntroCallout() {
 	return (
 		<div className="space-y-2">
-			<div className="border-lc-3 border-chroma-mlo bg-lc-1 bg-chroma-mlo flex items-start gap-2 rounded border px-3 py-2 text-sm">
+			<div className="border-primary-300 bg-primary-100 flex items-start gap-2 rounded border px-3 py-2 text-sm">
 				<Info className="text-primary mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span className="text-foreground/80">
@@ -1246,7 +1246,7 @@ function ShowcaseIntroCallout() {
 					</button>
 				</div>
 			</div>
-			<div className="border-lc-3 border-chroma-mlo bg-lc-1 bg-chroma-mlo flex items-start gap-2 rounded border px-3 py-2 text-sm">
+			<div className="border-primary-300 bg-primary-100 flex items-start gap-2 rounded border px-3 py-2 text-sm">
 				<Info className="text-primary mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span className="text-foreground/80">
@@ -1569,7 +1569,7 @@ function ThemesPage() {
 								)}
 								style={{ '--hue-primary': s.hue } as CSSProperties}
 							>
-								<div className="bg-lc-1 bg-chroma-mlo h-10 w-full rounded" />
+								<div className="bg-primary-100 h-10 w-full rounded" />
 								<span className="flex flex-col items-center text-center leading-tight">
 									<span
 										className={cn(
