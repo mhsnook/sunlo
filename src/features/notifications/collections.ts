@@ -33,12 +33,23 @@ export const notificationsCollection = createCollection(
 			try {
 				await Promise.all(
 					groupUpdatesByChanges(transaction.mutations).map(
-						({ changes, keys }) =>
-							supabase
+						async ({ changes, keys }) => {
+							const { data } = await supabase
 								.from('notification')
 								.update(changes as TablesUpdate<'notification'>)
 								.in('id', keys)
+								.select()
 								.throwOnError()
+							// `refetch: false` leaves the synced layer holding whatever the
+							// last fetch returned, and the optimistic value disappears with
+							// the transaction. Write the confirmed rows down so the two
+							// layers agree — otherwise a refetch that lands mid-flight
+							// carries stale rows and the update reverts on completion.
+							for (const row of data ?? [])
+								notificationsCollection.utils.writeUpdate(
+									NotificationSchema.parse(row)
+								)
+						}
 					)
 				)
 				return { refetch: false }

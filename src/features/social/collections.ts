@@ -59,12 +59,22 @@ export const chatMessagesCollection = createCollection(
 			try {
 				await Promise.all(
 					groupUpdatesByChanges(transaction.mutations).map(
-						({ changes, keys }) =>
-							supabase
+						async ({ changes, keys }) => {
+							const { data } = await supabase
 								.from('chat_message')
 								.update(changes as TablesUpdate<'chat_message'>)
 								.in('id', keys)
+								.select()
 								.throwOnError()
+							// See the note on notificationsCollection.onUpdate: with
+							// `refetch: false` the handler has to write the confirmed rows
+							// into the synced layer, or the update reverts when the
+							// optimistic state drops.
+							for (const row of data ?? [])
+								chatMessagesCollection.utils.writeUpdate(
+									ChatMessageSchema.parse(row)
+								)
+						}
 					)
 				)
 				return { refetch: false }
