@@ -3,6 +3,7 @@ import { isNull, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { NotificationSchema, type NotificationType } from './schemas'
 import { notificationsCollection } from './collections'
+import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import type { Tables } from '@/types/supabase'
@@ -57,6 +58,12 @@ export const useNotificationsRealtime = () => {
 	useEffect(() => {
 		if (!userId) return
 
+		// INSERT and UPDATE both carry the full new row, so one handler covers
+		// them. DELETE is not subscribed: its frame carries only the replica
+		// identity, so the `uid` filter cannot match and Supabase drops it.
+		// Picking those up needs `replica identity full` on the table, which is
+		// a migration. Nothing in the app hard-deletes a notification today —
+		// only the FK cascades from phrase_request, request_comment and phrase.
 		const channel = supabase
 			.channel('user-notifications')
 			.on(
@@ -68,10 +75,25 @@ export const useNotificationsRealtime = () => {
 					filter: `uid=eq.${userId}`,
 				},
 				(payload) => {
-					const newNotification = payload.new as Tables<'notification'>
-					notificationsCollection.utils.writeInsert(
-						NotificationSchema.parse(newNotification)
+					const row = NotificationSchema.parse(
+						payload.new as Tables<'notification'>
 					)
+					writeRealtimeRow(notificationsCollection, row.id, row)
+				}
+			)
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'notification',
+					filter: `uid=eq.${userId}`,
+				},
+				(payload) => {
+					const row = NotificationSchema.parse(
+						payload.new as Tables<'notification'>
+					)
+					writeRealtimeRow(notificationsCollection, row.id, row)
 				}
 			)
 			.subscribe()

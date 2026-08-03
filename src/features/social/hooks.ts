@@ -9,6 +9,7 @@ import {
 	type ChatMessageRelType,
 	type ChatMessageType,
 } from './schemas'
+import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
@@ -372,6 +373,12 @@ export const useSocialRealtime = () => {
 			)
 			.subscribe()
 
+		// INSERT and UPDATE both carry the full new row, so one handler covers
+		// them. UPDATE is what makes a friend's read receipt land live rather
+		// than on the next fetch. DELETE is not subscribed: its frame carries
+		// only the replica identity, so Supabase cannot check RLS on it and
+		// withholds it. That needs `replica identity full`, which is a
+		// migration, and nothing in the app deletes a chat message today.
 		const chatChannel = supabase
 			.channel('user-chats')
 			.on(
@@ -382,11 +389,24 @@ export const useSocialRealtime = () => {
 					table: 'chat_message',
 				},
 				(payload) => {
-					const newMessage = payload.new as Tables<'chat_message'>
-					console.log(`new chat`, newMessage)
-					chatMessagesCollection.utils.writeInsert(
-						ChatMessageSchema.parse(newMessage)
+					const row = ChatMessageSchema.parse(
+						payload.new as Tables<'chat_message'>
 					)
+					writeRealtimeRow(chatMessagesCollection, row.id, row)
+				}
+			)
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'chat_message',
+				},
+				(payload) => {
+					const row = ChatMessageSchema.parse(
+						payload.new as Tables<'chat_message'>
+					)
+					writeRealtimeRow(chatMessagesCollection, row.id, row)
 				}
 			)
 			.subscribe()
