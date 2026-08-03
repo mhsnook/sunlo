@@ -38,8 +38,11 @@ It does **not** reproduce ASD's approved dictionary verbatim — that is ASD's o
 | Sentence length              | ≤20 words for instructions, ≤25 for descriptions, shorter still for anything read mid-task    | Long compound sentences with nested subordinate clauses                     |
 | Condition before consequence | "If the deck is empty, the review button stays disabled."                                     | Burying the condition in a trailing clause                                  |
 | Noun clusters                | ≤3 words stacked ("fuel pump valve")                                                          | "high pressure fuel pump inlet valve assembly"                              |
-| No rule of threes            | Give the number of items that exist; two examples are fine if two make the point              | Padding a list to three, or stacking three parallel clauses, for rhythm     |
+| No triples for rhythm        | Cut or merge a triple that exists for cadence, not for content                                 | Three stacked adjectives, or "often X, often Y, often Z"                   |
+| Re-count every list of three | Recall what was left out; fold items that restate each other                                  | Leaving three unchecked because the list reads as finished                  |
 | No ellipsis                  | Keep subject, verb, and article explicit even when it reads longer                            | Dropping words to save space, creating ambiguity about which thing is meant |
+| Say which one you mean       | "the Vite build", "the auth *module*" — even when only one build exists                       | "the build", "auth", leaving the reader to resolve it                       |
+| Concrete referents           | Name the path, `file:line`, symbol, or section the claim points at                            | "that part", "somewhere in there", "the thing below"                        |
 | Lists for sequences          | A numbered or bulleted list for 3+ steps or conditions                                        | A sequence buried inside one prose sentence                                 |
 | Domain terms                 | Keep necessary technical terms for readers who have them; define once if not common           | Jargon aimed at a reader who was never taught it                            |
 | No dead words                | "Deck saved"                                                                                  | "Your deck has been successfully saved!" — cut "please", "simply", "just"   |
@@ -74,7 +77,7 @@ Two consequences worth stating outright:
 
 1. Read the whole input once for meaning. Do not start rewriting before you know what it must still say afterward.
 2. Identify the channel and reader from the table above. That sets the length target and the vocabulary.
-3. Walk it sentence by sentence and flag every rule violation: word inconsistency, tense, voice, length, ellipsis, noun stacking, buried condition, dead words.
+3. Walk it sentence by sentence and flag every rule violation: word inconsistency, tense, voice, length, ellipsis, unspecified generic, vague referent, noun stacking, buried condition, dead words.
 4. If the text names an action, grep the surrounding codebase or copy for other names for the same action. Inconsistency across files is the most common and most invisible violation.
 5. Rewrite each flagged sentence to fix the violation while preserving the meaning exactly. If a rewrite would drop necessary precision — a condition, a scope qualifier, a number — keep the longer phrasing and flag it instead of silently cutting it.
 6. Produce a before/after table.
@@ -98,6 +101,7 @@ Follow the table with a one-line note on anything you deliberately did **not** s
 - Rewrite dense or ambiguous prose into short, single-meaning, active-voice sentences.
 - Name the rule each sentence broke, before rewriting it.
 - Preserve every fact, condition, and scope qualifier in the original.
+- Add the word that says which one, and replace a vague referent with the concrete path, symbol, or section it points at.
 - Flag inconsistent naming for the same action across files.
 
 **Will not:**
