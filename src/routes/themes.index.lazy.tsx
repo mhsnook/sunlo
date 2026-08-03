@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
@@ -36,10 +36,12 @@ import {
 } from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
 import {
-	getLangHue,
-	getLangHueIndex,
+	getLangPalette,
+	getLangPaletteIndex,
 	getLangPopularityIndex,
-	LANG_HUES,
+	getPaletteCss,
+	setPaletteOn,
+	LANG_PALETTES,
 } from '@/lib/lang-theme'
 import { cn } from '@/lib/utils'
 import { languagesCollection } from '@/features/languages/collections'
@@ -1458,7 +1460,7 @@ function ComponentShowcase() {
 }
 
 // Our standard brand hue, shown alongside the per-language stops.
-const BRAND_HUE = 300
+const BRAND_PALETTE = 'purple'
 
 function ThemesPage() {
 	const { data: ranked = [] } = useLiveQuery((q) =>
@@ -1468,48 +1470,38 @@ function ThemesPage() {
 			.orderBy(({ language }) => language.display_order)
 	)
 
-	const [activeHue, setActiveHue] = useState<number | null>(null)
+	const [activePalette, setActivePalette] = useState<string | null>(null)
 
-	// Apply the picked hue to <html> so it reaches the body background
-	// (--background is hue-derived) and the whole app chrome — not just
-	// this page's subtree. Cleared on reset and when leaving the page.
+	// Apply the picked palette to <html> so it reaches the body background
+	// and the whole app chrome — not just this page's subtree. Cleared on
+	// reset and when leaving the page.
 	useEffect(() => {
 		const root = document.documentElement
-		const props = ['--hue-primary', '--hue-accent', '--hue-neutral']
-		if (activeHue === null) {
-			props.forEach((p) => root.style.removeProperty(p))
-			return
-		}
-		props.forEach((p) => root.style.setProperty(p, String(activeHue)))
-		return () => props.forEach((p) => root.style.removeProperty(p))
-	}, [activeHue])
+		setPaletteOn(root, activePalette)
+		return () => setPaletteOn(root, null)
+	}, [activePalette])
 
-	const grouped = LANG_HUES.map((hue, i) => ({
+	const grouped = LANG_PALETTES.map((palette, i) => ({
 		index: i,
-		hue,
-		langs: allLanguageOptions.filter((opt) => getLangHueIndex(opt.value) === i),
+		palette,
+		langs: allLanguageOptions.filter(
+			(opt) => getLangPaletteIndex(opt.value) === i
+		),
 	}))
 
-	// Brand first, then the per-language stops descending from just below
-	// the brand hue, wrapping the above-brand stops to the end.
-	const langSwatches = LANG_HUES.map((hue, i) => ({
-		hue,
-		label: `#${i}`,
-		brand: false,
-	}))
 	const swatches = [
-		{ hue: BRAND_HUE, label: 'Brand', brand: true },
-		...langSwatches
-			.filter((s) => s.hue < BRAND_HUE)
-			.toSorted((a, b) => b.hue - a.hue),
-		...langSwatches
-			.filter((s) => s.hue > BRAND_HUE)
-			.toSorted((a, b) => b.hue - a.hue),
+		{ palette: BRAND_PALETTE, label: 'Brand', brand: true },
+		...LANG_PALETTES.map((palette, i) => ({
+			palette,
+			label: `#${i}`,
+			brand: false,
+		})),
 	]
 
-	// Brand is the default hue, so picking it (or clearing) is not an
+	// Brand is the default palette, so picking it (or clearing) is not an
 	// override — the reset control has nothing to do in that state.
-	const isDefaultHue = activeHue === null || activeHue === BRAND_HUE
+	const isDefaultPalette =
+		activePalette === null || activePalette === BRAND_PALETTE
 
 	return (
 		<div className="@container mx-auto max-w-5xl space-y-8 p-6">
@@ -1522,10 +1514,10 @@ function ThemesPage() {
 			<header className="space-y-2">
 				<h1 className="text-2xl font-bold">Per-language palette</h1>
 				<p className="text-muted-foreground text-sm">
-					{LANG_HUES.length} hand-picked OKLCH stops, walked over languages in
-					popularity order ({'learners × phrases_to_learn'}). Stop walk: 6, 0,
-					4, 8, 2, 7, 1, 5, 9, 3 — adjacent ranks always land far apart on the
-					wheel.
+					{LANG_PALETTES.length} stock Tailwind palettes, walked over languages
+					in popularity order ({'learners × phrases_to_learn'}). Stop walk: 6,
+					0, 4, 8, 2, 7, 1, 5, 9, 3 — adjacent ranks always land far apart on
+					the wheel.
 				</p>
 			</header>
 
@@ -1536,20 +1528,20 @@ function ThemesPage() {
 					<Button
 						size="sm"
 						variant="neutral"
-						onClick={() => setActiveHue(null)}
-						className={cn(isDefaultHue && 'invisible')}
-						aria-hidden={isDefaultHue}
-						tabIndex={isDefaultHue ? -1 : undefined}
+						onClick={() => setActivePalette(null)}
+						className={cn(isDefaultPalette && 'invisible')}
+						aria-hidden={isDefaultPalette}
+						tabIndex={isDefaultPalette ? -1 : undefined}
 					>
-						Reset page hue
+						Reset page palette
 					</Button>
 				</div>
 				<p className="text-muted-foreground text-sm">
-					Click any swatch to theme the whole page with that hue.
+					Click any swatch to theme the whole page with that palette.
 				</p>
 				<div className="grid grid-cols-4 gap-2 @md:grid-cols-6 @3xl:grid-cols-11">
 					{swatches.map((s) => {
-						const isActive = activeHue === s.hue
+						const isActive = activePalette === s.palette
 						return (
 							<button
 								key={s.label}
@@ -1557,8 +1549,8 @@ function ThemesPage() {
 								aria-pressed={isActive}
 								aria-label={`Theme the page with ${
 									s.brand ? 'the brand' : `stop ${s.label}`
-								} hue, ${s.hue} degrees`}
-								onClick={() => setActiveHue(isActive ? null : s.hue)}
+								} palette, ${s.palette}`}
+								onClick={() => setActivePalette(isActive ? null : s.palette)}
 								className={cn(
 									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
 									isActive
@@ -1567,7 +1559,7 @@ function ThemesPage() {
 											? 'border-primary'
 											: 'hover:border-border border-transparent'
 								)}
-								style={{ '--hue-primary': s.hue } as CSSProperties}
+								style={getPaletteCss(s.palette)}
 							>
 								<div className="bg-primary-100 h-10 w-full rounded" />
 								<span className="flex flex-col items-center text-center leading-tight">
@@ -1580,7 +1572,7 @@ function ThemesPage() {
 										{s.brand && <Star className="size-3" />}
 										{s.brand ? 'Brand' : s.label}
 									</span>
-									<span className="text-muted-foreground">{s.hue}°</span>
+									<span className="text-muted-foreground">{s.palette}</span>
 								</span>
 							</button>
 						)
@@ -1605,7 +1597,7 @@ function ThemesPage() {
 							<LangBadge lang={lang.lang} />
 							<span className="flex-1 truncate">{lang.name}</span>
 							<span className="text-muted-foreground text-xs tabular-nums">
-								#{getLangHueIndex(lang.lang)} · {getLangHue(lang.lang)}°
+								#{getLangPaletteIndex(lang.lang)} · {getLangPalette(lang.lang)}
 							</span>
 						</div>
 					))}
@@ -1617,9 +1609,9 @@ function ThemesPage() {
 					Languages by stop
 				</summary>
 				{grouped.map((group) => (
-					<div key={group.hue} className="space-y-2">
+					<div key={group.palette} className="space-y-2">
 						<div className="text-muted-foreground text-xs">
-							stop #{group.index} · hue {group.hue}° · {group.langs.length}{' '}
+							stop #{group.index} · {group.palette} · {group.langs.length}{' '}
 							{group.langs.length === 1 ? 'language' : 'languages'}
 						</div>
 						<div className="flex flex-wrap gap-2">

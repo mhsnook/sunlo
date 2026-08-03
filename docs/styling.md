@@ -1,119 +1,77 @@
 # Styling
 
-## OKLCH Color System
+## Colors
 
-This project uses a **vendored, single-axis OKLCH color system** — `src/styles/oklch.css` (forked from `mhsnook/tailwind-oklch@112de8e`, MIT; no npm dependency, no JS plugin). Every color is composed from three independent axes: **luminance contrast** (`lc`), **chroma** (`chroma`), and **hue** (`hue`). The system auto-flips between light and dark mode, so you almost never write `dark:`.
-
-The guiding idea: **each class states one fact about one axis.** Hue and chroma flow _down the cascade_ from container seeders, so most elements only ever say what their luminance is.
-
-### Say each axis once, as low in the tree as it changes
-
-There are two kinds of class:
-
-**Cascade seeders** set an axis for _everything below them_ and apply no property themselves. Put them near a component's root:
-
-```
-hue-primary · hue-danger · hue-success · …     seeds hue for descendants
-chroma-mlo · chroma-hi · …                     seeds chroma for descendants
-```
-
-**Per-property setters** apply exactly one CSS property from one axis. Luminance is the one you set constantly; chroma and hue inherit from a seeder (or the `:root` default) unless set explicitly:
+Colors are ordinary Tailwind: a palette name and a shade number.
 
 ```typescript
-// A "generally green, generally lowkey" component: seed once at the top…
-;<div className="hue-success chroma-mlo">
-	{/* …then speak luminance inside */}
-	<div className="bg-lc-1">
-		<span className="text-lc-8">…</span>
-		<hr className="border-lc-3" />
-	</div>
+<div className="bg-primary-100 border-primary-200">
+	<span className="text-primary-800">…</span>
+	<button className="bg-primary-700 text-white hover:bg-primary-800">Save</button>
 </div>
 ```
 
-Because `:root` already seeds `hue-primary` + low chroma, a brand-colored surface often needs only `bg-lc-1`. Per-language dynamic theming keeps working automatically — it overrides the `--hue-*` variables everything resolves through.
+Seven **semantic palettes** are available — `primary`, `accent`, `neutral`, `success`, `warning`, `danger`, `info` — each with the standard 50–950 shades. Every one is an alias for a stock Tailwind palette, so `bg-danger-700` is `bg-red-700`: same value, same shade number. The aliases live in `src/styles/theme.css`.
 
-Each property has the full trio; set only the axes that differ from what's inherited:
+| Semantic  | Stock palette | Semantic  | Stock palette |
+| --------- | ------------- | --------- | ------------- |
+| `primary` | `purple`      | `success` | `green`       |
+| `accent`  | `teal`        | `warning` | `amber`       |
+| `neutral` | `slate`       | `danger`  | `red`         |
+|           |               | `info`    | `blue`        |
 
-```typescript
-className = 'bg-lc-1 bg-chroma-mlo bg-hue-primary' // all three explicit
-className = 'text-lc-6 text-chroma-hi text-hue-info'
-className = 'border-lc-3 border-chroma-mlo border-hue-primary'
-className = 'hover:bg-lc-2' // luminance only; chroma+hue inherited
-```
+Two things are added on top, and nothing else.
 
-Property prefixes: `bg-`, `text-`, `border-`, `border-b-`, `from-`, `to-` (gradient stops).
+### 1. The shade scale flips in dark mode
 
-### Luminance contrast scale (`lc`)
+50 and 950 swap, 100 and 900 swap, and so on down to 500, which mirrors itself. A shade number therefore means _how much contrast this has against the page_, not a fixed lightness:
 
-`{prop}-lc-{0–10 | base | fore | none | full}`. The scale auto-flips between light and dark mode:
+| Shade | Light mode     | Dark mode      | Use for                 |
+| ----- | -------------- | -------------- | ----------------------- |
+| `50`  | near-white     | near-black     | Blends with the page    |
+| `100` | very pale tint | very dark tint | Subtle surface          |
+| `500` | mid            | mid            | Solid fills, dots       |
+| `700` | strong         | strong         | Buttons, prominent text |
+| `950` | near-black     | near-white     | Maximum-contrast text   |
 
-| Value         | Light mode        | Dark mode         | Meaning          |
-| ------------- | ----------------- | ----------------- | ---------------- |
-| `0` / `base`  | 0.95 (near white) | 0.12 (near black) | Blends with page |
-| `1`           | 0.91              | 0.20              | Subtle tint      |
-| `5`           | 0.63              | 0.52              | Mid-contrast     |
-| `7`           | 0.44              | 0.68              | Prominent        |
-| `10` / `fore` | 0.15 (near black) | 0.92 (near white) | Maximum contrast |
-| `none`        | 1.0 (white)       | 0.0 (black)       | Beyond base      |
-| `full`        | 0.0 (black)       | 1.0 (white)       | Beyond fore      |
+So `bg-primary-100 text-primary-800` reads correctly in both modes and needs no `dark:` variant. **Do not write `dark:` in app code.**
 
-Arbitrary luminance auto-flips too: `bg-lc-[93]` → L=0.93 in light, 0.07 in dark.
+Stock Tailwind palettes (`bg-purple-600`, `text-slate-300`) are untouched and do **not** flip. The marketing pages in `src/routes/-homepage/` use them directly with hand-written `dark:` variants, which is why the flip is scoped to the semantic names.
 
-### Chroma stops (`chroma`)
+### 2. `primary` and `accent` can be re-pointed
 
-`{prop}-chroma-{lo | mlo | mid | mhi | hi}`, or the seeder `chroma-{…}`:
-
-| Name  | Value | Use for                            |
-| ----- | ----- | ---------------------------------- |
-| `lo`  | 0.02  | Backgrounds, muted surfaces        |
-| `mlo` | 0.06  | Tinted backgrounds, subtle borders |
-| `mid` | 0.12  | Medium saturation                  |
-| `mhi` | 0.18  | Prominent accents                  |
-| `hi`  | 0.25  | Vivid, saturated colors            |
-
-Arbitrary chroma is `n/100`: `border-chroma-[6]` → chroma 0.06.
-
-### Available hues (`hue`)
-
-`{prop}-hue-{…}` or the seeder `hue-{…}`. App palette (overridden in `globals.css`): `primary` (300), `accent` (175), `neutral` (270); plus `success` (145), `warning` (55), `danger` (15), `info` (220). Dynamic per-language hue is applied as an inline `--hue-*` style variable, not a utility.
-
-### Relative adjustments
-
-Nudge off the _inherited/current_ luminance without rewriting it — ideal for hover/active states:
+Both resolve through `--p-*` and `--a-*` variables, so setting those on any element re-themes everything inside it — no per-element classes, no re-declaring anything. That is how per-language theming works:
 
 ```typescript
-className = 'bg-lc-1 hover:bg-lc-up-1' // one step more contrast on hover
-className = 'text-lc-7 group-hover:text-lc-down-1' // one step less
+import { getLangThemeCss } from '@/lib/lang-theme'
+
+// every bg-primary-*, text-accent-*, border-primary-* inside follows
+<div style={getLangThemeCss(lang)}>…</div>
 ```
 
-`{prop}-lc-up-{1|2|3}` / `{prop}-lc-down-{1|2|3}`. Adjustments **don't compound**: a grandchild's `lc-up-1` nudges from the nearest ancestor's _set_ luminance, not from a parent's already-nudged value.
+The dark-mode flip composes on top, because the flip is written against `--p-*`/`--a-*` rather than against a fixed palette. A re-pointed subtree still flips correctly.
 
-### Semantic color tokens
+`src/lib/lang-theme.ts` owns the palette assignment: `LANG_PALETTES` maps language stops to stock palettes, `AVATAR_PALETTES` does the same for placeholder avatars, and `getPaletteCss()` / `setPaletteOn()` apply one.
 
-Defined in `globals.css`, these bridge the OKLCH scale with traditional Tailwind tokens:
+Because those `var(--color-rose-500)` references are built at runtime, `globals.css` imports Tailwind with `theme(static)` so no palette gets tree-shaken out.
 
-| Token                                  | Definition                | Notes                                                                 |
-| -------------------------------------- | ------------------------- | --------------------------------------------------------------------- |
-| `primary`                              | L=5, C=hi, hue-primary    | Auto-flips                                                            |
-| `primary-foresoft`                     | L=7, C=hi, hue-primary    | Auto-flips; the "interactive purple" for links, soft buttons, borders |
-| `primary-foreground`                   | Fixed L=0.93              | Always near-white — for text ON primary surfaces only                 |
-| `accent` / `accent-foresoft`           | L=5/7, C=hi, hue-accent   | Auto-flips                                                            |
-| `accent-foreground`                    | L=fore, C=mlo, hue-accent | Auto-flips; used as body text (language names)                        |
-| `foreground`, `muted-foreground`, etc. | Static per-mode           | Defined in `:root` and `.dark` blocks                                 |
+### Semantic surface tokens
+
+The ShadCN token set (`bg-card`, `bg-background`, `text-muted-foreground`, `border-border`, `bg-primary`, `text-primary-foreground`) is still there and still preferred for UI primitives that use the same color everywhere. All of them are defined from the palettes in `globals.css`, so they flip too.
+
+One exception worth knowing: `--color-primary-foreground` reads from `--p-50` rather than `--color-primary-50`, so it stays at the pale end in both modes. It is text that sits ON a saturated primary surface, which is mid-dark either way.
 
 ### When to use what
 
-- **Semantic tokens** (`text-primary`, `bg-card`, `border-border`): UI primitives that use the same color everywhere.
-- **Cascade seeder + `lc` inside** (`hue-success chroma-mlo` at the top, `bg-lc-1` / `text-lc-8` below): the default shape for a colored component — declare its character once, speak luminance within. Portable: drop it under a different seeder (a danger context, a lang-themed subtree) and it takes on that character.
-- **Explicit per-property axes** (`bg-lc-1 bg-chroma-mlo bg-hue-info`): one-off colored elements, or shared components used in many contexts where you want the color pinned rather than inherited.
-- **Adjustments** (`hover:bg-lc-up-1`): hover/focus/active state changes.
-- **Avoid `dark:` prefixes** — the scale and semantic tokens auto-flip. Reserve `dark:` for genuinely exceptional cases (e.g. a marketing page with custom gradients).
-- **Avoid opacity tints** (`bg-primary/10`) — the `lc/chroma/hue` utilities don't support the `/opacity` modifier; use a luminance step (`bg-lc-1`) instead for consistent appearance across monitors.
+- **Semantic tokens** (`bg-card`, `text-primary`): UI primitives with one color everywhere.
+- **Semantic palette + shade** (`bg-success-100`, `text-success-800`): the default for anything colored.
+- **Stock palettes** (`bg-purple-600`): marketing pages only, where the color is a deliberate one-off and you are willing to write `dark:` yourself.
+- **Opacity modifiers** (`bg-primary-600/50`) work normally.
 
 ### Caveats
 
-- **Portals break the cascade.** Base UI dialogs/popovers/dropdowns render into a portal, not under their trigger's DOM ancestor. Portal content must re-seed its own `hue`/`chroma`; never rely on inheritance across a portal boundary.
-- **Shared components inherit their context.** That's the feature (it's how `button.tsx` shares its `solids`/`softs` classes across hue variants), but when pruning axes from a shared component, check every render context — keep axes explicit unless the context-sensitivity is wanted.
+- **Portals do not break anything anymore.** A Base UI dialog rendered into a portal sits outside its trigger's DOM ancestor, so it will not pick up a re-pointed `primary` from that subtree. It still gets the correct default palette and the correct dark-mode flip.
+- **`neutral` shadows Tailwind's own `neutral`.** `bg-neutral-100` is slate-tinted and flips. Reach for `gray`, `zinc`, or `stone` if you want a true stock grey.
 
 ## Styling Conventions
 

@@ -2,35 +2,61 @@ import { useSyncExternalStore, type CSSProperties } from 'react'
 import { languagesCollection } from '@/features/languages/collections'
 import { allLanguageOptions } from '@/lib/languages'
 
-// Hand-picked OKLCH hue stops. Spaced to hug both sides of the dead
-// zones — red at the top, brand purple around 300, the long Duolingo
-// green dip — and to keep enough gap between stops that a casual
-// glance can tell two badges apart. Chroma + luminance are pinned by
-// the LangBadge variant; only hue varies.
-export const LANG_HUES: ReadonlyArray<number> = [
-	0, 50, 80, 110, 150, 180, 210, 240, 270, 330,
+// Stock Tailwind palettes, one per language stop. Spread around the wheel
+// so a casual glance tells two badges apart, and skipping purple, which is
+// the app's own primary. A language theme re-points `primary` and `accent`
+// at one of these — see getLangThemeCss below and src/styles/theme.css.
+export const LANG_PALETTES: ReadonlyArray<string> = [
+	'rose',
+	'orange',
+	'yellow',
+	'lime',
+	'emerald',
+	'teal',
+	'cyan',
+	'blue',
+	'indigo',
+	'fuchsia',
 ] as const
 
-// Avatar placeholder hues: the 10° grid 0–350 with three sets of stops
-// removed. First the LANG_HUES deck stops, so a missing-photo tile
-// never colour-matches a language badge. Then the three dead zones
-// LANG_HUES already hugs — the long Duolingo green dip (120–140),
-// brand purple (290–310), and near-red (10, 350, too close to the
-// danger hue). What's left is 18 saturated, well-separated hues.
-export const AVATAR_HUES: ReadonlyArray<number> = [
-	20, 30, 40, 60, 70, 90, 100, 160, 170, 190, 200, 220, 230, 250, 260, 280, 320,
-	340,
+// Avatar placeholder palettes: every chromatic Tailwind palette, so a
+// missing-photo tile has 17 well-separated colours to land on. Unlike the
+// old hue grid these overlap LANG_PALETTES, so an avatar can now colour-match
+// a language badge. Narrow this list if that reads as confusing.
+export const AVATAR_PALETTES: ReadonlyArray<string> = [
+	'red',
+	'orange',
+	'amber',
+	'yellow',
+	'lime',
+	'green',
+	'emerald',
+	'teal',
+	'cyan',
+	'sky',
+	'blue',
+	'indigo',
+	'violet',
+	'purple',
+	'fuchsia',
+	'pink',
+	'rose',
 ] as const
 
-// Deterministic placeholder hue for a user, keyed off a stable seed
-// (their uid). A small string hash indexes into AVATAR_HUES.
-export function getAvatarHue(seed: string): number {
+function hashIndex(seed: string, len: number): number {
 	let hash = 0
 	for (let i = 0; i < seed.length; i++) {
 		hash = (hash * 31 + seed.charCodeAt(i)) | 0
 	}
-	const len = AVATAR_HUES.length
-	return AVATAR_HUES[((hash % len) + len) % len]
+	return ((hash % len) + len) % len
+}
+
+// Deterministic placeholder colour for a user, keyed off a stable seed
+// (their uid). The avatar fallback only paints one surface, so it re-points
+// a single shade instead of the whole palette.
+export function getAvatarPaletteCss(seed: string): CSSProperties {
+	const palette = AVATAR_PALETTES[hashIndex(seed, AVATAR_PALETTES.length)]
+	return { '--p-500': `var(--color-${palette}-500)` } as CSSProperties
 }
 
 // Permutation walked over the popularity-ranked language list. The
@@ -66,13 +92,13 @@ export function getLangPopularityIndex(lang: string): number {
 	return ranking.get(lang) ?? alphabeticFallbackIndex(lang)
 }
 
-export function getLangHueIndex(lang: string): number {
+export function getLangPaletteIndex(lang: string): number {
 	const pos = getLangPopularityIndex(lang)
 	return LANG_STOP_WALK[pos % LANG_STOP_WALK.length]
 }
 
-export function getLangHue(lang: string): number {
-	return LANG_HUES[getLangHueIndex(lang)]
+export function getLangPalette(lang: string): string {
+	return LANG_PALETTES[getLangPaletteIndex(lang)]
 }
 
 // One-shot readiness flag for the popularity ranking. Flips false → true
@@ -108,34 +134,36 @@ export function useLangPopularityReady(): boolean {
 	)
 }
 
-// The axis hue variables every color utility resolves through. A theme
-// container re-declares them from --hue-primary so its whole subtree inherits
-// the language hue for bg/text/border/gradient with no per-element hue class.
-// (Setting only --hue-* is not enough: the :root axis defaults resolve
-// var(--hue-primary) once, at :root, and inherit that fixed value — so a
-// descendant that overrides --hue-primary is ignored unless the axis var is
-// re-declared here, where the override is in scope.)
-const AXIS_HUE_VARS = [
-	'--bg-h',
-	'--tx-h',
-	'--bd-h',
-	'--bdb-h',
-	'--gf-h',
-	'--gt-h',
-] as const
+const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const
 
-const AXIS_HUE_CSS = Object.fromEntries(
-	AXIS_HUE_VARS.map((v) => [v, 'var(--hue-primary)'])
-) as CSSProperties
+// Re-point `primary` and `accent` at a stock Tailwind palette. Every
+// bg-primary-*, text-accent-*, border-primary-* below this element resolves
+// through these, so a whole subtree re-themes with no per-element classes.
+// The dark-mode flip composes on top: it is written against --p-*/--a-*, so
+// a re-pointed palette still flips. See src/styles/theme.css.
+export function getPaletteCss(palette: string): CSSProperties {
+	return Object.fromEntries(
+		SHADES.flatMap((s) => [
+			[`--p-${s}`, `var(--color-${palette}-${s})`],
+			[`--a-${s}`, `var(--color-${palette}-${s})`],
+		])
+	) as CSSProperties
+}
+
+export function setPaletteOn(el: HTMLElement, palette: string | null): void {
+	for (const s of SHADES) {
+		if (palette === null) {
+			el.style.removeProperty(`--p-${s}`)
+			el.style.removeProperty(`--a-${s}`)
+		} else {
+			el.style.setProperty(`--p-${s}`, `var(--color-${palette}-${s})`)
+			el.style.setProperty(`--a-${s}`, `var(--color-${palette}-${s})`)
+		}
+	}
+}
 
 export function getLangThemeCss(lang: string): CSSProperties {
-	const hue = getLangHue(lang)
-	return {
-		'--hue-primary': hue,
-		'--hue-accent': hue,
-		'--hue-neutral': hue,
-		...AXIS_HUE_CSS,
-	} as CSSProperties
+	return getPaletteCss(getLangPalette(lang))
 }
 
 // Hook variant of getLangThemeCss that returns an empty style object
@@ -149,16 +177,5 @@ export function useLangThemeCss(lang: string): CSSProperties {
 
 export function setLangTheme(element?: HTMLElement, lang?: string): void {
 	const el = element ?? document.documentElement
-	if (!lang) {
-		el.style.removeProperty('--hue-primary')
-		el.style.removeProperty('--hue-accent')
-		el.style.removeProperty('--hue-neutral')
-		for (const v of AXIS_HUE_VARS) el.style.removeProperty(v)
-		return
-	}
-	const hue = String(getLangHue(lang))
-	el.style.setProperty('--hue-primary', hue)
-	el.style.setProperty('--hue-accent', hue)
-	el.style.setProperty('--hue-neutral', hue)
-	for (const v of AXIS_HUE_VARS) el.style.setProperty(v, 'var(--hue-primary)')
+	setPaletteOn(el, lang ? getLangPalette(lang) : null)
 }

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { OctagonMinus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getLangHue, useLangPopularityReady } from '@/lib/lang-theme'
+import { getLangThemeCss, useLangPopularityReady } from '@/lib/lang-theme'
 
 const badgeVariants = cva(
 	'rounded inline-flex items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 shadow-xs inset-shadow-xs',
@@ -13,7 +13,7 @@ const badgeVariants = cva(
 				secondary: 'border-neutral-200 bg-neutral-100 text-neutral-500',
 				destructive:
 					'border-transparent bg-destructive text-destructive-foreground',
-				success: 'border-transparent bg-green-600 text-green-100',
+				success: 'border-transparent bg-success-600 text-success-100',
 				outline: 'text-primary-foresoft border-neutral-200 bg-neutral-50',
 				lang: 'bg-primary-100 text-primary-950 border-primary-100 font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
 			},
@@ -62,9 +62,7 @@ function TinyBadge({
 function LangBadge({ lang, className }: { lang: string; className?: string }) {
 	const ready = useLangPopularityReady()
 	if (!lang) return null
-	const style = ready
-		? ({ '--hue-primary': getLangHue(lang) } as React.CSSProperties)
-		: undefined
+	const style = ready ? getLangThemeCss(lang) : undefined
 	return (
 		<Badge
 			variant="lang"

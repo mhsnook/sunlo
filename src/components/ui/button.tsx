@@ -12,9 +12,9 @@ const buttonVariants = cva(
 				// Spelled out per variant rather than shared: Tailwind only sees
 				// class names that appear literally in the source, so a `solid(hue)`
 				// helper would compile to nothing.
-				default: 'bg-primary-700 text-white hover:bg-primary-800',
+				default: 'bg-primary-700 text-primary-50 hover:bg-primary-800',
 				soft: 'bg-primary-100 text-primary-700 hover:bg-primary-50 hover:text-primary-800',
-				red: 'bg-danger-700 text-white hover:bg-danger-800',
+				red: 'bg-danger-700 text-danger-50 hover:bg-danger-800',
 				'red-soft':
 					'bg-danger-100 text-danger-700 hover:bg-danger-50 hover:text-danger-800',
 				neutral: 'hover:bg-neutral-200',
