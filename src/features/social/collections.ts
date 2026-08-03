@@ -6,8 +6,11 @@ import {
 	ChatMessageSchema,
 	type ChatMessageType,
 } from './schemas'
+import { toastError } from '@/components/ui/sonner'
+import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const friendSummariesCollection = createCollection(
 	queryCollectionOptions({
@@ -48,5 +51,27 @@ export const chatMessagesCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: ChatMessageSchema,
+		// Read receipts are the only update, and they stamp one `read_at` across
+		// every unread message from a friend, so grouping collapses the whole
+		// batch to a single request. The reader never waits on it, so the error
+		// toast lives here rather than at the call site.
+		onUpdate: async ({ transaction }) => {
+			try {
+				await Promise.all(
+					groupUpdatesByChanges(transaction.mutations).map(
+						({ changes, keys }) =>
+							supabase
+								.from('chat_message')
+								.update(changes as TablesUpdate<'chat_message'>)
+								.in('id', keys)
+								.throwOnError()
+					)
+				)
+				return { refetch: false }
+			} catch (error) {
+				toastError('Could not update your messages')
+				throw error
+			}
+		},
 	})
 )

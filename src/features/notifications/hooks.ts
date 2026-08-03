@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { isNull, useLiveQuery } from '@tanstack/react-db'
-import type { UseLiveQueryResult } from '@/types/main'
+import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { NotificationSchema, type NotificationType } from './schemas'
 import { notificationsCollection } from './collections'
 import supabase from '@/lib/supabase-client'
@@ -25,47 +24,30 @@ export const useUnreadCount = (): number | undefined => {
 	return data.length || undefined
 }
 
-export const useMarkAsRead = () =>
-	useMutation({
-		mutationFn: async (id: string) => {
-			const read_at = new Date().toISOString()
-			const { data } = await supabase
-				.from('notification')
-				.update({ read_at })
-				.eq('id', id)
-				.select()
-				.throwOnError()
-			return data[0]
-		},
-		onSuccess: (data) => {
-			notificationsCollection.utils.writeUpdate(NotificationSchema.parse(data))
-		},
+/**
+ * Mark one notification read. Fire-and-forget: the row updates in this tick,
+ * and `notificationsCollection.onUpdate` owns the error toast and the rollback.
+ */
+export const markNotificationRead = (id: uuid) => {
+	notificationsCollection.update(id, (draft) => {
+		draft.read_at = new Date().toISOString()
 	})
+}
 
-export const useMarkAllAsRead = () => {
-	const userId = useUserId()
-	return useMutation({
-		mutationFn: async () => {
-			const read_at = new Date().toISOString()
-			await supabase
-				.from('notification')
-				.update({ read_at })
-				.eq('uid', userId!)
-				.is('read_at', null)
-				.throwOnError()
-		},
-		onSuccess: () => {
-			notificationsCollection.utils.writeBatch(() => {
-				notificationsCollection.forEach((notification) => {
-					if (notification.read_at === null) {
-						notificationsCollection.utils.writeUpdate({
-							id: notification.id,
-							read_at: new Date().toISOString(),
-						})
-					}
-				})
-			})
-		},
+/**
+ * Mark every unread notification read in one transaction. The collection is
+ * RLS-scoped to the signed-in user, so the loaded rows are that user's rows.
+ */
+export const markAllNotificationsRead = () => {
+	const unreadIds = notificationsCollection.toArray
+		.filter((notification) => notification.read_at === null)
+		.map((notification) => notification.id)
+	if (unreadIds.length === 0) return
+	const read_at = new Date().toISOString()
+	notificationsCollection.update(unreadIds, (drafts) => {
+		drafts.forEach((draft) => {
+			draft.read_at = read_at
+		})
 	})
 }
 

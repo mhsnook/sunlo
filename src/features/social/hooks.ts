@@ -265,48 +265,33 @@ export const useUnreadChatsCount = (): number | undefined => {
 	return count || undefined
 }
 
-export const useMarkAsRead = () => {
-	return useMutation({
-		mutationFn: async ({
-			friendUid,
-			recipientUid,
-			read_at,
-		}: {
-			friendUid: uuid
-			recipientUid: uuid
-			read_at: string
-		}) => {
-			await supabase
-				.from('chat_message')
-				.update({ read_at })
-				.eq('sender_uid', friendUid)
-				.eq('recipient_uid', recipientUid)
-				.is('read_at', null)
-				.throwOnError()
-		},
-		onMutate: ({ friendUid, recipientUid, read_at }) => {
-			// Optimistically update all unread messages from this friend
-			chatMessagesCollection.utils.writeBatch(() => {
-				chatMessagesCollection.forEach((message) => {
-					if (
-						message.sender_uid === friendUid &&
-						message.recipient_uid === recipientUid &&
-						message.read_at === null
-					) {
-						chatMessagesCollection.utils.writeUpdate({
-							id: message.id,
-							read_at,
-						})
-					}
-				})
-			})
-		},
-		/*
-		onSettled: async () => {
-			// Sync the data back after success or failure
-			await chatMessagesCollection.utils.refetch()
-		},
-		*/
+/**
+ * Mark every unread message from one friend read. Fire-and-forget: the rows
+ * update in this tick, and `chatMessagesCollection.onUpdate` owns the error
+ * toast and the rollback.
+ */
+export const markChatRead = ({
+	friendUid,
+	recipientUid,
+	read_at,
+}: {
+	friendUid: uuid
+	recipientUid: uuid
+	read_at: string
+}) => {
+	const unreadIds = chatMessagesCollection.toArray
+		.filter(
+			(message) =>
+				message.sender_uid === friendUid &&
+				message.recipient_uid === recipientUid &&
+				message.read_at === null
+		)
+		.map((message) => message.id)
+	if (unreadIds.length === 0) return
+	chatMessagesCollection.update(unreadIds, (drafts) => {
+		drafts.forEach((draft) => {
+			draft.read_at = read_at
+		})
 	})
 }
 

@@ -15,7 +15,7 @@ import type {
 	NotificationType,
 	NotificationTypeEnum,
 } from '@/features/notifications/schemas'
-import { useMarkAsRead } from '@/features/notifications/hooks'
+import { markNotificationRead } from '@/features/notifications/hooks'
 import { useRequest } from '@/features/requests/hooks'
 import { useOnePhrase } from '@/features/phrases/hooks'
 import { useOneComment } from '@/features/requests/hooks'
@@ -101,7 +101,6 @@ export function NotificationItem({
 	notification: NotificationType
 }) {
 	const config = notificationConfig[notification.type]
-	const markAsRead = useMarkAsRead()
 	const isUnread = notification.read_at === null
 	const link = useNotificationLink(notification)
 	const navigate = useNavigate()
@@ -113,7 +112,7 @@ export function NotificationItem({
 		if (!e.currentTarget?.contains(target)) return
 		if (target.closest('button, a, input')) return
 
-		if (isUnread) markAsRead.mutate(notification.id)
+		if (isUnread) markNotificationRead(notification.id)
 		if (link)
 			void navigate({ to: link.to, params: link.params, search: link.search })
 	}
@@ -167,7 +166,7 @@ export function NotificationItem({
 								size="icon"
 								className="h-6 w-6"
 								aria-label="Mark as read"
-								onClick={() => markAsRead.mutate(notification.id)}
+								onClick={() => markNotificationRead(notification.id)}
 							>
 								<div className="bg-primary h-2.5 w-2.5 rounded-full" />
 							</Button>
