@@ -31,9 +31,8 @@ export const decksCollection = createCollection(
 		startSync: false,
 		schema: DeckMetaSchema,
 		onInsert: async ({ transaction }) => {
-			// The insert sends only `lang`; the server fills uid, created_at and
-			// every default. Writing the returned rows back is what
-			// { refetch: false } promises.
+			// The insert sends only `lang` — uid, created_at and every other
+			// column come back filled in by the server.
 			const langs = transaction.mutations.map((m) => m.modified.lang)
 			const { data } = await supabase
 				.from('user_deck')
@@ -75,8 +74,6 @@ export const decksCollection = createCollection(
 							),
 						{ submitted: changes, returned: row }
 					)
-					// The same .select() that fed the check keeps the synced layer
-					// correct, which is what { refetch: false } promises.
 					if (row) decksCollection.utils.writeUpdate(DeckMetaSchema.parse(row))
 				})
 			)

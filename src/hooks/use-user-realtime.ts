@@ -94,10 +94,9 @@ export const useUserRealtime = () => {
 			(key) => phrasePlaylistUpvotesCollection.utils.writeDelete(key)
 		)
 
-		// Decks: a second device creating or editing a deck. No DELETE binding —
-		// the replica identity is the `id` primary key, and this collection keys
-		// on `lang`, so a DELETE frame carries nothing we can map to a key.
-		// Nothing in the app deletes a deck either; archiving is an UPDATE.
+		// No DELETE binding: the replica identity is the `id` primary key while
+		// this collection keys on `lang`, so a DELETE frame carries nothing we
+		// can map to a key. Nothing deletes a deck anyway — archiving is UPDATE.
 		channel = channel
 			.on(
 				'postgres_changes',

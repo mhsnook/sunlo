@@ -23,9 +23,8 @@ learner:
 
 # learner updates daily review goal
 
-// Leaving the settings page and coming back reads the deck from the
-// collection, not from a refetch, so the new goal is only still 10 if
-// onUpdate wrote the server's row into the synced layer.
+// Coming back to settings reads the deck from the collection, not from a
+// refetch, so the goal still reading 10 is what proves the write-back.
 
 cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
