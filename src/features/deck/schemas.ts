@@ -10,7 +10,9 @@ export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
 export const CardDirectionSchema = z.enum(['forward', 'reverse'])
 export type CardDirectionType = z.infer<typeof CardDirectionSchema>
 
-export const DeckMetaRawSchema = z.object({
+// A `user_deck` row, nothing else. The language name is a lookup on `lang`
+// (`languages[deck.lang]` from `@/lib/languages`), not a column we carry.
+export const DeckMetaSchema = z.object({
 	uid: z.string(),
 	lang: LangSchema,
 	created_at: z.string(),
@@ -19,10 +21,6 @@ export const DeckMetaRawSchema = z.object({
 	learning_goal: LearningGoalEnumSchema,
 	preferred_translation_lang: LangSchema.nullable().default(null),
 	review_answer_mode: ReviewAnswerModeSchema.nullable().default(null),
-})
-
-export const DeckMetaSchema = DeckMetaRawSchema.extend({
-	language: z.string(),
 })
 
 export type DeckMetaType = z.infer<typeof DeckMetaSchema>

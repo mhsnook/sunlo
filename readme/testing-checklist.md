@@ -22,8 +22,7 @@ from the insert statement won't necessarily match it, so when we parse it with a
 order to insert into the local collection, we need to do a special check to ensure the parsing
 logic results in a record that matches the schema.
 
-- [ ] `decksCollection`: `DeckMetaSchema` parse a new row from `user_deck` to match a `user_deck_plus` and insert it in the local collection
-- [ ] `decksCollection`: `DeckMetaRawSchema` parse an updated row from `user_deck` and update it in the local collection
+- [x] `decksCollection`: no longer applies — it reads the `user_deck` table and `DeckMetaSchema` is that table's row, so the insert and update handlers write the returned rows straight back
 - [x] `phrasesCollection`: `PhraseFullSchema` parse a new row from `phrase` and match a `meta_phrase_info(*, translations)`
 - [x] `cardsCollection`: `CardMetaSchema` parse a new row from `user_card` and match a `user_card_plus`
 - [ ] `friendSummariesCollection`: `FriendSummarySchema` parse a new row from `friend_request_action` and match a `friend_summary`

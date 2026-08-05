@@ -16,6 +16,7 @@ import { decksCollection } from '@/features/deck/collections'
 import { type DeckMetaType } from '@/features/deck/schemas'
 import { useDeckPids, useDeckCardStats } from '@/features/deck/hooks'
 import { ago } from '@/lib/dayjs'
+import languages from '@/lib/languages'
 
 export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 	const [open, setOpen] = useState(false)
@@ -56,7 +57,7 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 
 						<div className="space-y-0.5">
 							<h3 className="text-muted-foreground text-lg leading-tight font-semibold">
-								{deck.language}
+								{languages[deck.lang] ?? deck.lang}
 							</h3>
 							<p className="text-muted-foreground text-xs">
 								{totalCards === 0
@@ -86,7 +87,9 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 					className="max-w-md"
 				>
 					<DialogHeader>
-						<DialogTitle>Restore {deck.language}?</DialogTitle>
+						<DialogTitle>
+							Restore {languages[deck.lang] ?? deck.lang}?
+						</DialogTitle>
 						<DialogDescription>
 							Your progress is preserved — pick up where you left off.
 						</DialogDescription>

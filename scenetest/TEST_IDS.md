@@ -108,6 +108,7 @@ natural wrapper element to label.
 | `dismiss-deck-settings-intro`        | data-testid | Deck settings intro | Button to dismiss settings intro sheet                                   |
 | `review-goal-options`                | data-testid | Settings section    | Container for daily review goal buttons                                  |
 | `review-goal-options {n}`            | data-key    | Settings section    | Button for daily goal (e.g. `review-goal-options 10`)                    |
+| `choice-selected`                    | data-name   | Any `ChoiceTile`    | Marks the selected tile (e.g. `review-goal-options 10 choice-selected`)  |
 | `review-goal-options-{n}`            | data-testid | Settings section    | Button for daily goal by testid (e.g. `review-goal-options-10`)          |
 | `learning-goal-options`              | data-testid | Settings section    | Container for learning goal buttons                                      |
 | `learning-goal-options {type}`       | data-key    | Settings section    | Button for learning goal (e.g. `learning-goal-options family`)           |
