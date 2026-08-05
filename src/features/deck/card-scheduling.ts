@@ -22,10 +22,19 @@ export const NO_SCHEDULING: CardScheduling = {
  * The latest scoring review wins. Stage-3 (again-round) rows carry null FSRS
  * values and would blank the card's scheduling, so they never count. Ordering
  * is by `created_at`, so a correction to an older row cannot jump the queue.
+ *
+ * Takes a missing list, not just an empty one: the include this reads is
+ * produced by the query engine, and a row that arrives without it must not
+ * take down the component that renders it. `useCardScheduling` reports the
+ * shape when that happens.
  */
+const isReviewList = (value: unknown): value is ReadonlyArray<CardReviewType> =>
+	Array.isArray(value)
+
 export function schedulingFromReviews(
-	reviews: ReadonlyArray<CardReviewType>
+	reviews: ReadonlyArray<CardReviewType> | null | undefined
 ): CardScheduling {
+	if (!isReviewList(reviews)) return NO_SCHEDULING
 	let latest: CardReviewType | null = null
 	for (const review of reviews) {
 		if (!isScoringReview(review)) continue

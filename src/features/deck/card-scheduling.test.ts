@@ -57,3 +57,10 @@ describe('schedulingFromReviews', () => {
 		expect(result).toEqual(NO_SCHEDULING)
 	})
 })
+
+describe('schedulingFromReviews with no list', () => {
+	it('reports never practised rather than throwing', () => {
+		expect(schedulingFromReviews(undefined)).toEqual(NO_SCHEDULING)
+		expect(schedulingFromReviews(null)).toEqual(NO_SCHEDULING)
+	})
+})

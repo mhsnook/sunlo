@@ -7,11 +7,7 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 import type { pids, uuid, UseLiveQueryResult } from '@/types/main'
 import type { CardDirectionType, CardMetaType, DeckMetaType } from './schemas'
 import { cardsWithReviews } from './live'
-import {
-	schedulingFromReviews,
-	NO_SCHEDULING,
-	type CardScheduling,
-} from './card-scheduling'
+import { schedulingFromReviews, type CardScheduling } from './card-scheduling'
 import type { CardReviewType } from '@/features/review/schemas'
 import { decksCollection, cardsCollection } from './collections'
 import {
@@ -272,10 +268,17 @@ export const useCardScheduling = (
 						.findOne(),
 		[phraseId, direction]
 	)
-	const scheduling = data ? schedulingFromReviews(data.reviews) : NO_SCHEDULING
+	const scheduling = schedulingFromReviews(data?.reviews)
+	should(
+		`cardsWithReviews row carries its reviews as an array`,
+		!data || Array.isArray(data.reviews),
+		{ reviews: data?.reviews, row: data }
+	)
 	should(
 		`card scheduling derived from reviews matches the user_card_plus columns`,
-		!data || scheduling.last_reviewed_at === (data.last_reviewed_at ?? null),
+		!data ||
+			!Array.isArray(data.reviews) ||
+			scheduling.last_reviewed_at === (data.last_reviewed_at ?? null),
 		{ derived: scheduling, welded: data }
 	)
 	return scheduling
