@@ -10,20 +10,10 @@ import { cardsCollection } from './collections'
 import { cardReviewsCollection } from '@/features/review/collections'
 
 /**
- * A card with the reviews that decide its scheduler state.
- *
- * This is the cross-feature join named (#593): the card row owns the detail,
- * `user_card_review` owns the history, and the pairing has one place to live
- * instead of sitting inline in a hook. `schedulingFromReviews` in
- * `card-scheduling.ts` turns the reviews into the three values the UI reads.
- *
- * The subquery keeps only the scoring stages (1 and 2). Again-round rows carry
- * null FSRS values and never decide scheduling, so they are dropped here rather
- * than filtered by every consumer.
- *
- * A card is keyed by phrase and direction — the forward and reverse cards for
- * one phrase are separate rows with separate histories — so the correlation
- * matches on both.
+ * A card with the reviews that decide its scheduler state — read it through
+ * `schedulingFromReviews`. Forward and reverse are separate cards with separate
+ * histories, so the correlation matches direction as well as phrase, and only
+ * the scoring stages come through (see `card-scheduling.ts`).
  */
 export const cardsWithReviews = createLiveQueryCollection({
 	id: 'cards_with_reviews',

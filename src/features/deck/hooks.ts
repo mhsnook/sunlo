@@ -250,14 +250,11 @@ export const useMyCard = (
 }
 
 /**
- * A card's scheduler state, derived from its reviews rather than read off the
- * card row (#757). `user_card_plus` welds the same three values on today, so
- * while both exist the `should()` holds the derivation to the view's answer —
- * both take the latest scoring review, so they must agree.
+ * Only safe where the route preloads `cardReviewsCollection`: with no reviews
+ * loaded a card reads as never practised rather than as unknown.
  *
- * The route that displays this preloads `cardReviewsCollection`, which is what
- * makes deriving it safe: no reviews loaded would read as "never practised"
- * rather than as unknown.
+ * The `should()` is temporary — it holds the derivation to the `user_card_plus`
+ * columns for as long as the view still supplies them.
  */
 export const useCardScheduling = (
 	phraseId: uuid | null | undefined,

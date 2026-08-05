@@ -2,13 +2,9 @@ import type { CardReviewType } from '@/features/review/schemas'
 import { isScoringReview } from '@/features/review/review-utils'
 
 /**
- * The scheduler state a card carries: when it was last practised, and the two
- * FSRS values the scheduler reads. Today these are columns on `user_card_plus`,
- * welded onto the card row by the view. They are derived data — the detail
- * lives on `user_card_review` — so this module computes them from the reviews.
- *
- * Splitting the derivation out of the live query keeps it testable: the query
- * in `live.ts` produces a card and its reviews, and this decides what they mean.
+ * When a card was last practised, and the two FSRS values the scheduler reads.
+ * `user_card_plus` still carries the same three as columns; until that view is
+ * gone, both routes to them exist and must agree.
  */
 export type CardScheduling = {
 	last_reviewed_at: string | null
@@ -23,12 +19,9 @@ export const NO_SCHEDULING: CardScheduling = {
 }
 
 /**
- * The latest scoring review decides a card's scheduler state.
- *
- * Only stages 1 and 2 score. An again-round row (stage 3) records that the user
- * tapped "again", and carries null FSRS values that would blank the card's
- * scheduling if it won. Ordering is by `created_at`, so a correction that
- * rewrites an older row does not jump the queue.
+ * The latest scoring review wins. Stage-3 (again-round) rows carry null FSRS
+ * values and would blank the card's scheduling, so they never count. Ordering
+ * is by `created_at`, so a correction to an older row cannot jump the queue.
  */
 export function schedulingFromReviews(
 	reviews: ReadonlyArray<CardReviewType>
