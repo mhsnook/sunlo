@@ -26,9 +26,9 @@ export const notificationsCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: NotificationSchema,
-		// Marking read is the only update. Mark-all-as-read stamps every unread
-		// row with one `read_at`, so grouping collapses it to a single request.
-		// Callers fire and forget, which is why the error toast lives here.
+		// Mark-all-as-read stamps one `read_at` across every unread row, so
+		// grouping collapses it to a single request. Callers fire and forget,
+		// so the error toast belongs here rather than at the call site.
 		onUpdate: async ({ transaction }) => {
 			try {
 				await Promise.all(
@@ -40,11 +40,7 @@ export const notificationsCollection = createCollection(
 								.in('id', keys)
 								.select()
 								.throwOnError()
-							// `refetch: false` leaves the synced layer holding whatever the
-							// last fetch returned, and the optimistic value disappears with
-							// the transaction. Write the confirmed rows down so the two
-							// layers agree — otherwise a refetch that lands mid-flight
-							// carries stale rows and the update reverts on completion.
+							// The write-back is what `refetch: false` promises.
 							for (const row of data ?? [])
 								notificationsCollection.utils.writeUpdate(
 									NotificationSchema.parse(row)

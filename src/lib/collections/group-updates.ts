@@ -1,11 +1,9 @@
 /**
- * Groups a transaction's update mutations by their change payload, so that a
- * bulk update (mark-all-notifications-read, chat read receipts) sends one
- * request per distinct payload instead of one request per row.
+ * Groups a transaction's update mutations by change payload, so a bulk update
+ * sends one request per distinct payload instead of one per row.
  *
- * Grouping is by `JSON.stringify(changes)`. Two payloads that differ only in
- * key order land in separate groups, which costs an extra request but never
- * writes the wrong value.
+ * Grouped by `JSON.stringify(changes)`: payloads differing only in key order
+ * land in separate groups, costing an extra request but never a wrong write.
  */
 export function groupUpdatesByChanges<TChanges>(
 	mutations: ReadonlyArray<{ changes: TChanges; key: string }>

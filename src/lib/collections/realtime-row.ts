@@ -6,14 +6,12 @@ type RowCollection<T extends object> = {
 /**
  * Apply a realtime INSERT or UPDATE frame to a collection's synced state.
  *
- * Writes an upsert rather than an update, because a frame can arrive for a row
- * this client never fetched — notifications load the newest 100 — and
- * `writeUpdate` throws on a key it cannot find.
+ * Upserts rather than updates: a frame can arrive for a row this client never
+ * fetched, and `writeUpdate` throws on a key it cannot find.
  *
- * Skips the write when every field already matches. That is what this client's
- * own mutation looks like coming back, and skipping it stops one
- * mark-all-as-read from re-running every live query over the collection once
- * per row.
+ * Skips the write when every field already matches — that is this client's own
+ * mutation echoing back, and writing it would re-run every live query for
+ * nothing.
  */
 export function writeRealtimeRow<T extends object>(
 	collection: RowCollection<T>,

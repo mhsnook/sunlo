@@ -373,12 +373,10 @@ export const useSocialRealtime = () => {
 			)
 			.subscribe()
 
-		// INSERT and UPDATE both carry the full new row, so one handler covers
-		// them. UPDATE is what makes a friend's read receipt land live rather
-		// than on the next fetch. DELETE is not subscribed: its frame carries
-		// only the replica identity, so Supabase cannot check RLS on it and
-		// withholds it. That needs `replica identity full`, which is a
-		// migration, and nothing in the app deletes a chat message today.
+		// UPDATE is what lands a friend's read receipt live. DELETE is
+		// deliberately not subscribed: its frame carries only the replica
+		// identity, so Supabase cannot check RLS on it and withholds it.
+		// Receiving deletes would need `replica identity full` on the table.
 		const chatChannel = supabase
 			.channel('user-chats')
 			.on(

@@ -51,10 +51,9 @@ export const chatMessagesCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: ChatMessageSchema,
-		// Read receipts are the only update, and they stamp one `read_at` across
-		// every unread message from a friend, so grouping collapses the whole
-		// batch to a single request. The reader never waits on it, so the error
-		// toast lives here rather than at the call site.
+		// Read receipts stamp one `read_at` across every unread message from a
+		// friend, so grouping collapses the batch to a single request. The
+		// reader never waits on it, so the error toast belongs here.
 		onUpdate: async ({ transaction }) => {
 			try {
 				await Promise.all(
@@ -66,10 +65,7 @@ export const chatMessagesCollection = createCollection(
 								.in('id', keys)
 								.select()
 								.throwOnError()
-							// See the note on notificationsCollection.onUpdate: with
-							// `refetch: false` the handler has to write the confirmed rows
-							// into the synced layer, or the update reverts when the
-							// optimistic state drops.
+							// The write-back is what `refetch: false` promises.
 							for (const row of data ?? [])
 								chatMessagesCollection.utils.writeUpdate(
 									ChatMessageSchema.parse(row)
