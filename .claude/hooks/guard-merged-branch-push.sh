@@ -41,6 +41,19 @@ git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null 2>&1 || exit 0
 
 git fetch -q origin "$DEFAULT_BRANCH" 2>/dev/null || true
 
+# A branch cut from the default and not yet committed to has a remote tip that
+# sits on the default's own first-parent history, so the ancestor test below
+# calls it merged and blocks the branch's FIRST push. A branch that really was
+# merged never sits there: a squash or rebase merge rewrites its commits, and a
+# merge commit takes the branch tip as a second parent. So treat a tip on the
+# first-parent line as "freshly cut" and let the push through.
+TIP=$(git rev-parse "origin/$BRANCH" 2>/dev/null)
+if [ -n "$TIP" ] &&
+	git rev-list --first-parent "origin/$DEFAULT_BRANCH" 2>/dev/null |
+	grep -qx "$TIP"; then
+	exit 0
+fi
+
 if git merge-base --is-ancestor "origin/$BRANCH" "origin/$DEFAULT_BRANCH" 2>/dev/null; then
 	echo "Blocked: origin/$BRANCH is already merged into $DEFAULT_BRANCH." >&2
 	echo "" >&2
