@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
 	useNotifications,
-	useMarkAllAsRead,
+	markAllNotificationsRead,
 	useUnreadCount,
 } from '@/features/notifications/hooks'
 import { NotificationItem } from './notification-item'
@@ -12,7 +12,6 @@ import type { NotificationType } from '@/features/notifications/schemas'
 
 export function NotificationList() {
 	const { data: notifications } = useNotifications()
-	const markAllAsRead = useMarkAllAsRead()
 	const unreadCount = useUnreadCount()
 
 	if (!notifications || notifications.length === 0) {
@@ -37,8 +36,7 @@ export function NotificationList() {
 							<Button
 								variant="ghost"
 								size="sm"
-								onClick={() => markAllAsRead.mutate()}
-								disabled={markAllAsRead.isPending}
+								onClick={markAllNotificationsRead}
 								data-testid="mark-all-read-button"
 							>
 								Mark all as read

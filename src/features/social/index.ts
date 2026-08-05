@@ -34,7 +34,7 @@ export {
 	useUnreadChatsCount,
 	useChatEntries,
 	type ChatEntry,
-	useMarkAsRead,
+	markChatRead,
 	useSendToFriends,
 	type ShareableContent,
 	useSocialRealtime,
