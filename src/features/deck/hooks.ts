@@ -4,8 +4,14 @@ import { should } from '@scenetest/checks/react'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
-import type { pids, UseLiveQueryResult } from '@/types/main'
-import type { CardMetaType, DeckMetaType } from './schemas'
+import type { pids, uuid, UseLiveQueryResult } from '@/types/main'
+import type { CardDirectionType, CardMetaType, DeckMetaType } from './schemas'
+import { cardsWithReviews } from './live'
+import {
+	schedulingFromReviews,
+	NO_SCHEDULING,
+	type CardScheduling,
+} from './card-scheduling'
 import type { CardReviewType } from '@/features/review/schemas'
 import { decksCollection, cardsCollection } from './collections'
 import {
@@ -241,6 +247,41 @@ export const useMyCard = (
 		...query,
 		data: card ? { ...card, sibling_id: sibling?.id ?? null } : undefined,
 	} as UseLiveQueryResult<CardWithSibling>
+}
+
+/**
+ * A card's scheduler state, derived from its reviews rather than read off the
+ * card row (#757). `user_card_plus` welds the same three values on today, so
+ * while both exist the `should()` holds the derivation to the view's answer —
+ * both take the latest scoring review, so they must agree.
+ *
+ * The route that displays this preloads `cardReviewsCollection`, which is what
+ * makes deriving it safe: no reviews loaded would read as "never practised"
+ * rather than as unknown.
+ */
+export const useCardScheduling = (
+	phraseId: uuid | null | undefined,
+	direction: CardDirectionType = 'forward'
+): CardScheduling => {
+	const { data } = useLiveQuery(
+		(q) =>
+			!phraseId
+				? undefined
+				: q
+						.from({ card: cardsWithReviews })
+						.where(({ card }) =>
+							and(eq(card.phrase_id, phraseId), eq(card.direction, direction))
+						)
+						.findOne(),
+		[phraseId, direction]
+	)
+	const scheduling = data ? schedulingFromReviews(data.reviews) : NO_SCHEDULING
+	should(
+		`card scheduling derived from reviews matches the user_card_plus columns`,
+		!data || scheduling.last_reviewed_at === (data.last_reviewed_at ?? null),
+		{ derived: scheduling, welded: data }
+	)
+	return scheduling
 }
 
 export const useDeckCards = (

@@ -45,7 +45,7 @@ import {
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import { ago } from '@/lib/dayjs'
-import { useMyCard } from '@/features/deck/hooks'
+import { useCardScheduling } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
@@ -398,14 +398,14 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 }
 
 function LastReviewedBadge({ phraseId }: { phraseId: uuid }) {
-	const { data: card } = useMyCard(phraseId)
-	if (!card?.last_reviewed_at) return null
+	const { last_reviewed_at } = useCardScheduling(phraseId)
+	if (!last_reviewed_at) return null
 	return (
 		<>
 			<span>•</span>
 			<span>
 				Your last review:{' '}
-				<span className="font-bold">{ago(card.last_reviewed_at)}</span>
+				<span className="font-bold">{ago(last_reviewed_at)}</span>
 			</span>
 		</>
 	)
