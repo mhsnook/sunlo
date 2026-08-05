@@ -1,7 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
-	DeckMetaRawSchema,
 	DeckMetaSchema,
 	type DeckMetaType,
 	CardMetaSchema,
@@ -11,7 +10,6 @@ import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { should } from '@scenetest/checks/react'
 import { sortDecksByCreation } from '@/lib/utils'
-import languages from '@/lib/languages'
 import type { TablesUpdate } from '@/types/supabase'
 
 export const decksCollection = createCollection(
@@ -24,13 +22,8 @@ export const decksCollection = createCollection(
 			const { data } = await supabase.from('user_deck').select().throwOnError()
 			return (
 				data
-					?.map((item) => DeckMetaRawSchema.parse(item))
-					.toSorted(sortDecksByCreation)
-					.map((d) =>
-						Object.assign(d, {
-							language: languages[d.lang],
-						})
-					) ?? []
+					?.map((item) => DeckMetaSchema.parse(item))
+					.toSorted(sortDecksByCreation) ?? []
 			)
 		},
 		getKey: (item: DeckMetaType) => item.lang,
@@ -38,10 +31,23 @@ export const decksCollection = createCollection(
 		startSync: false,
 		schema: DeckMetaSchema,
 		onInsert: async ({ transaction }) => {
-			await supabase
+			// The insert sends only `lang`; the server fills uid, created_at and
+			// every default. Writing the returned rows back is what
+			// { refetch: false } promises.
+			const langs = transaction.mutations.map((m) => m.modified.lang)
+			const { data } = await supabase
 				.from('user_deck')
-				.insert(transaction.mutations.map((m) => ({ lang: m.modified.lang })))
+				.insert(langs.map((lang) => ({ lang })))
+				.select()
 				.throwOnError()
+			const rows = data?.map((row) => DeckMetaSchema.parse(row)) ?? []
+			should(
+				'user_deck insert returned one row per deck the optimistic insert added',
+				rows.length === langs.length &&
+					langs.every((lang) => rows.some((row) => row.lang === lang)),
+				{ submitted: langs, returned: rows }
+			)
+			for (const row of rows) decksCollection.utils.writeInsert(row)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
@@ -69,6 +75,9 @@ export const decksCollection = createCollection(
 							),
 						{ submitted: changes, returned: row }
 					)
+					// The same .select() that fed the check keeps the synced layer
+					// correct, which is what { refetch: false } promises.
+					if (row) decksCollection.utils.writeUpdate(DeckMetaSchema.parse(row))
 				})
 			)
 			return { refetch: false }

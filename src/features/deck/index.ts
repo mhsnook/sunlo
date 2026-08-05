@@ -4,7 +4,6 @@
 // Schemas & types
 export {
 	DeckMetaSchema,
-	DeckMetaRawSchema,
 	type DeckMetaType,
 	CardMetaSchema,
 	type CardMetaType,

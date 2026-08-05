@@ -3,6 +3,7 @@ import { Rocket } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
 import type { DeckMetaType } from '@/features/deck/schemas'
+import languages from '@/lib/languages'
 import { useLangActiveDays } from './-deck-ranking'
 
 export function ReviewBanner({
@@ -37,8 +38,8 @@ export function ReviewBanner({
 					<div className="space-y-1">
 						<h2 className="text-lg leading-tight font-bold @md:text-xl">
 							<span className="text-primary-foresoft">{focusDue}</span>{' '}
-							{focus.language} {focusDue === 1 ? 'card' : 'cards'} ready for
-							review
+							{languages[focus.lang] ?? focus.lang}{' '}
+							{focusDue === 1 ? 'card' : 'cards'} ready for review
 						</h2>
 						<p className="text-muted-foreground text-sm">
 							About {estMinutes} {estMinutes === 1 ? 'minute' : 'minutes'}.

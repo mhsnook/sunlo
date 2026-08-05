@@ -25,6 +25,10 @@ export function ChoiceTile({
 		<button
 			type="button"
 			data-selected={selected || undefined}
+			// Scene selectors resolve data-testid / data-name / data-key, never an
+			// arbitrary attribute, so the selected tile carries a name a scene can
+			// assert on alongside the caller's data-key.
+			data-name={selected ? 'choice-selected' : undefined}
 			aria-pressed={selected}
 			className={cn(
 				'cursor-pointer rounded-2xl border-2 transition-colors',

@@ -22,6 +22,8 @@ import {
 	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
+import { DeckMetaSchema } from '@/features/deck/schemas'
+import { decksCollection } from '@/features/deck/collections'
 
 // DELETE payloads carry only the replica identity (the composite PK), which
 // includes the FK we key on.
@@ -91,6 +93,24 @@ export const useUserRealtime = () => {
 				),
 			(key) => phrasePlaylistUpvotesCollection.utils.writeDelete(key)
 		)
+
+		// Decks: a second device creating or editing a deck. No DELETE binding —
+		// the replica identity is the `id` primary key, and this collection keys
+		// on `lang`, so a DELETE frame carries nothing we can map to a key.
+		// Nothing in the app deletes a deck either; archiving is an UPDATE.
+		channel = channel
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'user_deck' },
+				(payload) =>
+					decksCollection.utils.writeUpsert(DeckMetaSchema.parse(payload.new))
+			)
+			.on(
+				'postgres_changes',
+				{ event: 'UPDATE', schema: 'public', table: 'user_deck' },
+				(payload) =>
+					decksCollection.utils.writeUpsert(DeckMetaSchema.parse(payload.new))
+			)
 
 		// Reviews: append-only INSERTs plus rare correction UPDATEs (#724).
 		channel = channel

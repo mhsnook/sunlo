@@ -52,7 +52,8 @@ export default function BrowseSearchOverlay({
 		() =>
 			userDecks
 				?.filter((d) => !d.archived)
-				?.map((d) => ({ code: d.lang, name: d.language })) ?? [],
+				?.map((d) => ({ code: d.lang, name: languages[d.lang] ?? d.lang })) ??
+			[],
 		[userDecks]
 	)
 
