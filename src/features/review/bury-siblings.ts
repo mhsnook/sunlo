@@ -1,34 +1,18 @@
 /**
- * Bury-siblings policy: when a phrase has both forward and reverse cards
- * eligible for today's review, only one should appear in the manifest.
- * Showing both wastes attention — having just answered "house → casa", being
- * asked "casa → house" a few cards later isn't a meaningful retrieval.
+ * Bury-siblings: keeps one of a phrase's two direction cards out of today's
+ * manifest when both are eligible. The policy, its four ordered rules, and the
+ * reasoning behind them are in `docs/review.md` — the routes layer builds the
+ * manifest and depends on them, so they live where that layer can read them.
  *
- * The other sibling isn't recorded as deferred anywhere; we just leave it out
- * of today's manifest and it falls back into normal scheduling tomorrow.
+ * Two things about the implementation that the policy doesn't say:
  *
- * Rules, in order:
+ * Rule 3 compares retrievability at t+1 day rather than today, so the ordering
+ * can invert. Two cards at 0.90 and 0.89 today may swap by tomorrow if the
+ * second decays more gradually, and the one that will be lower tomorrow is the
+ * one kept.
  *
- *   0. First-day exception: when BOTH siblings are unreviewed, keep both.
- *      The very first encounter pairs recognition then recall in one session
- *      to anchor the new phrase; standard bury-siblings kicks in starting on
- *      the second session.
- *
- *   1. If the reverse sibling's two most recent phase-1 reviews both scored 1
- *      (Again), bury the reverse and show the forward today. Piling on a
- *      third failure attempt isn't useful — let the user re-anchor recognition
- *      first and try recall again on a later session.
- *
- *   2. Otherwise, bury whichever sibling will be LESS overdue tomorrow — the
- *      one whose retrievability at t+1 day is HIGHER. The card that decays
- *      faster has the greater cost-of-deferring, so we keep it. (Concretely:
- *      two cards with retrievabilities 0.90 and 0.89 today might invert by
- *      tomorrow if the second decays more gradually, in which case we still
- *      keep the first.)
- *
- *   3. Fallback when retrievability can't be compared (one sibling reviewed
- *      and one not, so no apples-to-apples retrievability): bury the reverse
- *      and show the forward. Recognition before recall is the safer default.
+ * A buried sibling is not recorded anywhere. There is no deferred flag to
+ * clear — it is simply absent from the manifest and eligible again tomorrow.
  */
 
 import type { CardReviewType } from './schemas'

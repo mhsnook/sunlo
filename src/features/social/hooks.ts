@@ -368,6 +368,10 @@ export const useSocialRealtime = () => {
 						toastSuccess('Friend request accepted')
 					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
 						toastSuccess('You are now connected')
+					// We break the mutations.md convention here because friend
+					// summaries are a view, so we do a full refetch when friend
+					// requests come in. This will change when the friendSummaries
+					// fold/view moves into the client.
 					void friendSummariesCollection.utils.refetch()
 				}
 			)

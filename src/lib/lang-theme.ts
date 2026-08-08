@@ -12,8 +12,8 @@ export const LANG_HUES: ReadonlyArray<number> = [
 ] as const
 
 // Avatar placeholder hues: the 10° grid 0–350 with three sets of stops
-// removed. First the LANG_HUES deck stops, so a missing-photo tile
-// never colour-matches a language badge. Then the three dead zones
+// removed. First the LANG_HUES deck stops, offset so a missing-photo tile
+// won't colour-match a language badge. Then the three dead zones
 // LANG_HUES already hugs — the long Duolingo green dip (120–140),
 // brand purple (290–310), and near-red (10, 350, too close to the
 // danger hue). What's left is 18 saturated, well-separated hues.

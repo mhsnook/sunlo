@@ -197,9 +197,10 @@ function ReviewPageContent() {
 	// Get full card data for card-level manifest building
 	const { data: deckCards } = useDeckCards(lang)
 
-	// Reviews scoped to this language — used by bury-siblings Rule 1, which
-	// looks at the reverse card's two most recent phase-1 reviews to decide
-	// whether to defer recall after consecutive failures.
+	// Reviews scoped to this language — bury-siblings reads the reverse card's
+	// two most recent phase-1 reviews to decide whether to defer recall after
+	// consecutive failures, and the candidate set alone doesn't carry them.
+	// See docs/review.md.
 	const { data: reviewsForLang } = useLiveQuery(
 		(q) =>
 			q
