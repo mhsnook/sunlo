@@ -8,7 +8,7 @@ import { CardContent } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { useNewCardEntries } from '@/features/review/store'
+import { useNewManifestEntries } from '@/features/review/hooks'
 import type { uuid } from '@/types/main'
 import type { TranslationType } from '@/features/phrases/schemas'
 import type { CardDirectionType } from '@/features/deck/schemas'
@@ -57,18 +57,19 @@ function PreviewCard({
 			}
 		>
 			<CardContent className="flex flex-col items-center justify-center gap-3 p-4">
-				{isReverse ?
+				{isReverse ? (
 					<>
 						{translationsDisplay}
 						<Separator />
 						{phraseDisplay}
 					</>
-				:	<>
+				) : (
+					<>
 						{phraseDisplay}
 						<Separator />
 						{translationsDisplay}
 					</>
-				}
+				)}
 			</CardContent>
 		</CardlikeFlashcard>
 	)
@@ -80,21 +81,13 @@ export function NewCardsPreview({
 	manifest: Array<ManifestEntry>
 }) {
 	const { lang } = useParams({ strict: false })
-	const newCardEntries = useNewCardEntries()
 	const navigate = useNavigate()
 
 	const handleStartReview = () => {
 		void navigate({ to: '/learn/$lang/review/go', params: { lang: lang! } })
 	}
 
-	// Use the session's captured list of fresh-for-today entries. Filtering the
-	// manifest by "unreviewed" state is unreliable — last_reviewed_at comes from
-	// the user_card_plus view's "most recent review" join, which can be shaped
-	// by prior same-day (phase-3) reviews.
-	const newEntriesSet = new Set<ManifestEntry>(newCardEntries ?? [])
-	const unreviewedInOrder = manifest.filter((entry) =>
-		newEntriesSet.has(entry)
-	)
+	const unreviewedInOrder = useNewManifestEntries(manifest, lang ?? '')
 
 	if (unreviewedInOrder.length === 0) {
 		// No unreviewed cards to preview - show helpful guidance

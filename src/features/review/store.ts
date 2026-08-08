@@ -3,23 +3,14 @@ import { createStore } from 'zustand'
 import { useStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
-import type { ReviewStages } from './review-utils'
-import type { ManifestEntry } from './manifest'
-
 const DEFAULT_PROPS = {
 	lang: '',
 	dayString: '',
 	countCards: -1,
-	stage: null as ReviewStages,
 	currentCardIndex: -1,
-	newCardEntries: null as Array<ManifestEntry> | null,
 }
 
 type ReviewActions = {
-	skipReviewUnreviewed: () => void
-	skipReviewAgains: () => void
-	gotoReviewUnreviewed: (i: number) => void
-	gotoReviewAgains: (i: number) => void
 	gotoIndex: (i: number) => void
 	gotoNext: () => void
 	gotoEnd: () => void
@@ -28,8 +19,6 @@ type ReviewActions = {
 		lang: string,
 		dayString: string,
 		countCards: number,
-		newCardEntries?: Array<ManifestEntry> | null,
-		stage?: ReviewStages,
 		index?: number
 	) => void
 }
@@ -40,6 +29,17 @@ export type ReviewState = typeof DEFAULT_PROPS & {
 
 export type ReviewStore = ReturnType<typeof createReviewStore>
 
+/**
+ * A throwaway per-session cursor, nothing more. Session *state* — which cards
+ * exist (manifest), which have been reviewed (card_review), and what stage the
+ * session is at (milestone log) — lives in the collections, synced across
+ * devices and mirrored to localStorage. This store holds only the current
+ * card index within the manifest — an in-tab navigation position. The go route
+ * re-seeds it from `stats.index` on mount and on every stage change, so the
+ * actual position is always derived from the shared (stage, reviews); the
+ * persisted copy survives only as the "a session was started in this tab"
+ * signal the routing guard reads (`countCards`/`currentCardIndex` !== -1).
+ */
 export function createReviewStore(lang: string, dayString: string) {
 	return createStore<ReviewState>()(
 		devtools(
@@ -49,19 +49,6 @@ export function createReviewStore(lang: string, dayString: string) {
 					lang,
 					dayString,
 					actions: {
-						skipReviewUnreviewed: () => set({ stage: 3 }),
-						skipReviewAgains: () => set({ stage: 5 }),
-
-						gotoReviewUnreviewed: (i: number) =>
-							set({
-								stage: 2,
-								currentCardIndex: i,
-							}),
-						gotoReviewAgains: (i: number) =>
-							set({
-								stage: 4,
-								currentCardIndex: i,
-							}),
 						gotoIndex: (i) => set({ currentCardIndex: i }),
 						gotoNext: () =>
 							set((state) => ({
@@ -80,8 +67,6 @@ export function createReviewStore(lang: string, dayString: string) {
 							lang: string,
 							dayString: string,
 							countCards: number,
-							newCardEntries: Array<ManifestEntry> | null = null,
-							stage: ReviewStages = 1,
 							index: number = 0
 						) =>
 							set((state) => {
@@ -90,14 +75,12 @@ export function createReviewStore(lang: string, dayString: string) {
 									throw new Error(
 										'Mismatching language or dayString between params and current store state'
 									)
-								// ensure we only init once
-								if (state.stage !== null) return state
+								// ensure we only init once (countCards is -1 until initialised)
+								if (state.countCards !== -1) return state
 								return {
 									lang,
 									dayString,
 									countCards,
-									newCardEntries,
-									stage,
 									currentCardIndex: index,
 								}
 							}),
@@ -109,9 +92,7 @@ export function createReviewStore(lang: string, dayString: string) {
 						lang: state.lang,
 						dayString: state.dayString,
 						countCards: state.countCards,
-						stage: state.stage,
 						currentCardIndex: state.currentCardIndex,
-						newCardEntries: state.newCardEntries,
 					}),
 				}
 			)
@@ -135,10 +116,6 @@ export const useReviewDayString = (): string => {
 	return useReviewStore((store) => store.dayString)
 }
 
-export const useReviewStage = (): ReviewStages => {
-	return useReviewStore((state) => state.stage)
-}
-
 export const useCardIndex = (): number => {
 	return useReviewStore((state) => state.currentCardIndex)
 }
@@ -149,8 +126,4 @@ export const useInitialiseReviewStore = (): ReviewActions['init'] => {
 
 export const useReviewActions = (): ReviewActions => {
 	return useReviewStore((state) => state.actions)
-}
-
-export const useNewCardEntries = (): Array<ManifestEntry> | null => {
-	return useReviewStore((state) => state.newCardEntries)
 }

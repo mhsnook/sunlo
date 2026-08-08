@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -7,13 +7,17 @@ import {
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
-	useReviewStage,
 } from '@/features/review/store'
 import {
 	ensureManifestCardsInCollection,
-	useNextValid,
 	useReviewDay,
+	useReviewsTodayStats,
+	useUpdateReviewStage,
 } from '@/features/review/hooks'
+import {
+	getIndexOfNextAgainCard,
+	getIndexOfNextUnreviewedCard,
+} from '@/features/review/review-utils'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
@@ -51,11 +55,14 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 function ReviewPage() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
+	const currentCardIndex = useCardIndex()
 	const { data: day, isLoading } = useReviewDay(lang, dayString)
-	const stage = useReviewStage()
 
 	if (isLoading) return <Loader />
-	if (!day?.manifest?.length || stage === null)
+	// currentCardIndex === -1 means the cursor store hasn't been initialised —
+	// i.e. we landed here without going through setup/continue. Redirect back so
+	// the index route can seed the cursor (from stats.index) before we render.
+	if (!day?.manifest?.length || currentCardIndex === -1)
 		return <Navigate to="/learn/$lang/review" from={Route.fullPath} />
 
 	return (
@@ -71,9 +78,51 @@ function FlashCardReviewSession({
 	dayString: string
 }) {
 	const currentCardIndex = useCardIndex()
-	const reviewStage = useReviewStage()
+	const lang = useReviewLang()
+	const stats = useReviewsTodayStats(lang, dayString).data
+	const reviewStage = stats.stage
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
-	const nextValidIndex = useNextValid()
+	const updateStage = useUpdateReviewStage(lang, dayString)
+	// The next card needing attention this phase, computed off the same reviews
+	// data the stats already loaded (no second useReviewsToday subscription).
+	const nextValidIndex =
+		reviewStage < 3
+			? getIndexOfNextUnreviewedCard(
+					manifest,
+					stats.reviewsMap,
+					currentCardIndex
+				)
+			: getIndexOfNextAgainCard(manifest, stats.reviewsMap, currentCardIndex)
+
+	// "Skip for today" means different things per phase. In the go-back phase
+	// (stage 2) it skips one unreviewed card and walks forward to the end. In the
+	// again round (stage >= 3) there's no forward end to walk to — unmastered
+	// Again cards keep the complete-screen re-offering the round, and the phase
+	// only closes by advancing to stage 5. So skipping the again round finishes
+	// it outright rather than cycling back onto the remaining Again cards.
+	const handleSkipForToday = () => {
+		if (reviewStage >= 3) {
+			updateStage(5)
+			gotoIndex(manifest.length)
+		} else {
+			gotoIndex(nextValidIndex)
+		}
+	}
+
+	// Position derives from the shared (stage, reviews). The stored cursor is a
+	// within-stage browse offset only; on mount and whenever the stage advances —
+	// including a stage change pushed in from another device — snap back to the
+	// stage's canonical resume index (stats.index). Without this, a cursor left
+	// mid-manifest under a now-stale stage gets read against the wrong phase (e.g.
+	// a stage-5 session rendering a leftover card, where one "skip" jumps to the
+	// again-round's empty set and lands on "finished"). The ref keeps the effect
+	// keyed on stage alone — re-seeding on every stats.index change would fight
+	// in-stage navigation and answer-advance.
+	const seedRef = useRef(stats.index)
+	seedRef.current = stats.index
+	useLayoutEffect(() => {
+		gotoIndex(seedRef.current)
+	}, [reviewStage, gotoIndex])
 
 	const atTheEnd = currentCardIndex === manifest.length
 
@@ -131,14 +180,12 @@ function FlashCardReviewSession({
 								<ChevronRight className="size-4" />
 							</Button>
 						</>
-					) : !atTheEnd && (reviewStage ?? 0) > 1 ? (
+					) : !atTheEnd && reviewStage > 1 ? (
 						<Button
 							size="sm"
 							variant="ghost"
 							aria-label="skip for today"
-							onClick={() =>
-								animateAndNavigate(() => gotoIndex(nextValidIndex))
-							}
+							onClick={() => animateAndNavigate(handleSkipForToday)}
 							className="ps-4 pe-2"
 						>
 							Skip for today <ChevronRight className="size-4" />
@@ -172,7 +219,7 @@ function FlashCardReviewSession({
 								<ReviewSingleCard
 									pid={phraseId}
 									direction={direction}
-									reviewStage={reviewStage ?? 1}
+									reviewStage={reviewStage}
 									dayString={dayString}
 									triggerSlide={triggerSlide}
 								/>

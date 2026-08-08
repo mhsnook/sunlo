@@ -1,9 +1,5 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import {
-	useReviewDayString,
-	useReviewLang,
-	useReviewStage,
-} from '@/features/review/store'
+import { useReviewDayString, useReviewLang } from '@/features/review/store'
 import {
 	ensureManifestCardsInCollection,
 	useReviewDay,
@@ -39,10 +35,9 @@ function PreviewPage() {
 	const reviewLang = useReviewLang()
 	const dayString = useReviewDayString()
 	const { data: day, isLoading } = useReviewDay(reviewLang, dayString)
-	const stage = useReviewStage()
 
 	if (isLoading) return <Loader />
-	if (!day?.manifest?.length || stage === null)
+	if (!day?.manifest?.length)
 		return (
 			<Navigate
 				to="/learn/$lang/review"
