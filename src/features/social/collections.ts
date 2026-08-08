@@ -53,7 +53,7 @@ export const chatMessagesCollection = createCollection(
 		schema: ChatMessageSchema,
 		// Read receipts stamp one `read_at` across every unread message from a
 		// friend, so grouping collapses the batch to a single request. The
-		// reader never waits on it, so the error toast belongs here.
+		// reader doesn't wait on it, so the error toast belongs here.
 		onUpdate: async ({ transaction }) => {
 			try {
 				await Promise.all(

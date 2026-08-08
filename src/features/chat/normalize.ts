@@ -1,6 +1,6 @@
 // Pure-TS normalization, shared between the client (for the search query),
 // the Edge Function (for the same query, server-side), and the backfill
-// script (for indexed content). Same input → same output, always.
+// script (for indexed content). Same input → same output, so the three agree.
 //
 // PHILOSOPHY: this layer is unconditional and language-agnostic enough to be
 // safe. Anything language-specific that could plausibly be wrong, debated,

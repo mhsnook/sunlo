@@ -2,7 +2,7 @@ import { combinedScore } from '@/hooks/use-hybrid-search'
 
 // Diagnostic display: raw value → its sqrt contribution per side, then the
 // combined Σ. Only mounted by /search/test (search.test.lazy.tsx) so this
-// code lives in the diagnostic chunk and never ships in /search.
+// code lives in the diagnostic chunk and is not pulled into /search.
 
 const fmt2 = (n: number) => n.toFixed(2)
 

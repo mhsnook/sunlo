@@ -121,7 +121,7 @@ function decideBuryByTomorrowRetrievability(
 /**
  * Partition a candidate set into kept vs. buried. A candidate is buried only
  * when its sibling (same phrase_id, opposite direction) is also a candidate;
- * solo siblings are always kept.
+ * a candidate with no sibling in the set is kept.
  */
 export function partitionBuriedSiblings<T extends BurySiblingCandidate>(
 	candidates: ReadonlyArray<T>,

@@ -215,8 +215,7 @@ function ReviewPageContent() {
 
 	// One unified candidate list, then bury siblings exactly once. Both the
 	// display counts AND the manifest persisted on Start derive from `kept`,
-	// so users never see counts that don't match the session they're about
-	// to start.
+	// so the counts users see match the session they're about to start.
 	type ReviewCandidate = BurySiblingCandidate & { bucket: 'due' | 'fresh' }
 	const candidates: Array<ReviewCandidate> = []
 
@@ -234,8 +233,8 @@ function ReviewPageContent() {
 		})
 	}
 
-	// Brand-new cards (not yet in deckCards) — always treated as fresh. We
-	// still record both directions here so bury-siblings can pick which one
+	// Brand-new cards (not yet in deckCards) — treated as fresh. We still
+	// record both directions here so bury-siblings can pick which one
 	// actually goes on today's manifest; the buried sibling's user_card row
 	// is still inserted so it can come up in a future session.
 	for (const pid of cardsToCreate) {

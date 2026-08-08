@@ -18,8 +18,9 @@ export default function Flagged({
 		// the enabled flag is the primary control
 		if (flags[name].enabled === true) return children
 	} else if (isDevEnvironment()) return children
-	// show content in a local dev session only, with a little yellow border;
-	// never on a deployed domain, even if the build mode is wrong
+	// show content in a local dev session only, with a little yellow border.
+	// isDevEnvironment() checks the hostname as well as the build mode, so a
+	// deployed domain fails it even when Vite reports DEV.
 	return isDevEnvironment() ? (
 		<div className={cn('border border-dashed border-yellow-500', className)}>
 			{children}

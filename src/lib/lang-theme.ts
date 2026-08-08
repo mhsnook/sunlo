@@ -35,7 +35,7 @@ export function getAvatarHue(seed: string): number {
 
 // Permutation walked over the popularity-ranked language list. The
 // most popular language (display_order 1) gets stop 6 (sky blue), the
-// next stop 0 (red), and so on. Adjacent ranks always land far apart
+// next stop 0 (red), and so on. Adjacent ranks land far apart
 // on the wheel, so the dashboard reads as colourful regardless of
 // which languages a learner picks.
 const LANG_STOP_WALK: ReadonlyArray<number> = [
@@ -76,7 +76,7 @@ export function getLangHue(lang: string): number {
 }
 
 // One-shot readiness flag for the popularity ranking. Flips false → true
-// when languagesCollection first reports ready, then never moves; the
+// when languagesCollection first reports ready, then stays; the
 // listener set is cleared after firing. Consumers subscribe via the
 // hook below to get a visible "hydration" transition: badges paint
 // neutral grey on first paint, then fade to their language hue once

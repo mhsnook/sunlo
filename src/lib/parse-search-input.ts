@@ -25,8 +25,8 @@ const PREPOSITIONS = new Set(['in', 'for', 'about', 'the', 'a'])
  * 2. Strip words matching active LANGUAGE filter labels from the search text
  *    so results stay consistent before and after clicking a language filter
  *
- * Only language filters cause word stripping — tag filter labels are never
- * stripped because tags often overlap with real search content
+ * Only language filters cause word stripping — tag filter labels are left
+ * alone because tags often overlap with real search content
  * (e.g. "hot dog" is both a tag and something you'd search for).
  */
 export function parseSearchInput(
