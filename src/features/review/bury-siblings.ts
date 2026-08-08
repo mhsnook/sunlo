@@ -1,7 +1,7 @@
 /**
  * Bury-siblings: keeps one of a phrase's two direction cards out of today's
  * manifest when both are eligible. The policy, its four ordered rules, and the
- * reasoning behind them are in `docs/review.md` — the routes layer builds the
+ * reasoning behind them are in `./docs.md` — the routes layer builds the
  * manifest and depends on them, so they live where that layer can read them.
  *
  * Two things about the implementation that the policy doesn't say:

@@ -40,7 +40,7 @@ docs:
   load: "docs/styling.md"
 
 - task: "Building today's review manifest, bury-siblings, review phases, or anything that consumes FSRS scheduling from outside src/features/review"
-  load: "docs/review.md"
+  load: "src/features/review/docs.md"
 
 - task: "Working on the prototype phrasebook search at /chats — not the friend chat"
   load: "src/features/chat/docs.md"
@@ -50,6 +50,8 @@ docs:
 
 - task: "Deciding whether a PR targets main or next-<version>; cutting a release; version bumps; production builds"
   load: "docs/deployment.md"
+
+**Where a new doc goes:** `docs/*.md` holds cross-cutting concerns — the ones that apply wherever you are working. A doc about one domain lives beside its code as `src/features/<domain>/docs.md`, and a comment in that folder can point at it as `./docs.md`. Register either kind in the list above.
 
 ## Commands
 

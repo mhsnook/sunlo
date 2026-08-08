@@ -200,7 +200,7 @@ function ReviewPageContent() {
 	// Reviews scoped to this language — bury-siblings reads the reverse card's
 	// two most recent phase-1 reviews to decide whether to defer recall after
 	// consecutive failures, and the candidate set alone doesn't carry them.
-	// See docs/review.md.
+	// See src/features/review/docs.md.
 	const { data: reviewsForLang } = useLiveQuery(
 		(q) =>
 			q
