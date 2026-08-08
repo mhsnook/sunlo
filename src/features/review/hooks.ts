@@ -438,7 +438,6 @@ export function useReviewMutation(
 						),
 					}
 				}
-				// First scoring review for this card today.
 				console.log(`Scoring pass: creating review`, {
 					pid,
 					direction,
@@ -575,7 +574,7 @@ export function insertMilestone(input: {
 
 /**
  * Record a stage transition — a new milestone, not an in-place update, so two
- * devices mid-session no longer clobber each other. Fire-and-forget.
+ * devices mid-session don't clobber each other. Fire-and-forget.
  */
 export function useUpdateReviewStage(lang: string, day_session: string) {
 	const userId = useUserId()

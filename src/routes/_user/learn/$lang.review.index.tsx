@@ -80,11 +80,9 @@ export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
 })
 
-// Outer component handles auth check
 function ReviewPageSetup() {
 	const isAuth = useIsAuthenticated()
 
-	// Require auth for review
 	if (!isAuth) {
 		return (
 			<RequireAuth message="You need to be logged in to review your flashcards.">
@@ -96,7 +94,7 @@ function ReviewPageSetup() {
 	return <ReviewPageContent />
 }
 
-// Inner component contains all the hooks - only rendered when authenticated
+// Only rendered when authenticated, so its hooks can assume a session
 function ReviewPageContent() {
 	const { lang } = Route.useParams()
 	const navigate = useNavigate()
@@ -621,7 +619,6 @@ function ReviewPageContent() {
 										algoRecsSelected={algoRecsSelected}
 										setAlgoRecsSelected={setAlgoRecsSelected}
 										algoRecsFiltered={algoRecsFiltered}
-										// countOfCardsDesired={countNeeded2}
 									/>
 								</Drawer>
 								<Button
