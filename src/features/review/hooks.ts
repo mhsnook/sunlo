@@ -438,6 +438,7 @@ export function useReviewMutation(
 						),
 					}
 				}
+				// First scoring review for this card today.
 				console.log(`Scoring pass: creating review`, {
 					pid,
 					direction,
