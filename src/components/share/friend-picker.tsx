@@ -386,8 +386,8 @@ export function FriendPickerDialog({
 }) {
 	const { isAuth } = useAuth()
 	const isMobile = useIsMobile()
-	// A static override (the /themes showcase) always renders the picker;
-	// otherwise gate on auth.
+	// A static override (the /themes showcase) renders the picker without auth;
+	// otherwise gate on it.
 	const showPicker = friendsOverride ? true : isAuth
 	const [uids, setUids] = useState<uuid[]>(EMPTY_UIDS)
 	const [search, setSearch] = useState('')

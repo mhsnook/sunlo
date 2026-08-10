@@ -39,11 +39,19 @@ docs:
 - task: "Styling beyond copying an adjacent pattern — oklch color axes, semantic tokens, button variants, Base UI data attributes"
   load: "docs/styling.md"
 
+- task: "Building today's review manifest, bury-siblings, review phases, or anything that consumes FSRS scheduling from outside src/features/review"
+  load: "src/features/review/docs.md"
+
+- task: "Working on the prototype phrasebook search at /chats — not the friend chat"
+  load: "src/features/chat/docs.md"
+
 - task: "Changing database schema, migrations, seeds, or RLS"
   load: "docs/database.md"
 
 - task: "Deciding whether a PR targets main or next-<version>; cutting a release; version bumps; production builds"
   load: "docs/deployment.md"
+
+**Where a new doc goes:** `docs/*.md` holds cross-cutting concerns — the ones that apply wherever you are working. A doc about one domain lives beside its code as `src/features/<domain>/docs.md`, and a comment in that folder can point at it as `./docs.md`. Register either kind in the list above.
 
 ## Commands
 
@@ -75,7 +83,7 @@ pnpm run seeds:schema   # regenerate base.sql — review the diff carefully
 - **New tests are scenetest markdown scenes** (`scenetest/scenes/*.spec.md`), never new `@playwright/test` specs — `e2e/` is deprecated (`transform` label). Navigate by clicking, not by reloading (`openTo` is for the entry point only).
 - **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically.
 - **Base UI, not Radix** for primitives: selected tabs get `data-active` (style with `data-[active]:`), not `data-state="active"`. Verify attribute names in `node_modules/@base-ui/react/esm/` types.
-- **Avoid `dark:` prefixes and opacity tints** (`bg-primary/10`) — the oklch color system auto-flips; use luminance steps (`bg-lc-1`). Full system: `docs/styling.md`.
+- **`dark:` prefixes** — the oklch color system handles dark mode for you, so `dark:` is only needed on a raw colour class like `bg-amber-600`. Full system: `docs/styling.md`.
 
 ## Architecture
 

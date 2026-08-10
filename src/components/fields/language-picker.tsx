@@ -49,7 +49,7 @@ const POPULAR_LANG_COUNT = 6
 const POPULAR_LANG_FETCH = 16
 
 // Shown before the languages collection has synced, so the "Popular languages"
-// section never flashes empty. Replaced by live `display_order` ranking once ready.
+// section has content on first paint. Replaced by live `display_order` ranking once ready.
 const FALLBACK_POPULAR_LANGS = ['eng', 'fra', 'hin', 'kan', 'spa', 'tam']
 
 function Highlight({ text, q }: { text: string; q: string }) {
@@ -615,15 +615,15 @@ export function LanguagePicker({
 				style={
 					{
 						width: 'min(420px, 92vw)',
-						// Cap to the space the positioner reports so the popup always
-						// fits its chosen side and scrolls internally — otherwise an
-						// over-tall popup overflows and gets shoved into a corner.
+						// Cap to the space the positioner reports so the popup fits its
+						// chosen side and scrolls internally — otherwise an over-tall
+						// popup overflows and gets shoved into a corner.
 						maxHeight: 'min(540px, var(--available-height))',
 					} as CSSProperties
 				}
 				align="start"
 				sideOffset={6}
-				// Allow flipping above the anchor, but never shift sideways or fall
+				// Allow flipping above the anchor, but no sideways shift and no fall
 				// back to the perpendicular axis (which parks it at the screen edge).
 				collisionAvoidance={{
 					side: 'flip',

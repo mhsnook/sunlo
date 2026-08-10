@@ -5,8 +5,8 @@
  * production deploy is ever built or served in the wrong Vite mode that flag
  * flips to `true` and leaks dev tooling (the identity switcher, the
  * work-in-progress buttons behind `<Flagged>`) onto the live site. Requiring
- * a local-network hostname as well means dev UI can never render on a
- * deployed domain, even when the build mode is wrong.
+ * a local-network hostname as well means a deployed domain fails the check
+ * on hostname, whatever the build mode reports.
  */
 export function isDevEnvironment(): boolean {
 	if (!import.meta.env.DEV) return false

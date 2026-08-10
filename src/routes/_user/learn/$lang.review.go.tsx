@@ -90,7 +90,7 @@ function FlashCardReviewSession({
 		)
 	}, [manifest])
 
-	// Navigation happens immediately on click — never blocked by animation.
+	// Navigation happens immediately on click, ahead of the animation.
 	const [animKey, setAnimKey] = useState(0)
 
 	const animateAndNavigate = useCallback((navigate: () => void) => {

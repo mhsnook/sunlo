@@ -1000,7 +1000,7 @@ function ShowcaseChoiceTileGroup() {
 
 // Twin of the friend-chat bubble (src/routes/_user/friends/chats.$friendUid.tsx).
 // `isMine` flips alignment + drops the avatar, matching the live component.
-// Real chat messages always attach a phrase / playlist / request preview,
+// Real chat messages attach a phrase / playlist / request preview,
 // so the bubble takes its content via `children` (typically a card preview).
 function ChatBubble({
 	isMine,

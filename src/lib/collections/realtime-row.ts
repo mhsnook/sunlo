@@ -6,8 +6,8 @@ type RowCollection<T extends object> = {
 /**
  * Apply a realtime INSERT or UPDATE frame to a collection's synced state.
  *
- * Upserts rather than updates: a frame can arrive for a row this client never
- * fetched, and `writeUpdate` throws on a key it cannot find.
+ * Upserts rather than updates: if a frame arrives for a row this client hasn't
+ * fetched, `writeUpdate` will throw on a key it cannot find.
  *
  * Skips the write when every field already matches — that is this client's own
  * mutation echoing back, and writing it would re-run every live query for

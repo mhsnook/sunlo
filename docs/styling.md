@@ -107,8 +107,7 @@ Defined in `globals.css`, these bridge the OKLCH scale with traditional Tailwind
 - **Cascade seeder + `lc` inside** (`hue-success chroma-mlo` at the top, `bg-lc-1` / `text-lc-8` below): the default shape for a colored component — declare its character once, speak luminance within. Portable: drop it under a different seeder (a danger context, a lang-themed subtree) and it takes on that character.
 - **Explicit per-property axes** (`bg-lc-1 bg-chroma-mlo bg-hue-info`): one-off colored elements, or shared components used in many contexts where you want the color pinned rather than inherited.
 - **Adjustments** (`hover:bg-lc-up-1`): hover/focus/active state changes.
-- **Avoid `dark:` prefixes** — the scale and semantic tokens auto-flip. Reserve `dark:` for genuinely exceptional cases (e.g. a marketing page with custom gradients).
-- **Avoid opacity tints** (`bg-primary/10`) — the `lc/chroma/hue` utilities don't support the `/opacity` modifier; use a luminance step (`bg-lc-1`) instead for consistent appearance across monitors.
+- **`dark:` prefixes** — the oklch system handles dark mode for you, so `dark:` is only needed on a raw colour class like `bg-amber-600`.
 
 ### Caveats
 

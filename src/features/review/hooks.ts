@@ -255,7 +255,7 @@ export function useReviewDay(
  * the same set. Local `cardsCollection` can drift from that (long-lived
  * PWA without refetches, server-side data migrations, sessions authored
  * on another device), and if the manifest references a card the local
- * collection has never heard of, the review mutation can't find it when
+ * collection doesn't have, the review mutation can't find it when
  * syncing FSRS state. Refetch once to self-heal before the session starts.
  */
 export async function ensureManifestCardsInCollection(
@@ -308,8 +308,8 @@ export function useOneReviewToday(
 /**
  * Get the most recent scoring review for a phrase+direction (any day, not just today).
  * Used for FSRS calculations which need the previous difficulty/stability.
- * Filters to the scoring stages (1–2) so again-round re-reviews (which carry
- * null FSRS values) never feed into the scheduling chain.
+ * Filters to the scoring stages (1–2), so again-round re-reviews and their
+ * null FSRS values stay out of the scheduling chain.
  */
 export function useLatestReviewForPhrase(
 	pid: uuid,
@@ -487,8 +487,8 @@ export function useReviewMutation(
 			console.log(`mutation returns:`, data)
 			// The review itself is already persisted + in the collection (the
 			// optimistic action did that). This only mirrors FSRS onto the local
-			// card. Isolate any failure so a misleading "error posting your review"
-			// toast never fires and the slide transition always runs.
+			// card. Isolate any failure so it can't raise a misleading "error posting
+			// your review" toast or block the slide transition.
 			try {
 				// Only sync card scheduling state from scoring reviews (stages 1–2).
 				// Again-round rows are for tracking only — they carry null FSRS
@@ -575,7 +575,7 @@ export function insertMilestone(input: {
 
 /**
  * Record a stage transition — a new milestone, not an in-place update, so two
- * devices mid-session no longer clobber each other. Fire-and-forget.
+ * devices mid-session don't clobber each other. Fire-and-forget.
  */
 export function useUpdateReviewStage(lang: string, day_session: string) {
 	const userId = useUserId()
