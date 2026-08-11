@@ -1,5 +1,17 @@
 {
 	"outputStyle": "Clear Technical",
+	"extraKnownMarketplaces": {
+		"mhsnook": {
+			"source": {
+				"source": "github",
+				"repo": "mhsnook/skills"
+			}
+		}
+	},
+	"enabledPlugins": {
+		"spec-debt@mhsnook": true,
+		"ci-delta-reports@mhsnook": true
+	},
 	"hooks": {
 		"PreToolUse": [
 			{
