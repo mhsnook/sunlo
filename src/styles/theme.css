@@ -5,7 +5,7 @@
  * and `text-danger-700` is `text-red-700` — same values, same shade
  * numbers, same mental model. Components write ordinary Tailwind classes.
  *
- * Two things are added on top, and nothing else:
+ * Three things are added on top, and nothing else:
  *
  *   1. The shade scale flips in dark mode. 50 and 950 swap, 100 and 900
  *      swap, and so on down to 500, which mirrors itself. A shade number
@@ -19,12 +19,29 @@
  *      setting those on any element re-themes everything inside it. That is
  *      how per-language theming works — see `src/lib/lang-theme.ts`.
  *
+ *   3. `paper` and `ink` — the achromatic pair, defined below.
+ *
  * Tailwind's own palettes (`bg-purple-600`, `text-slate-300`, …) are
  * untouched and do NOT flip. The marketing pages in `src/routes/-homepage/`
  * use them directly with hand-written `dark:` variants.
  */
 
 @theme {
+	/* The achromatic pair. `paper` is a raised surface, `ink` is a mark on
+	   it, and both follow the mode — which `white` and `black` do not.
+
+	   Reach for `text-paper` on any filled surface. It is the one foreground
+	   that works on every palette, including a re-pointed one, and it is the
+	   answer to the trap in `text-white`: `bg-primary-700` flips to a light
+	   shade in dark mode, so white text on it is unreadable.
+
+	   They are not exact mirrors. Paper is a surface, so in dark mode it sits
+	   above the page rather than at pure black — that is what lets `bg-paper`
+	   lift a card off the background in both modes. Ink is a mark, so it goes
+	   all the way to the contrast limit. */
+	--color-paper: var(--paper);
+	--color-ink: var(--ink);
+
 	/* Re-pointable — see --p-* and --a-* below. */
 	--color-primary-50: var(--p-50);
 	--color-primary-100: var(--p-100);
@@ -115,6 +132,9 @@
 /* Default sources for the two re-pointable palettes. Override --p-* or
    --a-* on any element to re-theme its subtree. */
 :root {
+	--paper: var(--color-white);
+	--ink: var(--color-slate-950);
+
 	--p-50: var(--color-purple-50);
 	--p-100: var(--color-purple-100);
 	--p-200: var(--color-purple-200);
@@ -142,6 +162,9 @@
 
 /* Dark mode: the shade scale runs the other way. */
 .dark {
+	--paper: var(--color-slate-800);
+	--ink: var(--color-white);
+
 	--color-primary-50: var(--p-950);
 	--color-primary-100: var(--p-900);
 	--color-primary-200: var(--p-800);

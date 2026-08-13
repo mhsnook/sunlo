@@ -14,25 +14,28 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ShadCN's named surface tokens, built from the palettes in theme.css.
-   Because the palettes flip in dark mode, most of these need one definition
-   rather than two — `--card: var(--color-neutral-50)` is white-ish in light
-   mode and near-black in dark mode on its own. Only the tokens that must
-   NOT flip are repeated in the `.dark` block below. */
+   Because the palettes flip, most of these need one definition rather than
+   two — `--muted: var(--color-neutral-100)` is a pale grey in light mode and
+   a dark one in dark mode on its own. Only the tokens that must NOT flip are
+   repeated in the `.dark` block below. */
 :root {
-	--background: var(--color-primary-50);
+	--background: var(--color-neutral-100);
 	/* Neutral, not primary — purple-900 is saturated enough to tint body
 	   text noticeably. */
 	--foreground: var(--color-neutral-800);
-	--card: var(--color-neutral-50);
+	/* Paper, not a palette shade. A card has to sit ABOVE the page in both
+	   modes, and "above" is lighter either way — which is not something a
+	   flipping shade can express relative to a flipping page. */
+	--card: var(--color-paper);
 	--card-foreground: var(--color-neutral-900);
-	--popover: var(--color-neutral-50);
+	--popover: var(--color-paper);
 	--popover-foreground: var(--color-neutral-900);
 	--secondary: var(--color-neutral-100);
 	--secondary-foreground: var(--color-neutral-800);
 	--muted: var(--color-neutral-100);
 	--muted-foreground: var(--color-neutral-500);
 	--destructive: var(--color-danger-600);
-	--destructive-foreground: var(--color-danger-50);
+	--destructive-foreground: var(--color-paper);
 	--border: var(--color-primary-200);
 	--input: var(--color-neutral-200);
 	--ring: var(--color-primary-500);
@@ -41,10 +44,10 @@
 	--chart-3: var(--color-info-600);
 	--chart-4: var(--color-warning-500);
 	--chart-5: var(--color-danger-500);
-	--sidebar-background: var(--color-neutral-50);
+	--sidebar-background: var(--color-paper);
 	--sidebar-foreground: var(--color-neutral-700);
 	--sidebar-primary: var(--color-primary-700);
-	--sidebar-primary-foreground: var(--color-primary-50);
+	--sidebar-primary-foreground: var(--color-paper);
 	--sidebar-accent: var(--color-accent-100);
 	--sidebar-accent-foreground: var(--color-accent-800);
 	--sidebar-border: var(--color-neutral-200);
@@ -101,12 +104,8 @@
 	--color-accent-invert: var(--color-accent-100);
 	--color-accent-foreground: var(--color-accent-900);
 
-	/* Text ON a primary surface. Flips with everything else, so the polarity
-	   inverts by mode: a dark button with pale text in light mode, a pale
-	   button with dark text in dark mode. Both are high contrast, which a
-	   fixed pale value would not be — `bg-primary-700` lands on a light
-	   shade in dark mode. */
-	--color-primary-foreground: var(--color-primary-50);
+	/* Text ON a filled surface — see the `paper` note in theme.css. */
+	--color-primary-foreground: var(--color-paper);
 
 	/* Static tokens — separate light/dark definitions above */
 	--color-secondary: var(--secondary);

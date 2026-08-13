@@ -20,7 +20,9 @@ Alongside Tailwind's own palettes there are seven semantic ones, each an alias f
 | `neutral` | `slate`  | `danger`  | `red`   |
 |           |          | `info`    | `blue`  |
 
-The ShadCN surface tokens (`bg-card`, `text-muted-foreground`, `border-border`) are built from these in `globals.css`. Prefer them for UI primitives that use one color everywhere.
+Plus an achromatic pair, `paper` and `ink` — a surface and a mark on it, both following the mode, which `white` and `black` do not.
+
+The ShadCN surface tokens (`bg-card`, `text-muted-foreground`, `border-border`) are built from all of these in `globals.css`. Prefer them for UI primitives that use one color everywhere.
 
 Two behaviours are worth knowing.
 
@@ -28,7 +30,9 @@ Two behaviours are worth knowing.
 
 50 and 950 swap, 100 and 900 swap, down to 500 which mirrors itself. A shade number means _how much contrast against the page_, not a fixed lightness — so `bg-primary-100` is a subtle surface and `text-primary-800` is strong text in both modes. **Do not write `dark:` in app code.**
 
-One consequence to design around: a solid fill inverts polarity. `bg-primary-700` is dark with pale text in light mode, and pale with dark text in dark mode. Pair it with `text-primary-50`, never `text-white`.
+One consequence to design around: a solid fill inverts polarity. `bg-primary-700` is dark in light mode and pale in dark mode, so `text-white` on it is unreadable half the time. **Use `text-paper` on any filled surface** — it is the one foreground that works on every palette, including a re-pointed one.
+
+`paper` and `ink` are also the answer where a surface has to sit _above_ the page in both modes. "Above" means lighter either way, which no flipping shade can express relative to a flipping page — that is why `--card` is `paper` rather than `neutral-50`.
 
 Tailwind's own palettes do **not** flip. `bg-purple-600` is the same purple in both modes, which is why the marketing pages in `src/routes/-homepage/` can use them with hand-written `dark:` variants.
 
