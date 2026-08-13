@@ -97,19 +97,19 @@ describe('toArray includes on cards already present at query start', () => {
 	})
 })
 
-describe('toArray includes on cards entering a live query', () => {
-	const collectFrames = (
-		query: ReturnType<typeof buildQuery>,
-		key: string
-	): { frames: Array<unknown>; stop: () => void } => {
-		const frames: Array<unknown> = []
-		const subscription = query.subscribeChanges((changes) => {
-			for (const change of changes)
-				if (change.key === key) frames.push(change.value?.reviews)
-		})
-		return { frames, stop: () => subscription.unsubscribe() }
-	}
+const collectFrames = (
+	query: ReturnType<typeof buildQuery>,
+	key: string
+): { frames: Array<unknown>; stop: () => void } => {
+	const frames: Array<unknown> = []
+	const subscription = query.subscribeChanges((changes) => {
+		for (const change of changes)
+			if (change.key === key) frames.push(change.value?.reviews)
+	})
+	return { frames, stop: () => subscription.unsubscribe() }
+}
 
+describe('toArray includes on cards entering a live query', () => {
 	it('emits null first for a card whose reviews already exist', async () => {
 		const cards = makeCards('cards-b', [])
 		const reviews = makeReviews('reviews-b', [scoringReview('p1', 'r1')])
