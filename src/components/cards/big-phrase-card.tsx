@@ -398,7 +398,7 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 }
 
 function LastReviewedBadge({ phraseId }: { phraseId: uuid }) {
-	const { last_reviewed_at } = useCardScheduling(phraseId)
+	const last_reviewed_at = useCardScheduling(phraseId)?.last_reviewed_at
 	if (!last_reviewed_at) return null
 	return (
 		<>

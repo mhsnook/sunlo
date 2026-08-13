@@ -23,18 +23,20 @@ export const NO_SCHEDULING: CardScheduling = {
  * values and would blank the card's scheduling, so they never count. Ordering
  * is by `created_at`, so a correction to an older row cannot jump the queue.
  *
- * Takes a missing list, not just an empty one: the include this reads is
- * produced by the query engine, and a row that arrives without it must not
- * take down the component that renders it. `useCardScheduling` reports the
- * shape when that happens.
+ * Returns null when the review list is missing, which is not an empty history:
+ * the query engine emits a card the frame it enters the query with its
+ * `reviews` include set to null, and a card with a full history passes through
+ * that same null frame before its list arrives. A card with no reviews gets no
+ * correcting frame at all, so a caller can hold the null indefinitely. Either
+ * way, null must never be read as "never practised" — see `live.test.ts`.
  */
 const isReviewList = (value: unknown): value is ReadonlyArray<CardReviewType> =>
 	Array.isArray(value)
 
 export function schedulingFromReviews(
 	reviews: ReadonlyArray<CardReviewType> | null | undefined
-): CardScheduling {
-	if (!isReviewList(reviews)) return NO_SCHEDULING
+): CardScheduling | null {
+	if (!isReviewList(reviews)) return null
 	let latest: CardReviewType | null = null
 	for (const review of reviews) {
 		if (!isScoringReview(review)) continue

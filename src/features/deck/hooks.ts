@@ -246,6 +246,10 @@ export const useMyCard = (
 }
 
 /**
+ * Returns null while the card's reviews are still pending — see
+ * `schedulingFromReviews`. Callers render nothing for that frame rather than
+ * claiming the card was never practised.
+ *
  * Only safe where the route preloads `cardReviewsCollection`: with no reviews
  * loaded a card reads as never practised rather than as unknown.
  *
@@ -255,7 +259,7 @@ export const useMyCard = (
 export const useCardScheduling = (
 	phraseId: uuid | null | undefined,
 	direction: CardDirectionType = 'forward'
-): CardScheduling => {
+): CardScheduling | null => {
 	const { data } = useLiveQuery(
 		(q) =>
 			!phraseId
@@ -270,14 +274,9 @@ export const useCardScheduling = (
 	)
 	const scheduling = schedulingFromReviews(data?.reviews)
 	should(
-		`cardsWithReviews row carries its reviews as an array`,
-		!data || Array.isArray(data.reviews),
-		{ reviews: data?.reviews, row: data }
-	)
-	should(
 		`card scheduling derived from reviews matches the user_card_plus columns`,
 		!data ||
-			!Array.isArray(data.reviews) ||
+			!scheduling ||
 			scheduling.last_reviewed_at === (data.last_reviewed_at ?? null),
 		{ derived: scheduling, welded: data }
 	)

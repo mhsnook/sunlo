@@ -28,8 +28,8 @@ describe('schedulingFromReviews', () => {
 			review({ created_at: '2026-08-03T10:00:00Z', stage: 2, difficulty: 6 }),
 			review({ created_at: '2026-08-02T10:00:00Z', stage: 1, difficulty: 5 }),
 		])
-		expect(result.last_reviewed_at).toBe('2026-08-03T10:00:00Z')
-		expect(result.difficulty).toBe(6)
+		expect(result?.last_reviewed_at).toBe('2026-08-03T10:00:00Z')
+		expect(result?.difficulty).toBe(6)
 	})
 
 	it('ignores again-round rows, which carry null FSRS values', () => {
@@ -42,8 +42,8 @@ describe('schedulingFromReviews', () => {
 				stability: null,
 			}),
 		])
-		expect(result.last_reviewed_at).toBe('2026-08-01T10:00:00Z')
-		expect(result.stability).toBe(7)
+		expect(result?.last_reviewed_at).toBe('2026-08-01T10:00:00Z')
+		expect(result?.stability).toBe(7)
 	})
 
 	it('reports a card with no reviews as never practised', () => {
@@ -59,8 +59,11 @@ describe('schedulingFromReviews', () => {
 })
 
 describe('schedulingFromReviews with no list', () => {
-	it('reports never practised rather than throwing', () => {
-		expect(schedulingFromReviews(undefined)).toEqual(NO_SCHEDULING)
-		expect(schedulingFromReviews(null)).toEqual(NO_SCHEDULING)
+	// A pending include is null, and an empty history is NO_SCHEDULING. Collapsing
+	// the two would report every card as never practised for the frame it enters
+	// the query — see live.test.ts for the engine behaviour that forces this.
+	it('reports pending rather than never practised', () => {
+		expect(schedulingFromReviews(undefined)).toBeNull()
+		expect(schedulingFromReviews(null)).toBeNull()
 	})
 })
