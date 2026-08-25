@@ -10,7 +10,7 @@ export { notificationsCollection } from './collections'
 export {
 	useNotifications,
 	useUnreadCount,
-	useMarkAsRead,
-	useMarkAllAsRead,
+	markNotificationRead,
+	markAllNotificationsRead,
 	useNotificationsRealtime,
 } from './hooks'

@@ -11,15 +11,17 @@ export const cardsCollection = createCollection(
 		// ...id, queryKey, queryFn, getKey, schema...
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const { data } = await supabase
 						.from('user_card')
 						.update(m.changes)
 						.eq('id', m.original.id)
+						.select() // ask for the row back — see "The { refetch: false } contract"
 						.throwOnError()
-				)
+					for (const row of data ?? []) cardsCollection.utils.writeUpdate(row)
+				})
 			)
-			return { refetch: false } // optimistic value matches server; skip reload
+			return { refetch: false } // synced layer is now correct; skip the reload
 		},
 	})
 )
@@ -50,6 +52,83 @@ See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked exam
 
 - **Realtime sync handlers** writing supabase channel events into a collection (`chatMessagesCollection.utils.writeInsert(...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
+
+## The `{ refetch: false }` contract
+
+`{ refetch: false }` reads like a performance flag. It is a promise: **this handler has already made the synced layer correct.** Keep the promise by writing the server's returned rows into the synced layer, or omit the flag and let the collection reload.
+
+A collection holds two layers. The optimistic layer carries your change from the moment you make it. The synced layer holds what the server last told us. When the transaction ends, the optimistic entry stops being authoritative, and **whatever the synced layer holds is what the user is left with**. `{ refetch: false }` skips the one step that would have updated it, so if the handler writes nothing back, the synced layer still holds the pre-mutation row.
+
+Trust the server's row over your local copy. "The optimistic value already matches the server" is an assumption, not a fact — check it with `should()` rather than build on it.
+
+How badly this bites depends on how the mutation was started:
+
+| Started with                          | Without a write-back                                                                                                                                                          |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createOptimisticAction`              | **Always reverts**, the moment the action resolves. No refetch, no race.                                                                                                      |
+| `collection.insert / update / delete` | Holds on the quiet path. Reverts as soon as any read for that key lands mid-flight — an explicit `utils.refetch()`, a sibling handler that omitted the flag, or a second tab. |
+
+The second row is why this passes tests: nothing interferes, so the value sticks, and the handler looks correct.
+
+### What to write back, per operation
+
+```typescript
+// update — .select() the row, then writeUpdate it
+const { data } = await supabase
+	.from('phrase')
+	.update(changes)
+	.eq('id', m.original.id)
+	.select()
+	.throwOnError()
+for (const row of data ?? []) phrasesCollection.utils.writeUpdate(row)
+
+// insert — server columns win, the optimistic row fills the rest
+const { data } = await supabase
+	.from('phrase')
+	.insert(row)
+	.select()
+	.single()
+	.throwOnError()
+phrasesCollection.utils.writeInsert({ ...m.modified, ...data })
+
+// delete — nothing to fetch, just record it
+playlistPhraseLinksCollection.utils.writeDelete(m.original.id)
+```
+
+`writeUpdate` **merges** its argument over the current synced row. That matters for the collections that read a view but write a base table — `cardsCollection` (`user_card_plus` → `user_card`), `phrasesCollection` (`phrase_meta` → `phrase`). The base-table row the write returns has no view-derived columns, and the merge keeps the ones already there.
+
+`writeInsert` and `writeUpsert` **replace** rather than merge. On a view-backed collection, spread the optimistic row underneath (as above) so the view-derived columns are not blanked out.
+
+### Check the assumption with `should()`
+
+The old rule leaned on "our optimistic value matches the server." Several handlers already `.select()` the row and feed it to `should()` — that is the right instinct, and the returned row should then be written down as well. One `.select()` serves both: the check catches a wrong mental model in dev, and the write keeps the collection correct in production.
+
+```typescript
+const { data } = await supabase
+	.from('user_card')
+	.update(changes)
+	.eq('id', id)
+	.select()
+	.throwOnError()
+const row = data?.[0]
+should(
+	`user_card ${id} server row matches the submitted update`,
+	!row ||
+		Object.entries(changes).every(
+			([k, v]) => k === 'updated_at' || row[k] === v
+		),
+	{ submitted: changes, returned: row }
+)
+if (row) cardsCollection.utils.writeUpdate(row)
+```
+
+`should()` reports to the observer panel in dev and test, and the Vite plugin strips it from production builds. See `docs/testing.md`.
+
+### Realtime is a backstop, not the mechanism
+
+A realtime frame arrives after the database commits, so it carries the truth and is safe to write into the synced layer. But a collection that is only correct once the frame lands is wrong until then, and stays wrong whenever the socket is down. Make the handler correct on its own; let realtime cover the writes made by other clients and other devices.
+
+Use `writeUpsert` for realtime frames, never `writeUpdate` — a frame can arrive for a row this client never fetched, and `writeUpdate` throws on a key it cannot find. `writeDelete` throws the same way, so guard it with a `collection.get(key)` check.
 
 ## Don't refetch entire tables to sync — return the row and `writeInsert` / `writeUpdate` / `writeDelete`
 
@@ -104,7 +183,8 @@ Forms use **TanStack Form** through the app's composed hook — `useAppForm` fro
 ### Mutation Best Practices
 
 - **Persistence lives on the collection** via `onInsert/onUpdate/onDelete` handlers; call sites use `collection.insert / update / delete` for optimistic local state
-- **Throw from the handler** to roll the optimistic state back; **return `{ refetch: false }`** from a `queryCollectionOptions` handler when the optimistic value already matches what the server confirmed (skip the post-handler full refetch)
+- **Throw from the handler** to roll the optimistic state back
+- **Only return `{ refetch: false }` if the handler wrote the server's rows into the synced layer** — the flag is a promise, not a performance hint. See [The `{ refetch: false }` contract](#the--refetch-false--contract)
 - **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
 - **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
 - For mutations whose server-side effect can't be predicted client-side, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill

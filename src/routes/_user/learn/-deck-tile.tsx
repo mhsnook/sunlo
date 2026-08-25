@@ -13,6 +13,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import { useLangThemeCss } from '@/lib/lang-theme'
+import languages from '@/lib/languages'
 import { DeckMetaType } from '@/features/deck/schemas'
 import { useDeckPids } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
@@ -46,7 +47,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 
 						<div className="space-y-0.5">
 							<h3 className="text-lg leading-tight font-semibold">
-								{deck.language}
+								{languages[deck.lang] ?? deck.lang}
 							</h3>
 							<p className="text-muted-foreground text-xs">
 								{totalCards === 0 ? (
@@ -80,7 +81,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 					className="max-w-md"
 				>
 					<DialogHeader>
-						<DialogTitle>{deck.language}</DialogTitle>
+						<DialogTitle>{languages[deck.lang] ?? deck.lang}</DialogTitle>
 						<DialogDescription>
 							{totalCards === 0 ? (
 								'This deck is empty — time to start adding phrases.'

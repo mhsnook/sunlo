@@ -1,8 +1,11 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { NotificationSchema, type NotificationType } from './schemas'
+import { toastError } from '@/components/ui/sonner'
+import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const notificationsCollection = createCollection(
 	queryCollectionOptions({
@@ -23,5 +26,33 @@ export const notificationsCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: NotificationSchema,
+		// Mark-all-as-read stamps one `read_at` across every unread row, so
+		// grouping collapses it to a single request. Callers fire and forget,
+		// so the error toast belongs here rather than at the call site.
+		onUpdate: async ({ transaction }) => {
+			try {
+				await Promise.all(
+					groupUpdatesByChanges(transaction.mutations).map(
+						async ({ changes, keys }) => {
+							const { data } = await supabase
+								.from('notification')
+								.update(changes as TablesUpdate<'notification'>)
+								.in('id', keys)
+								.select()
+								.throwOnError()
+							// The write-back is what `refetch: false` promises.
+							for (const row of data ?? [])
+								notificationsCollection.utils.writeUpdate(
+									NotificationSchema.parse(row)
+								)
+						}
+					)
+				)
+				return { refetch: false }
+			} catch (error) {
+				toastError('Could not update your notifications')
+				throw error
+			}
+		},
 	})
 )

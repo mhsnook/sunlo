@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import {
-	DeckMetaRawSchema,
 	DeckMetaSchema,
 	CardMetaSchema,
 	CardStatusEnumSchema,
@@ -18,7 +17,7 @@ describe('CardStatusEnumSchema', () => {
 	})
 })
 
-describe('DeckMetaRawSchema', () => {
+describe('DeckMetaSchema', () => {
 	const validDeck = {
 		uid: 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		lang: 'hin',
@@ -31,13 +30,13 @@ describe('DeckMetaRawSchema', () => {
 	}
 
 	it('parses a valid deck with defaults', () => {
-		const result = DeckMetaRawSchema.parse(validDeck)
+		const result = DeckMetaSchema.parse(validDeck)
 		expect(result.lang).toBe('hin')
 		expect(result.daily_review_goal).toBe(15)
 	})
 
 	it('strips server-side stats columns no longer on the schema', () => {
-		const result = DeckMetaRawSchema.parse({
+		const result = DeckMetaSchema.parse({
 			...validDeck,
 			cards_active: 20,
 			count_reviews_7d: 45,
@@ -50,13 +49,13 @@ describe('DeckMetaRawSchema', () => {
 	})
 
 	it('accepts review_answer_mode values', () => {
-		const deck2 = DeckMetaRawSchema.parse({
+		const deck2 = DeckMetaSchema.parse({
 			...validDeck,
 			review_answer_mode: '2-buttons',
 		})
 		expect(deck2.review_answer_mode).toBe('2-buttons')
 
-		const deck4 = DeckMetaRawSchema.parse({
+		const deck4 = DeckMetaSchema.parse({
 			...validDeck,
 			review_answer_mode: '4-buttons',
 		})
@@ -64,17 +63,17 @@ describe('DeckMetaRawSchema', () => {
 	})
 
 	it('defaults review_answer_mode to null', () => {
-		const result = DeckMetaRawSchema.parse(validDeck)
+		const result = DeckMetaSchema.parse(validDeck)
 		expect(result.review_answer_mode).toBeNull()
 	})
 
 	it('defaults preferred_translation_lang to null', () => {
-		const result = DeckMetaRawSchema.parse(validDeck)
+		const result = DeckMetaSchema.parse(validDeck)
 		expect(result.preferred_translation_lang).toBeNull()
 	})
 
 	it('accepts explicit preferred_translation_lang', () => {
-		const result = DeckMetaRawSchema.parse({
+		const result = DeckMetaSchema.parse({
 			...validDeck,
 			preferred_translation_lang: 'fra',
 		})
@@ -83,7 +82,7 @@ describe('DeckMetaRawSchema', () => {
 
 	it('accepts all learning goal values', () => {
 		for (const goal of ['moving', 'family', 'visiting']) {
-			const result = DeckMetaRawSchema.parse({
+			const result = DeckMetaSchema.parse({
 				...validDeck,
 				learning_goal: goal,
 			})
@@ -93,25 +92,16 @@ describe('DeckMetaRawSchema', () => {
 
 	it('rejects invalid learning goal', () => {
 		expect(() =>
-			DeckMetaRawSchema.parse({ ...validDeck, learning_goal: 'tourism' })
+			DeckMetaSchema.parse({ ...validDeck, learning_goal: 'tourism' })
 		).toThrow()
 	})
-})
 
-describe('DeckMetaSchema (extended)', () => {
-	it('requires language in addition to raw fields', () => {
+	it('strips the language name a cached row may still carry', () => {
 		const result = DeckMetaSchema.parse({
-			uid: 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-			lang: 'kan',
-			created_at: '2026-03-01T00:00:00Z',
-			archived: false,
-			daily_review_goal: 15,
-			learning_goal: 'moving',
-			preferred_translation_lang: null,
-			review_answer_mode: null,
+			...validDeck,
 			language: 'Kannada',
-		})
-		expect(result.language).toBe('Kannada')
+		}) as Record<string, unknown>
+		expect(result.language).toBeUndefined()
 	})
 })
 

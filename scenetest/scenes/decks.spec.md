@@ -23,6 +23,9 @@ learner:
 
 # learner updates daily review goal
 
+// Coming back to settings reads the deck from the collection, not from a
+// refetch, so the goal still reading 10 is what proves the write-back.
+
 cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
@@ -34,6 +37,12 @@ learner:
 - click 10
 - up
 - seeToast toast-success
+- up
+- click appnav-feed
+- up
+- see deck-feed-page
+- go-to-deck-settings
+- see review-goal-options 10 choice-selected
 
 # learner updates learning goal
 

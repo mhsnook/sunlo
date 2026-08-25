@@ -62,8 +62,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
 	useLayoutEffect(() => {
 		// pingSupabase() surfaces a "backend unreachable" error —
-		// onAuthStateChange reads the restored session from localStorage and
-		// never makes a network call on its own, so it can't catch this.
+		// onAuthStateChange reads the restored session from localStorage without
+		// making a network call, so it can't catch this.
 		void pingSupabase().catch((error: unknown) => {
 			console.error('Supabase unreachable:', error)
 			setConnectionError(

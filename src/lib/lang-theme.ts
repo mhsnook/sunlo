@@ -12,11 +12,11 @@ export const LANG_HUES: ReadonlyArray<number> = [
 ] as const
 
 // Avatar placeholder hues: the 10° grid 0–350 with three sets of stops
-// removed. First the LANG_HUES deck stops, so a missing-photo tile never
-// colour-matches a language badge. Then the three dead zones LANG_HUES
-// already hugs — the long Duolingo green dip (120–140), brand purple
-// (290–310), and near-red (10, 350, too close to the danger hue). What's
-// left is 18 saturated, well-separated hues.
+// removed. First the LANG_HUES deck stops, offset so a missing-photo tile
+// won't colour-match a language badge. Then the three dead zones
+// LANG_HUES already hugs — the long Duolingo green dip (120–140),
+// brand purple (290–310), and near-red (10, 350, too close to the
+// danger hue). What's left is 18 saturated, well-separated hues.
 export const AVATAR_HUES: ReadonlyArray<number> = [
 	20, 30, 40, 60, 70, 90, 100, 160, 170, 190, 200, 220, 230, 250, 260, 280, 320,
 	340,
@@ -38,7 +38,7 @@ export function getAvatarHue(seed: string): number {
 
 // Permutation walked over the popularity-ranked language list. The
 // most popular language (display_order 1) gets stop 6 (sky blue), the
-// next stop 0 (red), and so on. Adjacent ranks always land far apart
+// next stop 0 (red), and so on. Adjacent ranks land far apart
 // on the wheel, so the dashboard reads as colourful regardless of
 // which languages a learner picks.
 const LANG_STOP_WALK: ReadonlyArray<number> = [
@@ -79,7 +79,7 @@ export function getLangHue(lang: string): number {
 }
 
 // One-shot readiness flag for the popularity ranking. Flips false → true
-// when languagesCollection first reports ready, then never moves; the
+// when languagesCollection first reports ready, then stays; the
 // listener set is cleared after firing. Consumers subscribe via the
 // hook below to get a visible "hydration" transition: badges paint
 // neutral grey on first paint, then fade to their language hue once

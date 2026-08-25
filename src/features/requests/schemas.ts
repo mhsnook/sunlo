@@ -17,8 +17,8 @@ export const PhraseRequestSchema = z.object({
 	deleted: z.boolean().default(false),
 	updated_at: z.string().nullable().optional(),
 	// Server-side trigger auto-creates a message row on insert if not
-	// provided, so this is optional at insert time. The synced row always
-	// has it set; the client just doesn't need to know the value upfront.
+	// provided, so this is optional at insert time. The synced row comes back
+	// with it set; the client just doesn't need to know the value upfront.
 	message_id: z.string().uuid().optional(),
 })
 

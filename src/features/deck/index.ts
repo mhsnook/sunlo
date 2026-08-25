@@ -4,7 +4,6 @@
 // Schemas & types
 export {
 	DeckMetaSchema,
-	DeckMetaRawSchema,
 	type DeckMetaType,
 	CardMetaSchema,
 	type CardMetaType,
@@ -21,6 +20,7 @@ export {
 	useDecks,
 	useDeckMeta,
 	useMyCard,
+	useCardScheduling,
 	useDeckCards,
 	useDeckPids,
 	useDeckRoutineStats,
@@ -29,8 +29,16 @@ export {
 	useReviewAnswerMode,
 } from './hooks'
 
+// Live collections
+export { cardsWithReviews } from './live'
+
 // Card utilities
 export { isDueCard } from './is-due-card'
+export {
+	schedulingFromReviews,
+	NO_SCHEDULING,
+	type CardScheduling,
+} from './card-scheduling'
 
 // Mutations
 export { useCreateDeck, optimisticNewDeck } from './mutations'

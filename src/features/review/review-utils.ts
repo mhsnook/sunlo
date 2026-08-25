@@ -25,7 +25,8 @@ export type ReviewsMap = {
 /**
  * A scoring review — one FSRS reads for scheduling. These are recorded in the
  * session's first pass (stage 1) or the go-back pass (stage 2). Again-round
- * re-reviews (stage 3) are tracking-only and never feed the scheduling chain.
+ * re-reviews (stage 3) are tracking-only, and this predicate is what keeps
+ * them out of the scheduling chain.
  * Replaces the old `day_first_review === true` predicate.
  */
 export function isScoringReview(
@@ -88,8 +89,8 @@ export function getIndexOfNextUnreviewedCard(
  * Why day_session and not created_at: the chain is one step per session, not
  * per timestamp. Session-based exclusion also tolerates legacy data with
  * multiple phase-1 rows in one session (`scripts/reclassify-phase1-duplicates`
- * cleans those up, but filtering by session means we'd never accidentally
- * pull a same-session sibling as our predecessor even if cleanup lagged).
+ * cleans those up, but filtering by session means a same-session sibling
+ * can't be pulled as our predecessor even if cleanup lagged).
  *
  * Returns `undefined` if no predecessor exists — correct semantics for a
  * card's first-ever phase-1 review.

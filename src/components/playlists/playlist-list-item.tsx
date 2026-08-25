@@ -50,7 +50,7 @@ export function PlaylistItem({
 
 	// Add every not-yet-in-deck phrase's cards to the deck. Phrases with an
 	// existing (skipped) card get flipped back to active; the rest are inserted.
-	// `phrasesNotInDeck` already excludes active/learned, so we never touch those.
+	// `phrasesNotInDeck` already excludes active/learned, so those are left alone.
 	const addPhrasesToDeck = (
 		phrases: Array<{ id: string; only_reverse: boolean | null }>
 	) => {

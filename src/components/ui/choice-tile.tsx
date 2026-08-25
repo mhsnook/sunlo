@@ -25,6 +25,9 @@ export function ChoiceTile({
 		<button
 			type="button"
 			data-selected={selected || undefined}
+			// data-selected styles; scene selectors resolve only data-testid /
+			// data-name / data-key, so selection needs a second attribute.
+			data-name={selected ? 'choice-selected' : undefined}
 			aria-pressed={selected}
 			className={cn(
 				'cursor-pointer rounded-2xl border-2 transition-colors',

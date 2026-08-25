@@ -15,6 +15,7 @@ import { GarlicBroccoli } from '@/components/garlic'
 import { useDecks } from '@/features/deck/hooks'
 import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
+import languages from '@/lib/languages'
 import { decksCollection } from '@/features/deck/collections'
 import type { DeckMetaType } from '@/features/deck/schemas'
 
@@ -111,7 +112,7 @@ function AuthenticatedHome({
 	const deckCount = activeDecks.length
 	const languageSubtitle =
 		deckCount === 1
-			? `You're learning ${activeDecks[0].language}.`
+			? `You're learning ${languages[activeDecks[0].lang] ?? activeDecks[0].lang}.`
 			: deckCount === 2
 				? `You're learning two languages.`
 				: deckCount === 3

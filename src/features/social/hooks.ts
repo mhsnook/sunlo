@@ -9,6 +9,7 @@ import {
 	type ChatMessageRelType,
 	type ChatMessageType,
 } from './schemas'
+import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
@@ -265,48 +266,33 @@ export const useUnreadChatsCount = (): number | undefined => {
 	return count || undefined
 }
 
-export const useMarkAsRead = () => {
-	return useMutation({
-		mutationFn: async ({
-			friendUid,
-			recipientUid,
-			read_at,
-		}: {
-			friendUid: uuid
-			recipientUid: uuid
-			read_at: string
-		}) => {
-			await supabase
-				.from('chat_message')
-				.update({ read_at })
-				.eq('sender_uid', friendUid)
-				.eq('recipient_uid', recipientUid)
-				.is('read_at', null)
-				.throwOnError()
-		},
-		onMutate: ({ friendUid, recipientUid, read_at }) => {
-			// Optimistically update all unread messages from this friend
-			chatMessagesCollection.utils.writeBatch(() => {
-				chatMessagesCollection.forEach((message) => {
-					if (
-						message.sender_uid === friendUid &&
-						message.recipient_uid === recipientUid &&
-						message.read_at === null
-					) {
-						chatMessagesCollection.utils.writeUpdate({
-							id: message.id,
-							read_at,
-						})
-					}
-				})
-			})
-		},
-		/*
-		onSettled: async () => {
-			// Sync the data back after success or failure
-			await chatMessagesCollection.utils.refetch()
-		},
-		*/
+/**
+ * Mark every unread message from one friend read. Fire-and-forget: the rows
+ * update in this tick, and `chatMessagesCollection.onUpdate` owns the error
+ * toast and the rollback.
+ */
+export const markChatRead = ({
+	friendUid,
+	recipientUid,
+	read_at,
+}: {
+	friendUid: uuid
+	recipientUid: uuid
+	read_at: string
+}) => {
+	const unreadIds = chatMessagesCollection.toArray
+		.filter(
+			(message) =>
+				message.sender_uid === friendUid &&
+				message.recipient_uid === recipientUid &&
+				message.read_at === null
+		)
+		.map((message) => message.id)
+	if (unreadIds.length === 0) return
+	chatMessagesCollection.update(unreadIds, (drafts) => {
+		drafts.forEach((draft) => {
+			draft.read_at = read_at
+		})
 	})
 }
 
@@ -382,11 +368,19 @@ export const useSocialRealtime = () => {
 						toastSuccess('Friend request accepted')
 					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
 						toastSuccess('You are now connected')
+					// We break the mutations.md convention here because friend
+					// summaries are a view, so we do a full refetch when friend
+					// requests come in. This will change when the friendSummaries
+					// fold/view moves into the client.
 					void friendSummariesCollection.utils.refetch()
 				}
 			)
 			.subscribe()
 
+		// UPDATE is what lands a friend's read receipt live. DELETE is
+		// deliberately not subscribed: its frame carries only the replica
+		// identity, so Supabase cannot check RLS on it and withholds it.
+		// Receiving deletes would need `replica identity full` on the table.
 		const chatChannel = supabase
 			.channel('user-chats')
 			.on(
@@ -397,11 +391,24 @@ export const useSocialRealtime = () => {
 					table: 'chat_message',
 				},
 				(payload) => {
-					const newMessage = payload.new as Tables<'chat_message'>
-					console.log(`new chat`, newMessage)
-					chatMessagesCollection.utils.writeInsert(
-						ChatMessageSchema.parse(newMessage)
+					const row = ChatMessageSchema.parse(
+						payload.new as Tables<'chat_message'>
 					)
+					writeRealtimeRow(chatMessagesCollection, row.id, row)
+				}
+			)
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'chat_message',
+				},
+				(payload) => {
+					const row = ChatMessageSchema.parse(
+						payload.new as Tables<'chat_message'>
+					)
+					writeRealtimeRow(chatMessagesCollection, row.id, row)
 				}
 			)
 			.subscribe()

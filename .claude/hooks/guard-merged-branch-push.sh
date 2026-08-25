@@ -41,6 +41,16 @@ git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null 2>&1 || exit 0
 
 git fetch -q origin "$DEFAULT_BRANCH" 2>/dev/null || true
 
+# A tip on the default's first-parent line means a freshly cut branch, which the
+# ancestor test below would call merged. A merged branch never sits there: squash
+# and rebase rewrite its commits, and a merge commit takes the tip as a 2nd parent.
+TIP=$(git rev-parse "origin/$BRANCH" 2>/dev/null)
+if [ -n "$TIP" ] &&
+	git rev-list --first-parent "origin/$DEFAULT_BRANCH" 2>/dev/null |
+	grep -qx "$TIP"; then
+	exit 0
+fi
+
 if git merge-base --is-ancestor "origin/$BRANCH" "origin/$DEFAULT_BRANCH" 2>/dev/null; then
 	echo "Blocked: origin/$BRANCH is already merged into $DEFAULT_BRANCH." >&2
 	echo "" >&2

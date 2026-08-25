@@ -96,7 +96,7 @@ function ReviewPageSetup() {
 	return <ReviewPageContent />
 }
 
-// Inner component contains all the hooks - only rendered when authenticated
+// Only rendered when authenticated, so its hooks can assume a session
 function ReviewPageContent() {
 	const { lang } = Route.useParams()
 	const navigate = useNavigate()
@@ -197,9 +197,10 @@ function ReviewPageContent() {
 	// Get full card data for card-level manifest building
 	const { data: deckCards } = useDeckCards(lang)
 
-	// Reviews scoped to this language — used by bury-siblings Rule 1, which
-	// looks at the reverse card's two most recent phase-1 reviews to decide
-	// whether to defer recall after consecutive failures.
+	// Reviews scoped to this language — bury-siblings reads the reverse card's
+	// two most recent phase-1 reviews to decide whether to defer recall after
+	// consecutive failures, and the candidate set alone doesn't carry them.
+	// See src/features/review/docs.md.
 	const { data: reviewsForLang } = useLiveQuery(
 		(q) =>
 			q
@@ -214,8 +215,7 @@ function ReviewPageContent() {
 
 	// One unified candidate list, then bury siblings exactly once. Both the
 	// display counts AND the manifest persisted on Start derive from `kept`,
-	// so users never see counts that don't match the session they're about
-	// to start.
+	// so the counts users see match the session they're about to start.
 	type ReviewCandidate = BurySiblingCandidate & { bucket: 'due' | 'fresh' }
 	const candidates: Array<ReviewCandidate> = []
 
@@ -233,8 +233,8 @@ function ReviewPageContent() {
 		})
 	}
 
-	// Brand-new cards (not yet in deckCards) — always treated as fresh. We
-	// still record both directions here so bury-siblings can pick which one
+	// Brand-new cards (not yet in deckCards) — treated as fresh. We still
+	// record both directions here so bury-siblings can pick which one
 	// actually goes on today's manifest; the buried sibling's user_card row
 	// is still inserted so it can come up in a future session.
 	for (const pid of cardsToCreate) {
@@ -621,7 +621,6 @@ function ReviewPageContent() {
 										algoRecsSelected={algoRecsSelected}
 										setAlgoRecsSelected={setAlgoRecsSelected}
 										algoRecsFiltered={algoRecsFiltered}
-										// countOfCardsDesired={countNeeded2}
 									/>
 								</Drawer>
 								<Button

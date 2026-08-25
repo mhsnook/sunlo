@@ -12,8 +12,8 @@ import { DeckMetaSchema } from '@/features/deck/schemas'
  * decks. Both are small and slow-changing, so a localStorage mirror is a cheap
  * way to paint them on the first frame after a reload.
  *
- * This is a sidecar cache, never a source of truth. Supabase stays
- * authoritative and overwrites it on revalidation.
+ * This is a sidecar cache: Supabase stays authoritative and overwrites it
+ * on revalidation.
  *
  * The two functions here are lifecycle hooks. The wider app lifecycle is a
  * confidence ladder — each phase is more certain about who the user is and

@@ -10,7 +10,6 @@ export function optimisticNewDeck(lang: string, uid: string): DeckMetaType {
 	return DeckMetaSchema.parse({
 		uid,
 		lang,
-		language: languages[lang] ?? lang,
 		learning_goal: 'moving',
 		archived: false,
 		daily_review_goal: 15,

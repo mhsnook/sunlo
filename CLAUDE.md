@@ -39,11 +39,19 @@ docs:
 - task: "Styling beyond copying an adjacent pattern — semantic palettes, dark-mode flipping, button variants, Base UI data attributes"
   load: "docs/styling.md"
 
+- task: "Building today's review manifest, bury-siblings, review phases, or anything that consumes FSRS scheduling from outside src/features/review"
+  load: "src/features/review/docs.md"
+
+- task: "Working on the prototype phrasebook search at /chats — not the friend chat"
+  load: "src/features/chat/docs.md"
+
 - task: "Changing database schema, migrations, seeds, or RLS"
   load: "docs/database.md"
 
 - task: "Deciding whether a PR targets main or next-<version>; cutting a release; version bumps; production builds"
   load: "docs/deployment.md"
+
+**Where a new doc goes:** `docs/*.md` holds cross-cutting concerns — the ones that apply wherever you are working. A doc about one domain lives beside its code as `src/features/<domain>/docs.md`, and a comment in that folder can point at it as `./docs.md`. Register either kind in the list above.
 
 ## Commands
 
@@ -75,7 +83,7 @@ pnpm run seeds:schema   # regenerate base.sql — review the diff carefully
 - **New tests are scenetest markdown scenes** (`scenetest/scenes/*.spec.md`), never new `@playwright/test` specs — `e2e/` is deprecated (`transform` label). Navigate by clicking, not by reloading (`openTo` is for the entry point only).
 - **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically.
 - **Base UI, not Radix** for primitives: selected tabs get `data-active` (style with `data-[active]:`), not `data-state="active"`. Verify attribute names in `node_modules/@base-ui/react/esm/` types.
-- **Avoid `dark:` prefixes in app code** — the semantic palettes (`primary`, `accent`, `neutral`, `success`, `warning`, `danger`, `info`) flip their shade scale in dark mode, so `bg-primary-100` is a subtle surface in both. Stock palettes (`bg-purple-600`) do NOT flip; the marketing pages in `src/routes/-homepage/` use them with hand-written `dark:` variants. Full system: `docs/styling.md`.
+- **`dark:` prefixes** — the semantic palettes flip their shade scale in dark mode, so `dark:` is only needed on a stock colour class like `bg-amber-600`. Full system: `docs/styling.md`.
 
 ## Architecture
 
@@ -87,7 +95,7 @@ Sunlo is a language-learning app: FSRS spaced-repetition flashcards, social feat
 
 **Data flow**: Supabase → collections (`src/features/<domain>/collections.ts`, Zod-validated) → live queries (`useLiveQuery`) → components. Collections fetch base tables only; joins and filtering happen in live queries. Public collections use `startSync: true`; user collections use `startSync: false`, rely on RLS to scope the fetch, and are cleared on logout. Routes preload with `collection.preload()` — `await Promise.all([...])` when the route needs data at first render, `void` for fire-and-forget background loads.
 
-**Mutations**: persistence lives on the collection (`onInsert/onUpdate/onDelete`); components call `collection.insert/update/delete` and wire toasts to `tx.isPersisted.promise`. Throwing from the handler rolls back the optimistic state; return `{ refetch: false }` when the optimistic value already matches the server. The old `useMutation` + manual `writeInsert`-in-`onSuccess` pattern is deprecated (`transform` label). Worked examples and exceptions: `docs/mutations.md`.
+**Mutations**: persistence lives on the collection (`onInsert/onUpdate/onDelete`); components call `collection.insert/update/delete` and wire toasts to `tx.isPersisted.promise`. Throwing from the handler rolls back the optimistic state. `{ refetch: false }` is a promise that the handler has already written the server's returned rows into the synced layer — `.select()` the write and `writeUpdate`/`writeInsert`/`writeDelete` them, or omit the flag; the optimistic value is dropped when the transaction ends, and the synced layer is what the user is left with. The old `useMutation` + manual `writeInsert`-in-`onSuccess` pattern is deprecated (`transform` label). Worked examples and exceptions: `docs/mutations.md`.
 
 ## Feature Modules (`src/features/`)
 
@@ -98,7 +106,7 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 | `profile`       | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                                    | useAuth, useProfile                                                |
 | `languages`     | Language, LangTag, LangSchema                             | languages, langTags                                          | useLanguageMeta, useLanguageTags                                   |
 | `phrases`       | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                                  | useLanguagePhrases, usePhrase                                      |
-| `deck`          | DeckMeta, CardMeta                                        | decks, cards                                                 | useDeckMeta, useDeckCards, useDeckPids                             |
+| `deck`          | DeckMeta, CardMeta                                        | decks, cards, cardsWithReviews (live)                        | useDeckMeta, useDeckCards, useDeckPids, useCardScheduling          |
 | `review`        | CardReview, DailyReviewState                              | cardReviews, reviewDays                                      | useReviewsToday, useReviewMutation                                 |
 | `requests`      | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes        | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
 | `social`        | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)          | useRelationFriends, useAllChats, useSocialRealtime                 |
