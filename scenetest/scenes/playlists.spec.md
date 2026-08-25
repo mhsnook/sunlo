@@ -1,6 +1,13 @@
 # learner edits their playlist
 
-cleanup: supabase.from('phrase_playlist').update({ title: '[team.full_playlist_for_edits_title]', description: '[team.full_playlist_for_edits_description]' }).eq('id', '[team.full_playlist_for_edits]')
+// Ported from the retired e2e spec `playlists.spec.ts` ("update playlist: edit
+// title, description, and href"). A YouTube source URL renders as an embed, so
+// `playlist-embed` is the user-visible proof that the URL was saved.
+// The manage-phrases flows that lived in the same e2e file — add, remove,
+// reorder, and the per-phrase timestamp link — are covered by
+// playlist-mutations.spec.ts, which asserts the persisted rows.
+
+cleanup: supabase.from('phrase_playlist').update({ title: '[team.full_playlist_for_edits_title]', description: '[team.full_playlist_for_edits_description]', href: null }).eq('id', '[team.full_playlist_for_edits]')
 
 learner:
 
@@ -8,72 +15,17 @@ learner:
 - openTo /learn/[team.lang_full]/playlists/[team.full_playlist_for_edits]
 - up
 - see playlist-detail-page
+- notSee playlist-embed
 - click update-playlist-button
 - up
 - see edit-playlist-dialog
 - typeInto edit-playlist-dialog title-input 'Test: Updated Playlist Title'
+- typeInto edit-playlist-dialog description-input 'Test: updated playlist description'
+- typeInto edit-playlist-dialog href-input 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 - click edit-playlist-dialog submit-button
 - up
 - seeToast toast-success
+- notSee edit-playlist-dialog
 - seeText Test: Updated Playlist Title
-
-// # learner adds phrase to playlist
-//
-// learner:
-//
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang_full] deck-link
-// - up
-// - see deck-feed-page
-// - click feed-item-playlist
-// - up
-// - see playlist-detail-page
-// - up
-// - click manage-phrases-button
-// - see manage-phrases-dialog
-// - click add-phrases-button
-// - typeInto phrase-search-input 'test phrase'
-// - click phrase-checkbox
-// - click add-flashcard-button
-// - up
-// - seeToast toast-success
-
-// # learner removes phrase from playlist
-//
-// learner:
-//
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang_full] deck-link
-// - up
-// - see deck-feed-page
-// - click feed-item-playlist
-// - up
-// - see playlist-detail-page
-// - up
-// - click manage-phrases-button
-// - see manage-phrases-dialog
-// - click remove-phrase-button
-// - up
-// - seeToast toast-success
-
-// # learner reorders phrases in playlist
-//
-// learner:
-//
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang_full] deck-link
-// - up
-// - see deck-feed-page
-// - click feed-item-playlist
-// - up
-// - see playlist-detail-page
-// - up
-// - click manage-phrases-button
-// - see manage-phrases-dialog
-// - click move-phrase-down-button
+- seeText Test: updated playlist description
+- see playlist-embed

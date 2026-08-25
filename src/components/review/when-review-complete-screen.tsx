@@ -47,7 +47,12 @@ export function WhenComplete() {
 			<CardContent className="flex grow flex-col justify-center gap-6">
 				{showWhich === 'a' ? (
 					<>
-						<CardTitle className="text-center">Step 2 of 3</CardTitle>
+						<CardTitle
+							className="text-center"
+							data-testid="review-step-2-heading"
+						>
+							Step 2 of 3
+						</CardTitle>
 						<p className="text-center text-lg">
 							You've completed your first pass, but there{' '}
 							{stats.unreviewed === 1
@@ -58,6 +63,7 @@ export function WhenComplete() {
 						</p>
 						<Button
 							size="lg"
+							data-testid="review-skipped-cards-button"
 							onClick={() => {
 								actions.gotoReviewUnreviewed(stats.firstUnreviewedIndex)
 								updateStage(2)
@@ -68,6 +74,7 @@ export function WhenComplete() {
 						<Button
 							size="lg"
 							variant="neutral"
+							data-testid="skip-review-step-2-button"
 							onClick={() => {
 								actions.skipReviewUnreviewed()
 								updateStage(3)
@@ -78,7 +85,12 @@ export function WhenComplete() {
 					</>
 				) : showWhich === 'b' ? (
 					<>
-						<CardTitle className="text-center">Step 3 of 3</CardTitle>
+						<CardTitle
+							className="text-center"
+							data-testid="review-step-3-heading"
+						>
+							Step 3 of 3
+						</CardTitle>
 						<p className="text-center text-lg">
 							There
 							{stats.again === 1 ? ' is 1 card ' : ` are ${stats.again} cards `}
@@ -87,6 +99,7 @@ export function WhenComplete() {
 						</p>
 						<Button
 							size="lg"
+							data-testid="review-again-cards-button"
 							onClick={() => {
 								actions.gotoReviewAgains(stats.firstAgainIndex)
 								updateStage(4)
@@ -118,6 +131,7 @@ export function WhenComplete() {
 						<Button
 							variant="neutral"
 							size="lg"
+							data-testid="skip-review-step-3-button"
 							onClick={() => {
 								actions.skipReviewAgains()
 								updateStage(5)
@@ -129,7 +143,12 @@ export function WhenComplete() {
 				) : (
 					<div className="flex h-full flex-col items-center justify-center gap-6 pb-16">
 						<SuccessCheckmark />
-						<CardTitle className="text-center">Review Complete!</CardTitle>
+						<CardTitle
+							className="text-center"
+							data-testid="review-complete-heading"
+						>
+							Review Complete!
+						</CardTitle>
 						<p className="text-muted-foreground text-center">
 							You reviewed {stats.reviewed} card
 							{stats.reviewed === 1 ? '' : 's'} today.

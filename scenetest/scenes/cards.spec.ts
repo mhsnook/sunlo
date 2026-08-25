@@ -1,8 +1,8 @@
-// Migrated from e2e/mutations/cards.spec.ts.
+// Migrated from the retired Playwright spec `e2e/mutations/cards.spec.ts`.
 //
-// The old Playwright spec scraped DB / collection state directly
-// (window.__cardsCollection, getCardByPhraseId, CardMetaSchema matchObject).
-// Those invariants now live as serverCheck() inline checks on
+// That spec scraped DB and collection state directly, through collections the
+// app exposed on `window` for exactly that purpose. Those invariants now live
+// as serverCheck() inline checks on
 // cardsCollection.onInsert / onUpdate (src/features/deck/collections.ts) and
 // in card-status-dropdown.tsx — so this spec only drives the user journey
 // and asserts user-visible outcomes. The inline checks fire as the card is

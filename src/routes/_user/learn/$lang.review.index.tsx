@@ -47,6 +47,7 @@ import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-t
 import { useUserId } from '@/lib/use-auth'
 import { insertMilestone, useReviewsTodayStats } from '@/features/review/hooks'
 import { ContinueReview } from '@/components/review/continue-review'
+import { should } from '@scenetest/checks/react'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { CardMetaSchema } from '@/features/deck/schemas'
@@ -384,6 +385,22 @@ function ReviewPageContent() {
 				console.warn(
 					`Error creating daily session: expected manifest of length ${manifestEntries.length} but got back a manifest ${Array.isArray(reviewDay?.manifest) ? 'with ' + reviewDay.manifest.length + 'entries' : 'of type "' + typeof reviewDay?.manifest}".`
 				)
+
+			// The card upsert uses ignoreDuplicates, so it returns fewer rows than
+			// it sent — none at all when every card already exists in the database
+			// (a local collection that has drifted out of date). The session must
+			// be created regardless: an earlier bug tied session creation to the
+			// upsert returning a row per card, so a stale collection left the
+			// learner with no review at all.
+			should(
+				'review session is created even when the card upsert returns no rows',
+				Array.isArray(reviewDay?.manifest) && reviewDay.manifest.length > 0,
+				{
+					cardsSubmitted: cardInserts.length,
+					cardsCreated: newCards.length,
+					manifestEntries: manifestEntries.length,
+				}
+			)
 
 			return {
 				countCards: manifestEntries.length,

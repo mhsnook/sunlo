@@ -56,33 +56,36 @@ learner:
 - seeToast toast-success
 - see deck-feed-page
 
-// # non-owner cannot edit or delete request
-//
-// learner:
-//
-// - openTo /login
-// - typeInto email-input [self.email]
-// - typeInto password-input [self.password]
-// - click submit-button
-// - openTo /learn/[team.lang_partial]/contributions
-// - click contributions-tab--requests
-// - click other-user-request-item
-// - see request-detail-page
-// - notSee update-request-button
-// - notSee delete-request-button
+# a non-owner sees no edit or delete controls on a request
 
-// # learner copies comment permalink
-//
-// learner:
-//
-// - login
-// - openTo /learn/[team.lang_partial]/contributions
-// - click contributions-tab--requests
-// - click request-item
-// - up
-// - see comment-item
-// - click comment-context-menu-trigger
-// - up
-// - click copy-link-menu-item
-// - up
-// - seeToast toast-success
+// Ownership gating on the request itself, mirroring the comment-level check in
+// comment-crud.spec.md. [team.partial_request_for_upvote] belongs to learner2,
+// so learner may read it but must not be offered the owner controls. Pairs with
+// the RLS policies on phrase_request for defense in depth.
+
+learner:
+
+- login
+- openTo /learn/[team.lang_partial]/requests/[team.partial_request_for_upvote]
+- up
+- see request-detail-page
+- notSee update-request-button
+- notSee delete-request-button
+
+# learner copies a link to a comment
+
+// The permalink points back at the request with the comment id in `focus`, so
+// the link opens the thread scrolled to that comment. Writing to the clipboard
+// needs a browser permission, granted for every actor in scenetest/config.ts.
+
+learner:
+
+- login
+- openTo /learn/[team.lang_partial]/requests/[team.partial_crud_request]
+- up
+- see request-detail-page
+- click comment-item [team.partial_learner_seed_comment] comment-context-menu-trigger
+- up
+- click copy-link-menu-item
+- up
+- seeToast toast-success

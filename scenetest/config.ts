@@ -39,6 +39,23 @@ export default defineConfig({
 	baseUrl: 'http://localhost:5173',
 	scenes: './scenetest/scenes',
 	noKeyboardActor: true,
+	// A full review session walks the whole daily manifest (10-20 cards, each
+	// with a reveal, a score, and a slide animation), and the again-cards round
+	// walks part of it a second time. The 30s default cuts those scenes off
+	// mid-session.
+	timeout: 120_000,
+	// Scenetest has no direct passthrough to Playwright's browser-context
+	// options, but a device profile carries them, so a one-entry device pool is
+	// how every actor gets clipboard access. Copy-link buttons toast an error
+	// without it. No viewport or user-agent is set here, so contexts are
+	// otherwise identical to the un-emulated default.
+	devices: [
+		{
+			name: 'Default',
+			category: 'desktop' as const,
+			contextOptions: { permissions: ['clipboard-read', 'clipboard-write'] },
+		},
+	],
 	// Fail fast when an error toast appears, instead of timing out on a
 	// misleading downstream assertion. console.error capture is unreliable
 	// when React Query catches mutation throws via microtask after the test

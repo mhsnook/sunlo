@@ -285,6 +285,7 @@ natural wrapper element to label.
 | Selector                     | Attribute   | Component/Location | Description                                                                                    |
 | ---------------------------- | ----------- | ------------------ | ---------------------------------------------------------------------------------------------- |
 | `playlist-detail-page`       | data-testid | Playlist route     | Playlist detail container                                                                      |
+| `playlist-embed`             | data-testid | Playlist page      | Source-URL embed or outbound link; absent when the playlist has no href                        |
 | `update-playlist-button`     | data-testid | Playlist page      | Edit button (owner only)                                                                       |
 | `edit-playlist-dialog`       | data-testid | Dialog             | Edit playlist dialog (scopes `edit-playlist-form`)                                             |
 | `edit-playlist-form`         | data-testid | Edit dialog        | Form element (scope `title-input`, `description-input`, `href-input`, `submit-button` by this) |
@@ -353,15 +354,25 @@ bottom sheet on mobile.
 
 ## Review
 
-| Selector               | Attribute   | Component/Location | Description             |
-| ---------------------- | ----------- | ------------------ | ----------------------- |
-| `review-setup-page`    | data-testid | Review route       | Review setup container  |
-| `start-review-button`  | data-testid | Review setup       | Button to start session |
-| `review-session-page`  | data-testid | Review session     | Active review container |
-| `flashcard`            | data-testid | Review session     | Flashcard component     |
-| `reveal-answer-button` | data-testid | Review session     | Button to show answer   |
-| `rating-good-button`   | data-testid | Review session     | "Good" rating button    |
-| `review-complete-page` | data-testid | Review session     | Completion screen       |
+| Selector                      | Attribute   | Component/Location | Description                                            |
+| ----------------------------- | ----------- | ------------------ | ------------------------------------------------------ |
+| `review-setup-page`           | data-testid | Review route       | Review setup container                                 |
+| `start-review-button`         | data-testid | Review setup       | Button to start session                                |
+| `review-session-page`         | data-testid | Review session     | Active review container                                |
+| `flashcard`                   | data-testid | Review session     | Flashcard component                                    |
+| `reveal-answer-button`        | data-testid | Review session     | Button to show answer                                  |
+| `rating-good-button`          | data-testid | Review session     | "Good" rating button                                   |
+| `review-previous-card-button` | data-testid | Review session     | Step back one card (stage 1 only)                      |
+| `review-next-card-button`     | data-testid | Review session     | Step forward one card (stage 1 only)                   |
+| `review-card-counter`         | data-testid | Review session     | "Card 3 of 12" position readout                        |
+| `review-complete-page`        | data-testid | Review session     | Completion screen                                      |
+| `review-step-2-heading`       | data-testid | Completion screen  | "Step 2 of 3" — cards skipped on the first pass remain |
+| `review-skipped-cards-button` | data-testid | Completion screen  | Go back and review the skipped cards                   |
+| `skip-review-step-2-button`   | data-testid | Completion screen  | Leave the skipped cards for another day                |
+| `review-step-3-heading`       | data-testid | Completion screen  | "Step 3 of 3" — again-cards remain                     |
+| `review-again-cards-button`   | data-testid | Completion screen  | Open the again-cards round                             |
+| `skip-review-step-3-button`   | data-testid | Completion screen  | Leave the again-cards for another day                  |
+| `review-complete-heading`     | data-testid | Completion screen  | "Review Complete!" — the session is finished           |
 
 ## Logged Out / Public
 
