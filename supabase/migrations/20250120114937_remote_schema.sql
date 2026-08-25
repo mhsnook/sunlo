@@ -73,12 +73,7 @@ alter type "public"."learning_goal" owner to "postgres";
 
 comment on type "public"."learning_goal" is 'why are you learning this language?';
 
-create or replace function "public"."add_phrase_translation_card" (
-	"text" "text",
-	"lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text"
-) returns "uuid" language "plpgsql" as $$
+create or replace function "public"."add_phrase_translation_card" ("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") returns "uuid" language "plpgsql" as $$
 DECLARE
     new_phrase_id uuid;
     user_deck_id uuid;
@@ -105,12 +100,7 @@ BEGIN
 END;
 $$;
 
-alter function "public"."add_phrase_translation_card" (
-	"text" "text",
-	"lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text"
-) owner to "postgres";
+alter function "public"."add_phrase_translation_card" ("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") owner to "postgres";
 
 create or replace function "public"."error_example" () returns "void" language "plpgsql" as $$
 begin
@@ -256,11 +246,7 @@ $$;
 
 alter function "public"."fsrs_s_0" ("score" numeric) owner to "postgres";
 
-create or replace function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) returns numeric language "plpgsql" as $$
+create or replace function "public"."fsrs_s_fail" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) returns numeric language "plpgsql" as $$
 DECLARE
 	W_11 numeric := 1.9395;
 	W_12 numeric := 0.11;
@@ -280,18 +266,9 @@ BEGIN
 END;
 $$;
 
-alter function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) owner to "postgres";
+alter function "public"."fsrs_s_fail" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) owner to "postgres";
 
-create or replace function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) returns numeric language "plpgsql" as $$
+create or replace function "public"."fsrs_s_success" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) returns numeric language "plpgsql" as $$
 DECLARE
     W_8 numeric := 1.54575;
 	W_9 numeric := 0.1192;
@@ -325,19 +302,9 @@ BEGIN
 END;
 $$;
 
-alter function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) owner to "postgres";
+alter function "public"."fsrs_s_success" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) owner to "postgres";
 
-create or replace function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) returns numeric language "plpgsql" as $$
+create or replace function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) returns numeric language "plpgsql" as $$
 BEGIN
     IF score = 1 THEN
 		RETURN fsrs_s_fail(difficulty, stability, review_time_retrievability);
@@ -346,19 +313,9 @@ BEGIN
 END;
 $$;
 
-alter function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) owner to "postgres";
+alter function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) owner to "postgres";
 
-create or replace function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" numeric
-) returns numeric language "plpgsql" as $$
+create or replace function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" numeric) returns numeric language "plpgsql" as $$
 BEGIN
     IF score = 1 THEN
 		RETURN fsrs_s_fail(difficulty, stability, review_time_retrievability);
@@ -367,18 +324,9 @@ BEGIN
 END;
 $$;
 
-alter function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" numeric
-) owner to "postgres";
+alter function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" numeric) owner to "postgres";
 
-create or replace function "public"."record_review_and_schedule" (
-	"user_card_id" "uuid",
-	"review_time_retrievability" numeric,
-	"review_time_score" integer
-) returns timestamp without time zone language "plpgsql" as $$
+create or replace function "public"."record_review_and_schedule" ("user_card_id" "uuid", "review_time_retrievability" numeric, "review_time_score" integer) returns timestamp without time zone language "plpgsql" as $$
 DECLARE
 		this_is_the_first_time BOOLEAN;
 		desired_retention NUMERIC := 0.9;
@@ -480,11 +428,7 @@ BEGIN
 END;
 $$;
 
-alter function "public"."record_review_and_schedule" (
-	"user_card_id" "uuid",
-	"review_time_retrievability" numeric,
-	"review_time_score" integer
-) owner to "postgres";
+alter function "public"."record_review_and_schedule" ("user_card_id" "uuid", "review_time_retrievability" numeric, "review_time_score" integer) owner to "postgres";
 
 set
 	default_tablespace = '';
@@ -515,12 +459,8 @@ select distinct
 	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
 	"a"."uid_more",
 	case
-		when (
-			"a"."action_type" = 'accept'::"public"."friend_request_response"
-		) then 'friends'::"text"
-		when (
-			"a"."action_type" = 'invite'::"public"."friend_request_response"
-		) then 'pending'::"text"
+		when ("a"."action_type" = 'accept'::"public"."friend_request_response") then 'friends'::"text"
+		when ("a"."action_type" = 'invite'::"public"."friend_request_response") then 'pending'::"text"
 		when (
 			"a"."action_type" = any (
 				array[
@@ -545,11 +485,7 @@ order by
 
 alter table "public"."friend_summary" owner to "postgres";
 
-create table if not exists "public"."language" (
-	"name" "text" not null,
-	"lang" character varying not null,
-	"alias_of" character varying
-);
+create table if not exists "public"."language" ("name" "text" not null, "lang" character varying not null, "alias_of" character varying);
 
 alter table "public"."language" owner to "postgres";
 
@@ -1362,26 +1298,11 @@ grant usage on schema "public" to "authenticated";
 
 grant usage on schema "public" to "service_role";
 
-grant all on function "public"."add_phrase_translation_card" (
-	"text" "text",
-	"lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text"
-) to "anon";
+grant all on function "public"."add_phrase_translation_card" ("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") to "anon";
 
-grant all on function "public"."add_phrase_translation_card" (
-	"text" "text",
-	"lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text"
-) to "authenticated";
+grant all on function "public"."add_phrase_translation_card" ("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") to "authenticated";
 
-grant all on function "public"."add_phrase_translation_card" (
-	"text" "text",
-	"lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text"
-) to "service_role";
+grant all on function "public"."add_phrase_translation_card" ("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") to "service_role";
 
 grant all on function "public"."error_example" () to "anon";
 
@@ -1461,104 +1382,35 @@ grant all on function "public"."fsrs_s_0" ("score" numeric) to "authenticated";
 
 grant all on function "public"."fsrs_s_0" ("score" numeric) to "service_role";
 
-grant all on function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) to "anon";
+grant all on function "public"."fsrs_s_fail" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) to "anon";
 
-grant all on function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) to "authenticated";
+grant all on function "public"."fsrs_s_fail" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) to "authenticated";
 
-grant all on function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) to "service_role";
+grant all on function "public"."fsrs_s_fail" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) to "service_role";
 
-grant all on function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "anon";
+grant all on function "public"."fsrs_s_success" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) to "anon";
 
-grant all on function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "authenticated";
+grant all on function "public"."fsrs_s_success" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) to "authenticated";
 
-grant all on function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "service_role";
+grant all on function "public"."fsrs_s_success" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) to "service_role";
 
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "anon";
+grant all on function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) to "anon";
 
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "authenticated";
+grant all on function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) to "authenticated";
 
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "service_role";
+grant all on function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) to "service_role";
 
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" numeric
-) to "anon";
+grant all on function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" numeric) to "anon";
 
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" numeric
-) to "authenticated";
+grant all on function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" numeric) to "authenticated";
 
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" numeric
-) to "service_role";
+grant all on function "public"."fsrs_stability" ("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" numeric) to "service_role";
 
-grant all on function "public"."record_review_and_schedule" (
-	"user_card_id" "uuid",
-	"review_time_retrievability" numeric,
-	"review_time_score" integer
-) to "anon";
+grant all on function "public"."record_review_and_schedule" ("user_card_id" "uuid", "review_time_retrievability" numeric, "review_time_score" integer) to "anon";
 
-grant all on function "public"."record_review_and_schedule" (
-	"user_card_id" "uuid",
-	"review_time_retrievability" numeric,
-	"review_time_score" integer
-) to "authenticated";
+grant all on function "public"."record_review_and_schedule" ("user_card_id" "uuid", "review_time_retrievability" numeric, "review_time_score" integer) to "authenticated";
 
-grant all on function "public"."record_review_and_schedule" (
-	"user_card_id" "uuid",
-	"review_time_retrievability" numeric,
-	"review_time_score" integer
-) to "service_role";
+grant all on function "public"."record_review_and_schedule" ("user_card_id" "uuid", "review_time_retrievability" numeric, "review_time_score" integer) to "service_role";
 
 grant all on table "public"."friend_request_action" to "anon";
 

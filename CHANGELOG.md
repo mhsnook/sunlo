@@ -29,6 +29,7 @@ _25 August, 2026_
 
 - **Formatter drift is tracked in CI (#752)**, and the bundle-size job now measures eager CSS alongside JS.
 - **A pre-push hook blocks reusing a merged branch name**, which would re-attach new work to a closed PR.
+- **Every SQL file is prettier-formatted.** `pnpm format` has run prettier over `supabase/**/*.sql` for a while, but 54 migrations and `dev-native/bootstrap.sql` predated it and were never passed through. They are formatted now, so `pnpm format:check` is clean on a fresh checkout. Whitespace and keyword case only: the token stream of all 141 SQL files is unchanged, and a native-Postgres rebuild produces the same schema and the same seed row counts.
 - **"Clear Technical" output style and the ASD-STE100 prose skill (#753)** set one plain-English standard for everything a human reads, from commit messages to UI copy.
 - Review scheduling and the chat prototype get feature docs (#765).
 

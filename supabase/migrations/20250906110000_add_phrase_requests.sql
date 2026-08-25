@@ -47,12 +47,7 @@ grant
 select
 	on table "public"."phrase_request" to "authenticated";
 
-create or replace function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"p_phrase_text" "text",
-	"p_translation_text" "text",
-	"p_translation_lang" character varying
-) returns json language "plpgsql" as $$
+create or replace function "public"."fulfill_phrase_request" ("request_id" "uuid", "p_phrase_text" "text", "p_translation_text" "text", "p_translation_lang" character varying) returns json language "plpgsql" as $$
 DECLARE
     v_requester_uid uuid;
     v_phrase_lang character varying;

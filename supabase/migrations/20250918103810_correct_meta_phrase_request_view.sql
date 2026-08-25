@@ -7,14 +7,7 @@ select
 	pr.prompt,
 	pr.status,
 	pr.fulfilled_at,
-	jsonb_build_object(
-		'uid',
-		pp.uid,
-		'username',
-		pp.username,
-		'avatar_path',
-		pp.avatar_path
-	) as requester,
+	jsonb_build_object('uid', pp.uid, 'username', pp.username, 'avatar_path', pp.avatar_path) as requester,
 	jsonb_agg(mpi.*) filter (
 		where
 			(mpi.id is not null)

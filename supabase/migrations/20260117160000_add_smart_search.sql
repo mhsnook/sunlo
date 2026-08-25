@@ -54,12 +54,7 @@ create or replace function search_phrases_smart (
 	result_limit int default 20,
 	cursor_created_at timestamptz default null,
 	cursor_id uuid default null
-) returns table (
-	id uuid,
-	similarity_score real,
-	popularity_score int,
-	created_at timestamptz
-) language plpgsql stable as $$
+) returns table (id uuid, similarity_score real, popularity_score int, created_at timestamptz) language plpgsql stable as $$
 DECLARE
   normalized_query TEXT;
 BEGIN
@@ -156,24 +151,15 @@ $$;
 -- Create triggers on relevant tables
 -- These fire AFTER changes to keep the search index up to date
 create trigger refresh_search_on_phrase_change
-after insert
-or
-update
-or delete on phrase for each statement
+after insert or update or delete on phrase for each statement
 execute function trigger_refresh_phrase_search ();
 
 create trigger refresh_search_on_translation_change
-after insert
-or
-update
-or delete on phrase_translation for each statement
+after insert or update or delete on phrase_translation for each statement
 execute function trigger_refresh_phrase_search ();
 
 create trigger refresh_search_on_tag_change
-after insert
-or
-update
-or delete on phrase_tag for each statement
+after insert or update or delete on phrase_tag for each statement
 execute function trigger_refresh_phrase_search ();
 
 -- Initial population of the materialized view

@@ -13,12 +13,7 @@ create or replace function "public"."search_phrases_smart" (
 	result_limit int default 20,
 	cursor_created_at timestamptz default null,
 	cursor_id uuid default null
-) returns table (
-	id uuid,
-	similarity_score real,
-	popularity_score int,
-	created_at timestamptz
-) language plpgsql stable as $$
+) returns table (id uuid, similarity_score real, popularity_score int, created_at timestamptz) language plpgsql stable as $$
 DECLARE
   normalized_query TEXT;
 BEGIN

@@ -51,6 +51,6 @@ $$ language plpgsql;
 
 drop trigger if exists trigger_update_phrase_translation_updated_at on "public"."phrase_translation";
 
-create trigger trigger_update_phrase_translation_updated_at before
-update on "public"."phrase_translation" for each row
+create trigger trigger_update_phrase_translation_updated_at
+before update on "public"."phrase_translation" for each row
 execute function update_phrase_translation_updated_at ();

@@ -41,13 +41,7 @@ add constraint user_card_review_difficulty_check check (
 );
 
 -- Drop the old PLv8 insert function (clients now use direct inserts)
-drop function if exists "public"."insert_user_card_review" (
-	"phrase_id" uuid,
-	"lang" character varying,
-	"score" integer,
-	"day_session" text,
-	"desired_retention" numeric
-);
+drop function if exists "public"."insert_user_card_review" ("phrase_id" uuid, "lang" character varying, "score" integer, "day_session" text, "desired_retention" numeric);
 
 -- Drop the old PLv8 update function
 drop function if exists "public"."update_user_card_review" ("review_id" uuid, "score" integer);
@@ -226,14 +220,7 @@ select distinct
 		"p"."text",
 		'source',
 		case
-			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
-				'type',
-				'request',
-				'id',
-				"cpl"."request_id",
-				'comment_id',
-				"cpl"."comment_id"
-			)
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" ('type', 'request', 'id', "cpl"."request_id", 'comment_id', "cpl"."comment_id")
 			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
 				'type',
 				'playlist',

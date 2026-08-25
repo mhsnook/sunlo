@@ -73,11 +73,7 @@ grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
 
-create or replace function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) returns "void" language "plpgsql" as $body$
+create or replace function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) returns "void" language "plpgsql" as $body$
 DECLARE
     tag_name text;
     v_tag_id uuid;
@@ -106,17 +102,9 @@ BEGIN
 END;
 $body$;
 
-alter function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) owner to "postgres";
+alter function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) owner to "postgres";
 
-grant all on function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) to "authenticated";
+grant all on function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) to "authenticated";
 
 create or replace view "public"."meta_phrase_info" as
 with
@@ -191,9 +179,7 @@ with
 					else 0
 				end
 			) as "count_skipped",
-			"json_agg" (
-				distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")
-			) filter (
+			"json_agg" (distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")) filter (
 				where
 					("t"."id" is not null)
 			) as "tags"
@@ -226,24 +212,15 @@ select
 	"results"."count_skipped",
 	case
 		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_active" / "results"."count_cards"))::numeric,
-			2
-		)
+		else "round" ((("results"."count_active" / "results"."count_cards"))::numeric, 2)
 	end as "percent_active",
 	case
 		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_learned" / "results"."count_cards"))::numeric,
-			2
-		)
+		else "round" ((("results"."count_learned" / "results"."count_cards"))::numeric, 2)
 	end as "percent_learned",
 	case
 		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_skipped" / "results"."count_cards"))::numeric,
-			2
-		)
+		else "round" ((("results"."count_skipped" / "results"."count_cards"))::numeric, 2)
 	end as "percent_skipped",
 	"rank" () over (
 		partition by
@@ -262,9 +239,7 @@ select
 			"results"."lang"
 		order by
 			case
-				when ("results"."count_cards" > 0) then (
-					("results"."count_skipped")::numeric / ("results"."count_cards")::numeric
-				)
+				when ("results"."count_cards" > 0) then (("results"."count_skipped")::numeric / ("results"."count_cards")::numeric)
 				else null::numeric
 			end
 	) as "rank_least_skipped",
@@ -273,9 +248,7 @@ select
 			"results"."lang"
 		order by
 			case
-				when ("results"."count_cards" > 0) then (
-					("results"."count_learned")::numeric / ("results"."count_cards")::numeric
-				)
+				when ("results"."count_cards" > 0) then (("results"."count_learned")::numeric / ("results"."count_cards")::numeric)
 				else null::numeric
 			end desc nulls last
 	) as "rank_most_learned",

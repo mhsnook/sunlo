@@ -98,13 +98,11 @@ create unique index "idx_meta_language_lang" on "public"."meta_language" using "
 
 -- 5. Triggers: refresh when learner counts or phrase counts change
 create or replace trigger "refresh_meta_language_on_deck_change"
-after insert
-or delete on "public"."user_deck" for each statement
+after insert or delete on "public"."user_deck" for each statement
 execute function "public"."trigger_refresh_meta_language" ();
 
 create or replace trigger "refresh_meta_language_on_phrase_change"
-after insert
-or delete on "public"."phrase" for each statement
+after insert or delete on "public"."phrase" for each statement
 execute function "public"."trigger_refresh_meta_language" ();
 
 -- 6. Grants (same as the regular view had)

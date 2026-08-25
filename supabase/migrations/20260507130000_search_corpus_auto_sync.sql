@@ -46,8 +46,8 @@ $$;
 
 drop trigger if exists "bump_phrase_updated_at" on "public"."phrase";
 
-create trigger "bump_phrase_updated_at" before
-update on "public"."phrase" for each row
+create trigger "bump_phrase_updated_at"
+before update on "public"."phrase" for each row
 execute function "public"."bump_phrase_updated_at" ();
 
 -- Extend phrase_meta to project the new column. CREATE OR REPLACE on a
@@ -130,8 +130,8 @@ $$;
 
 drop trigger if exists "skip_stale_corpus_upsert" on "public"."search_corpus";
 
-create trigger "skip_stale_corpus_upsert" before
-update on "public"."search_corpus" for each row
+create trigger "skip_stale_corpus_upsert"
+before update on "public"."search_corpus" for each row
 execute function "public"."skip_stale_corpus_upsert" ();
 
 -- ----------------------------------------------------------------------
@@ -256,48 +256,35 @@ $$;
 alter function "public"."trigger_refresh_search_text_index" () owner to "postgres";
 
 create trigger "refresh_text_index_on_phrase_change"
-after insert
-or
-update of "text",
+after insert or update of "text",
 "lang",
-"archived"
-or delete on "public"."phrase" for each statement
+"archived" or delete on "public"."phrase" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create trigger "refresh_text_index_on_translation_change"
-after insert
-or
-update of "text",
+after insert or update of "text",
 "lang",
 "archived",
-"phrase_id"
-or delete on "public"."phrase_translation" for each statement
+"phrase_id" or delete on "public"."phrase_translation" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create trigger "refresh_text_index_on_request_change"
-after insert
-or
-update of "prompt",
+after insert or update of "prompt",
 "lang",
-"deleted"
-or delete on "public"."phrase_request" for each statement
+"deleted" or delete on "public"."phrase_request" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create trigger "refresh_text_index_on_playlist_change"
-after insert
-or
-update of "title",
+after insert or update of "title",
 "description",
 "lang",
-"deleted"
-or delete on "public"."phrase_playlist" for each statement
+"deleted" or delete on "public"."phrase_playlist" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 -- phrase_tag has no UPDATE-of-meaningful-columns case (the table is just
 -- (phrase_id, tag_id)); insert/delete is what re-shapes a phrase's tags.
 create trigger "refresh_text_index_on_tag_change"
-after insert
-or delete on "public"."phrase_tag" for each statement
+after insert or delete on "public"."phrase_tag" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 -- Initial population.
@@ -491,41 +478,29 @@ $$;
 alter function "public"."trigger_notify_corpus_embed_change" () owner to "postgres";
 
 create trigger "embed_corpus_on_phrase_change"
-after insert
-or
-update of "text",
+after insert or update of "text",
 "lang",
-"archived"
-or delete on "public"."phrase" for each row
+"archived" or delete on "public"."phrase" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('phrase');
 
 create trigger "embed_corpus_on_translation_change"
-after insert
-or
-update of "text",
+after insert or update of "text",
 "lang",
 "archived",
-"phrase_id"
-or delete on "public"."phrase_translation" for each row
+"phrase_id" or delete on "public"."phrase_translation" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('translation');
 
 create trigger "embed_corpus_on_request_change"
-after insert
-or
-update of "prompt",
+after insert or update of "prompt",
 "lang",
-"deleted"
-or delete on "public"."phrase_request" for each row
+"deleted" or delete on "public"."phrase_request" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('request');
 
 create trigger "embed_corpus_on_playlist_change"
-after insert
-or
-update of "title",
+after insert or update of "title",
 "description",
 "lang",
-"deleted"
-or delete on "public"."phrase_playlist" for each row
+"deleted" or delete on "public"."phrase_playlist" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('playlist');
 
 -- Tag changes affect the parent phrase's text_normalized (tags are
@@ -534,6 +509,5 @@ execute function "public"."trigger_notify_corpus_embed_change" ('playlist');
 -- (phrase_id, tag_id) pair is what defines the link; UPDATE-in-place
 -- would rarely be meaningful.
 create trigger "embed_corpus_on_tag_change"
-after insert
-or delete on "public"."phrase_tag" for each row
+after insert or delete on "public"."phrase_tag" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('phrase');

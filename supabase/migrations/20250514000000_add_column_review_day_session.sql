@@ -14,12 +14,7 @@ drop function if exists "public"."insert_user_card_review" (user_card_id uuid, s
 set
 	check_function_bodies = off;
 
-create or replace function public.insert_user_card_review (
-	user_card_id uuid,
-	score integer,
-	day_session text,
-	desired_retention numeric default 0.9
-) returns user_card_review language plv8 as $function$
+create or replace function public.insert_user_card_review (user_card_id uuid, score integer, day_session text, desired_retention numeric default 0.9) returns user_card_review language plv8 as $function$
 
 const prevReviewQuery = plv8.execute("SELECT card.user_deck_id, card.id AS user_card_id, review.id, review.created_at, review.review_time_retrievability, review.difficulty, review.stability FROM public.user_card_plus AS card LEFT JOIN public.user_card_review AS review ON (review.user_card_id = card.id) WHERE card.id = $1 ORDER BY review.created_at DESC LIMIT 1", [user_card_id])
 // throw new Error('prevReviewQuery: ' + JSON.stringify(prevReviewQuery))

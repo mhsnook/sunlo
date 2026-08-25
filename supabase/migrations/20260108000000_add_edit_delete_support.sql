@@ -56,8 +56,8 @@ $function$;
 
 drop trigger if exists on_phrase_request_updated on public.phrase_request;
 
-create trigger on_phrase_request_updated before
-update on public.phrase_request for each row
+create trigger on_phrase_request_updated
+before update on public.phrase_request for each row
 execute function public.update_phrase_request_timestamp ();
 
 -- Trigger to automatically update updated_at on phrase_playlist changes
@@ -70,8 +70,8 @@ $function$;
 
 drop trigger if exists on_phrase_playlist_updated on public.phrase_playlist;
 
-create trigger on_phrase_playlist_updated before
-update on public.phrase_playlist for each row
+create trigger on_phrase_playlist_updated
+before update on public.phrase_playlist for each row
 execute function public.update_phrase_playlist_timestamp ();
 
 -- Update the read policy to filter out deleted requests
@@ -177,14 +177,7 @@ select distinct
 		"p"."text",
 		'source',
 		case
-			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
-				'type',
-				'request',
-				'id',
-				"cpl"."request_id",
-				'comment_id',
-				"cpl"."comment_id"
-			)
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" ('type', 'request', 'id', "cpl"."request_id", 'comment_id', "cpl"."comment_id")
 			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
 				'type',
 				'playlist',

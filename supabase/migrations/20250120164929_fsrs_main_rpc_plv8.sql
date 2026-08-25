@@ -1,8 +1,4 @@
-create or replace function public.record_review_and_schedule (
-	user_card_id uuid,
-	review_time_retrievability numeric,
-	review_time_score integer
-) returns timestamp without time zone language plv8 as $function$
+create or replace function public.record_review_and_schedule (user_card_id uuid, review_time_retrievability numeric, review_time_score integer) returns timestamp without time zone language plv8 as $function$
 const desired_retention = 0.9;
 
 const lastReview = plv8.execute("SELECT last_user_card_schedule_id, new_difficulty, new_stability FROM public.user_card_scheduled WHERE user_card_id = $1 ORDER BY created_at DESC LIMIT 1", [user_card_id])?.rows?.[0] ?? null;

@@ -69,7 +69,8 @@ $$;
 -- Create the trigger
 drop trigger if exists trigger_validate_friend_request_action on public.friend_request_action;
 
-create trigger trigger_validate_friend_request_action before insert on public.friend_request_action for each row
+create trigger trigger_validate_friend_request_action
+before insert on public.friend_request_action for each row
 execute function public.validate_friend_request_action ();
 
 comment on function public.validate_friend_request_action is 'Validates friend request actions to ensure data integrity and consent.

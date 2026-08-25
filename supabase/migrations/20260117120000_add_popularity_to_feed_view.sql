@@ -57,24 +57,8 @@ select distinct
 		p.text,
 		'source',
 		case
-			when cpl.request_id is not null then jsonb_build_object(
-				'type',
-				'request',
-				'id',
-				cpl.request_id,
-				'comment_id',
-				cpl.comment_id
-			)
-			when ppl.playlist_id is not null then jsonb_build_object(
-				'type',
-				'playlist',
-				'id',
-				ppl.playlist_id,
-				'title',
-				playlist.title,
-				'follows',
-				p.count_learners::integer
-			)
+			when cpl.request_id is not null then jsonb_build_object('type', 'request', 'id', cpl.request_id, 'comment_id', cpl.comment_id)
+			when ppl.playlist_id is not null then jsonb_build_object('type', 'playlist', 'id', ppl.playlist_id, 'title', playlist.title, 'follows', p.count_learners::integer)
 			else null::jsonb
 		end
 	) as payload

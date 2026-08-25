@@ -1,8 +1,5 @@
 -- Drop old function and types if they exist to avoid conflicts
-drop function if exists public.bulk_add_phrases (
-	p_lang character(3),
-	p_phrases public.phrase_with_translations_input[]
-);
+drop function if exists public.bulk_add_phrases (p_lang character(3), p_phrases public.phrase_with_translations_input[]);
 
 drop type if exists public.phrase_with_translations_output;
 
@@ -22,18 +19,10 @@ create type public.phrase_with_translations_input as (phrase_text text, translat
 create type public.translation_output as (id uuid, lang character(3), text text);
 
 -- A type for a phrase with its translations output, with IDs
-create type public.phrase_with_translations_output as (
-	id uuid,
-	lang character(3),
-	text text,
-	translations public.translation_output[]
-);
+create type public.phrase_with_translations_output as (id uuid, lang character(3), text text, translations public.translation_output[]);
 
 -- The RPC function to bulk-add phrases and translations, now returning the created data
-create or replace function public.bulk_add_phrases (
-	p_lang character(3),
-	p_phrases public.phrase_with_translations_input[]
-) returns setof public.phrase_with_translations_output language plpgsql as $$
+create or replace function public.bulk_add_phrases (p_lang character(3), p_phrases public.phrase_with_translations_input[]) returns setof public.phrase_with_translations_output language plpgsql as $$
 declare
     phrase_item public.phrase_with_translations_input;
     translation_item public.translation_input;
