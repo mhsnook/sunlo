@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.32 - Soft-Delete Upvotes
+
+_25 August, 2026_
+
+### Fixes
+
+- **Upvotes soft-delete, so one user's un-upvote no longer drops another's (#768).** Supabase realtime skips the RLS check on DELETE and broadcasts the replica identity to every subscriber of the table. The replica identity of the three upvote tables is the composite `(fk, uid)` PK and the collections key on the FK alone, so a stranger's un-upvote frame resolved to this client's own row: the button flipped back to un-upvoted, or `writeDelete` threw on a key the collection never held. The tables now carry `deleted boolean`; un-upvoting writes the flag and upvoting again upserts the same row, which makes the frame an RLS-scoped UPDATE that reaches only its owner. The count triggers fire on all three operations and count the flag rather than the row, a `before update` guard pins every column but `deleted`, and `recount_all_upvotes()` now recounts an item to zero when every upvote is soft-deleted. Client side, the three collections load live rows only, both handlers write the server's returned rows into the synced layer, and `bindUpvote` subscribes to INSERT and UPDATE.
+
+### Migrations
+
+- `20260825120000_soft_delete_upvotes.sql` — adds `deleted` to `comment_upvote`, `phrase_playlist_upvote` and `phrase_request_upvote`; rewrites the three upvote-count triggers and `recount_all_upvotes()` around the flag; adds the UPDATE policies, the `guard_upvote_update()` immutability trigger, and a re-upvote notification trigger.
+
 ## v0.31 - Drop `user_deck_plus`; Deck Stats as Client-Side Live Queries
 
 _21 July, 2026_
