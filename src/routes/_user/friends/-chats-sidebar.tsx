@@ -9,7 +9,7 @@ import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
 
 const linkActiveProps = {
-	className: 'hue-accent bg-lc-1 bg-chroma-mlo text-accent-foreground',
+	className: 'bg-accent-100 text-accent-foreground',
 }
 
 export function ChatsSidebar() {
@@ -65,7 +65,7 @@ function ChatEntryItem({ entry }: { entry: ChatEntry }) {
 			data-key={uid}
 			to="/friends/chats/$friendUid"
 			params={{ friendUid: uid }}
-			className="hover:hue-accent hover:bg-lc-1 hover:bg-chroma-mlo hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all"
+			className="hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all hover:bg-neutral-100"
 			activeProps={linkActiveProps}
 		>
 			<Avatar className="h-8 w-8">

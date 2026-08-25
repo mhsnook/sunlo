@@ -2,7 +2,7 @@
 @import '@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css';
 @import '@fontsource/opendyslexic/index.css';
 @import 'tailwindcss';
-@import './oklch.css';
+@import './theme.css';
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
@@ -10,80 +10,76 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Override plugin default hues to match Sunlo's palette */
-@theme {
-	--hue-primary: 300;
-	--hue-accent: 175;
-	--hue-neutral: 270;
-}
-
-/* Static tokens: light mode (default) */
+/* ShadCN's named surface tokens, built from the palettes in theme.css.
+   Because the palettes flip, most of these need one definition rather than
+   two — `--muted: var(--color-neutral-100)` is a pale grey in light mode and
+   a dark one in dark mode on its own. Only the tokens that must NOT flip are
+   repeated in the `.dark` block below. */
 :root {
-	--background: oklch(0.96 0.02 var(--hue-primary));
-	--foreground: oklch(0.3 0.06 var(--hue-primary));
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.15 0.02 var(--hue-neutral));
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.15 0.02 var(--hue-neutral));
-	--secondary: oklch(0.97 0.005 var(--hue-neutral));
-	--secondary-foreground: oklch(0.22 0.03 var(--hue-neutral));
-	--muted: oklch(0.97 0.005 var(--hue-neutral));
-	--muted-foreground: oklch(0.55 0.01 var(--hue-neutral));
-	--destructive: oklch(0.55 0.18 25);
-	--destructive-foreground: oklch(0.98 0.005 250);
-	--border: oklch(0.85 0.03 var(--hue-primary));
-	--input: oklch(0.93 0.005 var(--hue-neutral));
-	--ring: oklch(0.58 0.22 var(--hue-primary));
-	--chart-1: oklch(0.55 0.22 295);
-	--chart-2: oklch(0.55 0.1 185);
-	--chart-3: oklch(0.38 0.05 240);
-	--chart-4: oklch(0.78 0.14 85);
-	--chart-5: oklch(0.75 0.16 55);
-	--sidebar-background: oklch(0.98 0 0);
-	--sidebar-foreground: oklch(0.35 0.01 var(--hue-neutral));
-	--sidebar-primary: oklch(0.2 0.01 var(--hue-neutral));
-	--sidebar-primary-foreground: oklch(0.98 0 0);
-	--sidebar-accent: oklch(0.97 0.005 var(--hue-accent));
-	--sidebar-accent-foreground: oklch(0.2 0.01 260);
-	--sidebar-border: oklch(0.93 0.005 var(--hue-neutral));
-	--sidebar-ring: oklch(0.6 0.22 var(--hue-neutral));
+	--background: var(--color-neutral-100);
+	/* Neutral, not primary — purple-900 is saturated enough to tint body
+	   text noticeably. */
+	--foreground: var(--color-neutral-800);
+	/* Paper, not a palette shade. A card has to sit ABOVE the page in both
+	   modes, and "above" is lighter either way — which is not something a
+	   flipping shade can express relative to a flipping page. */
+	--card: var(--paper);
+	--card-foreground: var(--color-neutral-900);
+	--popover: var(--paper);
+	--popover-foreground: var(--color-neutral-900);
+	--secondary: var(--color-neutral-100);
+	--secondary-foreground: var(--color-neutral-800);
+	--muted: var(--color-neutral-100);
+	--muted-foreground: var(--color-neutral-500);
+	--destructive: var(--color-danger-600);
+	--destructive-foreground: var(--paper);
+	--border: oklch(
+		from light-dark(var(--color-purple-200), var(--color-purple-800)) l c
+			var(--hue, h)
+	);
+	--input: var(--color-neutral-200);
+	--ring: oklch(
+		from light-dark(var(--color-purple-500), var(--color-purple-500)) l c
+			var(--hue, h)
+	);
+	--chart-1: oklch(
+		from light-dark(var(--color-purple-500), var(--color-purple-500)) l c
+			var(--hue, h)
+	);
+	--chart-2: oklch(
+		from light-dark(var(--color-teal-500), var(--color-teal-500)) l c
+			var(--hue, h)
+	);
+	--chart-3: var(--color-info-600);
+	--chart-4: var(--color-warning-500);
+	--chart-5: var(--color-danger-500);
+	--sidebar-background: var(--paper);
+	--sidebar-foreground: var(--color-neutral-700);
+	--sidebar-primary: oklch(
+		from light-dark(var(--color-purple-700), var(--color-purple-300)) l c
+			var(--hue, h)
+	);
+	--sidebar-primary-foreground: var(--paper);
+	--sidebar-accent: oklch(
+		from light-dark(var(--color-teal-100), var(--color-teal-900)) l c
+			var(--hue, h)
+	);
+	--sidebar-accent-foreground: oklch(
+		from light-dark(var(--color-teal-800), var(--color-teal-200)) l c
+			var(--hue, h)
+	);
+	--sidebar-border: var(--color-neutral-200);
+	--sidebar-ring: oklch(
+		from light-dark(var(--color-purple-500), var(--color-purple-500)) l c
+			var(--hue, h)
+	);
 	--shadow-color-1: rgba(0, 0, 0, 0.05);
 	--shadow-color-2: rgba(0, 0, 0, 0.1);
 	--shadow-color-3: rgba(0, 0, 0, 0.25);
 }
 
-/* Static tokens: dark mode
-   Keep luminance within the plugin's 0.12–0.92 range to avoid
-   blown-out whites. Target ≤0.87 for body text, ≤0.84 for secondary. */
+/* Only what does not follow the palette flip. */
 .dark {
-	--background: oklch(0.22 0.03 var(--hue-primary));
-	--foreground: oklch(0.84 0.04 var(--hue-primary));
-	--card: oklch(0.2 0.05 var(--hue-neutral));
-	--card-foreground: oklch(0.84 0.04 var(--hue-primary));
-	--popover: oklch(0.15 0.03 var(--hue-neutral));
-	--popover-foreground: oklch(0.84 0.005 var(--hue-neutral));
-	--secondary: oklch(0.28 0.02 var(--hue-neutral));
-	--secondary-foreground: oklch(0.84 0.005 var(--hue-neutral));
-	--muted: oklch(0.28 0.02 var(--hue-neutral));
-	--muted-foreground: oklch(0.65 0.01 var(--hue-neutral));
-	--destructive: oklch(0.42 0.18 25);
-	--destructive-foreground: oklch(0.92 0.005 250);
-	--border: oklch(0.42 0.04 var(--hue-primary));
-	--input: oklch(0.28 0.02 var(--hue-neutral));
-	--ring: oklch(0.55 0.18 var(--hue-primary));
-	--chart-1: oklch(0.5 0.18 295);
-	--chart-2: oklch(0.58 0.1 170);
-	--chart-3: oklch(0.68 0.16 55);
-	--chart-4: oklch(0.58 0.18 310);
-	--chart-5: oklch(0.58 0.18 355);
-	--sidebar-background: oklch(0.2 0.01 var(--hue-neutral));
-	--sidebar-foreground: oklch(0.84 0.005 var(--hue-neutral));
-	--sidebar-primary: oklch(0.55 0.18 var(--hue-neutral));
-	--sidebar-primary-foreground: oklch(0.92 0 0);
-	--sidebar-accent: oklch(0.25 0.005 var(--hue-accent));
-	--sidebar-accent-foreground: oklch(0.84 0.005 var(--hue-accent));
-	--sidebar-border: oklch(0.25 0.005 var(--hue-primary));
-	--sidebar-ring: oklch(0.6 0.22 var(--hue-neutral));
 	--shadow-color-1: rgba(255, 255, 255, 0.05);
 	--shadow-color-2: rgba(255, 255, 255, 0.1);
 	--shadow-color-3: rgba(255, 255, 255, 0.25);
@@ -120,22 +116,37 @@
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 
-	/* "On-primary" text — always near-white regardless of mode.
-	   These surfaces (l-5, l-7) are always saturated and mid-to-dark,
-	   so the text must sit at the opposite (light) end. Fixed L=0.93
-	   avoids pure-white harshness while providing strong contrast. */
-	--color-primary-foreground: oklch(0.93 0.02 var(--hue-primary));
-	--color-primary-foresoft: oklch(var(--l-7) var(--c-hi) var(--hue-primary));
-	--color-primary: oklch(var(--l-5) var(--c-hi) var(--hue-primary));
-
-	/* Accent tokens — foreground auto-flips because it's used as body
-	   text (language names, links), not just on colored surfaces. */
-	--color-accent-foreground: oklch(
-		var(--l-fore) var(--c-mlo) var(--hue-accent)
+	/* Shade-less aliases, for UI primitives that want one primary or accent
+	   color rather than a point on the scale. The expression is spelled out
+	   again rather than referencing --color-primary-600, for the reason in
+	   theme.css: inline theme values are not emitted as variables. */
+	--color-primary: oklch(
+		from light-dark(var(--color-purple-600), var(--color-purple-400)) l c
+			var(--hue, h)
 	);
-	--color-accent-foresoft: oklch(var(--l-7) var(--c-hi) var(--hue-accent));
-	--color-accent: oklch(var(--l-5) var(--c-hi) var(--hue-accent));
-	--color-accent-invert: oklch(var(--l-1) var(--c-mid) var(--hue-accent));
+	--color-primary-foresoft: oklch(
+		from light-dark(var(--color-purple-700), var(--color-purple-300)) l c
+			var(--hue, h)
+	);
+	--color-accent: oklch(
+		from light-dark(var(--color-teal-600), var(--color-teal-400)) l c
+			var(--hue, h)
+	);
+	--color-accent-foresoft: oklch(
+		from light-dark(var(--color-teal-700), var(--color-teal-300)) l c
+			var(--hue, h)
+	);
+	--color-accent-invert: oklch(
+		from light-dark(var(--color-teal-100), var(--color-teal-900)) l c
+			var(--hue, h)
+	);
+	--color-accent-foreground: oklch(
+		from light-dark(var(--color-teal-900), var(--color-teal-100)) l c
+			var(--hue, h)
+	);
+
+	/* Text ON a filled surface — see the `paper` note in theme.css. */
+	--color-primary-foreground: var(--paper);
 
 	/* Static tokens — separate light/dark definitions above */
 	--color-secondary: var(--secondary);
@@ -327,7 +338,7 @@
 		@apply border-border;
 	}
 	body {
-		@apply bg-lc-base bg-chroma-lo bg-hue-neutral text-foreground;
+		@apply text-foreground bg-neutral-50;
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);

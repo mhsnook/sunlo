@@ -2,11 +2,11 @@ import { useSyncExternalStore, type CSSProperties } from 'react'
 import { languagesCollection } from '@/features/languages/collections'
 import { allLanguageOptions } from '@/lib/languages'
 
-// Hand-picked OKLCH hue stops. Spaced to hug both sides of the dead
-// zones — red at the top, brand purple around 300, the long Duolingo
-// green dip — and to keep enough gap between stops that a casual
-// glance can tell two badges apart. Chroma + luminance are pinned by
-// the LangBadge variant; only hue varies.
+// Hue stops for the per-language theme, in OKLCH degrees. Spaced to hug
+// both sides of the dead zones — red at the top, brand purple around 300,
+// the long Duolingo green dip — and to keep enough gap between stops that a
+// casual glance can tell two badges apart. Lightness and chroma come from
+// Tailwind's purple ramp; only hue varies. See src/styles/theme.css.
 export const LANG_HUES: ReadonlyArray<number> = [
 	0, 50, 80, 110, 150, 180, 210, 240, 270, 330,
 ] as const
@@ -22,15 +22,18 @@ export const AVATAR_HUES: ReadonlyArray<number> = [
 	340,
 ] as const
 
-// Deterministic placeholder hue for a user, keyed off a stable seed
-// (their uid). A small string hash indexes into AVATAR_HUES.
-export function getAvatarHue(seed: string): number {
+function hashIndex(seed: string, len: number): number {
 	let hash = 0
 	for (let i = 0; i < seed.length; i++) {
 		hash = (hash * 31 + seed.charCodeAt(i)) | 0
 	}
-	const len = AVATAR_HUES.length
-	return AVATAR_HUES[((hash % len) + len) % len]
+	return ((hash % len) + len) % len
+}
+
+// Deterministic placeholder colour for a user, keyed off a stable seed
+// (their uid). A small string hash indexes into AVATAR_HUES.
+export function getAvatarHue(seed: string): number {
+	return AVATAR_HUES[hashIndex(seed, AVATAR_HUES.length)]
 }
 
 // Permutation walked over the popularity-ranked language list. The
@@ -108,34 +111,17 @@ export function useLangPopularityReady(): boolean {
 	)
 }
 
-// The axis hue variables every color utility resolves through. A theme
-// container re-declares them from --hue-primary so its whole subtree inherits
-// the language hue for bg/text/border/gradient with no per-element hue class.
-// (Setting only --hue-* is not enough: the :root axis defaults resolve
-// var(--hue-primary) once, at :root, and inherit that fixed value — so a
-// descendant that overrides --hue-primary is ignored unless the axis var is
-// re-declared here, where the override is in scope.)
-const AXIS_HUE_VARS = [
-	'--bg-h',
-	'--tx-h',
-	'--bd-h',
-	'--bdb-h',
-	'--gf-h',
-	'--gt-h',
-] as const
-
-const AXIS_HUE_CSS = Object.fromEntries(
-	AXIS_HUE_VARS.map((v) => [v, 'var(--hue-primary)'])
-) as CSSProperties
+// Rotate `primary` and `accent` to one hue. Every bg-primary-*,
+// text-accent-*, border-primary-* below this element follows, with no
+// per-element classes and no re-declaring anything — the utilities resolve
+// `--hue` on the element that carries them. The dark-mode flip composes on
+// top. See src/styles/theme.css.
+export function getHueCss(hue: number): CSSProperties {
+	return { '--hue': hue } as CSSProperties
+}
 
 export function getLangThemeCss(lang: string): CSSProperties {
-	const hue = getLangHue(lang)
-	return {
-		'--hue-primary': hue,
-		'--hue-accent': hue,
-		'--hue-neutral': hue,
-		...AXIS_HUE_CSS,
-	} as CSSProperties
+	return getHueCss(getLangHue(lang))
 }
 
 // Hook variant of getLangThemeCss that returns an empty style object
@@ -149,16 +135,6 @@ export function useLangThemeCss(lang: string): CSSProperties {
 
 export function setLangTheme(element?: HTMLElement, lang?: string): void {
 	const el = element ?? document.documentElement
-	if (!lang) {
-		el.style.removeProperty('--hue-primary')
-		el.style.removeProperty('--hue-accent')
-		el.style.removeProperty('--hue-neutral')
-		for (const v of AXIS_HUE_VARS) el.style.removeProperty(v)
-		return
-	}
-	const hue = String(getLangHue(lang))
-	el.style.setProperty('--hue-primary', hue)
-	el.style.setProperty('--hue-accent', hue)
-	el.style.setProperty('--hue-neutral', hue)
-	for (const v of AXIS_HUE_VARS) el.style.setProperty(v, 'var(--hue-primary)')
+	if (!lang) el.style.removeProperty('--hue')
+	else el.style.setProperty('--hue', String(getLangHue(lang)))
 }

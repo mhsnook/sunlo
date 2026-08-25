@@ -105,7 +105,7 @@ export function DeckTile({ deck }: { deck: DeckType }) {
 								to="/learn/$lang/review"
 								params={{ lang: deck.lang }}
 								data-testid="start-practice-link"
-								className="from-lc-5 from-chroma-mhi to-lc-6 text-primary-foreground hover:from-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="from-primary-500 to-primary-600 text-primary-foreground hover:from-primary-600 flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								{dueToday === 0 ? (
 									<CircleCheck className="size-6" />
@@ -130,7 +130,7 @@ export function DeckTile({ deck }: { deck: DeckType }) {
 								to="/learn/$lang"
 								params={{ lang: deck.lang }}
 								data-testid="deck-link"
-								className="border-lc-2 bg-lc-1 bg-chroma-mlo text-primary-foresoft hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow transition-transform hover:-translate-y-0.5"
+								className="bg-primary-100 text-primary-foresoft hover:bg-primary-50 hover:text-primary-800 flex h-full flex-col items-start gap-2 rounded-2xl border border-neutral-200 p-4 shadow transition-transform hover:-translate-y-0.5"
 							>
 								<Logs className="size-6" />
 								<div>
@@ -210,7 +210,7 @@ export function AddDeckTile() {
 			data-testid="add-deck-tile"
 			className="block h-full transition-all duration-200 hover:-translate-y-0.5"
 		>
-			<Card className="border-lc-3 text-muted-foreground hover:text-primary-foresoft hover:border-primary-foresoft flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
+			<Card className="text-muted-foreground hover:text-primary-foresoft hover:border-primary-foresoft flex h-full min-h-[6.5rem] flex-col items-center justify-center gap-1 border-2 border-dashed border-neutral-300 bg-transparent p-4 shadow-none hover:bg-transparent hover:shadow-none">
 				<span className="text-2xl leading-none">+</span>
 				<span className="text-xs font-medium">Start a new deck</span>
 			</Card>

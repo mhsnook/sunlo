@@ -56,15 +56,15 @@ const statusIcon = {
 } as const
 
 const statusColors = {
-	active: 'text-lc-7 text-chroma-hi',
-	learned: 'hue-success text-lc-7 text-chroma-hi',
-	skipped: 'hue-neutral text-lc-5 text-chroma-mid',
+	active: 'text-primary-700',
+	learned: 'text-success-700',
+	skipped: 'text-neutral-500',
 } as const
 
 const statusBgColors = {
-	active: 'bg-lc-1',
-	learned: 'hue-success bg-lc-1',
-	skipped: 'hue-neutral bg-lc-1',
+	active: 'bg-neutral-100',
+	learned: 'bg-success-100',
+	skipped: 'bg-neutral-100',
 } as const
 
 const DEFAULT_RETENTION = 0.9
@@ -94,13 +94,13 @@ function getDueInfo(item: DueCheckable): {
 		const overdue = Math.abs(daysUntilDue)
 		return {
 			label: overdue === 1 ? 'Overdue 1d' : `Overdue ${overdue}d`,
-			color: 'hue-danger text-lc-7 text-chroma-hi',
+			color: 'text-danger-700',
 		}
 	}
 	if (daysUntilDue === 0)
 		return {
 			label: 'Due today',
-			color: 'hue-warning text-lc-7 text-chroma-hi',
+			color: 'text-warning-700',
 		}
 	return {
 		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,
@@ -364,7 +364,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 			<div className="hidden overflow-x-auto rounded-lg border @md:block">
 				<table className="w-full text-sm">
 					<thead>
-						<tr className="hue-neutral bg-lc-1 border-b">
+						<tr className="border-b bg-neutral-100">
 							<SortableHeader
 								label="Phrase"
 								field="phrase"
@@ -428,7 +428,7 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 		<div
 			className={cn(
 				'rounded-lg border transition-colors',
-				open ? 'hue-neutral bg-lc-0' : 'hover:hue-neutral hover:bg-lc-0',
+				open ? 'bg-neutral-50' : 'hover:bg-neutral-50',
 				isSkipped && 'opacity-50'
 			)}
 			data-testid="manage-deck-row"
@@ -568,7 +568,7 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 	return (
 		<tr
 			className={cn(
-				'hover:hue-neutral hover:bg-lc-0 border-b transition-colors last:border-b-0',
+				'hover:bg-neutral-50 border-b transition-colors last:border-b-0',
 				isSkipped && 'opacity-50'
 			)}
 			data-testid="manage-deck-row"

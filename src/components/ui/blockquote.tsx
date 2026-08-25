@@ -11,7 +11,7 @@ export function Blockquote({
 	return (
 		<blockquote
 			className={cn(
-				'chroma-mlo bg-lc-1 border-lc-4 mb-4 rounded border-l-4 p-4 italic',
+				'bg-primary-100 border-primary-400 mb-4 rounded border-l-4 p-4 italic',
 				className
 			)}
 		>

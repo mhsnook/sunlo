@@ -10,18 +10,15 @@ type CalloutProps = PropsWithChildren & {
 }
 
 const variants = {
-	// Seed the component's character once (primary hue, low-key chroma); the
-	// interior — including the icon circle below — inherits it and speaks lc.
-	default: 'hue-primary chroma-mlo bg-lc-1 border-lc-3',
-	problem:
-		'hue-danger bg-lc-[97] bg-chroma-[3] border-lc-[88] border-chroma-[6]',
+	default: 'bg-primary-100 border-primary-300',
+	problem: 'bg-danger-50 border-danger-100',
 	ghost: 'border text-muted-foreground bg-muted',
 }
 
 const iconCircleVariants = {
-	default: 'bg-lc-[95]',
-	problem: 'border border-lc-[82] border-chroma-[9] bg-lc-none bg-chroma-lo',
-	ghost: 'bg-lc-1 bg-chroma-lo bg-hue-neutral',
+	default: 'bg-primary-50',
+	problem: 'border border-danger-200 bg-card',
+	ghost: 'bg-neutral-100',
 }
 
 const sizes = {

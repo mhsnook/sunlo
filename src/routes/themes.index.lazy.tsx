@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
 import {
+	getHueCss,
 	getLangHue,
 	getLangHueIndex,
 	getLangPopularityIndex,
@@ -280,7 +281,7 @@ function ShowcaseRequestThread() {
 	return (
 		<div className="space-y-4" data-testid="showcase-request">
 			<CardlikeRequest>
-				<CardHeader className="border-lc-2 py-3 @md:py-6">
+				<CardHeader className="border-neutral-200 py-3 @md:py-6">
 					<div className="flex flex-row items-center justify-between gap-2">
 						<Byline
 							initials="PL"
@@ -432,7 +433,7 @@ function ShowcaseDeckDialog() {
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-				<div className="from-lc-5 from-chroma-mhi to-lc-6 text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
+				<div className="from-primary-500 to-primary-600 text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
 					<Rocket className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -443,7 +444,7 @@ function ShowcaseDeckDialog() {
 						</div>
 					</div>
 				</div>
-				<div className="border-lc-2 bg-lc-1 bg-chroma-mlo text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
+				<div className="bg-primary-100 text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border border-neutral-200 p-4 shadow">
 					<Logs className="size-6" />
 					<div>
 						<div className="text-base leading-tight font-semibold">
@@ -645,10 +646,10 @@ const cardStatusShowcaseStates: Array<{
 	soft?: boolean
 }> = [
 	{ choice: 'active', dot: 'bg-primary', soft: true },
-	{ choice: 'learned', dot: 'hue-success bg-lc-5 bg-chroma-hi' },
-	{ choice: 'skipped', dot: 'hue-neutral bg-lc-4' },
-	{ choice: 'nocard', dot: 'hue-neutral bg-lc-3' },
-	{ choice: 'nodeck', dot: 'hue-neutral bg-lc-3' },
+	{ choice: 'learned', dot: 'bg-success-500' },
+	{ choice: 'skipped', dot: 'bg-neutral-400' },
+	{ choice: 'nocard', dot: 'bg-neutral-300' },
+	{ choice: 'nodeck', dot: 'bg-neutral-300' },
 ]
 
 function CardStatusMenuItem({ choice }: { choice: ShowableActions }) {
@@ -1170,7 +1171,7 @@ function ProfilePill({
 }) {
 	return (
 		<div className="flex w-full flex-row items-center gap-4">
-			<div className="hover:bg-lc-1 hover:bg-chroma-mlo hover:border-lc-2 hover:border-chroma-mlo flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2">
+			<div className="flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2 hover:border-neutral-200 hover:bg-neutral-100">
 				<Avatar className="size-8">
 					<AvatarFallback seed={seed} className="text-xs font-bold">
 						{username.slice(0, 2).toUpperCase()}
@@ -1234,7 +1235,7 @@ function ShowcaseProfilePills() {
 function ShowcaseIntroCallout() {
 	return (
 		<div className="space-y-2">
-			<div className="border-lc-3 border-chroma-mlo bg-lc-1 bg-chroma-mlo flex items-start gap-2 rounded border px-3 py-2 text-sm">
+			<div className="border-primary-300 bg-primary-100 flex items-start gap-2 rounded border px-3 py-2 text-sm">
 				<Info className="text-primary mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span className="text-foreground/80">
@@ -1246,7 +1247,7 @@ function ShowcaseIntroCallout() {
 					</button>
 				</div>
 			</div>
-			<div className="border-lc-3 border-chroma-mlo bg-lc-1 bg-chroma-mlo flex items-start gap-2 rounded border px-3 py-2 text-sm">
+			<div className="border-primary-300 bg-primary-100 flex items-start gap-2 rounded border px-3 py-2 text-sm">
 				<Info className="text-primary mt-0.5 size-4 shrink-0" />
 				<div className="flex-1">
 					<span className="text-foreground/80">
@@ -1470,18 +1471,16 @@ function ThemesPage() {
 
 	const [activeHue, setActiveHue] = useState<number | null>(null)
 
-	// Apply the picked hue to <html> so it reaches the body background
-	// (--background is hue-derived) and the whole app chrome — not just
-	// this page's subtree. Cleared on reset and when leaving the page.
+	// Apply the picked palette to <html> so it reaches the body background
+	// and the whole app chrome — not just this page's subtree. Cleared on
+	// reset and when leaving the page.
 	useEffect(() => {
 		const root = document.documentElement
-		const props = ['--hue-primary', '--hue-accent', '--hue-neutral']
-		if (activeHue === null) {
-			props.forEach((p) => root.style.removeProperty(p))
-			return
+		if (activeHue === null) root.style.removeProperty('--hue')
+		else root.style.setProperty('--hue', String(activeHue))
+		return () => {
+			root.style.removeProperty('--hue')
 		}
-		props.forEach((p) => root.style.setProperty(p, String(activeHue)))
-		return () => props.forEach((p) => root.style.removeProperty(p))
 	}, [activeHue])
 
 	const grouped = LANG_HUES.map((hue, i) => ({
@@ -1490,24 +1489,12 @@ function ThemesPage() {
 		langs: allLanguageOptions.filter((opt) => getLangHueIndex(opt.value) === i),
 	}))
 
-	// Brand first, then the per-language stops descending from just below
-	// the brand hue, wrapping the above-brand stops to the end.
-	const langSwatches = LANG_HUES.map((hue, i) => ({
-		hue,
-		label: `#${i}`,
-		brand: false,
-	}))
 	const swatches = [
 		{ hue: BRAND_HUE, label: 'Brand', brand: true },
-		...langSwatches
-			.filter((s) => s.hue < BRAND_HUE)
-			.toSorted((a, b) => b.hue - a.hue),
-		...langSwatches
-			.filter((s) => s.hue > BRAND_HUE)
-			.toSorted((a, b) => b.hue - a.hue),
+		...LANG_HUES.map((hue, i) => ({ hue, label: `#${i}`, brand: false })),
 	]
 
-	// Brand is the default hue, so picking it (or clearing) is not an
+	// Brand is the default palette, so picking it (or clearing) is not an
 	// override — the reset control has nothing to do in that state.
 	const isDefaultHue = activeHue === null || activeHue === BRAND_HUE
 
@@ -1522,10 +1509,9 @@ function ThemesPage() {
 			<header className="space-y-2">
 				<h1 className="text-2xl font-bold">Per-language palette</h1>
 				<p className="text-muted-foreground text-sm">
-					{LANG_HUES.length} hand-picked OKLCH stops, walked over languages in
-					popularity order ({'learners × phrases_to_learn'}). Stop walk: 6, 0,
-					4, 8, 2, 7, 1, 5, 9, 3 — adjacent ranks always land far apart on the
-					wheel.
+					{LANG_HUES.length} hue stops, walked over languages in popularity
+					order ({'learners × phrases_to_learn'}). Stop walk: 6, 0, 4, 8, 2, 7,
+					1, 5, 9, 3 — adjacent ranks always land far apart on the wheel.
 				</p>
 			</header>
 
@@ -1567,9 +1553,9 @@ function ThemesPage() {
 											? 'border-primary'
 											: 'hover:border-border border-transparent'
 								)}
-								style={{ '--hue-primary': s.hue } as CSSProperties}
+								style={getHueCss(s.hue)}
 							>
-								<div className="bg-lc-1 bg-chroma-mlo h-10 w-full rounded" />
+								<div className="bg-primary-100 h-10 w-full rounded" />
 								<span className="flex flex-col items-center text-center leading-tight">
 									<span
 										className={cn(
