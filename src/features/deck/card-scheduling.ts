@@ -23,12 +23,17 @@ export const NO_SCHEDULING: CardScheduling = {
  * values and would blank the card's scheduling, so they never count. Ordering
  * is by `created_at`, so a correction to an older row cannot jump the queue.
  *
- * Returns null when the review list is missing, which is not an empty history:
- * the query engine emits a card the frame it enters the query with its
- * `reviews` include set to null, and a card with a full history passes through
- * that same null frame before its list arrives. A card with no reviews gets no
- * correcting frame at all, so a caller can hold the null indefinitely. Either
- * way, null must never be read as "never practised" — see `live.test.ts`.
+ * Returns null when the review list is missing, which is not an empty history.
+ * A `toArray` include is unpopulated on the frame its parent row enters the
+ * query, so `cardsWithReviews` emits every card once with `reviews: null` — a
+ * card with a full history included, before its list arrives on a later frame.
+ * A card with no reviews gets no later frame at all, so a subscriber holds that
+ * null for as long as the card stays unreviewed, even though the collection's
+ * own copy of the row holds an empty array.
+ *
+ * Null therefore means "not yet known" and must never be read as "never
+ * practised". Verified against @tanstack/db 0.6.5; if a later version seeds the
+ * include on entry, this branch is dead and can go.
  */
 const isReviewList = (value: unknown): value is ReadonlyArray<CardReviewType> =>
 	Array.isArray(value)

@@ -61,7 +61,7 @@ describe('schedulingFromReviews', () => {
 describe('schedulingFromReviews with no list', () => {
 	// A pending include is null, and an empty history is NO_SCHEDULING. Collapsing
 	// the two would report every card as never practised for the frame it enters
-	// the query — see live.test.ts for the engine behaviour that forces this.
+	// the query.
 	it('reports pending rather than never practised', () => {
 		expect(schedulingFromReviews(undefined)).toBeNull()
 		expect(schedulingFromReviews(null)).toBeNull()
