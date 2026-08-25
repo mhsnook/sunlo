@@ -19,14 +19,7 @@ select
 from
 	"public"."user_card_plus" "card"
 where
-	(
-		"card"."status" = any (
-			array[
-				'active'::"public"."card_status",
-				'learned'::"public"."card_status"
-			]
-		)
-	)
+	("card"."status" = any (array['active'::"public"."card_status", 'learned'::"public"."card_status"]))
 group by
 	"card"."phrase_id";
 
@@ -39,9 +32,7 @@ with
 		select
 			"pt"."phrase_id" as "t_phrase_id",
 			(
-				"json_agg" (
-					distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")
-				) filter (
+				"json_agg" (distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")) filter (
 					where
 						("tag"."id" is not null)
 				)
@@ -132,14 +123,7 @@ select distinct
 		"p"."text",
 		'source',
 		case
-			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
-				'type',
-				'request',
-				'id',
-				"cpl"."request_id",
-				'comment_id',
-				"cpl"."comment_id"
-			)
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" ('type', 'request', 'id', "cpl"."request_id", 'comment_id', "cpl"."comment_id")
 			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
 				'type',
 				'playlist',

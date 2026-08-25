@@ -119,9 +119,7 @@ select
 			results.lang
 		order by
 			case
-				when (results.count_cards > 0) then (
-					(results.count_skipped)::numeric / (results.count_cards)::numeric
-				)
+				when (results.count_cards > 0) then ((results.count_skipped)::numeric / (results.count_cards)::numeric)
 				else null::numeric
 			end
 	) as rank_least_skipped,
@@ -130,9 +128,7 @@ select
 			results.lang
 		order by
 			case
-				when (results.count_cards > 0) then (
-					(results.count_learned)::numeric / (results.count_cards)::numeric
-				)
+				when (results.count_cards > 0) then ((results.count_learned)::numeric / (results.count_cards)::numeric)
 				else null::numeric
 			end desc nulls last
 	) as rank_most_learned,

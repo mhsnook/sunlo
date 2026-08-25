@@ -16,13 +16,11 @@ $$;
 -- Trigger on INSERT/DELETE of playlist_phrase_link
 -- Fires when phrases are added or removed from a playlist
 create trigger on_playlist_phrase_link_changed
-after insert
-or delete on public.playlist_phrase_link for each row
+after insert or delete on public.playlist_phrase_link for each row
 execute function public.update_parent_playlist_timestamp ();
 
 -- Trigger on UPDATE of playlist_phrase_link
 -- Fires when phrase order or href is changed
 create trigger on_playlist_phrase_link_updated
-after
-update on public.playlist_phrase_link for each row
+after update on public.playlist_phrase_link for each row
 execute function public.update_parent_playlist_timestamp ();

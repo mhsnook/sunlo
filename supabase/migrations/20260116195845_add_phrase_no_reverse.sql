@@ -17,18 +17,10 @@ drop type if exists public.translation_input cascade;
 
 create type public.translation_input as (lang character(3), text text);
 
-create type public.phrase_with_translations_input as (
-	phrase_text text,
-	translations public.translation_input[],
-	only_reverse boolean
-);
+create type public.phrase_with_translations_input as (phrase_text text, translations public.translation_input[], only_reverse boolean);
 
 -- 3. Recreate the bulk_add_phrases function with only_reverse support
-create or replace function "public"."bulk_add_phrases" (
-	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" [],
-	"p_user_id" "uuid"
-) returns "jsonb" language "plpgsql" as $$
+create or replace function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") returns "jsonb" language "plpgsql" as $$
 declare
     phrase_item public.phrase_with_translations_input;
     new_phrase public.phrase;

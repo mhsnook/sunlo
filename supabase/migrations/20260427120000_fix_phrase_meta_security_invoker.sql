@@ -14,9 +14,7 @@ with
 		select
 			"pt"."phrase_id" as "t_phrase_id",
 			(
-				"json_agg" (
-					distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")
-				) filter (
+				"json_agg" (distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")) filter (
 					where
 						("tag"."id" is not null)
 				)

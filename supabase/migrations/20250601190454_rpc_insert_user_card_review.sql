@@ -1,9 +1,4 @@
-drop function if exists "public"."insert_user_card_review" (
-	user_card_id uuid,
-	score integer,
-	day_session text,
-	desired_retention numeric
-);
+drop function if exists "public"."insert_user_card_review" (user_card_id uuid, score integer, day_session text, desired_retention numeric);
 
 set
 	check_function_bodies = off;

@@ -23,6 +23,6 @@ begin
 end;
 $$;
 
-create trigger update_user_deck_updated_at before
-update on "public"."user_deck" for each row
+create trigger update_user_deck_updated_at
+before update on "public"."user_deck" for each row
 execute function "public"."update_user_deck_updated_at" ();

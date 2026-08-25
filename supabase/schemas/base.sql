@@ -36,6 +36,8 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
+create extension if not exists "pgsodium";
+
 alter schema "public" owner to "postgres";
 
 create extension if not exists "pg_graphql"
@@ -3005,14 +3007,6 @@ grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "authenticated"
 
 grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "service_role";
 
-grant all on function "public"."guard_upvote_update" () to "postgres";
-
-grant all on function "public"."guard_upvote_update" () to "anon";
-
-grant all on function "public"."guard_upvote_update" () to "authenticated";
-
-grant all on function "public"."guard_upvote_update" () to "service_role";
-
 grant all on function "public"."halfvec_in" ("cstring", "oid", integer) to "postgres";
 
 grant all on function "public"."halfvec_in" ("cstring", "oid", integer) to "anon";
@@ -3496,6 +3490,12 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "anon";
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "authenticated";
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
+
+grant all on function "public"."guard_upvote_update" () to "anon";
+
+grant all on function "public"."guard_upvote_update" () to "authenticated";
+
+grant all on function "public"."guard_upvote_update" () to "service_role";
 
 grant all on function "public"."halfvec_accum" (double precision[], "public"."halfvec") to "postgres";
 

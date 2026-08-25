@@ -95,14 +95,7 @@ create or replace function "public"."search_by_query" (
 	target_langs text[] default null,
 	exclude_ids uuid[] default '{}'::uuid[],
 	match_limit int default 20
-) returns table (
-	entity_type text,
-	entity_id uuid,
-	matched_via text,
-	matched_text text,
-	matched_lang text,
-	similarity real
-) language sql stable security invoker as $$
+) returns table (entity_type text, entity_id uuid, matched_via text, matched_text text, matched_lang text, similarity real) language sql stable security invoker as $$
 	with match_pool as (
 		select
 			cc.entity_id,
@@ -188,14 +181,7 @@ create or replace function "public"."search_by_anchors" (
 	target_langs text[] default null,
 	exclude_ids uuid[] default '{}'::uuid[],
 	match_limit int default 20
-) returns table (
-	entity_type text,
-	entity_id uuid,
-	matched_via text,
-	matched_text text,
-	matched_lang text,
-	similarity real
-) language plpgsql stable security invoker as $$
+) returns table (entity_type text, entity_id uuid, matched_via text, matched_text text, matched_lang text, similarity real) language plpgsql stable security invoker as $$
 declare
 	avg_embedding vector(1024);
 begin

@@ -44,14 +44,7 @@ alter table "public"."request_comment" enable row level security;
 -- Migrate existing data --
 -- Create comments for existing phrases with request_id
 insert into
-	"public"."request_comment" (
-		request_id,
-		parent_comment_id,
-		uid,
-		content,
-		created_at,
-		upvote_count
-	)
+	"public"."request_comment" (request_id, parent_comment_id, uid, content, created_at, upvote_count)
 select distinct
 	p.request_id,
 	null::uuid, -- top-level comment
@@ -380,14 +373,7 @@ with
 			p.lang,
 			p.text,
 			avg(c.difficulty) as avg_difficulty,
-			jsonb_build_object(
-				'uid',
-				pp.uid,
-				'username',
-				pp.username,
-				'avatar_path',
-				pp.avatar_path
-			) as added_by_profile,
+			jsonb_build_object('uid', pp.uid, 'username', pp.username, 'avatar_path', pp.avatar_path) as added_by_profile,
 			avg(c.stability) as avg_stability,
 			count(distinct c.phrase_id) as count_cards,
 			sum(
@@ -478,9 +464,7 @@ select
 			results.lang
 		order by
 			case
-				when (results.count_cards > 0) then (
-					(results.count_skipped)::numeric / (results.count_cards)::numeric
-				)
+				when (results.count_cards > 0) then ((results.count_skipped)::numeric / (results.count_cards)::numeric)
 				else null::numeric
 			end
 	) as rank_least_skipped,
@@ -489,9 +473,7 @@ select
 			results.lang
 		order by
 			case
-				when (results.count_cards > 0) then (
-					(results.count_learned)::numeric / (results.count_cards)::numeric
-				)
+				when (results.count_cards > 0) then ((results.count_learned)::numeric / (results.count_cards)::numeric)
 				else null::numeric
 			end desc nulls last
 	) as rank_most_learned,
@@ -514,14 +496,7 @@ select
 	pr.prompt,
 	pr.status,
 	pr.fulfilled_at,
-	jsonb_build_object(
-		'uid',
-		pp.uid,
-		'username',
-		pp.username,
-		'avatar_path',
-		pp.avatar_path
-	) as profile,
+	jsonb_build_object('uid', pp.uid, 'username', pp.username, 'avatar_path', pp.avatar_path) as profile,
 	(
 		select
 			array_agg(distinct cp.phrase_id) as array_agg
@@ -855,6 +830,5 @@ for update
 	to authenticated using ((uid = auth.uid ()));
 
 create trigger tr_update_comment_upvote_count
-after insert
-or delete on public.comment_upvote for each row
+after insert or delete on public.comment_upvote for each row
 execute function public.update_comment_upvote_count ();

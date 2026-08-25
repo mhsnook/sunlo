@@ -1,14 +1,6 @@
-drop function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-);
+drop function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []);
 
-create or replace function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) returns "jsonb" language "plpgsql" as $$
+create or replace function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) returns "jsonb" language "plpgsql" as $$
 DECLARE
     tag_name text;
     v_tag_id uuid;

@@ -103,14 +103,7 @@ select distinct
 		"p"."text",
 		'source',
 		case
-			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
-				'type',
-				'request',
-				'id',
-				"cpl"."request_id",
-				'comment_id',
-				"cpl"."comment_id"
-			)
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" ('type', 'request', 'id', "cpl"."request_id", 'comment_id', "cpl"."comment_id")
 			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
 				'type',
 				'playlist',

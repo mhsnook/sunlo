@@ -1,17 +1,9 @@
 alter table "public"."user_card_scheduled"
 add column "updated_at" timestamp with time zone not null default now();
 
-drop function if exists "public"."record_review_and_schedule" (
-	user_card_id uuid,
-	review_time_retrievability numeric,
-	review_time_score integer
-);
+drop function if exists "public"."record_review_and_schedule" (user_card_id uuid, review_time_retrievability numeric, review_time_score integer);
 
-create or replace function public.record_review_and_schedule (
-	user_card_id uuid,
-	review_time_retrievability numeric,
-	score integer
-) returns user_card_scheduled language plv8 as $function$
+create or replace function public.record_review_and_schedule (user_card_id uuid, review_time_retrievability numeric, score integer) returns user_card_scheduled language plv8 as $function$
 
 const desired_retention = 0.9;
 var comments = '';

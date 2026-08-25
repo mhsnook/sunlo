@@ -1,12 +1,5 @@
 -- Notification type enum
-create type notification_type as enum(
-	'request_commented',
-	'comment_replied',
-	'phrase_translated',
-	'phrase_referenced',
-	'request_upvoted',
-	'change_suggested'
-);
+create type notification_type as enum('request_commented', 'comment_replied', 'phrase_translated', 'phrase_referenced', 'request_upvoted', 'change_suggested');
 
 -- Notification table
 create table notification (

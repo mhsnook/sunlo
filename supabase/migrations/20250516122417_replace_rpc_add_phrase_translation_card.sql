@@ -1,9 +1,4 @@
-drop function if exists "public"."add_phrase_translation_card" (
-	text text,
-	lang text,
-	translation_text text,
-	translation_lang text
-);
+drop function if exists "public"."add_phrase_translation_card" (text text, lang text, translation_text text, translation_lang text);
 
 set
 	check_function_bodies = off;

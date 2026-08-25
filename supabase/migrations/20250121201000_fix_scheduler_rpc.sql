@@ -1,8 +1,4 @@
-create or replace function public.record_review_and_schedule (
-	user_card_id uuid,
-	review_time_retrievability numeric,
-	score integer
-) returns user_card_scheduled language plv8 as $function$
+create or replace function public.record_review_and_schedule (user_card_id uuid, review_time_retrievability numeric, score integer) returns user_card_scheduled language plv8 as $function$
 
 const desired_retention = 0.9;
 var comments = '';

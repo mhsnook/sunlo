@@ -8,23 +8,13 @@ drop function if exists "public"."fsrs_dp" (difficulty numeric, score numeric);
 
 drop function if exists "public"."fsrs_s_0" (score numeric);
 
-drop function if exists "public"."fsrs_stability" (
-	difficulty numeric,
-	stability numeric,
-	review_time_retrievability numeric,
-	score numeric
-);
+drop function if exists "public"."fsrs_stability" (difficulty numeric, stability numeric, review_time_retrievability numeric, score numeric);
 
 drop function if exists "public"."fsrs_difficulty" (difficulty numeric, score integer);
 
 drop function if exists "public"."fsrs_dp" (difficulty numeric, score integer);
 
-drop function if exists "public"."fsrs_stability" (
-	difficulty numeric,
-	stability numeric,
-	review_time_retrievability numeric,
-	score integer
-);
+drop function if exists "public"."fsrs_stability" (difficulty numeric, stability numeric, review_time_retrievability numeric, score integer);
 
 create extension plv8;
 
@@ -69,11 +59,7 @@ create or replace function public.fsrs_s_0 (score integer) returns numeric langu
 	return W[score - 1];
 $function$;
 
-create or replace function public.fsrs_s_fail (
-	difficulty numeric,
-	stability numeric,
-	review_time_retrievability numeric
-) returns numeric language plv8 as $function$
+create or replace function public.fsrs_s_fail (difficulty numeric, stability numeric, review_time_retrievability numeric) returns numeric language plv8 as $function$
 	const W_11 = 1.9395;
 	const W_12 = 0.11;
 	const W_13 = 0.29605;
@@ -86,12 +72,7 @@ create or replace function public.fsrs_s_fail (
 	return Math.min(s_f2, stability);
 $function$;
 
-create or replace function public.fsrs_s_success (
-	difficulty numeric,
-	stability numeric,
-	review_time_retrievability numeric,
-	score integer
-) returns numeric language plv8 as $function$
+create or replace function public.fsrs_s_success (difficulty numeric, stability numeric, review_time_retrievability numeric, score integer) returns numeric language plv8 as $function$
 	const W_8 = 1.54575;
 	const W_9 = 0.1192;
 	const W_10 = 1.01925;
@@ -107,12 +88,7 @@ create or replace function public.fsrs_s_success (
   return stability * alpha;
 $function$;
 
-create or replace function public.fsrs_stability (
-	difficulty numeric,
-	stability numeric,
-	review_time_retrievability numeric,
-	score integer
-) returns numeric language plv8 as $function$
+create or replace function public.fsrs_stability (difficulty numeric, stability numeric, review_time_retrievability numeric, score integer) returns numeric language plv8 as $function$
 	return (score === 1) ?
 			plv8.find_function("fsrs_s_fail")(difficulty, stability, review_time_retrievability)
 		: plv8.find_function("fsrs_s_success")(difficulty, stability, review_time_retrievability, score);

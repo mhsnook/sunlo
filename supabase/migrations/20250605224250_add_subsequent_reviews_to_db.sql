@@ -40,13 +40,7 @@ from
 set
 	check_function_bodies = off;
 
-create or replace function public.insert_user_card_review (
-	phrase_id uuid,
-	lang character varying,
-	score integer,
-	day_session text,
-	desired_retention numeric default 0.9
-) returns user_card_review language plv8 as $function$
+create or replace function public.insert_user_card_review (phrase_id uuid, lang character varying, score integer, day_session text, desired_retention numeric default 0.9) returns user_card_review language plv8 as $function$
 
 //-- auth check may be redundant for permissions but it will help the planner
 //-- we're fetching the most recent review, whether it was today or another day

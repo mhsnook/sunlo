@@ -55,14 +55,7 @@ with
 			"p"."lang",
 			"p"."text",
 			"avg" ("c"."difficulty") as "avg_difficulty",
-			"jsonb_build_object" (
-				'uid',
-				"pp"."uid",
-				'username',
-				"pp"."username",
-				'avatar_path',
-				"pp"."avatar_path"
-			) as "added_by_profile",
+			"jsonb_build_object" ('uid', "pp"."uid", 'username', "pp"."username", 'avatar_path', "pp"."avatar_path") as "added_by_profile",
 			"avg" ("c"."stability") as "avg_stability",
 			"count" (distinct "c"."phrase_id") as "count_cards",
 			"sum" (
@@ -83,9 +76,7 @@ with
 					else 0
 				end
 			) as "count_skipped",
-			"json_agg" (
-				distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")
-			) filter (
+			"json_agg" (distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")) filter (
 				where
 					("t"."id" is not null)
 			) as "tags"
@@ -128,24 +119,15 @@ select
 	"results"."count_skipped",
 	case
 		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_active" / "results"."count_cards"))::numeric,
-			2
-		)
+		else "round" ((("results"."count_active" / "results"."count_cards"))::numeric, 2)
 	end as "percent_active",
 	case
 		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_learned" / "results"."count_cards"))::numeric,
-			2
-		)
+		else "round" ((("results"."count_learned" / "results"."count_cards"))::numeric, 2)
 	end as "percent_learned",
 	case
 		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_skipped" / "results"."count_cards"))::numeric,
-			2
-		)
+		else "round" ((("results"."count_skipped" / "results"."count_cards"))::numeric, 2)
 	end as "percent_skipped",
 	"rank" () over (
 		partition by
@@ -164,9 +146,7 @@ select
 			"results"."lang"
 		order by
 			case
-				when ("results"."count_cards" > 0) then (
-					("results"."count_skipped")::numeric / ("results"."count_cards")::numeric
-				)
+				when ("results"."count_cards" > 0) then (("results"."count_skipped")::numeric / ("results"."count_cards")::numeric)
 				else null::numeric
 			end
 	) as "rank_least_skipped",
@@ -175,9 +155,7 @@ select
 			"results"."lang"
 		order by
 			case
-				when ("results"."count_cards" > 0) then (
-					("results"."count_learned")::numeric / ("results"."count_cards")::numeric
-				)
+				when ("results"."count_cards" > 0) then (("results"."count_learned")::numeric / ("results"."count_cards")::numeric)
 				else null::numeric
 			end desc nulls last
 	) as "rank_most_learned",

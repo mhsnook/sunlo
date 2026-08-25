@@ -292,8 +292,4 @@ with
 
 -- Schedule daily recount at 4:00 AM UTC
 select
-	cron.schedule (
-		'recount-all-upvotes',
-		'0 4 * * *',
-		'select public.recount_all_upvotes()'
-	);
+	cron.schedule ('recount-all-upvotes', '0 4 * * *', 'select public.recount_all_upvotes()');

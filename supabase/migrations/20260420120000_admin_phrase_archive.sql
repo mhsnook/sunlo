@@ -6,10 +6,7 @@
 -- 4. RLS policies for admin CRUD on phrases, translations, requests, and tags
 -- 5. Updated views (phrase_meta, feed_activities) to respect archived flag
 -- ── 1. admin_user table ──────────────────────────────────────────────
-create table if not exists public.admin_user (
-	uid uuid primary key references auth.users (id) on delete cascade,
-	created_at timestamptz not null default now()
-);
+create table if not exists public.admin_user (uid uuid primary key references auth.users (id) on delete cascade, created_at timestamptz not null default now());
 
 alter table public.admin_user enable row level security;
 
@@ -108,9 +105,7 @@ with
 		select
 			"pt"."phrase_id" as "t_phrase_id",
 			(
-				"json_agg" (
-					distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")
-				) filter (
+				"json_agg" (distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")) filter (
 					where
 						("tag"."id" is not null)
 				)
@@ -199,14 +194,7 @@ select distinct
 		"p"."text",
 		'source',
 		case
-			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
-				'type',
-				'request',
-				'id',
-				"cpl"."request_id",
-				'comment_id',
-				"cpl"."comment_id"
-			)
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" ('type', 'request', 'id', "cpl"."request_id", 'comment_id', "cpl"."comment_id")
 			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
 				'type',
 				'playlist',
