@@ -134,6 +134,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 				href={href}
 				target="_blank"
 				rel="noopener noreferrer"
+				data-testid="playlist-embed"
 				className="flex items-center gap-2 rounded-2xl bg-neutral-100 px-4 py-3 text-sm text-neutral-700 no-underline transition-colors hover:bg-neutral-200"
 			>
 				<ExternalLink className="size-4 shrink-0" />
@@ -145,7 +146,10 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 	}
 
 	return (
-		<div className="w-full overflow-hidden rounded-lg">
+		<div
+			className="w-full overflow-hidden rounded-lg"
+			data-testid="playlist-embed"
+		>
 			{embedInfo.type === 'youtube' && (
 				<iframe
 					className="aspect-video h-full w-full"

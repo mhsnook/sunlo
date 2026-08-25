@@ -115,10 +115,14 @@ function FlashCardReviewSession({
 								onClick={() => animateAndNavigate(gotoPrevious)}
 								disabled={currentCardIndex === 0}
 								aria-label="Previous card"
+								data-testid="review-previous-card-button"
 							>
 								<ChevronLeft className="size-4" />
 							</Button>
-							<div className="w-40 text-center text-sm">
+							<div
+								className="w-40 text-center text-sm"
+								data-testid="review-card-counter"
+							>
 								Card {currentCardIndex + 1} of {manifest.length}
 							</div>
 							<Button
@@ -127,6 +131,7 @@ function FlashCardReviewSession({
 								onClick={() => animateAndNavigate(gotoNext)}
 								disabled={atTheEnd}
 								aria-label="Next card"
+								data-testid="review-next-card-button"
 							>
 								<ChevronRight className="size-4" />
 							</Button>

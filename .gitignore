@@ -32,8 +32,5 @@ dist
 keystore.properties
 # contexts/*
 
-# Scenetest, Playwright
-/playwright-report/
-/test-results/
+# Scenetest
 /scenetest/.reports/
-/.auth/

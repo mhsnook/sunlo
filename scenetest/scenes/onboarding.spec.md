@@ -21,3 +21,25 @@ new-user:
 - up
 - notSee profile-creation-form
 - see welcome-page
+
+# a new user must affirm the community norms before using the app
+
+// Ported from the retired e2e spec `onboarding.spec.ts`. The affirmation is
+// recorded in localStorage, so the second `openTo /welcome` is the assertion
+// rather than navigation: reloading proves the dialog does not come back.
+
+new-user:
+
+- login
+- openTo /welcome
+- up
+- see intro-message-section
+- see affirm-community-norms-button
+- click affirm-community-norms-button
+- up
+- notSee intro-message-section
+- see sunlo-welcome-explainer
+- openTo /welcome
+- up
+- see sunlo-welcome-explainer
+- notSee intro-message-section

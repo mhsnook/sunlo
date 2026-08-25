@@ -16,7 +16,6 @@ import '@/styles/globals.css'
 import { Button } from '@/components/ui/button'
 import { queryClient } from './lib/query-client'
 import { authLifecycle } from './lib/auth-lifecycle'
-import './test-runtime-helpers'
 
 // bootstrap phase: wire localStorage mirrors and (if logged in) hydrate from
 // cache, synchronously — before React renders and before any collection syncs.

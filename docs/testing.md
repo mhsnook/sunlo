@@ -20,7 +20,7 @@ Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requir
 
 **Runtime checks** — scenetest's inline assertion functions `should()`, `failed()`, `serverCheck()` — live inside application code (components, mutation callbacks, effects) and report to the observer panel in dev. The Vite plugin strips them from production builds. They're a peer to scene specs, not a fallback. **Lean on them especially for mutation flows**: the scene asserts the user-visible outcome (`see toast-success`), while the inline check inside the mutation handler enforces the collection-state / client-server agreement that the old e2e tests were scraping from the DOM.
 
-**Do not write new `@playwright/test` specs.** The legacy `e2e/` directory is deprecated and slated for removal — see the `transform` label. Its `pnpm test` / `pnpm test:*` scripts have already been removed; the remaining specs run via `pnpm exec playwright test` directly. Don't add new specs here. Migrate existing ones to `scenetest/scenes/`.
+Scenetest drives Playwright under the hood, so `playwright` stays in `devDependencies` for the browser CLI (`playwright install chromium`). The `@playwright/test` framework and the old `e2e/` suite are gone — every browser test is a scene.
 
 ## Writing Scene Specs
 
@@ -98,8 +98,6 @@ learner:
 - openTo /learn
 - openTo /learn/hin/feed
 ```
-
-For legacy `@playwright/test` specs in `e2e/`, the equivalent rule was "never use `page.goto()`" — same principle.
 
 ## Use UI Semantics for Test Selectors
 
