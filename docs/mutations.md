@@ -95,7 +95,7 @@ phrasesCollection.utils.writeInsert({ ...m.modified, ...data })
 playlistPhraseLinksCollection.utils.writeDelete(m.original.id)
 ```
 
-`writeUpdate` **merges** its argument over the current synced row. That matters for the collections that read a view but write a base table — `cardsCollection` (`user_card_plus` → `user_card`), `phrasesCollection` (`phrase_meta` → `phrase`). The base-table row the write returns has no view-derived columns, and the merge keeps the ones already there.
+`writeUpdate` **merges** its argument over the current synced row. That matters for a collection that reads a view but writes a base table — `phrasesCollection` (`phrase_meta` → `phrase`). The base-table row the write returns has no view-derived columns, and the merge keeps the ones already there.
 
 `writeInsert` and `writeUpsert` **replace** rather than merge. On a view-backed collection, spread the optimistic row underneath (as above) so the view-derived columns are not blanked out.
 

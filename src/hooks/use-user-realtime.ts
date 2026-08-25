@@ -28,7 +28,6 @@ import {
 } from '@/features/review/collections'
 import { DeckSchema, CardSchema } from '@/features/deck/schemas'
 import { decksCollection, cardsCollection } from '@/features/deck/collections'
-import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 
 // The upvote tables soft-delete, so un-upvoting arrives as an UPDATE carrying
 // `deleted: true`, not as a DELETE. That matters: Supabase RLS-scopes INSERT
