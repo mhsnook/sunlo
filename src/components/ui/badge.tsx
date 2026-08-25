@@ -15,7 +15,7 @@ const badgeVariants = cva(
 					'border-transparent bg-destructive text-destructive-foreground',
 				success: 'border-transparent bg-success-600 text-success-100',
 				outline: 'text-primary-foresoft border-neutral-200 bg-neutral-50',
-				lang: 'bg-primary-100 text-primary-950 border-primary-100 font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
+				lang: 'bg-primary-200 text-primary-950 border-primary-200 font-mono font-bold uppercase tracking-wider items-end w-fit transition-colors duration-700',
 			},
 			size: {
 				lg: 'px-3 py-1 gap-2 [&>svg]:h-4 [&>svg]:w-4 [&>button]:h-5 [&>button]:w-5',
@@ -67,7 +67,9 @@ function LangBadge({ lang, className }: { lang: string; className?: string }) {
 		<Badge
 			variant="lang"
 			className={cn(
-				!ready && '!bg-neutral-100 !text-neutral-700 !border-neutral-200',
+				// Same shades as the lang variant, so the 700ms transition into the
+				// language hue changes colour without changing weight.
+				!ready && '!bg-neutral-200 !text-neutral-950 !border-neutral-200',
 				className
 			)}
 			style={style}
