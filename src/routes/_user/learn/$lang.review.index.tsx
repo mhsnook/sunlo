@@ -6,7 +6,8 @@ import { useMutation } from '@tanstack/react-query'
 import { toastSuccess } from '@/components/ui/sonner'
 import { toManifestEntry, type ManifestEntry } from '@/features/review/manifest'
 import { directionsForPhrase } from '@/features/deck/card-directions'
-import { useDeckCardsScheduled } from '@/features/deck/hooks'
+import { useDeckCardsWithReviews } from '@/features/deck/hooks'
+import { schedulingFromReviews } from '@/features/deck/card-scheduling'
 import { isDueCard } from '@/features/deck/is-due-card'
 import { phrasesCollection } from '@/features/phrases/collections'
 import {
@@ -194,10 +195,9 @@ function ReviewPageContent() {
 		deckPids?.today_active ?? [],
 	])
 
-	// Full card data for card-level manifest building, each card carrying the
-	// scheduling folded out of its own reviews — bury-siblings compares
-	// retrievability, so a candidate needs `last_reviewed_at` and `stability`.
-	const { data: deckCards } = useDeckCardsScheduled(lang)
+	// Whole cards, not just pids: bury-siblings compares retrievability, so a
+	// candidate needs `last_reviewed_at` and `stability`.
+	const { data: deckCards } = useDeckCardsWithReviews(lang)
 
 	// Reviews scoped to this language — bury-siblings reads the reverse card's
 	// two most recent phase-1 reviews to decide whether to defer recall after
@@ -224,13 +224,14 @@ function ReviewPageContent() {
 	for (const card of deckCards ?? []) {
 		if (!allPhraseSet.has(card.phrase_id)) continue
 		if (card.status !== 'active') continue
-		const isUnreviewed = !card.scheduling?.last_reviewed_at
-		if (!isUnreviewed && !isDueCard(card, card.scheduling)) continue
+		const scheduling = schedulingFromReviews(card.reviews)
+		const isUnreviewed = !scheduling?.last_reviewed_at
+		if (!isUnreviewed && !isDueCard(card, scheduling)) continue
 		candidates.push({
 			phrase_id: card.phrase_id,
 			direction: card.direction,
-			last_reviewed_at: card.scheduling?.last_reviewed_at ?? null,
-			stability: card.scheduling?.stability ?? null,
+			last_reviewed_at: scheduling?.last_reviewed_at ?? null,
+			stability: scheduling?.stability ?? null,
 			bucket: isUnreviewed && freshSet.has(card.phrase_id) ? 'fresh' : 'due',
 		})
 	}

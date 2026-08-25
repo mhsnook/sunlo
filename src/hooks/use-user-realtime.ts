@@ -112,9 +112,8 @@ export const useUserRealtime = () => {
 					decksCollection.utils.writeUpsert(DeckSchema.parse(payload.new))
 			)
 
-		// Cards: INSERT when another device adds a phrase to the deck, UPDATE when
-		// it changes a card's status. No DELETE binding — nothing hard-deletes a
-		// card, and the frame would carry only the replica identity.
+		// No DELETE binding: nothing hard-deletes a card, and the frame would
+		// carry only the replica identity.
 		channel = channel
 			.on(
 				'postgres_changes',

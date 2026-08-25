@@ -17,11 +17,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
+import { schedulingFromReviews } from '@/features/deck/card-scheduling'
 import {
 	useDeck,
 	useDeckCards,
-	useDeckCardsScheduled,
-	type ScheduledCard,
+	useDeckCardsWithReviews,
+	type CardWithReviews,
 } from '@/features/deck/hooks'
 import { updateCardsStatus } from '@/features/deck/card-status'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
@@ -144,7 +145,7 @@ function ManageDeckPage() {
 }
 
 function useCardData(lang: string) {
-	const { data: cards, isLoading: cardsLoading } = useDeckCardsScheduled(lang)
+	const { data: cards, isLoading: cardsLoading } = useDeckCardsWithReviews(lang)
 	const { data: phrases, isLoading: phrasesLoading } = useLangPhrasesRaw(lang)
 
 	const [sortField, setSortField] = useState<SortField>('last_reviewed')
@@ -157,7 +158,7 @@ function useCardData(lang: string) {
 		const phraseMap = new Map(phrases.map((p) => [p.id, p]))
 
 		// Group cards by phrase_id
-		const grouped = new Map<string, Array<ScheduledCard>>()
+		const grouped = new Map<string, Array<CardWithReviews>>()
 		for (const card of cards) {
 			const arr = grouped.get(card.phrase_id)
 			if (arr) arr.push(card)
@@ -177,13 +178,13 @@ function useCardData(lang: string) {
 				)
 				// Soonest last_reviewed_at (most recently reviewed direction)
 				const reviewed = dirCards
-					.map((c) => c.scheduling?.last_reviewed_at)
+					.map((c) => schedulingFromReviews(c.reviews)?.last_reviewed_at)
 					.filter(Boolean)
 					.toSorted()
 					.at(-1) as string | null
 				// Average difficulty of reviewed directions
 				const diffs = dirCards
-					.map((c) => c.scheduling?.difficulty)
+					.map((c) => schedulingFromReviews(c.reviews)?.difficulty)
 					.filter((d): d is number => d != null)
 				const difficulty =
 					diffs.length > 0
@@ -191,7 +192,7 @@ function useCardData(lang: string) {
 						: null
 				// Lowest stability (most urgent card drives due date)
 				const stabilities = dirCards
-					.map((c) => c.scheduling?.stability)
+					.map((c) => schedulingFromReviews(c.reviews)?.stability)
 					.filter((s): s is number => s != null)
 				const stability =
 					stabilities.length > 0 ? Math.min(...stabilities) : null
@@ -250,7 +251,7 @@ function useCardData(lang: string) {
 	const allPhraseRows: Array<PhraseRow> = useMemo(() => {
 		if (!cards || !phrases) return []
 		const phraseMap = new Map(phrases.map((p) => [p.id, p]))
-		const grouped = new Map<string, Array<ScheduledCard>>()
+		const grouped = new Map<string, Array<CardWithReviews>>()
 		for (const card of cards) {
 			const arr = grouped.get(card.phrase_id)
 			if (arr) arr.push(card)

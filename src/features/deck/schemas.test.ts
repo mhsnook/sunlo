@@ -122,8 +122,7 @@ describe('CardSchema', () => {
 		expect(result.direction).toBe('forward')
 	})
 
-	// The scheduler columns live on the reviews now, so a row carrying them is
-	// not a `user_card` row and does not belong in this collection.
+	// A row carrying scheduler columns is not a `user_card` row.
 	it('drops FSRS fields rather than carrying them on the card', () => {
 		const result = CardSchema.parse({
 			...validCard,

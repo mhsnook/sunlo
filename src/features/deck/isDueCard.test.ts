@@ -52,8 +52,7 @@ describe('isDueCard', () => {
 		).toBe(false)
 	})
 
-	// A card whose reviews have not arrived yet reads as not-due rather than
-	// as never-practised — see `schedulingFromReviews`.
+	// Pending reviews, not an empty history — see `schedulingFromReviews`.
 	it('returns false when scheduling is still pending', () => {
 		expect(isDueCard({ status: 'active' }, null)).toBe(false)
 	})

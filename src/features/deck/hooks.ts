@@ -133,11 +133,7 @@ const statsFromStatusGroups = (
 	return stats
 }
 
-/**
- * When each language was last practised, straight off the review rows. This is
- * an activity figure and counts every review, including the phase-3 rows that
- * `schedulingFromReviews` skips — a re-review is still practice.
- */
+/** When each language was last practised, over every review of any phase. */
 const useMostRecentReviewByLang = (): Record<string, string | null> => {
 	const { data } = useLiveQuery((q) =>
 		q
@@ -301,35 +297,25 @@ export const useDeckCards = (lang: string): UseLiveQueryResult<CardType[]> =>
 		[lang]
 	)
 
-/** A card row with the scheduler state folded out of its own reviews. */
-export type ScheduledCard = CardType & { scheduling: CardScheduling | null }
+/** A card row with its review history; fold it with `schedulingFromReviews`. */
+export type CardWithReviews = CardType & {
+	reviews: Array<CardReviewType> | null
+}
 
 /**
- * The deck's cards, each carrying the scheduling derived from its reviews.
- * Only safe where the route preloads `cardReviewsCollection` — see
- * `useCardScheduling` for the same caveat.
+ * Only safe where the route preloads `cardReviewsCollection`: with no reviews
+ * loaded a card reads as never practised rather than as unknown.
  */
-export const useDeckCardsScheduled = (
+export const useDeckCardsWithReviews = (
 	lang: string
-): UseLiveQueryResult<ScheduledCard[]> => {
-	const query = useLiveQuery(
+): UseLiveQueryResult<CardWithReviews[]> =>
+	useLiveQuery(
 		(q) =>
 			q
 				.from({ card: cardsWithReviews })
 				.where(({ card }) => eq(card.lang, lang)),
 		[lang]
-	)
-	return {
-		...query,
-		// These rows belong to the live query's materialized state, so the copy is
-		// required — Object.assign would mutate the collection's own rows.
-		// oxlint-disable-next-line no-map-spread -- copy-on-write is required here
-		data: query.data?.map(({ reviews, ...card }) => ({
-			...card,
-			scheduling: schedulingFromReviews(reviews),
-		})),
-	} as UseLiveQueryResult<ScheduledCard[]>
-}
+	) as UseLiveQueryResult<CardWithReviews[]>
 
 export const useDeckRoutineStats = (lang: string) => {
 	const today = dayjs()
@@ -370,55 +356,46 @@ type UseDeckPidsReturnType = {
 	data: DeckPids | null
 }
 
+/**
+ * One pass over the deck: `schedulingFromReviews` folds a card's whole history,
+ * so calling it once per bucket would repeat that work eight times.
+ */
+const bucketPids = (cards: ReadonlyArray<CardWithReviews>): DeckPids => {
+	const buckets: DeckPids = {
+		all: [],
+		active: [],
+		inactive: [],
+		reviewed: [],
+		reviewed_or_inactive: [],
+		reviewed_last_7d: [],
+		unreviewed_active: [],
+		today_active: [],
+	}
+	for (const card of cards) {
+		const scheduling = schedulingFromReviews(card.reviews)
+		const reviewedAt = scheduling?.last_reviewed_at
+		const isActive = card.status === 'active'
+		const pid = card.phrase_id
+		buckets.all.push(pid)
+		if (isActive) buckets.active.push(pid)
+		else buckets.inactive.push(pid)
+		if (reviewedAt) buckets.reviewed.push(pid)
+		if (reviewedAt || !isActive) buckets.reviewed_or_inactive.push(pid)
+		if (reviewedAt && inLastWeek(reviewedAt)) buckets.reviewed_last_7d.push(pid)
+		if (isActive && !reviewedAt) buckets.unreviewed_active.push(pid)
+		if (isDueCard(card, scheduling)) buckets.today_active.push(pid)
+	}
+	for (const key of Object.keys(buckets) as Array<keyof DeckPids>)
+		buckets[key] = unique(buckets[key])
+	return buckets
+}
+
 export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
-	const { isLoading, data } = useDeckCardsScheduled(lang)
+	const { isLoading, data } = useDeckCardsWithReviews(lang)
 
 	return {
 		isLoading: isLoading ?? true,
-		data: !data
-			? null
-			: {
-					all: unique(data.map((c) => c.phrase_id)),
-					active: unique(
-						data.filter((c) => c.status === 'active').map((c) => c.phrase_id)
-					),
-					inactive: unique(
-						data.filter((c) => c.status !== 'active').map((c) => c.phrase_id)
-					),
-					reviewed: unique(
-						data
-							.filter((c) => !!c.scheduling?.last_reviewed_at)
-							.map((c) => c.phrase_id)
-					),
-					reviewed_or_inactive: unique(
-						data
-							.filter(
-								(c) => !!c.scheduling?.last_reviewed_at || c.status !== 'active'
-							)
-							.map((c) => c.phrase_id)
-					),
-					reviewed_last_7d: unique(
-						data
-							.filter(
-								(c) =>
-									c.scheduling?.last_reviewed_at &&
-									inLastWeek(c.scheduling.last_reviewed_at)
-							)
-							.map((c) => c.phrase_id)
-					),
-					unreviewed_active: unique(
-						data
-							.filter(
-								(c) => c.status === 'active' && !c.scheduling?.last_reviewed_at
-							)
-							.map((c) => c.phrase_id)
-					),
-					today_active: unique(
-						data
-							.filter((c) => isDueCard(c, c.scheduling))
-							.map((c) => c.phrase_id)
-					),
-				},
+		data: !data ? null : bucketPids(data),
 	}
 }
 

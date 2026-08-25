@@ -88,9 +88,7 @@ export function NewCardsPreview({
 		void navigate({ to: '/learn/$lang/review/go', params: { lang: lang! } })
 	}
 
-	// Use the session's captured list of fresh-for-today entries. Deriving
-	// "unreviewed" from the manifest would mark a card reviewed the moment it is
-	// scored, so cards would leave this preview mid-session.
+	// `newCardEntries` is captured when the session is created.
 	const newEntriesSet = new Set<ManifestEntry>(newCardEntries ?? [])
 	const unreviewedInOrder = manifest.filter((entry) => newEntriesSet.has(entry))
 

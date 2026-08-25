@@ -14,8 +14,6 @@ import {
 	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from './collections'
-import { cardsCollection } from '@/features/deck/collections'
-import supabase from '@/lib/supabase-client'
 import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	type CardReviewType,
@@ -24,12 +22,8 @@ import {
 } from './schemas'
 import { useUserId } from '@/lib/use-auth'
 import { calculateFSRS, type Score } from './fsrs'
-import { CardSchema, type CardDirectionType } from '@/features/deck/schemas'
-import {
-	manifestPhraseId,
-	toManifestEntry,
-	type ManifestEntry,
-} from './manifest'
+import type { CardDirectionType } from '@/features/deck/schemas'
+import { type ManifestEntry } from './manifest'
 import {
 	buildReviewsMap,
 	findChainPredecessor,
@@ -254,53 +248,6 @@ export function useReviewDay(
 	)
 }
 
-/**
- * The manifest is the authoritative list of cards for a review session —
- * it's persisted server-side, so any device loading today's session sees
- * the same set. Local `cardsCollection` can drift from that (a session
- * authored on another device while this one was offline, a server-side data
- * migration), and the status dropdown during review reads the local card, so
- * a missing row makes it silently do nothing.
- *
- * Fetches only the phrases the manifest names that this client is missing —
- * never the whole table.
- */
-export async function ensureManifestCardsInCollection(
-	lang: string,
-	day_session: string
-) {
-	const reviewDay = reviewSessionsCollection.toArray.find(
-		(d) => d.lang === lang && d.day_session === day_session
-	)
-	if (!reviewDay?.manifest?.length) return
-
-	const present = new Set<string>(
-		cardsCollection.toArray.map((c) =>
-			toManifestEntry(c.phrase_id, c.direction)
-		)
-	)
-	const missingPhraseIds = [
-		...new Set(
-			reviewDay.manifest
-				.filter((entry) => !present.has(entry))
-				.map(manifestPhraseId)
-		),
-	]
-	if (missingPhraseIds.length === 0) return
-
-	console.warn(
-		`Review manifest references cards not in local cardsCollection; fetching them.`,
-		{ lang, day_session, missingPhraseIds }
-	)
-	const { data } = await supabase
-		.from('user_card')
-		.select()
-		.in('phrase_id', missingPhraseIds)
-		.throwOnError()
-	for (const row of data ?? [])
-		cardsCollection.utils.writeUpsert(CardSchema.parse(row))
-}
-
 export function useOneReviewToday(
 	day_session: string,
 	pid: uuid,
@@ -504,10 +451,6 @@ export function useReviewMutation(
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
-			// Nothing to mirror onto the card: the review row the optimistic action
-			// already put in `cardReviewsCollection` is the scheduler state, and
-			// every reader folds it with `schedulingFromReviews`.
-
 			triggerSlide(() => {
 				resetRevealCard()
 				// if the next is the same as current, it means we're on the final card, which

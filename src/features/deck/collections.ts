@@ -120,7 +120,6 @@ export const cardsCollection = createCollection(
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
-			// Throwing rolls the optimistic state back.
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const changes = m.changes as TablesUpdate<'user_card'>
