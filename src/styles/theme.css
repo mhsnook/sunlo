@@ -15,18 +15,39 @@
  *      `dark:` variants.
  *
  *   2. `primary` and `accent` can be re-pointed at a different Tailwind
- *      palette, per subtree. They resolve through `--p-*` and `--a-*`, so
- *      setting those on any element re-themes everything inside it. That is
- *      how per-language theming works — see `src/lib/lang-theme.ts`.
+ *      palette, per subtree, by setting `--p-*` or `--a-*` on an element.
+ *      That is how per-language theming works — see `src/lib/lang-theme.ts`.
  *
  *   3. `paper` and `ink` — the achromatic pair, defined below.
  *
  * Tailwind's own palettes (`bg-purple-600`, `text-slate-300`, …) are
  * untouched and do NOT flip. The marketing pages in `src/routes/-homepage/`
  * use them directly with hand-written `dark:` variants.
+ *
+ * ── Why the two groups are declared differently ──────────────────────────
+ *
+ * A custom property's value is substituted where it is DECLARED, and the
+ * result inherits. So `--color-danger-100: var(--color-red-100)` on `:root`
+ * resolves at `:root` — which is fine for a palette nobody re-points, and
+ * it keeps `--color-danger-100` available to globals.css.
+ *
+ * That is fatal for a re-pointable palette. An element setting `--p-100`
+ * cannot change a `--color-primary-100` that already resolved at `:root`.
+ * So primary and accent go through `@theme inline`, which pastes the whole
+ * expression into the utility class itself:
+ *
+ *     .bg-primary-100 { background-color: light-dark(var(--p-100), var(--p-900)) }
+ *
+ * Now both branches resolve on the element that carries the class, and
+ * `color-scheme` picks between them. Re-pointing and the dark-mode flip
+ * compose, instead of one clobbering the other. The cost is that
+ * `--color-primary-*` is not emitted as a variable, so globals.css spells
+ * out the same `light-dark()` expressions rather than referencing it.
  */
 
-@theme {
+:root {
+	color-scheme: light;
+
 	/* The achromatic pair. `paper` is a raised surface, `ink` is a mark on
 	   it, and both follow the mode — which `white` and `black` do not.
 
@@ -39,102 +60,10 @@
 	   above the page rather than at pure black — that is what lets `bg-paper`
 	   lift a card off the background in both modes. Ink is a mark, so it goes
 	   all the way to the contrast limit. */
-	--color-paper: var(--paper);
-	--color-ink: var(--ink);
-
-	/* Re-pointable — see --p-* and --a-* below. */
-	--color-primary-50: var(--p-50);
-	--color-primary-100: var(--p-100);
-	--color-primary-200: var(--p-200);
-	--color-primary-300: var(--p-300);
-	--color-primary-400: var(--p-400);
-	--color-primary-500: var(--p-500);
-	--color-primary-600: var(--p-600);
-	--color-primary-700: var(--p-700);
-	--color-primary-800: var(--p-800);
-	--color-primary-900: var(--p-900);
-	--color-primary-950: var(--p-950);
-
-	--color-accent-50: var(--a-50);
-	--color-accent-100: var(--a-100);
-	--color-accent-200: var(--a-200);
-	--color-accent-300: var(--a-300);
-	--color-accent-400: var(--a-400);
-	--color-accent-500: var(--a-500);
-	--color-accent-600: var(--a-600);
-	--color-accent-700: var(--a-700);
-	--color-accent-800: var(--a-800);
-	--color-accent-900: var(--a-900);
-	--color-accent-950: var(--a-950);
-
-	/* Fixed aliases for stock palettes. */
-	--color-neutral-50: var(--color-slate-50);
-	--color-neutral-100: var(--color-slate-100);
-	--color-neutral-200: var(--color-slate-200);
-	--color-neutral-300: var(--color-slate-300);
-	--color-neutral-400: var(--color-slate-400);
-	--color-neutral-500: var(--color-slate-500);
-	--color-neutral-600: var(--color-slate-600);
-	--color-neutral-700: var(--color-slate-700);
-	--color-neutral-800: var(--color-slate-800);
-	--color-neutral-900: var(--color-slate-900);
-	--color-neutral-950: var(--color-slate-950);
-
-	--color-success-50: var(--color-green-50);
-	--color-success-100: var(--color-green-100);
-	--color-success-200: var(--color-green-200);
-	--color-success-300: var(--color-green-300);
-	--color-success-400: var(--color-green-400);
-	--color-success-500: var(--color-green-500);
-	--color-success-600: var(--color-green-600);
-	--color-success-700: var(--color-green-700);
-	--color-success-800: var(--color-green-800);
-	--color-success-900: var(--color-green-900);
-	--color-success-950: var(--color-green-950);
-
-	--color-warning-50: var(--color-amber-50);
-	--color-warning-100: var(--color-amber-100);
-	--color-warning-200: var(--color-amber-200);
-	--color-warning-300: var(--color-amber-300);
-	--color-warning-400: var(--color-amber-400);
-	--color-warning-500: var(--color-amber-500);
-	--color-warning-600: var(--color-amber-600);
-	--color-warning-700: var(--color-amber-700);
-	--color-warning-800: var(--color-amber-800);
-	--color-warning-900: var(--color-amber-900);
-	--color-warning-950: var(--color-amber-950);
-
-	--color-danger-50: var(--color-red-50);
-	--color-danger-100: var(--color-red-100);
-	--color-danger-200: var(--color-red-200);
-	--color-danger-300: var(--color-red-300);
-	--color-danger-400: var(--color-red-400);
-	--color-danger-500: var(--color-red-500);
-	--color-danger-600: var(--color-red-600);
-	--color-danger-700: var(--color-red-700);
-	--color-danger-800: var(--color-red-800);
-	--color-danger-900: var(--color-red-900);
-	--color-danger-950: var(--color-red-950);
-
-	--color-info-50: var(--color-blue-50);
-	--color-info-100: var(--color-blue-100);
-	--color-info-200: var(--color-blue-200);
-	--color-info-300: var(--color-blue-300);
-	--color-info-400: var(--color-blue-400);
-	--color-info-500: var(--color-blue-500);
-	--color-info-600: var(--color-blue-600);
-	--color-info-700: var(--color-blue-700);
-	--color-info-800: var(--color-blue-800);
-	--color-info-900: var(--color-blue-900);
-	--color-info-950: var(--color-blue-950);
-}
-
-/* Default sources for the two re-pointable palettes. Override --p-* or
-   --a-* on any element to re-theme its subtree. */
-:root {
 	--paper: var(--color-white);
 	--ink: var(--color-slate-950);
 
+	/* Default sources for the re-pointable palettes. */
 	--p-50: var(--color-purple-50);
 	--p-100: var(--color-purple-100);
 	--p-200: var(--color-purple-200);
@@ -160,35 +89,12 @@
 	--a-950: var(--color-teal-950);
 }
 
-/* Dark mode: the shade scale runs the other way. */
 .dark {
+	color-scheme: dark;
 	--paper: var(--color-slate-800);
 	--ink: var(--color-white);
 
-	--color-primary-50: var(--p-950);
-	--color-primary-100: var(--p-900);
-	--color-primary-200: var(--p-800);
-	--color-primary-300: var(--p-700);
-	--color-primary-400: var(--p-600);
-	--color-primary-500: var(--p-500);
-	--color-primary-600: var(--p-400);
-	--color-primary-700: var(--p-300);
-	--color-primary-800: var(--p-200);
-	--color-primary-900: var(--p-100);
-	--color-primary-950: var(--p-50);
-
-	--color-accent-50: var(--a-950);
-	--color-accent-100: var(--a-900);
-	--color-accent-200: var(--a-800);
-	--color-accent-300: var(--a-700);
-	--color-accent-400: var(--a-600);
-	--color-accent-500: var(--a-500);
-	--color-accent-600: var(--a-400);
-	--color-accent-700: var(--a-300);
-	--color-accent-800: var(--a-200);
-	--color-accent-900: var(--a-100);
-	--color-accent-950: var(--a-50);
-
+	/* The flip, for the palettes that resolve at :root. */
 	--color-neutral-50: var(--color-slate-950);
 	--color-neutral-100: var(--color-slate-900);
 	--color-neutral-200: var(--color-slate-800);
@@ -248,4 +154,98 @@
 	--color-info-800: var(--color-blue-200);
 	--color-info-900: var(--color-blue-100);
 	--color-info-950: var(--color-blue-50);
+}
+
+/* Re-pointable palettes: inlined into the utility, so the source variables
+   resolve on the element and a themed subtree re-tints. See the note above. */
+@theme inline {
+	--color-paper: var(--paper);
+	--color-ink: var(--ink);
+
+	--color-primary-50: light-dark(var(--p-50), var(--p-950));
+	--color-primary-100: light-dark(var(--p-100), var(--p-900));
+	--color-primary-200: light-dark(var(--p-200), var(--p-800));
+	--color-primary-300: light-dark(var(--p-300), var(--p-700));
+	--color-primary-400: light-dark(var(--p-400), var(--p-600));
+	--color-primary-500: light-dark(var(--p-500), var(--p-500));
+	--color-primary-600: light-dark(var(--p-600), var(--p-400));
+	--color-primary-700: light-dark(var(--p-700), var(--p-300));
+	--color-primary-800: light-dark(var(--p-800), var(--p-200));
+	--color-primary-900: light-dark(var(--p-900), var(--p-100));
+	--color-primary-950: light-dark(var(--p-950), var(--p-50));
+
+	--color-accent-50: light-dark(var(--a-50), var(--a-950));
+	--color-accent-100: light-dark(var(--a-100), var(--a-900));
+	--color-accent-200: light-dark(var(--a-200), var(--a-800));
+	--color-accent-300: light-dark(var(--a-300), var(--a-700));
+	--color-accent-400: light-dark(var(--a-400), var(--a-600));
+	--color-accent-500: light-dark(var(--a-500), var(--a-500));
+	--color-accent-600: light-dark(var(--a-600), var(--a-400));
+	--color-accent-700: light-dark(var(--a-700), var(--a-300));
+	--color-accent-800: light-dark(var(--a-800), var(--a-200));
+	--color-accent-900: light-dark(var(--a-900), var(--a-100));
+	--color-accent-950: light-dark(var(--a-950), var(--a-50));
+}
+
+/* Fixed palettes: plain aliases, so globals.css can reference them. */
+@theme {
+	--color-neutral-50: var(--color-slate-50);
+	--color-neutral-100: var(--color-slate-100);
+	--color-neutral-200: var(--color-slate-200);
+	--color-neutral-300: var(--color-slate-300);
+	--color-neutral-400: var(--color-slate-400);
+	--color-neutral-500: var(--color-slate-500);
+	--color-neutral-600: var(--color-slate-600);
+	--color-neutral-700: var(--color-slate-700);
+	--color-neutral-800: var(--color-slate-800);
+	--color-neutral-900: var(--color-slate-900);
+	--color-neutral-950: var(--color-slate-950);
+
+	--color-success-50: var(--color-green-50);
+	--color-success-100: var(--color-green-100);
+	--color-success-200: var(--color-green-200);
+	--color-success-300: var(--color-green-300);
+	--color-success-400: var(--color-green-400);
+	--color-success-500: var(--color-green-500);
+	--color-success-600: var(--color-green-600);
+	--color-success-700: var(--color-green-700);
+	--color-success-800: var(--color-green-800);
+	--color-success-900: var(--color-green-900);
+	--color-success-950: var(--color-green-950);
+
+	--color-warning-50: var(--color-amber-50);
+	--color-warning-100: var(--color-amber-100);
+	--color-warning-200: var(--color-amber-200);
+	--color-warning-300: var(--color-amber-300);
+	--color-warning-400: var(--color-amber-400);
+	--color-warning-500: var(--color-amber-500);
+	--color-warning-600: var(--color-amber-600);
+	--color-warning-700: var(--color-amber-700);
+	--color-warning-800: var(--color-amber-800);
+	--color-warning-900: var(--color-amber-900);
+	--color-warning-950: var(--color-amber-950);
+
+	--color-danger-50: var(--color-red-50);
+	--color-danger-100: var(--color-red-100);
+	--color-danger-200: var(--color-red-200);
+	--color-danger-300: var(--color-red-300);
+	--color-danger-400: var(--color-red-400);
+	--color-danger-500: var(--color-red-500);
+	--color-danger-600: var(--color-red-600);
+	--color-danger-700: var(--color-red-700);
+	--color-danger-800: var(--color-red-800);
+	--color-danger-900: var(--color-red-900);
+	--color-danger-950: var(--color-red-950);
+
+	--color-info-50: var(--color-blue-50);
+	--color-info-100: var(--color-blue-100);
+	--color-info-200: var(--color-blue-200);
+	--color-info-300: var(--color-blue-300);
+	--color-info-400: var(--color-blue-400);
+	--color-info-500: var(--color-blue-500);
+	--color-info-600: var(--color-blue-600);
+	--color-info-700: var(--color-blue-700);
+	--color-info-800: var(--color-blue-800);
+	--color-info-900: var(--color-blue-900);
+	--color-info-950: var(--color-blue-950);
 }

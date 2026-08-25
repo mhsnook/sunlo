@@ -26,32 +26,32 @@
 	/* Paper, not a palette shade. A card has to sit ABOVE the page in both
 	   modes, and "above" is lighter either way — which is not something a
 	   flipping shade can express relative to a flipping page. */
-	--card: var(--color-paper);
+	--card: var(--paper);
 	--card-foreground: var(--color-neutral-900);
-	--popover: var(--color-paper);
+	--popover: var(--paper);
 	--popover-foreground: var(--color-neutral-900);
 	--secondary: var(--color-neutral-100);
 	--secondary-foreground: var(--color-neutral-800);
 	--muted: var(--color-neutral-100);
 	--muted-foreground: var(--color-neutral-500);
 	--destructive: var(--color-danger-600);
-	--destructive-foreground: var(--color-paper);
-	--border: var(--color-primary-200);
+	--destructive-foreground: var(--paper);
+	--border: light-dark(var(--p-200), var(--p-800));
 	--input: var(--color-neutral-200);
-	--ring: var(--color-primary-500);
-	--chart-1: var(--color-primary-500);
-	--chart-2: var(--color-accent-500);
+	--ring: var(--p-500);
+	--chart-1: var(--p-500);
+	--chart-2: var(--a-500);
 	--chart-3: var(--color-info-600);
 	--chart-4: var(--color-warning-500);
 	--chart-5: var(--color-danger-500);
-	--sidebar-background: var(--color-paper);
+	--sidebar-background: var(--paper);
 	--sidebar-foreground: var(--color-neutral-700);
-	--sidebar-primary: var(--color-primary-700);
-	--sidebar-primary-foreground: var(--color-paper);
-	--sidebar-accent: var(--color-accent-100);
-	--sidebar-accent-foreground: var(--color-accent-800);
+	--sidebar-primary: light-dark(var(--p-700), var(--p-300));
+	--sidebar-primary-foreground: var(--paper);
+	--sidebar-accent: light-dark(var(--a-100), var(--a-900));
+	--sidebar-accent-foreground: light-dark(var(--a-800), var(--a-200));
 	--sidebar-border: var(--color-neutral-200);
-	--sidebar-ring: var(--color-primary-500);
+	--sidebar-ring: var(--p-500);
 	--shadow-color-1: rgba(0, 0, 0, 0.05);
 	--shadow-color-2: rgba(0, 0, 0, 0.1);
 	--shadow-color-3: rgba(0, 0, 0, 0.25);
@@ -96,16 +96,18 @@
 	--color-foreground: var(--foreground);
 
 	/* Shade-less aliases, for UI primitives that want one primary or accent
-	   color rather than a point on the scale. */
-	--color-primary: var(--color-primary-600);
-	--color-primary-foresoft: var(--color-primary-700);
-	--color-accent: var(--color-accent-600);
-	--color-accent-foresoft: var(--color-accent-700);
-	--color-accent-invert: var(--color-accent-100);
-	--color-accent-foreground: var(--color-accent-900);
+	   color rather than a point on the scale. Spelled out as light-dark() over
+	   the source variables, for the reason in theme.css: these must resolve on
+	   the element so a re-pointed subtree picks them up. */
+	--color-primary: light-dark(var(--p-600), var(--p-400));
+	--color-primary-foresoft: light-dark(var(--p-700), var(--p-300));
+	--color-accent: light-dark(var(--a-600), var(--a-400));
+	--color-accent-foresoft: light-dark(var(--a-700), var(--a-300));
+	--color-accent-invert: light-dark(var(--a-100), var(--a-900));
+	--color-accent-foreground: light-dark(var(--a-900), var(--a-100));
 
 	/* Text ON a filled surface — see the `paper` note in theme.css. */
-	--color-primary-foreground: var(--color-paper);
+	--color-primary-foreground: var(--paper);
 
 	/* Static tokens — separate light/dark definitions above */
 	--color-secondary: var(--secondary);

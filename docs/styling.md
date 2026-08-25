@@ -38,7 +38,7 @@ Tailwind's own palettes do **not** flip. `bg-purple-600` is the same purple in b
 
 ### `primary` and `accent` are re-pointable
 
-Both resolve through `--p-*` and `--a-*`, so setting those on an element re-themes its whole subtree. That is how per-language theming works:
+Both resolve through `--p-*` and `--a-*`, so setting those on an element re-themes its whole subtree — the deck tiles and language badges on the learn index each carry their own language's palette. That is how per-language theming works:
 
 ```typescript
 import { getLangThemeCss } from '@/lib/lang-theme'
@@ -46,7 +46,9 @@ import { getLangThemeCss } from '@/lib/lang-theme'
 <div style={getLangThemeCss(lang)}>…</div>
 ```
 
-The flip is written against `--p-*`/`--a-*`, so a re-pointed subtree still flips. `src/lib/lang-theme.ts` owns which palette a language or avatar gets.
+`src/lib/lang-theme.ts` owns which palette a language or avatar gets.
+
+Re-pointing and the flip compose, and getting both at once is the reason these two palettes are declared differently from the rest — `theme.css` explains it. The short version: a custom property resolves where it is _declared_, so anything resolved at `:root` cannot be re-pointed further down. Primary and accent are therefore inlined into the utility class as `light-dark()`, which puts both branches on the element itself. If you add a palette that needs re-pointing, copy that shape; a plain alias will silently ignore the override.
 
 Note that `neutral` shadows Tailwind's own `neutral`: `bg-neutral-100` is slate-tinted and flips. Use `gray`, `zinc`, or `stone` for a true stock grey.
 
