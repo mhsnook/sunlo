@@ -88,7 +88,7 @@ function WelcomePage() {
 
 			{/* Welcome Header */}
 			<header className="space-y-4 text-center">
-				<div className="from-lc-2 from-chroma-mlo to-lc-0 to-chroma-lo mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
+				<div className="from-primary-200 to-primary-50 mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
 					<Sparkles className="text-primary size-10" />
 				</div>
 				<div>
@@ -280,7 +280,7 @@ function FeatureItem({
 }) {
 	return (
 		<div className="flex gap-3">
-			<div className="bg-lc-1 bg-chroma-mlo text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
+			<div className="bg-primary-100 text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
 				<Icon className="size-5" />
 			</div>
 			<div>
@@ -328,7 +328,7 @@ function ActionCard({
 		<Card
 			className={cn(
 				'transition-shadow hover:shadow-md',
-				isPrimary && 'border-lc-4 border-chroma-mlo bg-lc-0'
+				isPrimary && 'border-primary-400 bg-neutral-50'
 			)}
 		>
 			<CardHeader className="pb-2">
@@ -409,9 +409,9 @@ function BrowseRequestsDialog({
 							key={lang.lang}
 							type="button"
 							onClick={() => handleLang(lang.lang)}
-							className="bg-card hover:bg-lc-1 flex flex-col gap-2 rounded-lg border p-4 text-start transition-colors"
+							className="bg-card flex flex-col gap-2 rounded-lg border p-4 text-start transition-colors hover:bg-neutral-100"
 						>
-							<span className="from-lc-5 from-chroma-mhi to-lc-6 text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
+							<span className="from-primary-500 to-primary-600 text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
 								{lang.lang.toUpperCase()}
 							</span>
 							<span className="text-sm leading-tight font-semibold">
@@ -428,7 +428,7 @@ function BrowseRequestsDialog({
 						trigger={
 							<button
 								type="button"
-								className="bg-card hover:bg-lc-1 flex flex-col gap-2 rounded-lg border border-dashed p-4 text-start transition-colors"
+								className="bg-card flex flex-col gap-2 rounded-lg border border-dashed p-4 text-start transition-colors hover:bg-neutral-100"
 							>
 								<span className="bg-muted text-muted-foreground inline-flex w-fit items-center justify-center rounded-md px-2.5 py-1">
 									<List className="size-4" />

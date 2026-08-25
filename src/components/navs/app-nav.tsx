@@ -28,8 +28,7 @@ const activeProps = {
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const
 const inactiveProps = {
-	className:
-		'border-transparent text-muted-foreground hover:text-lc-7 hover:text-chroma-mhi',
+	className: 'border-transparent text-muted-foreground hover:text-neutral-700',
 } as const
 
 export function AppNav() {
@@ -55,7 +54,7 @@ export function AppNav() {
 			<div ref={ref}></div>
 
 			<div
-				className={`bg-lc-base bg-chroma-lo bg-hue-neutral sticky z-30 mt-1 border-b transition-colors ${entry?.isIntersecting === false ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
+				className={`sticky z-30 mt-1 border-b bg-neutral-50 transition-colors ${entry?.isIntersecting === false ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
 				style={{ viewTransitionName: 'appnav' }}
 			>
 				<div className="w-0 grow scrollbar-none overflow-x-auto">
@@ -63,7 +62,7 @@ export function AppNav() {
 						<NavigationMenuList className="flex w-full flex-row justify-start ps-2">
 							{links.map((l: LinkType) => (
 								<NavigationMenuItem
-									className="hover:bg-lc-1 hover:bg-chroma-mlo rounded-xl px-3"
+									className="rounded-xl px-3 hover:bg-neutral-100"
 									key={l.link.to}
 								>
 									<NavigationMenuLink asChild>

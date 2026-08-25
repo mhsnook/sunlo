@@ -1,55 +1,9 @@
 import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
-import { type ConfigExtension, extendTailwindMerge } from 'tailwind-merge'
+import { twMerge } from 'tailwind-merge'
 import type { DeckMetaType } from '@/features/deck/schemas'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
-
-/* ── OKLCH single-axis utilities × tailwind-merge ──────────────────────────
-   Our color utilities decompose into three same-prefix classes per property
-   (`bg-lc-7 bg-chroma-mhi`). Out of the box tailwind-merge
-   treats those as conflicting `bg-*` utilities and keeps only the last one,
-   silently dropping two of the three axes. Register each (property × axis) as
-   its own conflict group so the axes are independent: two `bg-lc-*` still
-   collapse to the last, but `bg-lc-*` and `bg-chroma-*` coexist. */
-const HUES = new Set([
-	'primary',
-	'accent',
-	'success',
-	'warning',
-	'danger',
-	'info',
-	'neutral',
-])
-const CHROMAS = new Set(['lo', 'mlo', 'mid', 'mhi', 'hi'])
-const isArbitrary = (v: string) => v.startsWith('[') && v.endsWith(']')
-const isHue = (v: string) => HUES.has(v) || isArbitrary(v)
-const isChroma = (v: string) => CHROMAS.has(v) || isArbitrary(v)
-const isLc = (v: string) =>
-	/^(?:\d+|base|fore|none|full|up-[123]|down-[123]|\[\d+\])$/.test(v)
-
-type ClassGroups = NonNullable<
-	ConfigExtension<string, string>['extend']
->['classGroups']
-const oklchClassGroups: ClassGroups = {}
-for (const p of ['bg', 'text', 'border', 'from', 'to']) {
-	oklchClassGroups[`ok-${p}-lc`] = [{ [p]: [{ lc: [isLc] }] }]
-	oklchClassGroups[`ok-${p}-chroma`] = [{ [p]: [{ chroma: [isChroma] }] }]
-	oklchClassGroups[`ok-${p}-hue`] = [{ [p]: [{ hue: [isHue] }] }]
-}
-// border-b sets border-bottom-color — a separate property from border-color
-oklchClassGroups['ok-border-b-lc'] = [{ border: [{ b: [{ lc: [isLc] }] }] }]
-oklchClassGroups['ok-border-b-chroma'] = [
-	{ border: [{ b: [{ chroma: [isChroma] }] }] },
-]
-oklchClassGroups['ok-border-b-hue'] = [{ border: [{ b: [{ hue: [isHue] }] }] }]
-// cascade seeders (apply no property, set an axis for all descendants)
-oklchClassGroups['ok-seed-hue'] = [{ hue: [isHue] }]
-oklchClassGroups['ok-seed-chroma'] = [{ chroma: [isChroma] }]
-
-const twMerge = extendTailwindMerge({
-	extend: { classGroups: oklchClassGroups },
-})
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))

@@ -250,7 +250,7 @@ function ForgettingCurveChart({
 						x2={PAD.left + PLOT.w}
 						y1={toY(r)}
 						y2={toY(r)}
-						className="hue-neutral text-lc-2"
+						className="text-neutral-200"
 						stroke="currentColor"
 						strokeWidth={1}
 					/>
@@ -273,7 +273,7 @@ function ForgettingCurveChart({
 						x2={toX(s.endDay)}
 						y1={PAD.top}
 						y2={PAD.top + PLOT.h}
-						className="hue-neutral text-lc-1"
+						className="text-neutral-100"
 						stroke="currentColor"
 						strokeWidth={1}
 					/>
@@ -306,7 +306,7 @@ function ForgettingCurveChart({
 						key={`tail-${s.index}`}
 						d={buildPath(pts)}
 						fill="none"
-						className="hue-accent text-lc-3 text-chroma-mlo"
+						className="text-accent-300"
 						stroke="currentColor"
 						strokeWidth={1.5}
 					/>
@@ -600,7 +600,7 @@ function FsrsPage() {
 														'flex-1 rounded-2xl border px-1 py-1 text-xs transition-colors',
 														r.score === opt
 															? `${SCORE_META[opt].activeBtn} font-medium`
-															: 'hover:hue-neutral border-border text-muted-foreground hover:bg-lc-1'
+															: 'border-border text-muted-foreground hover:bg-neutral-100'
 													)}
 												>
 													{SCORE_META[opt].label}
@@ -612,7 +612,7 @@ function FsrsPage() {
 											onClick={() => removeReview(r.id)}
 											aria-label={`Remove review ${i}`}
 											disabled={reviews.length <= 1}
-											className="hover:hue-danger text-muted-foreground hover:text-lc-5 hover:text-chroma-hi disabled:opacity-40"
+											className="text-muted-foreground hover:text-neutral-500 disabled:opacity-40"
 										>
 											<X className="size-4" />
 										</button>
