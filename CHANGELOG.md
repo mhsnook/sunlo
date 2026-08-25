@@ -1,5 +1,43 @@
 # Change Log
 
+## v0.32 - Tailwind Palette Replaces OKLCH; Decks as Rows; Soft-Delete Upvotes
+
+_25 August, 2026_
+
+### UI Changes
+
+- **The OKLCH color system is gone (#756).** Seven semantic palettes — primary, accent, neutral, success, info, warning, danger — are built from stock Tailwind colors and used as `{property}-{palette}-{50–950}`; the shade scale flips in dark mode, so a component needs no `dark:` variant, and `primary` and `accent` follow one `--hue` variable for per-language theming. A scripted prune had already cut the vendored utilities by 36% before the replacement landed (#742).
+
+### Refactors
+
+- **`decksCollection` reads `user_deck` rows and syncs over realtime (#757).** The queryFn stops grafting `language` onto the row (display sites look the name up in `languages[deck.lang]`), both handlers `.select()` their write into the synced layer, and `useUserRealtime` folds deck INSERT and UPDATE frames in, so a second device's edits arrive without a refetch.
+- **Card scheduling extracted from the review feature (#764).** `cardsWithReviews` names the card-to-review join in `deck/live.ts`, and `card-scheduling.ts` decides what those reviews mean — a test surface where there was an inline query.
+- **Mark-as-read moves onto collection ops, with realtime UPDATE as the backstop (#760).** `useMarkAsRead` and friends become plain functions over `notificationsCollection.onUpdate` and `chatMessagesCollection.onUpdate`, and the `{ refetch: false }` contract is now written down.
+- **The last `useMutation` + `writeInsert` call sites migrate to collection handlers (#625).** Deck insert (#741), the rest of the deck cluster, admin mutations (#746), and playlist phrase-link + deck-add (#745).
+- **`DeckMetaSchema` is now `DeckSchema`, and `useDeckMeta` is `useDeck` (#769).**
+
+### Fixes
+
+- **Upvotes soft-delete, so one user's un-upvote no longer drops another's (#768).** Supabase broadcasts every DELETE to every subscriber of the table without an RLS check, so a `deleted` flag on the three upvote tables turns the un-upvote into an RLS-scoped UPDATE that reaches only its owner.
+- Phrase-creator submit stays disabled until the form is valid on mount.
+- Bulk-add translation rows no longer trip `no-underscore-dangle` on their keys.
+
+### Improvements
+
+- **Formatter drift is tracked in CI (#752)**, and the bundle-size job now measures eager CSS alongside JS.
+- **A pre-push hook blocks reusing a merged branch name**, which would re-attach new work to a closed PR.
+- **"Clear Technical" output style and the ASD-STE100 prose skill (#753)** set one plain-English standard for everything a human reads, from commit messages to UI copy.
+- Review scheduling and the chat prototype get feature docs (#765).
+
+### Testing
+
+- **Two legacy Playwright specs deleted (#632)** — the friend-chat and add-a-phrase journeys they covered already have scenetest scenes.
+- scenetest dependencies upgraded.
+
+### Migrations
+
+- `20260825120000_soft_delete_upvotes.sql` — adds `deleted` to the three upvote tables, rewrites the upvote-count triggers and `recount_all_upvotes()` around the flag, and adds the UPDATE policies plus a guard trigger that pins every other column.
+
 ## v0.31 - Drop `user_deck_plus`; Deck Stats as Client-Side Live Queries
 
 _21 July, 2026_
