@@ -22,7 +22,7 @@ import {
 	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
-import { DeckSchema, CardMetaSchema } from '@/features/deck/schemas'
+import { DeckSchema, CardSchema } from '@/features/deck/schemas'
 import { decksCollection, cardsCollection } from '@/features/deck/collections'
 import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 
@@ -120,7 +120,7 @@ export const useUserRealtime = () => {
 				'postgres_changes',
 				{ event: 'INSERT', schema: 'public', table: 'user_card' },
 				(payload) => {
-					const row = CardMetaSchema.parse(payload.new)
+					const row = CardSchema.parse(payload.new)
 					writeRealtimeRow(cardsCollection, row.id, row)
 				}
 			)
@@ -128,7 +128,7 @@ export const useUserRealtime = () => {
 				'postgres_changes',
 				{ event: 'UPDATE', schema: 'public', table: 'user_card' },
 				(payload) => {
-					const row = CardMetaSchema.parse(payload.new)
+					const row = CardSchema.parse(payload.new)
 					writeRealtimeRow(cardsCollection, row.id, row)
 				}
 			)

@@ -5,8 +5,8 @@
 export {
 	DeckSchema,
 	type DeckType,
-	CardMetaSchema,
-	type CardMetaType,
+	CardSchema,
+	type CardType,
 	CardStatusEnumSchema,
 	CardDirectionSchema,
 	type CardDirectionType,

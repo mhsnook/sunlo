@@ -25,7 +25,7 @@ import {
 } from '@/features/deck/hooks'
 import { updateCardsStatus } from '@/features/deck/card-status'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
-import { type CardMetaType } from '@/features/deck/schemas'
+import { type CardType } from '@/features/deck/schemas'
 import { cn, sessionDaysDiff } from '@/lib/utils'
 import { calculateInterval } from '@/features/review'
 
@@ -39,7 +39,7 @@ type PhraseRow = {
 	phrase_id: string
 	phrase_text: string
 	/** Most active status across both directions */
-	status: CardMetaType['status']
+	status: CardType['status']
 	/** Soonest due date across both directions */
 	last_reviewed_at: string | null
 	/** Average difficulty across reviewed directions */
@@ -47,7 +47,7 @@ type PhraseRow = {
 	/** Lowest stability across directions (drives due date) */
 	stability: number | null
 	/** All underlying card records for this phrase */
-	cards: Array<CardMetaType>
+	cards: Array<CardType>
 }
 
 type SortField = 'phrase' | 'status' | 'last_reviewed' | 'difficulty'
@@ -293,7 +293,7 @@ function ManageDeckSummary({ lang }: { lang: string }) {
 	const phraseIds = new Set((cards ?? []).map((c) => c.phrase_id))
 	const byStatus = { active: 0, learned: 0, skipped: 0 }
 	const statusPriority = { active: 0, learned: 1, skipped: 2 } as const
-	const phraseStatus = new Map<string, CardMetaType['status']>()
+	const phraseStatus = new Map<string, CardType['status']>()
 	for (const card of cards ?? []) {
 		const prev = phraseStatus.get(card.phrase_id)
 		if (!prev || statusPriority[card.status] < statusPriority[prev]) {

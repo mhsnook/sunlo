@@ -1,11 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
-import {
-	DeckSchema,
-	type DeckType,
-	CardMetaSchema,
-	type CardMetaType,
-} from './schemas'
+import { DeckSchema, type DeckType, CardSchema, type CardType } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { should } from '@scenetest/checks/react'
@@ -90,12 +85,12 @@ export const cardsCollection = createCollection(
 			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading cardsCollection`)
 			const { data } = await supabase.from('user_card').select().throwOnError()
-			return data?.map((item) => CardMetaSchema.parse(item)) ?? []
+			return data?.map((item) => CardSchema.parse(item)) ?? []
 		},
-		getKey: (item: CardMetaType) => item.id,
+		getKey: (item: CardType) => item.id,
 		queryClient,
 		startSync: false,
-		schema: CardMetaSchema,
+		schema: CardSchema,
 		onInsert: async ({ transaction }) => {
 			const rows = transaction.mutations.map((m) => m.modified)
 			const { data } = await supabase
@@ -103,7 +98,7 @@ export const cardsCollection = createCollection(
 				.insert(rows)
 				.select()
 				.throwOnError()
-			const returned = data?.map((row) => CardMetaSchema.parse(row)) ?? []
+			const returned = data?.map((row) => CardSchema.parse(row)) ?? []
 			// Confirm the server stored the same cards our optimistic insert
 			// added to the collection. Stripped from production by the Vite plugin.
 			should(
@@ -148,7 +143,7 @@ export const cardsCollection = createCollection(
 							),
 						{ submitted: changes, returned: row }
 					)
-					if (row) cardsCollection.utils.writeUpdate(CardMetaSchema.parse(row))
+					if (row) cardsCollection.utils.writeUpdate(CardSchema.parse(row))
 				})
 			)
 			return { refetch: false }

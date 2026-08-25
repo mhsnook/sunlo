@@ -27,7 +27,7 @@ export type DeckType = z.infer<typeof DeckSchema>
 
 // A `user_card` row, nothing else. Scheduler state (last review, difficulty,
 // stability) is derived from the card's reviews — see `card-scheduling.ts`.
-export const CardMetaSchema = z.object({
+export const CardSchema = z.object({
 	id: z.string().uuid(),
 	created_at: z.string(),
 	phrase_id: z.string().uuid(),
@@ -38,4 +38,4 @@ export const CardMetaSchema = z.object({
 	updated_at: z.string(),
 })
 
-export type CardMetaType = z.infer<typeof CardMetaSchema>
+export type CardType = z.infer<typeof CardSchema>

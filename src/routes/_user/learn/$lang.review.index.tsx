@@ -49,7 +49,7 @@ import { insertMilestone, useReviewsTodayStats } from '@/features/review/hooks'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
-import { CardMetaSchema } from '@/features/deck/schemas'
+import { CardSchema } from '@/features/deck/schemas'
 import { ReviewSessionSchema } from '@/features/review/schemas'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import {
@@ -411,7 +411,7 @@ function ReviewPageContent() {
 
 			// add new records to local db collections
 			data.newCards.forEach((c) => {
-				cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
+				cardsCollection.utils.writeInsert(CardSchema.parse(c))
 			})
 			reviewSessionsCollection.utils.writeInsert(
 				ReviewSessionSchema.parse(data.reviewDay)

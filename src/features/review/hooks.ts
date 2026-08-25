@@ -24,7 +24,7 @@ import {
 } from './schemas'
 import { useUserId } from '@/lib/use-auth'
 import { calculateFSRS, type Score } from './fsrs'
-import { CardMetaSchema, type CardDirectionType } from '@/features/deck/schemas'
+import { CardSchema, type CardDirectionType } from '@/features/deck/schemas'
 import {
 	manifestPhraseId,
 	toManifestEntry,
@@ -298,7 +298,7 @@ export async function ensureManifestCardsInCollection(
 		.in('phrase_id', missingPhraseIds)
 		.throwOnError()
 	for (const row of data ?? [])
-		cardsCollection.utils.writeUpsert(CardMetaSchema.parse(row))
+		cardsCollection.utils.writeUpsert(CardSchema.parse(row))
 }
 
 export function useOneReviewToday(

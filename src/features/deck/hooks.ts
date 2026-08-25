@@ -5,7 +5,7 @@ import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type { pids, uuid, UseLiveQueryResult } from '@/types/main'
-import type { CardDirectionType, CardMetaType, DeckType } from './schemas'
+import type { CardDirectionType, CardType, DeckType } from './schemas'
 import { cardsWithReviews } from './live'
 import { schedulingFromReviews, type CardScheduling } from './card-scheduling'
 import type { CardReviewType } from '@/features/review/schemas'
@@ -237,7 +237,7 @@ export const useDeckReviewCounts = (lang: string): DeckReviewCounts => {
 	}, [data])
 }
 
-export type CardWithSibling = CardMetaType & { sibling_id: string | null }
+export type CardWithSibling = CardType & { sibling_id: string | null }
 
 export const useMyCard = (
 	phraseId: string | null | undefined
@@ -292,9 +292,7 @@ export const useCardScheduling = (
 	return schedulingFromReviews(data?.reviews)
 }
 
-export const useDeckCards = (
-	lang: string
-): UseLiveQueryResult<CardMetaType[]> =>
+export const useDeckCards = (lang: string): UseLiveQueryResult<CardType[]> =>
 	useLiveQuery(
 		(q) =>
 			q
@@ -304,7 +302,7 @@ export const useDeckCards = (
 	)
 
 /** A card row with the scheduler state folded out of its own reviews. */
-export type ScheduledCard = CardMetaType & { scheduling: CardScheduling | null }
+export type ScheduledCard = CardType & { scheduling: CardScheduling | null }
 
 /**
  * The deck's cards, each carrying the scheduling derived from its reviews.

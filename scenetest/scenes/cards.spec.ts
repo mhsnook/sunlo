@@ -1,7 +1,7 @@
 // Migrated from e2e/mutations/cards.spec.ts.
 //
 // The old Playwright spec scraped DB / collection state directly
-// (window.__cardsCollection, getCardByPhraseId, CardMetaSchema matchObject).
+// (window.__cardsCollection, getCardByPhraseId, CardSchema matchObject).
 // Those invariants now live as serverCheck() inline checks on
 // cardsCollection.onInsert / onUpdate (src/features/deck/collections.ts) and
 // in card-status-dropdown.tsx — so this spec only drives the user journey

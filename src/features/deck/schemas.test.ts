@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
 	DeckSchema,
-	CardMetaSchema,
+	CardSchema,
 	CardStatusEnumSchema,
 } from '@/features/deck/schemas'
 
@@ -105,7 +105,7 @@ describe('DeckSchema', () => {
 	})
 })
 
-describe('CardMetaSchema', () => {
+describe('CardSchema', () => {
 	const validCard = {
 		id: 'aa440001-1111-4aaa-bbbb-222222222222',
 		created_at: '2026-03-15T00:00:00Z',
@@ -117,15 +117,15 @@ describe('CardMetaSchema', () => {
 	}
 
 	it('parses a valid card', () => {
-		const result = CardMetaSchema.parse(validCard)
+		const result = CardSchema.parse(validCard)
 		expect(result.status).toBe('active')
 		expect(result.direction).toBe('forward')
 	})
 
 	// The scheduler columns live on the reviews now, so a row carrying them is
-	// a `user_card_plus` row and does not belong in this collection.
+	// not a `user_card` row and does not belong in this collection.
 	it('drops FSRS fields rather than carrying them on the card', () => {
-		const result = CardMetaSchema.parse({
+		const result = CardSchema.parse({
 			...validCard,
 			last_reviewed_at: '2026-03-30T12:00:00Z',
 			difficulty: 5.28,
@@ -138,7 +138,7 @@ describe('CardMetaSchema', () => {
 
 	it('rejects invalid card status', () => {
 		expect(() =>
-			CardMetaSchema.parse({ ...validCard, status: 'deleted' })
+			CardSchema.parse({ ...validCard, status: 'deleted' })
 		).toThrow()
 	})
 })

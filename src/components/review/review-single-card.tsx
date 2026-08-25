@@ -51,7 +51,7 @@ import {
 	PhraseFullFilteredType,
 	TranslationType,
 } from '@/features/phrases/schemas'
-import { type CardDirectionType, type CardMetaType } from '@/features/deck'
+import { type CardDirectionType, type CardType } from '@/features/deck'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
@@ -59,7 +59,7 @@ import { cardsCollection } from '@/features/deck/collections'
 import { useMyCard } from '@/features/deck/hooks'
 import { useCheck, should } from '@scenetest/checks/react'
 
-type CardStatus = CardMetaType['status']
+type CardStatus = CardType['status']
 
 const playAudio = (text: string) => {
 	toastNeutral(`Playing audio for: ${text}`)

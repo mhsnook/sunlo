@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { cardsCollection } from '@/features/deck/collections'
-import { type CardMetaType } from '@/features/deck/schemas'
+import { type CardType } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import { useDecks, useDeckCards, useMyCard } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
@@ -59,7 +59,7 @@ export function PlaylistItem({
 		const existingByKey = new Map(
 			(langCards ?? []).map((c) => [`${c.phrase_id}:${c.direction}`, c])
 		)
-		const toInsert: Array<CardMetaType> = []
+		const toInsert: Array<CardType> = []
 		const toActivate: Array<string> = []
 		for (const p of phrases) {
 			for (const direction of directionsForPhrase(p.only_reverse)) {
