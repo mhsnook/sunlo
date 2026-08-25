@@ -1,7 +1,7 @@
 import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar'
 
 import { cn } from '@/lib/utils'
-import { getAvatarPaletteCss } from '@/lib/lang-theme'
+import { getAvatarHue, getHueCss } from '@/lib/lang-theme'
 
 const Avatar = ({ className, ...props }: AvatarPrimitive.Root.Props) => (
 	<AvatarPrimitive.Root
@@ -35,7 +35,7 @@ const AvatarFallback = ({
 			seed ? 'bg-primary-500 text-primary-foreground' : 'bg-muted',
 			className
 		)}
-		style={seed ? { ...style, ...getAvatarPaletteCss(seed) } : style}
+		style={seed ? { ...style, ...getHueCss(getAvatarHue(seed)) } : style}
 		{...props}
 	/>
 )

@@ -1,10 +1,7 @@
 @import '@fontsource-variable/atkinson-hyperlegible-next/wght.css';
 @import '@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css';
 @import '@fontsource/opendyslexic/index.css';
-/* theme(static) emits every stock palette, not just the ones a utility
-   class mentions. src/lib/lang-theme.ts builds `var(--color-rose-500)`
-   references at runtime, which the class scanner cannot see. */
-@import 'tailwindcss' theme(static);
+@import 'tailwindcss';
 @import './theme.css';
 
 @plugin '@tailwindcss/typography';
@@ -36,22 +33,46 @@
 	--muted-foreground: var(--color-neutral-500);
 	--destructive: var(--color-danger-600);
 	--destructive-foreground: var(--paper);
-	--border: light-dark(var(--p-200), var(--p-800));
+	--border: oklch(
+		from light-dark(var(--color-purple-200), var(--color-purple-800)) l c
+			var(--hue, h)
+	);
 	--input: var(--color-neutral-200);
-	--ring: var(--p-500);
-	--chart-1: var(--p-500);
-	--chart-2: var(--a-500);
+	--ring: oklch(
+		from light-dark(var(--color-purple-500), var(--color-purple-500)) l c
+			var(--hue, h)
+	);
+	--chart-1: oklch(
+		from light-dark(var(--color-purple-500), var(--color-purple-500)) l c
+			var(--hue, h)
+	);
+	--chart-2: oklch(
+		from light-dark(var(--color-teal-500), var(--color-teal-500)) l c
+			var(--hue, h)
+	);
 	--chart-3: var(--color-info-600);
 	--chart-4: var(--color-warning-500);
 	--chart-5: var(--color-danger-500);
 	--sidebar-background: var(--paper);
 	--sidebar-foreground: var(--color-neutral-700);
-	--sidebar-primary: light-dark(var(--p-700), var(--p-300));
+	--sidebar-primary: oklch(
+		from light-dark(var(--color-purple-700), var(--color-purple-300)) l c
+			var(--hue, h)
+	);
 	--sidebar-primary-foreground: var(--paper);
-	--sidebar-accent: light-dark(var(--a-100), var(--a-900));
-	--sidebar-accent-foreground: light-dark(var(--a-800), var(--a-200));
+	--sidebar-accent: oklch(
+		from light-dark(var(--color-teal-100), var(--color-teal-900)) l c
+			var(--hue, h)
+	);
+	--sidebar-accent-foreground: oklch(
+		from light-dark(var(--color-teal-800), var(--color-teal-200)) l c
+			var(--hue, h)
+	);
 	--sidebar-border: var(--color-neutral-200);
-	--sidebar-ring: var(--p-500);
+	--sidebar-ring: oklch(
+		from light-dark(var(--color-purple-500), var(--color-purple-500)) l c
+			var(--hue, h)
+	);
 	--shadow-color-1: rgba(0, 0, 0, 0.05);
 	--shadow-color-2: rgba(0, 0, 0, 0.1);
 	--shadow-color-3: rgba(0, 0, 0, 0.25);
@@ -96,15 +117,33 @@
 	--color-foreground: var(--foreground);
 
 	/* Shade-less aliases, for UI primitives that want one primary or accent
-	   color rather than a point on the scale. Spelled out as light-dark() over
-	   the source variables, for the reason in theme.css: these must resolve on
-	   the element so a re-pointed subtree picks them up. */
-	--color-primary: light-dark(var(--p-600), var(--p-400));
-	--color-primary-foresoft: light-dark(var(--p-700), var(--p-300));
-	--color-accent: light-dark(var(--a-600), var(--a-400));
-	--color-accent-foresoft: light-dark(var(--a-700), var(--a-300));
-	--color-accent-invert: light-dark(var(--a-100), var(--a-900));
-	--color-accent-foreground: light-dark(var(--a-900), var(--a-100));
+	   color rather than a point on the scale. The expression is spelled out
+	   again rather than referencing --color-primary-600, for the reason in
+	   theme.css: inline theme values are not emitted as variables. */
+	--color-primary: oklch(
+		from light-dark(var(--color-purple-600), var(--color-purple-400)) l c
+			var(--hue, h)
+	);
+	--color-primary-foresoft: oklch(
+		from light-dark(var(--color-purple-700), var(--color-purple-300)) l c
+			var(--hue, h)
+	);
+	--color-accent: oklch(
+		from light-dark(var(--color-teal-600), var(--color-teal-400)) l c
+			var(--hue, h)
+	);
+	--color-accent-foresoft: oklch(
+		from light-dark(var(--color-teal-700), var(--color-teal-300)) l c
+			var(--hue, h)
+	);
+	--color-accent-invert: oklch(
+		from light-dark(var(--color-teal-100), var(--color-teal-900)) l c
+			var(--hue, h)
+	);
+	--color-accent-foreground: oklch(
+		from light-dark(var(--color-teal-900), var(--color-teal-100)) l c
+			var(--hue, h)
+	);
 
 	/* Text ON a filled surface — see the `paper` note in theme.css. */
 	--color-primary-foreground: var(--paper);

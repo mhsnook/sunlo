@@ -1,9 +1,9 @@
 /* theme.css — the app's semantic color palettes.
  *
  * Everything here is stock Tailwind. Each semantic palette is an alias for
- * one of Tailwind's own palettes, so `bg-primary-600` is `bg-purple-600`
- * and `text-danger-700` is `text-red-700` — same values, same shade
- * numbers, same mental model. Components write ordinary Tailwind classes.
+ * one of Tailwind's own, so `bg-primary-600` is `bg-purple-600` and
+ * `text-danger-700` is `text-red-700` — same values, same shade numbers,
+ * same mental model. Components write ordinary Tailwind classes.
  *
  * Three things are added on top, and nothing else:
  *
@@ -14,35 +14,48 @@
  *      `text-primary-800` is strong text in both modes. Components need no
  *      `dark:` variants.
  *
- *   2. `primary` and `accent` can be re-pointed at a different Tailwind
- *      palette, per subtree, by setting `--p-*` or `--a-*` on an element.
- *      That is how per-language theming works — see `src/lib/lang-theme.ts`.
+ *   2. `primary` and `accent` follow one variable, `--hue`. Set it on any
+ *      element and every primary and accent color inside rotates to that
+ *      hue, keeping the lightness and chroma of the shade it started from.
+ *      Unset, they are exactly stock purple and teal. That is how
+ *      per-language theming works — see `src/lib/lang-theme.ts`.
  *
  *   3. `paper` and `ink` — the achromatic pair, defined below.
  *
  * Tailwind's own palettes (`bg-purple-600`, `text-slate-300`, …) are
- * untouched and do NOT flip. The marketing pages in `src/routes/-homepage/`
- * use them directly with hand-written `dark:` variants.
+ * untouched: they neither flip nor rotate. The marketing pages in
+ * `src/routes/-homepage/` use them with hand-written `dark:` variants.
  *
- * ── Why the two groups are declared differently ──────────────────────────
+ * ── How the two groups differ ────────────────────────────────────────────
  *
  * A custom property's value is substituted where it is DECLARED, and the
  * result inherits. So `--color-danger-100: var(--color-red-100)` on `:root`
- * resolves at `:root` — which is fine for a palette nobody re-points, and
- * it keeps `--color-danger-100` available to globals.css.
+ * resolves at `:root` — fine for a palette nobody re-tints, and it keeps
+ * `--color-danger-100` available to globals.css.
  *
- * That is fatal for a re-pointable palette. An element setting `--p-100`
- * cannot change a `--color-primary-100` that already resolved at `:root`.
- * So primary and accent go through `@theme inline`, which pastes the whole
- * expression into the utility class itself:
+ * That is fatal for a rotatable palette: an element setting `--hue` cannot
+ * change a value that already resolved at `:root`. So primary and accent go
+ * through `@theme inline`, which pastes the whole expression into the
+ * utility class itself:
  *
- *     .bg-primary-100 { background-color: light-dark(var(--p-100), var(--p-900)) }
+ *     .bg-primary-100 {
+ *       background-color: oklch(
+ *         from light-dark(var(--color-purple-100), var(--color-purple-900))
+ *         l c var(--hue, h)
+ *       );
+ *     }
  *
- * Now both branches resolve on the element that carries the class, and
- * `color-scheme` picks between them. Re-pointing and the dark-mode flip
- * compose, instead of one clobbering the other. The cost is that
- * `--color-primary-*` is not emitted as a variable, so globals.css spells
- * out the same `light-dark()` expressions rather than referencing it.
+ * Everything then resolves on the element that carries the class: the
+ * relative-color `from` reads Tailwind's purple ramp for lightness and
+ * chroma, `color-scheme` picks the light or dark branch, and `var(--hue, h)`
+ * either rotates to a set hue or falls back to `h`, the source's own.
+ *
+ * Two consequences worth knowing. Rotating keeps the source ramp's chroma,
+ * so a hue whose stock palette is more saturated than purple reads muted
+ * here — pick hues by eye, not by arithmetic. And `--color-primary-*` is not
+ * emitted as a variable, so globals.css spells the expression out again
+ * rather than referencing it. Tailwind does not resolve one inline theme
+ * value into another.
  */
 
 :root {
@@ -52,9 +65,9 @@
 	   it, and both follow the mode — which `white` and `black` do not.
 
 	   Reach for `text-paper` on any filled surface. It is the one foreground
-	   that works on every palette, including a re-pointed one, and it is the
-	   answer to the trap in `text-white`: `bg-primary-700` flips to a light
-	   shade in dark mode, so white text on it is unreadable.
+	   that works at any hue, and it is the answer to the trap in
+	   `text-white`: `bg-primary-700` flips to a light shade in dark mode, so
+	   white text on it is unreadable.
 
 	   They are not exact mirrors. Paper is a surface, so in dark mode it sits
 	   above the page rather than at pure black — that is what lets `bg-paper`
@@ -62,31 +75,6 @@
 	   all the way to the contrast limit. */
 	--paper: var(--color-white);
 	--ink: var(--color-slate-950);
-
-	/* Default sources for the re-pointable palettes. */
-	--p-50: var(--color-purple-50);
-	--p-100: var(--color-purple-100);
-	--p-200: var(--color-purple-200);
-	--p-300: var(--color-purple-300);
-	--p-400: var(--color-purple-400);
-	--p-500: var(--color-purple-500);
-	--p-600: var(--color-purple-600);
-	--p-700: var(--color-purple-700);
-	--p-800: var(--color-purple-800);
-	--p-900: var(--color-purple-900);
-	--p-950: var(--color-purple-950);
-
-	--a-50: var(--color-teal-50);
-	--a-100: var(--color-teal-100);
-	--a-200: var(--color-teal-200);
-	--a-300: var(--color-teal-300);
-	--a-400: var(--color-teal-400);
-	--a-500: var(--color-teal-500);
-	--a-600: var(--color-teal-600);
-	--a-700: var(--color-teal-700);
-	--a-800: var(--color-teal-800);
-	--a-900: var(--color-teal-900);
-	--a-950: var(--color-teal-950);
 }
 
 .dark {
@@ -156,35 +144,101 @@
 	--color-info-950: var(--color-blue-50);
 }
 
-/* Re-pointable palettes: inlined into the utility, so the source variables
-   resolve on the element and a themed subtree re-tints. See the note above. */
+/* Rotatable palettes: inlined into the utility, so --hue resolves on the
+   element and a themed subtree re-tints. See the note above. */
 @theme inline {
 	--color-paper: var(--paper);
 	--color-ink: var(--ink);
 
-	--color-primary-50: light-dark(var(--p-50), var(--p-950));
-	--color-primary-100: light-dark(var(--p-100), var(--p-900));
-	--color-primary-200: light-dark(var(--p-200), var(--p-800));
-	--color-primary-300: light-dark(var(--p-300), var(--p-700));
-	--color-primary-400: light-dark(var(--p-400), var(--p-600));
-	--color-primary-500: light-dark(var(--p-500), var(--p-500));
-	--color-primary-600: light-dark(var(--p-600), var(--p-400));
-	--color-primary-700: light-dark(var(--p-700), var(--p-300));
-	--color-primary-800: light-dark(var(--p-800), var(--p-200));
-	--color-primary-900: light-dark(var(--p-900), var(--p-100));
-	--color-primary-950: light-dark(var(--p-950), var(--p-50));
+	--color-primary-50: oklch(
+		from light-dark(var(--color-purple-50), var(--color-purple-950)) l c
+			var(--hue, h)
+	);
+	--color-primary-100: oklch(
+		from light-dark(var(--color-purple-100), var(--color-purple-900)) l c
+			var(--hue, h)
+	);
+	--color-primary-200: oklch(
+		from light-dark(var(--color-purple-200), var(--color-purple-800)) l c
+			var(--hue, h)
+	);
+	--color-primary-300: oklch(
+		from light-dark(var(--color-purple-300), var(--color-purple-700)) l c
+			var(--hue, h)
+	);
+	--color-primary-400: oklch(
+		from light-dark(var(--color-purple-400), var(--color-purple-600)) l c
+			var(--hue, h)
+	);
+	--color-primary-500: oklch(
+		from light-dark(var(--color-purple-500), var(--color-purple-500)) l c
+			var(--hue, h)
+	);
+	--color-primary-600: oklch(
+		from light-dark(var(--color-purple-600), var(--color-purple-400)) l c
+			var(--hue, h)
+	);
+	--color-primary-700: oklch(
+		from light-dark(var(--color-purple-700), var(--color-purple-300)) l c
+			var(--hue, h)
+	);
+	--color-primary-800: oklch(
+		from light-dark(var(--color-purple-800), var(--color-purple-200)) l c
+			var(--hue, h)
+	);
+	--color-primary-900: oklch(
+		from light-dark(var(--color-purple-900), var(--color-purple-100)) l c
+			var(--hue, h)
+	);
+	--color-primary-950: oklch(
+		from light-dark(var(--color-purple-950), var(--color-purple-50)) l c
+			var(--hue, h)
+	);
 
-	--color-accent-50: light-dark(var(--a-50), var(--a-950));
-	--color-accent-100: light-dark(var(--a-100), var(--a-900));
-	--color-accent-200: light-dark(var(--a-200), var(--a-800));
-	--color-accent-300: light-dark(var(--a-300), var(--a-700));
-	--color-accent-400: light-dark(var(--a-400), var(--a-600));
-	--color-accent-500: light-dark(var(--a-500), var(--a-500));
-	--color-accent-600: light-dark(var(--a-600), var(--a-400));
-	--color-accent-700: light-dark(var(--a-700), var(--a-300));
-	--color-accent-800: light-dark(var(--a-800), var(--a-200));
-	--color-accent-900: light-dark(var(--a-900), var(--a-100));
-	--color-accent-950: light-dark(var(--a-950), var(--a-50));
+	--color-accent-50: oklch(
+		from light-dark(var(--color-teal-50), var(--color-teal-950)) l c
+			var(--hue, h)
+	);
+	--color-accent-100: oklch(
+		from light-dark(var(--color-teal-100), var(--color-teal-900)) l c
+			var(--hue, h)
+	);
+	--color-accent-200: oklch(
+		from light-dark(var(--color-teal-200), var(--color-teal-800)) l c
+			var(--hue, h)
+	);
+	--color-accent-300: oklch(
+		from light-dark(var(--color-teal-300), var(--color-teal-700)) l c
+			var(--hue, h)
+	);
+	--color-accent-400: oklch(
+		from light-dark(var(--color-teal-400), var(--color-teal-600)) l c
+			var(--hue, h)
+	);
+	--color-accent-500: oklch(
+		from light-dark(var(--color-teal-500), var(--color-teal-500)) l c
+			var(--hue, h)
+	);
+	--color-accent-600: oklch(
+		from light-dark(var(--color-teal-600), var(--color-teal-400)) l c
+			var(--hue, h)
+	);
+	--color-accent-700: oklch(
+		from light-dark(var(--color-teal-700), var(--color-teal-300)) l c
+			var(--hue, h)
+	);
+	--color-accent-800: oklch(
+		from light-dark(var(--color-teal-800), var(--color-teal-200)) l c
+			var(--hue, h)
+	);
+	--color-accent-900: oklch(
+		from light-dark(var(--color-teal-900), var(--color-teal-100)) l c
+			var(--hue, h)
+	);
+	--color-accent-950: oklch(
+		from light-dark(var(--color-teal-950), var(--color-teal-50)) l c
+			var(--hue, h)
+	);
 }
 
 /* Fixed palettes: plain aliases, so globals.css can reference them. */

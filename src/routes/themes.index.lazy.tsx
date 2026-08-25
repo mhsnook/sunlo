@@ -36,12 +36,11 @@ import {
 } from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
 import {
-	getLangPalette,
-	getLangPaletteIndex,
+	getHueCss,
+	getLangHue,
+	getLangHueIndex,
 	getLangPopularityIndex,
-	getPaletteCss,
-	setPaletteOn,
-	LANG_PALETTES,
+	LANG_HUES,
 } from '@/lib/lang-theme'
 import { cn } from '@/lib/utils'
 import { languagesCollection } from '@/features/languages/collections'
@@ -1460,7 +1459,7 @@ function ComponentShowcase() {
 }
 
 // Our standard brand hue, shown alongside the per-language stops.
-const BRAND_PALETTE = 'purple'
+const BRAND_HUE = 300
 
 function ThemesPage() {
 	const { data: ranked = [] } = useLiveQuery((q) =>
@@ -1470,38 +1469,34 @@ function ThemesPage() {
 			.orderBy(({ language }) => language.display_order)
 	)
 
-	const [activePalette, setActivePalette] = useState<string | null>(null)
+	const [activeHue, setActiveHue] = useState<number | null>(null)
 
 	// Apply the picked palette to <html> so it reaches the body background
 	// and the whole app chrome — not just this page's subtree. Cleared on
 	// reset and when leaving the page.
 	useEffect(() => {
 		const root = document.documentElement
-		setPaletteOn(root, activePalette)
-		return () => setPaletteOn(root, null)
-	}, [activePalette])
+		if (activeHue === null) root.style.removeProperty('--hue')
+		else root.style.setProperty('--hue', String(activeHue))
+		return () => {
+			root.style.removeProperty('--hue')
+		}
+	}, [activeHue])
 
-	const grouped = LANG_PALETTES.map((palette, i) => ({
+	const grouped = LANG_HUES.map((hue, i) => ({
 		index: i,
-		palette,
-		langs: allLanguageOptions.filter(
-			(opt) => getLangPaletteIndex(opt.value) === i
-		),
+		hue,
+		langs: allLanguageOptions.filter((opt) => getLangHueIndex(opt.value) === i),
 	}))
 
 	const swatches = [
-		{ palette: BRAND_PALETTE, label: 'Brand', brand: true },
-		...LANG_PALETTES.map((palette, i) => ({
-			palette,
-			label: `#${i}`,
-			brand: false,
-		})),
+		{ hue: BRAND_HUE, label: 'Brand', brand: true },
+		...LANG_HUES.map((hue, i) => ({ hue, label: `#${i}`, brand: false })),
 	]
 
 	// Brand is the default palette, so picking it (or clearing) is not an
 	// override — the reset control has nothing to do in that state.
-	const isDefaultPalette =
-		activePalette === null || activePalette === BRAND_PALETTE
+	const isDefaultHue = activeHue === null || activeHue === BRAND_HUE
 
 	return (
 		<div className="@container mx-auto max-w-5xl space-y-8 p-6">
@@ -1514,10 +1509,9 @@ function ThemesPage() {
 			<header className="space-y-2">
 				<h1 className="text-2xl font-bold">Per-language palette</h1>
 				<p className="text-muted-foreground text-sm">
-					{LANG_PALETTES.length} stock Tailwind palettes, walked over languages
-					in popularity order ({'learners × phrases_to_learn'}). Stop walk: 6,
-					0, 4, 8, 2, 7, 1, 5, 9, 3 — adjacent ranks always land far apart on
-					the wheel.
+					{LANG_HUES.length} hue stops, walked over languages in popularity
+					order ({'learners × phrases_to_learn'}). Stop walk: 6, 0, 4, 8, 2, 7,
+					1, 5, 9, 3 — adjacent ranks always land far apart on the wheel.
 				</p>
 			</header>
 
@@ -1528,20 +1522,20 @@ function ThemesPage() {
 					<Button
 						size="sm"
 						variant="neutral"
-						onClick={() => setActivePalette(null)}
-						className={cn(isDefaultPalette && 'invisible')}
-						aria-hidden={isDefaultPalette}
-						tabIndex={isDefaultPalette ? -1 : undefined}
+						onClick={() => setActiveHue(null)}
+						className={cn(isDefaultHue && 'invisible')}
+						aria-hidden={isDefaultHue}
+						tabIndex={isDefaultHue ? -1 : undefined}
 					>
-						Reset page palette
+						Reset page hue
 					</Button>
 				</div>
 				<p className="text-muted-foreground text-sm">
-					Click any swatch to theme the whole page with that palette.
+					Click any swatch to theme the whole page with that hue.
 				</p>
 				<div className="grid grid-cols-4 gap-2 @md:grid-cols-6 @3xl:grid-cols-11">
 					{swatches.map((s) => {
-						const isActive = activePalette === s.palette
+						const isActive = activeHue === s.hue
 						return (
 							<button
 								key={s.label}
@@ -1549,8 +1543,8 @@ function ThemesPage() {
 								aria-pressed={isActive}
 								aria-label={`Theme the page with ${
 									s.brand ? 'the brand' : `stop ${s.label}`
-								} palette, ${s.palette}`}
-								onClick={() => setActivePalette(isActive ? null : s.palette)}
+								} hue, ${s.hue} degrees`}
+								onClick={() => setActiveHue(isActive ? null : s.hue)}
 								className={cn(
 									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
 									isActive
@@ -1559,7 +1553,7 @@ function ThemesPage() {
 											? 'border-primary'
 											: 'hover:border-border border-transparent'
 								)}
-								style={getPaletteCss(s.palette)}
+								style={getHueCss(s.hue)}
 							>
 								<div className="bg-primary-100 h-10 w-full rounded" />
 								<span className="flex flex-col items-center text-center leading-tight">
@@ -1572,7 +1566,7 @@ function ThemesPage() {
 										{s.brand && <Star className="size-3" />}
 										{s.brand ? 'Brand' : s.label}
 									</span>
-									<span className="text-muted-foreground">{s.palette}</span>
+									<span className="text-muted-foreground">{s.hue}°</span>
 								</span>
 							</button>
 						)
@@ -1597,7 +1591,7 @@ function ThemesPage() {
 							<LangBadge lang={lang.lang} />
 							<span className="flex-1 truncate">{lang.name}</span>
 							<span className="text-muted-foreground text-xs tabular-nums">
-								#{getLangPaletteIndex(lang.lang)} · {getLangPalette(lang.lang)}
+								#{getLangHueIndex(lang.lang)} · {getLangHue(lang.lang)}°
 							</span>
 						</div>
 					))}
@@ -1609,9 +1603,9 @@ function ThemesPage() {
 					Languages by stop
 				</summary>
 				{grouped.map((group) => (
-					<div key={group.palette} className="space-y-2">
+					<div key={group.hue} className="space-y-2">
 						<div className="text-muted-foreground text-xs">
-							stop #{group.index} · {group.palette} · {group.langs.length}{' '}
+							stop #{group.index} · hue {group.hue}° · {group.langs.length}{' '}
 							{group.langs.length === 1 ? 'language' : 'languages'}
 						</div>
 						<div className="flex flex-wrap gap-2">

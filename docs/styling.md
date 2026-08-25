@@ -36,19 +36,22 @@ One consequence to design around: a solid fill inverts polarity. `bg-primary-700
 
 Tailwind's own palettes do **not** flip. `bg-purple-600` is the same purple in both modes, which is why the marketing pages in `src/routes/-homepage/` can use them with hand-written `dark:` variants.
 
-### `primary` and `accent` are re-pointable
+### `primary` and `accent` follow one hue
 
-Both resolve through `--p-*` and `--a-*`, so setting those on an element re-themes its whole subtree — the deck tiles and language badges on the learn index each carry their own language's palette. That is how per-language theming works:
+Set `--hue` on any element and every primary and accent color inside rotates to it, keeping the lightness and chroma of the shade it started from. Unset, they are exactly stock purple and teal.
 
 ```typescript
 import { getLangThemeCss } from '@/lib/lang-theme'
 
+// every bg-primary-*, text-accent-*, border-primary-* inside follows
 <div style={getLangThemeCss(lang)}>…</div>
 ```
 
-`src/lib/lang-theme.ts` owns which palette a language or avatar gets.
+That is how the deck tiles and language badges on the learn index each carry their own language's color. `src/lib/lang-theme.ts` owns which hue a language or avatar gets.
 
-Re-pointing and the flip compose, and getting both at once is the reason these two palettes are declared differently from the rest — `theme.css` explains it. The short version: a custom property resolves where it is _declared_, so anything resolved at `:root` cannot be re-pointed further down. Primary and accent are therefore inlined into the utility class as `light-dark()`, which puts both branches on the element itself. If you add a palette that needs re-pointing, copy that shape; a plain alias will silently ignore the override.
+Because lightness and chroma come from one ramp, every hue reads at the same visual weight — a yellow badge and a blue badge look equally heavy, which stock palettes do not manage. The flip side is that chroma comes from purple too, so a hue whose stock palette is more saturated reads muted here. Pick hues by eye, not by arithmetic.
+
+Rotating and flipping compose, and getting both at once is why these two palettes are declared differently from the rest — `theme.css` explains it. The short version: a custom property resolves where it is _declared_, so anything resolved at `:root` cannot be re-tinted further down. Primary and accent are therefore inlined into the utility class, which puts `--hue` on the element itself. If you add a palette that needs to rotate, copy that shape; a plain alias will silently ignore `--hue`.
 
 Note that `neutral` shadows Tailwind's own `neutral`: `bg-neutral-100` is slate-tinted and flips. Use `gray`, `zinc`, or `stone` for a true stock grey.
 
