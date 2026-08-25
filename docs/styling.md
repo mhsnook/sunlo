@@ -2,29 +2,33 @@
 
 ## Colors
 
-Colors are stock Tailwind — a palette name and a shade number:
+Colors are a modified Tailwind palette. Semantic colors use the same class structure as stock Tailwind — `{property}-{color}-{50–950}` — but on a palette that adjusts its lightness automatically between light and dark mode.
 
 ```typescript
 <div className="bg-primary-100 border-primary-200">
 	<span className="text-primary-800">…</span>
-	<button className="bg-primary-700 text-primary-50 hover:bg-primary-800">Save</button>
+	<button className="bg-primary-700 text-paper hover:bg-primary-800">Save</button>
 </div>
 ```
 
-Alongside Tailwind's own palettes there are seven semantic ones, each an alias for a stock palette at the same shade numbers — `bg-danger-700` _is_ `bg-red-700`. Aliases live in `src/styles/theme.css`.
+There are seven semantic palettes, each built from one of Tailwind's own at matching shade numbers. They live in `src/styles/theme.css`.
 
-| Semantic  | Stock    | Semantic  | Stock   |
-| --------- | -------- | --------- | ------- |
-| `primary` | `purple` | `success` | `green` |
-| `accent`  | `teal`   | `warning` | `amber` |
-| `neutral` | `slate`  | `danger`  | `red`   |
-|           |          | `info`    | `blue`  |
+| Semantic  | Built from | Semantic  | Built from |
+| --------- | ---------- | --------- | ---------- |
+| `primary` | `purple`   | `success` | `green`    |
+| `accent`  | `teal`     | `warning` | `amber`    |
+| `neutral` | `slate`    | `danger`  | `red`      |
+|           |            | `info`    | `blue`     |
 
 Plus an achromatic pair, `paper` and `ink` — a surface and a mark on it, both following the mode, which `white` and `black` do not.
 
+Keep in mind that a semantic color only looks like its shade number in light mode. `bg-primary-700` is a deep purple there; in dark mode it flips and reads closer to `-300`. The number describes contrast against the page, not lightness.
+
+Tailwind's own palettes are untouched. `bg-purple-600` is the same purple in both modes, which is why the marketing pages in `src/routes/-homepage/` can use them with hand-written `dark:` variants.
+
 The ShadCN surface tokens (`bg-card`, `text-muted-foreground`, `border-border`) are built from all of these in `globals.css`. Prefer them for UI primitives that use one color everywhere.
 
-Two behaviours are worth knowing.
+Two behaviours are worth knowing in more detail.
 
 ### Dark mode flips the shade scale
 
@@ -33,8 +37,6 @@ Two behaviours are worth knowing.
 One consequence to design around: a solid fill inverts polarity. `bg-primary-700` is dark in light mode and pale in dark mode, so `text-white` on it is unreadable half the time. **Use `text-paper` on any filled surface** — it is the one foreground that works on every palette, including a re-pointed one.
 
 `paper` and `ink` are also the answer where a surface has to sit _above_ the page in both modes. "Above" means lighter either way, which no flipping shade can express relative to a flipping page — that is why `--card` is `paper` rather than `neutral-50`.
-
-Tailwind's own palettes do **not** flip. `bg-purple-600` is the same purple in both modes, which is why the marketing pages in `src/routes/-homepage/` can use them with hand-written `dark:` variants.
 
 ### `primary` and `accent` follow one hue
 
