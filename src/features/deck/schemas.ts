@@ -12,7 +12,7 @@ export type CardDirectionType = z.infer<typeof CardDirectionSchema>
 
 // A `user_deck` row, nothing else. The language name is a lookup on `lang`
 // (`languages[deck.lang]` from `@/lib/languages`), not a column we carry.
-export const DeckMetaSchema = z.object({
+export const DeckSchema = z.object({
 	uid: z.string(),
 	lang: LangSchema,
 	created_at: z.string(),
@@ -23,7 +23,7 @@ export const DeckMetaSchema = z.object({
 	review_answer_mode: ReviewAnswerModeSchema.nullable().default(null),
 })
 
-export type DeckMetaType = z.infer<typeof DeckMetaSchema>
+export type DeckType = z.infer<typeof DeckSchema>
 
 export const CardMetaSchema = z.object({
 	id: z.string().uuid(),

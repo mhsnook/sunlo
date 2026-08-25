@@ -4,10 +4,10 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useUserId } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { decksCollection } from './collections'
-import { DeckMetaSchema, type DeckMetaType } from './schemas'
+import { DeckSchema, type DeckType } from './schemas'
 
-export function optimisticNewDeck(lang: string, uid: string): DeckMetaType {
-	return DeckMetaSchema.parse({
+export function optimisticNewDeck(lang: string, uid: string): DeckType {
+	return DeckSchema.parse({
 		uid,
 		lang,
 		learning_goal: 'moving',

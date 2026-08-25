@@ -10,7 +10,7 @@ import {
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
 import {
-	useDeckMeta,
+	useDeck,
 	useDeckPids,
 	useDeckRoutineStats,
 	useDeckCardStats,
@@ -31,7 +31,7 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function WelcomePage() {
 	const { lang } = Route.useParams()
-	const { data: deck, isReady } = useDeckMeta(lang)
+	const { data: deck, isReady } = useDeck(lang)
 	const { cards_active, cards_skipped, cards_learned } = useDeckCardStats(lang)
 	const { isOpen, showCallout, handleClose, handleReopen } =
 		useIntro('deck-new')
@@ -60,7 +60,7 @@ function WelcomePage() {
 
 function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 	const { lang } = Route.useParams()
-	const { data: meta } = useDeckMeta(lang)
+	const { data: meta } = useDeck(lang)
 	const { data: deckPids } = useDeckPids(lang)
 	const { data: routineStats } = useDeckRoutineStats(lang)
 	const { most_recent_review_at } = useDeckCardStats(lang)
@@ -124,7 +124,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 
 function DeckSettings() {
 	const { lang } = Route.useParams()
-	const { data } = useDeckMeta(lang)
+	const { data } = useDeck(lang)
 
 	return (
 		<Card>

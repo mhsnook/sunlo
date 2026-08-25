@@ -14,12 +14,12 @@ import {
 } from '@/components/ui/dialog'
 import { useLangThemeCss } from '@/lib/lang-theme'
 import languages from '@/lib/languages'
-import { DeckMetaType } from '@/features/deck/schemas'
+import { DeckType } from '@/features/deck/schemas'
 import { useDeckPids } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import { todayString } from '@/lib/utils'
 
-export function DeckTile({ deck }: { deck: DeckMetaType }) {
+export function DeckTile({ deck }: { deck: DeckType }) {
 	const [open, setOpen] = useState(false)
 	const { data: pids } = useDeckPids(deck.lang)
 	const remaining = useActiveReviewRemaining(deck.lang, todayString())

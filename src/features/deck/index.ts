@@ -3,8 +3,8 @@
 
 // Schemas & types
 export {
-	DeckMetaSchema,
-	type DeckMetaType,
+	DeckSchema,
+	type DeckType,
 	CardMetaSchema,
 	type CardMetaType,
 	CardStatusEnumSchema,
@@ -18,7 +18,7 @@ export { decksCollection, cardsCollection } from './collections'
 // Hooks
 export {
 	useDecks,
-	useDeckMeta,
+	useDeck,
 	useMyCard,
 	useCardScheduling,
 	useDeckCards,

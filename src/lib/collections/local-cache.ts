@@ -5,7 +5,7 @@ import {
 } from '@/features/profile/collections'
 import { MyProfileSchema } from '@/features/profile/schemas'
 import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaSchema } from '@/features/deck/schemas'
+import { DeckSchema } from '@/features/deck/schemas'
 
 /**
  * Local persistence for user-owned collections — currently the profile and
@@ -59,7 +59,7 @@ export const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
 		storageKey: 'sunlo-cache-decks',
 		queryKey: ['user', 'deck'],
 		collection: decksCollection,
-		parseRow: (row) => DeckMetaSchema.parse(row),
+		parseRow: (row) => DeckSchema.parse(row),
 	},
 ]
 

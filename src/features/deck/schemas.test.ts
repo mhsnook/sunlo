@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-	DeckMetaSchema,
+	DeckSchema,
 	CardMetaSchema,
 	CardStatusEnumSchema,
 } from '@/features/deck/schemas'
@@ -17,7 +17,7 @@ describe('CardStatusEnumSchema', () => {
 	})
 })
 
-describe('DeckMetaSchema', () => {
+describe('DeckSchema', () => {
 	const validDeck = {
 		uid: 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		lang: 'hin',
@@ -30,13 +30,13 @@ describe('DeckMetaSchema', () => {
 	}
 
 	it('parses a valid deck with defaults', () => {
-		const result = DeckMetaSchema.parse(validDeck)
+		const result = DeckSchema.parse(validDeck)
 		expect(result.lang).toBe('hin')
 		expect(result.daily_review_goal).toBe(15)
 	})
 
 	it('strips server-side stats columns no longer on the schema', () => {
-		const result = DeckMetaSchema.parse({
+		const result = DeckSchema.parse({
 			...validDeck,
 			cards_active: 20,
 			count_reviews_7d: 45,
@@ -49,13 +49,13 @@ describe('DeckMetaSchema', () => {
 	})
 
 	it('accepts review_answer_mode values', () => {
-		const deck2 = DeckMetaSchema.parse({
+		const deck2 = DeckSchema.parse({
 			...validDeck,
 			review_answer_mode: '2-buttons',
 		})
 		expect(deck2.review_answer_mode).toBe('2-buttons')
 
-		const deck4 = DeckMetaSchema.parse({
+		const deck4 = DeckSchema.parse({
 			...validDeck,
 			review_answer_mode: '4-buttons',
 		})
@@ -63,17 +63,17 @@ describe('DeckMetaSchema', () => {
 	})
 
 	it('defaults review_answer_mode to null', () => {
-		const result = DeckMetaSchema.parse(validDeck)
+		const result = DeckSchema.parse(validDeck)
 		expect(result.review_answer_mode).toBeNull()
 	})
 
 	it('defaults preferred_translation_lang to null', () => {
-		const result = DeckMetaSchema.parse(validDeck)
+		const result = DeckSchema.parse(validDeck)
 		expect(result.preferred_translation_lang).toBeNull()
 	})
 
 	it('accepts explicit preferred_translation_lang', () => {
-		const result = DeckMetaSchema.parse({
+		const result = DeckSchema.parse({
 			...validDeck,
 			preferred_translation_lang: 'fra',
 		})
@@ -82,7 +82,7 @@ describe('DeckMetaSchema', () => {
 
 	it('accepts all learning goal values', () => {
 		for (const goal of ['moving', 'family', 'visiting']) {
-			const result = DeckMetaSchema.parse({
+			const result = DeckSchema.parse({
 				...validDeck,
 				learning_goal: goal,
 			})
@@ -92,12 +92,12 @@ describe('DeckMetaSchema', () => {
 
 	it('rejects invalid learning goal', () => {
 		expect(() =>
-			DeckMetaSchema.parse({ ...validDeck, learning_goal: 'tourism' })
+			DeckSchema.parse({ ...validDeck, learning_goal: 'tourism' })
 		).toThrow()
 	})
 
 	it('strips the language name a cached row may still carry', () => {
-		const result = DeckMetaSchema.parse({
+		const result = DeckSchema.parse({
 			...validDeck,
 			language: 'Kannada',
 		}) as Record<string, unknown>

@@ -27,7 +27,7 @@ const AppNav = lazy(() =>
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import { resolveNavList } from '@/types/route-static-data'
 import { authLifecycle } from '@/lib/auth-lifecycle'
-import { useDeckMeta } from '@/features/deck/hooks'
+import { useDeck } from '@/features/deck/hooks'
 import { useSocialRealtime } from '@/features/social'
 import { languagesCollection } from '@/features/languages/collections'
 import { useNotificationsRealtime } from '@/features/notifications/hooks'
@@ -93,7 +93,7 @@ function UserLayout() {
 	// when the visitor has no active deck for this language — they're browsing,
 	// not learning, and the deck-scoped links would only lead to dead pages.
 	const langGatesAppNav = !!lang && lang in languages
-	const { data: currentDeck } = useDeckMeta(langGatesAppNav ? lang : '')
+	const { data: currentDeck } = useDeck(langGatesAppNav ? lang : '')
 	const hasActiveDeckForLang =
 		!langGatesAppNav || (!!currentDeck && !currentDeck.archived)
 	const hasAppNav =

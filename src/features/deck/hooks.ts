@@ -5,7 +5,7 @@ import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type { pids, uuid, UseLiveQueryResult } from '@/types/main'
-import type { CardDirectionType, CardMetaType, DeckMetaType } from './schemas'
+import type { CardDirectionType, CardMetaType, DeckType } from './schemas'
 import { cardsWithReviews } from './live'
 import { schedulingFromReviews, type CardScheduling } from './card-scheduling'
 import type { CardReviewType } from '@/features/review/schemas'
@@ -69,7 +69,7 @@ export const useDeckActivityChartData = (
 	}
 }
 
-export const useDeckMeta = (lang: string): UseLiveQueryResult<DeckMetaType> =>
+export const useDeck = (lang: string): UseLiveQueryResult<DeckType> =>
 	useLiveQuery(
 		(q) =>
 			q
@@ -79,7 +79,7 @@ export const useDeckMeta = (lang: string): UseLiveQueryResult<DeckMetaType> =>
 		[lang]
 	)
 
-export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
+export const useDecks = (): UseLiveQueryResult<DeckType[]> => {
 	const query = useLiveQuery((q) => q.from({ deck: decksCollection }))
 	const statsByLang = useDeckCardStatsByLang()
 	return {
@@ -381,7 +381,7 @@ export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
  * 3. Fallback to 'eng'
  */
 export const usePreferredTranslationLang = (lang: string): string => {
-	const { data: deck } = useDeckMeta(lang)
+	const { data: deck } = useDeck(lang)
 	const { data: profile } = useProfile()
 	// Deck-specific preference takes priority
 	if (deck?.preferred_translation_lang) {
@@ -401,7 +401,7 @@ export const usePreferredTranslationLang = (lang: string): string => {
 export const useReviewAnswerMode = (
 	lang: string
 ): '4-buttons' | '2-buttons' => {
-	const { data: deck } = useDeckMeta(lang)
+	const { data: deck } = useDeck(lang)
 	const { data: profile } = useProfile()
 	if (deck?.review_answer_mode) {
 		return deck.review_answer_mode

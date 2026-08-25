@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import dayjs from 'dayjs'
 import { and, eq, gte, useLiveQuery } from '@tanstack/react-db'
 
-import type { DeckMetaType } from '@/features/deck/schemas'
+import type { DeckType } from '@/features/deck/schemas'
 import { useDeckPids } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import {
@@ -81,7 +81,7 @@ export function DeckDueProbe({
 	deck,
 	onReport,
 }: {
-	deck: DeckMetaType
+	deck: DeckType
 	onReport: (entry: DeckDue) => void
 }) {
 	const { data: pids } = useDeckPids(deck.lang)
@@ -105,8 +105,8 @@ export function DeckDueProbe({
  * tiebreak by raw due count desc, then lang asc for stability.
  */
 export function compareDecks(
-	a: DeckMetaType,
-	b: DeckMetaType,
+	a: DeckType,
+	b: DeckType,
 	scores: Record<string, number>,
 	dueMap: DueMap
 ) {

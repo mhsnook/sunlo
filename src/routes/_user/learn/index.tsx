@@ -17,7 +17,7 @@ import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { decksCollection } from '@/features/deck/collections'
-import type { DeckMetaType } from '@/features/deck/schemas'
+import type { DeckType } from '@/features/deck/schemas'
 
 import { DeckTile, AddDeckTile } from './-deck-tile'
 import { ReviewBanner } from './-review-banner'
@@ -94,7 +94,7 @@ function AuthenticatedHome({
 	activeDecks,
 	hasArchived,
 }: {
-	activeDecks: Array<DeckMetaType>
+	activeDecks: Array<DeckType>
 	hasArchived: boolean
 }) {
 	const { data: profile } = useProfile()

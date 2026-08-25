@@ -18,11 +18,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChoiceTile } from '@/components/ui/choice-tile'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
-import { useDeckMeta } from '@/features/deck/hooks'
+import { useDeck } from '@/features/deck/hooks'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import { LanguagePicker } from '@/components/fields/language-picker'
 import { decksCollection } from '@/features/deck/collections'
-import { type DeckMetaType } from '@/features/deck/schemas'
+import { type DeckType } from '@/features/deck/schemas'
 import { useProfile } from '@/features/profile/hooks'
 import { type ReviewAnswerModeType } from '@/features/profile/schemas'
 import { cn } from '@/lib/utils'
@@ -30,7 +30,7 @@ import languages from '@/lib/languages'
 import { Label } from '@/components/ui/label'
 import { InfoDialog } from '@/components/info-dialog'
 
-type LearningGoalType = DeckMetaType['learning_goal']
+type LearningGoalType = DeckType['learning_goal']
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -41,7 +41,7 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 function DeckSettingsPage() {
 	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
-	const { data: meta, isReady } = useDeckMeta(lang)
+	const { data: meta, isReady } = useDeck(lang)
 
 	if (!isAuth) {
 		return (

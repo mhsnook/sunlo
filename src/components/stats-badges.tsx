@@ -8,14 +8,14 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ago } from '@/lib/dayjs'
 import {
-	useDeckMeta,
+	useDeck,
 	useDeckPids,
 	useDeckCardStats,
 	useDeckReviewCounts,
 } from '@/features/deck/hooks'
 
 export function DeckStatsBadges({ lang }: { lang: string }) {
-	const { data: deckMeta } = useDeckMeta(lang)
+	const { data: deckMeta } = useDeck(lang)
 	const { data: deckPids } = useDeckPids(lang)
 	const { most_recent_review_at } = useDeckCardStats(lang)
 	const { count_reviews_7d } = useDeckReviewCounts(lang)

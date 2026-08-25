@@ -33,7 +33,7 @@ import { useInvalidateFeed } from '@/features/feed/hooks'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
-import { useDeckMeta, usePreferredTranslationLang } from '@/features/deck/hooks'
+import { useDeck, usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
 import { useAppForm } from '@/components/form'
@@ -87,7 +87,7 @@ function AddPhraseTab() {
 	const [newPhrases, setNewPhrases] = useState<uuid[]>([])
 
 	// Deck status detection
-	const { data: deck } = useDeckMeta(lang)
+	const { data: deck } = useDeck(lang)
 	const hasActiveDeck = !!deck && !deck.archived
 	const hasArchivedDeck = !!deck && deck.archived
 	const noDeck = !deck
