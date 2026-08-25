@@ -113,30 +113,46 @@ export type DeckCardStats = {
 type CardStatusGroup = {
 	status: string
 	count: number
-	most_recent: string | null
 }
 
 const statsFromStatusGroups = (
-	groups: ReadonlyArray<CardStatusGroup>
+	groups: ReadonlyArray<CardStatusGroup>,
+	most_recent_review_at: string | null
 ): DeckCardStats => {
 	const stats: DeckCardStats = {
 		cards_active: 0,
 		cards_learned: 0,
 		cards_skipped: 0,
-		most_recent_review_at: null,
+		most_recent_review_at,
 	}
 	for (const g of groups) {
 		if (g.status === 'active') stats.cards_active = g.count
 		else if (g.status === 'learned') stats.cards_learned = g.count
 		else if (g.status === 'skipped') stats.cards_skipped = g.count
-		if (
-			g.most_recent &&
-			(stats.most_recent_review_at === null ||
-				g.most_recent > stats.most_recent_review_at)
-		)
-			stats.most_recent_review_at = g.most_recent
 	}
 	return stats
+}
+
+/**
+ * When each language was last practised, straight off the review rows. This is
+ * an activity figure and counts every review, including the phase-3 rows that
+ * `schedulingFromReviews` skips — a re-review is still practice.
+ */
+const useMostRecentReviewByLang = (): Record<string, string | null> => {
+	const { data } = useLiveQuery((q) =>
+		q
+			.from({ review: cardReviewsCollection })
+			.groupBy(({ review }) => review.lang)
+			.select(({ review }) => ({
+				lang: review.lang,
+				most_recent: max(review.created_at),
+			}))
+	)
+	return useMemo(() => {
+		const out: Record<string, string | null> = {}
+		for (const row of data ?? []) out[row.lang] = row.most_recent
+		return out
+	}, [data])
 }
 
 export const useDeckCardStats = (lang: string): DeckCardStats => {
@@ -149,11 +165,15 @@ export const useDeckCardStats = (lang: string): DeckCardStats => {
 				.select(({ card }) => ({
 					status: card.status,
 					count: count(card.id),
-					most_recent: max(card.last_reviewed_at),
 				})),
 		[lang]
 	)
-	return useMemo(() => statsFromStatusGroups(data ?? []), [data])
+	const mostRecentByLang = useMostRecentReviewByLang()
+	const mostRecent = mostRecentByLang[lang] ?? null
+	return useMemo(
+		() => statsFromStatusGroups(data ?? [], mostRecent),
+		[data, mostRecent]
+	)
 }
 
 export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
@@ -165,9 +185,9 @@ export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
 				lang: card.lang,
 				status: card.status,
 				count: count(card.id),
-				most_recent: max(card.last_reviewed_at),
 			}))
 	)
+	const mostRecentByLang = useMostRecentReviewByLang()
 	return useMemo(() => {
 		const byLang = new Map<string, Array<CardStatusGroup>>()
 		for (const row of data ?? []) {
@@ -177,9 +197,9 @@ export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
 		}
 		const out: Record<string, DeckCardStats> = {}
 		for (const [lang, groups] of byLang)
-			out[lang] = statsFromStatusGroups(groups)
+			out[lang] = statsFromStatusGroups(groups, mostRecentByLang[lang] ?? null)
 		return out
-	}, [data])
+	}, [data, mostRecentByLang])
 }
 
 export type DeckReviewCounts = {
@@ -294,6 +314,33 @@ export const useDeckCards = (
 		[lang]
 	)
 
+/** A card row with the scheduler state folded out of its own reviews. */
+export type ScheduledCard = CardMetaType & { scheduling: CardScheduling | null }
+
+/**
+ * The deck's cards, each carrying the scheduling derived from its reviews.
+ * Only safe where the route preloads `cardReviewsCollection` — see
+ * `useCardScheduling` for the same caveat.
+ */
+export const useDeckCardsScheduled = (
+	lang: string
+): UseLiveQueryResult<ScheduledCard[]> => {
+	const query = useLiveQuery(
+		(q) =>
+			q
+				.from({ card: cardsWithReviews })
+				.where(({ card }) => eq(card.lang, lang)),
+		[lang]
+	)
+	return {
+		...query,
+		data: query.data?.map(({ reviews, ...card }) => ({
+			...card,
+			scheduling: schedulingFromReviews(reviews),
+		})),
+	} as UseLiveQueryResult<ScheduledCard[]>
+}
+
 export const useDeckRoutineStats = (lang: string) => {
 	const today = dayjs()
 	const mostRecentMonday = today.isoWeekday(1).subtract(4, 'hour')
@@ -334,7 +381,7 @@ type UseDeckPidsReturnType = {
 }
 
 export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
-	const { isLoading, data } = useDeckCards(lang)
+	const { isLoading, data } = useDeckCardsScheduled(lang)
 
 	return {
 		isLoading: isLoading ?? true,
@@ -349,26 +396,38 @@ export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
 						data.filter((c) => c.status !== 'active').map((c) => c.phrase_id)
 					),
 					reviewed: unique(
-						data.filter((c) => !!c.last_reviewed_at).map((c) => c.phrase_id)
+						data
+							.filter((c) => !!c.scheduling?.last_reviewed_at)
+							.map((c) => c.phrase_id)
 					),
 					reviewed_or_inactive: unique(
 						data
-							.filter((c) => !!c.last_reviewed_at || c.status !== 'active')
+							.filter(
+								(c) => !!c.scheduling?.last_reviewed_at || c.status !== 'active'
+							)
 							.map((c) => c.phrase_id)
 					),
 					reviewed_last_7d: unique(
 						data
 							.filter(
-								(c) => c.last_reviewed_at && inLastWeek(c.last_reviewed_at)
+								(c) =>
+									c.scheduling?.last_reviewed_at &&
+									inLastWeek(c.scheduling.last_reviewed_at)
 							)
 							.map((c) => c.phrase_id)
 					),
 					unreviewed_active: unique(
 						data
-							.filter((c) => c.status === 'active' && !c.last_reviewed_at)
+							.filter(
+								(c) => c.status === 'active' && !c.scheduling?.last_reviewed_at
+							)
 							.map((c) => c.phrase_id)
 					),
-					today_active: unique(data.filter(isDueCard).map((c) => c.phrase_id)),
+					today_active: unique(
+						data
+							.filter((c) => isDueCard(c, c.scheduling))
+							.map((c) => c.phrase_id)
+					),
 				},
 	}
 }

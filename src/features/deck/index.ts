@@ -22,6 +22,7 @@ export {
 	useMyCard,
 	useCardScheduling,
 	useDeckCards,
+	useDeckCardsScheduled,
 	useDeckPids,
 	useDeckRoutineStats,
 	useDeckActivityChartData,
