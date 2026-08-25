@@ -22,8 +22,9 @@ import {
 	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
-import { DeckSchema } from '@/features/deck/schemas'
-import { decksCollection } from '@/features/deck/collections'
+import { DeckSchema, CardMetaSchema } from '@/features/deck/schemas'
+import { decksCollection, cardsCollection } from '@/features/deck/collections'
+import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 
 // DELETE payloads carry only the replica identity (the composite PK), which
 // includes the FK we key on.
@@ -109,6 +110,27 @@ export const useUserRealtime = () => {
 				{ event: 'UPDATE', schema: 'public', table: 'user_deck' },
 				(payload) =>
 					decksCollection.utils.writeUpsert(DeckSchema.parse(payload.new))
+			)
+
+		// Cards: INSERT when another device adds a phrase to the deck, UPDATE when
+		// it changes a card's status. No DELETE binding — nothing hard-deletes a
+		// card, and the frame would carry only the replica identity.
+		channel = channel
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'user_card' },
+				(payload) => {
+					const row = CardMetaSchema.parse(payload.new)
+					writeRealtimeRow(cardsCollection, row.id, row)
+				}
+			)
+			.on(
+				'postgres_changes',
+				{ event: 'UPDATE', schema: 'public', table: 'user_card' },
+				(payload) => {
+					const row = CardMetaSchema.parse(payload.new)
+					writeRealtimeRow(cardsCollection, row.id, row)
+				}
 			)
 
 		// Reviews: append-only INSERTs plus rare correction UPDATEs (#724).

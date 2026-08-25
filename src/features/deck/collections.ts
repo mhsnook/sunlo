@@ -103,14 +103,14 @@ export const cardsCollection = createCollection(
 				.insert(rows)
 				.select()
 				.throwOnError()
+			const returned = data?.map((row) => CardMetaSchema.parse(row)) ?? []
 			// Confirm the server stored the same cards our optimistic insert
 			// added to the collection. Stripped from production by the Vite plugin.
 			should(
 				'user_card insert returned rows matching the optimistic cards',
-				!!data &&
-					data.length === rows.length &&
+				returned.length === rows.length &&
 					rows.every((row) =>
-						data.some(
+						returned.some(
 							(d) =>
 								d.id === row.id &&
 								d.status === row.status &&
@@ -119,8 +119,9 @@ export const cardsCollection = createCollection(
 								d.lang === row.lang
 						)
 					),
-				{ submitted: rows, returned: data }
+				{ submitted: rows, returned }
 			)
+			for (const row of returned) cardsCollection.utils.writeInsert(row)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
@@ -147,6 +148,7 @@ export const cardsCollection = createCollection(
 							),
 						{ submitted: changes, returned: row }
 					)
+					if (row) cardsCollection.utils.writeUpdate(CardMetaSchema.parse(row))
 				})
 			)
 			return { refetch: false }

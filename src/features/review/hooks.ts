@@ -15,6 +15,7 @@ import {
 	reviewMilestonesCollection,
 } from './collections'
 import { cardsCollection } from '@/features/deck/collections'
+import supabase from '@/lib/supabase-client'
 import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	type CardReviewType,
@@ -23,8 +24,12 @@ import {
 } from './schemas'
 import { useUserId } from '@/lib/use-auth'
 import { calculateFSRS, type Score } from './fsrs'
-import type { CardDirectionType } from '@/features/deck/schemas'
-import { toManifestEntry, type ManifestEntry } from './manifest'
+import { CardMetaSchema, type CardDirectionType } from '@/features/deck/schemas'
+import {
+	manifestPhraseId,
+	toManifestEntry,
+	type ManifestEntry,
+} from './manifest'
 import {
 	buildReviewsMap,
 	findChainPredecessor,
@@ -252,11 +257,13 @@ export function useReviewDay(
 /**
  * The manifest is the authoritative list of cards for a review session —
  * it's persisted server-side, so any device loading today's session sees
- * the same set. Local `cardsCollection` can drift from that (long-lived
- * PWA without refetches, server-side data migrations, sessions authored
- * on another device), and if the manifest references a card the local
- * collection doesn't have, the review mutation can't find it when
- * syncing FSRS state. Refetch once to self-heal before the session starts.
+ * the same set. Local `cardsCollection` can drift from that (a session
+ * authored on another device while this one was offline, a server-side data
+ * migration), and the status dropdown during review reads the local card, so
+ * a missing row makes it silently do nothing.
+ *
+ * Fetches only the phrases the manifest names that this client is missing —
+ * never the whole table.
  */
 export async function ensureManifestCardsInCollection(
 	lang: string,
@@ -272,14 +279,26 @@ export async function ensureManifestCardsInCollection(
 			toManifestEntry(c.phrase_id, c.direction)
 		)
 	)
-	const missing = reviewDay.manifest.some((entry) => !present.has(entry))
-	if (missing) {
-		console.warn(
-			`Review manifest references cards not in local cardsCollection; refetching to self-heal.`,
-			{ lang, day_session }
-		)
-		await cardsCollection.utils.refetch()
-	}
+	const missingPhraseIds = [
+		...new Set(
+			reviewDay.manifest
+				.filter((entry) => !present.has(entry))
+				.map(manifestPhraseId)
+		),
+	]
+	if (missingPhraseIds.length === 0) return
+
+	console.warn(
+		`Review manifest references cards not in local cardsCollection; fetching them.`,
+		{ lang, day_session, missingPhraseIds }
+	)
+	const { data } = await supabase
+		.from('user_card')
+		.select()
+		.in('phrase_id', missingPhraseIds)
+		.throwOnError()
+	for (const row of data ?? [])
+		cardsCollection.utils.writeUpsert(CardMetaSchema.parse(row))
 }
 
 export function useOneReviewToday(
