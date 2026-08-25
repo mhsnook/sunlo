@@ -35,10 +35,8 @@
  * 4. Compares each recomputed row to what's stored. Rows that drift beyond
  *    `EPSILON` are recorded for update.
  *
- * Because the card's `last_reviewed_at`, `difficulty`, and `stability` are
- * projected from the latest review by the `user_card_plus` view (see
- * supabase/schemas/base.sql:1677-1754), fixing the reviews is sufficient —
- * the cards collection will reflect corrected values on next refetch.
+ * The card carries no scheduler state — clients fold it out of the review rows
+ * themselves (`schedulingFromReviews`) — so fixing the reviews is sufficient.
  *
  * Usage
  * -----

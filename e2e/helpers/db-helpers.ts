@@ -344,9 +344,8 @@ export async function getReviewByPhraseId(
  * Get a card by phrase ID from the database for a specific user
  */
 export async function getCardByPhraseId(phraseId: string, uid: string) {
-	// Query the base table instead of the view to avoid potential view refresh issues
 	return await supabase
-		.from('user_card_plus')
+		.from('user_card')
 		.select()
 		.eq('phrase_id', phraseId)
 		.eq('uid', uid)

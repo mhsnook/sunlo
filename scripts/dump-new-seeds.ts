@@ -330,7 +330,6 @@ const SKIP_TABLES = new Set([
 	'phrase_meta',
 	'phrase_stats',
 	'public_profile',
-	'user_card_plus',
 	'user_deck_plus',
 ])
 

@@ -12,7 +12,7 @@ _25 August, 2026_
 
 - **`decksCollection` reads `user_deck` rows and syncs over realtime (#757).** The queryFn stops grafting `language` onto the row (display sites look the name up in `languages[deck.lang]`), both handlers `.select()` their write into the synced layer, and `useUserRealtime` folds deck INSERT and UPDATE frames in, so a second device's edits arrive without a refetch.
 - **Card scheduling extracted from the review feature (#764).** `cardsWithReviews` names the card-to-review join in `deck/live.ts`, and `card-scheduling.ts` decides what those reviews mean — a test surface where there was an inline query.
-- **`cardsCollection` reads `user_card` rows; scheduler state derives from the reviews (#757).** `last_reviewed_at`, `difficulty` and `stability` leave `CardSchema` — the card is a row, and every reader folds the card's own reviews through `schedulingFromReviews`. Both handlers write their acks into the synced layer, `useUserRealtime` folds card INSERT and UPDATE frames in, and the review mutation no longer mirrors FSRS back onto the card. Nothing in the app reads `user_card_plus` any more. `CardMetaSchema` is now `CardSchema`, following #769.
+- **`cardsCollection` reads `user_card` rows; scheduler state derives from the reviews (#757).** `last_reviewed_at`, `difficulty` and `stability` leave `CardSchema` — the card is a row, and every reader folds the card's own reviews through `schedulingFromReviews`. Both handlers write their acks into the synced layer, `useUserRealtime` folds card INSERT and UPDATE frames in, and the review mutation no longer mirrors FSRS back onto the card. `user_card_plus` is dropped — with nothing reading it and nothing in the schema depending on it, the view was pure indirection, and a table is what realtime can stream. `CardMetaSchema` is now `CardSchema`, following #769.
 - **The new-card preview derives from review history.** Drops `newCardEntries` from the review store — a list captured at session creation and persisted alongside it — for a live query asking which manifest cards have no review from an earlier session. It also fixes the preview coming up empty when resuming a session rather than starting one.
 - **Mark-as-read moves onto collection ops, with realtime UPDATE as the backstop (#760).** `useMarkAsRead` and friends become plain functions over `notificationsCollection.onUpdate` and `chatMessagesCollection.onUpdate`, and the `{ refetch: false }` contract is now written down.
 - **The last `useMutation` + `writeInsert` call sites migrate to collection handlers (#625).** Deck insert (#741), the rest of the deck cluster, admin mutations (#746), and playlist phrase-link + deck-add (#745).
@@ -40,6 +40,7 @@ _25 August, 2026_
 ### Migrations
 
 - `20260825120000_soft_delete_upvotes.sql` — adds `deleted` to the three upvote tables, rewrites the upvote-count triggers and `recount_all_upvotes()` around the flag, and adds the UPDATE policies plus a guard trigger that pins every other column.
+- `20260825140000_drop_user_card_plus.sql` — drops the `user_card_plus` view; `cardsCollection` reads the base `user_card` table and derives scheduler state from the reviews.
 
 ## v0.31 - Drop `user_deck_plus`; Deck Stats as Client-Side Live Queries
 

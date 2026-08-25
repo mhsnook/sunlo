@@ -1,0 +1,12 @@
+-- Drop user_card_plus. Its three welded columns — last_reviewed_at, difficulty
+-- and stability — projected the latest review onto the card row, so
+-- cardsCollection read a view to get values that live on user_card_review.
+-- Those are derived client-side now (schedulingFromReviews), and the card is
+-- read as a plain user_card row, which is what let it join realtime:
+-- postgres_changes fires on tables, not views.
+--
+-- Nothing else in the schema depended on it — no view, no function, no policy.
+-- Follows user_deck_plus (#737) for the same reason and with the same caveat:
+-- if per-card scheduler state ever wants to be server-side again, it comes back
+-- as a table a trigger maintains and the WAL can stream, not as a view.
+drop view if exists "public"."user_card_plus";
