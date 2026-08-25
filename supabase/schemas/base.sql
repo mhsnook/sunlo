@@ -266,6 +266,17 @@ $$;
 
 alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
 
+create or replace function "public"."guard_upvote_update" () returns "trigger" language "plpgsql" as $$
+begin
+  if (to_jsonb(old) - 'deleted') is distinct from (to_jsonb(new) - 'deleted') then
+    raise exception 'An upvote row is immutable except for its deleted flag';
+  end if;
+  return new;
+end;
+$$;
+
+alter function "public"."guard_upvote_update" () owner to "postgres";
+
 create or replace function "public"."handle_new_user" () returns "trigger" language "plpgsql" security definer as $$
 begin
 	insert into "public"."user_profile" ("uid", "flags")
@@ -383,7 +394,7 @@ BEGIN
   UPDATE phrase_request pr
   SET upvote_count = sub.cnt
   FROM (
-    SELECT pru.request_id, count(*) as cnt
+    SELECT pru.request_id, count(*) filter (where pru.deleted = false) as cnt
     FROM phrase_request_upvote pru
     WHERE pru.request_id IN (
       SELECT DISTINCT request_id FROM phrase_request_upvote
@@ -398,7 +409,7 @@ BEGIN
   UPDATE phrase_playlist pp
   SET upvote_count = sub.cnt
   FROM (
-    SELECT ppu.playlist_id, count(*) as cnt
+    SELECT ppu.playlist_id, count(*) filter (where ppu.deleted = false) as cnt
     FROM phrase_playlist_upvote ppu
     WHERE ppu.playlist_id IN (
       SELECT DISTINCT playlist_id FROM phrase_playlist_upvote
@@ -413,7 +424,7 @@ BEGIN
   UPDATE request_comment rc
   SET upvote_count = sub.cnt
   FROM (
-    SELECT cu.comment_id, count(*) as cnt
+    SELECT cu.comment_id, count(*) filter (where cu.deleted = false) as cnt
     FROM comment_upvote cu
     WHERE cu.comment_id IN (
       SELECT DISTINCT comment_id FROM comment_upvote
@@ -726,16 +737,18 @@ alter function "public"."trigger_refresh_search_text_index" () owner to "postgre
 
 create or replace function "public"."update_comment_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
-  if (TG_OP = 'INSERT') then
+  if (TG_OP = 'INSERT' and NEW.deleted = false) then
     update request_comment
     set upvote_count = upvote_count + 1
     where id = NEW.comment_id;
-    return NEW;
-  elsif (TG_OP = 'DELETE') then
+  elsif (TG_OP = 'UPDATE' and OLD.deleted is distinct from NEW.deleted) then
+    update request_comment
+    set upvote_count = upvote_count + (case when NEW.deleted then -1 else 1 end)
+    where id = NEW.comment_id;
+  elsif (TG_OP = 'DELETE' and OLD.deleted = false) then
     update request_comment
     set upvote_count = upvote_count - 1
     where id = OLD.comment_id;
-    return OLD;
   end if;
   return null;
 end;
@@ -768,16 +781,18 @@ alter function "public"."update_phrase_playlist_timestamp" () owner to "postgres
 
 create or replace function "public"."update_phrase_playlist_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
-  if (TG_OP = 'INSERT') then
+  if (TG_OP = 'INSERT' and NEW.deleted = false) then
     update phrase_playlist
     set upvote_count = upvote_count + 1
     where id = NEW.playlist_id;
-    return NEW;
-  elsif (TG_OP = 'DELETE') then
+  elsif (TG_OP = 'UPDATE' and OLD.deleted is distinct from NEW.deleted) then
+    update phrase_playlist
+    set upvote_count = upvote_count + (case when NEW.deleted then -1 else 1 end)
+    where id = NEW.playlist_id;
+  elsif (TG_OP = 'DELETE' and OLD.deleted = false) then
     update phrase_playlist
     set upvote_count = upvote_count - 1
     where id = OLD.playlist_id;
-    return OLD;
   end if;
   return null;
 end;
@@ -796,16 +811,18 @@ alter function "public"."update_phrase_request_timestamp" () owner to "postgres"
 
 create or replace function "public"."update_phrase_request_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
-  if (TG_OP = 'INSERT') then
+  if (TG_OP = 'INSERT' and NEW.deleted = false) then
     update phrase_request
     set upvote_count = upvote_count + 1
     where id = NEW.request_id;
-    return NEW;
-  elsif (TG_OP = 'DELETE') then
+  elsif (TG_OP = 'UPDATE' and OLD.deleted is distinct from NEW.deleted) then
+    update phrase_request
+    set upvote_count = upvote_count + (case when NEW.deleted then -1 else 1 end)
+    where id = NEW.request_id;
+  elsif (TG_OP = 'DELETE' and OLD.deleted = false) then
     update phrase_request
     set upvote_count = upvote_count - 1
     where id = OLD.request_id;
-    return OLD;
   end if;
   return null;
 end;
@@ -967,7 +984,8 @@ alter table "public"."comment_phrase_link" owner to "postgres";
 create table if not exists "public"."comment_upvote" (
 	"comment_id" "uuid" not null,
 	"uid" "uuid" default "auth"."uid" () not null,
-	"created_at" timestamp with time zone default "now" () not null
+	"created_at" timestamp with time zone default "now" () not null,
+	"deleted" boolean default false not null
 );
 
 alter table "public"."comment_upvote" owner to "postgres";
@@ -1487,7 +1505,8 @@ alter table "public"."phrase_meta" owner to "postgres";
 create table if not exists "public"."phrase_playlist_upvote" (
 	"playlist_id" "uuid" not null,
 	"uid" "uuid" default "auth"."uid" () not null,
-	"created_at" timestamp with time zone default "now" () not null
+	"created_at" timestamp with time zone default "now" () not null,
+	"deleted" boolean default false not null
 );
 
 alter table "public"."phrase_playlist_upvote" owner to "postgres";
@@ -1506,7 +1525,8 @@ comment on column "public"."phrase_relation"."added_by" is 'User who added this 
 create table if not exists "public"."phrase_request_upvote" (
 	"request_id" "uuid" not null,
 	"uid" "uuid" default "auth"."uid" () not null,
-	"created_at" timestamp with time zone default "now" () not null
+	"created_at" timestamp with time zone default "now" () not null,
+	"deleted" boolean default false not null
 );
 
 alter table "public"."phrase_request_upvote" owner to "postgres";
@@ -2047,16 +2067,28 @@ after insert or delete or update of "text",
 "phrase_id" on "public"."phrase_translation" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('translation');
 
+create or replace trigger "guard_comment_upvote_update"
+before update on "public"."comment_upvote" for each row
+execute function "public"."guard_upvote_update" ();
+
+create or replace trigger "guard_phrase_playlist_upvote_update"
+before update on "public"."phrase_playlist_upvote" for each row
+execute function "public"."guard_upvote_update" ();
+
+create or replace trigger "guard_phrase_request_upvote_update"
+before update on "public"."phrase_request_upvote" for each row
+execute function "public"."guard_upvote_update" ();
+
+create or replace trigger "on_comment_upvote_changed"
+after insert or delete or update on "public"."comment_upvote" for each row
+execute function "public"."update_comment_upvote_count" ();
+
 create or replace trigger "on_phrase_playlist_updated"
 before update on "public"."phrase_playlist" for each row
 execute function "public"."update_phrase_playlist_timestamp" ();
 
-create or replace trigger "on_phrase_playlist_upvote_added"
-after insert on "public"."phrase_playlist_upvote" for each row
-execute function "public"."update_phrase_playlist_upvote_count" ();
-
-create or replace trigger "on_phrase_playlist_upvote_removed"
-after delete on "public"."phrase_playlist_upvote" for each row
+create or replace trigger "on_phrase_playlist_upvote_changed"
+after insert or delete or update on "public"."phrase_playlist_upvote" for each row
 execute function "public"."update_phrase_playlist_upvote_count" ();
 
 create or replace trigger "on_phrase_request_auto_upvote"
@@ -2067,12 +2099,8 @@ create or replace trigger "on_phrase_request_updated"
 before update on "public"."phrase_request" for each row
 execute function "public"."update_phrase_request_timestamp" ();
 
-create or replace trigger "on_phrase_request_upvote_added"
-after insert on "public"."phrase_request_upvote" for each row
-execute function "public"."update_phrase_request_upvote_count" ();
-
-create or replace trigger "on_phrase_request_upvote_removed"
-after delete on "public"."phrase_request_upvote" for each row
+create or replace trigger "on_phrase_request_upvote_changed"
+after insert or delete or update on "public"."phrase_request_upvote" for each row
 execute function "public"."update_phrase_request_upvote_count" ();
 
 create or replace trigger "on_playlist_phrase_link_changed"
@@ -2125,10 +2153,6 @@ create or replace trigger "skip_stale_corpus_upsert"
 before update on "public"."search_corpus" for each row
 execute function "public"."skip_stale_corpus_upsert" ();
 
-create or replace trigger "tr_update_comment_upvote_count"
-after insert or delete on "public"."comment_upvote" for each row
-execute function "public"."update_comment_upvote_count" ();
-
 create or replace trigger "trg_notify_on_comment"
 after insert on "public"."request_comment" for each row
 execute function "public"."notify_on_comment" ();
@@ -2137,8 +2161,17 @@ create or replace trigger "trg_notify_on_phrase_reference"
 after insert on "public"."comment_phrase_link" for each row
 execute function "public"."notify_on_phrase_reference" ();
 
+create or replace trigger "trg_notify_on_request_reupvote"
+after update on "public"."phrase_request_upvote" for each row when (
+	(
+		("old"."deleted" = true)
+		and ("new"."deleted" = false)
+	)
+)
+execute function "public"."notify_on_request_upvote" ();
+
 create or replace trigger "trg_notify_on_request_upvote"
-after insert on "public"."phrase_request_upvote" for each row
+after insert on "public"."phrase_request_upvote" for each row when (("new"."deleted" = false))
 execute function "public"."notify_on_request_upvote" ();
 
 create or replace trigger "trg_notify_on_translation"
@@ -2854,6 +2887,24 @@ create policy "Users can update own notifications" on "public"."notification"
 for update
 	using (("uid" = "auth"."uid" ()));
 
+create policy "Users can update own upvotes" on "public"."comment_upvote"
+for update
+	to "authenticated" using (("uid" = "auth"."uid" ()))
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "Users can update own upvotes" on "public"."phrase_playlist_upvote"
+for update
+	to "authenticated" using (("uid" = "auth"."uid" ()))
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "Users can update own upvotes" on "public"."phrase_request_upvote"
+for update
+	to "authenticated" using (("uid" = "auth"."uid" ()))
+with
+	check (("uid" = "auth"."uid" ()));
+
 create policy "Users can update their own playlists" on "public"."phrase_playlist"
 for update
 	to "authenticated" using (
@@ -3038,6 +3089,14 @@ grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "anon";
 grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "authenticated";
 
 grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "service_role";
+
+grant all on function "public"."guard_upvote_update" () to "postgres";
+
+grant all on function "public"."guard_upvote_update" () to "anon";
+
+grant all on function "public"."guard_upvote_update" () to "authenticated";
+
+grant all on function "public"."guard_upvote_update" () to "service_role";
 
 grant all on function "public"."halfvec_in" ("cstring", "oid", integer) to "postgres";
 
