@@ -21,6 +21,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { deleteSyncedRow } from '@/lib/collections/realtime-row'
 import { should } from '@scenetest/checks/react'
 
 export const phraseRequestsCollection = createCollection(
@@ -83,6 +84,7 @@ export const phraseRequestUpvotesCollection = createCollection(
 			const { data } = await supabase
 				.from('phrase_request_upvote')
 				.select('request_id')
+				.eq('deleted', false)
 				.throwOnError()
 			return data?.map((item) => PhraseRequestUpvoteSchema.parse(item)) ?? []
 		},
@@ -90,27 +92,56 @@ export const phraseRequestUpvotesCollection = createCollection(
 		queryClient,
 		schema: PhraseRequestUpvoteSchema,
 		// One-per-user enforced by the (request_id, uid) PK; upvote_count kept by
-		// a DB trigger. uid defaults to auth.uid().
+		// a DB trigger. The collection holds live upvotes only: a row the user
+		// un-upvoted stays in the table with `deleted` set, and never loads.
 		onInsert: async ({ transaction }) => {
-			await supabase
+			// Upsert, not insert: un-upvoting leaves the row in place with
+			// `deleted` set, so upvoting again revives that row rather than
+			// hitting the (request_id, uid) primary key. `uid` is in the payload
+			// so the conflict target is explicit.
+			const uid = (await supabase.auth.getSession()).data.session?.user.id
+			const ids = transaction.mutations.map((m) => m.modified.request_id)
+			const { data } = await supabase
 				.from('phrase_request_upvote')
-				.insert(
-					transaction.mutations.map((m) => ({
-						request_id: m.modified.request_id,
-					}))
+				.upsert(
+					ids.map((request_id) => ({ request_id, uid, deleted: false })),
+					{ onConflict: 'request_id,uid' }
 				)
+				.select('request_id')
 				.throwOnError()
+			const rows =
+				data?.map((row) => PhraseRequestUpvoteSchema.parse(row)) ?? []
+			should(
+				'phrase_request_upvote upsert returned one row per upvote added',
+				rows.length === ids.length &&
+					ids.every((id) => rows.some((row) => row.request_id === id)),
+				{ submitted: ids, returned: rows }
+			)
+			for (const row of rows)
+				phraseRequestUpvotesCollection.utils.writeUpsert(row)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			await supabase
+			// Soft delete. A real DELETE broadcasts to every subscriber of the
+			// table without an RLS check, so other users' clients would drop
+			// their own upvote row — see docs/mutations.md and issue #768.
+			const ids = transaction.mutations.map((m) => m.original.request_id)
+			const { data } = await supabase
 				.from('phrase_request_upvote')
-				.delete()
-				.in(
-					'request_id',
-					transaction.mutations.map((m) => m.original.request_id)
-				)
+				.update({ deleted: true })
+				.in('request_id', ids)
+				.select('request_id')
 				.throwOnError()
+			const rows =
+				data?.map((row) => PhraseRequestUpvoteSchema.parse(row)) ?? []
+			should(
+				'phrase_request_upvote soft delete flagged one row per upvote removed',
+				rows.length === ids.length &&
+					ids.every((id) => rows.some((row) => row.request_id === id)),
+				{ submitted: ids, returned: rows }
+			)
+			for (const row of rows)
+				deleteSyncedRow(phraseRequestUpvotesCollection, row.request_id)
 			return { refetch: false }
 		},
 	})
@@ -218,6 +249,7 @@ export const commentUpvotesCollection = createCollection(
 			const { data } = await supabase
 				.from('comment_upvote')
 				.select('comment_id')
+				.eq('deleted', false)
 				.throwOnError()
 			return data?.map((item) => CommentUpvoteSchema.parse(item)) ?? []
 		},
@@ -226,27 +258,53 @@ export const commentUpvotesCollection = createCollection(
 		queryClient,
 		schema: CommentUpvoteSchema,
 		// One-per-user enforced by the (comment_id, uid) PK; upvote_count kept by
-		// a DB trigger. uid defaults to auth.uid().
+		// a DB trigger. The collection holds live upvotes only: a row the user
+		// un-upvoted stays in the table with `deleted` set, and never loads.
 		onInsert: async ({ transaction }) => {
-			await supabase
+			// Upsert, not insert: un-upvoting leaves the row in place with
+			// `deleted` set, so upvoting again revives that row rather than
+			// hitting the (comment_id, uid) primary key. `uid` is in the payload
+			// so the conflict target is explicit.
+			const uid = (await supabase.auth.getSession()).data.session?.user.id
+			const ids = transaction.mutations.map((m) => m.modified.comment_id)
+			const { data } = await supabase
 				.from('comment_upvote')
-				.insert(
-					transaction.mutations.map((m) => ({
-						comment_id: m.modified.comment_id,
-					}))
+				.upsert(
+					ids.map((comment_id) => ({ comment_id, uid, deleted: false })),
+					{ onConflict: 'comment_id,uid' }
 				)
+				.select('comment_id')
 				.throwOnError()
+			const rows = data?.map((row) => CommentUpvoteSchema.parse(row)) ?? []
+			should(
+				'comment_upvote upsert returned one row per upvote added',
+				rows.length === ids.length &&
+					ids.every((id) => rows.some((row) => row.comment_id === id)),
+				{ submitted: ids, returned: rows }
+			)
+			for (const row of rows) commentUpvotesCollection.utils.writeUpsert(row)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			await supabase
+			// Soft delete. A real DELETE broadcasts to every subscriber of the
+			// table without an RLS check, so other users' clients would drop
+			// their own upvote row — see docs/mutations.md and issue #768.
+			const ids = transaction.mutations.map((m) => m.original.comment_id)
+			const { data } = await supabase
 				.from('comment_upvote')
-				.delete()
-				.in(
-					'comment_id',
-					transaction.mutations.map((m) => m.original.comment_id)
-				)
+				.update({ deleted: true })
+				.in('comment_id', ids)
+				.select('comment_id')
 				.throwOnError()
+			const rows = data?.map((row) => CommentUpvoteSchema.parse(row)) ?? []
+			should(
+				'comment_upvote soft delete flagged one row per upvote removed',
+				rows.length === ids.length &&
+					ids.every((id) => rows.some((row) => row.comment_id === id)),
+				{ submitted: ids, returned: rows }
+			)
+			for (const row of rows)
+				deleteSyncedRow(commentUpvotesCollection, row.comment_id)
 			return { refetch: false }
 		},
 	})

@@ -66,6 +66,7 @@ header of `scripts/db-native.sh`.
 - **Table names**: Singular (e.g., `phrase` not `phrases`)
 - **Timestamps**: Use `created_at timestamp with time zone default now() not null`
 - **User data**: Private tables use `uid` field with Row Level Security (RLS)
+- **Soft delete**: A row a user can remove and then restore — an upvote, a request, a playlist — carries `deleted boolean default false not null` and is never deleted outright. Realtime is the reason: Supabase broadcasts DELETE to every subscriber of the table without an RLS check, while an UPDATE reaches only the users who can read the row. Queries and views filter on `deleted = false`; see `docs/mutations.md`.
 
 ## Row Level Security (RLS)
 
