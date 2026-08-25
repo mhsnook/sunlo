@@ -5,9 +5,9 @@ on:
     # Version-named release branches (next-0.28, next-0.28.1) plus bare `next`.
     # Globs are required here — Actions matches branch filters literally otherwise,
     # so a plain `next` would silently skip CI on every `next-*` branch.
-    branches: [next, "next-*"]
+    branches: [next, 'next-*']
   pull_request:
-    branches: [next, "next-*", main]
+    branches: [next, 'next-*', main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
@@ -32,11 +32,26 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # The formatter gate is scoped to the files this PR touches, so the job
+      # has to say which those are. Two-dot diff, because `actions/checkout`
+      # leaves us on the MERGE ref for a `pull_request` event — base is already
+      # merged in, so base.sha..HEAD is exactly this PR's own changes. Switch to
+      # three-dot if the checkout ever pins `pull_request.head.sha`.
+      - name: List files this PR touches
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null ||
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git diff --name-only --diff-filter=d "$BASE_SHA" HEAD |
+            sort > /tmp/pr-touched.txt
+          wc -l < /tmp/pr-touched.txt
 
       # Typecheck, lint, and formatter-drift all diff the PR against the base
       # branch, so they share one job: the base branch is checked out and
@@ -163,14 +178,22 @@ jobs:
               return lines.join('\n');
             };
 
-            // formatter drift: informational; trend arrow + file lists capped at 50.
-            const formatSection = (d, prFiles) => {
-              const newFiles = d.added.map(e => e.raw);
+            // formatter drift: the blocking half is the intersection with the
+            // files this PR touched — a file you edited ships formatted, whether
+            // its drift is new or was there all along. That is NOT the lint rule,
+            // and deliberately so: formatting is per-file, not per-issue. The
+            // repo-wide before/after stays informational, with the trend arrow
+            // carrying it. Lists cap at 50.
+            const formatSection = (d, prFiles, touched, touchedKnown) => {
+              const dirtyTouched = prFiles.filter(f => touched.has(f));
+              const elsewhere = d.added.map(e => e.raw).filter(f => !touched.has(f));
               const resolved = d.resolved.map(e => e.raw);
+              fs.writeFileSync('/tmp/format-touched-count.txt', String(dirtyTouched.length));
+              fs.writeFileSync('/tmp/format-touched-known.txt', touchedKnown ? '1' : '0');
               const trend = d.pr < d.base ? '🟢' : d.pr > d.base ? '🔺' : '➖';
               const summary = `${trend} **Before:** ${d.base} file(s) → **After:** ${d.pr} file(s)` +
-                (newFiles.length || resolved.length
-                  ? ` (+${newFiles.length} new, −${resolved.length} reformatted)`
+                (d.added.length || resolved.length
+                  ? ` (+${d.added.length} new, −${resolved.length} reformatted)`
                   : ` (no change)`);
               // Group the remaining drift by extension: 80 files that are all
               // .sql migrations read very differently from 80 spread across .tsx
@@ -186,22 +209,36 @@ jobs:
                 return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
               };
               const block = (title, list) =>
+                list.length === 0 ? null :
                 `\n**${title} (${list.length}):**\n\`\`\`\n${list.slice(0, 50).join('\n')}` +
                 `${list.length > 50 ? `\n… and ${list.length - 50} more` : ''}\n\`\`\``;
+              const verdict =
+                !touchedKnown
+                  ? '⚠️ No list of touched files was produced, so the touched-file check could not run.'
+                  : dirtyTouched.length
+                    ? `❌ **${dirtyTouched.length} file(s) this PR touches are not formatted.** Run \`pnpm format\` and commit — a file you edited ships formatted, whatever state it was in before.`
+                    : '✅ Every file this PR touches is formatted.';
+              const ext = byExt(prFiles);
               const lines = [
                 '#### Formatter drift (`pnpm format`)',
                 '',
-                'Files `pnpm format` would still rewrite (oxfmt for code + prettier for SQL) — formatting debt to drive toward **0** over time by reformatting legacy files as you touch them.',
+                verdict,
+                block('Touched and unformatted', dirtyTouched),
+                '',
+                'The repo-wide total below is **context, not a gate** — formatting debt to drive toward **0** by reformatting legacy files as you touch them.',
                 '',
                 summary,
+                ext.length ? '\n**By type:** ' + ext.map(([e, n]) => '`' + e + '` ' + n).join(' · ') : null,
+                block('Newly unformatted elsewhere', elsewhere),
+                block('Reformatted / cleaned up', resolved),
               ];
-              const ext = byExt(prFiles);
-              if (ext.length) lines.push('', '**By type:** ' + ext.map(([e, n]) => '`' + e + '` ' + n).join(' · '));
-              if (newFiles.length > 0) lines.push(block('Newly unformatted', newFiles));
-              if (resolved.length > 0) lines.push(block('Reformatted / cleaned up', resolved));
-              return lines.join('\n');
+              return lines.filter(l => l !== null).join('\n');
             };
 
+            // An absent touched.txt is NOT an empty PR — it means the step that
+            // writes it did not run. Record that, and let the gate refuse to pass.
+            const touchedKnown = fs.existsSync('/tmp/pr-touched.txt');
+            const touched = new Set(read('/tmp/pr-touched.txt'));
             const fmtPr = read('/tmp/pr-format.txt');
             const tsc  = differential(read('/tmp/base-errors.txt'), read('/tmp/pr-errors.txt'), tscParse,  true);
             const lint = differential(read('/tmp/base-lint.txt'),   read('/tmp/pr-lint.txt'),   lintParse, true);
@@ -212,7 +249,7 @@ jobs:
               marker, '',
               tscSection(tsc), '', '---', '',
               lintSection(lint), '', '---', '',
-              formatSection(fmt, fmtPr),
+              formatSection(fmt, fmtPr, touched, touchedKnown),
             ].join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
@@ -244,13 +281,25 @@ jobs:
               }
             }
 
-      - name: Fail on new errors or lint issues
+      # Typecheck and lint gate on the DELTA — new issues only, so a legacy
+      # backlog never blocks a PR. The formatter gates on the PR's own
+      # FOOTPRINT instead: every file it touched, new drift or old.
+      - name: Fail on new errors, new lint issues, or unformatted touched files
         run: |
           TSC=$(cat /tmp/tsc-new-count.txt 2>/dev/null || echo 0)
           LINT=$(cat /tmp/lint-new-count.txt 2>/dev/null || echo 0)
+          FMT=$(cat /tmp/format-touched-count.txt 2>/dev/null || echo 0)
+          FMT_KNOWN=$(cat /tmp/format-touched-known.txt 2>/dev/null || echo 0)
           FAIL=0
           if [ "$TSC" -gt 0 ]; then echo "❌ $TSC new type error(s)"; FAIL=1; fi
           if [ "$LINT" -gt 0 ]; then echo "❌ $LINT new lint issue(s)"; FAIL=1; fi
+          if [ "$FMT_KNOWN" != "1" ]; then
+            echo "❌ no list of touched files was produced — the formatter check did not run"
+            FAIL=1
+          elif [ "$FMT" -gt 0 ]; then
+            echo "❌ $FMT touched file(s) are not formatted — run 'pnpm format'"
+            FAIL=1
+          fi
           if [ "$FAIL" -ne 0 ]; then
             echo "See the '### PR checks' comment for details"
             exit 1
@@ -274,8 +323,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Set up dummy env for build
         run: |
@@ -437,8 +486,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Set up dummy env for build
         run: |
@@ -467,8 +516,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -491,8 +540,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '22'
+          cache: 'pnpm'
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
