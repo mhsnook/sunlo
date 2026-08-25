@@ -44,6 +44,12 @@ export type Score = 1 | 2 | 3 | 4
 export interface FSRSInput {
 	score: Score
 	previousReview?: CardReviewType
+	/**
+	 * When the user last saw this card, from a review of any phase. Defaults to
+	 * `previousReview.created_at`, which is only the same row when the user did
+	 * not re-read the card after scoring it — see `findLastSighting`.
+	 */
+	lastSeenAt?: string
 	currentTime?: Date
 	desiredRetention?: number
 }
@@ -198,13 +204,14 @@ export function calculateInterval(
  * - scheduledFor (Date): the computed next review date
  *
  * First review: initializes difficulty and stability from the score alone.
- * Subsequent reviews: uses elapsed time since last review to compute
+ * Subsequent reviews: uses the time since the card was last seen to compute
  * retrievability, then updates difficulty and stability based on performance.
  */
 export function calculateFSRS(input: FSRSInput): FSRSOutput {
 	const {
 		score,
 		previousReview,
+		lastSeenAt,
 		currentTime = new Date(),
 		desiredRetention = 0.9,
 	} = input
@@ -222,8 +229,13 @@ export function calculateFSRS(input: FSRSInput): FSRSOutput {
 		difficulty = initialDifficulty(score)
 		stability = initialStability(score)
 	} else {
-		// Subsequent review with valid FSRS data
-		const timeSinceLastReview = dateDiff(previousReview.created_at, currentTime)
+		// Subsequent review with valid FSRS data. The elapsed time runs from the
+		// last sighting, which may be a later re-read than the scoring review
+		// supplying difficulty and stability.
+		const timeSinceLastReview = dateDiff(
+			lastSeenAt ?? previousReview.created_at,
+			currentTime
+		)
 
 		// Calculate how well we expected to remember this
 		currentRetrievability = retrievability(

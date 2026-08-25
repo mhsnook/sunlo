@@ -27,6 +27,7 @@ import { type ManifestEntry } from './manifest'
 import {
 	buildReviewsMap,
 	findChainPredecessor,
+	findLastSighting,
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
 	isScoringReview,
@@ -46,6 +47,7 @@ interface PostReviewInput {
 	day_session: string
 	stage: number
 	previousReview?: CardReviewType
+	lastSeenAt?: string
 }
 
 // Build a full review row client-side (id + created_at included, so the
@@ -54,7 +56,11 @@ const buildReviewRow = (submitData: PostReviewInput): CardReviewType => {
 	const { uid, phrase_id, lang, direction, score, day_session, stage } =
 		submitData
 	const fsrs = isScoringReview({ stage })
-		? calculateFSRS({ score, previousReview: submitData.previousReview })
+		? calculateFSRS({
+				score,
+				previousReview: submitData.previousReview,
+				lastSeenAt: submitData.lastSeenAt,
+			})
 		: { difficulty: null, stability: null, retrievability: null }
 
 	return {
@@ -86,9 +92,10 @@ const appendReview = async (row: CardReviewType): Promise<CardReviewType> => {
 const correctReview = async (
 	existing: CardReviewType,
 	score: Score,
-	previousReview?: CardReviewType
+	previousReview?: CardReviewType,
+	lastSeenAt?: string
 ): Promise<CardReviewType> => {
-	const fsrs = calculateFSRS({ score, previousReview })
+	const fsrs = calculateFSRS({ score, previousReview, lastSeenAt })
 	await cardReviewsCollection.update(existing.id, (draft) => {
 		draft.score = score
 		draft.difficulty = fsrs.difficulty
@@ -400,7 +407,13 @@ export function useReviewMutation(
 						row: await correctReview(
 							prevDataToday,
 							score as Score,
-							chainPredecessor
+							chainPredecessor,
+							findLastSighting(
+								cardReviewsCollection.toArray,
+								pid,
+								direction,
+								day_session
+							)?.created_at
 						),
 					}
 				}
@@ -423,6 +436,12 @@ export function useReviewMutation(
 							day_session,
 							stage,
 							previousReview: latestReview,
+							lastSeenAt: findLastSighting(
+								cardReviewsCollection.toArray,
+								pid,
+								direction,
+								day_session
+							)?.created_at,
 						})
 					),
 				}
