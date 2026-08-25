@@ -89,10 +89,7 @@ export const cardsCollection = createCollection(
 		queryFn: async () => {
 			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading cardsCollection`)
-			const { data } = await supabase
-				.from('user_card_plus')
-				.select()
-				.throwOnError()
+			const { data } = await supabase.from('user_card').select().throwOnError()
 			return data?.map((item) => CardMetaSchema.parse(item)) ?? []
 		},
 		getKey: (item: CardMetaType) => item.id,
@@ -100,20 +97,7 @@ export const cardsCollection = createCollection(
 		startSync: false,
 		schema: CardMetaSchema,
 		onInsert: async ({ transaction }) => {
-			// Only the user_card columns — the rest of CardMetaSchema (last_reviewed_at,
-			// difficulty, stability) lives in user_card_plus via the user_card_review
-			// join, not on the underlying table. { refetch: false } because our
-			// optimistic row already carries the same column values we send.
-			const rows = transaction.mutations.map((m) => ({
-				id: m.modified.id,
-				uid: m.modified.uid,
-				phrase_id: m.modified.phrase_id,
-				lang: m.modified.lang,
-				status: m.modified.status,
-				direction: m.modified.direction,
-				created_at: m.modified.created_at,
-				updated_at: m.modified.updated_at,
-			}))
+			const rows = transaction.mutations.map((m) => m.modified)
 			const { data } = await supabase
 				.from('user_card')
 				.insert(rows)
@@ -140,9 +124,7 @@ export const cardsCollection = createCollection(
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
-			// Throwing rolls the optimistic state back. { refetch: false } keeps
-			// the confirmed value locally instead of reloading user_card_plus —
-			// safe because user_card has no triggers that change other columns.
+			// Throwing rolls the optimistic state back.
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const changes = m.changes as TablesUpdate<'user_card'>

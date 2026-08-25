@@ -76,9 +76,6 @@ export function PlaylistItem({
 						direction,
 						created_at: nowIso,
 						updated_at: nowIso,
-						last_reviewed_at: null,
-						difficulty: null,
-						stability: null,
 					})
 				}
 			}

@@ -272,9 +272,6 @@ export const useMyCard = (
  *
  * Only safe where the route preloads `cardReviewsCollection`: with no reviews
  * loaded a card reads as never practised rather than as unknown.
- *
- * The `should()` is temporary — it holds the derivation to the `user_card_plus`
- * columns for as long as the view still supplies them.
  */
 export const useCardScheduling = (
 	phraseId: uuid | null | undefined,
@@ -292,15 +289,7 @@ export const useCardScheduling = (
 						.findOne(),
 		[phraseId, direction]
 	)
-	const scheduling = schedulingFromReviews(data?.reviews)
-	should(
-		`card scheduling derived from reviews matches the user_card_plus columns`,
-		!data ||
-			!scheduling ||
-			scheduling.last_reviewed_at === (data.last_reviewed_at ?? null),
-		{ derived: scheduling, welded: data }
-	)
-	return scheduling
+	return schedulingFromReviews(data?.reviews)
 }
 
 export const useDeckCards = (
@@ -334,6 +323,9 @@ export const useDeckCardsScheduled = (
 	)
 	return {
 		...query,
+		// These rows belong to the live query's materialized state, so the copy is
+		// required — Object.assign would mutate the collection's own rows.
+		// oxlint-disable-next-line no-map-spread -- copy-on-write is required here
 		data: query.data?.map(({ reviews, ...card }) => ({
 			...card,
 			scheduling: schedulingFromReviews(reviews),

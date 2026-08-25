@@ -485,43 +485,9 @@ export function useReviewMutation(
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
-			// The review itself is already persisted + in the collection (the
-			// optimistic action did that). This only mirrors FSRS onto the local
-			// card. Isolate any failure so it can't raise a misleading "error posting
-			// your review" toast or block the slide transition.
-			try {
-				// Only sync card scheduling state from scoring reviews (stages 1–2).
-				// Again-round rows are for tracking only — they carry null FSRS
-				// values that would corrupt the scheduling chain.
-				if (isScoringReview(data.row)) {
-					const existingCard = cardsCollection.toArray.find(
-						(c) =>
-							c.phrase_id === data.row.phrase_id &&
-							c.direction === data.row.direction
-					)
-					if (existingCard) {
-						cardsCollection.utils.writeUpdate({
-							id: existingCard.id,
-							last_reviewed_at: data.row.created_at,
-							difficulty: data.row.difficulty,
-							stability: data.row.stability,
-						})
-					} else {
-						console.warn(
-							`Review saved to DB, but no matching card found in local cardsCollection to update.`,
-							{
-								phrase_id: data.row.phrase_id,
-								direction: data.row.direction,
-							}
-						)
-					}
-				}
-			} catch (err) {
-				console.error(
-					`Review saved, but failed to sync local collections:`,
-					err
-				)
-			}
+			// Nothing to mirror onto the card: the review row the optimistic action
+			// already put in `cardReviewsCollection` is the scheduler state, and
+			// every reader folds it with `schedulingFromReviews`.
 
 			triggerSlide(() => {
 				resetRevealCard()

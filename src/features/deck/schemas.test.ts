@@ -114,26 +114,26 @@ describe('CardMetaSchema', () => {
 		lang: 'kan',
 		status: 'active',
 		updated_at: '2026-03-15T00:00:00Z',
-		last_reviewed_at: null,
-		difficulty: null,
-		stability: null,
 	}
 
 	it('parses a valid card', () => {
 		const result = CardMetaSchema.parse(validCard)
 		expect(result.status).toBe('active')
-		expect(result.last_reviewed_at).toBeNull()
+		expect(result.direction).toBe('forward')
 	})
 
-	it('accepts card with FSRS fields', () => {
+	// The scheduler columns live on the reviews now, so a row carrying them is
+	// a `user_card_plus` row and does not belong in this collection.
+	it('drops FSRS fields rather than carrying them on the card', () => {
 		const result = CardMetaSchema.parse({
 			...validCard,
 			last_reviewed_at: '2026-03-30T12:00:00Z',
 			difficulty: 5.28,
 			stability: 3.17,
 		})
-		expect(result.difficulty).toBe(5.28)
-		expect(result.stability).toBe(3.17)
+		expect(result).not.toHaveProperty('last_reviewed_at')
+		expect(result).not.toHaveProperty('difficulty')
+		expect(result).not.toHaveProperty('stability')
 	})
 
 	it('rejects invalid card status', () => {

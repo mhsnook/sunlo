@@ -3,8 +3,8 @@ import { isScoringReview } from '@/features/review/review-utils'
 
 /**
  * When a card was last practised, and the two FSRS values the scheduler reads.
- * `user_card_plus` still carries the same three as columns; until that view is
- * gone, both routes to them exist and must agree.
+ * These are derived from the card's reviews and stored nowhere else — the
+ * `user_card` row carries no scheduler state.
  */
 export type CardScheduling = {
 	last_reviewed_at: string | null

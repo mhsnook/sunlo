@@ -57,18 +57,19 @@ function PreviewCard({
 			}
 		>
 			<CardContent className="flex flex-col items-center justify-center gap-3 p-4">
-				{isReverse ?
+				{isReverse ? (
 					<>
 						{translationsDisplay}
 						<Separator />
 						{phraseDisplay}
 					</>
-				:	<>
+				) : (
+					<>
 						{phraseDisplay}
 						<Separator />
 						{translationsDisplay}
 					</>
-				}
+				)}
 			</CardContent>
 		</CardlikeFlashcard>
 	)
@@ -87,14 +88,11 @@ export function NewCardsPreview({
 		void navigate({ to: '/learn/$lang/review/go', params: { lang: lang! } })
 	}
 
-	// Use the session's captured list of fresh-for-today entries. Filtering the
-	// manifest by "unreviewed" state is unreliable — last_reviewed_at comes from
-	// the user_card_plus view's "most recent review" join, which can be shaped
-	// by prior same-day (phase-3) reviews.
+	// Use the session's captured list of fresh-for-today entries. Deriving
+	// "unreviewed" from the manifest would mark a card reviewed the moment it is
+	// scored, so cards would leave this preview mid-session.
 	const newEntriesSet = new Set<ManifestEntry>(newCardEntries ?? [])
-	const unreviewedInOrder = manifest.filter((entry) =>
-		newEntriesSet.has(entry)
-	)
+	const unreviewedInOrder = manifest.filter((entry) => newEntriesSet.has(entry))
 
 	if (unreviewedInOrder.length === 0) {
 		// No unreviewed cards to preview - show helpful guidance
