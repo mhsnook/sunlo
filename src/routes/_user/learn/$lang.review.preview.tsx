@@ -4,10 +4,7 @@ import {
 	useReviewLang,
 	useReviewStage,
 } from '@/features/review/store'
-import {
-	ensureManifestCardsInCollection,
-	useReviewDay,
-} from '@/features/review/hooks'
+import { useReviewDay } from '@/features/review/hooks'
 import { Loader } from '@/components/ui/loader'
 import { NewCardsPreview } from '@/components/review/new-cards-preview'
 import {
@@ -15,7 +12,6 @@ import {
 	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
-import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 	staticData: {
@@ -23,14 +19,13 @@ export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 		focusMode: true,
 	},
 	component: PreviewPage,
-	loader: async ({ context, params }) => {
+	loader: async ({ context }) => {
 		if (!context.auth.isAuth) return
 		await Promise.all([
 			reviewSessionsCollection.preload(),
 			cardReviewsCollection.preload(),
 			reviewMilestonesCollection.preload(),
 		])
-		await ensureManifestCardsInCollection(params.lang, todayString())
 	},
 })
 

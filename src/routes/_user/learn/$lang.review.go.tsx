@@ -9,11 +9,7 @@ import {
 	useReviewLang,
 	useReviewStage,
 } from '@/features/review/store'
-import {
-	ensureManifestCardsInCollection,
-	useNextValid,
-	useReviewDay,
-} from '@/features/review/hooks'
+import { useNextValid, useReviewDay } from '@/features/review/hooks'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
@@ -28,7 +24,6 @@ import {
 	type ManifestEntry,
 } from '@/features/review/manifest'
 import { useCheck, should } from '@scenetest/checks/react'
-import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	staticData: {
@@ -37,14 +32,13 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		fixedHeight: true,
 	},
 	component: ReviewPage,
-	loader: async ({ context, params }) => {
+	loader: async ({ context }) => {
 		if (!context.auth.isAuth) return
 		await Promise.all([
 			reviewSessionsCollection.preload(),
 			cardReviewsCollection.preload(),
 			reviewMilestonesCollection.preload(),
 		])
-		await ensureManifestCardsInCollection(params.lang, todayString())
 	},
 })
 

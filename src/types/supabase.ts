@@ -1391,13 +1391,6 @@ export type Database = {
 						referencedColumns: ['uid', 'phrase_id', 'direction']
 					},
 					{
-						foreignKeyName: 'user_card_review_phrase_id_uid_fkey'
-						columns: ['uid', 'phrase_id', 'direction']
-						isOneToOne: false
-						referencedRelation: 'user_card_plus'
-						referencedColumns: ['uid', 'phrase_id', 'direction']
-					},
-					{
 						foreignKeyName: 'user_card_review_uid_fkey'
 						columns: ['uid']
 						isOneToOne: false
@@ -1838,74 +1831,6 @@ export type Database = {
 					text_normalized: string | null
 				}
 				Relationships: []
-			}
-			user_card_plus: {
-				Row: {
-					created_at: string | null
-					current_timestamp: string | null
-					difficulty: number | null
-					direction: Database['public']['Enums']['card_direction'] | null
-					id: string | null
-					lang: string | null
-					last_reviewed_at: string | null
-					phrase_id: string | null
-					retrievability_now: number | null
-					stability: number | null
-					status: Database['public']['Enums']['card_status'] | null
-					uid: string | null
-					updated_at: string | null
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'user_card_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'user_card_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'meta_language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'user_card_lang_uid_fkey'
-						columns: ['uid', 'lang']
-						isOneToOne: false
-						referencedRelation: 'user_deck'
-						referencedColumns: ['uid', 'lang']
-					},
-					{
-						foreignKeyName: 'user_card_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'user_card_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_meta'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'user_card_uid_fkey'
-						columns: ['uid']
-						isOneToOne: false
-						referencedRelation: 'public_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'user_card_uid_fkey'
-						columns: ['uid']
-						isOneToOne: false
-						referencedRelation: 'user_profile'
-						referencedColumns: ['uid']
-					},
-				]
 			}
 		}
 		Functions: {

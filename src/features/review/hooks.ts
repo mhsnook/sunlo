@@ -14,7 +14,6 @@ import {
 	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from './collections'
-import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, inArray, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	type CardReviewType,
@@ -24,10 +23,11 @@ import {
 import { useUserId } from '@/lib/use-auth'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardDirectionType } from '@/features/deck/schemas'
-import { toManifestEntry, type ManifestEntry } from './manifest'
+import { type ManifestEntry } from './manifest'
 import {
 	buildReviewsMap,
 	findChainPredecessor,
+	findLastSighting,
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
 	isScoringReview,
@@ -47,6 +47,7 @@ interface PostReviewInput {
 	day_session: string
 	stage: number
 	previousReview?: CardReviewType
+	lastSeenAt?: string
 }
 
 // Build a full review row client-side (id + created_at included, so the
@@ -55,7 +56,11 @@ const buildReviewRow = (submitData: PostReviewInput): CardReviewType => {
 	const { uid, phrase_id, lang, direction, score, day_session, stage } =
 		submitData
 	const fsrs = isScoringReview({ stage })
-		? calculateFSRS({ score, previousReview: submitData.previousReview })
+		? calculateFSRS({
+				score,
+				previousReview: submitData.previousReview,
+				lastSeenAt: submitData.lastSeenAt,
+			})
 		: { difficulty: null, stability: null, retrievability: null }
 
 	return {
@@ -87,9 +92,10 @@ const appendReview = async (row: CardReviewType): Promise<CardReviewType> => {
 const correctReview = async (
 	existing: CardReviewType,
 	score: Score,
-	previousReview?: CardReviewType
+	previousReview?: CardReviewType,
+	lastSeenAt?: string
 ): Promise<CardReviewType> => {
-	const fsrs = calculateFSRS({ score, previousReview })
+	const fsrs = calculateFSRS({ score, previousReview, lastSeenAt })
 	await cardReviewsCollection.update(existing.id, (draft) => {
 		draft.score = score
 		draft.difficulty = fsrs.difficulty
@@ -249,39 +255,6 @@ export function useReviewDay(
 	)
 }
 
-/**
- * The manifest is the authoritative list of cards for a review session —
- * it's persisted server-side, so any device loading today's session sees
- * the same set. Local `cardsCollection` can drift from that (long-lived
- * PWA without refetches, server-side data migrations, sessions authored
- * on another device), and if the manifest references a card the local
- * collection doesn't have, the review mutation can't find it when
- * syncing FSRS state. Refetch once to self-heal before the session starts.
- */
-export async function ensureManifestCardsInCollection(
-	lang: string,
-	day_session: string
-) {
-	const reviewDay = reviewSessionsCollection.toArray.find(
-		(d) => d.lang === lang && d.day_session === day_session
-	)
-	if (!reviewDay?.manifest?.length) return
-
-	const present = new Set<string>(
-		cardsCollection.toArray.map((c) =>
-			toManifestEntry(c.phrase_id, c.direction)
-		)
-	)
-	const missing = reviewDay.manifest.some((entry) => !present.has(entry))
-	if (missing) {
-		console.warn(
-			`Review manifest references cards not in local cardsCollection; refetching to self-heal.`,
-			{ lang, day_session }
-		)
-		await cardsCollection.utils.refetch()
-	}
-}
-
 export function useOneReviewToday(
 	day_session: string,
 	pid: uuid,
@@ -434,7 +407,13 @@ export function useReviewMutation(
 						row: await correctReview(
 							prevDataToday,
 							score as Score,
-							chainPredecessor
+							chainPredecessor,
+							findLastSighting(
+								cardReviewsCollection.toArray,
+								pid,
+								direction,
+								day_session
+							)?.created_at
 						),
 					}
 				}
@@ -457,6 +436,12 @@ export function useReviewMutation(
 							day_session,
 							stage,
 							previousReview: latestReview,
+							lastSeenAt: findLastSighting(
+								cardReviewsCollection.toArray,
+								pid,
+								direction,
+								day_session
+							)?.created_at,
 						})
 					),
 				}
@@ -485,44 +470,6 @@ export function useReviewMutation(
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
-			// The review itself is already persisted + in the collection (the
-			// optimistic action did that). This only mirrors FSRS onto the local
-			// card. Isolate any failure so it can't raise a misleading "error posting
-			// your review" toast or block the slide transition.
-			try {
-				// Only sync card scheduling state from scoring reviews (stages 1–2).
-				// Again-round rows are for tracking only — they carry null FSRS
-				// values that would corrupt the scheduling chain.
-				if (isScoringReview(data.row)) {
-					const existingCard = cardsCollection.toArray.find(
-						(c) =>
-							c.phrase_id === data.row.phrase_id &&
-							c.direction === data.row.direction
-					)
-					if (existingCard) {
-						cardsCollection.utils.writeUpdate({
-							id: existingCard.id,
-							last_reviewed_at: data.row.created_at,
-							difficulty: data.row.difficulty,
-							stability: data.row.stability,
-						})
-					} else {
-						console.warn(
-							`Review saved to DB, but no matching card found in local cardsCollection to update.`,
-							{
-								phrase_id: data.row.phrase_id,
-								direction: data.row.direction,
-							}
-						)
-					}
-				}
-			} catch (err) {
-				console.error(
-					`Review saved, but failed to sync local collections:`,
-					err
-				)
-			}
-
 			triggerSlide(() => {
 				resetRevealCard()
 				// if the next is the same as current, it means we're on the final card, which

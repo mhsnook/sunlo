@@ -120,6 +120,32 @@ export function findChainPredecessor(
 	return best
 }
 
+/**
+ * The newest review of ANY phase from a session strictly before
+ * `beforeSession` — when the user last had eyes on this card and its answer.
+ *
+ * This is the start of the interval FSRS decays over, which is a different
+ * question from `findChainPredecessor`'s: that one supplies the difficulty and
+ * stability to decay, and only a scoring review carries those. A phase-3
+ * re-read moves the clock without moving the values, so the two can return
+ * different rows for the same card.
+ */
+export function findLastSighting(
+	reviews: Array<CardReviewType>,
+	pid: uuid,
+	direction: CardDirectionType,
+	beforeSession: string
+): CardReviewType | undefined {
+	let best: CardReviewType | undefined = undefined
+	for (const r of reviews) {
+		if (r.phrase_id !== pid) continue
+		if (r.direction !== direction) continue
+		if (r.day_session >= beforeSession) continue
+		if (!best || r.created_at > best.created_at) best = r
+	}
+	return best
+}
+
 export function getIndexOfNextAgainCard(
 	manifest: Array<ManifestEntry>,
 	reviewsMap: ReviewsMap,

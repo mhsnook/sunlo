@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
 	DeckSchema,
-	CardMetaSchema,
+	CardSchema,
 	CardStatusEnumSchema,
 } from '@/features/deck/schemas'
 
@@ -105,7 +105,7 @@ describe('DeckSchema', () => {
 	})
 })
 
-describe('CardMetaSchema', () => {
+describe('CardSchema', () => {
 	const validCard = {
 		id: 'aa440001-1111-4aaa-bbbb-222222222222',
 		created_at: '2026-03-15T00:00:00Z',
@@ -114,31 +114,30 @@ describe('CardMetaSchema', () => {
 		lang: 'kan',
 		status: 'active',
 		updated_at: '2026-03-15T00:00:00Z',
-		last_reviewed_at: null,
-		difficulty: null,
-		stability: null,
 	}
 
 	it('parses a valid card', () => {
-		const result = CardMetaSchema.parse(validCard)
+		const result = CardSchema.parse(validCard)
 		expect(result.status).toBe('active')
-		expect(result.last_reviewed_at).toBeNull()
+		expect(result.direction).toBe('forward')
 	})
 
-	it('accepts card with FSRS fields', () => {
-		const result = CardMetaSchema.parse({
+	// A row carrying scheduler columns is not a `user_card` row.
+	it('drops FSRS fields rather than carrying them on the card', () => {
+		const result = CardSchema.parse({
 			...validCard,
 			last_reviewed_at: '2026-03-30T12:00:00Z',
 			difficulty: 5.28,
 			stability: 3.17,
 		})
-		expect(result.difficulty).toBe(5.28)
-		expect(result.stability).toBe(3.17)
+		expect(result).not.toHaveProperty('last_reviewed_at')
+		expect(result).not.toHaveProperty('difficulty')
+		expect(result).not.toHaveProperty('stability')
 	})
 
 	it('rejects invalid card status', () => {
 		expect(() =>
-			CardMetaSchema.parse({ ...validCard, status: 'deleted' })
+			CardSchema.parse({ ...validCard, status: 'deleted' })
 		).toThrow()
 	})
 })

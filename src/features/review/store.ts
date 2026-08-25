@@ -4,7 +4,6 @@ import { useStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
 import type { ReviewStages } from './review-utils'
-import type { ManifestEntry } from './manifest'
 
 const DEFAULT_PROPS = {
 	lang: '',
@@ -12,7 +11,6 @@ const DEFAULT_PROPS = {
 	countCards: -1,
 	stage: null as ReviewStages,
 	currentCardIndex: -1,
-	newCardEntries: null as Array<ManifestEntry> | null,
 }
 
 type ReviewActions = {
@@ -28,7 +26,6 @@ type ReviewActions = {
 		lang: string,
 		dayString: string,
 		countCards: number,
-		newCardEntries?: Array<ManifestEntry> | null,
 		stage?: ReviewStages,
 		index?: number
 	) => void
@@ -80,7 +77,6 @@ export function createReviewStore(lang: string, dayString: string) {
 							lang: string,
 							dayString: string,
 							countCards: number,
-							newCardEntries: Array<ManifestEntry> | null = null,
 							stage: ReviewStages = 1,
 							index: number = 0
 						) =>
@@ -96,7 +92,6 @@ export function createReviewStore(lang: string, dayString: string) {
 									lang,
 									dayString,
 									countCards,
-									newCardEntries,
 									stage,
 									currentCardIndex: index,
 								}
@@ -111,7 +106,6 @@ export function createReviewStore(lang: string, dayString: string) {
 						countCards: state.countCards,
 						stage: state.stage,
 						currentCardIndex: state.currentCardIndex,
-						newCardEntries: state.newCardEntries,
 					}),
 				}
 			)
@@ -149,8 +143,4 @@ export const useInitialiseReviewStore = (): ReviewActions['init'] => {
 
 export const useReviewActions = (): ReviewActions => {
 	return useReviewStore((state) => state.actions)
-}
-
-export const useNewCardEntries = (): Array<ManifestEntry> | null => {
-	return useReviewStore((state) => state.newCardEntries)
 }

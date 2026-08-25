@@ -5,7 +5,7 @@ import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type { pids, uuid, UseLiveQueryResult } from '@/types/main'
-import type { CardDirectionType, CardMetaType, DeckType } from './schemas'
+import type { CardDirectionType, CardType, DeckType } from './schemas'
 import { cardsWithReviews } from './live'
 import { schedulingFromReviews, type CardScheduling } from './card-scheduling'
 import type { CardReviewType } from '@/features/review/schemas'
@@ -113,30 +113,42 @@ export type DeckCardStats = {
 type CardStatusGroup = {
 	status: string
 	count: number
-	most_recent: string | null
 }
 
 const statsFromStatusGroups = (
-	groups: ReadonlyArray<CardStatusGroup>
+	groups: ReadonlyArray<CardStatusGroup>,
+	most_recent_review_at: string | null
 ): DeckCardStats => {
 	const stats: DeckCardStats = {
 		cards_active: 0,
 		cards_learned: 0,
 		cards_skipped: 0,
-		most_recent_review_at: null,
+		most_recent_review_at,
 	}
 	for (const g of groups) {
 		if (g.status === 'active') stats.cards_active = g.count
 		else if (g.status === 'learned') stats.cards_learned = g.count
 		else if (g.status === 'skipped') stats.cards_skipped = g.count
-		if (
-			g.most_recent &&
-			(stats.most_recent_review_at === null ||
-				g.most_recent > stats.most_recent_review_at)
-		)
-			stats.most_recent_review_at = g.most_recent
 	}
 	return stats
+}
+
+/** When each language was last practised, over every review of any phase. */
+const useMostRecentReviewByLang = (): Record<string, string | null> => {
+	const { data } = useLiveQuery((q) =>
+		q
+			.from({ review: cardReviewsCollection })
+			.groupBy(({ review }) => review.lang)
+			.select(({ review }) => ({
+				lang: review.lang,
+				most_recent: max(review.created_at),
+			}))
+	)
+	return useMemo(() => {
+		const out: Record<string, string | null> = {}
+		for (const row of data ?? []) out[row.lang] = row.most_recent
+		return out
+	}, [data])
 }
 
 export const useDeckCardStats = (lang: string): DeckCardStats => {
@@ -149,11 +161,15 @@ export const useDeckCardStats = (lang: string): DeckCardStats => {
 				.select(({ card }) => ({
 					status: card.status,
 					count: count(card.id),
-					most_recent: max(card.last_reviewed_at),
 				})),
 		[lang]
 	)
-	return useMemo(() => statsFromStatusGroups(data ?? []), [data])
+	const mostRecentByLang = useMostRecentReviewByLang()
+	const mostRecent = mostRecentByLang[lang] ?? null
+	return useMemo(
+		() => statsFromStatusGroups(data ?? [], mostRecent),
+		[data, mostRecent]
+	)
 }
 
 export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
@@ -165,9 +181,9 @@ export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
 				lang: card.lang,
 				status: card.status,
 				count: count(card.id),
-				most_recent: max(card.last_reviewed_at),
 			}))
 	)
+	const mostRecentByLang = useMostRecentReviewByLang()
 	return useMemo(() => {
 		const byLang = new Map<string, Array<CardStatusGroup>>()
 		for (const row of data ?? []) {
@@ -177,9 +193,9 @@ export const useDeckCardStatsByLang = (): Record<string, DeckCardStats> => {
 		}
 		const out: Record<string, DeckCardStats> = {}
 		for (const [lang, groups] of byLang)
-			out[lang] = statsFromStatusGroups(groups)
+			out[lang] = statsFromStatusGroups(groups, mostRecentByLang[lang] ?? null)
 		return out
-	}, [data])
+	}, [data, mostRecentByLang])
 }
 
 export type DeckReviewCounts = {
@@ -217,7 +233,7 @@ export const useDeckReviewCounts = (lang: string): DeckReviewCounts => {
 	}, [data])
 }
 
-export type CardWithSibling = CardMetaType & { sibling_id: string | null }
+export type CardWithSibling = CardType & { sibling_id: string | null }
 
 export const useMyCard = (
 	phraseId: string | null | undefined
@@ -252,9 +268,6 @@ export const useMyCard = (
  *
  * Only safe where the route preloads `cardReviewsCollection`: with no reviews
  * loaded a card reads as never practised rather than as unknown.
- *
- * The `should()` is temporary — it holds the derivation to the `user_card_plus`
- * columns for as long as the view still supplies them.
  */
 export const useCardScheduling = (
 	phraseId: uuid | null | undefined,
@@ -272,20 +285,10 @@ export const useCardScheduling = (
 						.findOne(),
 		[phraseId, direction]
 	)
-	const scheduling = schedulingFromReviews(data?.reviews)
-	should(
-		`card scheduling derived from reviews matches the user_card_plus columns`,
-		!data ||
-			!scheduling ||
-			scheduling.last_reviewed_at === (data.last_reviewed_at ?? null),
-		{ derived: scheduling, welded: data }
-	)
-	return scheduling
+	return schedulingFromReviews(data?.reviews)
 }
 
-export const useDeckCards = (
-	lang: string
-): UseLiveQueryResult<CardMetaType[]> =>
+export const useDeckCards = (lang: string): UseLiveQueryResult<CardType[]> =>
 	useLiveQuery(
 		(q) =>
 			q
@@ -293,6 +296,26 @@ export const useDeckCards = (
 				.where(({ card }) => eq(card.lang, lang)),
 		[lang]
 	)
+
+/** A card row with its review history; fold it with `schedulingFromReviews`. */
+export type CardWithReviews = CardType & {
+	reviews: Array<CardReviewType> | null
+}
+
+/**
+ * Only safe where the route preloads `cardReviewsCollection`: with no reviews
+ * loaded a card reads as never practised rather than as unknown.
+ */
+export const useDeckCardsWithReviews = (
+	lang: string
+): UseLiveQueryResult<CardWithReviews[]> =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ card: cardsWithReviews })
+				.where(({ card }) => eq(card.lang, lang)),
+		[lang]
+	) as UseLiveQueryResult<CardWithReviews[]>
 
 export const useDeckRoutineStats = (lang: string) => {
 	const today = dayjs()
@@ -333,43 +356,46 @@ type UseDeckPidsReturnType = {
 	data: DeckPids | null
 }
 
+/**
+ * One pass over the deck: `schedulingFromReviews` folds a card's whole history,
+ * so calling it once per bucket would repeat that work eight times.
+ */
+const bucketPids = (cards: ReadonlyArray<CardWithReviews>): DeckPids => {
+	const buckets: DeckPids = {
+		all: [],
+		active: [],
+		inactive: [],
+		reviewed: [],
+		reviewed_or_inactive: [],
+		reviewed_last_7d: [],
+		unreviewed_active: [],
+		today_active: [],
+	}
+	for (const card of cards) {
+		const scheduling = schedulingFromReviews(card.reviews)
+		const reviewedAt = scheduling?.last_reviewed_at
+		const isActive = card.status === 'active'
+		const pid = card.phrase_id
+		buckets.all.push(pid)
+		if (isActive) buckets.active.push(pid)
+		else buckets.inactive.push(pid)
+		if (reviewedAt) buckets.reviewed.push(pid)
+		if (reviewedAt || !isActive) buckets.reviewed_or_inactive.push(pid)
+		if (reviewedAt && inLastWeek(reviewedAt)) buckets.reviewed_last_7d.push(pid)
+		if (isActive && !reviewedAt) buckets.unreviewed_active.push(pid)
+		if (isDueCard(card, scheduling)) buckets.today_active.push(pid)
+	}
+	for (const key of Object.keys(buckets) as Array<keyof DeckPids>)
+		buckets[key] = unique(buckets[key])
+	return buckets
+}
+
 export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
-	const { isLoading, data } = useDeckCards(lang)
+	const { isLoading, data } = useDeckCardsWithReviews(lang)
 
 	return {
 		isLoading: isLoading ?? true,
-		data: !data
-			? null
-			: {
-					all: unique(data.map((c) => c.phrase_id)),
-					active: unique(
-						data.filter((c) => c.status === 'active').map((c) => c.phrase_id)
-					),
-					inactive: unique(
-						data.filter((c) => c.status !== 'active').map((c) => c.phrase_id)
-					),
-					reviewed: unique(
-						data.filter((c) => !!c.last_reviewed_at).map((c) => c.phrase_id)
-					),
-					reviewed_or_inactive: unique(
-						data
-							.filter((c) => !!c.last_reviewed_at || c.status !== 'active')
-							.map((c) => c.phrase_id)
-					),
-					reviewed_last_7d: unique(
-						data
-							.filter(
-								(c) => c.last_reviewed_at && inLastWeek(c.last_reviewed_at)
-							)
-							.map((c) => c.phrase_id)
-					),
-					unreviewed_active: unique(
-						data
-							.filter((c) => c.status === 'active' && !c.last_reviewed_at)
-							.map((c) => c.phrase_id)
-					),
-					today_active: unique(data.filter(isDueCard).map((c) => c.phrase_id)),
-				},
+		data: !data ? null : bucketPids(data),
 	}
 }
 

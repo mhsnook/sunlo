@@ -262,8 +262,8 @@ You need two values from the Supabase dashboard (Project Settings → API):
 #### 3. Back up the table first
 
 The script only writes to `user_card_review` (no card-table writes needed —
-the `user_card_plus` view projects review values through). But `--apply`
-modifies existing rows in place; there's no automatic rollback.
+the card carries no scheduler state; clients derive it from the reviews). But
+`--apply` modifies existing rows in place; there's no automatic rollback.
 
 From the Supabase SQL editor or a psql session pointed at prod:
 
