@@ -366,8 +366,6 @@ function ReviewPageContent() {
 				...reverseNew,
 			]
 
-			const freshCardEntries = [...forwardNew, ...reverseNew]
-
 			const { data: reviewDay } = await supabase
 				.from('user_review_session')
 				.insert({
@@ -393,7 +391,6 @@ function ReviewPageContent() {
 				countCardsFresh: freshCards.length,
 				countCardsCreated: newCards.length,
 				countCardsAlreadyExisted: cardInserts.length - newCards.length,
-				freshCardEntries,
 				newCards,
 				reviewDay,
 			}
@@ -426,12 +423,7 @@ function ReviewPageContent() {
 				event: 'session_started',
 				stage: 1,
 			})
-			initLocalReviewState(
-				lang,
-				dayString,
-				data.countCards,
-				data.freshCardEntries
-			)
+			initLocalReviewState(lang, dayString, data.countCards)
 			const toastMessage =
 				data.countCardsAlreadyExisted > 0
 					? `Ready! Could only create ${data.countCardsCreated} new cards — ${data.countCardsAlreadyExisted} already existed. You have ${data.countCards} total today.`
