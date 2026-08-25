@@ -32,9 +32,9 @@ Two behaviours are worth knowing in more detail.
 
 ### Dark mode flips the shade scale
 
-50 and 950 swap, 100 and 900 swap, down to 500 which mirrors itself. A shade number means _how much contrast against the page_, not a fixed lightness — so `bg-primary-100` is a subtle surface and `text-primary-800` is strong text in both modes. **Do not write `dark:` in app code.**
+50 and 950 swap, 100 and 900 swap, down to 500, which mirrors itself. So `bg-primary-100` is a subtle surface and `text-primary-800` is strong text in both modes. **Do not write `dark:` in app code.**
 
-One consequence to design around: a solid fill inverts polarity. `bg-primary-700` is dark in light mode and pale in dark mode, so `text-white` on it is unreadable half the time. **Use `text-paper` on any filled surface** — it is the one foreground that works on every palette, including a re-pointed one.
+One consequence to design around: since a solid fill inverts, `text-white` on it is unreadable half the time. **Use `text-paper` on any filled surface** — it is the one foreground that works at any hue, in either mode.
 
 `paper` and `ink` are also the answer where a surface has to sit _above_ the page in both modes. "Above" means lighter either way, which no flipping shade can express relative to a flipping page — that is why `--card` is `paper` rather than `neutral-50`.
 
