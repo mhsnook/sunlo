@@ -17,10 +17,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
-import { useDeck, useDeckCards } from '@/features/deck/hooks'
+import { schedulingFromReviews } from '@/features/deck/card-scheduling'
+import {
+	useDeck,
+	useDeckCards,
+	useDeckCardsWithReviews,
+	type CardWithReviews,
+} from '@/features/deck/hooks'
 import { updateCardsStatus } from '@/features/deck/card-status'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
-import { type CardMetaType } from '@/features/deck/schemas'
+import { type CardType } from '@/features/deck/schemas'
 import { cn, sessionDaysDiff } from '@/lib/utils'
 import { calculateInterval } from '@/features/review'
 
@@ -34,7 +40,7 @@ type PhraseRow = {
 	phrase_id: string
 	phrase_text: string
 	/** Most active status across both directions */
-	status: CardMetaType['status']
+	status: CardType['status']
 	/** Soonest due date across both directions */
 	last_reviewed_at: string | null
 	/** Average difficulty across reviewed directions */
@@ -42,7 +48,7 @@ type PhraseRow = {
 	/** Lowest stability across directions (drives due date) */
 	stability: number | null
 	/** All underlying card records for this phrase */
-	cards: Array<CardMetaType>
+	cards: Array<CardType>
 }
 
 type SortField = 'phrase' | 'status' | 'last_reviewed' | 'difficulty'
@@ -139,7 +145,7 @@ function ManageDeckPage() {
 }
 
 function useCardData(lang: string) {
-	const { data: cards, isLoading: cardsLoading } = useDeckCards(lang)
+	const { data: cards, isLoading: cardsLoading } = useDeckCardsWithReviews(lang)
 	const { data: phrases, isLoading: phrasesLoading } = useLangPhrasesRaw(lang)
 
 	const [sortField, setSortField] = useState<SortField>('last_reviewed')
@@ -152,7 +158,7 @@ function useCardData(lang: string) {
 		const phraseMap = new Map(phrases.map((p) => [p.id, p]))
 
 		// Group cards by phrase_id
-		const grouped = new Map<string, Array<CardMetaType>>()
+		const grouped = new Map<string, Array<CardWithReviews>>()
 		for (const card of cards) {
 			const arr = grouped.get(card.phrase_id)
 			if (arr) arr.push(card)
@@ -172,13 +178,13 @@ function useCardData(lang: string) {
 				)
 				// Soonest last_reviewed_at (most recently reviewed direction)
 				const reviewed = dirCards
-					.map((c) => c.last_reviewed_at)
+					.map((c) => schedulingFromReviews(c.reviews)?.last_reviewed_at)
 					.filter(Boolean)
 					.toSorted()
 					.at(-1) as string | null
 				// Average difficulty of reviewed directions
 				const diffs = dirCards
-					.map((c) => c.difficulty)
+					.map((c) => schedulingFromReviews(c.reviews)?.difficulty)
 					.filter((d): d is number => d != null)
 				const difficulty =
 					diffs.length > 0
@@ -186,7 +192,7 @@ function useCardData(lang: string) {
 						: null
 				// Lowest stability (most urgent card drives due date)
 				const stabilities = dirCards
-					.map((c) => c.stability)
+					.map((c) => schedulingFromReviews(c.reviews)?.stability)
 					.filter((s): s is number => s != null)
 				const stability =
 					stabilities.length > 0 ? Math.min(...stabilities) : null
@@ -245,7 +251,7 @@ function useCardData(lang: string) {
 	const allPhraseRows: Array<PhraseRow> = useMemo(() => {
 		if (!cards || !phrases) return []
 		const phraseMap = new Map(phrases.map((p) => [p.id, p]))
-		const grouped = new Map<string, Array<CardMetaType>>()
+		const grouped = new Map<string, Array<CardWithReviews>>()
 		for (const card of cards) {
 			const arr = grouped.get(card.phrase_id)
 			if (arr) arr.push(card)
@@ -288,7 +294,7 @@ function ManageDeckSummary({ lang }: { lang: string }) {
 	const phraseIds = new Set((cards ?? []).map((c) => c.phrase_id))
 	const byStatus = { active: 0, learned: 0, skipped: 0 }
 	const statusPriority = { active: 0, learned: 1, skipped: 2 } as const
-	const phraseStatus = new Map<string, CardMetaType['status']>()
+	const phraseStatus = new Map<string, CardType['status']>()
 	for (const card of cards ?? []) {
 		const prev = phraseStatus.get(card.phrase_id)
 		if (!prev || statusPriority[card.status] < statusPriority[prev]) {

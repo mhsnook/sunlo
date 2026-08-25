@@ -1709,91 +1709,6 @@ with
 
 alter table "public"."search_text_index" owner to "postgres";
 
-create or replace view "public"."user_card_plus"
-with
-	("security_invoker" = 'true') as
-with
-	"review" as (
-		select
-			"rev"."id",
-			"rev"."uid",
-			"rev"."score",
-			"rev"."difficulty",
-			"rev"."stability",
-			"rev"."review_time_retrievability",
-			"rev"."created_at",
-			"rev"."updated_at",
-			"rev"."day_session",
-			"rev"."lang",
-			"rev"."phrase_id",
-			"rev"."direction"
-		from
-			(
-				"public"."user_card_review" "rev"
-				left join "public"."user_card_review" "rev2" on (
-					(
-						("rev"."phrase_id" = "rev2"."phrase_id")
-						and ("rev"."uid" = "rev2"."uid")
-						and ("rev"."direction" = "rev2"."direction")
-						and ("rev"."created_at" < "rev2"."created_at")
-						and ("rev2"."stage" = any (array[1, 2]))
-					)
-				)
-			)
-		where
-			(
-				("rev2"."created_at" is null)
-				and ("rev"."stage" = any (array[1, 2]))
-			)
-	)
-select
-	"card"."lang",
-	"card"."id",
-	"card"."uid",
-	"card"."status",
-	"card"."phrase_id",
-	"card"."direction",
-	"card"."created_at",
-	"card"."updated_at",
-	"review"."created_at" as "last_reviewed_at",
-	"review"."difficulty",
-	"review"."stability",
-	current_timestamp as "current_timestamp",
-	nullif(
-		"power" (
-			(
-				1.0 + (
-					(
-						(19.0 / 81.0) * (
-							(
-								extract(
-									epoch
-									from
-										(current_timestamp - "review"."created_at")
-								) / 3600.0
-							) / 24.0
-						)
-					) / nullif("review"."stability", (0)::numeric)
-				)
-			),
-			'-0.5'::numeric
-		),
-		'NaN'::numeric
-	) as "retrievability_now"
-from
-	(
-		"public"."user_card" "card"
-		left join "review" on (
-			(
-				("card"."phrase_id" = "review"."phrase_id")
-				and ("card"."uid" = "review"."uid")
-				and ("card"."direction" = "review"."direction")
-			)
-		)
-	);
-
-alter table "public"."user_card_plus" owner to "postgres";
-
 create table if not exists "public"."user_client_event" (
 	"id" "uuid" default "gen_random_uuid" () not null,
 	"created_at" timestamp with time zone default "now" () not null,
@@ -4684,12 +4599,6 @@ grant all on table "public"."search_text_index" to "anon";
 grant all on table "public"."search_text_index" to "authenticated";
 
 grant all on table "public"."search_text_index" to "service_role";
-
-grant all on table "public"."user_card_plus" to "anon";
-
-grant all on table "public"."user_card_plus" to "authenticated";
-
-grant all on table "public"."user_card_plus" to "service_role";
 
 grant all on table "public"."user_client_event" to "anon";
 

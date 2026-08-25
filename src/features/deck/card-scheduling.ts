@@ -3,8 +3,8 @@ import { isScoringReview } from '@/features/review/review-utils'
 
 /**
  * When a card was last practised, and the two FSRS values the scheduler reads.
- * `user_card_plus` still carries the same three as columns; until that view is
- * gone, both routes to them exist and must agree.
+ * Derived from the card's reviews and stored nowhere else — the `user_card`
+ * row carries no scheduler state.
  */
 export type CardScheduling = {
 	last_reviewed_at: string | null
@@ -18,40 +18,47 @@ export const NO_SCHEDULING: CardScheduling = {
 	stability: null,
 }
 
-/**
- * The latest scoring review wins. Stage-3 (again-round) rows carry null FSRS
- * values and would blank the card's scheduling, so they never count. Ordering
- * is by `created_at`, so a correction to an older row cannot jump the queue.
- *
- * Returns null when the review list is missing, which is not an empty history.
- * A `toArray` include is unpopulated on the frame its parent row enters the
- * query, so `cardsWithReviews` emits every card once with `reviews: null` — a
- * card with a full history included, before its list arrives on a later frame.
- * A card with no reviews gets no later frame at all, so a subscriber holds that
- * null for as long as the card stays unreviewed, even though the collection's
- * own copy of the row holds an empty array.
- *
- * Null therefore means "not yet known" and must never be read as "never
- * practised". Verified against @tanstack/db 0.6.5; if a later version seeds the
- * include on entry, this branch is dead and can go.
- */
 const isReviewList = (value: unknown): value is ReadonlyArray<CardReviewType> =>
 	Array.isArray(value)
 
+/**
+ * The two values come from different rows, and mixing them up is the footgun
+ * here.
+ *
+ * `last_reviewed_at` is the newest review of ANY phase. It answers "how long
+ * since the user last saw this card and its answer", which is the elapsed time
+ * FSRS decays against, so a phase-3 re-review counts.
+ *
+ * `difficulty` and `stability` come from the newest SCORING review (phase 1–2).
+ * Phase-3 rows carry null FSRS values and would blank the card's state.
+ *
+ * Returns null when the review list is missing, which is not an empty history:
+ * a `toArray` include is unpopulated on the frame its parent row enters the
+ * query, so every card is emitted once with `reviews: null` — a card with a
+ * full history included. A card with no reviews gets no later frame at all, so
+ * a subscriber holds that null indefinitely. Null therefore means "not yet
+ * known" and must never be read as "never practised".
+ */
 export function schedulingFromReviews(
 	reviews: ReadonlyArray<CardReviewType> | null | undefined
 ): CardScheduling | null {
 	if (!isReviewList(reviews)) return null
-	let latest: CardReviewType | null = null
+	let latestSighting: CardReviewType | null = null
+	let latestScoring: CardReviewType | null = null
 	for (const review of reviews) {
+		if (
+			latestSighting === null ||
+			review.created_at > latestSighting.created_at
+		)
+			latestSighting = review
 		if (!isScoringReview(review)) continue
-		if (latest === null || review.created_at > latest.created_at)
-			latest = review
+		if (latestScoring === null || review.created_at > latestScoring.created_at)
+			latestScoring = review
 	}
-	if (latest === null) return NO_SCHEDULING
+	if (latestSighting === null) return NO_SCHEDULING
 	return {
-		last_reviewed_at: latest.created_at,
-		difficulty: latest.difficulty,
-		stability: latest.stability,
+		last_reviewed_at: latestSighting.created_at,
+		difficulty: latestScoring?.difficulty ?? null,
+		stability: latestScoring?.stability ?? null,
 	}
 }

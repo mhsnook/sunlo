@@ -1,11 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
-import {
-	DeckSchema,
-	type DeckType,
-	CardMetaSchema,
-	type CardMetaType,
-} from './schemas'
+import { DeckSchema, type DeckType, CardSchema, type CardType } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { should } from '@scenetest/checks/react'
@@ -89,44 +84,28 @@ export const cardsCollection = createCollection(
 		queryFn: async () => {
 			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading cardsCollection`)
-			const { data } = await supabase
-				.from('user_card_plus')
-				.select()
-				.throwOnError()
-			return data?.map((item) => CardMetaSchema.parse(item)) ?? []
+			const { data } = await supabase.from('user_card').select().throwOnError()
+			return data?.map((item) => CardSchema.parse(item)) ?? []
 		},
-		getKey: (item: CardMetaType) => item.id,
+		getKey: (item: CardType) => item.id,
 		queryClient,
 		startSync: false,
-		schema: CardMetaSchema,
+		schema: CardSchema,
 		onInsert: async ({ transaction }) => {
-			// Only the user_card columns — the rest of CardMetaSchema (last_reviewed_at,
-			// difficulty, stability) lives in user_card_plus via the user_card_review
-			// join, not on the underlying table. { refetch: false } because our
-			// optimistic row already carries the same column values we send.
-			const rows = transaction.mutations.map((m) => ({
-				id: m.modified.id,
-				uid: m.modified.uid,
-				phrase_id: m.modified.phrase_id,
-				lang: m.modified.lang,
-				status: m.modified.status,
-				direction: m.modified.direction,
-				created_at: m.modified.created_at,
-				updated_at: m.modified.updated_at,
-			}))
+			const rows = transaction.mutations.map((m) => m.modified)
 			const { data } = await supabase
 				.from('user_card')
 				.insert(rows)
 				.select()
 				.throwOnError()
+			const returned = data?.map((row) => CardSchema.parse(row)) ?? []
 			// Confirm the server stored the same cards our optimistic insert
 			// added to the collection. Stripped from production by the Vite plugin.
 			should(
 				'user_card insert returned rows matching the optimistic cards',
-				!!data &&
-					data.length === rows.length &&
+				returned.length === rows.length &&
 					rows.every((row) =>
-						data.some(
+						returned.some(
 							(d) =>
 								d.id === row.id &&
 								d.status === row.status &&
@@ -135,14 +114,12 @@ export const cardsCollection = createCollection(
 								d.lang === row.lang
 						)
 					),
-				{ submitted: rows, returned: data }
+				{ submitted: rows, returned }
 			)
+			for (const row of returned) cardsCollection.utils.writeInsert(row)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
-			// Throwing rolls the optimistic state back. { refetch: false } keeps
-			// the confirmed value locally instead of reloading user_card_plus —
-			// safe because user_card has no triggers that change other columns.
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const changes = m.changes as TablesUpdate<'user_card'>
@@ -165,6 +142,7 @@ export const cardsCollection = createCollection(
 							),
 						{ submitted: changes, returned: row }
 					)
+					if (row) cardsCollection.utils.writeUpdate(CardSchema.parse(row))
 				})
 			)
 			return { refetch: false }

@@ -5,8 +5,8 @@
 export {
 	DeckSchema,
 	type DeckType,
-	CardMetaSchema,
-	type CardMetaType,
+	CardSchema,
+	type CardType,
 	CardStatusEnumSchema,
 	CardDirectionSchema,
 	type CardDirectionType,
@@ -22,6 +22,7 @@ export {
 	useMyCard,
 	useCardScheduling,
 	useDeckCards,
+	useDeckCardsWithReviews,
 	useDeckPids,
 	useDeckRoutineStats,
 	useDeckActivityChartData,

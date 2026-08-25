@@ -75,9 +75,6 @@ export const createPhraseWithTranslation =
 					direction: c.direction,
 					created_at: now,
 					updated_at: now,
-					last_reviewed_at: null,
-					stability: null,
-					difficulty: null,
 				})
 			}
 		},
@@ -163,9 +160,6 @@ export const createPhraseWithTranslation =
 					direction: c.direction,
 					created_at: now,
 					updated_at: now,
-					last_reviewed_at: null,
-					stability: null,
-					difficulty: null,
 				})
 			}
 		},
@@ -251,9 +245,6 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					direction: c.direction,
 					created_at: now,
 					updated_at: now,
-					last_reviewed_at: null,
-					stability: null,
-					difficulty: null,
 				})
 			}
 			for (const tagId of p.tagIds) {
@@ -379,9 +370,6 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					direction: c.direction,
 					created_at: now,
 					updated_at: now,
-					last_reviewed_at: null,
-					stability: null,
-					difficulty: null,
 				})
 			}
 			for (const tagId of p.tagIds) {
