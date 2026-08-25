@@ -30,7 +30,7 @@ import { optimisticNewDeck } from '@/features/deck/mutations'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
 import { useInvalidateFeed } from '@/features/feed/hooks'
-import { useDeckMeta } from '@/features/deck/hooks'
+import { useDeck } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import {
 	SpreadsheetImportDialog,
@@ -87,7 +87,7 @@ function BulkAddPhrasesPage() {
 	>([])
 
 	// Deck status detection
-	const { data: deck } = useDeckMeta(lang)
+	const { data: deck } = useDeck(lang)
 	const hasActiveDeck = !!deck && !deck.archived
 	const hasArchivedDeck = !!deck && deck.archived
 	const noDeck = !deck

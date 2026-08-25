@@ -13,12 +13,12 @@ import {
 } from '@/components/ui/dialog'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { decksCollection } from '@/features/deck/collections'
-import { type DeckMetaType } from '@/features/deck/schemas'
+import { type DeckType } from '@/features/deck/schemas'
 import { useDeckPids, useDeckCardStats } from '@/features/deck/hooks'
 import { ago } from '@/lib/dayjs'
 import languages from '@/lib/languages'
 
-export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
+export function ArchivedDeckTile({ deck }: { deck: DeckType }) {
 	const [open, setOpen] = useState(false)
 	const { data: pids } = useDeckPids(deck.lang)
 	const { most_recent_review_at } = useDeckCardStats(deck.lang)

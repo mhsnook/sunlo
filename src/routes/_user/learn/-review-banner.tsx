@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Rocket } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
-import type { DeckMetaType } from '@/features/deck/schemas'
+import type { DeckType } from '@/features/deck/schemas'
 import languages from '@/lib/languages'
 import { useLangActiveDays } from './-deck-ranking'
 
@@ -10,7 +10,7 @@ export function ReviewBanner({
 	focus,
 	focusDue,
 }: {
-	focus: DeckMetaType | undefined
+	focus: DeckType | undefined
 	focusDue: number
 }) {
 	const activeDays = useLangActiveDays(focus?.lang)

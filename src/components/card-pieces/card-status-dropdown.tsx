@@ -27,11 +27,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useUserId } from '@/lib/use-auth'
-import {
-	useDeckMeta,
-	useMyCard,
-	type CardWithSibling,
-} from '@/features/deck/hooks'
+import { useDeck, useMyCard, type CardWithSibling } from '@/features/deck/hooks'
 import languages from '@/lib/languages'
 import { Button } from '@/components/ui/button'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
@@ -42,7 +38,7 @@ import {
 	type LearningStatus,
 } from '@/features/deck/card-status'
 import { optimisticNewDeck } from '@/features/deck/mutations'
-import { type DeckMetaType } from '@/features/deck/schemas'
+import { type DeckType } from '@/features/deck/schemas'
 import {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
@@ -217,7 +213,7 @@ export function CardStatusDropdown({
 	className,
 }: CardStatusDropdownProps) {
 	const userId = useUserId()
-	const { data: deck } = useDeckMeta(phrase.lang)
+	const { data: deck } = useDeck(phrase.lang)
 	const { data: card } = useMyCard(phrase.id)
 
 	const setCardStatus = useCardStatusMutator(phrase, card)
@@ -337,7 +333,7 @@ export function CardStatusHeart({
 }) {
 	const requireAuth = useRequireAuth()
 	const { data: card } = useMyCard(phrase.id)
-	const { data: deck } = useDeckMeta(phrase.lang)
+	const { data: deck } = useDeck(phrase.lang)
 	const setCardStatus = useCardStatusMutator(phrase, card)
 	const statusToPost = card?.status === 'active' ? 'skipped' : 'active'
 
@@ -408,7 +404,7 @@ function StartLearningDialog({
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	lang: string
-	archivedDeck: DeckMetaType | null
+	archivedDeck: DeckType | null
 	onConfirmed: () => Promise<void>
 }) {
 	const userId = useUserId()

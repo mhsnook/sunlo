@@ -1,7 +1,7 @@
 import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { type ConfigExtension, extendTailwindMerge } from 'tailwind-merge'
-import type { DeckMetaType } from '@/features/deck/schemas'
+import type { DeckType } from '@/features/deck/schemas'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
 
@@ -216,8 +216,8 @@ export function nullSubmit(event: {
 
 // sort ASC earliest first
 export const sortDecksByCreation = (
-	a: Partial<DeckMetaType> & { created_at: string; lang: string },
-	b: Partial<DeckMetaType> & { created_at: string; lang: string }
+	a: Partial<DeckType> & { created_at: string; lang: string },
+	b: Partial<DeckType> & { created_at: string; lang: string }
 ) =>
 	a.created_at > b.created_at
 		? 1

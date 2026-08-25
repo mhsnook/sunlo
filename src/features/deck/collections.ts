@@ -1,8 +1,8 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
-	DeckMetaSchema,
-	type DeckMetaType,
+	DeckSchema,
+	type DeckType,
 	CardMetaSchema,
 	type CardMetaType,
 } from './schemas'
@@ -22,14 +22,14 @@ export const decksCollection = createCollection(
 			const { data } = await supabase.from('user_deck').select().throwOnError()
 			return (
 				data
-					?.map((item) => DeckMetaSchema.parse(item))
+					?.map((item) => DeckSchema.parse(item))
 					.toSorted(sortDecksByCreation) ?? []
 			)
 		},
-		getKey: (item: DeckMetaType) => item.lang,
+		getKey: (item: DeckType) => item.lang,
 		queryClient,
 		startSync: false,
-		schema: DeckMetaSchema,
+		schema: DeckSchema,
 		onInsert: async ({ transaction }) => {
 			// The insert sends only `lang` — uid, created_at and every other
 			// column come back filled in by the server.
@@ -39,7 +39,7 @@ export const decksCollection = createCollection(
 				.insert(langs.map((lang) => ({ lang })))
 				.select()
 				.throwOnError()
-			const rows = data?.map((row) => DeckMetaSchema.parse(row)) ?? []
+			const rows = data?.map((row) => DeckSchema.parse(row)) ?? []
 			should(
 				'user_deck insert returned one row per deck the optimistic insert added',
 				rows.length === langs.length &&
@@ -74,7 +74,7 @@ export const decksCollection = createCollection(
 							),
 						{ submitted: changes, returned: row }
 					)
-					if (row) decksCollection.utils.writeUpdate(DeckMetaSchema.parse(row))
+					if (row) decksCollection.utils.writeUpdate(DeckSchema.parse(row))
 				})
 			)
 			return { refetch: false }

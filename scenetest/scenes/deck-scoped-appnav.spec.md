@@ -1,7 +1,7 @@
 # deck-scoped appnav stays hidden when the user has no deck for this language
 
 // \_user.tsx gates the deck-scoped appnav (feed/review/contributions/stats)
-// behind useDeckMeta — without an active deck for the current $lang, the
+// behind useDeck — without an active deck for the current $lang, the
 // sidebar links would just lead to empty/dead pages, so they're hidden.
 
 cleanup: supabase.from('user_card').delete().eq('uid', '[new-user.key]').eq('lang', '[team.lang_full]')

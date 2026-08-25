@@ -22,7 +22,7 @@ import {
 	reviewSessionsCollection,
 	reviewMilestonesCollection,
 } from '@/features/review/collections'
-import { DeckMetaSchema } from '@/features/deck/schemas'
+import { DeckSchema } from '@/features/deck/schemas'
 import { decksCollection } from '@/features/deck/collections'
 
 // DELETE payloads carry only the replica identity (the composite PK), which
@@ -102,13 +102,13 @@ export const useUserRealtime = () => {
 				'postgres_changes',
 				{ event: 'INSERT', schema: 'public', table: 'user_deck' },
 				(payload) =>
-					decksCollection.utils.writeUpsert(DeckMetaSchema.parse(payload.new))
+					decksCollection.utils.writeUpsert(DeckSchema.parse(payload.new))
 			)
 			.on(
 				'postgres_changes',
 				{ event: 'UPDATE', schema: 'public', table: 'user_deck' },
 				(payload) =>
-					decksCollection.utils.writeUpsert(DeckMetaSchema.parse(payload.new))
+					decksCollection.utils.writeUpsert(DeckSchema.parse(payload.new))
 			)
 
 		// Reviews: append-only INSERTs plus rare correction UPDATEs (#724).

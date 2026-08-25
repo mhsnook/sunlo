@@ -36,7 +36,7 @@ import {
 	useReviewStage,
 } from '@/features/review/store'
 import { arrayDifference, arrayUnion, min0 } from '@/lib/utils'
-import { useDeckMeta, useDeckPids } from '@/features/deck/hooks'
+import { useDeck, useDeckPids } from '@/features/deck/hooks'
 import supabase from '@/lib/supabase-client'
 import {
 	LanguageIsEmpty,
@@ -104,7 +104,7 @@ function ReviewPageContent() {
 	const stage = useReviewStage()
 	const userId = useUserId()
 	// const retrievabilityTarget = 0.9
-	const { data: meta } = useDeckMeta(lang)
+	const { data: meta } = useDeck(lang)
 	const recs = useCompositePids(lang)
 	const { data: deckPids } = useDeckPids(lang)
 	const initLocalReviewState = useInitialiseReviewStore()

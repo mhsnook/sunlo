@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
-import { useDeckMeta, useDeckCards } from '@/features/deck/hooks'
+import { useDeck, useDeckCards } from '@/features/deck/hooks'
 import { updateCardsStatus } from '@/features/deck/card-status'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import { type CardMetaType } from '@/features/deck/schemas'
@@ -111,7 +111,7 @@ function getDueInfo(item: DueCheckable): {
 function ManageDeckPage() {
 	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
-	const { data: meta, isReady } = useDeckMeta(lang)
+	const { data: meta, isReady } = useDeck(lang)
 
 	if (!isAuth) {
 		return (
