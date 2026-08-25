@@ -78,10 +78,14 @@ learner3:
 - up
 - seeToast toast-success
 
-# learner upvotes a request and requester gets notified
+# learner upvotes a request, undoes it, upvotes again, and requester gets notified
 
 cleanup: supabase.from('phrase_request_upvote').delete().eq('uid', '[learner.key]').eq('request_id', '[team.partial_request_for_upvote]')
 cleanup: supabase.from('notification').delete().eq('type', 'request_upvoted').gte('created_at', '[testStart]')
+
+// Upvotes soft-delete (#768), so the second click flips `deleted` and the
+// third revives the same row by upsert. The should() checks in
+// phraseRequestUpvotesCollection assert the server agrees at each step.
 
 learner:
 
@@ -89,6 +93,12 @@ learner:
 - openTo /learn/[team.lang_partial]/requests/[team.partial_request_for_upvote]
 - up
 - see request-detail-page
+- click upvote-request-button
+- up
+- seeToast toast-success
+- click upvote-request-button
+- up
+- seeToast toast-success
 - click upvote-request-button
 - up
 - seeToast toast-success

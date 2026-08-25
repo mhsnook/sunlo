@@ -28,3 +28,25 @@ export function writeRealtimeRow<T extends object>(
 		return
 	collection.utils.writeUpsert(row)
 }
+
+type DeletableCollection = {
+	get: (key: string) => unknown
+	utils: { writeDelete: (key: string) => void }
+}
+
+/**
+ * Drop a row from a collection's synced state.
+ *
+ * Skips the write when the collection does not hold the row: `writeDelete`
+ * throws on a key it cannot find, and both callers can race one another. A
+ * realtime frame can arrive for a row this client never fetched, and a
+ * persistence handler can reach here after the frame for its own write already
+ * landed. Soft-deleting tables arrive as an UPDATE carrying `deleted` — see
+ * docs/mutations.md.
+ */
+export function deleteSyncedRow(
+	collection: DeletableCollection,
+	key: string
+): void {
+	if (collection.get(key)) collection.utils.writeDelete(key)
+}

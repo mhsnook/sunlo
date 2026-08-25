@@ -207,16 +207,19 @@ export type Database = {
 				Row: {
 					comment_id: string
 					created_at: string
+					deleted: boolean
 					uid: string
 				}
 				Insert: {
 					comment_id: string
 					created_at?: string
+					deleted?: boolean
 					uid?: string
 				}
 				Update: {
 					comment_id?: string
 					created_at?: string
+					deleted?: boolean
 					uid?: string
 				}
 				Relationships: [
@@ -662,16 +665,19 @@ export type Database = {
 			phrase_playlist_upvote: {
 				Row: {
 					created_at: string
+					deleted: boolean
 					playlist_id: string
 					uid: string
 				}
 				Insert: {
 					created_at?: string
+					deleted?: boolean
 					playlist_id: string
 					uid?: string
 				}
 				Update: {
 					created_at?: string
+					deleted?: boolean
 					playlist_id?: string
 					uid?: string
 				}
@@ -838,16 +844,19 @@ export type Database = {
 			phrase_request_upvote: {
 				Row: {
 					created_at: string
+					deleted: boolean
 					request_id: string
 					uid: string
 				}
 				Insert: {
 					created_at?: string
+					deleted?: boolean
 					request_id: string
 					uid?: string
 				}
 				Update: {
 					created_at?: string
+					deleted?: boolean
 					request_id?: string
 					uid?: string
 				}

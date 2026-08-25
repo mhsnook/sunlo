@@ -1,6 +1,10 @@
 import { useEffect } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import supabase from '@/lib/supabase-client'
+import {
+	deleteSyncedRow,
+	writeRealtimeRow,
+} from '@/lib/collections/realtime-row'
 import { useUserId } from '@/lib/use-auth'
 import {
 	PhraseRequestUpvoteSchema,
@@ -26,28 +30,35 @@ import { DeckSchema, CardSchema } from '@/features/deck/schemas'
 import { decksCollection, cardsCollection } from '@/features/deck/collections'
 import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 
-// DELETE payloads carry only the replica identity (the composite PK), which
-// includes the FK we key on.
+// The upvote tables soft-delete, so un-upvoting arrives as an UPDATE carrying
+// `deleted: true`, not as a DELETE. That matters: Supabase RLS-scopes INSERT
+// and UPDATE frames but broadcasts every DELETE to every subscriber, so the
+// old DELETE binding dropped this user's own upvote when a stranger un-upvoted
+// the same request (#768). See docs/mutations.md.
 function bindUpvote(
 	channel: RealtimeChannel,
 	table: string,
 	keyField: string,
-	onUpsert: (row: Record<string, unknown>) => void,
-	onDelete: (key: string) => void
+	onUpvote: (row: Record<string, unknown>) => void,
+	onUnUpvote: (key: string) => void
 ): RealtimeChannel {
+	const handle = (payload: { new: Record<string, unknown> }) => {
+		const row = payload.new
+		const key = row[keyField]
+		if (typeof key !== 'string') return
+		if (row.deleted === true) onUnUpvote(key)
+		else onUpvote(row)
+	}
 	return channel
 		.on(
 			'postgres_changes',
 			{ event: 'INSERT', schema: 'public', table },
-			(payload) => onUpsert(payload.new)
+			handle
 		)
 		.on(
 			'postgres_changes',
-			{ event: 'DELETE', schema: 'public', table },
-			(payload) => {
-				const key = (payload.old as Record<string, unknown>)[keyField]
-				if (typeof key === 'string') onDelete(key)
-			}
+			{ event: 'UPDATE', schema: 'public', table },
+			handle
 		)
 }
 
@@ -66,33 +77,41 @@ export const useUserRealtime = () => {
 			channel,
 			'phrase_request_upvote',
 			'request_id',
-			(row) =>
-				phraseRequestUpvotesCollection.utils.writeUpsert(
-					PhraseRequestUpvoteSchema.parse(row)
-				),
-			(key) => phraseRequestUpvotesCollection.utils.writeDelete(key)
+			(row) => {
+				const upvote = PhraseRequestUpvoteSchema.parse(row)
+				writeRealtimeRow(
+					phraseRequestUpvotesCollection,
+					upvote.request_id,
+					upvote
+				)
+			},
+			(key) => deleteSyncedRow(phraseRequestUpvotesCollection, key)
 		)
 
 		channel = bindUpvote(
 			channel,
 			'comment_upvote',
 			'comment_id',
-			(row) =>
-				commentUpvotesCollection.utils.writeUpsert(
-					CommentUpvoteSchema.parse(row)
-				),
-			(key) => commentUpvotesCollection.utils.writeDelete(key)
+			(row) => {
+				const upvote = CommentUpvoteSchema.parse(row)
+				writeRealtimeRow(commentUpvotesCollection, upvote.comment_id, upvote)
+			},
+			(key) => deleteSyncedRow(commentUpvotesCollection, key)
 		)
 
 		channel = bindUpvote(
 			channel,
 			'phrase_playlist_upvote',
 			'playlist_id',
-			(row) =>
-				phrasePlaylistUpvotesCollection.utils.writeUpsert(
-					PhrasePlaylistUpvoteSchema.parse(row)
-				),
-			(key) => phrasePlaylistUpvotesCollection.utils.writeDelete(key)
+			(row) => {
+				const upvote = PhrasePlaylistUpvoteSchema.parse(row)
+				writeRealtimeRow(
+					phrasePlaylistUpvotesCollection,
+					upvote.playlist_id,
+					upvote
+				)
+			},
+			(key) => deleteSyncedRow(phrasePlaylistUpvotesCollection, key)
 		)
 
 		// No DELETE binding: the replica identity is the `id` primary key while

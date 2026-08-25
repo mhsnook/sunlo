@@ -50,7 +50,7 @@ See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked exam
 
 **Reasonable exceptions:**
 
-- **Realtime sync handlers** writing supabase channel events into a collection (`chatMessagesCollection.utils.writeInsert(...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
+- **Realtime sync handlers** writing supabase channel events into a collection (`writeRealtimeRow(chatMessagesCollection, ...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
 
 ## The `{ refetch: false }` contract
@@ -128,7 +128,18 @@ if (row) cardsCollection.utils.writeUpdate(row)
 
 A realtime frame arrives after the database commits, so it carries the truth and is safe to write into the synced layer. But a collection that is only correct once the frame lands is wrong until then, and stays wrong whenever the socket is down. Make the handler correct on its own; let realtime cover the writes made by other clients and other devices.
 
-Use `writeUpsert` for realtime frames, never `writeUpdate` — a frame can arrive for a row this client never fetched, and `writeUpdate` throws on a key it cannot find. `writeDelete` throws the same way, so guard it with a `collection.get(key)` check.
+Use `writeRealtimeRow(collection, key, row)` and `deleteSyncedRow(collection, key)` (`src/lib/collections/realtime-row.ts`) for INSERT and UPDATE frames. It upserts, because a frame can arrive for a row this client never fetched and `writeUpdate` throws on a key it cannot find. It also skips the write when every field already matches, which is this client's own mutation echoing back — writing it would re-run every live query for nothing.
+
+**INSERT and UPDATE frames are RLS-scoped; DELETE frames are not.** Supabase tests each subscriber's policies against the new row, so an insert or update reaches you only if you could have fetched that row yourself. It cannot do the same for a delete, because the row is already gone by then. So every delete on a published table reaches every subscriber of that table, whoever owned the row.
+
+A delete frame also carries only the table's replica identity — the primary key, unless the table is set to `replica identity full`. Every other column is absent.
+
+Two rules follow:
+
+- **Soft-delete the row instead of subscribing to DELETE.** A `deleted` flag turns the removal into an UPDATE, which Supabase scopes by RLS and sends with every column. The three upvote tables work this way (#768): `onDelete` writes `deleted: true`, the realtime handler routes any frame carrying `deleted` to `deleteSyncedRow(collection, key)`, and the collection loads live rows only.
+- **Subscribe to DELETE only when the replica identity is safe to show every subscriber**, and then compare its `uid` to the signed-in user and drop the frame if it does not match. Do not reach for `replica identity full` to widen the payload on an RLS table: that broadcasts every column of every deleted row. The `collection.get(key)` guard `deleteSyncedRow` applies is not enough on its own — it stops the throw, not the deletion of your own row on someone else's frame.
+
+No collection subscribes to DELETE today. `chat_message` declines on both counts: its replica identity is the bare `id`, which says nothing about who owned the message, and chat messages are never deleted.
 
 ## Don't refetch entire tables to sync — return the row and `writeInsert` / `writeUpdate` / `writeDelete`
 
@@ -205,9 +216,8 @@ useEffect(() => {
 				table: 'chat_message',
 			},
 			(payload) => {
-				chatMessagesCollection.utils.writeInsert(
-					ChatMessageSchema.parse(payload.new)
-				)
+				const row = ChatMessageSchema.parse(payload.new)
+				writeRealtimeRow(chatMessagesCollection, row.id, row)
 			}
 		)
 		.subscribe()
