@@ -14,13 +14,9 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 
 	return !profile ? null : (
 		<AvatarIconRow {...profile}>
-			<div className="flex flex-row gap-2">
+			<div className="relative flex flex-row gap-2">
 				{friendRequest.isPending ? (
 					<IconSizedLoader />
-				) : friendRequest.lastAction ? (
-					<span className="rounded-squircle size-8 rounded-full bg-green-600 p-1">
-						<Check className="size-6 text-white" />
-					</span>
 				) : !profile.relation || profile.relation.status === 'unconnected' ? (
 					<Button
 						variant="default"
@@ -89,6 +85,20 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 				) : (
 					<> status is "{profile.relation.status}" for some reason</>
 				)}
+				{/* The row underneath has already settled into the new status. This
+				    marks the moment it changed, then gets out of the way. Keyed by
+				    the action so a second one replays it. */}
+				{friendRequest.lastAction ? (
+					<span
+						key={friendRequest.lastAction}
+						aria-hidden
+						className="animate-out fade-out zoom-out-75 fill-mode-forwards pointer-events-none absolute inset-0 flex items-center delay-700 duration-500"
+					>
+						<span className="rounded-squircle size-8 rounded-full bg-green-600 p-1">
+							<Check className="size-6 text-white" />
+						</span>
+					</span>
+				) : null}
 			</div>
 		</AvatarIconRow>
 	)
