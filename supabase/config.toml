@@ -278,11 +278,12 @@ verify_jwt = true
 [functions.embed-corpus-row]
 enabled = true
 # Internal-only: called by Postgres triggers (via pg_net) on source-table
-# changes. JWT verification rejects random internet callers — triggers
-# send the calling user's auth header (or a service-role JWT fallback
-# from vault) so legitimate trigger invocations pass; a raw POST from
-# the public internet without a Supabase-issued JWT gets a 401 from the
-# runtime before the function code runs.
+# changes. The trigger forwards the calling user's auth header, and with
+# no PostgREST session (a Studio or psql edit) it skips the dispatch
+# rather than send an unauthenticated request. A raw POST from the public
+# internet gets a 401 from the runtime before the function code runs, and
+# the function itself requires role = 'authenticated', so anon and
+# service-role tokens get a 403.
 verify_jwt = true
 
 [analytics]
