@@ -4,16 +4,18 @@ type RowCollection<T extends object> = {
 }
 
 /**
- * Apply a realtime INSERT or UPDATE frame to a collection's synced state.
+ * Put one server-supplied row into a collection's synced state — a realtime
+ * INSERT or UPDATE frame, or the row a persistence handler wrote back.
  *
- * Upserts rather than updates: if a frame arrives for a row this client hasn't
- * fetched, `writeUpdate` will throw on a key it cannot find.
+ * Upserts rather than inserts or updates, because the two callers race: a
+ * frame can arrive for a row this client never fetched (`writeUpdate` throws
+ * on a key it cannot find), and a frame for this client's own write can land
+ * before its handler resolves (`writeInsert` throws on a key already there).
  *
- * Skips the write when every field already matches — that is this client's own
- * mutation echoing back, and writing it would re-run every live query for
- * nothing.
+ * Skips the write when every field already matches — the same row arriving
+ * twice — because writing it would re-run every live query for nothing.
  */
-export function writeRealtimeRow<T extends object>(
+export function writeSyncedRow<T extends object>(
 	collection: RowCollection<T>,
 	key: string,
 	row: T

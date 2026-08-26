@@ -12,7 +12,7 @@ import {
 	type FriendRequestActionType,
 	type FriendRequestResponseType,
 } from './schemas'
-import { writeRealtimeRow } from '@/lib/collections/realtime-row'
+import { writeSyncedRow } from '@/lib/collections/realtime-row'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
@@ -447,7 +447,7 @@ export const useSocialRealtime = () => {
 						toastSuccess('Friend request accepted')
 					if (row.action_type === 'accept' && row.uid_by === userId)
 						toastSuccess('You are now connected')
-					writeRealtimeRow(friendRequestActionsCollection, row.id, row)
+					writeSyncedRow(friendRequestActionsCollection, row.id, row)
 				}
 			)
 			.subscribe()
@@ -468,7 +468,7 @@ export const useSocialRealtime = () => {
 					const row = ChatMessageSchema.parse(
 						payload.new as Tables<'chat_message'>
 					)
-					writeRealtimeRow(chatMessagesCollection, row.id, row)
+					writeSyncedRow(chatMessagesCollection, row.id, row)
 				}
 			)
 			.on(
@@ -482,7 +482,7 @@ export const useSocialRealtime = () => {
 					const row = ChatMessageSchema.parse(
 						payload.new as Tables<'chat_message'>
 					)
-					writeRealtimeRow(chatMessagesCollection, row.id, row)
+					writeSyncedRow(chatMessagesCollection, row.id, row)
 				}
 			)
 			.subscribe()

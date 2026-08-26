@@ -1,10 +1,7 @@
 import { useEffect } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import supabase from '@/lib/supabase-client'
-import {
-	deleteSyncedRow,
-	writeRealtimeRow,
-} from '@/lib/collections/realtime-row'
+import { deleteSyncedRow, writeSyncedRow } from '@/lib/collections/realtime-row'
 import { useUserId } from '@/lib/use-auth'
 import {
 	PhraseRequestUpvoteSchema,
@@ -78,7 +75,7 @@ export const useUserRealtime = () => {
 			'request_id',
 			(row) => {
 				const upvote = PhraseRequestUpvoteSchema.parse(row)
-				writeRealtimeRow(
+				writeSyncedRow(
 					phraseRequestUpvotesCollection,
 					upvote.request_id,
 					upvote
@@ -93,7 +90,7 @@ export const useUserRealtime = () => {
 			'comment_id',
 			(row) => {
 				const upvote = CommentUpvoteSchema.parse(row)
-				writeRealtimeRow(commentUpvotesCollection, upvote.comment_id, upvote)
+				writeSyncedRow(commentUpvotesCollection, upvote.comment_id, upvote)
 			},
 			(key) => deleteSyncedRow(commentUpvotesCollection, key)
 		)
@@ -104,7 +101,7 @@ export const useUserRealtime = () => {
 			'playlist_id',
 			(row) => {
 				const upvote = PhrasePlaylistUpvoteSchema.parse(row)
-				writeRealtimeRow(
+				writeSyncedRow(
 					phrasePlaylistUpvotesCollection,
 					upvote.playlist_id,
 					upvote
@@ -138,7 +135,7 @@ export const useUserRealtime = () => {
 				{ event: 'INSERT', schema: 'public', table: 'user_card' },
 				(payload) => {
 					const row = CardSchema.parse(payload.new)
-					writeRealtimeRow(cardsCollection, row.id, row)
+					writeSyncedRow(cardsCollection, row.id, row)
 				}
 			)
 			.on(
@@ -146,7 +143,7 @@ export const useUserRealtime = () => {
 				{ event: 'UPDATE', schema: 'public', table: 'user_card' },
 				(payload) => {
 					const row = CardSchema.parse(payload.new)
-					writeRealtimeRow(cardsCollection, row.id, row)
+					writeSyncedRow(cardsCollection, row.id, row)
 				}
 			)
 

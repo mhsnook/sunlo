@@ -3,7 +3,7 @@ import { isNull, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { NotificationSchema, type NotificationType } from './schemas'
 import { notificationsCollection } from './collections'
-import { writeRealtimeRow } from '@/lib/collections/realtime-row'
+import { writeSyncedRow } from '@/lib/collections/realtime-row'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import type { Tables } from '@/types/supabase'
@@ -75,7 +75,7 @@ export const useNotificationsRealtime = () => {
 					const row = NotificationSchema.parse(
 						payload.new as Tables<'notification'>
 					)
-					writeRealtimeRow(notificationsCollection, row.id, row)
+					writeSyncedRow(notificationsCollection, row.id, row)
 				}
 			)
 			.on(
@@ -90,7 +90,7 @@ export const useNotificationsRealtime = () => {
 					const row = NotificationSchema.parse(
 						payload.new as Tables<'notification'>
 					)
-					writeRealtimeRow(notificationsCollection, row.id, row)
+					writeSyncedRow(notificationsCollection, row.id, row)
 				}
 			)
 			.subscribe()
