@@ -1,5 +1,5 @@
 import { publicProfilesCollection } from '@/features/profile/collections'
-import { friendSummariesCollection } from './collections'
+import { friendSummaries } from './live'
 import type { FriendSummaryType } from './schemas'
 import type { PublicProfileType } from '@/features/profile/schemas'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
@@ -11,11 +11,11 @@ export const useSearchProfilesByUsername = (
 ): UseLiveQueryResult<PublicProfileType[]> => {
 	return useLiveQuery(
 		(q) =>
-			!query.trim() ?
-				undefined
-			:	q
-					.from({ profile: publicProfilesCollection })
-					.where(({ profile }) => ilike(profile.username, `%${query}%`)),
+			!query.trim()
+				? undefined
+				: q
+						.from({ profile: publicProfilesCollection })
+						.where(({ profile }) => ilike(profile.username, `%${query}%`)),
 		[query]
 	)
 }
@@ -31,19 +31,17 @@ export const useOnePublicProfile = (
 				.from({ profile: publicProfilesCollection })
 				.where(({ profile }) => eq(profile.uid, uid))
 				.findOne()
-				.join(
-					{ relation: friendSummariesCollection },
-					({ profile, relation }) => eq(relation.uid, profile.uid)
+				.join({ relation: friendSummaries }, ({ profile, relation }) =>
+					eq(relation.uid, profile.uid)
 				)
 				.fn.select(({ profile, relation }) => ({
 					...profile,
-					relation:
-						!relation ? null : (
-							{
+					relation: !relation
+						? null
+						: {
 								...relation,
 								isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
-							}
-						),
+							},
 				})),
 		[uid]
 	)

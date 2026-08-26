@@ -20,11 +20,7 @@ function SendPhraseDialog({
 	onOpenChange: (open: boolean) => void
 	trigger?: ReactNode
 }) {
-	const mutation = useSendToFriends(
-		phrase.lang,
-		{ message_type: 'recommendation', phrase_id: phrase.id },
-		{ onSuccess: () => onOpenChange(false) }
-	)
+	const send = useSendToFriends()
 	return (
 		<FriendPickerDialog
 			open={open}
@@ -35,8 +31,14 @@ function SendPhraseDialog({
 			authTitle="Login to Send"
 			authMessage="You need to be logged in to send phrases to friends."
 			preview={<PhrasePreviewChip phrase={phrase} />}
-			onSend={(uids) => mutation.mutate(uids)}
-			isPending={mutation.isPending}
+			onSend={(recipientUids) => {
+				send({
+					recipientUids,
+					lang: phrase.lang,
+					content: { message_type: 'recommendation', phrase_id: phrase.id },
+				})
+				onOpenChange(false)
+			}}
 		/>
 	)
 }

@@ -1,6 +1,4 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation, type UseMutationResult } from '@tanstack/react-query'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
 
@@ -18,11 +16,14 @@ import {
 } from '@/components/ui/card'
 import { useUserId } from '@/lib/use-auth'
 import languages from '@/lib/languages'
-import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/features/profile/hooks'
 import { Loader } from '@/components/ui/loader'
 import { avatarUrlify } from '@/lib/hooks'
 import { useOnePublicProfile } from '@/features/social/public-profile'
+import {
+	useFriendRequestAction,
+	type FriendRequestAction,
+} from '@/features/social/hooks'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
@@ -50,26 +51,10 @@ function AcceptInvitePage() {
 			'Something went wrong; you are not logged in, or this invite link is for a different user'
 		)
 
-	const acceptOrDeclineMutation = useMutation({
-		mutationKey: ['invite', 'accept-or-decline', search.uid_by],
-		mutationFn: async ({ action }: { action: 'decline' | 'accept' }) => {
-			const res = await supabase
-				.from('friend_request_action')
-				.insert({
-					uid_by: search.uid_by,
-					uid_for: userId,
-					action_type: action,
-				})
-				.throwOnError()
-				.select()
-			return res
-		},
-		onSuccess: () => toastSuccess('Response successful'), // now redirect somewhere?,
-		onError: (error) => {
-			toastError('An error has occurred')
-			console.log(`The error accepting the friend invite:`, error)
-		},
-	})
+	// The action is recorded by *this* user about the inviter, and it carries
+	// the sorted pair key the friend-summary fold groups on. Writing the row by
+	// hand here got both wrong, so it goes through the shared hook.
+	const friendRequest = useFriendRequestAction(search.uid_by)
 
 	return (
 		<main className="w-app flex h-screen flex-col justify-center p-2 pb-20">
@@ -88,18 +73,18 @@ function AcceptInvitePage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
-						{acceptOrDeclineMutation.error ? (
+						{friendRequest.error ? (
 							<ShowAndLogError
-								error={acceptOrDeclineMutation.error}
+								error={friendRequest.error}
 								text="Something went wrong"
 							/>
-						) : !acceptOrDeclineMutation.isSuccess ? (
+						) : !friendRequest.lastAction ? (
 							<AcceptInviteForm
 								profile={profile}
 								friend={friend}
-								acceptOrDeclineMutation={acceptOrDeclineMutation}
+								friendRequest={friendRequest}
 							/>
-						) : acceptOrDeclineMutation.variables.action === 'accept' ? (
+						) : friendRequest.lastAction === 'accept' ? (
 							<ShowAccepted friend={friend} />
 						) : (
 							<ShowDeclined />
@@ -114,15 +99,11 @@ function AcceptInvitePage() {
 function AcceptInviteForm({
 	profile,
 	friend,
-	acceptOrDeclineMutation,
+	friendRequest,
 }: {
 	profile: { avatar_path: string | null } | null | undefined
 	friend: PublicProfileType | null | undefined
-	acceptOrDeclineMutation: UseMutationResult<
-		unknown,
-		Error,
-		{ action: 'decline' | 'accept' }
-	>
+	friendRequest: FriendRequestAction
 }) {
 	return (
 		<>
@@ -149,16 +130,16 @@ function AcceptInviteForm({
 			<div className="flex flex-row justify-center gap-4">
 				<Button
 					size="lg"
-					onClick={() => acceptOrDeclineMutation.mutate({ action: 'accept' })}
-					disabled={acceptOrDeclineMutation.isPending}
+					onClick={() => friendRequest.act('accept')}
+					disabled={friendRequest.isPending}
 				>
 					Accept invitation
 				</Button>
 				<Button
 					size="lg"
 					variant="neutral"
-					onClick={() => acceptOrDeclineMutation.mutate({ action: 'decline' })}
-					disabled={acceptOrDeclineMutation.isPending}
+					onClick={() => friendRequest.act('decline')}
+					disabled={friendRequest.isPending}
 				>
 					Ignore
 				</Button>

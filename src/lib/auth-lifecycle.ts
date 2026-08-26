@@ -2,7 +2,7 @@ import { failed } from '@scenetest/checks/react'
 import { queryClient } from '@/lib/query-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import { decksCollection, cardsCollection } from '@/features/deck/collections'
-import { friendSummariesCollection } from '@/features/social/collections'
+import { friendRequestActionsCollection } from '@/features/social/collections'
 import { resetUiPrefs } from '@/lib/ui-prefs'
 import {
 	PERSISTED_COLLECTIONS,
@@ -90,7 +90,7 @@ class AuthLifecycle {
 	/**
 	 * _user route loader. Force-reloads what the shell renders with (profile,
 	 * decks) before it mounts. notifications loads itself when the navbar bell's
-	 * live query subscribes; friendSummaries gets a warm-up; the rest reload via
+	 * live query subscribes; friend requests get a warm-up; the rest reload via
 	 * their own route loaders. The failed()/throw is the contract: an empty
 	 * profile here means handle_new_user didn't run.
 	 */
@@ -114,7 +114,7 @@ class AuthLifecycle {
 			)
 		}
 
-		void friendSummariesCollection.preload()
+		void friendRequestActionsCollection.preload()
 		void cardsCollection.preload()
 	}
 }

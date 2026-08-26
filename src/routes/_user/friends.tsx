@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { publicProfilesCollection } from '@/features/profile/collections'
-import { friendSummariesCollection } from '@/features/social/collections'
+import { friendRequestActionsCollection } from '@/features/social/collections'
 import { RequireAuth } from '@/components/require-auth'
 
 export const Route = createFileRoute('/_user/friends')({
@@ -13,7 +13,7 @@ export const Route = createFileRoute('/_user/friends')({
 		// Only preload if authenticated
 		if (!context.auth.isAuth) return
 		await Promise.all([
-			friendSummariesCollection.preload(),
+			friendRequestActionsCollection.preload(),
 			publicProfilesCollection.preload(),
 		])
 	},

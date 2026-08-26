@@ -19,11 +19,7 @@ export function SendRequestToFriendDialog({
 	children: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
-	const mutation = useSendToFriends(
-		lang,
-		{ message_type: 'request', request_id: id },
-		{ onSuccess: () => setOpen(false) }
-	)
+	const send = useSendToFriends()
 
 	if (!lang || !id) return null
 
@@ -43,8 +39,14 @@ export function SendRequestToFriendDialog({
 					subtitle="Send this request to a friend"
 				/>
 			}
-			onSend={(uids) => mutation.mutate(uids)}
-			isPending={mutation.isPending}
+			onSend={(recipientUids) => {
+				send({
+					recipientUids,
+					lang,
+					content: { message_type: 'request', request_id: id },
+				})
+				setOpen(false)
+			}}
 		/>
 	)
 }
