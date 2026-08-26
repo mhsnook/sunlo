@@ -1,7 +1,11 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { PhraseFullFullType } from '@/features/phrases/schemas'
-import type { PhrasePlaylistType, PlaylistPhraseLinkType } from './schemas'
+import type {
+	PhrasePlaylistType,
+	PhrasePlaylistUpvoteType,
+	PlaylistPhraseLinkType,
+} from './schemas'
 
 import {
 	phrasePlaylistsCollection,
@@ -82,12 +86,14 @@ export function useOnePlaylistPhrases(
 	)
 }
 
-/** Whether the current user has upvoted this playlist. */
-export const useHasPlaylistUpvote = (playlistId: uuid): boolean =>
-	!!useLiveQuery(
+/** This user's upvote row for a playlist — see `useMyRequestUpvote`. */
+export const useMyPlaylistUpvote = (
+	playlistId: uuid
+): PhrasePlaylistUpvoteType | undefined =>
+	useLiveQuery(
 		(q) =>
 			q
 				.from({ upvote: phrasePlaylistUpvotesCollection })
 				.where(({ upvote }) => eq(upvote.playlist_id, playlistId)),
 		[playlistId]
-	).data?.length
+	).data?.[0]

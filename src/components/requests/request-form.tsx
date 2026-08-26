@@ -43,7 +43,7 @@ const createRequest = createOptimisticAction<CreateInput>({
 			created_at: new Date().toISOString(),
 			updated_at: null,
 		})
-		phraseRequestUpvotesCollection.insert({ request_id: id })
+		phraseRequestUpvotesCollection.insert({ request_id: id, deleted: false })
 	},
 	mutationFn: async ({ id, prompt, lang, userId }) => {
 		// .select() the inserted row back so we can drop the synced state
@@ -64,7 +64,10 @@ const createRequest = createOptimisticAction<CreateInput>({
 		})
 		// The auto-upvote trigger created the upvote row server-side; the
 		// local schema is just { request_id }, no need to fetch it back.
-		phraseRequestUpvotesCollection.utils.writeInsert({ request_id: id })
+		phraseRequestUpvotesCollection.utils.writeInsert({
+			request_id: id,
+			deleted: false,
+		})
 	},
 })
 

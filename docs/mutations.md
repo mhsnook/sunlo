@@ -58,7 +58,7 @@ This is the exception, not the default. Most writes are safe to show immediately
 
 **Reasonable exceptions:**
 
-- **Realtime sync handlers** writing supabase channel events into a collection (`writeSyncedRow(chatMessagesCollection, ...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
+- **Realtime sync handlers** writing supabase channel events into a collection (`writeSyncedRow(chatMessagesCollection, row)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
 
 ## The `{ refetch: false }` contract
@@ -99,8 +99,8 @@ const { data } = await supabase
 	.throwOnError()
 phrasesCollection.utils.writeInsert({ ...m.modified, ...data })
 
-// delete — nothing to fetch, just record it
-playlistPhraseLinksCollection.utils.writeDelete(m.original.id)
+// delete — soft-delete instead: `.update({ deleted: true })` and write the
+// row back like any other update
 ```
 
 `writeUpdate` **merges** its argument over the current synced row. That matters for a collection that reads a view but writes a base table — `phrasesCollection` (`phrase_meta` → `phrase`). The base-table row the write returns has no view-derived columns, and the merge keeps the ones already there.
@@ -121,22 +121,42 @@ const { data } = await supabase
 const row = data?.[0]
 should(
 	`user_card ${id} server row matches the submitted update`,
-	!row ||
-		Object.entries(changes).every(
-			([k, v]) => k === 'updated_at' || row[k] === v
-		),
+	rowMatches(changes, row),
 	{ submitted: changes, returned: row }
 )
-if (row) cardsCollection.utils.writeUpdate(row)
+if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
 ```
 
-`should()` reports to the observer panel in dev and test, and the Vite plugin strips it from production builds. See `docs/testing.md`.
+`rowMatches(submitted, row)` is that comparison: every field the handler submitted comes back unchanged on the server's row. A missing row passes (a soft delete may not be selectable back under RLS), and `created_at` / `updated_at` are the server's to set. `allRowsMatch(submitted, returned)` is the insert-handler form — one matching row back per row sent.
+
+`should()` reports to the observer panel in dev and test, and the Vite plugin strips it from production builds, arguments included. See `docs/testing.md`.
+
+### One way into the synced layer
+
+Every write to the synced layer goes through `src/lib/collections/synced-row.ts`, whether the row came back on a mutation's ack or arrived as a realtime frame:
+
+```typescript
+writeSyncedRow(collection, row) // writeSyncedRows(collection, rows) for many
+```
+
+There is no helper for dropping a row, because nothing should drop one: a removal is a soft delete, which reaches the collection as an ordinary update.
+
+Pass the whole row — the key comes from the collection's own `getKeyFromItem`. Prefer the plural form for a handler's ack, which usually has more than one row. The rest (upsert semantics, skipping a row already held, batching, and what happens on a collection that never loaded) is the function's business, not the caller's.
+
+One thing the caller does owe it: **preload a collection in the route loader wherever its rows are displayed or written.** A write to a collection nothing has loaded is dropped, and the row waits for the next fetch.
+
+**Where the rule applies:** every persistence handler and every realtime binding. Two kinds of call site still use `collection.utils.*` directly, and both are deliberate:
+
+- **A partial update that must merge**, like `card-status.ts` patching `count_learners` onto a `phrasesCollection` row. `writeSyncedRow` upserts, and upsert **replaces** — it needs the whole row.
+- **The deprecated `useMutation` + `writeInsert`-in-`onSuccess` sites.** See #758; they pick the rule up as they move onto collection handlers.
+
+A new site outside those two is a sign the row should go through the collection.
 
 ### Realtime is a backstop, not the mechanism
 
 A realtime frame arrives after the database commits, so it carries the truth and is safe to write into the synced layer. But a collection that is only correct once the frame lands is wrong until then, and stays wrong whenever the socket is down. Make the handler correct on its own; let realtime cover the writes made by other clients and other devices.
 
-Use `writeSyncedRow(collection, key, row)` and `deleteSyncedRow(collection, key)` (`src/lib/collections/realtime-row.ts`) for INSERT and UPDATE frames. It upserts, because a frame can arrive for a row this client never fetched and `writeUpdate` throws on a key it cannot find. It also skips the write when every field already matches, which is this client's own mutation echoing back — writing it would re-run every live query for nothing.
+Bind frames with `bindRows(channel, table, collection, parse)` in `useUserRealtime`, which folds INSERT and UPDATE through `writeSyncedRow` (above).
 
 **INSERT and UPDATE frames are RLS-scoped; DELETE frames are not.** Supabase tests each subscriber's policies against the new row, so an insert or update reaches you only if you could have fetched that row yourself. It cannot do the same for a delete, because the row is already gone by then. So every delete on a published table reaches every subscriber of that table, whoever owned the row.
 
@@ -144,12 +164,12 @@ A delete frame also carries only the table's replica identity — the primary ke
 
 Two rules follow:
 
-- **Soft-delete the row instead of subscribing to DELETE.** A `deleted` flag turns the removal into an UPDATE, which Supabase scopes by RLS and sends with every column. The three upvote tables work this way (#768): `onDelete` writes `deleted: true`, the realtime handler routes any frame carrying `deleted` to `deleteSyncedRow(collection, key)`, and the collection loads live rows only.
-- **Subscribe to DELETE only when the replica identity is safe to show every subscriber**, and then compare its `uid` to the signed-in user and drop the frame if it does not match. Do not reach for `replica identity full` to widen the payload on an RLS table: that broadcasts every column of every deleted row. The `collection.get(key)` guard `deleteSyncedRow` applies is not enough on its own — it stops the throw, not the deletion of your own row on someone else's frame.
+- **Soft-delete the row instead of subscribing to DELETE.** A `deleted` flag turns the removal into an UPDATE, which Supabase scopes by RLS and sends with every column. The three upvote tables work this way: the button calls `collection.update(key, (draft) => { draft.deleted = !draft.deleted })`, the collection keeps the row, and live queries filter on `deleted`. No `onDelete` handler, and no special realtime binding — a removal is an ordinary update on both sides of the wire.
+- **Don't subscribe to DELETE.** Comparing the frame's `uid` to the signed-in user would need `replica identity full`, which broadcasts every column of every deleted row on an RLS table. Soft-delete instead.
 
 No collection subscribes to DELETE today. `chat_message` declines on both counts: its replica identity is the bare `id`, which says nothing about who owned the message, and chat messages are never deleted.
 
-## Don't refetch entire tables to sync — return the row and `writeInsert` / `writeUpdate` / `writeDelete`
+## Don't refetch entire tables to sync — return the row and write it back
 
 `collection.utils.refetch()` is **a full table fetch** (`queryCollectionOptions.queryFn` re-runs `.from('…').select()` for the whole table). After a single-row mutation, this is wildly disproportionate: a refetch of `phrase_request` to confirm one new request pulls every request in the system.
 
@@ -157,7 +177,7 @@ The cheap alternative: make supabase or the RPC hand back the affected rows, and
 
 - For direct supabase writes, append `.select()` (or `.select().single()`) to `insert / update / delete` calls. The post-mutation row(s) come back in the response.
 - For RPCs, prefer ones that already `RETURN json_build_object(...)` with the affected rows (e.g. `create_comment_with_phrases`).
-- Inside a `createOptimisticAction.mutationFn`, call `collection.utils.writeInsert(parsed)` / `writeUpdate(parsed)` / `writeDelete(key)` with the server's returned row(s). The synced state is now correct without a full refetch, and the optimistic state drops cleanly when the action resolves.
+- Inside a `createOptimisticAction.mutationFn`, call `writeSyncedRows(collection, parsed)` with the server's returned row(s). The synced state is now correct without a full refetch, and the optimistic state drops cleanly when the action resolves.
 
 Treat `collection.utils.refetch()` like `useEffect`: a code smell that needs a justification. **If you're about to add one, stop and check with the human first.** Usually one of these is the right move instead: pass client-generated IDs to the server so optimistic === synced; use `.select()` to get the row back; or change the RPC to return what you need. Legitimate uses do exist (e.g. picking up cascade-deleted rows on a parent delete) but they're rare and should be commented at the call site.
 
@@ -225,7 +245,7 @@ useEffect(() => {
 			},
 			(payload) => {
 				const row = ChatMessageSchema.parse(payload.new)
-				writeSyncedRow(chatMessagesCollection, row.id, row)
+				writeSyncedRow(chatMessagesCollection, row)
 			}
 		)
 		.subscribe()

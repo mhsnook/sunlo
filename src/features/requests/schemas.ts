@@ -50,8 +50,11 @@ export const MessageTagLinkSchema = z.object({
 
 export type MessageTagLinkType = z.infer<typeof MessageTagLinkSchema>
 
+// The upvote tables soft-delete: un-upvoting flips `deleted`, so the row the
+// collection holds mirrors the row the server holds. Live queries filter it.
 export const PhraseRequestUpvoteSchema = z.object({
 	request_id: z.string().uuid(),
+	deleted: z.boolean(),
 })
 
 export type PhraseRequestUpvoteType = z.infer<typeof PhraseRequestUpvoteSchema>
@@ -105,6 +108,7 @@ export type CommentPhraseLinkType = z.infer<typeof CommentPhraseLinkSchema>
 
 export const CommentUpvoteSchema = z.object({
 	comment_id: z.string().uuid(),
+	deleted: z.boolean(),
 })
 
 export type CommentUpvoteType = z.infer<typeof CommentUpvoteSchema>

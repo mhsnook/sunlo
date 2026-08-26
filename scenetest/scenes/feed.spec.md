@@ -32,6 +32,21 @@ learner:
 - up
 - click feed-item-playlist [team.full_playlist_for_edits] upvote-playlist-button
 
+# learner upvotes a playlist the moment the feed renders it
+
+// No settle step before the click, on purpose: nothing here waits for the
+// upvote collection, so this clicks whatever state it is in when the button
+// first paints.
+
+cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner.key]').eq('playlist_id', '[team.full_playlist_for_edits]')
+
+learner:
+
+- login
+- go-to-deck
+- click feed-item-playlist [team.full_playlist_for_edits] upvote-playlist-button
+- seeToast toast-success
+
 // feed loads more items on scroll — SKIPPED: even the well-populated lang
 // has <20 feed items so hasNextPage is false and load-more-button never
 // renders. Re-enable after adding more feed seed data.

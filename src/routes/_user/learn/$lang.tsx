@@ -20,6 +20,7 @@ import {
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
+	phrasePlaylistUpvotesCollection,
 } from '@/features/playlists/collections'
 import {
 	messageTagLinksCollection,
@@ -79,7 +80,9 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				reviewMilestonesCollection.preload(),
 				cardsCollection.preload(),
 				decksCollection.preload(),
-				phraseRequestUpvotesCollection.preload()
+				phraseRequestUpvotesCollection.preload(),
+				// The feed shows playlists, so their upvote buttons need this.
+				phrasePlaylistUpvotesCollection.preload()
 			)
 		}
 		await Promise.all(preloads)

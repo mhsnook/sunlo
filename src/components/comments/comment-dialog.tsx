@@ -436,7 +436,7 @@ export const createComment = createOptimisticAction<CreateCommentInput>({
 			// DB trigger auto-upvotes the author, so the count starts at 1.
 			upvote_count: 1,
 		})
-		commentUpvotesCollection.insert({ comment_id: commentId })
+		commentUpvotesCollection.insert({ comment_id: commentId, deleted: false })
 		for (const { linkId, phraseId } of phraseLinks) {
 			commentPhraseLinksCollection.insert({
 				id: linkId,
@@ -462,7 +462,10 @@ export const createComment = createOptimisticAction<CreateCommentInput>({
 		}
 		const comment = RequestCommentSchema.parse(result.request_comment)
 		commentsCollection.utils.writeInsert(comment)
-		commentUpvotesCollection.utils.writeInsert({ comment_id: comment.id })
+		commentUpvotesCollection.utils.writeInsert({
+			comment_id: comment.id,
+			deleted: false,
+		})
 		for (const link of result.comment_phrase_links) {
 			commentPhraseLinksCollection.utils.writeInsert(
 				CommentPhraseLinkSchema.parse(link)

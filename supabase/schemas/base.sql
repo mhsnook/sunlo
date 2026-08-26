@@ -2972,6 +2972,9 @@ alter publication "supabase_realtime"
 add table only "public"."user_deck";
 
 alter publication "supabase_realtime"
+add table only "public"."user_profile";
+
+alter publication "supabase_realtime"
 add table only "public"."user_review_milestone";
 
 alter publication "supabase_realtime"
