@@ -7,6 +7,7 @@ _26 August, 2026_
 ### Improvements
 
 - **The deprecated `pgjwt` extension is dropped.** Nothing in the schema signs a JWT in SQL — the one outbound authenticated call forwards the caller's PostgREST authorization header — so the extension goes before Supabase removes it.
+- **`scripts/db-native.sh` stubs `pgsodium`, so a native reset loads `base.sql` again.** The regenerated dump creates the extension, which is enabled on production, and the script had no stub for it, so `reset` stopped at that line.
 
 ### Migrations
 
