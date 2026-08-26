@@ -48,11 +48,9 @@ import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-t
 import { useUserId } from '@/lib/use-auth'
 import { insertMilestone, useReviewsTodayStats } from '@/features/review/hooks'
 import { ContinueReview } from '@/components/review/continue-review'
-import { should } from '@scenetest/checks/react'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { CardSchema } from '@/features/deck/schemas'
-import { ReviewSessionSchema } from '@/features/review/schemas'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import {
 	cardReviewsCollection,
@@ -367,41 +365,22 @@ function ReviewPageContent() {
 				...reverseNew,
 			]
 
-			const { data: reviewDay } = await supabase
-				.from('user_review_session')
-				.insert({
-					lang,
-					day_session: dayString,
-					uid: userId!,
-					manifest: manifestEntries,
-				})
-				.throwOnError()
-				.select()
-				.single()
-
-			if (
-				!Array.isArray(reviewDay?.manifest) ||
-				reviewDay.manifest.length !== manifestEntries.length
-			)
-				console.warn(
-					`Error creating daily session: expected manifest of length ${manifestEntries.length} but got back a manifest ${Array.isArray(reviewDay?.manifest) ? 'with ' + reviewDay.manifest.length + 'entries' : 'of type "' + typeof reviewDay?.manifest}".`
+			if (manifestEntries.length === 0)
+				throw new Error(
+					`Can't start today's review: no cards are due or available.`
 				)
 
-			// The card upsert uses ignoreDuplicates, so it returns fewer rows than
-			// it sent — none at all when every card already exists in the database
-			// (a local collection that has drifted out of date). The session must
-			// be created regardless: an earlier bug tied session creation to the
-			// upsert returning a row per card, so a stale collection left the
-			// learner with no review at all.
-			should(
-				'review session is created even when the card upsert returns no rows',
-				Array.isArray(reviewDay?.manifest) && reviewDay.manifest.length > 0,
-				{
-					cardsSubmitted: cardInserts.length,
-					cardsCreated: newCards.length,
-					manifestEntries: manifestEntries.length,
-				}
-			)
+			// Claim the session before the optimistic row lands — it makes
+			// stats.count non-zero, which is what the redirect below keys on.
+			sessionJustCreatedRef.current = true
+
+			await reviewSessionsCollection.insert({
+				lang,
+				day_session: dayString,
+				uid: userId!,
+				created_at: new Date().toISOString(),
+				manifest: manifestEntries,
+			}).isPersisted.promise
 
 			return {
 				countCards: manifestEntries.length,
@@ -409,28 +388,16 @@ function ReviewPageContent() {
 				countCardsCreated: newCards.length,
 				countCardsAlreadyExisted: cardInserts.length - newCards.length,
 				newCards,
-				reviewDay,
 			}
 		},
 		onSettled: (data, error) => {
 			if (error) throw error
 			if (!data) throw new Error('No data returned from mutation')
-			if (!data.reviewDay)
-				throw new Error('No daily session data returned from mutation')
-			if (!Array.isArray(data.reviewDay.manifest))
-				throw new Error(
-					`Error creating today's review session: server returned type "${typeof data.reviewDay.manifest}"`
-				)
-			if (data.reviewDay.manifest.length === 0)
-				throw new Error(`Error creating today's review session: empty manifest`)
 
 			// add new records to local db collections
 			data.newCards.forEach((c) => {
 				cardsCollection.utils.writeInsert(CardSchema.parse(c))
 			})
-			reviewSessionsCollection.utils.writeInsert(
-				ReviewSessionSchema.parse(data.reviewDay)
-			)
 			// Open the append-only progress log. The session row is already
 			// persisted, so the milestone's FK is satisfied. Fire-and-forget.
 			insertMilestone({
@@ -446,7 +413,6 @@ function ReviewPageContent() {
 					? `Ready! Could only create ${data.countCardsCreated} new cards — ${data.countCardsAlreadyExisted} already existed. You have ${data.countCards} total today.`
 					: `Ready to go! ${data.countCardsCreated} new cards, ${data.countCards} total for today.`
 			toastSuccess(toastMessage)
-			sessionJustCreatedRef.current = true
 			void navigate({ to: '/learn/$lang/review/preview', params: { lang } })
 		},
 	})
@@ -458,7 +424,8 @@ function ReviewPageContent() {
 		throw new Error('Pids/recs should not be null here :/, even once')
 
 	// when the manifest is present, skip this page, go to a better one
-	// useRef guard: set synchronously in onSettled before React batch re-render, prevents redirect racing with navigate to /preview
+	// The ref keeps this page's own new session from redirecting it away
+	// mid-mutation.
 	if (stats?.count && !sessionJustCreatedRef.current)
 		return stats.complete === stats.count || stats.stage >= 5 ? (
 			<WhenComplete />
