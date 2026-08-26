@@ -1,12 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useLiveQuery } from '@tanstack/react-db'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
-import {
-	sendToFriends,
-	SHARE_SUCCESS_TOAST,
-	type ShareableContent,
-} from '@/features/social/hooks'
+import { useSendToFriends, type ShareableContent } from '@/features/social'
 import {
 	Search,
 	Send,
@@ -17,7 +12,6 @@ import {
 	MessageCircleHeart,
 } from 'lucide-react'
 
-import { useUserId } from '@/lib/use-auth'
 import { phrasesComposed } from '@/features/phrases/live'
 import { phraseRequestsActive } from '@/features/requests/live'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
@@ -73,7 +67,6 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
 	const params = Route.useParams()
-	const userId = useUserId()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const inputRef = useRef<HTMLInputElement>(null)
 
@@ -217,28 +210,16 @@ function RouteComponent() {
 		void navigate({ to: '/friends/chats/$friendUid', params })
 	}
 
-	// The message lands in the thread on click, so the dialog can close on the
+	// The message lands in the thread on click, so the dialog closes on the
 	// same tick; `chatMessagesCollection` owns the write-back and the rollback.
-	const send = (lang: string, content: ShareableContent) => {
-		if (!userId) return
-		const tx = sendToFriends({
-			senderUid: userId,
-			recipientUids: [params.friendUid],
-			lang,
-			content,
-		})
+	const send = useSendToFriends()
+	const sendAndClose = (messageLang: string, content: ShareableContent) => {
+		send({ recipientUids: [params.friendUid], lang: messageLang, content })
 		closeDialog()
-		tx.isPersisted.promise.then(
-			() => toastSuccess(SHARE_SUCCESS_TOAST[content.message_type]),
-			(error: unknown) => {
-				console.log(`Failed to send to this friend:`, error, content)
-				toastError('Something went wrong')
-			}
-		)
 	}
 
 	const handleSend = (result: SearchResult) =>
-		send(
+		sendAndClose(
 			result.lang,
 			result.type === 'phrase'
 				? { message_type: 'recommendation', phrase_id: result.id }
@@ -251,7 +232,7 @@ function RouteComponent() {
 		setShowCreator(false)
 		// Send the newly created phrase immediately
 		if (!lang) return
-		send(lang, { message_type: 'recommendation', phrase_id: phraseId })
+		sendAndClose(lang, { message_type: 'recommendation', phrase_id: phraseId })
 	}
 
 	return (

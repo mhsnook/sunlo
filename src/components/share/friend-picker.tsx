@@ -24,7 +24,7 @@ import type { uuid } from '@/types/main'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { LoginSignupButtons } from '@/components/ui/authenticated-dialog'
-import { IconSizedLoader, Loader } from '@/components/ui/loader'
+import { Loader } from '@/components/ui/loader'
 
 const EMPTY_UIDS: uuid[] = []
 
@@ -170,7 +170,6 @@ function PickerBody({
 	setSearch,
 	searchRef,
 	onSend,
-	isPending = false,
 }: {
 	friendsOverride?: RelationsFullType[]
 	preview?: ReactNode
@@ -180,7 +179,6 @@ function PickerBody({
 	setSearch: Dispatch<SetStateAction<string>>
 	searchRef: RefObject<HTMLInputElement | null>
 	onSend: (uids: uuid[]) => void
-	isPending?: boolean
 }) {
 	// These live queries run only while the picker is open (PickerBody is
 	// portal-mounted by the dialog), so closed pickers on list items cost
@@ -319,11 +317,11 @@ function PickerBody({
 				</span>
 				<Button
 					className="ms-auto gap-2"
-					disabled={count === 0 || !isReady || isPending}
+					disabled={count === 0 || !isReady}
 					onClick={() => onSend(uids)}
 					data-testid="send-to-friends-button"
 				>
-					{isPending ? <IconSizedLoader /> : <Send className="size-4" />}
+					<Send className="size-4" />
 					<span className="whitespace-nowrap">
 						{count > 0 ? `Send to ${count}` : 'Send'}
 					</span>
@@ -362,7 +360,6 @@ export function FriendPickerDialog({
 	description,
 	preview,
 	onSend,
-	isPending = false,
 	authTitle = 'Login to Send',
 	authMessage = 'You need to be logged in to send things to friends.',
 	trigger,
@@ -374,7 +371,6 @@ export function FriendPickerDialog({
 	description?: string
 	preview?: ReactNode
 	onSend: (uids: uuid[]) => void
-	isPending?: boolean
 	authTitle?: string
 	authMessage?: string
 	trigger?: ReactNode
@@ -454,7 +450,6 @@ export function FriendPickerDialog({
 								setSearch={setSearch}
 								searchRef={searchRef}
 								onSend={onSend}
-								isPending={isPending}
 							/>
 						</>
 					) : (

@@ -19,11 +19,7 @@ export function SendPlaylistToFriendDialog({
 	children: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
-	const { send } = useSendToFriends(
-		lang,
-		{ message_type: 'playlist', playlist_id: id },
-		{ onSuccess: () => setOpen(false) }
-	)
+	const send = useSendToFriends()
 
 	if (!lang || !id) return null
 
@@ -43,7 +39,14 @@ export function SendPlaylistToFriendDialog({
 					subtitle="Send this playlist to a friend"
 				/>
 			}
-			onSend={send}
+			onSend={(recipientUids) => {
+				send({
+					recipientUids,
+					lang,
+					content: { message_type: 'playlist', playlist_id: id },
+				})
+				setOpen(false)
+			}}
 		/>
 	)
 }

@@ -383,24 +383,22 @@ export type ShareableContent =
 	| { message_type: 'request'; request_id: uuid }
 	| { message_type: 'playlist'; playlist_id: uuid }
 
-export const SHARE_SUCCESS_TOAST: Record<
-	ShareableContent['message_type'],
-	string
-> = {
+const SHARE_SUCCESS_TOAST: Record<ShareableContent['message_type'], string> = {
 	recommendation: 'Phrase sent to friend',
 	request: 'Request sent to friend',
 	playlist: 'Playlist sent to friend',
 }
 
 /**
- * Send one piece of shared content to one or more friends.
+ * Build one chat message per recipient and hand them to the collection.
  *
  * Every chat message the app writes goes through here, so the row shape and
- * its null foreign keys are stated once. The write is optimistic: the message
- * is in the thread before the server answers, and a rejected one rolls back
- * with the error toast its caller attaches to the returned transaction.
+ * its null foreign keys are stated once. The write is optimistic: unlike a
+ * friend request, nothing server-side rejects or rewrites a message, so a
+ * failure is a real failure and rolling it back out of the thread is the
+ * right thing to show.
  */
-export const sendToFriends = ({
+const sendChatMessages = ({
 	senderUid,
 	recipientUids,
 	lang,
@@ -410,48 +408,55 @@ export const sendToFriends = ({
 	recipientUids: Array<uuid>
 	lang: string
 	content: ShareableContent
-}) =>
-	chatMessagesCollection.insert(
-		recipientUids.map((recipient_uid) =>
-			ChatMessageSchema.parse({
-				// Client-generated so the server's row replaces this one rather
-				// than joining it. `created_at` is a local guess the write-back
-				// overwrites with the server's stamp.
-				id: crypto.randomUUID(),
-				created_at: new Date().toISOString(),
-				sender_uid: senderUid,
-				recipient_uid,
-				lang,
-				phrase_id: null,
-				request_id: null,
-				playlist_id: null,
-				related_message_id: null,
-				read_at: null,
-				...content,
-			})
-		)
+}) => {
+	// One stamp for the whole share, so a message sent to eight friends sorts
+	// identically in all eight threads. The server's stamp replaces it.
+	const created_at = new Date().toISOString()
+	return chatMessagesCollection.insert(
+		recipientUids.map((recipient_uid) => ({
+			// Client-generated so the server's row replaces this one rather than
+			// joining it. The collection validates against `ChatMessageSchema`.
+			id: crypto.randomUUID(),
+			created_at,
+			sender_uid: senderUid,
+			recipient_uid,
+			lang,
+			phrase_id: null,
+			request_id: null,
+			playlist_id: null,
+			related_message_id: null,
+			read_at: null,
+			...content,
+		}))
 	)
+}
 
 /**
- * Send a phrase / request / playlist to friends from one of the three share
- * dialogs. They differ only in the `content` they carry, and each closes
- * itself through `onSuccess` as soon as the messages are in the thread.
+ * Send a phrase / request / playlist to friends.
+ *
+ * The hook supplies the sender and owns the toasts; everything that varies
+ * per click is an argument. That way one hook serves both the share dialogs,
+ * which carry fixed content to many friends, and the chat recommend dialog,
+ * which sends to one friend content it picks at click time.
  */
-export const useSendToFriends = (
-	lang: string,
-	content: ShareableContent,
-	{ onSuccess }: { onSuccess?: () => void } = {}
-) => {
+export const useSendToFriends = () => {
 	const userId = useUserId()
-	const send = (recipientUids: Array<uuid>) => {
+	return ({
+		recipientUids,
+		lang,
+		content,
+	}: {
+		recipientUids: Array<uuid>
+		lang: string
+		content: ShareableContent
+	}) => {
 		if (!userId) return
-		const tx = sendToFriends({
+		const tx = sendChatMessages({
 			senderUid: userId,
 			recipientUids,
 			lang,
 			content,
 		})
-		onSuccess?.()
 		tx.isPersisted.promise.then(
 			() => toastSuccess(SHARE_SUCCESS_TOAST[content.message_type]),
 			(error: unknown) => {
@@ -460,7 +465,6 @@ export const useSendToFriends = (
 			}
 		)
 	}
-	return { send }
 }
 
 /** Subscribe to realtime friend-request and chat-message events. */

@@ -90,7 +90,7 @@ export const chatMessagesCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: ChatMessageSchema,
-		// Every chat message the app writes lands here — see `sendToFriends`.
+		// Every chat message the app writes lands here — see `useSendToFriends`.
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map(
 				(m) => m.modified as ChatMessageType
@@ -112,8 +112,13 @@ export const chatMessagesCollection = createCollection(
 			)
 			// The write-back is what `refetch: false` promises. Upsert, because
 			// this row's own realtime frame can land before the insert resolves.
-			for (const row of rows)
-				writeSyncedRow(chatMessagesCollection, row.id, row)
+			// Batched: each write is otherwise its own commit, and a commit
+			// copies the whole collection into the query cache and re-runs every
+			// live query over it — eight recipients would pay that eight times.
+			chatMessagesCollection.utils.writeBatch(() => {
+				for (const row of rows)
+					writeSyncedRow(chatMessagesCollection, row.id, row)
+			})
 			return { refetch: false }
 		},
 		// Read receipts stamp one `read_at` across every unread message from a

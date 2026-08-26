@@ -19,11 +19,7 @@ export function SendRequestToFriendDialog({
 	children: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
-	const { send } = useSendToFriends(
-		lang,
-		{ message_type: 'request', request_id: id },
-		{ onSuccess: () => setOpen(false) }
-	)
+	const send = useSendToFriends()
 
 	if (!lang || !id) return null
 
@@ -43,7 +39,14 @@ export function SendRequestToFriendDialog({
 					subtitle="Send this request to a friend"
 				/>
 			}
-			onSend={send}
+			onSend={(recipientUids) => {
+				send({
+					recipientUids,
+					lang,
+					content: { message_type: 'request', request_id: id },
+				})
+				setOpen(false)
+			}}
 		/>
 	)
 }
