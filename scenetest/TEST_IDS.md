@@ -338,6 +338,25 @@ natural wrapper element to label.
 | `invite-qr-card`     | data-testid | Invite page        | Card wrapping the QR code section            |
 | `invite-qr-code`     | data-testid | Invite page        | QR code element encoding the signup referral |
 
+## Relationship actions
+
+One button per relationship status, on the friend profile page
+(`routes/_user/friends/$uid.tsx` → `-relationship-actions.tsx`). The confirm
+buttons live inside a `ConfirmDestructiveActionDialog`, so click the status
+button first to open it.
+
+| Selector                                | Attribute   | Component/Location  | Description               |
+| --------------------------------------- | ----------- | ------------------- | ------------------------- |
+| `friend-profile-page`                   | data-testid | Friend profile      | Profile page container    |
+| `add-friend-button`                     | data-testid | Unconnected         | Sends the invite          |
+| `requested-status-button`               | data-testid | Pending, sent by me | Opens the cancel dialog   |
+| `cancel-friend-request-button`          | data-testid | Cancel dialog       | Cancels the invite I sent |
+| `accept-friend-request-button`          | data-testid | Pending, sent to me | Accepts the invite        |
+| `decline-friend-request-button`         | data-testid | Pending, sent to me | Opens the decline dialog  |
+| `confirm-decline-friend-request-button` | data-testid | Decline dialog      | Declines the invite       |
+| `friends-status-button`                 | data-testid | Friends             | Opens the unfriend dialog |
+| `unfriend-button`                       | data-testid | Unfriend dialog     | Ends the friendship       |
+
 ## Share-with-friends picker
 
 Used by the "Send in chat" / share actions for phrases, playlists, and requests

@@ -48,9 +48,17 @@ The component subscribes to the collection via `useLiveQuery` (here through `use
 
 See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked example. See also the [TanStack DB optimistic-mutations skill](../node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md) for `createOptimisticAction` (multi-collection atomic mutations) and `createPacedMutations` (auto-save / debounce / throttle).
 
+### When the optimistic state is worse than waiting
+
+`collection.insert / update / delete` take `{ optimistic: false }`. The handler still runs and the transaction still resolves through `isPersisted.promise`; the row just never enters the optimistic layer, so it appears when the handler writes the server's row back.
+
+Reach for it when a rollback would be more confusing than a wait. Friend requests are the case in the app today: `validate_friend_request_action` rejects several transitions, and a relationship that reads "friends" for a moment and then reads "unconnected" again is a worse thing to show than a button that waits and then reports the error. `useFriendRequestAction` writes non-optimistically and holds its own `pendingAction` for the spinner.
+
+This is the exception, not the default. Most writes are safe to show immediately: the server accepts them, and the optimistic value is what the user came to see.
+
 **Reasonable exceptions:**
 
-- **Realtime sync handlers** writing supabase channel events into a collection (`writeRealtimeRow(chatMessagesCollection, ...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
+- **Realtime sync handlers** writing supabase channel events into a collection (`writeSyncedRow(chatMessagesCollection, ...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
 
 ## The `{ refetch: false }` contract
@@ -128,7 +136,7 @@ if (row) cardsCollection.utils.writeUpdate(row)
 
 A realtime frame arrives after the database commits, so it carries the truth and is safe to write into the synced layer. But a collection that is only correct once the frame lands is wrong until then, and stays wrong whenever the socket is down. Make the handler correct on its own; let realtime cover the writes made by other clients and other devices.
 
-Use `writeRealtimeRow(collection, key, row)` and `deleteSyncedRow(collection, key)` (`src/lib/collections/realtime-row.ts`) for INSERT and UPDATE frames. It upserts, because a frame can arrive for a row this client never fetched and `writeUpdate` throws on a key it cannot find. It also skips the write when every field already matches, which is this client's own mutation echoing back — writing it would re-run every live query for nothing.
+Use `writeSyncedRow(collection, key, row)` and `deleteSyncedRow(collection, key)` (`src/lib/collections/realtime-row.ts`) for INSERT and UPDATE frames. It upserts, because a frame can arrive for a row this client never fetched and `writeUpdate` throws on a key it cannot find. It also skips the write when every field already matches, which is this client's own mutation echoing back — writing it would re-run every live query for nothing.
 
 **INSERT and UPDATE frames are RLS-scoped; DELETE frames are not.** Supabase tests each subscriber's policies against the new row, so an insert or update reaches you only if you could have fetched that row yourself. It cannot do the same for a delete, because the row is already gone by then. So every delete on a published table reaches every subscriber of that table, whoever owned the row.
 
@@ -217,7 +225,7 @@ useEffect(() => {
 			},
 			(payload) => {
 				const row = ChatMessageSchema.parse(payload.new)
-				writeRealtimeRow(chatMessagesCollection, row.id, row)
+				writeSyncedRow(chatMessagesCollection, row.id, row)
 			}
 		)
 		.subscribe()

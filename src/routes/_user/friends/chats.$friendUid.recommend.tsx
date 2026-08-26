@@ -1,8 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import { useLiveQuery } from '@tanstack/react-db'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
+import { useSendToFriends, type ShareableContent } from '@/features/social'
 import {
 	Search,
 	Send,
@@ -13,9 +12,6 @@ import {
 	MessageCircleHeart,
 } from 'lucide-react'
 
-import type { TablesInsert } from '@/types/supabase'
-import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/use-auth'
 import { phrasesComposed } from '@/features/phrases/live'
 import { phraseRequestsActive } from '@/features/requests/live'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
@@ -71,7 +67,6 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
 	const params = Route.useParams()
-	const userId = useUserId()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const inputRef = useRef<HTMLInputElement>(null)
 
@@ -215,66 +210,29 @@ function RouteComponent() {
 		void navigate({ to: '/friends/chats/$friendUid', params })
 	}
 
-	const sendMessageMutation = useMutation({
-		mutationFn: async (newMessage: TablesInsert<'chat_message'>) => {
-			const { error } = await supabase.from('chat_message').insert(newMessage)
-			if (error) throw error
-		},
-		onSuccess: (_data, variables) => {
-			const label =
-				variables.message_type === 'recommendation'
-					? 'Phrase'
-					: variables.message_type === 'playlist'
-						? 'Playlist'
-						: 'Request'
-			closeDialog()
-			toastSuccess(`${label} sent!`)
-		},
-		onError: (error) => {
-			toastError(`Failed to send: ${error.message}`)
-		},
-	})
-
-	const handleSend = (result: SearchResult) => {
-		if (!userId) return
-		const base = {
-			sender_uid: userId,
-			recipient_uid: params.friendUid,
-			lang: result.lang,
-		}
-
-		if (result.type === 'phrase') {
-			void sendMessageMutation.mutate({
-				...base,
-				phrase_id: result.id,
-				message_type: 'recommendation',
-			})
-		} else if (result.type === 'playlist') {
-			void sendMessageMutation.mutate({
-				...base,
-				playlist_id: result.id,
-				message_type: 'playlist',
-			})
-		} else {
-			void sendMessageMutation.mutate({
-				...base,
-				request_id: result.id,
-				message_type: 'request',
-			})
-		}
+	// The message lands in the thread on click, so the dialog closes on the
+	// same tick; `chatMessagesCollection` owns the write-back and the rollback.
+	const send = useSendToFriends()
+	const sendAndClose = (messageLang: string, content: ShareableContent) => {
+		send({ recipientUids: [params.friendUid], lang: messageLang, content })
+		closeDialog()
 	}
+
+	const handleSend = (result: SearchResult) =>
+		sendAndClose(
+			result.lang,
+			result.type === 'phrase'
+				? { message_type: 'recommendation', phrase_id: result.id }
+				: result.type === 'playlist'
+					? { message_type: 'playlist', playlist_id: result.id }
+					: { message_type: 'request', request_id: result.id }
+		)
 
 	const handlePhraseCreated = (phraseId: string) => {
 		setShowCreator(false)
 		// Send the newly created phrase immediately
-		if (!userId || !lang) return
-		void sendMessageMutation.mutate({
-			sender_uid: userId,
-			recipient_uid: params.friendUid,
-			phrase_id: phraseId,
-			lang,
-			message_type: 'recommendation',
-		})
+		if (!lang) return
+		sendAndClose(lang, { message_type: 'recommendation', phrase_id: phraseId })
 	}
 
 	return (
@@ -377,7 +335,6 @@ function RouteComponent() {
 									result={result}
 									showType={activeFilter === null}
 									onSend={() => handleSend(result)}
-									disabled={sendMessageMutation.isPending}
 								/>
 							))
 						)
@@ -432,12 +389,10 @@ function SendableResult({
 	result,
 	showType,
 	onSend,
-	disabled,
 }: {
 	result: SearchResult
 	showType: boolean
 	onSend: () => void
-	disabled: boolean
 }) {
 	const typeIcon =
 		result.type === 'phrase' ? (
@@ -454,7 +409,6 @@ function SendableResult({
 		<button
 			type="button"
 			onClick={onSend}
-			disabled={disabled}
 			data-testid={`send-${result.type}-${result.id}`}
 			className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-neutral-100 disabled:opacity-50"
 		>

@@ -7,7 +7,7 @@ import { useLiveQuery, eq } from '@tanstack/react-db'
 import supabase from '@/lib/supabase-client'
 import { FeedActivitySchema, type FeedActivityType } from './schemas'
 import type { LangType } from '@/features/languages/schemas'
-import { friendSummariesCollection } from '@/features/social/collections'
+import { friendSummaries } from '@/features/social/live'
 
 export type FeedFilterType = 'request' | 'playlist' | 'phrase'
 
@@ -81,7 +81,7 @@ export function useFriendUids() {
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ friend: friendSummariesCollection })
+				.from({ friend: friendSummaries })
 				.where(({ friend }) => eq(friend.status, 'friends'))
 				.select(({ friend }) => ({ uid: friend.uid })),
 		[]

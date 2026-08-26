@@ -19,11 +19,7 @@ export function SendPlaylistToFriendDialog({
 	children: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
-	const mutation = useSendToFriends(
-		lang,
-		{ message_type: 'playlist', playlist_id: id },
-		{ onSuccess: () => setOpen(false) }
-	)
+	const send = useSendToFriends()
 
 	if (!lang || !id) return null
 
@@ -43,8 +39,14 @@ export function SendPlaylistToFriendDialog({
 					subtitle="Send this playlist to a friend"
 				/>
 			}
-			onSend={(uids) => mutation.mutate(uids)}
-			isPending={mutation.isPending}
+			onSend={(recipientUids) => {
+				send({
+					recipientUids,
+					lang,
+					content: { message_type: 'playlist', playlist_id: id },
+				})
+				setOpen(false)
+			}}
 		/>
 	)
 }

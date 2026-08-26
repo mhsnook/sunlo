@@ -101,19 +101,19 @@ Sunlo is a language-learning app: FSRS spaced-repetition flashcards, social feat
 
 Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hooks.ts`, and a barrel `index.ts` (some add `live.ts`, `mutations.ts`, `store.ts`, `fsrs.ts`). Modules are deliberately wide where concepts are inseparable — `requests/` holds requests + comments + comment→phrase links + upvotes because a comment without a request is meaningless; don't split a wide module to satisfy a lint rule.
 
-| Domain          | Schemas                                                   | Collections                                                  | Key Hooks                                                          |
-| --------------- | --------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ |
-| `profile`       | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                                    | useAuth, useProfile                                                |
-| `languages`     | Language, LangTag, LangSchema                             | languages, langTags                                          | useLanguageMeta, useLanguageTags                                   |
-| `phrases`       | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                                  | useLanguagePhrases, usePhrase                                      |
-| `deck`          | Deck, Card                                                | decks, cards, cardsWithReviews (live)                        | useDeck, useDeckCards, useDeckPids, useCardScheduling              |
-| `review`        | CardReview, DailyReviewState                              | cardReviews, reviewDays                                      | useReviewsToday, useReviewMutation                                 |
-| `requests`      | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes        | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
-| `social`        | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)          | useRelationFriends, useAllChats, useSocialRealtime                 |
-| `chat`          | ChatQuery, ChatTurn, ChatResultPhrase                     | (zustand store, no collection — prototype phrasebook search) | useChatStore, useChatTurns, useChatSearch                          |
-| `notifications` | Notification                                              | notifications                                                | useNotifications, useUnreadCount, useMarkAsRead                    |
-| `playlists`     | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                         | useOnePlaylist, useLangPlaylists                                   |
-| `feed`          | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature)      | useFeedLang                                                        |
+| Domain          | Schemas                                                   | Collections                                                                | Key Hooks                                                          |
+| --------------- | --------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `profile`       | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                                                  | useAuth, useProfile                                                |
+| `languages`     | Language, LangTag, LangSchema                             | languages, langTags                                                        | useLanguageMeta, useLanguageTags                                   |
+| `phrases`       | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                                                | useLanguagePhrases, usePhrase                                      |
+| `deck`          | Deck, Card                                                | decks, cards, cardsWithReviews (live)                                      | useDeck, useDeckCards, useDeckPids, useCardScheduling              |
+| `review`        | CardReview, DailyReviewState                              | cardReviews, reviewDays                                                    | useReviewsToday, useReviewMutation                                 |
+| `requests`      | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes                      | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
+| `social`        | FriendRequestAction, FriendSummary, ChatMessage           | friendRequestActions, chatMessages, friendSummaries + relationsFull (live) | useRelationFriends, useAllChats, useSocialRealtime                 |
+| `chat`          | ChatQuery, ChatTurn, ChatResultPhrase                     | (zustand store, no collection — prototype phrasebook search)               | useChatStore, useChatTurns, useChatSearch                          |
+| `notifications` | Notification                                              | notifications                                                              | useNotifications, useUnreadCount, useMarkAsRead                    |
+| `playlists`     | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                                       | useOnePlaylist, useLangPlaylists                                   |
+| `feed`          | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature)                    | useFeedLang                                                        |
 
 **Imports**: consumer code (routes, components) imports from the barrel (`@/features/deck`); cross-domain wiring imports specific files (`@/features/deck/collections`); intra-feature imports are relative (`./schemas`). Always use the `@/` alias otherwise.
 
