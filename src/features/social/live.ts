@@ -1,4 +1,4 @@
-import { createLiveQueryCollection, eq } from '@tanstack/db'
+import { BTreeIndex, createLiveQueryCollection, eq } from '@tanstack/db'
 import { createFriendSummaries } from './friend-summary-fold'
 import { friendRequestActionsCollection } from './collections'
 import {
@@ -13,6 +13,12 @@ export const friendSummaries = createFriendSummaries(
 	friendRequestActionsCollection,
 	myProfileCollection
 )
+
+// A live query collection cannot take `autoIndex`, so the two fields consumers
+// look rows up by are indexed here — `uid` for the join in `useOnePublicProfile`
+// and `status` for the friends filters.
+friendSummaries.createIndex((row) => row.uid, { indexType: BTreeIndex })
+friendSummaries.createIndex((row) => row.status, { indexType: BTreeIndex })
 
 export type RelationsFullType = FriendSummaryType & {
 	isMostRecentByMe: boolean

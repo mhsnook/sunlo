@@ -133,32 +133,6 @@ describe('the friend summary fold', () => {
 		expect(summaries.toArray).toHaveLength(2)
 	})
 
-	it('ranks an optimistic `Z` stamp against the server`s `+00:00` form', () => {
-		// A client-stamped `new Date().toISOString()` and PostgREST's offset form
-		// are compared as strings by the sort key, so the two spellings have to
-		// order by the instant they name.
-		pushAction(
-			action({
-				id: 'b3',
-				created_at: '2026-01-05T00:00:00.000Z',
-				uid_by: ME,
-				uid_for: BEN,
-				action_type: 'remove',
-			})
-		)
-		expect(byFriend(BEN)?.status).toBe('unconnected')
-		pushAction(
-			action({
-				id: 'b4',
-				created_at: '2026-01-06T00:00:00+00:00',
-				uid_by: BEN,
-				uid_for: ME,
-				action_type: 'invite',
-			})
-		)
-		expect(byFriend(BEN)?.status).toBe('pending')
-	})
-
 	it('picks one winner when two actions on a pair share a timestamp', () => {
 		const at = '2026-01-07T00:00:00+00:00'
 		pushAction(

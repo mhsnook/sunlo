@@ -60,25 +60,12 @@ export const STATUS_AFTER_ACTION: Record<
 	remove: 'unconnected',
 }
 
-/** What each action tells the person who took it, once the server stores it. */
-export const FRIEND_ACTION_TOAST: Record<
-	FriendRequestResponseType,
-	{ text: string; tone: 'success' | 'neutral' }
-> = {
-	invite: { text: 'Friend request sent 👍', tone: 'success' },
-	accept: {
-		text: 'Accepted invitation. You are now connected 👍',
-		tone: 'success',
-	},
-	decline: { text: 'Declined this invitation', tone: 'neutral' },
-	cancel: { text: 'Cancelled this invitation', tone: 'neutral' },
-	remove: { text: 'You are no longer friends', tone: 'neutral' },
-}
-
 /**
  * The pair's current relationship, folded from its newest action. Keyed by
  * `${uid_less}--${uid_more}`; `uid` is the other party, relative to the
- * signed-in user. Derived, never fetched.
+ * signed-in user. Derived on the client, never fetched — though the
+ * `friend_summary` view still exists, because `validate_friend_request_action`
+ * reads it.
  */
 export const FriendSummarySchema = z.object({
 	uid: z.string().uuid(),

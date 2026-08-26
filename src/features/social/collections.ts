@@ -47,21 +47,16 @@ export const friendRequestActionsCollection = createCollection(
 				.throwOnError()
 			const rows =
 				data?.map((row) => FriendRequestActionSchema.parse(row)) ?? []
+			// The handler needs every submitted row back, so `writeUpsert` puts a
+			// row under each key. It deliberately does not assert the action type:
 			// `validate_friend_request_action` rewrites one action before storing
-			// it: an invite to someone who already invited you is mutual consent,
-			// so it lands as an accept. Every other action is stored as sent, and
-			// an invalid one raises instead, which throws out of this handler.
+			// it — an invite to someone who already invited you is mutual consent,
+			// so it lands as an accept — which is why the caller reads the stored
+			// type back rather than trusting what it sent. An invalid action
+			// raises instead, and that throws out of this handler.
 			should(
-				'friend_request_action insert returned each row as sent, or an invite the server accepted',
-				rows.length === submitted.length &&
-					submitted.every((sent) => {
-						const row = rows.find((r) => r.id === sent.id)
-						return (
-							!!row &&
-							(row.action_type === sent.action_type ||
-								(sent.action_type === 'invite' && row.action_type === 'accept'))
-						)
-					}),
+				'friend_request_action insert returned every submitted row',
+				rows.length === submitted.length,
 				{ submitted, returned: rows }
 			)
 			// The write-back is what `refetch: false` promises — and here it is

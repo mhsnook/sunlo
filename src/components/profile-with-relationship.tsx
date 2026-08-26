@@ -59,13 +59,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								aria-label="Confirm: Decline friend request"
 								onClick={() => friendRequest.act('decline')}
 							>
-								{friendRequest.isPending ? (
-									<IconSizedLoader />
-								) : friendRequest.lastAction ? (
-									<Check className="size-6 text-white" />
-								) : (
-									<>Confirm</>
-								)}
+								Confirm
 							</Button>
 						</ConfirmDestructiveActionDialog>
 					</>
@@ -87,13 +81,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 							aria-label="Confirm: Cancel friend request"
 							onClick={() => friendRequest.act('cancel')}
 						>
-							{friendRequest.isPending ? (
-								<IconSizedLoader />
-							) : friendRequest.lastAction ? (
-								<Check className="size-6 text-white" />
-							) : (
-								<>Confirm</>
-							)}
+							Confirm
 						</Button>
 					</ConfirmDestructiveActionDialog>
 				) : profile.relation.status === 'friends' ? (

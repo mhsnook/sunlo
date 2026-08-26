@@ -8,7 +8,6 @@ export {
 	FriendRequestActionSchema,
 	type FriendRequestActionType,
 	type FriendRequestResponseType,
-	STATUS_AFTER_ACTION,
 	ChatMessageSchema,
 	type ChatMessageType,
 	type ChatMessageRelType,

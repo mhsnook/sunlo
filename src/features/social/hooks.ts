@@ -7,9 +7,9 @@ import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
 	ChatMessageSchema,
 	FriendRequestActionSchema,
-	FRIEND_ACTION_TOAST,
 	type ChatMessageRelType,
 	type ChatMessageType,
+	type FriendRequestActionType,
 	type FriendRequestResponseType,
 } from './schemas'
 import { writeRealtimeRow } from '@/lib/collections/realtime-row'
@@ -60,16 +60,38 @@ export const useOneRelation = (
 		[uid]
 	)
 
+/** What each action tells the person who took it, once the server stores it. */
+export const FRIEND_ACTION_TOAST: Record<
+	FriendRequestResponseType,
+	{ text: string; tone: 'success' | 'neutral' }
+> = {
+	invite: { text: 'Friend request sent 👍', tone: 'success' },
+	accept: {
+		text: 'Accepted invitation. You are now connected 👍',
+		tone: 'success',
+	},
+	decline: { text: 'Declined this invitation', tone: 'neutral' },
+	cancel: { text: 'Cancelled this invitation', tone: 'neutral' },
+	remove: { text: 'You are no longer friends', tone: 'neutral' },
+}
+
 /** What `useFriendRequestAction` hands back to a button. */
 export type FriendRequestAction = {
 	act: (action_type: FriendRequestResponseType) => void
-	/** The action currently in flight, or null. */
-	pendingAction: FriendRequestResponseType | null
 	isPending: boolean
 	/** The last action the server stored, for a call site showing an outcome. */
 	lastAction: FriendRequestResponseType | null
 	error: Error | null
 }
+
+type ActionState = Omit<FriendRequestAction, 'act'> & { uid_for: uuid }
+
+/** Nothing has been tried yet for this person. */
+const NO_ACTION_YET = {
+	isPending: false,
+	lastAction: null,
+	error: null,
+} satisfies Omit<ActionState, 'uid_for'>
 
 /**
  * Record one friend request action, and wait for the server to store it.
@@ -82,41 +104,48 @@ export type FriendRequestAction = {
  */
 export const useFriendRequestAction = (uid_for: uuid): FriendRequestAction => {
 	const uid_by = useUserId()
-	const [uid_less, uid_more] = [uid_by, uid_for].toSorted()
-	const [pendingAction, setPendingAction] =
-		useState<FriendRequestResponseType | null>(null)
-	const [lastAction, setLastAction] =
-		useState<FriendRequestResponseType | null>(null)
-	const [error, setError] = useState<Error | null>(null)
+	// Scoped to `uid_for` so navigating from one profile to another does not
+	// show the previous person's outcome — this component stays mounted.
+	const [state, setState] = useState<ActionState>({
+		uid_for,
+		...NO_ACTION_YET,
+	})
+	const current: ActionState =
+		state.uid_for === uid_for ? state : { uid_for, ...NO_ACTION_YET }
 
 	const act = (action_type: FriendRequestResponseType) => {
-		if (!uid_by || pendingAction !== null) return
+		if (!uid_by || current.isPending) return
+		const [uid_less, uid_more] = [uid_by, uid_for].toSorted()
 		const id = crypto.randomUUID()
-		setPendingAction(action_type)
-		setError(null)
+		setState({ uid_for, isPending: true, lastAction: null, error: null })
+		// `collection.insert` validates against the collection's schema, so the
+		// object only needs to satisfy the type here. `created_at` is required by
+		// that schema and dropped by the handler — the server stamps it.
 		const tx = friendRequestActionsCollection.insert(
-			FriendRequestActionSchema.parse({
+			{
 				id,
-				// The schema needs a timestamp and the handler drops it: the server
-				// stamps `created_at`, and nothing renders this row before then.
 				created_at: new Date().toISOString(),
 				uid_less,
 				uid_more,
 				uid_by,
 				uid_for,
 				action_type,
-			}),
+			} satisfies FriendRequestActionType,
 			{ optimistic: false }
 		)
 		tx.isPersisted.promise.then(
 			() => {
-				// Read the toast off the stored row, not off what we sent: an invite
-				// to someone who already invited you is stored as an accept.
-				const stored =
+				// Report what the server settled on, not what we asked for: an
+				// invite to someone who already invited you is stored as an accept.
+				const settled =
 					friendRequestActionsCollection.get(id)?.action_type ?? action_type
-				setPendingAction(null)
-				setLastAction(stored)
-				const toast = FRIEND_ACTION_TOAST[stored]
+				setState({
+					uid_for,
+					isPending: false,
+					lastAction: settled,
+					error: null,
+				})
+				const toast = FRIEND_ACTION_TOAST[settled]
 				if (toast.tone === 'success') toastSuccess(toast.text)
 				else toastNeutral(toast.text)
 			},
@@ -128,8 +157,12 @@ export const useFriendRequestAction = (uid_for: uuid): FriendRequestAction => {
 					failure,
 					action_type
 				)
-				setPendingAction(null)
-				setError(failure)
+				setState({
+					uid_for,
+					isPending: false,
+					lastAction: null,
+					error: failure,
+				})
 				toastError(`Something went wrong with this interaction`)
 			}
 		)
@@ -137,10 +170,9 @@ export const useFriendRequestAction = (uid_for: uuid): FriendRequestAction => {
 
 	return {
 		act,
-		pendingAction,
-		isPending: pendingAction !== null,
-		lastAction,
-		error,
+		isPending: current.isPending,
+		lastAction: current.lastAction,
+		error: current.error,
 	}
 }
 

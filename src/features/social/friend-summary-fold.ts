@@ -3,40 +3,25 @@ import { STATUS_AFTER_ACTION, type FriendSummaryType } from './schemas'
 import type { friendRequestActionsCollection } from './collections'
 import type { myProfileCollection } from '@/features/profile/collections'
 
-/** The key both `friend_summary` and its client-side fold use for a pair. */
-export const friendPairKey = (pair: {
-	uid_less: string
-	uid_more: string
-}): string => `${pair.uid_less}--${pair.uid_more}`
+/** The key a pair is stored under, matching the old `friend_summary` fetch. */
+const friendPairKey = (pair: { uid_less: string; uid_more: string }): string =>
+	`${pair.uid_less}--${pair.uid_more}`
 
 // A column reference as the query builder hands it over, not its value.
 type ColumnRef = Parameters<typeof concat>[0]
 
 /**
- * A sortable key for one action, so `max()` can pick the newest of a pair.
+ * A sortable key for one action, so `max()` can pick the newest of a pair, and
+ * the join below can find the action that key came from.
  *
  * `created_at` is fixed-width ISO from PostgREST, so it sorts lexically the way
  * it sorts chronologically. `id` breaks a tie between two actions stamped in
  * the same microsecond, which keeps the pick single-valued — two winners would
- * be two rows under one key. The pair columns lead so the key can be compared
- * against a group's `max()` directly; they are constant within a group, so
- * they do not affect which action wins.
+ * be two rows under one key — and makes the key unique, so the join matches
+ * exactly one action.
  */
-const actionSortKey = (action: {
-	uid_less: ColumnRef
-	uid_more: ColumnRef
-	created_at: ColumnRef
-	id: ColumnRef
-}) =>
-	concat(
-		action.uid_less,
-		'|',
-		action.uid_more,
-		'|',
-		action.created_at,
-		'|',
-		action.id
-	)
+const actionSortKey = (action: { created_at: ColumnRef; id: ColumnRef }) =>
+	concat(action.created_at, '|', action.id)
 
 /**
  * Fold the friend-request action log into one summary row per pair — the same
@@ -61,6 +46,7 @@ export const createFriendSummaries = (
 ) => {
 	const latestPerPair = createLiveQueryCollection({
 		id: 'friend_pairs',
+		gcTime: 20 * 60 * 1000,
 		query: (q) =>
 			q
 				.from({ action: actions })
@@ -104,5 +90,9 @@ export const createFriendSummaries = (
 					})
 				),
 		getKey: friendPairKey,
+		// These are module-scope singletons, so they should outlive a navigation
+		// that unmounts every subscriber. The 5s default would tear down all
+		// three pipelines and re-fold the whole log on the way back.
+		gcTime: 20 * 60 * 1000,
 	})
 }
