@@ -1,8 +1,18 @@
 import { createLiveQueryCollection, eq } from '@tanstack/db'
-import { friendSummariesCollection } from './collections'
-import { publicProfilesCollection } from '@/features/profile/collections'
+import { createFriendSummaries } from './friend-summary-fold'
+import { friendRequestActionsCollection } from './collections'
+import {
+	myProfileCollection,
+	publicProfilesCollection,
+} from '@/features/profile/collections'
 import type { FriendSummaryType } from './schemas'
 import type { PublicProfileType } from '@/features/profile/schemas'
+
+/** Every pair the signed-in user belongs to, with its current status. */
+export const friendSummaries = createFriendSummaries(
+	friendRequestActionsCollection,
+	myProfileCollection
+)
 
 export type RelationsFullType = FriendSummaryType & {
 	isMostRecentByMe: boolean
@@ -12,7 +22,7 @@ export type RelationsFullType = FriendSummaryType & {
 export const relationsFull = createLiveQueryCollection({
 	query: (q) =>
 		q
-			.from({ relation: friendSummariesCollection })
+			.from({ relation: friendSummaries })
 			.join(
 				{ profile: publicProfilesCollection },
 				({ relation, profile }) => eq(relation.uid, profile.uid),

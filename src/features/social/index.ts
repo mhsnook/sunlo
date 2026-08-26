@@ -5,6 +5,10 @@
 export {
 	FriendSummarySchema,
 	type FriendSummaryType,
+	FriendRequestActionSchema,
+	type FriendRequestActionType,
+	type FriendRequestResponseType,
+	STATUS_AFTER_ACTION,
 	ChatMessageSchema,
 	type ChatMessageType,
 	type ChatMessageRelType,
@@ -15,12 +19,12 @@ export {
 
 // Collections
 export {
-	friendSummariesCollection,
+	friendRequestActionsCollection,
 	chatMessagesCollection,
 } from './collections'
 
-// Live collections
-export { relationsFull, type RelationsFullType } from './live'
+// Live collections — the friend-summary fold over the action log
+export { friendSummaries, relationsFull, type RelationsFullType } from './live'
 
 // Hooks
 export {
@@ -28,6 +32,7 @@ export {
 	useIncomingFriendRequests,
 	useOneRelation,
 	useFriendRequestAction,
+	type FriendRequestAction,
 	useAllChats,
 	useOneFriendChat,
 	useUnreadMessages,

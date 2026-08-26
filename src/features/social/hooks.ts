@@ -1,13 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 
-import type { Tables, TablesInsert } from '@/types/supabase'
+import type { Tables } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
 	ChatMessageSchema,
+	FriendRequestActionSchema,
+	FRIEND_ACTION_TOAST,
 	type ChatMessageRelType,
 	type ChatMessageType,
+	type FriendRequestResponseType,
 } from './schemas'
 import { writeRealtimeRow } from '@/lib/collections/realtime-row'
 import supabase from '@/lib/supabase-client'
@@ -15,7 +18,7 @@ import { useUserId } from '@/lib/use-auth'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import {
 	chatMessagesCollection,
-	friendSummariesCollection,
+	friendRequestActionsCollection,
 } from './collections'
 import { mapArrays } from '@/lib/utils'
 import { relationsFull, type RelationsFullType } from './live'
@@ -57,41 +60,88 @@ export const useOneRelation = (
 		[uid]
 	)
 
-export const useFriendRequestAction = (uid_for: uuid) => {
+/** What `useFriendRequestAction` hands back to a button. */
+export type FriendRequestAction = {
+	act: (action_type: FriendRequestResponseType) => void
+	/** The action currently in flight, or null. */
+	pendingAction: FriendRequestResponseType | null
+	isPending: boolean
+	/** The last action the server stored, for a call site showing an outcome. */
+	lastAction: FriendRequestResponseType | null
+	error: Error | null
+}
+
+/**
+ * Record one friend request action, and wait for the server to store it.
+ *
+ * The write is deliberately not optimistic. `validate_friend_request_action`
+ * rejects several transitions, and a relationship that reads "friends" for a
+ * moment and then reads "unconnected" again is a worse thing to show than a
+ * button that waits and then reports the error. `onInsert` writes the stored
+ * row into the synced layer, so the relationship changes once, when it is real.
+ */
+export const useFriendRequestAction = (uid_for: uuid): FriendRequestAction => {
 	const uid_by = useUserId()
 	const [uid_less, uid_more] = [uid_by, uid_for].toSorted()
+	const [pendingAction, setPendingAction] =
+		useState<FriendRequestResponseType | null>(null)
+	const [lastAction, setLastAction] =
+		useState<FriendRequestResponseType | null>(null)
+	const [error, setError] = useState<Error | null>(null)
 
-	return useMutation({
-		mutationKey: ['user', uid_by, 'friend_request_action', uid_for],
-		mutationFn: async (action_type: string) => {
-			await supabase
-				.from('friend_request_action')
-				.insert({
-					uid_less,
-					uid_more,
-					uid_by,
-					uid_for,
-					action_type,
-				} as TablesInsert<'friend_request_action'>)
-				.throwOnError()
-		},
-		onSuccess: (_, variable) => {
-			if (variable === 'invite') toastSuccess('Friend request sent 👍')
-			if (variable === 'accept')
-				toastSuccess('Accepted invitation. You are now connected 👍')
-			if (variable === 'decline') toastNeutral('Declined this invitation')
-			if (variable === 'cancel') toastNeutral('Cancelled this invitation')
-			if (variable === 'remove') toastNeutral('You are no longer friends')
-		},
-		onError: (error, variables) => {
-			console.log(
-				`Something went wrong trying to modify your relationship:`,
-				error,
-				variables
-			)
-			toastError(`Something went wrong with this interaction`)
-		},
-	})
+	const act = (action_type: FriendRequestResponseType) => {
+		if (!uid_by || pendingAction !== null) return
+		const id = crypto.randomUUID()
+		setPendingAction(action_type)
+		setError(null)
+		const tx = friendRequestActionsCollection.insert(
+			FriendRequestActionSchema.parse({
+				id,
+				// The schema needs a timestamp and the handler drops it: the server
+				// stamps `created_at`, and nothing renders this row before then.
+				created_at: new Date().toISOString(),
+				uid_less,
+				uid_more,
+				uid_by,
+				uid_for,
+				action_type,
+			}),
+			{ optimistic: false }
+		)
+		tx.isPersisted.promise.then(
+			() => {
+				// Read the toast off the stored row, not off what we sent: an invite
+				// to someone who already invited you is stored as an accept.
+				const stored =
+					friendRequestActionsCollection.get(id)?.action_type ?? action_type
+				setPendingAction(null)
+				setLastAction(stored)
+				const toast = FRIEND_ACTION_TOAST[stored]
+				if (toast.tone === 'success') toastSuccess(toast.text)
+				else toastNeutral(toast.text)
+			},
+			(caught: unknown) => {
+				const failure =
+					caught instanceof Error ? caught : new Error(String(caught))
+				console.log(
+					`Something went wrong trying to modify your relationship:`,
+					failure,
+					action_type
+				)
+				setPendingAction(null)
+				setError(failure)
+				toastError(`Something went wrong with this interaction`)
+			}
+		)
+	}
+
+	return {
+		act,
+		pendingAction,
+		isPending: pendingAction !== null,
+		lastAction,
+		error,
+	}
 }
 
 type ChatsMap = {
@@ -360,19 +410,12 @@ export const useSocialRealtime = () => {
 					table: 'friend_request_action',
 				},
 				(payload) => {
-					const newAction = payload.new as Tables<'friend_request_action'>
-					if (
-						newAction.action_type === 'accept' &&
-						newAction.uid_for === userId
-					)
+					const row = FriendRequestActionSchema.parse(payload.new)
+					if (row.action_type === 'accept' && row.uid_for === userId)
 						toastSuccess('Friend request accepted')
-					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
+					if (row.action_type === 'accept' && row.uid_by === userId)
 						toastSuccess('You are now connected')
-					// We break the mutations.md convention here because friend
-					// summaries are a view, so we do a full refetch when friend
-					// requests come in. This will change when the friendSummaries
-					// fold/view moves into the client.
-					void friendSummariesCollection.utils.refetch()
+					writeRealtimeRow(friendRequestActionsCollection, row.id, row)
 				}
 			)
 			.subscribe()

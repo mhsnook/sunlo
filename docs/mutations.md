@@ -48,6 +48,14 @@ The component subscribes to the collection via `useLiveQuery` (here through `use
 
 See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked example. See also the [TanStack DB optimistic-mutations skill](../node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md) for `createOptimisticAction` (multi-collection atomic mutations) and `createPacedMutations` (auto-save / debounce / throttle).
 
+### When the optimistic state is worse than waiting
+
+`collection.insert / update / delete` take `{ optimistic: false }`. The handler still runs and the transaction still resolves through `isPersisted.promise`; the row just never enters the optimistic layer, so it appears when the handler writes the server's row back.
+
+Reach for it when a rollback would be more confusing than a wait. Friend requests are the case in the app today: `validate_friend_request_action` rejects several transitions, and a relationship that reads "friends" for a moment and then reads "unconnected" again is a worse thing to show than a button that waits and then reports the error. `useFriendRequestAction` writes non-optimistically and holds its own `pendingAction` for the spinner.
+
+This is the exception, not the default. Most writes are safe to show immediately: the server accepts them, and the optimistic value is what the user came to see.
+
 **Reasonable exceptions:**
 
 - **Realtime sync handlers** writing supabase channel events into a collection (`writeRealtimeRow(chatMessagesCollection, ...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
