@@ -18,6 +18,11 @@ a tiny empty "extension" for each, purely so `create extension <name>` succeeds:
 | `pgjwt`          | JWT signing in SQL; never called by the schema            |
 | `pg_cron`        | job scheduler; no jobs are scheduled in the schema        |
 
+`pgjwt` is dropped from the live schema by migration
+`20260826120000_drop_pgjwt.sql`, but the January 2025 baseline migration
+still creates it, so the stub stays for anyone who replays that file with
+`scripts/db-native.sh apply`.
+
 The real objects a couple of functions reference (`net.http_post`,
 `vault.decrypted_secrets`) are created as plain objects in
 `supabase/dev-native/bootstrap.sql`, not by these extensions.

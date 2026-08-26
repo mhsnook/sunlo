@@ -1,0 +1,13 @@
+-- Drop pgjwt. Supabase deprecated the extension, and nothing in this schema
+-- calls it: no function, view, policy or trigger references sign(), verify(),
+-- url_encode(), url_decode() or algorithm_sign().
+--
+-- The one place the database makes an authenticated outbound call is
+-- trigger_notify_corpus_embed_change, and it forwards the caller's PostgREST
+-- authorization header to the embed-corpus-row edge function rather than
+-- signing a token in SQL. pgcrypto stays — pgjwt depended on it, not the
+-- reverse, and the schema uses it directly.
+--
+-- No `cascade`: if a dependency turns up that this audit missed, the migration
+-- fails here instead of dropping the dependent object.
+drop extension if exists "pgjwt";
