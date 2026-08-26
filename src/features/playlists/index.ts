@@ -34,5 +34,5 @@ export {
 	useMyPlaylists,
 	useOnePlaylist,
 	useOnePlaylistPhrases,
-	useHasPlaylistUpvote,
+	useMyPlaylistUpvote,
 } from './hooks'

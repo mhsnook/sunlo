@@ -29,8 +29,11 @@ export const PhrasePlaylistSchema = z.object({
 
 export type PhrasePlaylistType = z.infer<typeof PhrasePlaylistSchema>
 
+// The upvote tables soft-delete: un-upvoting flips `deleted`, so the row the
+// collection holds mirrors the row the server holds. Live queries filter it.
 export const PhrasePlaylistUpvoteSchema = z.object({
 	playlist_id: z.string().uuid(),
+	deleted: z.boolean(),
 })
 
 export type PhrasePlaylistUpvoteType = z.infer<

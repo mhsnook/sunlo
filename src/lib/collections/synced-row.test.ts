@@ -2,13 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { QueryClient } from '@tanstack/query-core'
 import { createCollection } from '@tanstack/db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
-import {
-	writeSyncedRow,
-	writeSyncedRows,
-	deleteSyncedRow,
-	deleteSyncedRows,
-	rowMatches,
-} from './synced-row'
+import { writeSyncedRow, writeSyncedRows, rowMatches } from './synced-row'
 
 type Row = { id: string; name: string; flags?: Record<string, boolean> }
 
@@ -118,34 +112,6 @@ describe('writeSyncedRows', () => {
 			])
 		).not.toThrow()
 		expect(collection.size).toBe(0)
-	})
-})
-
-describe('deleteSyncedRows', () => {
-	it('commits many deletes once, and skips keys the collection lacks', async () => {
-		const collection = makeCollection([
-			{ id: 'a', name: 'Anya' },
-			{ id: 'b', name: 'Bo' },
-		])
-		await collection.preload()
-
-		const batch = vi.spyOn(collection.utils, 'writeBatch')
-		deleteSyncedRows(collection, ['a', 'b', 'zzz'])
-		expect(batch).toHaveBeenCalledTimes(1)
-		expect(collection.size).toBe(0)
-	})
-})
-
-describe('deleteSyncedRow', () => {
-	it('drops a key the collection does not hold', async () => {
-		const collection = makeCollection([{ id: 'a', name: 'Anya' }])
-		await collection.preload()
-
-		expect(() => collection.utils.writeDelete('zzz')).toThrow()
-		expect(() => deleteSyncedRow(collection, 'zzz')).not.toThrow()
-
-		deleteSyncedRow(collection, 'a')
-		expect(collection.get('a')).toBeUndefined()
 	})
 })
 

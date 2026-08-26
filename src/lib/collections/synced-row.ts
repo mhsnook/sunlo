@@ -4,7 +4,6 @@ export type SyncedCollection<T extends object, TKey extends string> = {
 	getKeyFromItem: (item: T) => TKey
 	utils: {
 		writeUpsert: (data: T) => void
-		writeDelete: (key: TKey) => void
 		writeBatch: (writes: () => void) => void
 	}
 }
@@ -44,35 +43,6 @@ export function writeSyncedRow<T extends object, TKey extends string>(
 	row: T
 ): void {
 	writeSyncedRows(collection, [row])
-}
-
-/**
- * Drop rows from a collection's synced layer. Skips a key the collection does
- * not hold: `writeDelete` throws on one, and a frame can arrive for a row this
- * client never fetched.
- */
-export function deleteSyncedRows<T extends object, TKey extends string>(
-	collection: SyncedCollection<T, TKey>,
-	keys: Array<TKey>
-): void {
-	if (!collection.isReady()) return
-	const held = keys.filter((key) => collection.get(key))
-	if (held.length === 0) return
-	if (held.length === 1) {
-		collection.utils.writeDelete(held[0]!)
-		return
-	}
-	collection.utils.writeBatch(() => {
-		for (const key of held) collection.utils.writeDelete(key)
-	})
-}
-
-/** One row's worth of {@link deleteSyncedRows}. */
-export function deleteSyncedRow<T extends object, TKey extends string>(
-	collection: SyncedCollection<T, TKey>,
-	key: TKey
-): void {
-	deleteSyncedRows(collection, [key])
 }
 
 /**

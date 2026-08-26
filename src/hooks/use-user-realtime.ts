@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import supabase from '@/lib/supabase-client'
 import {
-	deleteSyncedRow,
 	writeSyncedRow,
 	type SyncedCollection,
 } from '@/lib/collections/synced-row'
@@ -67,36 +66,6 @@ function bindRows<T extends object, TKey extends string>(
 	)
 }
 
-/**
- * The upvote tables soft-delete, so un-upvoting arrives as an UPDATE carrying
- * `deleted: true`, not as a DELETE.
- */
-function bindUpvote<T extends object, TKey extends string>(
-	channel: RealtimeChannel,
-	table: string,
-	mine: string,
-	collection: SyncedCollection<T, TKey>,
-	parse: (row: unknown) => T,
-	keyField: string
-): RealtimeChannel {
-	const handle = (payload: { new: Record<string, unknown> }) => {
-		if (!collection.isReady()) return
-		const key = payload.new[keyField]
-		if (typeof key !== 'string') return
-		if (payload.new.deleted === true) deleteSyncedRow(collection, key as TKey)
-		else writeSyncedRow(collection, parse(payload.new))
-	}
-	return (['INSERT', 'UPDATE'] as const).reduce(
-		(ch, event) =>
-			ch.on(
-				'postgres_changes',
-				{ event, schema: 'public', table, filter: mine },
-				handle
-			),
-		channel
-	)
-}
-
 // Realtime for the user's own tables: RLS scopes each stream to the
 // subscriber, so we fold events straight into their collections. Subscribed in
 // the `_user` layout, torn down on sign-out.
@@ -109,29 +78,26 @@ export const useUserRealtime = () => {
 		const mine = `uid=eq.${userId}`
 		let channel = supabase.channel('user-tables-realtime')
 
-		channel = bindUpvote(
+		channel = bindRows(
 			channel,
 			'phrase_request_upvote',
 			mine,
 			phraseRequestUpvotesCollection,
-			(row) => PhraseRequestUpvoteSchema.parse(row),
-			'request_id'
+			(row) => PhraseRequestUpvoteSchema.parse(row)
 		)
-		channel = bindUpvote(
+		channel = bindRows(
 			channel,
 			'comment_upvote',
 			mine,
 			commentUpvotesCollection,
-			(row) => CommentUpvoteSchema.parse(row),
-			'comment_id'
+			(row) => CommentUpvoteSchema.parse(row)
 		)
-		channel = bindUpvote(
+		channel = bindRows(
 			channel,
 			'phrase_playlist_upvote',
 			mine,
 			phrasePlaylistUpvotesCollection,
-			(row) => PhrasePlaylistUpvoteSchema.parse(row),
-			'playlist_id'
+			(row) => PhrasePlaylistUpvoteSchema.parse(row)
 		)
 
 		channel = bindRows(channel, 'user_deck', mine, decksCollection, (row) =>

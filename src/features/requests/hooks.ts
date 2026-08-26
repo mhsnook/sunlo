@@ -13,8 +13,10 @@ import {
 } from './collections'
 import type {
 	CommentPhraseLinkType,
+	CommentUpvoteType,
 	MessageTagType,
 	PhraseRequestType,
+	PhraseRequestUpvoteType,
 	RequestCommentType,
 } from './schemas'
 
@@ -82,15 +84,22 @@ export function useAnyonesPhraseRequests(
 	)
 }
 
-/** Whether the current user has upvoted this request. */
-export const useHasRequestUpvote = (requestId: uuid): boolean =>
-	!!useLiveQuery(
+/**
+ * This user's upvote row for a request, upvoted or un-upvoted. Un-upvoting
+ * flips `deleted` rather than removing the row, so a caller reads
+ * `upvote?.deleted === false` for "has upvoted" and passes the row itself to
+ * decide between an insert and an update.
+ */
+export const useMyRequestUpvote = (
+	requestId: uuid
+): PhraseRequestUpvoteType | undefined =>
+	useLiveQuery(
 		(q) =>
 			q
 				.from({ upvote: phraseRequestUpvotesCollection })
 				.where(({ upvote }) => eq(upvote.request_id, requestId)),
 		[requestId]
-	).data?.length
+	).data?.[0]
 
 /** Look up a single comment by ID. Returns undefined when no id is given. */
 export const useOneComment = (
@@ -124,15 +133,17 @@ export const useCommentPhraseLinks = (
 		[commentId]
 	)
 
-/** Whether the current user has upvoted this comment. */
-export const useHasCommentUpvote = (commentId: uuid): boolean =>
-	!!useLiveQuery(
+/** This user's upvote row for a comment — see {@link useMyRequestUpvote}. */
+export const useMyCommentUpvote = (
+	commentId: uuid
+): CommentUpvoteType | undefined =>
+	useLiveQuery(
 		(q) =>
 			q
 				.from({ upvote: commentUpvotesCollection })
 				.where(({ upvote }) => eq(upvote.comment_id, commentId)),
 		[commentId]
-	).data?.length
+	).data?.[0]
 
 /**
  * A "set" of phrases derived from a request tag: every phrase contributed as

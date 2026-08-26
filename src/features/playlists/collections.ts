@@ -11,7 +11,8 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
-import { deleteSyncedRows, writeSyncedRows } from '@/lib/collections/synced-row'
+import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
 import type { TablesUpdate } from '@/types/supabase'
 import { should } from '@scenetest/checks/react'
 
@@ -122,22 +123,22 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 			console.log(`Loading phrasePlaylistUpvotesCollection`)
 			const { data } = await supabase
 				.from('phrase_playlist_upvote')
-				.select('playlist_id')
-				.eq('deleted', false)
+				.select('playlist_id, deleted')
 				.throwOnError()
 			return data?.map((item) => PhrasePlaylistUpvoteSchema.parse(item)) ?? []
 		},
 		getKey: (item: PhrasePlaylistUpvoteType) => item.playlist_id,
 		queryClient,
 		schema: PhrasePlaylistUpvoteSchema,
-		// One-per-user enforced by the (playlist_id, uid) PK; upvote_count kept by
-		// a DB trigger. The collection holds live upvotes only: a row the user
-		// un-upvoted stays in the table with `deleted` set, and never loads.
+		// One-per-user enforced by the (playlist_id, uid) PK; upvote_count kept by a
+		// DB trigger. Un-upvoting flips `deleted`, so the row stays in the
+		// collection and live queries filter it. `guard_upvote_update` rejects
+		// an update touching any other column.
 		onInsert: async ({ transaction }) => {
-			// Upsert, not insert: un-upvoting leaves the row in place with
-			// `deleted` set, so upvoting again revives that row rather than
-			// hitting the (playlist_id, uid) primary key. `uid` is in the payload
-			// so the conflict target is explicit.
+			// Upsert, not insert: a row this client has not loaded may already
+			// exist with `deleted` set, and an insert would hit the (playlist_id, uid)
+			// primary key. `uid` is in the payload so the conflict target is
+			// explicit.
 			const uid = (await supabase.auth.getSession()).data.session?.user.id
 			const ids = transaction.mutations.map((m) => m.modified.playlist_id)
 			const { data } = await supabase
@@ -146,7 +147,7 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 					ids.map((playlist_id) => ({ playlist_id, uid, deleted: false })),
 					{ onConflict: 'playlist_id,uid' }
 				)
-				.select('playlist_id')
+				.select('playlist_id, deleted')
 				.throwOnError()
 			const rows =
 				data?.map((row) => PhrasePlaylistUpvoteSchema.parse(row)) ?? []
@@ -159,28 +160,29 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 			writeSyncedRows(phrasePlaylistUpvotesCollection, rows)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			// Soft delete. A real DELETE broadcasts to every subscriber of the
-			// table without an RLS check, so other users' clients would drop
-			// their own upvote row — see docs/mutations.md and issue #768.
-			const ids = transaction.mutations.map((m) => m.original.playlist_id)
-			const { data } = await supabase
-				.from('phrase_playlist_upvote')
-				.update({ deleted: true })
-				.in('playlist_id', ids)
-				.select('playlist_id')
-				.throwOnError()
-			const rows =
-				data?.map((row) => PhrasePlaylistUpvoteSchema.parse(row)) ?? []
-			should(
-				'phrase_playlist_upvote soft delete flagged one row per upvote removed',
-				rows.length === ids.length &&
-					ids.every((id) => rows.some((row) => row.playlist_id === id)),
-				{ submitted: ids, returned: rows }
-			)
-			deleteSyncedRows(
-				phrasePlaylistUpvotesCollection,
-				rows.map((row) => row.playlist_id)
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				groupUpdatesByChanges(transaction.mutations).map(
+					async ({ changes, keys }) => {
+						const { data } = await supabase
+							.from('phrase_playlist_upvote')
+							.update(changes)
+							.in('playlist_id', keys)
+							.select('playlist_id, deleted')
+							.throwOnError()
+						const rows =
+							data?.map((row) => PhrasePlaylistUpvoteSchema.parse(row)) ?? []
+						should(
+							'phrase_playlist_upvote update returned one row per upvote changed',
+							rows.length === keys.length &&
+								keys.every((key) =>
+									rows.some((row) => row.playlist_id === key)
+								),
+							{ submitted: { changes, keys }, returned: rows }
+						)
+						writeSyncedRows(phrasePlaylistUpvotesCollection, rows)
+					}
+				)
 			)
 			return { refetch: false }
 		},
