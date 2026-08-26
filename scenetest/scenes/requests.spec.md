@@ -76,13 +76,7 @@ learner:
 
 // The permalink points back at the request with the comment id in `focus`, so
 // the link opens the thread scrolled to that comment. Writing to the clipboard
-// needs a browser permission, granted for every actor in scenetest/config.ts.
-//
-// @@TODO `see` rather than `seeToast`, which waits for the toast to disappear.
-// The context menu is right-aligned, so if the mouse is left nearby, sonner
-// reads it as a hover, pauses the dismiss timer, and the toast never goes away.
-// The preceding `openTo` clears any earlier toast, and an error toast fails the
-// scene through errorSelectors.
+// needs a browser permission, which scenetest grants every actor by default.
 
 learner:
 
@@ -94,4 +88,4 @@ learner:
 - up
 - click copy-link-menu-item
 - up
-- see toast-success
+- seeToast toast-success

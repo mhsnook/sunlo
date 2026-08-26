@@ -171,10 +171,8 @@ test('admin bulk-adds messages', async ({ actor, team }) => {
 			.typeInto('bulk-add-textarea', `${promptA}\n\n${promptB}`)
 			.click('bulk-add-submit')
 			.up()
+			.seeToast('toast-success')
 
-		// No seeToast here: the success toast can outlive its 5s dismissal window
-		// under CI load, and the DB poll below is the authoritative assertion that
-		// the optimistic action actually persisted both requests.
 		const created = await pollUntil(async () => {
 			const { data } = await supabase
 				.from('phrase_request')
