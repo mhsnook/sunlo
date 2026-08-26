@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.33 - Drop the Deprecated `pgjwt` Extension
+
+_26 August, 2026_
+
+### Improvements
+
+- **The deprecated `pgjwt` extension is dropped.** Nothing in the schema signs a JWT in SQL — the one outbound authenticated call forwards the caller's PostgREST authorization header — so the extension goes before Supabase removes it.
+
+### Migrations
+
+- `20260826120000_drop_pgjwt.sql` — drops the `pgjwt` extension, which Supabase deprecated and no function, view, policy or trigger in the schema ever called.
+
 ## v0.32 - Tailwind Palette Replaces OKLCH; Decks as Rows; Soft-Delete Upvotes
 
 _25 August, 2026_
