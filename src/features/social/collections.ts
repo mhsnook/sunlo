@@ -90,6 +90,32 @@ export const chatMessagesCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: ChatMessageSchema,
+		// Every chat message the app writes lands here — see `sendToFriends`.
+		onInsert: async ({ transaction }) => {
+			const submitted = transaction.mutations.map(
+				(m) => m.modified as ChatMessageType
+			)
+			const { data } = await supabase
+				.from('chat_message')
+				// The server stamps `created_at`. The optimistic row carries a
+				// local guess only so the thread orders correctly before the
+				// write-back lands.
+				.insert(submitted.map(({ created_at: _created_at, ...row }) => row))
+				.select()
+				.throwOnError()
+			const rows = data?.map((row) => ChatMessageSchema.parse(row)) ?? []
+			should(
+				'chat_message insert returned one row per message sent',
+				rows.length === submitted.length &&
+					submitted.every((sent) => rows.some((row) => row.id === sent.id)),
+				{ submitted, returned: rows }
+			)
+			// The write-back is what `refetch: false` promises. Upsert, because
+			// this row's own realtime frame can land before the insert resolves.
+			for (const row of rows)
+				writeSyncedRow(chatMessagesCollection, row.id, row)
+			return { refetch: false }
+		},
 		// Read receipts stamp one `read_at` across every unread message from a
 		// friend, so grouping collapses the batch to a single request. The
 		// reader doesn't wait on it, so the error toast belongs here.

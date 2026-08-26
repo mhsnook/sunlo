@@ -170,7 +170,7 @@ function PickerBody({
 	setSearch,
 	searchRef,
 	onSend,
-	isPending,
+	isPending = false,
 }: {
 	friendsOverride?: RelationsFullType[]
 	preview?: ReactNode
@@ -180,7 +180,7 @@ function PickerBody({
 	setSearch: Dispatch<SetStateAction<string>>
 	searchRef: RefObject<HTMLInputElement | null>
 	onSend: (uids: uuid[]) => void
-	isPending: boolean
+	isPending?: boolean
 }) {
 	// These live queries run only while the picker is open (PickerBody is
 	// portal-mounted by the dialog), so closed pickers on list items cost

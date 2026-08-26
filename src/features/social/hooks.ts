@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 
 import type { Tables } from '@/types/supabase'
@@ -384,16 +383,59 @@ export type ShareableContent =
 	| { message_type: 'request'; request_id: uuid }
 	| { message_type: 'playlist'; playlist_id: uuid }
 
-const SHARE_SUCCESS_TOAST: Record<ShareableContent['message_type'], string> = {
+export const SHARE_SUCCESS_TOAST: Record<
+	ShareableContent['message_type'],
+	string
+> = {
 	recommendation: 'Phrase sent to friend',
 	request: 'Request sent to friend',
 	playlist: 'Playlist sent to friend',
 }
 
 /**
- * Send a phrase / request / playlist to one or more friends as a chat message.
- * Shared by the three "send in chat" surfaces — they differ only in the
- * `message_type` + foreign key carried in `content`.
+ * Send one piece of shared content to one or more friends.
+ *
+ * Every chat message the app writes goes through here, so the row shape and
+ * its null foreign keys are stated once. The write is optimistic: the message
+ * is in the thread before the server answers, and a rejected one rolls back
+ * with the error toast its caller attaches to the returned transaction.
+ */
+export const sendToFriends = ({
+	senderUid,
+	recipientUids,
+	lang,
+	content,
+}: {
+	senderUid: uuid
+	recipientUids: Array<uuid>
+	lang: string
+	content: ShareableContent
+}) =>
+	chatMessagesCollection.insert(
+		recipientUids.map((recipient_uid) =>
+			ChatMessageSchema.parse({
+				// Client-generated so the server's row replaces this one rather
+				// than joining it. `created_at` is a local guess the write-back
+				// overwrites with the server's stamp.
+				id: crypto.randomUUID(),
+				created_at: new Date().toISOString(),
+				sender_uid: senderUid,
+				recipient_uid,
+				lang,
+				phrase_id: null,
+				request_id: null,
+				playlist_id: null,
+				related_message_id: null,
+				read_at: null,
+				...content,
+			})
+		)
+	)
+
+/**
+ * Send a phrase / request / playlist to friends from one of the three share
+ * dialogs. They differ only in the `content` they carry, and each closes
+ * itself through `onSuccess` as soon as the messages are in the thread.
  */
 export const useSendToFriends = (
 	lang: string,
@@ -401,28 +443,24 @@ export const useSendToFriends = (
 	{ onSuccess }: { onSuccess?: () => void } = {}
 ) => {
 	const userId = useUserId()
-	return useMutation({
-		mutationKey: ['send-to-friend', lang, content],
-		mutationFn: async (friendUids: uuid[]) => {
-			if (!userId) throw new Error('User not logged in')
-			const inserts = friendUids.map((recipient_uid) => ({
-				sender_uid: userId,
-				recipient_uid,
-				lang,
-				...content,
-			}))
-			const { data } = await supabase
-				.from('chat_message')
-				.insert(inserts)
-				.throwOnError()
-			return data
-		},
-		onSuccess: () => {
-			onSuccess?.()
-			toastSuccess(SHARE_SUCCESS_TOAST[content.message_type])
-		},
-		onError: () => toastError('Something went wrong'),
-	})
+	const send = (recipientUids: Array<uuid>) => {
+		if (!userId) return
+		const tx = sendToFriends({
+			senderUid: userId,
+			recipientUids,
+			lang,
+			content,
+		})
+		onSuccess?.()
+		tx.isPersisted.promise.then(
+			() => toastSuccess(SHARE_SUCCESS_TOAST[content.message_type]),
+			(error: unknown) => {
+				console.log(`Failed to send to friends:`, error, content)
+				toastError('Something went wrong')
+			}
+		)
+	}
+	return { send }
 }
 
 /** Subscribe to realtime friend-request and chat-message events. */

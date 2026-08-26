@@ -40,6 +40,8 @@ export {
 	type ChatEntry,
 	markChatRead,
 	useSendToFriends,
+	sendToFriends,
+	SHARE_SUCCESS_TOAST,
 	type ShareableContent,
 	useSocialRealtime,
 } from './hooks'

@@ -20,7 +20,7 @@ function SendPhraseDialog({
 	onOpenChange: (open: boolean) => void
 	trigger?: ReactNode
 }) {
-	const mutation = useSendToFriends(
+	const { send } = useSendToFriends(
 		phrase.lang,
 		{ message_type: 'recommendation', phrase_id: phrase.id },
 		{ onSuccess: () => onOpenChange(false) }
@@ -35,8 +35,7 @@ function SendPhraseDialog({
 			authTitle="Login to Send"
 			authMessage="You need to be logged in to send phrases to friends."
 			preview={<PhrasePreviewChip phrase={phrase} />}
-			onSend={(uids) => mutation.mutate(uids)}
-			isPending={mutation.isPending}
+			onSend={send}
 		/>
 	)
 }
