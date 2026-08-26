@@ -15,18 +15,16 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 	const handleClick = (e: MouseEvent) => {
 		e.stopPropagation()
 		requireAuth(() => {
-			void phrasePlaylistUpvotesCollection.preload().then(() => {
-				const tx = hasUpvoted
-					? phrasePlaylistUpvotesCollection.delete(playlist.id)
-					: phrasePlaylistUpvotesCollection.insert({ playlist_id: playlist.id })
-				tx.isPersisted.promise.then(
-					() => toastSuccess(hasUpvoted ? 'Vote removed' : 'Vote added!'),
-					(err: unknown) => {
-						const message = err instanceof Error ? err.message : 'unknown error'
-						toastError(`Failed to update upvote: ${message}`)
-					}
-				)
-			})
+			const tx = hasUpvoted
+				? phrasePlaylistUpvotesCollection.delete(playlist.id)
+				: phrasePlaylistUpvotesCollection.insert({ playlist_id: playlist.id })
+			tx.isPersisted.promise.then(
+				() => toastSuccess(hasUpvoted ? 'Vote removed' : 'Vote added!'),
+				(err: unknown) => {
+					const message = err instanceof Error ? err.message : 'unknown error'
+					toastError(`Failed to update upvote: ${message}`)
+				}
+			)
 		}, 'Please log in to vote on playlists')
 	}
 

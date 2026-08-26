@@ -15,14 +15,12 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 	const handleClick = (e: MouseEvent) => {
 		e.stopPropagation()
 		requireAuth(() => {
-			void commentUpvotesCollection.preload().then(() => {
-				const tx = hasUpvoted
-					? commentUpvotesCollection.delete(comment.id)
-					: commentUpvotesCollection.insert({ comment_id: comment.id })
-				tx.isPersisted.promise.catch((err: unknown) => {
-					const message = err instanceof Error ? err.message : 'unknown error'
-					toastError(`Failed to update upvote: ${message}`)
-				})
+			const tx = hasUpvoted
+				? commentUpvotesCollection.delete(comment.id)
+				: commentUpvotesCollection.insert({ comment_id: comment.id })
+			tx.isPersisted.promise.catch((err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to update upvote: ${message}`)
 			})
 		}, 'Please log in to vote on comments')
 	}
