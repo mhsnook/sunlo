@@ -44,6 +44,8 @@ PGSOCK="${PG_HOME}/sock"
 PGPORT="54399"
 DBNAME="sunlo"
 PGVECTOR_VERSION="v0.8.0"      # apt ships 0.6.0; the dump needs halfvec/sparsevec (>=0.7)
+# Supabase extensions with no native build. See dev-native/extensions/README.md.
+FAKE_EXTENSIONS="pg_net supabase_vault pg_graphql pgjwt pg_cron pgsodium"
 DB_URL="postgresql://postgres@127.0.0.1:${PGPORT}/${DBNAME}"
 
 PGBIN="$(echo /usr/lib/postgresql/*/bin | tr ' ' '\n' | sort -V | tail -1)"
@@ -89,19 +91,29 @@ ensure_pgvector() {
 }
 
 install_fake_extensions() {
-  # Empty, relocatable stubs so `create extension <name>` succeeds. The objects a
-  # couple of functions actually reference live in bootstrap.sql, not here.
+  # Empty stubs so `create extension <name>` succeeds. The objects a couple of
+  # functions actually reference live in bootstrap.sql, not here.
   require_root install_fake_extensions
-  local n
-  for n in pg_net supabase_vault pg_graphql pgjwt pg_cron; do
+  local n placement
+  for n in ${FAKE_EXTENSIONS}; do
+    # pgsodium is the one stub that has to name a schema. base.sql creates it as
+    # a bare `create extension if not exists "pgsodium";`, and the dump runs with
+    # an empty search_path, so a relocatable stub has nowhere to land and the
+    # statement fails with "no schema has been selected to create in". The stub
+    # holds no objects, so the schema it names is nominal.
+    if [ "${n}" = "pgsodium" ]; then
+      placement="relocatable = false"$'\n'"schema = 'public'"
+    else
+      placement="relocatable = true"
+    fi
     cat > "${EXTDIR}/${n}.control" <<CTL
 comment = 'native-dev stub for ${n} (schema/migration/type work only, no runtime behaviour)'
 default_version = '1.0'
-relocatable = true
+${placement}
 CTL
     echo "-- native-dev stub: no objects (see supabase/dev-native/bootstrap.sql)" > "${EXTDIR}/${n}--1.0.sql"
   done
-  log "installed fake extension stubs: pg_net supabase_vault pg_graphql pgjwt pg_cron"
+  log "installed fake extension stubs: ${FAKE_EXTENSIONS}"
 }
 
 init_cluster() {
