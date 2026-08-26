@@ -443,10 +443,12 @@ export const useSocialRealtime = () => {
 				},
 				(payload) => {
 					const row = FriendRequestActionSchema.parse(payload.new)
+					// Only the other party's actions are news. Your own frame
+					// echoes back here too, and `useFriendRequestAction` has
+					// already toasted it — telling you twice is what the
+					// `learner3 accepts a friend request` scene caught.
 					if (row.action_type === 'accept' && row.uid_for === userId)
 						toastSuccess('Friend request accepted')
-					if (row.action_type === 'accept' && row.uid_by === userId)
-						toastSuccess('You are now connected')
 					writeSyncedRow(friendRequestActionsCollection, row.id, row)
 				}
 			)
