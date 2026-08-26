@@ -1,17 +1,29 @@
 # Change Log
 
-## v0.33 - Drop the Deprecated `pgjwt` Extension
+## v0.33 - Every User Table Reads, Writes, and Syncs Directly, Closing #757 and #723; Drop `pgjwt`
 
 _26 August, 2026_
+
+### Refactors
+
+- **Every user-owned table now reads, writes, and syncs directly, closing epics #757 and #723.** Decks and cards made the jump in v0.32; this release finishes the rest — reviews, sessions, milestones, the profile, upvotes, and friend requests. No collection welds a derived column onto a view anymore, every one of them carries realtime, and `grep -rn "utils.refetch(" src/` now returns nothing: the app's last full-table refetch is gone.
+- **`friendSummariesCollection` folds from the action log instead of refetching a view (#777).** Every `friend_request_action` used to trigger a refetch of `friend_summary`; the client now folds the log itself, grouping by pair and taking the newest action per pair. The write is deliberately not optimistic — `validate_friend_request_action` can reject a transition, so the row lands in the collection only once the server confirms it, and `accept-invite`'s hand-rolled insert (which the RLS policy was rejecting) now goes through the same shared hook as every other action.
+- **The rest of #757's tail: write-backs, profile realtime, and one way into a collection's synced layer (#780).** `user_profile` now publishes over realtime, so a profile edit on one device reaches another without a refetch. Six handlers across three collections had returned `{ refetch: false }` without writing the server's row into the synced layer — realtime covered for them until the socket dropped; each now `.select()`s its write and writes the returned row down. `writeRealtimeRow` and the ad hoc write-back calls collapse into one `writeSyncedRow`/`writeSyncedRows` pair, `useUserRealtime` folds every binding (deck, card, notification, chat, upvote, profile) through one `bindRows` helper, and un-upvoting now flips the row's `deleted` flag in place instead of deleting it from the collection — `deleteSyncedRow`/`deleteSyncedRows` are gone, since nothing in the schema hard-deletes a user-owned row anymore. `reviewSessionsCollection` gains the `onInsert` it never had, so review-session creation goes through the collection like every other write.
 
 ### Improvements
 
 - **The deprecated `pgjwt` extension is dropped.** Nothing in the schema signs a JWT in SQL — the one outbound authenticated call forwards the caller's PostgREST authorization header — so the extension goes before Supabase removes it.
 - **`scripts/db-native.sh` stubs `pgsodium`, so a native reset loads `base.sql` again.** The regenerated dump creates the extension, which is enabled on production, and the script had no stub for it, so `reset` stopped at that line.
+- **CI's formatter check now gates on the files a PR actually touches, not the repo's total drift.** Diffing drift-list against drift-list let a file that was already unformatted cancel itself out of the comparison; the gate is now the intersection of the PR's own footprint with head's drift list.
+
+### Testing
+
+- **scenetest upgraded, 0.15.0 → 0.17.0.** `seeToast` now asserts a new toast appeared instead of waiting for it to also disappear, which drops three workarounds: a scene that fell back to a weaker assertion because sonner pauses a toast's dismiss timer under the pointer, a skipped assertion on bulk-add, and a Playwright-only device pool that existed only to grant clipboard permissions (scenetest grants them by default now). Full suite: 3549/3549 assertions, 153/161 scenes (8 skipped need the `search` edge function the local stack doesn't run).
 
 ### Migrations
 
 - `20260826120000_drop_pgjwt.sql` — drops the `pgjwt` extension, which Supabase deprecated and no function, view, policy or trigger in the schema ever called.
+- `20260826130000_enable_realtime_for_user_profile.sql` — adds `user_profile` to the `supabase_realtime` publication.
 
 ## v0.32 - Tailwind Palette Replaces OKLCH; Decks as Rows; Soft-Delete Upvotes
 
