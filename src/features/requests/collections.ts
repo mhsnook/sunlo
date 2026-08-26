@@ -21,7 +21,11 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
-import { deleteSyncedRow } from '@/lib/collections/realtime-row'
+import {
+	deleteSyncedRows,
+	rowMatches,
+	writeSyncedRows,
+} from '@/lib/collections/synced-row'
 import { should } from '@scenetest/checks/react'
 
 export const phraseRequestsCollection = createCollection(
@@ -51,20 +55,12 @@ export const phraseRequestsCollection = createCollection(
 						.eq('id', m.original.id)
 						.select()
 						.throwOnError()
-					// m.changes IS the optimistic collection value; confirming the
-					// server's returned row matches it proves client/server
-					// agreement. A soft-delete (deleted: true) may not be
-					// selectable back under RLS — `!row ||` skips the assertion
-					// rather than failing. The guard lives inside should() so the
-					// whole call strips cleanly from production builds.
-					const row = data?.[0] as Record<string, unknown> | undefined
+					// m.changes IS the optimistic collection value, so confirming the
+					// server's returned row matches it proves client/server agreement.
+					const row = data?.[0]
 					should(
 						`phrase_request ${m.original.id} server row matches the submitted update`,
-						!row ||
-							Object.entries(m.changes).every(
-								([k, v]) =>
-									k === 'updated_at' || k === 'created_at' || row[k] === v
-							),
+						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
 				})
@@ -117,8 +113,7 @@ export const phraseRequestUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.request_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows)
-				phraseRequestUpvotesCollection.utils.writeUpsert(row)
+			writeSyncedRows(phraseRequestUpvotesCollection, rows)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
@@ -140,8 +135,10 @@ export const phraseRequestUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.request_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows)
-				deleteSyncedRow(phraseRequestUpvotesCollection, row.request_id)
+			deleteSyncedRows(
+				phraseRequestUpvotesCollection,
+				rows.map((row) => row.request_id)
+			)
 			return { refetch: false }
 		},
 	})
@@ -173,17 +170,10 @@ export const commentsCollection = createCollection(
 						.eq('id', m.original.id)
 						.select()
 						.throwOnError()
-					// Confirm the server's returned row matches the optimistic
-					// edit. The row-guard lives inside should() so the whole call
-					// strips cleanly from production builds.
-					const row = data?.[0] as Record<string, unknown> | undefined
+					const row = data?.[0]
 					should(
 						`request_comment ${m.original.id} server row matches the submitted update`,
-						!row ||
-							Object.entries(m.changes).every(
-								([k, v]) =>
-									k === 'updated_at' || k === 'created_at' || row[k] === v
-							),
+						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
 				})
@@ -282,7 +272,7 @@ export const commentUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.comment_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows) commentUpvotesCollection.utils.writeUpsert(row)
+			writeSyncedRows(commentUpvotesCollection, rows)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
@@ -303,8 +293,10 @@ export const commentUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.comment_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows)
-				deleteSyncedRow(commentUpvotesCollection, row.comment_id)
+			deleteSyncedRows(
+				commentUpvotesCollection,
+				rows.map((row) => row.comment_id)
+			)
 			return { refetch: false }
 		},
 	})

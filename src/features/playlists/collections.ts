@@ -11,7 +11,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
-import { deleteSyncedRow } from '@/lib/collections/realtime-row'
+import { deleteSyncedRows, writeSyncedRows } from '@/lib/collections/synced-row'
 import type { TablesUpdate } from '@/types/supabase'
 import { should } from '@scenetest/checks/react'
 
@@ -156,8 +156,7 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.playlist_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows)
-				phrasePlaylistUpvotesCollection.utils.writeUpsert(row)
+			writeSyncedRows(phrasePlaylistUpvotesCollection, rows)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
@@ -179,8 +178,10 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.playlist_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows)
-				deleteSyncedRow(phrasePlaylistUpvotesCollection, row.playlist_id)
+			deleteSyncedRows(
+				phrasePlaylistUpvotesCollection,
+				rows.map((row) => row.playlist_id)
+			)
 			return { refetch: false }
 		},
 	})

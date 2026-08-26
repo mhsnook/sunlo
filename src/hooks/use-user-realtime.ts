@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import supabase from '@/lib/supabase-client'
-import { deleteSyncedRow, writeSyncedRow } from '@/lib/collections/realtime-row'
+import {
+	deleteSyncedRow,
+	writeSyncedRow,
+	type SyncedCollection,
+} from '@/lib/collections/synced-row'
 import { useUserId } from '@/lib/use-auth'
 import {
 	PhraseRequestUpvoteSchema,
@@ -25,40 +29,75 @@ import {
 } from '@/features/review/collections'
 import { DeckSchema, CardSchema } from '@/features/deck/schemas'
 import { decksCollection, cardsCollection } from '@/features/deck/collections'
+import { MyProfileSchema } from '@/features/profile/schemas'
+import { myProfileCollection } from '@/features/profile/collections'
 
-// The upvote tables soft-delete, so un-upvoting arrives as an UPDATE carrying
-// `deleted: true`, not as a DELETE. That matters: Supabase RLS-scopes INSERT
-// and UPDATE frames but broadcasts every DELETE to every subscriber, so the
-// old DELETE binding dropped this user's own upvote when a stranger un-upvoted
-// the same request (#768). See docs/mutations.md.
-function bindUpvote(
+/**
+ * Fold a table's INSERT and UPDATE frames into its collection.
+ *
+ * Every table on this channel is one the signed-in user owns, so every binding
+ * filters on `uid`. RLS already scopes the stream; the filter lets realtime
+ * discard a row before the policy check.
+ *
+ * No DELETE: Supabase RLS-scopes INSERT and UPDATE frames but broadcasts every
+ * DELETE to every subscriber, carrying only the replica identity. See
+ * docs/mutations.md.
+ */
+function bindRows<T extends object, TKey extends string>(
 	channel: RealtimeChannel,
 	table: string,
-	keyField: string,
-	onUpvote: (row: Record<string, unknown>) => void,
-	onUnUpvote: (key: string) => void
+	mine: string,
+	collection: SyncedCollection<T, TKey>,
+	parse: (row: unknown) => T
 ): RealtimeChannel {
-	const handle = (payload: { new: Record<string, unknown> }) => {
-		const row = payload.new
-		const key = row[keyField]
-		if (typeof key !== 'string') return
-		if (row.deleted === true) onUnUpvote(key)
-		else onUpvote(row)
+	const handle = (payload: { new: unknown }) => {
+		// Ahead of the write's own check, so a route that never loaded this
+		// collection doesn't parse frames it will throw away.
+		if (!collection.isReady()) return
+		writeSyncedRow(collection, parse(payload.new))
 	}
-	return channel
-		.on(
-			'postgres_changes',
-			{ event: 'INSERT', schema: 'public', table },
-			handle
-		)
-		.on(
-			'postgres_changes',
-			{ event: 'UPDATE', schema: 'public', table },
-			handle
-		)
+	return (['INSERT', 'UPDATE'] as const).reduce(
+		(ch, event) =>
+			ch.on(
+				'postgres_changes',
+				{ event, schema: 'public', table, filter: mine },
+				handle
+			),
+		channel
+	)
 }
 
-// Realtime for the user's own tables (#723): RLS scopes each stream to the
+/**
+ * The upvote tables soft-delete, so un-upvoting arrives as an UPDATE carrying
+ * `deleted: true`, not as a DELETE.
+ */
+function bindUpvote<T extends object, TKey extends string>(
+	channel: RealtimeChannel,
+	table: string,
+	mine: string,
+	collection: SyncedCollection<T, TKey>,
+	parse: (row: unknown) => T,
+	keyField: string
+): RealtimeChannel {
+	const handle = (payload: { new: Record<string, unknown> }) => {
+		if (!collection.isReady()) return
+		const key = payload.new[keyField]
+		if (typeof key !== 'string') return
+		if (payload.new.deleted === true) deleteSyncedRow(collection, key as TKey)
+		else writeSyncedRow(collection, parse(payload.new))
+	}
+	return (['INSERT', 'UPDATE'] as const).reduce(
+		(ch, event) =>
+			ch.on(
+				'postgres_changes',
+				{ event, schema: 'public', table, filter: mine },
+				handle
+			),
+		channel
+	)
+}
+
+// Realtime for the user's own tables: RLS scopes each stream to the
 // subscriber, so we fold events straight into their collections. Subscribed in
 // the `_user` layout, torn down on sign-out.
 export const useUserRealtime = () => {
@@ -67,123 +106,68 @@ export const useUserRealtime = () => {
 	useEffect(() => {
 		if (!userId) return
 
+		const mine = `uid=eq.${userId}`
 		let channel = supabase.channel('user-tables-realtime')
 
 		channel = bindUpvote(
 			channel,
 			'phrase_request_upvote',
-			'request_id',
-			(row) => {
-				const upvote = PhraseRequestUpvoteSchema.parse(row)
-				writeSyncedRow(
-					phraseRequestUpvotesCollection,
-					upvote.request_id,
-					upvote
-				)
-			},
-			(key) => deleteSyncedRow(phraseRequestUpvotesCollection, key)
+			mine,
+			phraseRequestUpvotesCollection,
+			(row) => PhraseRequestUpvoteSchema.parse(row),
+			'request_id'
 		)
-
 		channel = bindUpvote(
 			channel,
 			'comment_upvote',
-			'comment_id',
-			(row) => {
-				const upvote = CommentUpvoteSchema.parse(row)
-				writeSyncedRow(commentUpvotesCollection, upvote.comment_id, upvote)
-			},
-			(key) => deleteSyncedRow(commentUpvotesCollection, key)
+			mine,
+			commentUpvotesCollection,
+			(row) => CommentUpvoteSchema.parse(row),
+			'comment_id'
 		)
-
 		channel = bindUpvote(
 			channel,
 			'phrase_playlist_upvote',
-			'playlist_id',
-			(row) => {
-				const upvote = PhrasePlaylistUpvoteSchema.parse(row)
-				writeSyncedRow(
-					phrasePlaylistUpvotesCollection,
-					upvote.playlist_id,
-					upvote
-				)
-			},
-			(key) => deleteSyncedRow(phrasePlaylistUpvotesCollection, key)
+			mine,
+			phrasePlaylistUpvotesCollection,
+			(row) => PhrasePlaylistUpvoteSchema.parse(row),
+			'playlist_id'
 		)
 
-		// No DELETE binding: the replica identity is the `id` primary key while
-		// this collection keys on `lang`, so a DELETE frame carries nothing we
-		// can map to a key. Nothing deletes a deck anyway — archiving is UPDATE.
-		channel = channel
-			.on(
-				'postgres_changes',
-				{ event: 'INSERT', schema: 'public', table: 'user_deck' },
-				(payload) =>
-					decksCollection.utils.writeUpsert(DeckSchema.parse(payload.new))
-			)
-			.on(
-				'postgres_changes',
-				{ event: 'UPDATE', schema: 'public', table: 'user_deck' },
-				(payload) =>
-					decksCollection.utils.writeUpsert(DeckSchema.parse(payload.new))
-			)
-
-		// No DELETE binding: nothing hard-deletes a card, and the frame would
-		// carry only the replica identity.
-		channel = channel
-			.on(
-				'postgres_changes',
-				{ event: 'INSERT', schema: 'public', table: 'user_card' },
-				(payload) => {
-					const row = CardSchema.parse(payload.new)
-					writeSyncedRow(cardsCollection, row.id, row)
-				}
-			)
-			.on(
-				'postgres_changes',
-				{ event: 'UPDATE', schema: 'public', table: 'user_card' },
-				(payload) => {
-					const row = CardSchema.parse(payload.new)
-					writeSyncedRow(cardsCollection, row.id, row)
-				}
-			)
-
-		// Reviews: append-only INSERTs plus rare correction UPDATEs (#724).
-		channel = channel
-			.on(
-				'postgres_changes',
-				{ event: 'INSERT', schema: 'public', table: 'user_card_review' },
-				(payload) =>
-					cardReviewsCollection.utils.writeUpsert(
-						CardReviewSchema.parse(payload.new)
-					)
-			)
-			.on(
-				'postgres_changes',
-				{ event: 'UPDATE', schema: 'public', table: 'user_card_review' },
-				(payload) =>
-					cardReviewsCollection.utils.writeUpsert(
-						CardReviewSchema.parse(payload.new)
-					)
-			)
-
-		// Review session (immutable, INSERT-only) + its append-only milestone log.
-		channel = channel
-			.on(
-				'postgres_changes',
-				{ event: 'INSERT', schema: 'public', table: 'user_review_session' },
-				(payload) =>
-					reviewSessionsCollection.utils.writeUpsert(
-						ReviewSessionSchema.parse(payload.new)
-					)
-			)
-			.on(
-				'postgres_changes',
-				{ event: 'INSERT', schema: 'public', table: 'user_review_milestone' },
-				(payload) =>
-					reviewMilestonesCollection.utils.writeUpsert(
-						ReviewMilestoneSchema.parse(payload.new)
-					)
-			)
+		channel = bindRows(channel, 'user_deck', mine, decksCollection, (row) =>
+			DeckSchema.parse(row)
+		)
+		channel = bindRows(channel, 'user_card', mine, cardsCollection, (row) =>
+			CardSchema.parse(row)
+		)
+		channel = bindRows(
+			channel,
+			'user_card_review',
+			mine,
+			cardReviewsCollection,
+			(row) => CardReviewSchema.parse(row)
+		)
+		channel = bindRows(
+			channel,
+			'user_review_session',
+			mine,
+			reviewSessionsCollection,
+			(row) => ReviewSessionSchema.parse(row)
+		)
+		channel = bindRows(
+			channel,
+			'user_review_milestone',
+			mine,
+			reviewMilestonesCollection,
+			(row) => ReviewMilestoneSchema.parse(row)
+		)
+		channel = bindRows(
+			channel,
+			'user_profile',
+			mine,
+			myProfileCollection,
+			(row) => MyProfileSchema.parse(row)
+		)
 
 		channel.subscribe()
 

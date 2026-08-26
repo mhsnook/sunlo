@@ -58,7 +58,7 @@ This is the exception, not the default. Most writes are safe to show immediately
 
 **Reasonable exceptions:**
 
-- **Realtime sync handlers** writing supabase channel events into a collection (`writeSyncedRow(chatMessagesCollection, ...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
+- **Realtime sync handlers** writing supabase channel events into a collection (`writeSyncedRow(chatMessagesCollection, row)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
 
 ## The `{ refetch: false }` contract
@@ -121,22 +121,41 @@ const { data } = await supabase
 const row = data?.[0]
 should(
 	`user_card ${id} server row matches the submitted update`,
-	!row ||
-		Object.entries(changes).every(
-			([k, v]) => k === 'updated_at' || row[k] === v
-		),
+	rowMatches(changes, row),
 	{ submitted: changes, returned: row }
 )
-if (row) cardsCollection.utils.writeUpdate(row)
+if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
 ```
 
-`should()` reports to the observer panel in dev and test, and the Vite plugin strips it from production builds. See `docs/testing.md`.
+`rowMatches(submitted, row)` is that comparison: every field the handler submitted comes back unchanged on the server's row. A missing row passes (a soft delete may not be selectable back under RLS), and `created_at` / `updated_at` are the server's to set. `allRowsMatch(submitted, returned)` is the insert-handler form — one matching row back per row sent.
+
+`should()` reports to the observer panel in dev and test, and the Vite plugin strips it from production builds, arguments included. See `docs/testing.md`.
+
+### One way into the synced layer
+
+Every write to the synced layer goes through `src/lib/collections/synced-row.ts`, whether the row came back on a mutation's ack or arrived as a realtime frame:
+
+```typescript
+writeSyncedRow(collection, row) // writeSyncedRows(collection, rows) for many
+deleteSyncedRow(collection, key) // deleteSyncedRows(collection, keys)
+```
+
+Pass the whole row — the key comes from the collection's own `getKeyFromItem`. Prefer the plural form for a handler's ack, which usually has more than one row. The rest (upsert semantics, skipping a row already held, batching, and what happens on a collection that never loaded) is the function's business, not the caller's.
+
+One thing the caller does owe it: **preload a collection in the route loader wherever its rows are displayed or written.** A write to a collection nothing has loaded is dropped, and the row waits for the next fetch.
+
+**Where the rule applies:** every persistence handler and every realtime binding. Two kinds of call site still use `collection.utils.*` directly, and both are deliberate:
+
+- **A partial update that must merge**, like `card-status.ts` patching `count_learners` onto a `phrasesCollection` row. `writeSyncedRow` upserts, and upsert **replaces** — it needs the whole row.
+- **The deprecated `useMutation` + `writeInsert`-in-`onSuccess` sites.** See #758; they pick the rule up as they move onto collection handlers.
+
+A new site outside those two is a sign the row should go through the collection.
 
 ### Realtime is a backstop, not the mechanism
 
 A realtime frame arrives after the database commits, so it carries the truth and is safe to write into the synced layer. But a collection that is only correct once the frame lands is wrong until then, and stays wrong whenever the socket is down. Make the handler correct on its own; let realtime cover the writes made by other clients and other devices.
 
-Use `writeSyncedRow(collection, key, row)` and `deleteSyncedRow(collection, key)` (`src/lib/collections/realtime-row.ts`) for INSERT and UPDATE frames. It upserts, because a frame can arrive for a row this client never fetched and `writeUpdate` throws on a key it cannot find. It also skips the write when every field already matches, which is this client's own mutation echoing back — writing it would re-run every live query for nothing.
+Bind frames with `bindRows(channel, table, collection, parse)` in `useUserRealtime`, which folds INSERT and UPDATE through `writeSyncedRow` (above).
 
 **INSERT and UPDATE frames are RLS-scoped; DELETE frames are not.** Supabase tests each subscriber's policies against the new row, so an insert or update reaches you only if you could have fetched that row yourself. It cannot do the same for a delete, because the row is already gone by then. So every delete on a published table reaches every subscriber of that table, whoever owned the row.
 
@@ -225,7 +244,7 @@ useEffect(() => {
 			},
 			(payload) => {
 				const row = ChatMessageSchema.parse(payload.new)
-				writeSyncedRow(chatMessagesCollection, row.id, row)
+				writeSyncedRow(chatMessagesCollection, row)
 			}
 		)
 		.subscribe()
