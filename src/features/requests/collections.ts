@@ -21,7 +21,8 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
-import { deleteSyncedRow } from '@/lib/collections/realtime-row'
+import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
+import { rowMatches, writeSyncedRows } from '@/lib/collections/synced-row'
 import { should } from '@scenetest/checks/react'
 
 export const phraseRequestsCollection = createCollection(
@@ -51,20 +52,12 @@ export const phraseRequestsCollection = createCollection(
 						.eq('id', m.original.id)
 						.select()
 						.throwOnError()
-					// m.changes IS the optimistic collection value; confirming the
-					// server's returned row matches it proves client/server
-					// agreement. A soft-delete (deleted: true) may not be
-					// selectable back under RLS — `!row ||` skips the assertion
-					// rather than failing. The guard lives inside should() so the
-					// whole call strips cleanly from production builds.
-					const row = data?.[0] as Record<string, unknown> | undefined
+					// m.changes IS the optimistic collection value, so confirming the
+					// server's returned row matches it proves client/server agreement.
+					const row = data?.[0]
 					should(
 						`phrase_request ${m.original.id} server row matches the submitted update`,
-						!row ||
-							Object.entries(m.changes).every(
-								([k, v]) =>
-									k === 'updated_at' || k === 'created_at' || row[k] === v
-							),
+						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
 				})
@@ -83,22 +76,22 @@ export const phraseRequestUpvotesCollection = createCollection(
 			console.log(`Loading phraseRequestUpvotesCollection`)
 			const { data } = await supabase
 				.from('phrase_request_upvote')
-				.select('request_id')
-				.eq('deleted', false)
+				.select('request_id, deleted')
 				.throwOnError()
 			return data?.map((item) => PhraseRequestUpvoteSchema.parse(item)) ?? []
 		},
 		getKey: (item: PhraseRequestUpvoteType) => item.request_id,
 		queryClient,
 		schema: PhraseRequestUpvoteSchema,
-		// One-per-user enforced by the (request_id, uid) PK; upvote_count kept by
-		// a DB trigger. The collection holds live upvotes only: a row the user
-		// un-upvoted stays in the table with `deleted` set, and never loads.
+		// One-per-user enforced by the (request_id, uid) PK; upvote_count kept by a
+		// DB trigger. Un-upvoting flips `deleted`, so the row stays in the
+		// collection and live queries filter it. `guard_upvote_update` rejects
+		// an update touching any other column.
 		onInsert: async ({ transaction }) => {
-			// Upsert, not insert: un-upvoting leaves the row in place with
-			// `deleted` set, so upvoting again revives that row rather than
-			// hitting the (request_id, uid) primary key. `uid` is in the payload
-			// so the conflict target is explicit.
+			// Upsert, not insert: a row this client has not loaded may already
+			// exist with `deleted` set, and the insert would hit the (request_id,
+			// uid) primary key. `uid` is in the payload so the conflict target
+			// is explicit.
 			const uid = (await supabase.auth.getSession()).data.session?.user.id
 			const ids = transaction.mutations.map((m) => m.modified.request_id)
 			const { data } = await supabase
@@ -107,7 +100,7 @@ export const phraseRequestUpvotesCollection = createCollection(
 					ids.map((request_id) => ({ request_id, uid, deleted: false })),
 					{ onConflict: 'request_id,uid' }
 				)
-				.select('request_id')
+				.select('request_id, deleted')
 				.throwOnError()
 			const rows =
 				data?.map((row) => PhraseRequestUpvoteSchema.parse(row)) ?? []
@@ -117,31 +110,31 @@ export const phraseRequestUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.request_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows)
-				phraseRequestUpvotesCollection.utils.writeUpsert(row)
+			writeSyncedRows(phraseRequestUpvotesCollection, rows)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			// Soft delete. A real DELETE broadcasts to every subscriber of the
-			// table without an RLS check, so other users' clients would drop
-			// their own upvote row — see docs/mutations.md and issue #768.
-			const ids = transaction.mutations.map((m) => m.original.request_id)
-			const { data } = await supabase
-				.from('phrase_request_upvote')
-				.update({ deleted: true })
-				.in('request_id', ids)
-				.select('request_id')
-				.throwOnError()
-			const rows =
-				data?.map((row) => PhraseRequestUpvoteSchema.parse(row)) ?? []
-			should(
-				'phrase_request_upvote soft delete flagged one row per upvote removed',
-				rows.length === ids.length &&
-					ids.every((id) => rows.some((row) => row.request_id === id)),
-				{ submitted: ids, returned: rows }
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				groupUpdatesByChanges(transaction.mutations).map(
+					async ({ changes, keys }) => {
+						const { data } = await supabase
+							.from('phrase_request_upvote')
+							.update(changes)
+							.in('request_id', keys)
+							.select('request_id, deleted')
+							.throwOnError()
+						const rows =
+							data?.map((row) => PhraseRequestUpvoteSchema.parse(row)) ?? []
+						should(
+							'phrase_request_upvote update returned one row per upvote changed',
+							rows.length === keys.length &&
+								keys.every((key) => rows.some((row) => row.request_id === key)),
+							{ submitted: { changes, keys }, returned: rows }
+						)
+						writeSyncedRows(phraseRequestUpvotesCollection, rows)
+					}
+				)
 			)
-			for (const row of rows)
-				deleteSyncedRow(phraseRequestUpvotesCollection, row.request_id)
 			return { refetch: false }
 		},
 	})
@@ -173,17 +166,10 @@ export const commentsCollection = createCollection(
 						.eq('id', m.original.id)
 						.select()
 						.throwOnError()
-					// Confirm the server's returned row matches the optimistic
-					// edit. The row-guard lives inside should() so the whole call
-					// strips cleanly from production builds.
-					const row = data?.[0] as Record<string, unknown> | undefined
+					const row = data?.[0]
 					should(
 						`request_comment ${m.original.id} server row matches the submitted update`,
-						!row ||
-							Object.entries(m.changes).every(
-								([k, v]) =>
-									k === 'updated_at' || k === 'created_at' || row[k] === v
-							),
+						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
 				})
@@ -248,23 +234,22 @@ export const commentUpvotesCollection = createCollection(
 			console.log(`Loading commentUpvotesCollection`)
 			const { data } = await supabase
 				.from('comment_upvote')
-				.select('comment_id')
-				.eq('deleted', false)
+				.select('comment_id, deleted')
 				.throwOnError()
 			return data?.map((item) => CommentUpvoteSchema.parse(item)) ?? []
 		},
-		// this is a one-column table consisting of comment IDs only
 		getKey: (item: CommentUpvoteType) => item.comment_id,
 		queryClient,
 		schema: CommentUpvoteSchema,
-		// One-per-user enforced by the (comment_id, uid) PK; upvote_count kept by
-		// a DB trigger. The collection holds live upvotes only: a row the user
-		// un-upvoted stays in the table with `deleted` set, and never loads.
+		// One-per-user enforced by the (comment_id, uid) PK; upvote_count kept by a
+		// DB trigger. Un-upvoting flips `deleted`, so the row stays in the
+		// collection and live queries filter it. `guard_upvote_update` rejects
+		// an update touching any other column.
 		onInsert: async ({ transaction }) => {
-			// Upsert, not insert: un-upvoting leaves the row in place with
-			// `deleted` set, so upvoting again revives that row rather than
-			// hitting the (comment_id, uid) primary key. `uid` is in the payload
-			// so the conflict target is explicit.
+			// Upsert, not insert: a row this client has not loaded may already
+			// exist with `deleted` set, and an insert would hit the (comment_id, uid)
+			// primary key. `uid` is in the payload so the conflict target is
+			// explicit.
 			const uid = (await supabase.auth.getSession()).data.session?.user.id
 			const ids = transaction.mutations.map((m) => m.modified.comment_id)
 			const { data } = await supabase
@@ -273,7 +258,7 @@ export const commentUpvotesCollection = createCollection(
 					ids.map((comment_id) => ({ comment_id, uid, deleted: false })),
 					{ onConflict: 'comment_id,uid' }
 				)
-				.select('comment_id')
+				.select('comment_id, deleted')
 				.throwOnError()
 			const rows = data?.map((row) => CommentUpvoteSchema.parse(row)) ?? []
 			should(
@@ -282,38 +267,36 @@ export const commentUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.comment_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			for (const row of rows) commentUpvotesCollection.utils.writeUpsert(row)
+			writeSyncedRows(commentUpvotesCollection, rows)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			// Soft delete. A real DELETE broadcasts to every subscriber of the
-			// table without an RLS check, so other users' clients would drop
-			// their own upvote row — see docs/mutations.md and issue #768.
-			const ids = transaction.mutations.map((m) => m.original.comment_id)
-			const { data } = await supabase
-				.from('comment_upvote')
-				.update({ deleted: true })
-				.in('comment_id', ids)
-				.select('comment_id')
-				.throwOnError()
-			const rows = data?.map((row) => CommentUpvoteSchema.parse(row)) ?? []
-			should(
-				'comment_upvote soft delete flagged one row per upvote removed',
-				rows.length === ids.length &&
-					ids.every((id) => rows.some((row) => row.comment_id === id)),
-				{ submitted: ids, returned: rows }
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				groupUpdatesByChanges(transaction.mutations).map(
+					async ({ changes, keys }) => {
+						const { data } = await supabase
+							.from('comment_upvote')
+							.update(changes)
+							.in('comment_id', keys)
+							.select('comment_id, deleted')
+							.throwOnError()
+						const rows =
+							data?.map((row) => CommentUpvoteSchema.parse(row)) ?? []
+						should(
+							'comment_upvote update returned one row per upvote changed',
+							rows.length === keys.length &&
+								keys.every((key) => rows.some((row) => row.comment_id === key)),
+							{ submitted: { changes, keys }, returned: rows }
+						)
+						writeSyncedRows(commentUpvotesCollection, rows)
+					}
+				)
 			)
-			for (const row of rows)
-				deleteSyncedRow(commentUpvotesCollection, row.comment_id)
 			return { refetch: false }
 		},
 	})
 )
 
-// `message` is the cross-language object behind each phrase_request. Today
-// it's 1:1 with a request (auto-created by a DB trigger on insert), but
-// holds the tag links and will later group reposts of the same underlying
-// message across languages. See migration 20260526120000.
 export const messagesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'messages',

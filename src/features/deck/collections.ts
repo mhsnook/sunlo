@@ -3,6 +3,12 @@ import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { DeckSchema, type DeckType, CardSchema, type CardType } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import {
+	allRowsMatch,
+	rowMatches,
+	writeSyncedRow,
+	writeSyncedRows,
+} from '@/lib/collections/synced-row'
 import { should } from '@scenetest/checks/react'
 import { sortDecksByCreation } from '@/lib/utils'
 import type { TablesUpdate } from '@/types/supabase'
@@ -34,14 +40,16 @@ export const decksCollection = createCollection(
 				.insert(langs.map((lang) => ({ lang })))
 				.select()
 				.throwOnError()
-			const rows = data?.map((row) => DeckSchema.parse(row)) ?? []
+			const returned = data?.map((row) => DeckSchema.parse(row)) ?? []
 			should(
 				'user_deck insert returned one row per deck the optimistic insert added',
-				rows.length === langs.length &&
-					langs.every((lang) => rows.some((row) => row.lang === lang)),
-				{ submitted: langs, returned: rows }
+				allRowsMatch(
+					langs.map((lang) => ({ lang })),
+					returned
+				),
+				{ submitted: langs, returned }
 			)
-			for (const row of rows) decksCollection.utils.writeInsert(row)
+			writeSyncedRows(decksCollection, returned)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
@@ -57,19 +65,13 @@ export const decksCollection = createCollection(
 						.throwOnError()
 					// m.changes IS the optimistic collection value, so confirming the
 					// server's returned row matches it proves client/server agreement.
-					// The row-guard is inside should() so the whole call strips
-					// cleanly from production builds.
-					const row = data?.[0] as Record<string, unknown> | undefined
+					const row = data?.[0]
 					should(
 						`user_deck (${m.original.lang}) server row matches the submitted update`,
-						!row ||
-							Object.entries(changes).every(
-								([k, v]) =>
-									k === 'updated_at' || k === 'created_at' || row[k] === v
-							),
+						rowMatches(changes, row),
 						{ submitted: changes, returned: row }
 					)
-					if (row) decksCollection.utils.writeUpdate(DeckSchema.parse(row))
+					if (row) writeSyncedRow(decksCollection, DeckSchema.parse(row))
 				})
 			)
 			return { refetch: false }
@@ -99,24 +101,12 @@ export const cardsCollection = createCollection(
 				.select()
 				.throwOnError()
 			const returned = data?.map((row) => CardSchema.parse(row)) ?? []
-			// Confirm the server stored the same cards our optimistic insert
-			// added to the collection. Stripped from production by the Vite plugin.
 			should(
 				'user_card insert returned rows matching the optimistic cards',
-				returned.length === rows.length &&
-					rows.every((row) =>
-						returned.some(
-							(d) =>
-								d.id === row.id &&
-								d.status === row.status &&
-								d.phrase_id === row.phrase_id &&
-								d.direction === row.direction &&
-								d.lang === row.lang
-						)
-					),
+				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			for (const row of returned) cardsCollection.utils.writeInsert(row)
+			writeSyncedRows(cardsCollection, returned)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
@@ -129,20 +119,13 @@ export const cardsCollection = createCollection(
 						.eq('id', m.original.id)
 						.select()
 						.throwOnError()
-					// Confirm the server's returned row matches the optimistic
-					// update. The row-guard is inside should() so the whole call
-					// strips cleanly from production builds.
-					const row = data?.[0] as Record<string, unknown> | undefined
+					const row = data?.[0]
 					should(
 						`user_card ${m.original.id} server row matches the submitted update`,
-						!row ||
-							Object.entries(changes).every(
-								([k, v]) =>
-									k === 'updated_at' || k === 'created_at' || row[k] === v
-							),
+						rowMatches(changes, row),
 						{ submitted: changes, returned: row }
 					)
-					if (row) cardsCollection.utils.writeUpdate(CardSchema.parse(row))
+					if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
 				})
 			)
 			return { refetch: false }

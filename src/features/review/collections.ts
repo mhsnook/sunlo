@@ -10,6 +10,14 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import {
+	allRowsMatch,
+	rowMatches,
+	writeSyncedRow,
+	writeSyncedRows,
+} from '@/lib/collections/synced-row'
+import { should } from '@scenetest/checks/react'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const cardReviewsCollection = createCollection(
 	queryCollectionOptions({
@@ -32,21 +40,40 @@ export const cardReviewsCollection = createCollection(
 		// and carried on the row; the handler just persists it. CHECK constraints
 		// validate the values.
 		onInsert: async ({ transaction }) => {
-			await supabase
+			const rows = transaction.mutations.map((m) => m.modified)
+			const { data } = await supabase
 				.from('user_card_review')
-				.insert(transaction.mutations.map((m) => m.modified))
+				.insert(rows)
+				.select()
 				.throwOnError()
+			const returned = data?.map((row) => CardReviewSchema.parse(row)) ?? []
+			should(
+				'user_card_review insert returned one row per review submitted',
+				allRowsMatch(rows, returned),
+				{ submitted: rows, returned }
+			)
+			writeSyncedRows(cardReviewsCollection, returned)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'user_card_review'>
+					const { data } = await supabase
 						.from('user_card_review')
-						.update(m.changes)
+						.update(changes)
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
-				)
+					const row = data?.[0]
+					should(
+						`user_card_review ${m.original.id} server row matches the submitted update`,
+						rowMatches(changes, row),
+						{ submitted: changes, returned: row }
+					)
+					if (row)
+						writeSyncedRow(cardReviewsCollection, CardReviewSchema.parse(row))
+				})
 			)
 			return { refetch: false }
 		},
@@ -70,6 +97,24 @@ export const reviewSessionsCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: ReviewSessionSchema,
+		// A session is written once and never updated: the manifest is fixed, and
+		// progress lives in user_review_milestone.
+		onInsert: async ({ transaction }) => {
+			const rows = transaction.mutations.map((m) => m.modified)
+			const { data } = await supabase
+				.from('user_review_session')
+				.insert(rows)
+				.select()
+				.throwOnError()
+			const returned = data?.map((row) => ReviewSessionSchema.parse(row)) ?? []
+			should(
+				'user_review_session insert returned one row per session submitted',
+				allRowsMatch(rows, returned),
+				{ submitted: rows, returned }
+			)
+			writeSyncedRows(reviewSessionsCollection, returned)
+			return { refetch: false }
+		},
 	})
 )
 
@@ -93,10 +138,20 @@ export const reviewMilestonesCollection = createCollection(
 		// Append-only: the row (client-generated id + created_at) is built at the
 		// call site and just persisted here.
 		onInsert: async ({ transaction }) => {
-			await supabase
+			const rows = transaction.mutations.map((m) => m.modified)
+			const { data } = await supabase
 				.from('user_review_milestone')
-				.insert(transaction.mutations.map((m) => m.modified))
+				.insert(rows)
+				.select()
 				.throwOnError()
+			const returned =
+				data?.map((row) => ReviewMilestoneSchema.parse(row)) ?? []
+			should(
+				'user_review_milestone insert returned one row per milestone submitted',
+				allRowsMatch(rows, returned),
+				{ submitted: rows, returned }
+			)
+			writeSyncedRows(reviewMilestonesCollection, returned)
 			return { refetch: false }
 		},
 	})

@@ -3,30 +3,36 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
 import { phraseRequestUpvotesCollection } from '@/features/requests/collections'
-import { useHasRequestUpvote } from '@/features/requests/hooks'
+import { useMyRequestUpvote } from '@/features/requests/hooks'
 import { Button } from '@/components/ui/button'
 import { PhraseRequestType } from '@/features/requests/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 	const requireAuth = useRequireAuth()
-	const hasUpvoted = useHasRequestUpvote(request.id)
+	const upvote = useMyRequestUpvote(request.id)
+	const hasUpvoted = upvote?.deleted === false
 
 	const handleClick = (e: MouseEvent) => {
 		e.stopPropagation()
 		requireAuth(() => {
-			void phraseRequestUpvotesCollection.preload().then(() => {
-				const tx = hasUpvoted
-					? phraseRequestUpvotesCollection.delete(request.id)
-					: phraseRequestUpvotesCollection.insert({ request_id: request.id })
-				tx.isPersisted.promise.then(
-					() => toastSuccess(hasUpvoted ? 'Vote removed' : 'Vote added!'),
-					(err: unknown) => {
-						const message = err instanceof Error ? err.message : 'unknown error'
-						toastError(`Failed to update upvote: ${message}`)
-					}
-				)
-			})
+			// Un-upvoting flips `deleted` rather than removing the row, so the
+			// collection mirrors the table.
+			const tx = upvote
+				? phraseRequestUpvotesCollection.update(request.id, (draft) => {
+						draft.deleted = !draft.deleted
+					})
+				: phraseRequestUpvotesCollection.insert({
+						request_id: request.id,
+						deleted: false,
+					})
+			tx.isPersisted.promise.then(
+				() => toastSuccess(hasUpvoted ? 'Vote removed' : 'Vote added!'),
+				(err: unknown) => {
+					const message = err instanceof Error ? err.message : 'unknown error'
+					toastError(`Failed to update upvote: ${message}`)
+				}
+			)
 		}, 'Please log in to vote on requests')
 	}
 

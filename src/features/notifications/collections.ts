@@ -3,6 +3,7 @@ import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { NotificationSchema, type NotificationType } from './schemas'
 import { toastError } from '@/components/ui/sonner'
 import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import type { TablesUpdate } from '@/types/supabase'
@@ -41,10 +42,10 @@ export const notificationsCollection = createCollection(
 								.select()
 								.throwOnError()
 							// The write-back is what `refetch: false` promises.
-							for (const row of data ?? [])
-								notificationsCollection.utils.writeUpdate(
-									NotificationSchema.parse(row)
-								)
+							writeSyncedRows(
+								notificationsCollection,
+								(data ?? []).map((row) => NotificationSchema.parse(row))
+							)
 						}
 					)
 				)

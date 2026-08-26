@@ -3,26 +3,32 @@ import { toastError } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
 import { commentUpvotesCollection } from '@/features/requests/collections'
-import { useHasCommentUpvote } from '@/features/requests/hooks'
+import { useMyCommentUpvote } from '@/features/requests/hooks'
 import { Button } from '@/components/ui/button'
 import { RequestCommentType } from '@/features/requests/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function Upvote({ comment }: { comment: RequestCommentType }) {
 	const requireAuth = useRequireAuth()
-	const hasUpvoted = useHasCommentUpvote(comment.id)
+	const upvote = useMyCommentUpvote(comment.id)
+	const hasUpvoted = upvote?.deleted === false
 
 	const handleClick = (e: MouseEvent) => {
 		e.stopPropagation()
 		requireAuth(() => {
-			void commentUpvotesCollection.preload().then(() => {
-				const tx = hasUpvoted
-					? commentUpvotesCollection.delete(comment.id)
-					: commentUpvotesCollection.insert({ comment_id: comment.id })
-				tx.isPersisted.promise.catch((err: unknown) => {
-					const message = err instanceof Error ? err.message : 'unknown error'
-					toastError(`Failed to update upvote: ${message}`)
-				})
+			// Un-upvoting flips `deleted` rather than removing the row, so the
+			// collection mirrors the table.
+			const tx = upvote
+				? commentUpvotesCollection.update(comment.id, (draft) => {
+						draft.deleted = !draft.deleted
+					})
+				: commentUpvotesCollection.insert({
+						comment_id: comment.id,
+						deleted: false,
+					})
+			tx.isPersisted.promise.catch((err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to update upvote: ${message}`)
 			})
 		}, 'Please log in to vote on comments')
 	}

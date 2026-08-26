@@ -10,6 +10,8 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { rowMatches, writeSyncedRow } from '@/lib/collections/synced-row'
+import { should } from '@scenetest/checks/react'
 import type { TablesUpdate } from '@/types/supabase'
 
 export const publicProfilesCollection = createCollection(
@@ -69,13 +71,23 @@ export const myProfileCollection = createCollection(
 		schema: MyProfileSchema,
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'user_profile'>
+					const { data } = await supabase
 						.from('user_profile')
-						.update(m.changes as TablesUpdate<'user_profile'>)
+						.update(changes)
 						.eq('uid', m.original.uid)
+						.select()
 						.throwOnError()
-				)
+					const row = data?.[0]
+					should(
+						`user_profile ${m.original.uid} server row matches the submitted update`,
+						rowMatches(changes, row),
+						{ submitted: changes, returned: row }
+					)
+					if (row)
+						writeSyncedRow(myProfileCollection, MyProfileSchema.parse(row))
+				})
 			)
 			return { refetch: false }
 		},

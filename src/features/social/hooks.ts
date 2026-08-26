@@ -11,7 +11,7 @@ import {
 	type FriendRequestActionType,
 	type FriendRequestResponseType,
 } from './schemas'
-import { writeSyncedRow } from '@/lib/collections/realtime-row'
+import { writeSyncedRow } from '@/lib/collections/synced-row'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
@@ -491,7 +491,7 @@ export const useSocialRealtime = () => {
 					// `learner3 accepts a friend request` scene caught.
 					if (row.action_type === 'accept' && row.uid_for === userId)
 						toastSuccess('Friend request accepted')
-					writeSyncedRow(friendRequestActionsCollection, row.id, row)
+					writeSyncedRow(friendRequestActionsCollection, row)
 				}
 			)
 			.subscribe()
@@ -512,7 +512,7 @@ export const useSocialRealtime = () => {
 					const row = ChatMessageSchema.parse(
 						payload.new as Tables<'chat_message'>
 					)
-					writeSyncedRow(chatMessagesCollection, row.id, row)
+					writeSyncedRow(chatMessagesCollection, row)
 				}
 			)
 			.on(
@@ -526,7 +526,7 @@ export const useSocialRealtime = () => {
 					const row = ChatMessageSchema.parse(
 						payload.new as Tables<'chat_message'>
 					)
-					writeSyncedRow(chatMessagesCollection, row.id, row)
+					writeSyncedRow(chatMessagesCollection, row)
 				}
 			)
 			.subscribe()

@@ -117,6 +117,7 @@ function NewPlaylistPageContent() {
 			)
 			phrasePlaylistUpvotesCollection.utils.writeInsert({
 				playlist_id: data.playlist.id,
+				deleted: false,
 			})
 			invalidateFeed(lang)
 			toastSuccess(`Added new playlist with ${data.links.length} phrases`)

@@ -7,7 +7,7 @@ import {
 	type ChatMessageType,
 } from './schemas'
 import { should } from '@scenetest/checks/react'
-import { writeSyncedRow } from '@/lib/collections/realtime-row'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
 import { toastError } from '@/components/ui/sonner'
 import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
 import { queryClient } from '@/lib/query-client'
@@ -63,11 +63,10 @@ export const friendRequestActionsCollection = createCollection(
 			// The write-back is what `refetch: false` promises — and here it is
 			// also the only thing that puts the row in the collection, because
 			// `useFriendRequestAction` writes with `{ optimistic: false }`.
-			// `writeSyncedRow` rather than a bare writeInsert: this row's own
+			// `writeSyncedRows` rather than a bare writeInsert: this row's own
 			// realtime frame can land first, in which case the key is already
 			// here and `writeInsert` would throw.
-			for (const row of rows)
-				writeSyncedRow(friendRequestActionsCollection, row.id, row)
+			writeSyncedRows(friendRequestActionsCollection, rows)
 			return { refetch: false }
 		},
 	})
@@ -112,13 +111,7 @@ export const chatMessagesCollection = createCollection(
 			)
 			// The write-back is what `refetch: false` promises. Upsert, because
 			// this row's own realtime frame can land before the insert resolves.
-			// Batched: each write is otherwise its own commit, and a commit
-			// copies the whole collection into the query cache and re-runs every
-			// live query over it — eight recipients would pay that eight times.
-			chatMessagesCollection.utils.writeBatch(() => {
-				for (const row of rows)
-					writeSyncedRow(chatMessagesCollection, row.id, row)
-			})
+			writeSyncedRows(chatMessagesCollection, rows)
 			return { refetch: false }
 		},
 		// Read receipts stamp one `read_at` across every unread message from a
@@ -136,10 +129,10 @@ export const chatMessagesCollection = createCollection(
 								.select()
 								.throwOnError()
 							// The write-back is what `refetch: false` promises.
-							for (const row of data ?? [])
-								chatMessagesCollection.utils.writeUpdate(
-									ChatMessageSchema.parse(row)
-								)
+							writeSyncedRows(
+								chatMessagesCollection,
+								(data ?? []).map((row) => ChatMessageSchema.parse(row))
+							)
 						}
 					)
 				)
