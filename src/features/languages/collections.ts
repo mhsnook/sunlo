@@ -8,6 +8,8 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { allRowsMatch, writeSyncedRows } from '@/lib/collections/synced-row'
+import { should } from '@scenetest/checks/react'
 
 export const languagesCollection = createCollection(
 	queryCollectionOptions({
@@ -41,20 +43,25 @@ export const langTagsCollection = createCollection(
 		schema: LangTagSchema,
 		queryClient,
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const r = m.modified
-					await supabase
-						.from('tag')
-						.insert({
-							id: r.id,
-							name: r.name,
-							lang: r.lang,
-							added_by: r.added_by,
-						})
-						.throwOnError()
-				})
+			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
+				name: m.modified.name,
+				lang: m.modified.lang,
+				added_by: m.modified.added_by,
+			}))
+			const { data } = await supabase
+				.from('tag')
+				.insert(submitted)
+				.select()
+				.throwOnError()
+			const returned = data?.map((row) => LangTagSchema.parse(row)) ?? []
+			should(
+				'tag insert returned one row per tag the optimistic insert added',
+				allRowsMatch(submitted, returned),
+				{ submitted, returned }
 			)
+			// The write-back is what `refetch: false` promises.
+			writeSyncedRows(langTagsCollection, returned)
 			return { refetch: false }
 		},
 	})

@@ -12,7 +12,12 @@ import {
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
-import { writeSyncedRows } from '@/lib/collections/synced-row'
+import {
+	allRowsMatch,
+	rowMatches,
+	writeSyncedRow,
+	writeSyncedRows,
+} from '@/lib/collections/synced-row'
 import type { TablesUpdate } from '@/types/supabase'
 import { should } from '@scenetest/checks/react'
 
@@ -39,14 +44,27 @@ export const phrasePlaylistsCollection = createCollection(
 		// the toast UX via tx.isPersisted.promise.
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'phrase_playlist'>
+					const { data } = await supabase
 						.from('phrase_playlist')
-						.update(m.changes as TablesUpdate<'phrase_playlist'>)
+						.update(changes)
 						.eq('id', m.original.id)
 						.select()
 						.throwOnError()
-				)
+					const row = data?.[0]
+					should(
+						`phrase_playlist ${m.original.id} server row matches the submitted update`,
+						rowMatches(changes, row),
+						{ submitted: changes, returned: row }
+					)
+					// The write-back is what `refetch: false` promises.
+					if (row)
+						writeSyncedRow(
+							phrasePlaylistsCollection,
+							PhrasePlaylistSchema.parse(row)
+						)
+				})
 			)
 			return { refetch: false }
 		},
@@ -71,32 +89,54 @@ export const playlistPhraseLinksCollection = createCollection(
 		schema: PlaylistPhraseLinkSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
-		// uid + created_at default server-side (auth.uid() / now()); the optimistic
-		// row already carries client values for them, so { refetch: false }.
+		// uid + created_at default server-side (auth.uid() / now()), so the
+		// insert asks for the row back and writes the server's values down.
 		onInsert: async ({ transaction }) => {
-			await supabase
+			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
+				playlist_id: m.modified.playlist_id,
+				phrase_id: m.modified.phrase_id,
+				order: m.modified.order,
+				href: m.modified.href,
+			}))
+			const { data } = await supabase
 				.from('playlist_phrase_link')
-				.insert(
-					transaction.mutations.map((m) => ({
-						id: m.modified.id,
-						playlist_id: m.modified.playlist_id,
-						phrase_id: m.modified.phrase_id,
-						order: m.modified.order,
-						href: m.modified.href,
-					}))
-				)
+				.insert(submitted)
+				.select()
 				.throwOnError()
+			const returned =
+				data?.map((row) => PlaylistPhraseLinkSchema.parse(row)) ?? []
+			should(
+				'playlist_phrase_link insert returned one row per link added',
+				allRowsMatch(submitted, returned),
+				{ submitted, returned }
+			)
+			// The write-back is what `refetch: false` promises.
+			writeSyncedRows(playlistPhraseLinksCollection, returned)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'playlist_phrase_link'>
+					const { data } = await supabase
 						.from('playlist_phrase_link')
-						.update(m.changes as TablesUpdate<'playlist_phrase_link'>)
+						.update(changes)
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
-				)
+					const row = data?.[0]
+					should(
+						`playlist_phrase_link ${m.original.id} server row matches the submitted update`,
+						rowMatches(changes, row),
+						{ submitted: changes, returned: row }
+					)
+					if (row)
+						writeSyncedRow(
+							playlistPhraseLinksCollection,
+							PlaylistPhraseLinkSchema.parse(row)
+						)
+				})
 			)
 			return { refetch: false }
 		},

@@ -22,7 +22,12 @@ import {
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
-import { rowMatches, writeSyncedRows } from '@/lib/collections/synced-row'
+import {
+	allRowsMatch,
+	rowMatches,
+	writeSyncedRow,
+	writeSyncedRows,
+} from '@/lib/collections/synced-row'
 import { should } from '@scenetest/checks/react'
 
 export const phraseRequestsCollection = createCollection(
@@ -60,6 +65,12 @@ export const phraseRequestsCollection = createCollection(
 						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
+					// The write-back is what `refetch: false` promises.
+					if (row)
+						writeSyncedRow(
+							phraseRequestsCollection,
+							PhraseRequestSchema.parse(row)
+						)
 				})
 			)
 			return { refetch: false }
@@ -172,6 +183,9 @@ export const commentsCollection = createCollection(
 						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
+					// The write-back is what `refetch: false` promises.
+					if (row)
+						writeSyncedRow(commentsCollection, RequestCommentSchema.parse(row))
 				})
 			)
 			return { refetch: false }
@@ -331,19 +345,25 @@ export const messageTagsCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					await supabase
-						.from('message_tag')
-						.insert({
-							slug: m.modified.slug,
-							label: m.modified.label,
-							description: m.modified.description,
-							sort_order: m.modified.sort_order,
-						})
-						.throwOnError()
-				})
+			const submitted = transaction.mutations.map((m) => ({
+				slug: m.modified.slug,
+				label: m.modified.label,
+				description: m.modified.description,
+				sort_order: m.modified.sort_order,
+			}))
+			const { data } = await supabase
+				.from('message_tag')
+				.insert(submitted)
+				.select()
+				.throwOnError()
+			const returned = data?.map((row) => MessageTagSchema.parse(row)) ?? []
+			should(
+				'message_tag insert returned one row per tag added',
+				allRowsMatch(submitted, returned),
+				{ submitted, returned }
 			)
+			// The write-back is what `refetch: false` promises.
+			writeSyncedRows(messageTagsCollection, returned)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
@@ -364,6 +384,8 @@ export const messageTagsCollection = createCollection(
 							`Update on message_tag "${m.original.slug}" affected no rows (permission denied or row removed).`
 						)
 					}
+					// The write-back is what `refetch: false` promises.
+					writeSyncedRow(messageTagsCollection, MessageTagSchema.parse(data[0]))
 				})
 			)
 			return { refetch: false }
@@ -409,17 +431,23 @@ export const messageTagLinksCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					await supabase
-						.from('message_tag_link')
-						.insert({
-							message_id: m.modified.message_id,
-							tag_slug: m.modified.tag_slug,
-						})
-						.throwOnError()
-				})
+			const submitted = transaction.mutations.map((m) => ({
+				message_id: m.modified.message_id,
+				tag_slug: m.modified.tag_slug,
+			}))
+			const { data } = await supabase
+				.from('message_tag_link')
+				.insert(submitted)
+				.select()
+				.throwOnError()
+			const returned = data?.map((row) => MessageTagLinkSchema.parse(row)) ?? []
+			should(
+				'message_tag_link insert returned one row per link added',
+				allRowsMatch(submitted, returned),
+				{ submitted, returned }
 			)
+			// The write-back is what `refetch: false` promises.
+			writeSyncedRows(messageTagLinksCollection, returned)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
