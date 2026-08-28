@@ -189,23 +189,22 @@ export const commentsCollection = createCollection(
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const { data } = await supabase
-						.from('request_comment')
-						.delete()
-						.eq('id', m.original.id)
-						.select()
-						.throwOnError()
-					// A delete with .select() returns the rows it removed; confirm
-					// we removed exactly the targeted comment. Stripped from
-					// production by the Vite plugin.
-					should(
-						`request_comment delete removed comment ${m.original.id}`,
-						data?.length === 1 && data[0].id === m.original.id,
-						{ targetId: m.original.id, returned: data }
-					)
-				})
+			const ids = transaction.mutations.map((m) => m.original.id)
+			const { data } = await supabase
+				.from('request_comment')
+				.delete()
+				.in('id', ids)
+				.select()
+				.throwOnError()
+			// A delete with .select() returns the rows it removed; confirm we
+			// removed exactly the targeted comments. Stripped from production
+			// by the Vite plugin.
+			const returned = data ?? []
+			should(
+				'request_comment delete removed one row per targeted comment',
+				returned.length === ids.length &&
+					ids.every((id) => returned.some((row) => row.id === id)),
+				{ submitted: ids, returned }
 			)
 			// Cascade-deleted replies and phrase links linger in the local
 			// collections until the next stale refetch, but they don't render
@@ -387,21 +386,21 @@ export const messageTagsCollection = createCollection(
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const { data } = await supabase
-						.from('message_tag')
-						.delete()
-						.eq('slug', m.original.slug)
-						.select()
-						.throwOnError()
-					if (!data || data.length === 0) {
-						throw new Error(
-							`Delete on message_tag "${m.original.slug}" affected no rows (permission denied or row removed).`
-						)
-					}
-				})
-			)
+			// .select() so we can count the rows actually removed: an RLS-blocked
+			// DELETE returns 0 rows with no PostgREST error. Throwing rolls the
+			// optimistic state back and surfaces the failure.
+			const slugs = transaction.mutations.map((m) => m.original.slug)
+			const { data } = await supabase
+				.from('message_tag')
+				.delete()
+				.in('slug', slugs)
+				.select()
+				.throwOnError()
+			if ((data?.length ?? 0) !== slugs.length) {
+				throw new Error(
+					`Delete on message_tag affected ${data?.length ?? 0} of ${slugs.length} rows (permission denied or row removed).`
+				)
+			}
 			return { refetch: false }
 		},
 	})
