@@ -126,15 +126,6 @@ $$;
 
 alter function "public"."auto_upvote_new_request" () owner to "postgres";
 
-create or replace function "public"."bump_phrase_updated_at" () returns "trigger" language "plpgsql" as $$
-begin
-	new.updated_at := clock_timestamp();
-	return new;
-end;
-$$;
-
-alter function "public"."bump_phrase_updated_at" () owner to "postgres";
-
 create or replace function "public"."blank_removed_comment" () returns "trigger" language "plpgsql" as $$
 begin
   new.content = '';
@@ -143,6 +134,15 @@ end;
 $$;
 
 alter function "public"."blank_removed_comment" () owner to "postgres";
+
+create or replace function "public"."bump_phrase_updated_at" () returns "trigger" language "plpgsql" as $$
+begin
+	new.updated_at := clock_timestamp();
+	return new;
+end;
+$$;
+
+alter function "public"."bump_phrase_updated_at" () owner to "postgres";
 
 create or replace function "public"."cascade_soft_delete_comment" () returns "trigger" language "plpgsql" security definer as $$
 begin
@@ -1251,13 +1251,17 @@ from
 					left join "public"."phrase_stats" "ps" on (("ps"."phrase_id" = "p"."id"))
 				)
 				left join "public"."comment_phrase_link" "cpl" on (
-					("p"."id" = "cpl"."phrase_id")
-					and ("cpl"."deleted" = false)
+					(
+						("p"."id" = "cpl"."phrase_id")
+						and ("cpl"."deleted" = false)
+					)
 				)
 			)
 			left join "public"."playlist_phrase_link" "ppl" on (
-				("p"."id" = "ppl"."phrase_id")
-				and ("ppl"."deleted" = false)
+				(
+					("p"."id" = "ppl"."phrase_id")
+					and ("ppl"."deleted" = false)
+				)
 			)
 		)
 		left join "public"."phrase_playlist" "playlist" on (("ppl"."playlist_id" = "playlist"."id"))
@@ -1965,11 +1969,11 @@ create index "message_tag_link_tag_slug_idx" on "public"."message_tag_link" usin
 
 create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btree" ("uid");
 
+create index "phrase_tag_phrase_id_idx" on "public"."phrase_tag" using "btree" ("phrase_id");
+
 create unique index "phrase_tag_phrase_id_tag_id_live_idx" on "public"."phrase_tag" using "btree" ("phrase_id", "tag_id")
 where
 	("deleted" = false);
-
-create index "phrase_tag_phrase_id_idx" on "public"."phrase_tag" using "btree" ("phrase_id");
 
 create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
 
@@ -2825,18 +2829,6 @@ with
 		)
 	);
 
-create policy "User can view and update their own profile" on "public"."user_profile" to "authenticated" using (("uid" = "auth"."uid" ()))
-with
-	check (("uid" = "auth"."uid" ()));
-
-create policy "User data only for this user" on "public"."user_card" using (("auth"."uid" () = "uid"))
-with
-	check (("auth"."uid" () = "uid"));
-
-create policy "User data only for this user" on "public"."user_deck" using (("auth"."uid" () = "uid"))
-with
-	check (("auth"."uid" () = "uid"));
-
 create policy "Taggers and admins can soft-delete phrase tags" on "public"."phrase_tag"
 for update
 	to "authenticated" using (
@@ -2862,6 +2854,18 @@ with
 			or "public"."is_admin" ()
 		)
 	);
+
+create policy "User can view and update their own profile" on "public"."user_profile" to "authenticated" using (("uid" = "auth"."uid" ()))
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "User data only for this user" on "public"."user_card" using (("auth"."uid" () = "uid"))
+with
+	check (("auth"."uid" () = "uid"));
+
+create policy "User data only for this user" on "public"."user_deck" using (("auth"."uid" () = "uid"))
+with
+	check (("auth"."uid" () = "uid"));
 
 create policy "Users can create comments" on "public"."request_comment" for insert to "authenticated"
 with
@@ -3509,11 +3513,23 @@ grant all on function "public"."binary_quantize" ("public"."vector") to "authent
 
 grant all on function "public"."binary_quantize" ("public"."vector") to "service_role";
 
+grant all on function "public"."blank_removed_comment" () to "anon";
+
+grant all on function "public"."blank_removed_comment" () to "authenticated";
+
+grant all on function "public"."blank_removed_comment" () to "service_role";
+
 grant all on function "public"."bump_phrase_updated_at" () to "anon";
 
 grant all on function "public"."bump_phrase_updated_at" () to "authenticated";
 
 grant all on function "public"."bump_phrase_updated_at" () to "service_role";
+
+grant all on function "public"."cascade_soft_delete_comment" () to "anon";
+
+grant all on function "public"."cascade_soft_delete_comment" () to "authenticated";
+
+grant all on function "public"."cascade_soft_delete_comment" () to "service_role";
 
 grant all on function "public"."cosine_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
 
@@ -3538,18 +3554,6 @@ grant all on function "public"."cosine_distance" ("public"."vector", "public"."v
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "authenticated";
 
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "service_role";
-
-grant all on function "public"."blank_removed_comment" () to "anon";
-
-grant all on function "public"."blank_removed_comment" () to "authenticated";
-
-grant all on function "public"."blank_removed_comment" () to "service_role";
-
-grant all on function "public"."cascade_soft_delete_comment" () to "anon";
-
-grant all on function "public"."cascade_soft_delete_comment" () to "authenticated";
-
-grant all on function "public"."cascade_soft_delete_comment" () to "service_role";
 
 grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "anon";
 
