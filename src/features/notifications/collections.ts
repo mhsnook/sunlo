@@ -41,7 +41,6 @@ export const notificationsCollection = createCollection(
 								.in('id', keys)
 								.select()
 								.throwOnError()
-							// The write-back is what `refetch: false` promises.
 							writeSyncedRows(
 								notificationsCollection,
 								(data ?? []).map((row) => NotificationSchema.parse(row))

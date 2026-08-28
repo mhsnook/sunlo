@@ -18,7 +18,8 @@ export const cardsCollection = createCollection(
 						.eq('id', m.original.id)
 						.select() // ask for the rows back so we can skip the refetch
 						.throwOnError()
-					for (const row of data ?? []) cardsCollection.utils.writeUpdate(row)
+					const row = data?.[0]
+					if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
 				})
 			)
 			return { refetch: false } // the rows are written back; skip the reload
@@ -81,31 +82,40 @@ The second row is why this passes tests: nothing interferes, so the value sticks
 ### What to write back, per operation
 
 ```typescript
-// update — .select() the row, then writeUpdate it
+// update — .select() the row, then write it back
 const { data } = await supabase
-	.from('phrase')
+	.from('phrase_translation')
 	.update(changes)
 	.eq('id', m.original.id)
 	.select()
 	.throwOnError()
-for (const row of data ?? []) phrasesCollection.utils.writeUpdate(row)
+const row = data?.[0]
+if (row)
+	writeSyncedRow(phraseTranslationsCollection, TranslationSchema.parse(row))
 
-// insert — server columns win, the optimistic row fills the rest
+// insert — one .select() returns every row the transaction sent
 const { data } = await supabase
-	.from('phrase')
-	.insert(row)
+	.from('phrase_translation')
+	.insert(submitted)
 	.select()
-	.single()
 	.throwOnError()
-phrasesCollection.utils.writeInsert({ ...m.modified, ...data })
+writeSyncedRows(
+	phraseTranslationsCollection,
+	data?.map((row) => TranslationSchema.parse(row)) ?? []
+)
 
 // delete — soft-delete instead: `.update({ deleted: true })` and write the
 // row back like any other update
 ```
 
-`writeUpdate` **merges** its argument over the current synced row. That matters for a collection that reads a view but writes a base table — `phrasesCollection` (`phrase_meta` → `phrase`). The base-table row the write returns has no view-derived columns, and the merge keeps the ones already there.
+`writeSyncedRow` upserts, so it **replaces** the row the collection holds rather than merging into it. That matters for a collection that reads a view but writes a base table: `phrasesCollection` reads `phrase_meta` and writes `phrase`, and the row the update returns has none of the columns the view computes. Spread the row you hold underneath the one you got back.
 
-`writeInsert` and `writeUpsert` **replace** rather than merge. On a view-backed collection, spread the optimistic row underneath (as above) so the view-derived columns are not blanked out.
+```typescript
+const current = phrasesCollection.get(m.original.id) ?? m.original
+writeSyncedRow(phrasesCollection, PhraseSchema.parse({ ...current, ...row }))
+```
+
+An insert into the same collection needs no spread, because the schema's defaults are already right for a row nobody has touched yet — a phrase you just created has no learners.
 
 ### Check the assumption with `should()`
 

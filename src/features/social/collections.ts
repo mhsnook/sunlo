@@ -60,9 +60,8 @@ export const friendRequestActionsCollection = createCollection(
 				rows.length === submitted.length,
 				{ submitted, returned: rows }
 			)
-			// The write-back is what `refetch: false` promises — and here it is
-			// also the only thing that puts the row in the collection, because
-			// `useFriendRequestAction` writes with `{ optimistic: false }`.
+			// This write is the only thing that puts the row in the collection,
+			// because `useFriendRequestAction` writes with `{ optimistic: false }`.
 			// `writeSyncedRows` rather than a bare writeInsert: this row's own
 			// realtime frame can land first, in which case the key is already
 			// here and `writeInsert` would throw.
@@ -109,8 +108,8 @@ export const chatMessagesCollection = createCollection(
 					submitted.every((sent) => rows.some((row) => row.id === sent.id)),
 				{ submitted, returned: rows }
 			)
-			// The write-back is what `refetch: false` promises. Upsert, because
-			// this row's own realtime frame can land before the insert resolves.
+			// Upsert, because this row's own realtime frame can land before the
+			// insert resolves.
 			writeSyncedRows(chatMessagesCollection, rows)
 			return { refetch: false }
 		},
@@ -128,7 +127,6 @@ export const chatMessagesCollection = createCollection(
 								.in('id', keys)
 								.select()
 								.throwOnError()
-							// The write-back is what `refetch: false` promises.
 							writeSyncedRows(
 								chatMessagesCollection,
 								(data ?? []).map((row) => ChatMessageSchema.parse(row))
