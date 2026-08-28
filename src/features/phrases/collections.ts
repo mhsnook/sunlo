@@ -162,12 +162,6 @@ export const phraseTranslationsCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		// No onDelete: `phrase_translation` carries no delete RLS policy, so a
-		// hard delete returns 0 rows and no error. Archiving is an update —
-		// `collection.update(id, (draft) => { draft.archived = true })` — which
-		// onUpdate above persists. Leaving the handler off makes a stray
-		// `.delete()` throw MissingDeleteHandlerError instead of silently
-		// dropping the row from the local collection until the next sync.
 	})
 )
 

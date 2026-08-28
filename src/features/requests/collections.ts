@@ -196,9 +196,6 @@ export const commentsCollection = createCollection(
 				.in('id', ids)
 				.select()
 				.throwOnError()
-			// A delete with .select() returns the rows it removed; confirm we
-			// removed exactly the targeted comments. Stripped from production
-			// by the Vite plugin.
 			const returned = data ?? []
 			should(
 				'request_comment delete removed one row per targeted comment',
@@ -386,9 +383,6 @@ export const messageTagsCollection = createCollection(
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
-			// .select() so we can count the rows actually removed: an RLS-blocked
-			// DELETE returns 0 rows with no PostgREST error. Throwing rolls the
-			// optimistic state back and surfaces the failure.
 			const slugs = transaction.mutations.map((m) => m.original.slug)
 			const { data } = await supabase
 				.from('message_tag')
