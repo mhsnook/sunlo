@@ -16,12 +16,12 @@ export const cardsCollection = createCollection(
 						.from('user_card')
 						.update(m.changes)
 						.eq('id', m.original.id)
-						.select() // ask for the row back — see "The { refetch: false } contract"
+						.select() // ask for the rows back so we can skip the refetch
 						.throwOnError()
 					for (const row of data ?? []) cardsCollection.utils.writeUpdate(row)
 				})
 			)
-			return { refetch: false } // synced layer is now correct; skip the reload
+			return { refetch: false } // the rows are written back; skip the reload
 		},
 	})
 )
@@ -61,11 +61,11 @@ This is the exception, not the default. Most writes are safe to show immediately
 - **Realtime sync handlers** writing supabase channel events into a collection (`writeSyncedRow(chatMessagesCollection, row)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
 
-## The `{ refetch: false }` contract
+## Write the rows back, then skip the refetch
 
-`{ refetch: false }` reads like a performance flag. It is a promise: **this handler has already made the synced layer correct.** Keep the promise by writing the server's returned rows into the synced layer, or omit the flag and let the collection reload.
+Returning all affected rows from the supabase API and writing them back to the collection with `writeSyncedRows` allows us to skip refetching the whole table after mutations. `{ refetch: false }` is how the handler says it did that. Write the rows back, or omit the flag and let the collection reload.
 
-A collection holds two layers. The optimistic layer carries your change from the moment you make it. The synced layer holds what the server last told us. When the transaction ends, the optimistic entry stops being authoritative, and **whatever the synced layer holds is what the user is left with**. `{ refetch: false }` skips the one step that would have updated it, so if the handler writes nothing back, the synced layer still holds the pre-mutation row.
+A collection holds two layers. The optimistic layer carries your change from the moment you make it. The synced layer holds what the server last told us. When the transaction ends, the optimistic entry stops being authoritative, and **the user sees whatever the synced layer holds**. `{ refetch: false }` skips the one step that would have updated it, so a handler that writes nothing back leaves the user looking at the pre-mutation row.
 
 Trust the server's row over your local copy. "The optimistic value already matches the server" is an assumption, not a fact — check it with `should()` rather than build on it.
 
@@ -223,7 +223,7 @@ Forms use **TanStack Form** through the app's composed hook — `useAppForm` fro
 
 - **Persistence lives on the collection** via `onInsert/onUpdate/onDelete` handlers; call sites use `collection.insert / update / delete` for optimistic local state
 - **Throw from the handler** to roll the optimistic state back
-- **Only return `{ refetch: false }` if the handler wrote the server's rows into the synced layer** — the flag is a promise, not a performance hint. See [The `{ refetch: false }` contract](#the--refetch-false--contract)
+- **Write the server's rows back before returning `{ refetch: false }`** — a handler that skips the refetch without writing the rows leaves the user looking at the pre-mutation row. See [Write the rows back, then skip the refetch](#write-the-rows-back-then-skip-the-refetch)
 - **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
 - **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
 - For mutations whose server-side effect can't be predicted client-side, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
