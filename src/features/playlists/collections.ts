@@ -79,7 +79,6 @@ export const playlistPhraseLinksCollection = createCollection(
 			const { data } = await supabase
 				.from('playlist_phrase_link')
 				.select()
-				.eq('deleted', false)
 				.throwOnError()
 
 			return data

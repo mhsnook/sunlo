@@ -178,6 +178,8 @@ Two rules follow:
 
 **State the filter once, in a derived collection.** `phraseRequestsActive`, `commentsActive`, `phraseTagLinksActive` and the rest live in each feature's `live.ts` and pre-filter `deleted = false`; read sites use those and say nothing about the flag. Filter inline only where the flag is what the component is showing — the upvote button reads `upvote.deleted` to pick filled or outline, so it wants the raw collection.
 
+**A collection's `queryFn` never filters `deleted` itself.** Two layers already decide what a client holds and what it shows, and a third opinion in the fetch only makes the collection disagree with its table: RLS decides which rows this user may read at all, and the live queries decide which of those to render. A handler's `.select()` write-back puts the just-flagged row into the synced layer regardless, so a `queryFn` that filtered would give a collection whose contents depend on whether you flagged the row this session or reloaded since.
+
 - **Don't subscribe to DELETE.** Comparing the frame's `uid` to the signed-in user would need `replica identity full`, which broadcasts every column of every deleted row on an RLS table. Soft-delete instead.
 
 No collection subscribes to DELETE today. `chat_message` declines on both counts: its replica identity is the bare `id`, which says nothing about who owned the message, and chat messages are never deleted.

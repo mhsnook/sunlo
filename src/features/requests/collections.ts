@@ -208,7 +208,6 @@ export const commentPhraseLinksCollection = createCollection(
 			const { data } = await supabase
 				.from('comment_phrase_link')
 				.select()
-				.eq('deleted', false)
 				.throwOnError()
 			return data?.map((item) => CommentPhraseLinkSchema.parse(item)) ?? []
 		},
@@ -381,7 +380,6 @@ export const messageTagLinksCollection = createCollection(
 			const { data } = await supabase
 				.from('message_tag_link')
 				.select()
-				.eq('deleted', false)
 				.throwOnError()
 			return data?.map((item) => MessageTagLinkSchema.parse(item)) ?? []
 		},
