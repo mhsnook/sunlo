@@ -60,7 +60,6 @@ export const langTagsCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			// The write-back is what `refetch: false` promises.
 			writeSyncedRows(langTagsCollection, returned)
 			return { refetch: false }
 		},

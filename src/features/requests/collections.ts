@@ -65,7 +65,6 @@ export const phraseRequestsCollection = createCollection(
 						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
-					// The write-back is what `refetch: false` promises.
 					if (row)
 						writeSyncedRow(
 							phraseRequestsCollection,
@@ -183,7 +182,6 @@ export const commentsCollection = createCollection(
 						rowMatches(m.changes, row),
 						{ submitted: m.changes, returned: row }
 					)
-					// The write-back is what `refetch: false` promises.
 					if (row)
 						writeSyncedRow(commentsCollection, RequestCommentSchema.parse(row))
 				})
@@ -362,7 +360,6 @@ export const messageTagsCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			// The write-back is what `refetch: false` promises.
 			writeSyncedRows(messageTagsCollection, returned)
 			return { refetch: false }
 		},
@@ -384,7 +381,6 @@ export const messageTagsCollection = createCollection(
 							`Update on message_tag "${m.original.slug}" affected no rows (permission denied or row removed).`
 						)
 					}
-					// The write-back is what `refetch: false` promises.
 					writeSyncedRow(messageTagsCollection, MessageTagSchema.parse(data[0]))
 				})
 			)
@@ -446,7 +442,6 @@ export const messageTagLinksCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			// The write-back is what `refetch: false` promises.
 			writeSyncedRows(messageTagLinksCollection, returned)
 			return { refetch: false }
 		},

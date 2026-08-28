@@ -48,9 +48,6 @@ export const phrasesCollection = createCollection(
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const r = m.modified
-					// `added_by` is left off rather than sent as undefined when the
-					// client has none: the server fills it from auth.uid(), and a
-					// key present-but-undefined would fail `rowMatches` below.
 					const submitted = {
 						id: r.id,
 						lang: r.lang,
@@ -69,16 +66,7 @@ export const phrasesCollection = createCollection(
 						rowMatches(submitted, row),
 						{ submitted, returned: row }
 					)
-					// The write-back is what `refetch: false` promises. The
-					// collection reads `phrase_meta`, so the base-table row the
-					// insert returns carries no view-derived columns, and an
-					// upsert replaces rather than merges: the optimistic row
-					// supplies `count_learners` and the two averages.
-					if (row)
-						writeSyncedRow(
-							phrasesCollection,
-							PhraseSchema.parse({ ...m.modified, ...row })
-						)
+					if (row) writeSyncedRow(phrasesCollection, PhraseSchema.parse(row))
 				})
 			)
 			return { refetch: false }
@@ -99,8 +87,8 @@ export const phrasesCollection = createCollection(
 						rowMatches(changes, row),
 						{ submitted: changes, returned: row }
 					)
-					// As in onInsert: merge over the row we hold so the
-					// view-derived columns survive the write-back.
+					// `phrase_meta` is a view; the columns it computes are not on the
+					// `phrase` row this update returns.
 					if (row) {
 						const current = phrasesCollection.get(m.original.id) ?? m.original
 						writeSyncedRow(
@@ -133,7 +121,6 @@ export const phraseTranslationsCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
-			// `added_by` omitted rather than undefined — see phrasesCollection.
 			const submitted = transaction.mutations.map((m) => ({
 				id: m.modified.id,
 				phrase_id: m.modified.phrase_id,
@@ -152,7 +139,6 @@ export const phraseTranslationsCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			// The write-back is what `refetch: false` promises.
 			writeSyncedRows(phraseTranslationsCollection, returned)
 			return { refetch: false }
 		},
@@ -230,7 +216,6 @@ export const phraseTagLinksCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			// The write-back is what `refetch: false` promises.
 			writeSyncedRows(phraseTagLinksCollection, returned)
 			return { refetch: false }
 		},

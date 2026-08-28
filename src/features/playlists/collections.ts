@@ -58,7 +58,6 @@ export const phrasePlaylistsCollection = createCollection(
 						rowMatches(changes, row),
 						{ submitted: changes, returned: row }
 					)
-					// The write-back is what `refetch: false` promises.
 					if (row)
 						writeSyncedRow(
 							phrasePlaylistsCollection,
@@ -89,8 +88,6 @@ export const playlistPhraseLinksCollection = createCollection(
 		schema: PlaylistPhraseLinkSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
-		// uid + created_at default server-side (auth.uid() / now()), so the
-		// insert asks for the row back and writes the server's values down.
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
 				id: m.modified.id,
@@ -111,7 +108,6 @@ export const playlistPhraseLinksCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			// The write-back is what `refetch: false` promises.
 			writeSyncedRows(playlistPhraseLinksCollection, returned)
 			return { refetch: false }
 		},
