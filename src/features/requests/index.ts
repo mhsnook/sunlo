@@ -35,8 +35,16 @@ export {
 	messageTagLinksCollection,
 } from './collections'
 
+// Mutations
+export { attachMessageTag, deleteComment, detachMessageTag } from './mutations'
+
 // Live collections
-export { phraseRequestsActive } from './live'
+export {
+	commentPhraseLinksActive,
+	commentsActive,
+	messageTagLinksActive,
+	phraseRequestsActive,
+} from './live'
 
 // Hooks
 export {
@@ -46,6 +54,7 @@ export {
 	useMyRequestUpvote,
 	useAnyonesPhraseRequests,
 	useOneComment,
+	useRequestThread,
 	useCommentPhraseLinks,
 	useMyCommentUpvote,
 	useAnyonesComments,

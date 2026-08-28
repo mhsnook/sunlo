@@ -31,7 +31,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 			{/* @@TODO -- IT's possible this is entirely dead code at the moment */}
 			{source && (
 				<div className="text-muted-foreground/70 ml-2 text-xs italic">
-					{source.type === 'request' ?
+					{source.type === 'request' ? (
 						<>
 							for{' '}
 							<Link
@@ -42,7 +42,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 								request
 							</Link>
 						</>
-					: source.type === 'playlist' ?
+					) : source.type === 'playlist' ? (
 						<>
 							in{' '}
 							<Link
@@ -53,7 +53,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 								{source.title}
 							</Link>
 						</>
-					:	null}
+					) : null}
 				</div>
 			)}
 		</div>

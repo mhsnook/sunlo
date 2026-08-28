@@ -29,16 +29,14 @@ import {
 import { WithPhrase } from '@/components/with-phrase'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
-import {
-	messageTagLinksCollection,
-	phraseRequestsCollection,
-} from '@/features/requests/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import { type PhraseRequestType } from '@/features/requests/schemas'
+import { attachMessageTag, detachMessageTag } from '@/features/requests'
 import {
 	useMessageTags,
 	useMessageTagsForMessage,
 	useRequestLinksPhraseIds,
-} from '@/features/requests/hooks'
+} from '@/features/requests'
 import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { useAuth } from '@/lib/use-auth'
 import { ago } from '@/lib/dayjs'
@@ -197,7 +195,7 @@ function MessageSection({
 										type="button"
 										className="ms-1 -me-1 inline-flex items-center"
 										aria-label={`Remove ${tag.label}`}
-										onClick={() => detachTag(messageId, tag.slug)}
+										onClick={() => removeTag(messageId, tag.slug)}
 									>
 										<X className="h-3 w-3" />
 									</button>
@@ -262,8 +260,8 @@ function AddTagPopover({
 									<Checkbox
 										checked={isOn}
 										onCheckedChange={(checked) => {
-											if (checked) attachTag(messageId, tag.slug)
-											else detachTag(messageId, tag.slug)
+											if (checked) addTag(messageId, tag.slug)
+											else removeTag(messageId, tag.slug)
 										}}
 									/>
 									<span>{tag.label}</span>
@@ -275,26 +273,6 @@ function AddTagPopover({
 			</PopoverContent>
 		</Popover>
 	)
-}
-
-function attachTag(messageId: uuid, tagSlug: string) {
-	const tx = messageTagLinksCollection.insert({
-		message_id: messageId,
-		tag_slug: tagSlug,
-		created_at: new Date().toISOString(),
-	})
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to add tag')
-		console.error(err)
-	})
-}
-
-function detachTag(messageId: uuid, tagSlug: string) {
-	const tx = messageTagLinksCollection.delete(`${messageId}--${tagSlug}`)
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to remove tag')
-		console.error(err)
-	})
 }
 
 function RelatedRequestsSection({
@@ -531,5 +509,25 @@ function ArchiveRequestButton({
 				<Archive className="text-destructive size-4" />
 			)}
 		</Button>
+	)
+}
+
+// One message at a time, from a badge's X or a checkbox. The bulk selection
+// bar calls the feature mutations directly and reports its own aggregate.
+function addTag(messageId: uuid, tagSlug: string) {
+	attachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to add tag')
+			console.error(err)
+		}
+	)
+}
+
+function removeTag(messageId: uuid, tagSlug: string) {
+	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to remove tag')
+			console.error(err)
+		}
 	)
 }

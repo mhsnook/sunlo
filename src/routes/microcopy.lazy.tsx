@@ -626,10 +626,10 @@ const destructiveActions: Array<{
 		source: 'components/playlists/delete-playlist-dialog.tsx',
 	},
 	{
-		action: 'Delete comment',
+		action: 'Remove comment',
 		triggerLabel: '(icon only)',
 		triggerIcon: Trash2,
-		confirmLabel: 'Delete',
+		confirmLabel: 'Remove',
 		source: 'components/comments/delete-comment-dialog.tsx',
 	},
 	{
@@ -990,9 +990,9 @@ const iconOnlyButtons: Array<{
 		source: 'components/playlists/delete-playlist-dialog.tsx',
 	},
 	{
-		action: 'Delete comment',
+		action: 'Remove comment',
 		Icon: Trash2,
-		ariaLabel: 'Delete comment',
+		ariaLabel: 'Remove comment',
 		source: 'components/comments/delete-comment-dialog.tsx',
 	},
 	{

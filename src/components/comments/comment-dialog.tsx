@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { createOptimisticAction, eq } from '@tanstack/db'
-import { useLiveQuery } from '@tanstack/react-db'
+import { createOptimisticAction } from '@tanstack/db'
 import * as z from 'zod'
 import { Paperclip, Plus, Search, X } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
@@ -14,6 +13,7 @@ import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
 import supabase from '@/lib/supabase-client'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
 import { useUserId } from '@/lib/use-auth'
 import { cn } from '@/lib/utils'
 import {
@@ -28,7 +28,7 @@ import {
 	type RequestCommentType,
 } from '@/features/requests/schemas'
 import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
-import { useRequest } from '@/features/requests/hooks'
+import { useCommentPhraseLinks, useRequest } from '@/features/requests'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
@@ -498,7 +498,9 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 			draft.updated_at = now
 		})
 		for (const link of linksToDelete) {
-			commentPhraseLinksCollection.delete(link.linkId)
+			commentPhraseLinksCollection.update(link.linkId, (draft) => {
+				draft.deleted = true
+			})
 		}
 		for (const link of linksToInsert) {
 			commentPhraseLinksCollection.insert({
@@ -530,18 +532,22 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 		)
 
 		if (linksToDelete.length > 0) {
-			await supabase
+			// Unlinking a phrase is a soft delete, so the row stays and the live
+			// queries filter it.
+			const { data: removed } = await supabase
 				.from('comment_phrase_link')
-				.delete()
+				.update({ deleted: true })
 				.eq('comment_id', commentId)
 				.in(
 					'phrase_id',
 					linksToDelete.map((l) => l.phraseId)
 				)
+				.select()
 				.throwOnError()
-			for (const link of linksToDelete) {
-				commentPhraseLinksCollection.utils.writeDelete(link.linkId)
-			}
+			writeSyncedRows(
+				commentPhraseLinksCollection,
+				removed?.map((row) => CommentPhraseLinkSchema.parse(row)) ?? []
+			)
 		}
 
 		if (linksToInsert.length > 0) {
@@ -763,19 +769,5 @@ function EditCommentForm({
 				</Button>
 			</div>
 		</form>
-	)
-}
-
-function useCommentPhraseLinks(commentId: uuid | undefined) {
-	return useLiveQuery(
-		(q) =>
-			commentId
-				? q
-						.from({ link: commentPhraseLinksCollection })
-						.where(({ link }) => eq(link.comment_id, commentId))
-				: q
-						.from({ link: commentPhraseLinksCollection })
-						.where(({ link }) => eq(link.comment_id, '')),
-		[commentId]
 	)
 }

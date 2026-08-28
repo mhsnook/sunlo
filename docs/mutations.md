@@ -149,7 +149,7 @@ Every write to the synced layer goes through `src/lib/collections/synced-row.ts`
 writeSyncedRow(collection, row) // writeSyncedRows(collection, rows) for many
 ```
 
-There is no helper for dropping a row, because nothing should drop one: a removal is a soft delete, which reaches the collection as an ordinary update.
+There is no helper for dropping a row, because nothing drops one — a removal sets a flag, and reaches the collection as an ordinary update. No collection configures an `onDelete` handler, so a stray `collection.delete()` throws `MissingDeleteHandlerError`. Which flag each table uses, and what a removed row still shows, is `docs/database.md`.
 
 Pass the whole row — the key comes from the collection's own `getKeyFromItem`. Prefer the plural form for a handler's ack, which usually has more than one row. The rest (upsert semantics, skipping a row already held, batching, and what happens on a collection that never loaded) is the function's business, not the caller's.
 
@@ -172,38 +172,53 @@ Bind frames with `bindRows(channel, table, collection, parse)` in `useUserRealti
 
 A delete frame also carries only the table's replica identity — the primary key, unless the table is set to `replica identity full`. Every other column is absent.
 
-Two rules follow:
+So nothing subscribes to DELETE and nothing hard-deletes. Four places carry that, to grep:
 
-- **Soft-delete the row instead of subscribing to DELETE.** A `deleted` flag turns the removal into an UPDATE, which Supabase scopes by RLS and sends with every column. The three upvote tables work this way: the button calls `collection.update(key, (draft) => { draft.deleted = !draft.deleted })`, the collection keeps the row, and live queries filter on `deleted`. No `onDelete` handler, and no special realtime binding — a removal is an ordinary update on both sides of the wire.
-- **Don't subscribe to DELETE.** Comparing the frame's `uid` to the signed-in user would need `replica identity full`, which broadcasts every column of every deleted row on an RLS table. Soft-delete instead.
+|           |                                                                                |
+| --------- | ------------------------------------------------------------------------------ |
+| the flag  | `deleted` or `archived` on the row — `docs/database.md` says which, per table  |
+| the write | `collection.update(key, (draft) => { draft.deleted = true })` at the call site |
+| the read  | the `*Active` collections in each feature's `live.ts`                          |
+| the guard | no `onDelete` handler anywhere, so `collection.delete()` throws                |
 
-No collection subscribes to DELETE today. `chat_message` declines on both counts: its replica identity is the bare `id`, which says nothing about who owned the message, and chat messages are never deleted.
+**State the filter once, in a derived collection.** `phraseRequestsActive`, `commentsActive`, `phraseTagLinksActive` and the rest live in each feature's `live.ts` and pre-filter `deleted = false`; read sites use those and say nothing about the flag. Filter inline only where the flag is what the component is showing — the upvote button reads `upvote.deleted` to pick filled or outline, so it wants the raw collection.
 
-## Deprecated pattern — do not use for new code, migrate when touching old code (tracked by the `transform` label)
+**A collection's `queryFn` never filters `deleted` itself.** Two layers already decide what a client holds and what it shows, and a third opinion in the fetch only makes the collection disagree with its table: RLS decides which rows this user may read at all, and the live queries decide which of those to render. A handler's `.select()` write-back puts the just-flagged row into the synced layer regardless, so a `queryFn` that filtered would give a collection whose contents depend on whether you flagged the row this session or reloaded since.
+
+**If we ever publish a soft-deleted table**, one flag is not enough: the UPDATE that sets `deleted` is exactly the frame RLS will withhold, if the SELECT policy narrows on it (see `docs/database.md`). It would take two steps — a `deleting` state the policy still admits, which subscribers receive and act on by dropping the row themselves, then the final `deleted` state they never see and no longer need. A client holding a row for the moment between the two is not a leak: it was allowed to read that row already.
+
+## Mutation Best Practices
+
+- **Persistence lives on the collection** via `onInsert/onUpdate` handlers; call sites use `collection.insert / update` for optimistic local state
+- **Throw from the handler** to roll the optimistic state back
+- **Write the server's rows back before returning `{ refetch: false }`** — a handler that skips the refetch without writing the rows leaves the user looking at the pre-mutation row. See [Write the rows back, then skip the refetch](#write-the-rows-back-then-skip-the-refetch)
+- **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
+- **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
+- For a mutation that writes several collections in one round-trip, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
+
+## The deprecated pattern: `useMutation` + `onSuccess` + `collection.utils.write*`
+
+Migration defined in #625; the remaining call sites carry the `transform` label and move as they are touched. Grep for them with `\.utils\.write(Insert|Update|Delete)`.
+
+It looked like this: a `useMutation` calling supabase itself, then syncing the collection by hand in `onSuccess`. Two things are wrong with it.
+
+- **The optimistic update isn't one.** Local state only changes after the server answers, so the user waits for a round-trip to see their own click.
+- **A successful write can report failure.** React Query routes an error thrown in `onSuccess` to `onError`, so if the hand-written sync throws, the row is saved and the user is told "Failed to create".
+
+Both go away when persistence moves onto the collection. The call site becomes one line, and the toast hangs off the transaction:
 
 ```typescript
-// ❌ useMutation calling supabase directly + manual local sync in onSuccess.
-// React Query routes onSuccess errors to onError, so a successful DB write
-// whose post-success sync throws surfaces as a misleading "Failed to X" toast.
-const mutation = useMutation({
-	mutationFn: async (values) => {
-		const { data } = await supabase
-			.from('phrase')
-			.insert(values)
-			.select()
-			.throwOnError()
-		return data[0]
-	},
-	onSuccess: (data) => {
-		phrasesCollection.utils.writeInsert(PhraseSchema.parse(data))
-		toast.success('Created!')
-	},
-	onError: (error) => {
-		toast.error('Failed to create')
-		console.log('Error', error)
-	},
-})
+const tx = phrasesCollection.insert({ id: crypto.randomUUID(), ...values })
+tx.isPersisted.promise.then(
+	() => toastSuccess('Created!'),
+	(err) => {
+		toastError('Failed to create')
+		console.error('rolled back', err)
+	}
+)
 ```
+
+The row appears in the same tick and disappears again if the server rejects it. Most of the time you can drop the success toast too — the user can see the thing they made.
 
 ## Standard Form Pattern
 
@@ -215,42 +230,19 @@ Forms use **TanStack Form** through the app's composed hook — `useAppForm` fro
 4. In `onSubmit`, call the collection mutation (`collection.insert/update`) and wire toasts to `tx.isPersisted.promise`
 5. Copy an existing form (e.g. `src/components/requests/request-form.tsx`, `src/components/login-card-body.tsx`) rather than wiring from scratch
 
-### Mutation Best Practices
-
-- **Persistence lives on the collection** via `onInsert/onUpdate` handlers; call sites use `collection.insert / update` for optimistic local state
-- **Throw from the handler** to roll the optimistic state back
-- **Write the server's rows back before returning `{ refetch: false }`** — a handler that skips the refetch without writing the rows leaves the user looking at the pre-mutation row. See [Write the rows back, then skip the refetch](#write-the-rows-back-then-skip-the-refetch)
-- **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
-- **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
-- For a mutation that writes several collections in one round-trip, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
-
 ## Realtime Patterns
 
-For friend requests and chat messages, use `useEffect` to subscribe:
+Every user-owned table folds through one channel, `useUserRealtime` in `src/hooks/use-user-realtime.ts`. It is subscribed in the `_user` layout and torn down on sign-out, and each table is one `bindRows` call:
 
 ```typescript
-useEffect(() => {
-	const channel = supabase
-		.channel('chat_messages')
-		.on(
-			'postgres_changes',
-			{
-				event: 'INSERT',
-				schema: 'public',
-				table: 'chat_message',
-			},
-			(payload) => {
-				const row = ChatMessageSchema.parse(payload.new)
-				writeSyncedRow(chatMessagesCollection, row)
-			}
-		)
-		.subscribe()
-
-	return () => {
-		supabase.removeChannel(channel)
-	}
-}, [])
+channel = bindRows(channel, 'user_card', mine, cardsCollection, (row) =>
+	CardSchema.parse(row)
+)
 ```
+
+`bindRows` binds INSERT and UPDATE (never DELETE), filters server-side on `uid=eq.<userId>`, skips frames for a collection the route never loaded, and writes through `writeSyncedRow`. Adding a table means adding a `bindRows` line and putting the table in the `supabase_realtime` publication — check `docs/database.md` first if the table soft-deletes.
+
+Two features subscribe outside this hook, because they react to an event rather than sync a collection: `src/features/notifications/hooks.ts` and `src/features/social/hooks.ts`.
 
 ## Query Configuration
 

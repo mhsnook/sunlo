@@ -19,7 +19,12 @@ export type LangTagType = z.infer<typeof LangTagSchema>
 export const PhraseTagSchema = z.object({
 	id: z.string().uuid(),
 	name: z.string(),
+	/** The `phrase_tag` row that attached this tag, and who attached it. */
+	linkId: z.string().uuid(),
+	addedBy: z.string().uuid(),
 })
+
+export type PhraseTagType = z.infer<typeof PhraseTagSchema>
 
 export const LanguageSchema = z.object({
 	lang: LangSchema,

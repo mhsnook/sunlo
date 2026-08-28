@@ -11,6 +11,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
 import {
 	allRowsMatch,
 	rowMatches,
@@ -169,7 +170,7 @@ export const phraseTagLinksCollection = createCollection(
 	queryCollectionOptions({
 		id: 'phrase_tag_links',
 		queryKey: ['public', 'phrase_tag'],
-		getKey: (item: PhraseTagLinkType) => `${item.phrase_id}--${item.tag_id}`,
+		getKey: (item: PhraseTagLinkType) => item.id,
 		queryFn: async () => {
 			console.log(`Loading phraseTagLinksCollection`)
 			const { data } = await supabase
@@ -184,6 +185,7 @@ export const phraseTagLinksCollection = createCollection(
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
 				phrase_id: m.modified.phrase_id,
 				tag_id: m.modified.tag_id,
 				added_by: m.modified.added_by,
@@ -202,16 +204,29 @@ export const phraseTagLinksCollection = createCollection(
 			writeSyncedRows(phraseTagLinksCollection, returned)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
+		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					await supabase
-						.from('phrase_tag')
-						.delete()
-						.eq('phrase_id', m.original.phrase_id)
-						.eq('tag_id', m.original.tag_id)
-						.throwOnError()
-				})
+				groupUpdatesByChanges(transaction.mutations).map(
+					async ({ changes, keys }) => {
+						const { data } = await supabase
+							.from('phrase_tag')
+							.update(changes as TablesUpdate<'phrase_tag'>)
+							.in('id', keys)
+							.select()
+							.throwOnError()
+						const rows =
+							data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
+						should(
+							'phrase_tag update returned one row per tag link changed',
+							allRowsMatch(
+								keys.map(() => changes),
+								rows
+							),
+							{ submitted: { changes, keys }, returned: rows }
+						)
+						writeSyncedRows(phraseTagLinksCollection, rows)
+					}
+				)
 			)
 			return { refetch: false }
 		},

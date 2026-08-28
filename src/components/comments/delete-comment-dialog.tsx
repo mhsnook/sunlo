@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { RequestCommentType } from '@/features/requests/schemas'
-import { commentsCollection } from '@/features/requests/collections'
+import { deleteComment } from '@/features/requests'
 
 export function DeleteCommentDialog({
 	comment,
@@ -22,14 +22,14 @@ export function DeleteCommentDialog({
 }) {
 	const [open, setOpen] = useState(false)
 
-	const deleteComment = () => {
+	const removeComment = () => {
 		setOpen(false)
-		const tx = commentsCollection.delete(comment.id)
+		const tx = deleteComment(comment.id)
 		tx.isPersisted.promise.then(
-			() => toastSuccess('Comment deleted'),
+			() => toastSuccess('Comment removed'),
 			(err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(`Failed to delete comment: ${message}`)
+				toastError(`Failed to remove comment: ${message}`)
 			}
 		)
 	}
@@ -39,7 +39,7 @@ export function DeleteCommentDialog({
 			<Button
 				variant="ghost"
 				size="icon"
-				aria-label="Delete comment"
+				aria-label="Remove comment"
 				data-testid="delete-comment-button"
 				onClick={() => setOpen(true)}
 			>
@@ -47,20 +47,20 @@ export function DeleteCommentDialog({
 			</Button>
 			<AlertDialogContent data-testid="delete-comment-dialog">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Delete comment?</AlertDialogTitle>
+					<AlertDialogTitle>Remove comment?</AlertDialogTitle>
 					<AlertDialogDescription>
-						This will permanently delete your comment and all its replies. This
-						action cannot be undone.
+						This removes your comment and its links to phrases (but does not
+						remove any phrases you may have added to the library).
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
-						onClick={deleteComment}
+						onClick={removeComment}
 						className="bg-destructive text-destructive-foreground"
 						data-testid="confirm-delete-comment-button"
 					>
-						Delete
+						Remove
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

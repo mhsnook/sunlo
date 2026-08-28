@@ -233,12 +233,20 @@ test('learner removes a phrase from their playlist', async ({
 			.seeToast('toast-success')
 			.notSee('manage-phrase-card')
 
+		// Removing a phrase is a soft delete (#786): the row stays and carries
+		// the flag, and the live queries filter it — which is what the
+		// `notSee('manage-phrase-card')` above already proved.
 		const { data: links } = await supabase
 			.from('playlist_phrase_link')
-			.select('id')
+			.select('id, deleted')
 			.eq('playlist_id', playlistId)
 			.throwOnError()
-		assert.equal(links?.length, 0, 'the link should be deleted')
+		assert.equal(links?.length, 1, 'the link row should still be there')
+		assert.equal(
+			links?.[0]?.deleted,
+			true,
+			'the link should be flagged deleted'
+		)
 	} finally {
 		if (playlistId) {
 			await supabase

@@ -56,12 +56,14 @@ export const PhraseSchema = z.object({
 export type PhraseType = z.infer<typeof PhraseSchema>
 
 // PhraseTagLinkSchema — the row shape of `phrase_tag`, the join table
-// between phrase and tag. Composite primary key (phrase_id, tag_id).
+// between phrase and tag.
 export const PhraseTagLinkSchema = z.object({
+	id: z.string().uuid(),
 	phrase_id: z.string().uuid(),
 	tag_id: z.string().uuid(),
 	created_at: z.string(),
 	added_by: z.string().uuid(),
+	deleted: z.boolean().default(false),
 })
 
 export type PhraseTagLinkType = z.infer<typeof PhraseTagLinkSchema>
@@ -72,7 +74,7 @@ export type PhraseTagLinkType = z.infer<typeof PhraseTagLinkSchema>
 // aggregated from `phraseTagLinksCollection` joined with langTags.
 export type PhraseFullType = PhraseType & {
 	translations: Array<TranslationType>
-	tags: Array<{ id: string; name: string }>
+	tags: Array<{ id: string; name: string; linkId: string; addedBy: string }>
 }
 
 // Parser for places (RPC responses, write paths) that need to validate a

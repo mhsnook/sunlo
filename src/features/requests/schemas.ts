@@ -43,9 +43,11 @@ export const MessageTagSchema = z.object({
 export type MessageTagType = z.infer<typeof MessageTagSchema>
 
 export const MessageTagLinkSchema = z.object({
+	id: z.string().uuid(),
 	message_id: z.string().uuid(),
 	tag_slug: z.string(),
 	created_at: z.string(),
+	deleted: z.boolean().default(false),
 })
 
 export type MessageTagLinkType = z.infer<typeof MessageTagLinkSchema>
@@ -91,6 +93,7 @@ export const RequestCommentSchema = z.object({
 	created_at: z.string(),
 	updated_at: z.string(),
 	upvote_count: z.number(),
+	deleted: z.boolean().default(false),
 })
 
 export type RequestCommentType = z.infer<typeof RequestCommentSchema>
@@ -102,6 +105,7 @@ export const CommentPhraseLinkSchema = z.object({
 	phrase_id: z.string().uuid(),
 	uid: z.string().uuid(),
 	created_at: z.string(),
+	deleted: z.boolean().default(false),
 })
 
 export type CommentPhraseLinkType = z.infer<typeof CommentPhraseLinkSchema>

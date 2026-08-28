@@ -91,9 +91,9 @@ export function FeedEmptyState({
 	return (
 		<div className="text-muted-foreground my-6 ms-2 space-y-3">
 			<p className="italic">
-				{feedTab === 'popular' ?
-					'Nothing popular yet. You might have to lead the way!'
-				:	'This feed is empty.'}
+				{feedTab === 'popular'
+					? 'Nothing popular yet. You might have to lead the way!'
+					: 'This feed is empty.'}
 			</p>
 			<Link
 				className={buttonVariants({ variant: 'soft', size: 'sm' })}

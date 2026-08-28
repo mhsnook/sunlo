@@ -126,6 +126,15 @@ $$;
 
 alter function "public"."auto_upvote_new_request" () owner to "postgres";
 
+create or replace function "public"."blank_removed_comment" () returns "trigger" language "plpgsql" as $$
+begin
+  new.content = '';
+  return new;
+end;
+$$;
+
+alter function "public"."blank_removed_comment" () owner to "postgres";
+
 create or replace function "public"."bump_phrase_updated_at" () returns "trigger" language "plpgsql" as $$
 begin
 	new.updated_at := clock_timestamp();
@@ -134,6 +143,18 @@ end;
 $$;
 
 alter function "public"."bump_phrase_updated_at" () owner to "postgres";
+
+create or replace function "public"."cascade_soft_delete_comment" () returns "trigger" language "plpgsql" security definer as $$
+begin
+  update public.comment_phrase_link
+  set deleted = true
+  where comment_id = new.id and deleted = false;
+
+  return null;
+end;
+$$;
+
+alter function "public"."cascade_soft_delete_comment" () owner to "postgres";
 
 create or replace function "public"."create_comment_with_phrases" (
 	"p_request_id" "uuid",
@@ -264,16 +285,16 @@ $$;
 
 alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
 
-create or replace function "public"."guard_upvote_update" () returns "trigger" language "plpgsql" as $$
+create or replace function "public"."guard_soft_delete_only" () returns "trigger" language "plpgsql" as $$
 begin
   if (to_jsonb(old) - 'deleted') is distinct from (to_jsonb(new) - 'deleted') then
-    raise exception 'An upvote row is immutable except for its deleted flag';
+    raise exception 'This row is immutable except for its deleted flag';
   end if;
   return new;
 end;
 $$;
 
-alter function "public"."guard_upvote_update" () owner to "postgres";
+alter function "public"."guard_soft_delete_only" () owner to "postgres";
 
 create or replace function "public"."handle_new_user" () returns "trigger" language "plpgsql" security definer as $$
 begin
@@ -974,7 +995,8 @@ create table if not exists "public"."comment_phrase_link" (
 	"comment_id" "uuid" not null,
 	"phrase_id" "uuid" not null,
 	"uid" "uuid" default "auth"."uid" () not null,
-	"created_at" timestamp with time zone default "now" () not null
+	"created_at" timestamp with time zone default "now" () not null,
+	"deleted" boolean default false not null
 );
 
 alter table "public"."comment_phrase_link" owner to "postgres";
@@ -1142,7 +1164,8 @@ create table if not exists "public"."playlist_phrase_link" (
 	"playlist_id" "uuid" not null,
 	"order" double precision,
 	"href" "text",
-	"created_at" timestamp with time zone default "now" () not null
+	"created_at" timestamp with time zone default "now" () not null,
+	"deleted" boolean default false not null
 );
 
 alter table "public"."playlist_phrase_link" owner to "postgres";
@@ -1182,7 +1205,10 @@ select
 			from
 				"public"."playlist_phrase_link"
 			where
-				("playlist_phrase_link"."playlist_id" = "pp"."id")
+				(
+					("playlist_phrase_link"."playlist_id" = "pp"."id")
+					and ("playlist_phrase_link"."deleted" = false)
+				)
 		)
 	) as "payload"
 from
@@ -1224,9 +1250,19 @@ from
 					"public"."phrase" "p"
 					left join "public"."phrase_stats" "ps" on (("ps"."phrase_id" = "p"."id"))
 				)
-				left join "public"."comment_phrase_link" "cpl" on (("p"."id" = "cpl"."phrase_id"))
+				left join "public"."comment_phrase_link" "cpl" on (
+					(
+						("p"."id" = "cpl"."phrase_id")
+						and ("cpl"."deleted" = false)
+					)
+				)
 			)
-			left join "public"."playlist_phrase_link" "ppl" on (("p"."id" = "ppl"."phrase_id"))
+			left join "public"."playlist_phrase_link" "ppl" on (
+				(
+					("p"."id" = "ppl"."phrase_id")
+					and ("ppl"."deleted" = false)
+				)
+			)
 		)
 		left join "public"."phrase_playlist" "playlist" on (("ppl"."playlist_id" = "playlist"."id"))
 	)
@@ -1317,7 +1353,9 @@ alter table "public"."message_tag" owner to "postgres";
 create table if not exists "public"."message_tag_link" (
 	"message_id" "uuid" not null,
 	"tag_slug" "text" not null,
-	"created_at" timestamp with time zone default "now" () not null
+	"created_at" timestamp with time zone default "now" () not null,
+	"deleted" boolean default false not null,
+	"id" "uuid" default "gen_random_uuid" () not null
 );
 
 alter table "public"."message_tag_link" owner to "postgres";
@@ -1440,7 +1478,9 @@ create table if not exists "public"."phrase_tag" (
 	"phrase_id" "uuid" not null,
 	"tag_id" "uuid" not null,
 	"created_at" timestamp with time zone default "now" () not null,
-	"added_by" "uuid" default "auth"."uid" () not null
+	"added_by" "uuid" default "auth"."uid" () not null,
+	"deleted" boolean default false not null,
+	"id" "uuid" default "gen_random_uuid" () not null
 );
 
 alter table "public"."phrase_tag" owner to "postgres";
@@ -1473,6 +1513,8 @@ with
 				"public"."phrase_tag" "pt"
 				left join "public"."tag" "tag" on (("tag"."id" = "pt"."tag_id"))
 			)
+		where
+			("pt"."deleted" = false)
 		group by
 			"pt"."phrase_id"
 	)
@@ -1588,7 +1630,8 @@ create table if not exists "public"."request_comment" (
 	"content" "text" not null,
 	"created_at" timestamp with time zone default "now" () not null,
 	"updated_at" timestamp with time zone default "now" () not null,
-	"upvote_count" integer default 0 not null
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null
 );
 
 alter table "public"."request_comment" owner to "postgres";
@@ -1622,6 +1665,8 @@ with
 				"public"."phrase_tag" "pt"
 				join "public"."tag" "t" on (("t"."id" = "pt"."tag_id"))
 			)
+		where
+			("pt"."deleted" = false)
 		group by
 			"pt"."phrase_id"
 	)
@@ -1796,7 +1841,7 @@ alter table only "public"."message"
 add constraint "message_pkey" primary key ("id");
 
 alter table only "public"."message_tag_link"
-add constraint "message_tag_link_pkey" primary key ("message_id", "tag_slug");
+add constraint "message_tag_link_pkey" primary key ("id");
 
 alter table only "public"."message_tag"
 add constraint "message_tag_pkey" primary key ("slug");
@@ -1820,7 +1865,7 @@ alter table only "public"."phrase_request_upvote"
 add constraint "phrase_request_upvote_pkey" primary key ("request_id", "uid");
 
 alter table only "public"."phrase_tag"
-add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
+add constraint "phrase_tag_pkey" primary key ("id");
 
 alter table only "public"."playlist_phrase_link"
 add constraint "playlist_phrase_link_pkey" primary key ("id");
@@ -1914,9 +1959,21 @@ create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid"
 
 create index "idx_user_review_milestone_session_created" on "public"."user_review_milestone" using "btree" ("uid", "lang", "day_session", "created_at" desc);
 
+create index "message_tag_link_message_id_idx" on "public"."message_tag_link" using "btree" ("message_id");
+
+create unique index "message_tag_link_message_id_tag_slug_live_idx" on "public"."message_tag_link" using "btree" ("message_id", "tag_slug")
+where
+	("deleted" = false);
+
 create index "message_tag_link_tag_slug_idx" on "public"."message_tag_link" using "btree" ("tag_slug");
 
 create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btree" ("uid");
+
+create index "phrase_tag_phrase_id_idx" on "public"."phrase_tag" using "btree" ("phrase_id");
+
+create unique index "phrase_tag_phrase_id_tag_id_live_idx" on "public"."phrase_tag" using "btree" ("phrase_id", "tag_id")
+where
+	("deleted" = false);
 
 create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
 
@@ -1946,9 +2003,27 @@ create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "la
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
 
+create or replace trigger "blank_removed_comment"
+before update on "public"."request_comment" for each row when (
+	(
+		("old"."deleted" = false)
+		and ("new"."deleted" = true)
+	)
+)
+execute function "public"."blank_removed_comment" ();
+
 create or replace trigger "bump_phrase_updated_at"
 before update on "public"."phrase" for each row
 execute function "public"."bump_phrase_updated_at" ();
+
+create or replace trigger "cascade_soft_delete_comment"
+after update on "public"."request_comment" for each row when (
+	(
+		("old"."deleted" = false)
+		and ("new"."deleted" = true)
+	)
+)
+execute function "public"."cascade_soft_delete_comment" ();
 
 create or replace trigger "embed_corpus_on_phrase_change"
 after insert or delete or update of "text",
@@ -1970,7 +2045,7 @@ after insert or delete or update of "prompt",
 execute function "public"."trigger_notify_corpus_embed_change" ('request');
 
 create or replace trigger "embed_corpus_on_tag_change"
-after insert or delete on "public"."phrase_tag" for each row
+after insert or delete or update of "deleted" on "public"."phrase_tag" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('phrase');
 
 create or replace trigger "embed_corpus_on_translation_change"
@@ -1980,17 +2055,29 @@ after insert or delete or update of "text",
 "phrase_id" on "public"."phrase_translation" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('translation');
 
+create or replace trigger "guard_comment_phrase_link_update"
+before update on "public"."comment_phrase_link" for each row
+execute function "public"."guard_soft_delete_only" ();
+
 create or replace trigger "guard_comment_upvote_update"
 before update on "public"."comment_upvote" for each row
-execute function "public"."guard_upvote_update" ();
+execute function "public"."guard_soft_delete_only" ();
+
+create or replace trigger "guard_message_tag_link_update"
+before update on "public"."message_tag_link" for each row
+execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "guard_phrase_playlist_upvote_update"
 before update on "public"."phrase_playlist_upvote" for each row
-execute function "public"."guard_upvote_update" ();
+execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "guard_phrase_request_upvote_update"
 before update on "public"."phrase_request_upvote" for each row
-execute function "public"."guard_upvote_update" ();
+execute function "public"."guard_soft_delete_only" ();
+
+create or replace trigger "guard_phrase_tag_update"
+before update on "public"."phrase_tag" for each row
+execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "on_comment_upvote_changed"
 after insert or delete or update on "public"."comment_upvote" for each row
@@ -2052,7 +2139,7 @@ after insert or delete or update of "prompt",
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create or replace trigger "refresh_text_index_on_tag_change"
-after insert or delete on "public"."phrase_tag" for each statement
+after insert or delete or update of "deleted" on "public"."phrase_tag" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create or replace trigger "refresh_text_index_on_translation_change"
@@ -2313,6 +2400,12 @@ create policy "Admins can insert message tags" on "public"."message_tag" for ins
 with
 	check ("public"."is_admin" ());
 
+create policy "Admins can update message tag links" on "public"."message_tag_link"
+for update
+	to "authenticated" using ("public"."is_admin" ())
+with
+	check ("public"."is_admin" ());
+
 create policy "Admins can update message tags" on "public"."message_tag"
 for update
 	to "authenticated" using ("public"."is_admin" ())
@@ -2459,7 +2552,17 @@ with
 
 create policy "Enable read access for all users" on "public"."comment_phrase_link" for
 select
-	using (true);
+	using (
+		(
+			("deleted" = false)
+			or (
+				"uid" = (
+					select
+						"auth"."uid" () as "uid"
+				)
+			)
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."language" for
 select
@@ -2475,7 +2578,12 @@ select
 
 create policy "Enable read access for all users" on "public"."message_tag_link" for
 select
-	using (true);
+	using (
+		(
+			("deleted" = false)
+			or "public"."is_admin" ()
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."phrase" for
 select
@@ -2510,7 +2618,18 @@ select
 
 create policy "Enable read access for all users" on "public"."phrase_tag" for
 select
-	using (true);
+	using (
+		(
+			("deleted" = false)
+			or (
+				"added_by" = (
+					select
+						"auth"."uid" () as "uid"
+				)
+			)
+			or "public"."is_admin" ()
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."phrase_translation" for
 select
@@ -2529,7 +2648,17 @@ select
 
 create policy "Enable read access for all users" on "public"."playlist_phrase_link" for
 select
-	using (true);
+	using (
+		(
+			("deleted" = false)
+			or (
+				"uid" = (
+					select
+						"auth"."uid" () as "uid"
+				)
+			)
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."request_comment" for
 select
@@ -2700,6 +2829,32 @@ with
 		)
 	);
 
+create policy "Taggers and admins can soft-delete phrase tags" on "public"."phrase_tag"
+for update
+	to "authenticated" using (
+		(
+			(
+				"added_by" = (
+					select
+						"auth"."uid" () as "uid"
+				)
+			)
+			or "public"."is_admin" ()
+		)
+	)
+with
+	check (
+		(
+			(
+				"added_by" = (
+					select
+						"auth"."uid" () as "uid"
+				)
+			)
+			or "public"."is_admin" ()
+		)
+	);
+
 create policy "User can view and update their own profile" on "public"."user_profile" to "authenticated" using (("uid" = "auth"."uid" ()))
 with
 	check (("uid" = "auth"."uid" ()));
@@ -2787,6 +2942,26 @@ with
 				) = "sender_uid"
 			)
 			and "public"."are_friends" ("sender_uid", "recipient_uid")
+		)
+	);
+
+create policy "Users can soft-delete phrase links for their own comments" on "public"."comment_phrase_link"
+for update
+	to "authenticated" using (
+		(
+			"uid" = (
+				select
+					"auth"."uid" () as "uid"
+			)
+		)
+	)
+with
+	check (
+		(
+			"uid" = (
+				select
+					"auth"."uid" () as "uid"
+			)
 		)
 	);
 
@@ -3338,11 +3513,23 @@ grant all on function "public"."binary_quantize" ("public"."vector") to "authent
 
 grant all on function "public"."binary_quantize" ("public"."vector") to "service_role";
 
+grant all on function "public"."blank_removed_comment" () to "anon";
+
+grant all on function "public"."blank_removed_comment" () to "authenticated";
+
+grant all on function "public"."blank_removed_comment" () to "service_role";
+
 grant all on function "public"."bump_phrase_updated_at" () to "anon";
 
 grant all on function "public"."bump_phrase_updated_at" () to "authenticated";
 
 grant all on function "public"."bump_phrase_updated_at" () to "service_role";
+
+grant all on function "public"."cascade_soft_delete_comment" () to "anon";
+
+grant all on function "public"."cascade_soft_delete_comment" () to "authenticated";
+
+grant all on function "public"."cascade_soft_delete_comment" () to "service_role";
 
 grant all on function "public"."cosine_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
 
@@ -3490,11 +3677,11 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "authen
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
 
-grant all on function "public"."guard_upvote_update" () to "anon";
+grant all on function "public"."guard_soft_delete_only" () to "anon";
 
-grant all on function "public"."guard_upvote_update" () to "authenticated";
+grant all on function "public"."guard_soft_delete_only" () to "authenticated";
 
-grant all on function "public"."guard_upvote_update" () to "service_role";
+grant all on function "public"."guard_soft_delete_only" () to "service_role";
 
 grant all on function "public"."halfvec_accum" (double precision[], "public"."halfvec") to "postgres";
 

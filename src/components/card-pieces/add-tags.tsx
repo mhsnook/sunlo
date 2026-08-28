@@ -20,9 +20,15 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { langTagsCollection } from '@/features/languages/collections'
+import type { PhraseTagType } from '@/features/languages/schemas'
 import { phraseTagLinksCollection } from '@/features/phrases/collections'
-import { PhraseFullFilteredType } from '@/features/phrases/schemas'
-import { useUserId } from '@/lib/use-auth'
+import {
+	PhraseFullFilteredType,
+	PhraseTagLinkSchema,
+	type PhraseTagLinkType,
+} from '@/features/phrases/schemas'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
+import { useAuth, useUserId } from '@/lib/use-auth'
 import { useAppForm } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
 
@@ -39,7 +45,7 @@ type AddTagsAction = {
 	phraseId: string
 	lang: string
 	uid: string
-	tags: Array<{ tagId: string; name: string; isNew: boolean }>
+	tags: Array<{ linkId: string; tagId: string; name: string; isNew: boolean }>
 }
 
 const addTagsAction = createOptimisticAction<AddTagsAction>({
@@ -56,10 +62,12 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 				})
 			}
 			phraseTagLinksCollection.insert({
+				id: t.linkId,
 				phrase_id: phraseId,
 				tag_id: t.tagId,
 				added_by: uid,
 				created_at: now,
+				deleted: false,
 			})
 		}
 	},
@@ -72,12 +80,19 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 			await supabase.from('tag').insert(newRows).throwOnError()
 		}
 		const linkRows = tags.map((t) => ({
+			id: t.linkId,
 			phrase_id: phraseId,
 			tag_id: t.tagId,
 			added_by: uid,
 		}))
+		let confirmedLinks: Array<PhraseTagLinkType> = []
 		if (linkRows.length) {
-			await supabase.from('phrase_tag').insert(linkRows).throwOnError()
+			const { data } = await supabase
+				.from('phrase_tag')
+				.insert(linkRows)
+				.select()
+				.throwOnError()
+			confirmedLinks = data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
 		}
 		// Sync the confirmed rows so they survive the action's optimistic-state
 		// drop at the end of mutationFn.
@@ -92,13 +107,8 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 					created_at: now,
 				})
 			}
-			phraseTagLinksCollection.utils.writeInsert({
-				phrase_id: phraseId,
-				tag_id: t.tagId,
-				added_by: uid,
-				created_at: now,
-			})
 		}
+		writeSyncedRows(phraseTagLinksCollection, confirmedLinks)
 	},
 })
 
@@ -118,6 +128,7 @@ export function AddTags({
 		const resolved: AddTagsAction['tags'] = values.tags.map((name) => {
 			const existing = (allLangTags ?? []).find((t) => t.name === name)
 			return {
+				linkId: crypto.randomUUID(),
 				tagId: existing?.id ?? crypto.randomUUID(),
 				name,
 				isNew: !existing,
@@ -186,11 +197,7 @@ export function AddTags({
 							{phrase.tags?.length ? (
 								phrase.tags.map((tag) =>
 									allowRemove ? (
-										<RemovableTagBadge
-											key={tag.id}
-											tag={tag}
-											phraseId={phrase.id}
-										/>
+										<RemovableTagBadge key={tag.id} tag={tag} />
 									) : (
 										<Badge key={tag.id} variant="secondary">
 											{tag.name}
@@ -253,15 +260,17 @@ export function AddTags({
 	)
 }
 
-function RemovableTagBadge({
-	tag,
-	phraseId,
-}: {
-	tag: { id: string; name: string }
-	phraseId: string
-}) {
+function RemovableTagBadge({ tag }: { tag: PhraseTagType }) {
+	const { userId, isAdmin } = useAuth()
+
+	// The general public gets a badge with no 'x'
+	if (!isAdmin && tag.addedBy !== userId)
+		return <Badge variant="secondary">{tag.name}</Badge>
+
 	const removeTag = () => {
-		const tx = phraseTagLinksCollection.delete(`${phraseId}--${tag.id}`)
+		const tx = phraseTagLinksCollection.update(tag.linkId, (draft) => {
+			draft.deleted = true
+		})
 		tx.isPersisted.promise.then(
 			() => toastSuccess(`Tag "${tag.name}" removed`),
 			(err: Error) => {
@@ -276,6 +285,7 @@ function RemovableTagBadge({
 			{tag.name}
 			<button
 				onClick={removeTag}
+				aria-label={`Remove ${tag.name}`}
 				className="hover:text-destructive -me-1 rounded-full p-0.5"
 			>
 				<X className="size-3" />
