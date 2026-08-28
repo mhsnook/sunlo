@@ -11,6 +11,13 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import {
+	allRowsMatch,
+	rowMatches,
+	writeSyncedRow,
+	writeSyncedRows,
+} from '@/lib/collections/synced-row'
+import { should } from '@scenetest/checks/react'
 import type { TablesUpdate } from '@/types/supabase'
 
 // Columns we want off the phrase_meta view (slim — no `tags` JSON column;
@@ -41,16 +48,25 @@ export const phrasesCollection = createCollection(
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const r = m.modified
-					await supabase
+					const submitted = {
+						id: r.id,
+						lang: r.lang,
+						text: r.text,
+						only_reverse: r.only_reverse,
+						...(r.added_by ? { added_by: r.added_by } : {}),
+					}
+					const { data } = await supabase
 						.from('phrase')
-						.insert({
-							id: r.id,
-							lang: r.lang,
-							text: r.text,
-							only_reverse: r.only_reverse,
-							added_by: r.added_by ?? undefined,
-						})
+						.insert(submitted)
+						.select()
 						.throwOnError()
+					const row = data?.[0]
+					should(
+						`phrase ${r.id} insert returned the row it wrote`,
+						rowMatches(submitted, row),
+						{ submitted, returned: row }
+					)
+					if (row) writeSyncedRow(phrasesCollection, PhraseSchema.parse(row))
 				})
 			)
 			return { refetch: false }
@@ -59,11 +75,27 @@ export const phrasesCollection = createCollection(
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const changes = m.changes as TablesUpdate<'phrase'>
-					await supabase
+					const { data } = await supabase
 						.from('phrase')
 						.update(changes)
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
+					const row = data?.[0]
+					should(
+						`phrase ${m.original.id} server row matches the submitted update`,
+						rowMatches(changes, row),
+						{ submitted: changes, returned: row }
+					)
+					// `phrase_meta` is a view; the columns it computes are not on the
+					// `phrase` row this update returns.
+					if (row) {
+						const current = phrasesCollection.get(m.original.id) ?? m.original
+						writeSyncedRow(
+							phrasesCollection,
+							PhraseSchema.parse({ ...current, ...row })
+						)
+					}
 				})
 			)
 			return { refetch: false }
@@ -89,32 +121,48 @@ export const phraseTranslationsCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const r = m.modified
-					await supabase
-						.from('phrase_translation')
-						.insert({
-							id: r.id,
-							phrase_id: r.phrase_id,
-							lang: r.lang,
-							text: r.text,
-							added_by: r.added_by ?? undefined,
-						})
-						.throwOnError()
-				})
+			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
+				phrase_id: m.modified.phrase_id,
+				lang: m.modified.lang,
+				text: m.modified.text,
+				...(m.modified.added_by ? { added_by: m.modified.added_by } : {}),
+			}))
+			const { data } = await supabase
+				.from('phrase_translation')
+				.insert(submitted)
+				.select()
+				.throwOnError()
+			const returned = data?.map((row) => TranslationSchema.parse(row)) ?? []
+			should(
+				'phrase_translation insert returned one row per translation added',
+				allRowsMatch(submitted, returned),
+				{ submitted, returned }
 			)
+			writeSyncedRows(phraseTranslationsCollection, returned)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const changes = m.changes as TablesUpdate<'phrase_translation'>
-					await supabase
+					const { data } = await supabase
 						.from('phrase_translation')
 						.update(changes)
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
+					const row = data?.[0]
+					should(
+						`phrase_translation ${m.original.id} server row matches the submitted update`,
+						rowMatches(changes, row),
+						{ submitted: changes, returned: row }
+					)
+					if (row)
+						writeSyncedRow(
+							phraseTranslationsCollection,
+							TranslationSchema.parse(row)
+						)
 				})
 			)
 			return { refetch: false }
@@ -152,19 +200,23 @@ export const phraseTagLinksCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const r = m.modified
-					await supabase
-						.from('phrase_tag')
-						.insert({
-							phrase_id: r.phrase_id,
-							tag_id: r.tag_id,
-							added_by: r.added_by,
-						})
-						.throwOnError()
-				})
+			const submitted = transaction.mutations.map((m) => ({
+				phrase_id: m.modified.phrase_id,
+				tag_id: m.modified.tag_id,
+				added_by: m.modified.added_by,
+			}))
+			const { data } = await supabase
+				.from('phrase_tag')
+				.insert(submitted)
+				.select()
+				.throwOnError()
+			const returned = data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
+			should(
+				'phrase_tag insert returned one row per tag link added',
+				allRowsMatch(submitted, returned),
+				{ submitted, returned }
 			)
+			writeSyncedRows(phraseTagLinksCollection, returned)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
