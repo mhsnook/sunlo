@@ -45,30 +45,25 @@ export const phrasesCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const r = m.modified
-					const submitted = {
-						id: r.id,
-						lang: r.lang,
-						text: r.text,
-						only_reverse: r.only_reverse,
-						...(r.added_by ? { added_by: r.added_by } : {}),
-					}
-					const { data } = await supabase
-						.from('phrase')
-						.insert(submitted)
-						.select()
-						.throwOnError()
-					const row = data?.[0]
-					should(
-						`phrase ${r.id} insert returned the row it wrote`,
-						rowMatches(submitted, row),
-						{ submitted, returned: row }
-					)
-					if (row) writeSyncedRow(phrasesCollection, PhraseSchema.parse(row))
-				})
+			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
+				lang: m.modified.lang,
+				text: m.modified.text,
+				only_reverse: m.modified.only_reverse,
+				...(m.modified.added_by ? { added_by: m.modified.added_by } : {}),
+			}))
+			const { data } = await supabase
+				.from('phrase')
+				.insert(submitted)
+				.select()
+				.throwOnError()
+			const returned = data?.map((row) => PhraseSchema.parse(row)) ?? []
+			should(
+				'phrase insert returned one row per phrase the optimistic insert added',
+				allRowsMatch(submitted, returned),
+				{ submitted, returned }
 			)
+			writeSyncedRows(phrasesCollection, returned)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
@@ -163,18 +158,6 @@ export const phraseTranslationsCollection = createCollection(
 							phraseTranslationsCollection,
 							TranslationSchema.parse(row)
 						)
-				})
-			)
-			return { refetch: false }
-		},
-		onDelete: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					await supabase
-						.from('phrase_translation')
-						.delete()
-						.eq('id', m.original.id)
-						.throwOnError()
 				})
 			)
 			return { refetch: false }
