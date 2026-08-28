@@ -208,6 +208,7 @@ export const commentPhraseLinksCollection = createCollection(
 			const { data } = await supabase
 				.from('comment_phrase_link')
 				.select()
+				.eq('deleted', false)
 				.throwOnError()
 			return data?.map((item) => CommentPhraseLinkSchema.parse(item)) ?? []
 		},
@@ -368,8 +369,6 @@ export const messageTagsCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		// No onDelete: the admin UI archives a tag by flipping `archived`,
-		// which the onUpdate handler above persists.
 	})
 )
 
@@ -382,6 +381,7 @@ export const messageTagLinksCollection = createCollection(
 			const { data } = await supabase
 				.from('message_tag_link')
 				.select()
+				.eq('deleted', false)
 				.throwOnError()
 			return data?.map((item) => MessageTagLinkSchema.parse(item)) ?? []
 		},
@@ -410,8 +410,6 @@ export const messageTagLinksCollection = createCollection(
 			writeSyncedRows(messageTagLinksCollection, returned)
 			return { refetch: false }
 		},
-		// No onDelete: unlinking a tag flips `deleted`, which arrives here as an
-		// ordinary update.
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				groupUpdatesByChanges(transaction.mutations).map(
@@ -431,10 +429,17 @@ export const messageTagLinksCollection = createCollection(
 								`Update on message_tag_link affected ${data?.length ?? 0} of ${keys.length} rows (permission denied or row removed).`
 							)
 						}
-						writeSyncedRows(
-							messageTagLinksCollection,
+						const rows =
 							data?.map((row) => MessageTagLinkSchema.parse(row)) ?? []
+						should(
+							'message_tag_link update returned one row per link changed',
+							allRowsMatch(
+								keys.map(() => changes),
+								rows
+							),
+							{ submitted: { changes, keys }, returned: rows }
 						)
+						writeSyncedRows(messageTagLinksCollection, rows)
 					}
 				)
 			)

@@ -1,6 +1,5 @@
 import { createOptimisticAction } from '@tanstack/db'
 
-import { toastError } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { writeSyncedRow, writeSyncedRows } from '@/lib/collections/synced-row'
 import type { uuid } from '@/types/main'
@@ -9,60 +8,65 @@ import {
 	commentsCollection,
 	messageTagLinksCollection,
 } from './collections'
-import { CommentPhraseLinkSchema, RequestCommentSchema } from './schemas'
+import {
+	CommentPhraseLinkSchema,
+	type MessageTagLinkType,
+	RequestCommentSchema,
+} from './schemas'
 
 /**
- * The live link between a message and a tag, if there is one. A detached link
- * stays in the collection with `deleted` set, and a message can hold both that
- * row and a later replacement, so "does this message carry this tag?" is a
- * question about the live rows only.
+ * Which of these messages already carry this tag, keyed by message id.
+ *
+ * A detached link stays in the collection with `deleted` set, and a message
+ * can hold both that row and a later replacement, so "does this message carry
+ * this tag?" is a question about the live rows only. One pass over the
+ * collection answers it for a whole selection.
  */
-const liveMessageTagLink = (messageId: uuid, tagSlug: string) =>
-	messageTagLinksCollection.toArray.find(
-		(link) =>
-			link.message_id === messageId &&
+function liveTagLinksByMessage(messageIds: Array<uuid>, tagSlug: string) {
+	const wanted = new Set(messageIds)
+	const byMessage = new Map<uuid, MessageTagLinkType>()
+	for (const link of messageTagLinksCollection.toArray) {
+		if (
+			!link.deleted &&
 			link.tag_slug === tagSlug &&
-			!link.deleted
-	)
+			wanted.has(link.message_id)
+		)
+			byMessage.set(link.message_id, link)
+	}
+	return byMessage
+}
 
 /**
- * Attach a tag to a message. Attaching one it already carries does nothing.
- * Reports its own failure, because every caller says the same thing about one.
+ * Attach a tag to these messages, in one transaction. Messages that already
+ * carry it are left alone, and attaching to none of them returns nothing.
  */
-export function attachMessageTag(messageId: uuid, tagSlug: string) {
-	if (liveMessageTagLink(messageId, tagSlug)) return
-	const tx = messageTagLinksCollection.insert({
-		id: crypto.randomUUID(),
-		message_id: messageId,
-		tag_slug: tagSlug,
-		created_at: new Date().toISOString(),
-		deleted: false,
-	})
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to add tag')
-		console.error(err)
-	})
-	return tx
+export function attachMessageTag(messageIds: Array<uuid>, tagSlug: string) {
+	const alreadyTagged = liveTagLinksByMessage(messageIds, tagSlug)
+	const rows = messageIds
+		.filter((messageId) => !alreadyTagged.has(messageId))
+		.map((messageId) => ({
+			id: crypto.randomUUID(),
+			message_id: messageId,
+			tag_slug: tagSlug,
+			created_at: new Date().toISOString(),
+			deleted: false,
+		}))
+	return rows.length ? messageTagLinksCollection.insert(rows) : undefined
 }
 
-/** Detach a tag from a message. Detaching one it doesn't carry does nothing. */
-export function detachMessageTag(messageId: uuid, tagSlug: string) {
-	const link = liveMessageTagLink(messageId, tagSlug)
-	if (!link) return
-	const tx = messageTagLinksCollection.update(link.id, (draft) => {
-		draft.deleted = true
-	})
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to remove tag')
-		console.error(err)
-	})
-	return tx
-}
-
-type DeleteCommentInput = {
-	commentId: uuid
-	/** The comment's own phrase links, from `useCommentPhraseLinks`. */
-	linkIds: Array<uuid>
+/**
+ * Detach a tag from these messages, in one transaction. Messages that don't
+ * carry it are left alone, and detaching from none of them returns nothing.
+ */
+export function detachMessageTag(messageIds: Array<uuid>, tagSlug: string) {
+	const linkIds = [...liveTagLinksByMessage(messageIds, tagSlug).values()].map(
+		(link) => link.id
+	)
+	return linkIds.length
+		? messageTagLinksCollection.update(linkIds, (drafts) => {
+				for (const draft of drafts) draft.deleted = true
+			})
+		: undefined
 }
 
 /**
@@ -72,21 +76,23 @@ type DeleteCommentInput = {
  * action across two collections rather than two `collection.update` calls that
  * could half succeed.
  */
-export const deleteComment = createOptimisticAction<DeleteCommentInput>({
-	onMutate: ({ commentId, linkIds }) => {
+export const deleteComment = createOptimisticAction<uuid>({
+	onMutate: (commentId) => {
 		commentsCollection.update(commentId, (draft) => {
 			draft.deleted = true
 			// Matches `blank_removed_comment`, so the text goes in the same tick
 			// rather than when the server's row lands.
 			draft.content = ''
 		})
-		for (const linkId of linkIds) {
-			commentPhraseLinksCollection.update(linkId, (draft) => {
-				draft.deleted = true
+		const linkIds = commentPhraseLinksCollection.toArray
+			.filter((link) => link.comment_id === commentId && !link.deleted)
+			.map((link) => link.id)
+		if (linkIds.length)
+			commentPhraseLinksCollection.update(linkIds, (drafts) => {
+				for (const draft of drafts) draft.deleted = true
 			})
-		}
 	},
-	mutationFn: async ({ commentId }) => {
+	mutationFn: async (commentId) => {
 		const { data } = await supabase
 			.from('request_comment')
 			.update({ deleted: true })

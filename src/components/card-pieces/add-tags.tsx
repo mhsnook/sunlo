@@ -3,8 +3,7 @@ import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Tags, X } from 'lucide-react'
-import { and, createOptimisticAction, eq } from '@tanstack/db'
-import { useLiveQuery } from '@tanstack/react-db'
+import { createOptimisticAction } from '@tanstack/db'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -21,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { langTagsCollection } from '@/features/languages/collections'
+import type { PhraseTagType } from '@/features/languages/schemas'
 import { phraseTagLinksCollection } from '@/features/phrases/collections'
 import {
 	PhraseFullFilteredType,
@@ -197,11 +197,7 @@ export function AddTags({
 							{phrase.tags?.length ? (
 								phrase.tags.map((tag) =>
 									allowRemove ? (
-										<RemovableTagBadge
-											key={tag.id}
-											tag={tag}
-											phraseId={phrase.id}
-										/>
+										<RemovableTagBadge key={tag.id} tag={tag} />
 									) : (
 										<Badge key={tag.id} variant="secondary">
 											{tag.name}
@@ -264,36 +260,17 @@ export function AddTags({
 	)
 }
 
-function RemovableTagBadge({
-	tag,
-	phraseId,
-}: {
-	tag: { id: string; name: string }
-	phraseId: string
-}) {
+function RemovableTagBadge({ tag }: { tag: PhraseTagType }) {
 	const { userId, isAdmin } = useAuth()
-	// The link row, not just the tag: removing one flips its `deleted` flag,
-	// and the policy behind that update is `added_by = auth.uid() or
-	// is_admin()`. Anyone else gets the badge without the X.
-	const { data: links } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: phraseTagLinksCollection })
-				.where(({ link }) =>
-					and(
-						eq(link.phrase_id, phraseId),
-						eq(link.tag_id, tag.id),
-						eq(link.deleted, false)
-					)
-				),
-		[phraseId, tag.id]
-	)
-	const link = links?.[0]
-	const canRemove = !!link && (isAdmin || link.added_by === userId)
+
+	// Removing a tag flips its link row's `deleted` flag, and the policy behind
+	// that update is `added_by = auth.uid() or is_admin()`. Anyone else gets
+	// the badge without the X.
+	if (!isAdmin && tag.addedBy !== userId)
+		return <Badge variant="secondary">{tag.name}</Badge>
 
 	const removeTag = () => {
-		if (!link) return
-		const tx = phraseTagLinksCollection.update(link.id, (draft) => {
+		const tx = phraseTagLinksCollection.update(tag.linkId, (draft) => {
 			draft.deleted = true
 		})
 		tx.isPersisted.promise.then(
@@ -304,8 +281,6 @@ function RemovableTagBadge({
 			}
 		)
 	}
-
-	if (!canRemove) return <Badge variant="secondary">{tag.name}</Badge>
 
 	return (
 		<Badge variant="secondary" className="gap-1">

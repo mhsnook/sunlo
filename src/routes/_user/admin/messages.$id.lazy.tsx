@@ -3,6 +3,7 @@ import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ExternalLink, Plus, X } from 'lucide-react'
 
+import { toastError } from '@/components/ui/sonner'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
@@ -20,15 +21,9 @@ import {
 	messagesCollection,
 	phraseRequestsCollection,
 } from '@/features/requests/collections'
-import {
-	useMessageTags,
-	useMessageTagsForMessage,
-} from '@/features/requests/hooks'
+import { useMessageTags, useMessageTagsForMessage } from '@/features/requests'
 import type { uuid } from '@/types/main'
-import {
-	attachMessageTag,
-	detachMessageTag,
-} from '@/features/requests/mutations'
+import { attachMessageTag, detachMessageTag } from '@/features/requests'
 
 export const Route = createLazyFileRoute('/_user/admin/messages/$id')({
 	component: AdminMessageDetail,
@@ -104,7 +99,7 @@ function AdminMessageDetail() {
 									type="button"
 									className="ms-1 -me-1 inline-flex items-center"
 									aria-label={`Remove ${tag.label}`}
-									onClick={() => detachMessageTag(message.id, tag.slug)}
+									onClick={() => removeTag(message.id, tag.slug)}
 								>
 									<X className="h-3 w-3" />
 								</button>
@@ -205,8 +200,8 @@ function AddTagPopover({
 									<Checkbox
 										checked={isOn}
 										onCheckedChange={(checked) => {
-											if (checked) attachMessageTag(messageId, tag.slug)
-											else detachMessageTag(messageId, tag.slug)
+											if (checked) addTag(messageId, tag.slug)
+											else removeTag(messageId, tag.slug)
 										}}
 									/>
 									<span>{tag.label}</span>
@@ -217,5 +212,25 @@ function AddTagPopover({
 				</ul>
 			</PopoverContent>
 		</Popover>
+	)
+}
+
+// One message at a time, from a badge's X or a checkbox. The bulk selection
+// bar calls the feature mutations directly and reports its own aggregate.
+function addTag(messageId: uuid, tagSlug: string) {
+	attachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to add tag')
+			console.error(err)
+		}
+	)
+}
+
+function removeTag(messageId: uuid, tagSlug: string) {
+	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to remove tag')
+			console.error(err)
+		}
 	)
 }

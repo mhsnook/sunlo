@@ -1,6 +1,6 @@
 import { type CSSProperties } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Globe,
 	Users,
@@ -22,8 +22,8 @@ import {
 } from '@/features/languages/hooks'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { phraseRequestsCollection } from '@/features/requests/collections'
-import { phraseRequestsActive } from '@/features/requests/live'
-import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
+import { phraseRequestsActive } from '@/features/requests'
+import { playlistPhraseLinksActive } from '@/features/playlists/live'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { useAuth } from '@/lib/use-auth'
 import languages from '@/lib/languages'
@@ -447,9 +447,7 @@ function TrendingPlaylistsSection() {
 	)
 
 	const { data: playlistLinks } = useLiveQuery((q) =>
-		q
-			.from({ link: playlistPhraseLinksCollection })
-			.where(({ link }) => eq(link.deleted, false))
+		q.from({ link: playlistPhraseLinksActive })
 	)
 
 	// Count phrases per playlist

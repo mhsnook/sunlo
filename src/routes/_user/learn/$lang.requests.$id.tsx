@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
+import { eq, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 import { CSSProperties, useId } from 'react'
 import { Paperclip } from 'lucide-react'
@@ -8,7 +8,7 @@ import type { uuid } from '@/types/main'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import { useRequest } from '@/features/requests/hooks'
+import { useRequest } from '@/features/requests'
 import { Markdown } from '@/components/my-markdown'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
@@ -28,7 +28,8 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 } from '@/features/requests/collections'
-import { useOneComment } from '@/features/requests/hooks'
+import { useOneComment, useRequestThread } from '@/features/requests'
+import { commentPhraseLinksActive } from '@/features/requests'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
 	CommentDialog,
@@ -203,10 +204,8 @@ function AnswersOnlyView() {
 	const { data: links, isLoading } = useLiveQuery(
 		(q) =>
 			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) =>
-					and(eq(link.request_id, params.id), eq(link.deleted, false))
-				),
+				.from({ link: commentPhraseLinksActive })
+				.where(({ link }) => eq(link.request_id, params.id)),
 		[params.id]
 	)
 	if (isLoading) return <Loader />
@@ -272,50 +271,13 @@ function TopLevelComments({
 	requestId: uuid
 	lang: string
 }) {
-	const { data: threads, isLoading } = useLiveQuery(
-		(q) =>
-			q
-				.from({ comment: commentsCollection })
-				.where(({ comment }) =>
-					and(
-						eq(comment.request_id, requestId),
-						isNull(comment.parent_comment_id)
-					)
-				)
-				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
-		[requestId]
-	)
-
-	// A removed comment stays only as long as it is holding up a reply. With
-	// nothing under it there is nothing to anchor, so it goes.
-	const { data: liveReplies } = useLiveQuery(
-		(q) =>
-			q
-				.from({ reply: commentsCollection })
-				.where(({ reply }) =>
-					and(eq(reply.request_id, requestId), eq(reply.deleted, false))
-				)
-				.select(({ reply }) => ({
-					parent_comment_id: reply.parent_comment_id,
-				})),
-		[requestId]
-	)
-	const parentsWithReplies = new Set(
-		(liveReplies ?? []).map((reply) => reply.parent_comment_id)
-	)
-	const comments = (threads ?? []).filter(
-		(comment) => !comment.deleted || parentsWithReplies.has(comment.id)
-	)
-	// A tombstone is a place in the thread, not a comment, so it doesn't count.
-	const commentCount = comments.filter((comment) => !comment.deleted).length
-
-	if (isLoading) return <Loader />
+	const { comments, count } = useRequestThread(requestId)
 
 	return (
 		<>
 			<div className="my-4 space-y-3">
 				<p className="text-muted-foreground px-4 text-sm">
-					Showing {commentCount} comment{commentCount !== 1 ? 's' : ''}.
+					Showing {count} comment{count !== 1 ? 's' : ''}.
 				</p>
 				<div className="divide-y border">
 					{comments.map((comment) => (

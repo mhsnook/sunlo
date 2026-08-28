@@ -76,7 +76,7 @@ export type PhraseTagLinkType = z.infer<typeof PhraseTagLinkSchema>
 // aggregated from `phraseTagLinksCollection` joined with langTags.
 export type PhraseFullType = PhraseType & {
 	translations: Array<TranslationType>
-	tags: Array<{ id: string; name: string }>
+	tags: Array<{ id: string; name: string; linkId: string; addedBy: string }>
 }
 
 // Parser for places (RPC responses, write paths) that need to validate a

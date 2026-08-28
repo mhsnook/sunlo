@@ -1,4 +1,4 @@
-import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import type {
@@ -10,8 +10,8 @@ import type {
 import {
 	phrasePlaylistsCollection,
 	phrasePlaylistUpvotesCollection,
-	playlistPhraseLinksCollection,
 } from './collections'
+import { playlistPhraseLinksActive } from './live'
 import { phrasesFull } from '@/features/phrases/live'
 import { useUserId } from '@/lib/use-auth'
 
@@ -74,15 +74,13 @@ export function useOnePlaylistPhrases(
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ link: playlistPhraseLinksCollection })
+				.from({ link: playlistPhraseLinksActive })
 				.join(
 					{ phrase: phrasesFull },
 					({ link, phrase }) => eq(link.phrase_id, phrase.id),
 					'inner'
 				)
-				.where(({ link }) =>
-					and(eq(link.playlist_id, id), eq(link.deleted, false))
-				)
+				.where(({ link }) => eq(link.playlist_id, id))
 				.orderBy(({ link }) => link.order),
 		[id]
 	)

@@ -175,6 +175,9 @@ A delete frame also carries only the table's replica identity — the primary ke
 Two rules follow:
 
 - **Soft-delete the row instead of subscribing to DELETE.** A `deleted` flag turns the removal into an UPDATE, which Supabase scopes by RLS and sends with every column. Every table in the app works this way: the button calls `collection.update(key, (draft) => { draft.deleted = true })`, the collection keeps the row, and live queries filter on `deleted`. No `onDelete` handler anywhere, and no special realtime binding — a removal is an ordinary update on both sides of the wire. A join table keys on its own `id` like every other collection, with a partial unique index over the live rows holding the one-link-per-pair rule, so re-adding a link inserts a fresh row and the removed one stays behind it.
+
+**State the filter once, in a derived collection.** `phraseRequestsActive`, `commentsActive`, `phraseTagLinksActive` and the rest live in each feature's `live.ts` and pre-filter `deleted = false`; read sites use those and say nothing about the flag. Filter inline only where the flag is what the component is showing — the upvote button reads `upvote.deleted` to pick filled or outline, so it wants the raw collection.
+
 - **Don't subscribe to DELETE.** Comparing the frame's `uid` to the signed-in user would need `replica identity full`, which broadcasts every column of every deleted row on an RLS table. Soft-delete instead.
 
 No collection subscribes to DELETE today. `chat_message` declines on both counts: its replica identity is the bare `id`, which says nothing about who owned the message, and chat messages are never deleted.

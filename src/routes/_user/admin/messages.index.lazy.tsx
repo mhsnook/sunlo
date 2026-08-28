@@ -62,10 +62,8 @@ import {
 	PhraseRequestSchema,
 	type MessageTagType,
 } from '@/features/requests/schemas'
-import {
-	attachMessageTag,
-	detachMessageTag,
-} from '@/features/requests/mutations'
+import { attachMessageTag, detachMessageTag } from '@/features/requests'
+import { messageTagLinksActive } from '@/features/requests'
 
 export const Route = createLazyFileRoute('/_user/admin/messages/')({
 	component: AdminMessagesPage,
@@ -193,10 +191,7 @@ function AdminMessagesPage() {
 	)
 
 	const { data: allLinks } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: messageTagLinksCollection })
-				.where(({ link }) => eq(link.deleted, false)),
+		(q) => q.from({ link: messageTagLinksActive }),
 		[]
 	)
 
@@ -905,41 +900,25 @@ function SelectionBar({
 
 	const applyTag = (slug: string) => {
 		const ids = Array.from(selected)
-		Promise.all(
-			ids
-				.map(
-					(message_id) =>
-						attachMessageTag(message_id, slug)?.isPersisted.promise
-				)
-				.filter((pending) => pending !== undefined)
-		).then(
-			() => {
-				toastSuccess(`Applied "${slug}" to ${ids.length}`)
-				setTagPickerOpen(false)
-			},
-			// Each failure already reported itself; this just stops the
-			// success toast.
-			() => setTagPickerOpen(false)
-		)
+		bulkTag(attachMessageTag(ids, slug), `Applied "${slug}" to ${ids.length}`)
 	}
 
 	const removeTag = (slug: string) => {
 		const ids = Array.from(selected)
-		Promise.all(
-			ids
-				.map(
-					(message_id) =>
-						detachMessageTag(message_id, slug)?.isPersisted.promise
-				)
-				.filter((pending) => pending !== undefined)
-		).then(
-			() => {
-				toastSuccess(`Removed "${slug}" from ${ids.length}`)
-				setTagPickerOpen(false)
-			},
-			// Each failure already reported itself; this just stops the
-			// success toast.
-			() => setTagPickerOpen(false)
+		bulkTag(detachMessageTag(ids, slug), `Removed "${slug}" from ${ids.length}`)
+	}
+
+	// One transaction covers the whole selection, so there is one thing to
+	// report rather than one toast per message.
+	function bulkTag(tx: ReturnType<typeof attachMessageTag>, done: string) {
+		setTagPickerOpen(false)
+		if (!tx) return
+		tx.isPersisted.promise.then(
+			() => toastSuccess(done),
+			(err: unknown) => {
+				toastError('Failed to tag some messages')
+				console.error(err)
+			}
 		)
 	}
 
@@ -1113,7 +1092,7 @@ function MessageRowItem({
 									<button
 										type="button"
 										className="ms-1 -me-1 inline-flex items-center"
-										onClick={() => detachMessageTag(row.message_id, tag.slug)}
+										onClick={() => detachOneTag(row.message_id, tag.slug)}
 										aria-label={`Remove ${tag.label}`}
 									>
 										<X className="h-3 w-3" />
@@ -1135,5 +1114,16 @@ function MessageRowItem({
 				Request
 			</Link>
 		</li>
+	)
+}
+
+// One message at a time, from a badge's X. The selection bar above calls the
+// feature mutation directly and reports its own aggregate.
+function detachOneTag(messageId: string, tagSlug: string) {
+	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to remove tag')
+			console.error(err)
+		}
 	)
 }

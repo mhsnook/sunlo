@@ -1,6 +1,7 @@
 import { createOptimisticAction } from '@tanstack/db'
 
 import supabase from '@/lib/supabase-client'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
 import type { uuid } from '@/types/main'
 import {
 	phrasesCollection,
@@ -375,16 +376,17 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					updated_at: now,
 				})
 			}
-			for (const link of p.tagLinks) {
-				phraseTagLinksCollection.utils.writeInsert({
+			writeSyncedRows(
+				phraseTagLinksCollection,
+				p.tagLinks.map((link) => ({
 					id: link.linkId,
 					phrase_id: p.phraseId,
 					tag_id: link.tagId,
 					added_by: uid,
 					created_at: now,
 					deleted: false,
-				})
-			}
+				}))
+			)
 		}
 	},
 })

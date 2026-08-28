@@ -13,8 +13,11 @@
 -- schema change; only its unused client handler goes.
 -- 1. The guard. Three of these tables are pure join rows: nothing about them
 -- is editable except the new flag. The guard pins every column but `deleted`,
--- the way `guard_upvote_update` does for the three upvote tables, so opening
--- UPDATE does not also let a client repoint a link at another row.
+-- so opening UPDATE does not also let a client repoint a link at another row.
+--
+-- This is `guard_upvote_update` under a name that says what it does rather
+-- than which tables first needed it. The three upvote triggers move onto it
+-- and the old function goes, so the rule has one home.
 create or replace function public.guard_soft_delete_only () returns trigger language plpgsql as $$
 begin
   if (to_jsonb(old) - 'deleted') is distinct from (to_jsonb(new) - 'deleted') then
@@ -25,6 +28,20 @@ end;
 $$;
 
 alter function public.guard_soft_delete_only () owner to postgres;
+
+create or replace trigger guard_comment_upvote_update
+before update on public.comment_upvote for each row
+execute function public.guard_soft_delete_only ();
+
+create or replace trigger guard_phrase_playlist_upvote_update
+before update on public.phrase_playlist_upvote for each row
+execute function public.guard_soft_delete_only ();
+
+create or replace trigger guard_phrase_request_upvote_update
+before update on public.phrase_request_upvote for each row
+execute function public.guard_soft_delete_only ();
+
+drop function if exists public.guard_upvote_update ();
 
 -- 2. phrase_tag. Anyone signed in can tag a phrase, and the badge's X button
 -- was offered to every reader, but only the DELETE policy's admins ever
@@ -52,6 +69,11 @@ add constraint phrase_tag_pkey primary key (id);
 create unique index phrase_tag_phrase_id_tag_id_live_idx on public.phrase_tag using btree (phrase_id, tag_id)
 where
 	(deleted = false);
+
+-- The dropped composite primary key was also the only index leading with
+-- `phrase_id`, which is what Postgres scans when a phrase is removed. The
+-- partial index above cannot serve a lookup that says nothing about `deleted`.
+create index phrase_tag_phrase_id_idx on public.phrase_tag using btree (phrase_id);
 
 create policy "Taggers and admins can soft-delete phrase tags" on public.phrase_tag
 for update
@@ -159,6 +181,8 @@ add constraint message_tag_link_pkey primary key (id);
 create unique index message_tag_link_message_id_tag_slug_live_idx on public.message_tag_link using btree (message_id, tag_slug)
 where
 	(deleted = false);
+
+create index message_tag_link_message_id_idx on public.message_tag_link using btree (message_id);
 
 create policy "Admins can update message tag links" on public.message_tag_link
 for update

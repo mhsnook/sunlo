@@ -176,6 +176,9 @@ export const phraseTagLinksCollection = createCollection(
 			const { data } = await supabase
 				.from('phrase_tag')
 				.select('*')
+				// A removed link never comes back — re-adding a tag inserts a
+				// fresh row — so no client has a use for one.
+				.eq('deleted', false)
 				.throwOnError()
 			return data?.map((r) => PhraseTagLinkSchema.parse(r)) ?? []
 		},
@@ -204,8 +207,6 @@ export const phraseTagLinksCollection = createCollection(
 			writeSyncedRows(phraseTagLinksCollection, returned)
 			return { refetch: false }
 		},
-		// No onDelete: removing a tag flips `deleted`, which arrives here as an
-		// ordinary update.
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				groupUpdatesByChanges(transaction.mutations).map(

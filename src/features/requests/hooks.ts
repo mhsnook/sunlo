@@ -1,16 +1,20 @@
-import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import { useMemo } from 'react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
-	commentPhraseLinksCollection,
-	commentUpvotesCollection,
 	commentsCollection,
-	messageTagLinksCollection,
+	commentUpvotesCollection,
 	messageTagsCollection,
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from './collections'
+import {
+	commentPhraseLinksActive,
+	commentsActive,
+	messageTagLinksActive,
+	phraseRequestsActive,
+} from './live'
 import type {
 	CommentPhraseLinkType,
 	CommentUpvoteType,
@@ -26,10 +30,8 @@ export const useRequestLinksPhraseIds = (
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) =>
-					and(eq(link.request_id, requestId), eq(link.deleted, false))
-				)
+				.from({ link: commentPhraseLinksActive })
+				.where(({ link }) => eq(link.request_id, requestId))
 				.select(({ link }) => ({ phrase_id: link.phrase_id }))
 				.distinct(),
 		[requestId]
@@ -45,10 +47,8 @@ export const useRequestCounts = (
 	const countComments = useLiveQuery(
 		(q) =>
 			q
-				.from({ comment: commentsCollection })
-				.where(({ comment }) =>
-					and(eq(id, comment.request_id), eq(comment.deleted, false))
-				),
+				.from({ comment: commentsActive })
+				.where(({ comment }) => eq(id, comment.request_id)),
 		[id]
 	).data?.length
 	const countLinks = useRequestLinksPhraseIds(id).data?.length
@@ -56,6 +56,57 @@ export const useRequestCounts = (
 		countComments,
 		countLinks,
 	}
+}
+
+/**
+ * A request's top-level comments, in the order the thread shows them.
+ *
+ * A removed comment is kept only while it is holding up a reply — with nothing
+ * under it there is nothing to anchor, so it goes. `count` is the comments
+ * proper: a tombstone is a place in the thread, not a comment.
+ */
+export const useRequestThread = (
+	requestId: uuid
+): { comments: Array<RequestCommentType>; count: number } => {
+	const { data: threads } = useLiveQuery(
+		(q) =>
+			q
+				.from({ comment: commentsCollection })
+				.where(({ comment }) =>
+					and(
+						eq(comment.request_id, requestId),
+						isNull(comment.parent_comment_id)
+					)
+				)
+				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
+		[requestId]
+	)
+	const { data: replyParents } = useLiveQuery(
+		(q) =>
+			q
+				.from({ reply: commentsActive })
+				.where(({ reply }) => eq(reply.request_id, requestId))
+				.select(({ reply }) => ({ parent_comment_id: reply.parent_comment_id }))
+				.distinct(),
+		[requestId]
+	)
+
+	return useMemo(() => {
+		const withReplies = new Set(
+			(replyParents ?? []).map((reply) => reply.parent_comment_id)
+		)
+		const comments: Array<RequestCommentType> = []
+		let count = 0
+		for (const comment of threads ?? []) {
+			if (comment.deleted) {
+				if (withReplies.has(comment.id)) comments.push(comment)
+			} else {
+				comments.push(comment)
+				count++
+			}
+		}
+		return { comments, count }
+	}, [threads, replyParents])
 }
 
 export const useRequest = (
@@ -114,10 +165,8 @@ export const useOneComment = (
 			!commentId
 				? undefined
 				: q
-						.from({ comment: commentsCollection })
-						.where(({ comment }) =>
-							and(eq(comment.id, commentId), eq(comment.deleted, false))
-						)
+						.from({ comment: commentsActive })
+						.where(({ comment }) => eq(comment.id, commentId))
 						.findOne(),
 		[commentId]
 	)
@@ -129,15 +178,15 @@ export const useOneComment = (
  * its own subscription. Keeps the cross-feature edge inside `phrases`.
  */
 export const useCommentPhraseLinks = (
-	commentId: uuid
+	commentId: uuid | undefined | null
 ): UseLiveQueryResult<CommentPhraseLinkType[]> =>
 	useLiveQuery(
 		(q) =>
-			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) =>
-					and(eq(link.comment_id, commentId), eq(link.deleted, false))
-				),
+			!commentId
+				? undefined
+				: q
+						.from({ link: commentPhraseLinksActive })
+						.where(({ link }) => eq(link.comment_id, commentId)),
 		[commentId]
 	)
 
@@ -169,26 +218,18 @@ export type RequestTagSet = {
 export function useRequestTagSets(lang: string): RequestTagSet[] {
 	const { data: tags } = useMessageTags()
 	const { data: tagLinks } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: messageTagLinksCollection })
-				.where(({ link }) => eq(link.deleted, false)),
+		(q) => q.from({ link: messageTagLinksActive }),
 		[]
 	)
 	const { data: requests } = useLiveQuery(
 		(q) =>
 			q
-				.from({ request: phraseRequestsCollection })
-				.where(({ request }) =>
-					and(eq(request.lang, lang), eq(request.deleted, false))
-				),
+				.from({ request: phraseRequestsActive })
+				.where(({ request }) => eq(request.lang, lang)),
 		[lang]
 	)
 	const { data: phraseLinks } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.deleted, false)),
+		(q) => q.from({ link: commentPhraseLinksActive }),
 		[]
 	)
 
@@ -250,19 +291,14 @@ export function useRequestsByMessageTag(lang: string): {
 } {
 	const { data: tags } = useMessageTags()
 	const { data: tagLinks } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: messageTagLinksCollection })
-				.where(({ link }) => eq(link.deleted, false)),
+		(q) => q.from({ link: messageTagLinksActive }),
 		[]
 	)
 	const { data: requests } = useLiveQuery(
 		(q) =>
 			q
-				.from({ request: phraseRequestsCollection })
-				.where(({ request }) =>
-					and(eq(request.lang, lang), eq(request.deleted, false))
-				)
+				.from({ request: phraseRequestsActive })
+				.where(({ request }) => eq(request.lang, lang))
 				.orderBy(({ request }) => request.created_at, 'desc'),
 		[lang]
 	)
@@ -328,10 +364,8 @@ export const useMessageTagsForMessage = (
 			!messageId
 				? undefined
 				: q
-						.from({ link: messageTagLinksCollection })
-						.where(({ link }) =>
-							and(eq(link.message_id, messageId), eq(link.deleted, false))
-						)
+						.from({ link: messageTagLinksActive })
+						.where(({ link }) => eq(link.message_id, messageId))
 						.join(
 							{ tag: messageTagsCollection },
 							({ link, tag }) => eq(link.tag_slug, tag.slug),
@@ -352,10 +386,8 @@ export function useAnyonesComments(
 	return useLiveQuery(
 		(q) => {
 			let query = q
-				.from({ comment: commentsCollection })
-				.where(({ comment }) =>
-					and(eq(comment.uid, uid), eq(comment.deleted, false))
-				)
+				.from({ comment: commentsActive })
+				.where(({ comment }) => eq(comment.uid, uid))
 				.join(
 					{ request: phraseRequestsCollection },
 					({ comment, request }) => eq(comment.request_id, request.id),

@@ -79,6 +79,7 @@ export const playlistPhraseLinksCollection = createCollection(
 			const { data } = await supabase
 				.from('playlist_phrase_link')
 				.select()
+				.eq('deleted', false)
 				.throwOnError()
 
 			return data
@@ -136,8 +137,6 @@ export const playlistPhraseLinksCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		// No onDelete: removing a phrase from a playlist flips `deleted`, which
-		// the onUpdate handler above already persists.
 	})
 )
 

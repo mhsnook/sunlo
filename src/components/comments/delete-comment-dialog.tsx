@@ -13,8 +13,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { RequestCommentType } from '@/features/requests/schemas'
-import { useCommentPhraseLinks } from '@/features/requests/hooks'
-import { deleteComment } from '@/features/requests/mutations'
+import { deleteComment } from '@/features/requests'
 
 export function DeleteCommentDialog({
 	comment,
@@ -22,14 +21,10 @@ export function DeleteCommentDialog({
 	comment: RequestCommentType
 }) {
 	const [open, setOpen] = useState(false)
-	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
 
 	const removeComment = () => {
 		setOpen(false)
-		const tx = deleteComment({
-			commentId: comment.id,
-			linkIds: (phraseLinks ?? []).map((link) => link.id),
-		})
+		const tx = deleteComment(comment.id)
 		tx.isPersisted.promise.then(
 			() => toastSuccess('Comment removed'),
 			(err: unknown) => {

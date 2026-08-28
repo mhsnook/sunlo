@@ -31,15 +31,12 @@ import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { type PhraseRequestType } from '@/features/requests/schemas'
-import {
-	attachMessageTag,
-	detachMessageTag,
-} from '@/features/requests/mutations'
+import { attachMessageTag, detachMessageTag } from '@/features/requests'
 import {
 	useMessageTags,
 	useMessageTagsForMessage,
 	useRequestLinksPhraseIds,
-} from '@/features/requests/hooks'
+} from '@/features/requests'
 import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { useAuth } from '@/lib/use-auth'
 import { ago } from '@/lib/dayjs'
@@ -198,7 +195,7 @@ function MessageSection({
 										type="button"
 										className="ms-1 -me-1 inline-flex items-center"
 										aria-label={`Remove ${tag.label}`}
-										onClick={() => detachMessageTag(messageId, tag.slug)}
+										onClick={() => removeTag(messageId, tag.slug)}
 									>
 										<X className="h-3 w-3" />
 									</button>
@@ -263,8 +260,8 @@ function AddTagPopover({
 									<Checkbox
 										checked={isOn}
 										onCheckedChange={(checked) => {
-											if (checked) attachMessageTag(messageId, tag.slug)
-											else detachMessageTag(messageId, tag.slug)
+											if (checked) addTag(messageId, tag.slug)
+											else removeTag(messageId, tag.slug)
 										}}
 									/>
 									<span>{tag.label}</span>
@@ -512,5 +509,25 @@ function ArchiveRequestButton({
 				<Archive className="text-destructive size-4" />
 			)}
 		</Button>
+	)
+}
+
+// One message at a time, from a badge's X or a checkbox. The bulk selection
+// bar calls the feature mutations directly and reports its own aggregate.
+function addTag(messageId: uuid, tagSlug: string) {
+	attachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to add tag')
+			console.error(err)
+		}
+	)
+}
+
+function removeTag(messageId: uuid, tagSlug: string) {
+	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to remove tag')
+			console.error(err)
+		}
 	)
 }

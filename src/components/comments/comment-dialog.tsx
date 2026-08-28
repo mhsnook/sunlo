@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { and, createOptimisticAction, eq } from '@tanstack/db'
-import { useLiveQuery } from '@tanstack/react-db'
+import { createOptimisticAction } from '@tanstack/db'
 import * as z from 'zod'
 import { Paperclip, Plus, Search, X } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
@@ -29,7 +28,7 @@ import {
 	type RequestCommentType,
 } from '@/features/requests/schemas'
 import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
-import { useRequest } from '@/features/requests/hooks'
+import { useCommentPhraseLinks, useRequest } from '@/features/requests'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
@@ -770,21 +769,5 @@ function EditCommentForm({
 				</Button>
 			</div>
 		</form>
-	)
-}
-
-function useCommentPhraseLinks(commentId: uuid | undefined) {
-	return useLiveQuery(
-		(q) =>
-			commentId
-				? q
-						.from({ link: commentPhraseLinksCollection })
-						.where(({ link }) =>
-							and(eq(link.comment_id, commentId), eq(link.deleted, false))
-						)
-				: q
-						.from({ link: commentPhraseLinksCollection })
-						.where(({ link }) => eq(link.comment_id, '')),
-		[commentId]
 	)
 }

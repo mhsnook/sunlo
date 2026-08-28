@@ -296,17 +296,6 @@ $$;
 
 alter function "public"."guard_soft_delete_only" () owner to "postgres";
 
-create or replace function "public"."guard_upvote_update" () returns "trigger" language "plpgsql" as $$
-begin
-  if (to_jsonb(old) - 'deleted') is distinct from (to_jsonb(new) - 'deleted') then
-    raise exception 'An upvote row is immutable except for its deleted flag';
-  end if;
-  return new;
-end;
-$$;
-
-alter function "public"."guard_upvote_update" () owner to "postgres";
-
 create or replace function "public"."handle_new_user" () returns "trigger" language "plpgsql" security definer as $$
 begin
 	insert into "public"."user_profile" ("uid", "flags")
@@ -1966,6 +1955,8 @@ create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid"
 
 create index "idx_user_review_milestone_session_created" on "public"."user_review_milestone" using "btree" ("uid", "lang", "day_session", "created_at" desc);
 
+create index "message_tag_link_message_id_idx" on "public"."message_tag_link" using "btree" ("message_id");
+
 create unique index "message_tag_link_message_id_tag_slug_live_idx" on "public"."message_tag_link" using "btree" ("message_id", "tag_slug")
 where
 	("deleted" = false);
@@ -1977,6 +1968,8 @@ create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btre
 create unique index "phrase_tag_phrase_id_tag_id_live_idx" on "public"."phrase_tag" using "btree" ("phrase_id", "tag_id")
 where
 	("deleted" = false);
+
+create index "phrase_tag_phrase_id_idx" on "public"."phrase_tag" using "btree" ("phrase_id");
 
 create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
 
@@ -2064,7 +2057,7 @@ execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "guard_comment_upvote_update"
 before update on "public"."comment_upvote" for each row
-execute function "public"."guard_upvote_update" ();
+execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "guard_message_tag_link_update"
 before update on "public"."message_tag_link" for each row
@@ -2072,11 +2065,11 @@ execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "guard_phrase_playlist_upvote_update"
 before update on "public"."phrase_playlist_upvote" for each row
-execute function "public"."guard_upvote_update" ();
+execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "guard_phrase_request_upvote_update"
 before update on "public"."phrase_request_upvote" for each row
-execute function "public"."guard_upvote_update" ();
+execute function "public"."guard_soft_delete_only" ();
 
 create or replace trigger "guard_phrase_tag_update"
 before update on "public"."phrase_tag" for each row
@@ -3685,12 +3678,6 @@ grant all on function "public"."guard_soft_delete_only" () to "anon";
 grant all on function "public"."guard_soft_delete_only" () to "authenticated";
 
 grant all on function "public"."guard_soft_delete_only" () to "service_role";
-
-grant all on function "public"."guard_upvote_update" () to "anon";
-
-grant all on function "public"."guard_upvote_update" () to "authenticated";
-
-grant all on function "public"."guard_upvote_update" () to "service_role";
 
 grant all on function "public"."halfvec_accum" (double precision[], "public"."halfvec") to "postgres";
 
