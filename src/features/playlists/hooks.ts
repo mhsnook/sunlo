@@ -1,4 +1,4 @@
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import type {
@@ -80,7 +80,9 @@ export function useOnePlaylistPhrases(
 					({ link, phrase }) => eq(link.phrase_id, phrase.id),
 					'inner'
 				)
-				.where(({ link }) => eq(link.playlist_id, id))
+				.where(({ link }) =>
+					and(eq(link.playlist_id, id), eq(link.deleted, false))
+				)
 				.orderBy(({ link }) => link.order),
 		[id]
 	)

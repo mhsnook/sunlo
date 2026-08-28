@@ -3,7 +3,7 @@
 // ignores it) to keep the route module itself focused on data + layout.
 import { type CSSProperties, type ReactNode, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	ArrowRight,
 	Check,
@@ -127,7 +127,9 @@ export function SetTile({
 		(q) =>
 			q
 				.from({ link: playlistPhraseLinksCollection })
-				.where(({ link }) => eq(link.playlist_id, playlist.id)),
+				.where(({ link }) =>
+					and(eq(link.playlist_id, playlist.id), eq(link.deleted, false))
+				),
 		[playlist.id]
 	)
 	const { data: deckPids } = useDeckPids(lang)

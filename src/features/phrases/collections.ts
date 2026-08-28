@@ -182,35 +182,56 @@ export const phraseTagLinksCollection = createCollection(
 		queryClient,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		// Upsert, not insert: re-adding a tag someone removed has to revive the
+		// soft-deleted row, which an insert would hit the (phrase_id, tag_id)
+		// primary key on. `added_by` is left to its column default so the
+		// revive path touches nothing but `deleted`, which is all
+		// `guard_soft_delete_only` allows.
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
 				phrase_id: m.modified.phrase_id,
 				tag_id: m.modified.tag_id,
-				added_by: m.modified.added_by,
+				deleted: false,
 			}))
 			const { data } = await supabase
 				.from('phrase_tag')
-				.insert(submitted)
+				.upsert(submitted, { onConflict: 'phrase_id,tag_id' })
 				.select()
 				.throwOnError()
 			const returned = data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
 			should(
-				'phrase_tag insert returned one row per tag link added',
+				'phrase_tag upsert returned one row per tag link added',
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
 			writeSyncedRows(phraseTagLinksCollection, returned)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
+		// No onDelete: removing a tag flips `deleted`, which arrives here as an
+		// ordinary update. A composite key can't be batched with `.in()`, which
+		// matches a column rather than a tuple, so the update fans out per row.
+		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
-					await supabase
+					const changes = m.changes as TablesUpdate<'phrase_tag'>
+					const { data } = await supabase
 						.from('phrase_tag')
-						.delete()
+						.update(changes)
 						.eq('phrase_id', m.original.phrase_id)
 						.eq('tag_id', m.original.tag_id)
+						.select()
 						.throwOnError()
+					const row = data?.[0]
+					should(
+						`phrase_tag (${m.original.phrase_id}, ${m.original.tag_id}) server row matches the submitted update`,
+						rowMatches(changes, row),
+						{ submitted: changes, returned: row }
+					)
+					if (row)
+						writeSyncedRow(
+							phraseTagLinksCollection,
+							PhraseTagLinkSchema.parse(row)
+						)
 				})
 			)
 			return { refetch: false }

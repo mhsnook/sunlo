@@ -189,7 +189,10 @@ function AdminMessagesPage() {
 	)
 
 	const { data: allLinks } = useLiveQuery(
-		(q) => q.from({ link: messageTagLinksCollection }),
+		(q) =>
+			q
+				.from({ link: messageTagLinksCollection })
+				.where(({ link }) => eq(link.deleted, false)),
 		[]
 	)
 
@@ -901,11 +904,23 @@ function SelectionBar({
 		Promise.all(
 			ids.map(async (message_id) => {
 				try {
-					const tx = messageTagLinksCollection.insert({
-						message_id,
-						tag_slug: slug,
-						created_at: new Date().toISOString(),
-					})
+					// A tag an admin detached is still in the collection with
+					// `deleted` set, so re-attaching it revives that row rather
+					// than inserting a second one under the same
+					// (message_id, tag_slug) key.
+					const key = `${message_id}--${slug}` as const
+					const existing = messageTagLinksCollection.get(key)
+					if (existing && !existing.deleted) return
+					const tx = existing
+						? messageTagLinksCollection.update(key, (draft) => {
+								draft.deleted = false
+							})
+						: messageTagLinksCollection.insert({
+								message_id,
+								tag_slug: slug,
+								created_at: new Date().toISOString(),
+								deleted: false,
+							})
 					await tx.isPersisted.promise
 				} catch (err) {
 					// Duplicate (already tagged) is fine; surface other errors.
@@ -934,7 +949,12 @@ function SelectionBar({
 		Promise.all(
 			ids.map(async (message_id) => {
 				try {
-					const tx = messageTagLinksCollection.delete(`${message_id}--${slug}`)
+					const tx = messageTagLinksCollection.update(
+						`${message_id}--${slug}`,
+						(draft) => {
+							draft.deleted = true
+						}
+					)
 					await tx.isPersisted.promise
 				} catch (err) {
 					if (
@@ -1153,7 +1173,12 @@ function MessageRowItem({
 }
 
 function detachTag(messageId: string, slug: string) {
-	const tx = messageTagLinksCollection.delete(`${messageId}--${slug}`)
+	const tx = messageTagLinksCollection.update(
+		`${messageId}--${slug}`,
+		(draft) => {
+			draft.deleted = true
+		}
+	)
 	tx.isPersisted.promise.catch((err: unknown) => {
 		toastError('Failed to remove tag')
 		console.error(err)

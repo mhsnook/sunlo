@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { RequestCommentType } from '@/features/requests/schemas'
-import { commentsCollection } from '@/features/requests/collections'
+import { useCommentPhraseLinks } from '@/features/requests/hooks'
+import { deleteComment } from '@/features/requests/mutations'
 
 export function DeleteCommentDialog({
 	comment,
@@ -21,10 +22,14 @@ export function DeleteCommentDialog({
 	comment: RequestCommentType
 }) {
 	const [open, setOpen] = useState(false)
+	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
 
-	const deleteComment = () => {
+	const removeComment = () => {
 		setOpen(false)
-		const tx = commentsCollection.delete(comment.id)
+		const tx = deleteComment({
+			commentId: comment.id,
+			linkIds: (phraseLinks ?? []).map((link) => link.id),
+		})
 		tx.isPersisted.promise.then(
 			() => toastSuccess('Comment deleted'),
 			(err: unknown) => {
@@ -49,14 +54,13 @@ export function DeleteCommentDialog({
 				<AlertDialogHeader>
 					<AlertDialogTitle>Delete comment?</AlertDialogTitle>
 					<AlertDialogDescription>
-						This will permanently delete your comment and all its replies. This
-						action cannot be undone.
+						This removes your comment and all its replies. You can't undo this.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
-						onClick={deleteComment}
+						onClick={removeComment}
 						className="bg-destructive text-destructive-foreground"
 						data-testid="confirm-delete-comment-button"
 					>

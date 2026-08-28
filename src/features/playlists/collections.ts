@@ -136,17 +136,8 @@ export const playlistPhraseLinksCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			await supabase
-				.from('playlist_phrase_link')
-				.delete()
-				.in(
-					'id',
-					transaction.mutations.map((m) => m.original.id)
-				)
-				.throwOnError()
-			return { refetch: false }
-		},
+		// No onDelete: removing a phrase from a playlist flips `deleted`, which
+		// the onUpdate handler above already persists.
 	})
 )
 

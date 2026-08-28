@@ -35,6 +35,9 @@ export {
 	messageTagLinksCollection,
 } from './collections'
 
+// Mutations
+export { deleteComment } from './mutations'
+
 // Live collections
 export { phraseRequestsActive } from './live'
 

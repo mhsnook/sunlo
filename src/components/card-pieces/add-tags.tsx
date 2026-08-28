@@ -21,7 +21,12 @@ import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { langTagsCollection } from '@/features/languages/collections'
 import { phraseTagLinksCollection } from '@/features/phrases/collections'
-import { PhraseFullFilteredType } from '@/features/phrases/schemas'
+import {
+	PhraseFullFilteredType,
+	PhraseTagLinkSchema,
+	type PhraseTagLinkType,
+} from '@/features/phrases/schemas'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
 import { useUserId } from '@/lib/use-auth'
 import { useAppForm } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
@@ -55,12 +60,24 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 					created_at: now,
 				})
 			}
-			phraseTagLinksCollection.insert({
-				phrase_id: phraseId,
-				tag_id: t.tagId,
-				added_by: uid,
-				created_at: now,
-			})
+			// A tag someone removed is still in the collection with `deleted`
+			// set, so re-adding it revives that row rather than inserting a
+			// second one under the same (phrase_id, tag_id) key.
+			const key = `${phraseId}--${t.tagId}` as const
+			const existing = phraseTagLinksCollection.get(key)
+			if (!existing) {
+				phraseTagLinksCollection.insert({
+					phrase_id: phraseId,
+					tag_id: t.tagId,
+					added_by: uid,
+					created_at: now,
+					deleted: false,
+				})
+			} else if (existing.deleted) {
+				phraseTagLinksCollection.update(key, (draft) => {
+					draft.deleted = false
+				})
+			}
 		}
 	},
 	mutationFn: async ({ phraseId, lang, uid, tags }) => {
@@ -71,13 +88,23 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 		if (newRows.length) {
 			await supabase.from('tag').insert(newRows).throwOnError()
 		}
+		// Upsert, not insert: a tag someone removed is still there with
+		// `deleted` set, and its (phrase_id, tag_id) primary key would reject
+		// the insert. `added_by` is left to its column default so the revive
+		// path touches nothing but `deleted`.
 		const linkRows = tags.map((t) => ({
 			phrase_id: phraseId,
 			tag_id: t.tagId,
-			added_by: uid,
+			deleted: false,
 		}))
+		let confirmedLinks: Array<PhraseTagLinkType> = []
 		if (linkRows.length) {
-			await supabase.from('phrase_tag').insert(linkRows).throwOnError()
+			const { data } = await supabase
+				.from('phrase_tag')
+				.upsert(linkRows, { onConflict: 'phrase_id,tag_id' })
+				.select()
+				.throwOnError()
+			confirmedLinks = data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
 		}
 		// Sync the confirmed rows so they survive the action's optimistic-state
 		// drop at the end of mutationFn.
@@ -92,13 +119,8 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 					created_at: now,
 				})
 			}
-			phraseTagLinksCollection.utils.writeInsert({
-				phrase_id: phraseId,
-				tag_id: t.tagId,
-				added_by: uid,
-				created_at: now,
-			})
 		}
+		writeSyncedRows(phraseTagLinksCollection, confirmedLinks)
 	},
 })
 
@@ -261,7 +283,12 @@ function RemovableTagBadge({
 	phraseId: string
 }) {
 	const removeTag = () => {
-		const tx = phraseTagLinksCollection.delete(`${phraseId}--${tag.id}`)
+		const tx = phraseTagLinksCollection.update(
+			`${phraseId}--${tag.id}`,
+			(draft) => {
+				draft.deleted = true
+			}
+		)
 		tx.isPersisted.promise.then(
 			() => toastSuccess(`Tag "${tag.name}" removed`),
 			(err: Error) => {

@@ -188,28 +188,14 @@ export const commentsCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			const ids = transaction.mutations.map((m) => m.original.id)
-			const { data } = await supabase
-				.from('request_comment')
-				.delete()
-				.in('id', ids)
-				.select()
-				.throwOnError()
-			const returned = data ?? []
-			should(
-				'request_comment delete removed one row per targeted comment',
-				returned.length === ids.length &&
-					ids.every((id) => returned.some((row) => row.id === id)),
-				{ submitted: ids, returned }
-			)
-			// Cascade-deleted replies and phrase links linger in the local
-			// collections until the next stale refetch, but they don't render
-			// (orphaned replies have no parent anchor; orphaned phrase links
-			// filter out of the provenance inner-join). Skipping the full-table
-			// refetch is worth that small inconsistency.
-			return { refetch: false }
-		},
+		// No onDelete: deleting a comment flips `deleted`, which the onUpdate
+		// handler above persists. The FK cascade that used to take the replies
+		// and phrase links with it is now `cascade_soft_delete_comment`, a
+		// trigger — the replies belong to other people, so no client could flag
+		// them under RLS. Those replies stay unflagged in the local collection
+		// until the next fetch, and never render: they only mount inside the
+		// parent comment, which is gone from every live query the moment the
+		// flag lands.
 	})
 )
 
@@ -382,21 +368,8 @@ export const messageTagsCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			const slugs = transaction.mutations.map((m) => m.original.slug)
-			const { data } = await supabase
-				.from('message_tag')
-				.delete()
-				.in('slug', slugs)
-				.select()
-				.throwOnError()
-			if ((data?.length ?? 0) !== slugs.length) {
-				throw new Error(
-					`Delete on message_tag affected ${data?.length ?? 0} of ${slugs.length} rows (permission denied or row removed).`
-				)
-			}
-			return { refetch: false }
-		},
+		// No onDelete: the admin UI archives a tag by flipping `archived`,
+		// which the onUpdate handler above persists.
 	})
 )
 
@@ -419,40 +392,55 @@ export const messageTagLinksCollection = createCollection(
 		schema: MessageTagLinkSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		// Upsert, not insert: re-attaching a tag an admin detached has to revive
+		// the soft-deleted row, which an insert would hit the
+		// (message_id, tag_slug) primary key on.
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
 				message_id: m.modified.message_id,
 				tag_slug: m.modified.tag_slug,
+				deleted: false,
 			}))
 			const { data } = await supabase
 				.from('message_tag_link')
-				.insert(submitted)
+				.upsert(submitted, { onConflict: 'message_id,tag_slug' })
 				.select()
 				.throwOnError()
 			const returned = data?.map((row) => MessageTagLinkSchema.parse(row)) ?? []
 			should(
-				'message_tag_link insert returned one row per link added',
+				'message_tag_link upsert returned one row per link added',
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
 			writeSyncedRows(messageTagLinksCollection, returned)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
+		// No onDelete: unlinking a tag flips `deleted`, which arrives here as an
+		// ordinary update. A composite key can't be batched with `.in()`, which
+		// matches a column rather than a tuple, so the update fans out per row.
+		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
+					// .select() so we can confirm rows were actually affected:
+					// RLS-protected UPDATE silently returns 0 rows when the
+					// caller lacks permission (no PostgREST error). Throwing
+					// rolls the optimistic state back and surfaces the failure.
 					const { data } = await supabase
 						.from('message_tag_link')
-						.delete()
+						.update(m.changes)
 						.eq('message_id', m.original.message_id)
 						.eq('tag_slug', m.original.tag_slug)
 						.select()
 						.throwOnError()
 					if (!data || data.length === 0) {
 						throw new Error(
-							`Delete on message_tag_link (${m.original.message_id}, ${m.original.tag_slug}) affected no rows (permission denied or row already removed).`
+							`Update on message_tag_link (${m.original.message_id}, ${m.original.tag_slug}) affected no rows (permission denied or row removed).`
 						)
 					}
+					writeSyncedRow(
+						messageTagLinksCollection,
+						MessageTagLinkSchema.parse(data[0])
+					)
 				})
 			)
 			return { refetch: false }

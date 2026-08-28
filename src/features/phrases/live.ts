@@ -49,7 +49,9 @@ export const phrasesComposed = createLiveQueryCollection({
 						({ link, tag }) => eq(link.tag_id, tag.id),
 						'inner'
 					)
-					.where(({ link }) => eq(link.phrase_id, phrase.id))
+					.where(({ link }) =>
+						and(eq(link.phrase_id, phrase.id), eq(link.deleted, false))
+					)
 					.select(({ tag }) => ({ id: tag.id, name: tag.name }))
 			),
 		})),
@@ -135,7 +137,11 @@ export const usePhrasePlaylists = (
 							'inner'
 						)
 						.where(({ link, playlist }) =>
-							and(eq(link.phrase_id, phrase.id), eq(playlist.deleted, false))
+							and(
+								eq(link.phrase_id, phrase.id),
+								eq(link.deleted, false),
+								eq(playlist.deleted, false)
+							)
 						)
 						.select(({ playlist, link }) => ({
 							type: 'playlist' as const,
@@ -180,8 +186,13 @@ export const usePhraseComments = (
 							({ comment, request }) => eq(comment.request_id, request.id),
 							'inner'
 						)
-						.where(({ link, request }) =>
-							and(eq(link.phrase_id, phrase.id), eq(request.deleted, false))
+						.where(({ link, comment, request }) =>
+							and(
+								eq(link.phrase_id, phrase.id),
+								eq(link.deleted, false),
+								eq(comment.deleted, false),
+								eq(request.deleted, false)
+							)
 						)
 						.select(({ comment, request, link }) => ({
 							type: 'comment' as const,
@@ -234,7 +245,12 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 							({ link, playlist }) => eq(link.playlist_id, playlist.id),
 							'inner'
 						)
-						.where(({ link }) => inArray(link.playlist_id, playlistIds))
+						.where(({ link }) =>
+							and(
+								inArray(link.playlist_id, playlistIds),
+								eq(link.deleted, false)
+							)
+						)
 						.select(({ link, playlist }) => ({
 							phraseId: link.phrase_id,
 							playlistId: playlist.id,
@@ -254,7 +270,9 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 							({ link, request }) => eq(link.request_id, request.id),
 							'inner'
 						)
-						.where(({ link }) => inArray(link.request_id, requestIds))
+						.where(({ link }) =>
+							and(inArray(link.request_id, requestIds), eq(link.deleted, false))
+						)
 						.select(({ link, request }) => ({
 							phraseId: link.phrase_id,
 							requestId: request.id,

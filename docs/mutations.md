@@ -149,7 +149,7 @@ Every write to the synced layer goes through `src/lib/collections/synced-row.ts`
 writeSyncedRow(collection, row) // writeSyncedRows(collection, rows) for many
 ```
 
-There is no helper for dropping a row, because nothing should drop one: a removal is a soft delete, which reaches the collection as an ordinary update.
+There is no helper for dropping a row, because nothing should drop one: a removal is a soft delete, which reaches the collection as an ordinary update. No collection in `src/` configures an `onDelete` handler, so a stray `collection.delete()` fails loudly with `MissingDeleteHandlerError` rather than half-working.
 
 Pass the whole row — the key comes from the collection's own `getKeyFromItem`. Prefer the plural form for a handler's ack, which usually has more than one row. The rest (upsert semantics, skipping a row already held, batching, and what happens on a collection that never loaded) is the function's business, not the caller's.
 
@@ -174,7 +174,7 @@ A delete frame also carries only the table's replica identity — the primary ke
 
 Two rules follow:
 
-- **Soft-delete the row instead of subscribing to DELETE.** A `deleted` flag turns the removal into an UPDATE, which Supabase scopes by RLS and sends with every column. The three upvote tables work this way: the button calls `collection.update(key, (draft) => { draft.deleted = !draft.deleted })`, the collection keeps the row, and live queries filter on `deleted`. No `onDelete` handler, and no special realtime binding — a removal is an ordinary update on both sides of the wire.
+- **Soft-delete the row instead of subscribing to DELETE.** A `deleted` flag turns the removal into an UPDATE, which Supabase scopes by RLS and sends with every column. Every table in the app works this way: the button calls `collection.update(key, (draft) => { draft.deleted = true })`, the collection keeps the row, and live queries filter on `deleted`. No `onDelete` handler anywhere, and no special realtime binding — a removal is an ordinary update on both sides of the wire. A join table's insert is an **upsert** on its composite key for the same reason: re-adding a link has to revive the flagged row rather than collide with it.
 - **Don't subscribe to DELETE.** Comparing the frame's `uid` to the signed-in user would need `replica identity full`, which broadcasts every column of every deleted row on an RLS table. Soft-delete instead.
 
 No collection subscribes to DELETE today. `chat_message` declines on both counts: its replica identity is the bare `id`, which says nothing about who owned the message, and chat messages are never deleted.

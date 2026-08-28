@@ -204,7 +204,9 @@ function AnswersOnlyView() {
 		(q) =>
 			q
 				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.request_id, params.id)),
+				.where(({ link }) =>
+					and(eq(link.request_id, params.id), eq(link.deleted, false))
+				),
 		[params.id]
 	)
 	if (isLoading) return <Loader />
@@ -277,7 +279,8 @@ function TopLevelComments({
 				.where(({ comment }) =>
 					and(
 						eq(comment.request_id, requestId),
-						isNull(comment.parent_comment_id)
+						isNull(comment.parent_comment_id),
+						eq(comment.deleted, false)
 					)
 				)
 				.orderBy(({ comment }) => comment.upvote_count, 'desc'),

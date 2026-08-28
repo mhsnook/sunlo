@@ -1,5 +1,5 @@
 import { Link, useSearch } from '@tanstack/react-router'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import { ChevronDown, ChevronUp, Edit, Reply } from 'lucide-react'
 
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
@@ -34,7 +34,9 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		(q) =>
 			q
 				.from({ reply: commentsCollection })
-				.where(({ reply }) => eq(reply.parent_comment_id, comment.id))
+				.where(({ reply }) =>
+					and(eq(reply.parent_comment_id, comment.id), eq(reply.deleted, false))
+				)
 				.join({ profile: publicProfilesCollection }, ({ reply, profile }) =>
 					eq(profile.uid, reply.uid)
 				)

@@ -278,11 +278,22 @@ function AddTagPopover({
 }
 
 function attachTag(messageId: uuid, tagSlug: string) {
-	const tx = messageTagLinksCollection.insert({
-		message_id: messageId,
-		tag_slug: tagSlug,
-		created_at: new Date().toISOString(),
-	})
+	// A tag an admin detached is still in the collection with `deleted` set, so
+	// re-attaching it revives that row rather than inserting a second one under
+	// the same (message_id, tag_slug) key.
+	const key = `${messageId}--${tagSlug}` as const
+	const existing = messageTagLinksCollection.get(key)
+	if (existing && !existing.deleted) return
+	const tx = existing
+		? messageTagLinksCollection.update(key, (draft) => {
+				draft.deleted = false
+			})
+		: messageTagLinksCollection.insert({
+				message_id: messageId,
+				tag_slug: tagSlug,
+				created_at: new Date().toISOString(),
+				deleted: false,
+			})
 	tx.isPersisted.promise.catch((err: unknown) => {
 		toastError('Failed to add tag')
 		console.error(err)
@@ -290,7 +301,12 @@ function attachTag(messageId: uuid, tagSlug: string) {
 }
 
 function detachTag(messageId: uuid, tagSlug: string) {
-	const tx = messageTagLinksCollection.delete(`${messageId}--${tagSlug}`)
+	const tx = messageTagLinksCollection.update(
+		`${messageId}--${tagSlug}`,
+		(draft) => {
+			draft.deleted = true
+		}
+	)
 	tx.isPersisted.promise.catch((err: unknown) => {
 		toastError('Failed to remove tag')
 		console.error(err)

@@ -151,6 +151,7 @@ export type Database = {
 				Row: {
 					comment_id: string
 					created_at: string
+					deleted: boolean
 					id: string
 					phrase_id: string
 					request_id: string
@@ -159,6 +160,7 @@ export type Database = {
 				Insert: {
 					comment_id: string
 					created_at?: string
+					deleted?: boolean
 					id?: string
 					phrase_id: string
 					request_id: string
@@ -167,6 +169,7 @@ export type Database = {
 				Update: {
 					comment_id?: string
 					created_at?: string
+					deleted?: boolean
 					id?: string
 					phrase_id?: string
 					request_id?: string
@@ -417,16 +420,19 @@ export type Database = {
 			message_tag_link: {
 				Row: {
 					created_at: string
+					deleted: boolean
 					message_id: string
 					tag_slug: string
 				}
 				Insert: {
 					created_at?: string
+					deleted?: boolean
 					message_id: string
 					tag_slug: string
 				}
 				Update: {
 					created_at?: string
+					deleted?: boolean
 					message_id?: string
 					tag_slug?: string
 				}
@@ -888,18 +894,21 @@ export type Database = {
 				Row: {
 					added_by: string
 					created_at: string
+					deleted: boolean
 					phrase_id: string
 					tag_id: string
 				}
 				Insert: {
 					added_by?: string
 					created_at?: string
+					deleted?: boolean
 					phrase_id: string
 					tag_id: string
 				}
 				Update: {
 					added_by?: string
 					created_at?: string
+					deleted?: boolean
 					phrase_id?: string
 					tag_id?: string
 				}
@@ -1026,6 +1035,7 @@ export type Database = {
 			playlist_phrase_link: {
 				Row: {
 					created_at: string
+					deleted: boolean
 					href: string | null
 					id: string
 					order: number | null
@@ -1035,6 +1045,7 @@ export type Database = {
 				}
 				Insert: {
 					created_at?: string
+					deleted?: boolean
 					href?: string | null
 					id?: string
 					order?: number | null
@@ -1044,6 +1055,7 @@ export type Database = {
 				}
 				Update: {
 					created_at?: string
+					deleted?: boolean
 					href?: string | null
 					id?: string
 					order?: number | null
@@ -1079,6 +1091,7 @@ export type Database = {
 				Row: {
 					content: string
 					created_at: string
+					deleted: boolean
 					id: string
 					parent_comment_id: string | null
 					request_id: string
@@ -1089,6 +1102,7 @@ export type Database = {
 				Insert: {
 					content: string
 					created_at?: string
+					deleted?: boolean
 					id?: string
 					parent_comment_id?: string | null
 					request_id: string
@@ -1099,6 +1113,7 @@ export type Database = {
 				Update: {
 					content?: string
 					created_at?: string
+					deleted?: boolean
 					id?: string
 					parent_comment_id?: string | null
 					request_id?: string

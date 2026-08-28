@@ -1,6 +1,6 @@
 import { type CSSProperties } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useLiveQuery } from '@tanstack/react-db'
+import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	Globe,
 	Users,
@@ -447,7 +447,9 @@ function TrendingPlaylistsSection() {
 	)
 
 	const { data: playlistLinks } = useLiveQuery((q) =>
-		q.from({ link: playlistPhraseLinksCollection })
+		q
+			.from({ link: playlistPhraseLinksCollection })
+			.where(({ link }) => eq(link.deleted, false))
 	)
 
 	// Count phrases per playlist

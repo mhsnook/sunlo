@@ -62,6 +62,7 @@ export const PhraseTagLinkSchema = z.object({
 	tag_id: z.string().uuid(),
 	created_at: z.string(),
 	added_by: z.string().uuid(),
+	deleted: z.boolean().default(false),
 })
 
 export type PhraseTagLinkType = z.infer<typeof PhraseTagLinkSchema>

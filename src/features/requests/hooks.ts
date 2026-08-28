@@ -27,7 +27,9 @@ export const useRequestLinksPhraseIds = (
 		(q) =>
 			q
 				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.request_id, requestId))
+				.where(({ link }) =>
+					and(eq(link.request_id, requestId), eq(link.deleted, false))
+				)
 				.select(({ link }) => ({ phrase_id: link.phrase_id }))
 				.distinct(),
 		[requestId]
@@ -44,7 +46,9 @@ export const useRequestCounts = (
 		(q) =>
 			q
 				.from({ comment: commentsCollection })
-				.where(({ comment }) => eq(id, comment.request_id)),
+				.where(({ comment }) =>
+					and(eq(id, comment.request_id), eq(comment.deleted, false))
+				),
 		[id]
 	).data?.length
 	const countLinks = useRequestLinksPhraseIds(id).data?.length
@@ -111,7 +115,9 @@ export const useOneComment = (
 				? undefined
 				: q
 						.from({ comment: commentsCollection })
-						.where(({ comment }) => eq(comment.id, commentId))
+						.where(({ comment }) =>
+							and(eq(comment.id, commentId), eq(comment.deleted, false))
+						)
 						.findOne(),
 		[commentId]
 	)
@@ -129,7 +135,9 @@ export const useCommentPhraseLinks = (
 		(q) =>
 			q
 				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.comment_id, commentId)),
+				.where(({ link }) =>
+					and(eq(link.comment_id, commentId), eq(link.deleted, false))
+				),
 		[commentId]
 	)
 
@@ -161,7 +169,10 @@ export type RequestTagSet = {
 export function useRequestTagSets(lang: string): RequestTagSet[] {
 	const { data: tags } = useMessageTags()
 	const { data: tagLinks } = useLiveQuery(
-		(q) => q.from({ link: messageTagLinksCollection }),
+		(q) =>
+			q
+				.from({ link: messageTagLinksCollection })
+				.where(({ link }) => eq(link.deleted, false)),
 		[]
 	)
 	const { data: requests } = useLiveQuery(
@@ -174,7 +185,10 @@ export function useRequestTagSets(lang: string): RequestTagSet[] {
 		[lang]
 	)
 	const { data: phraseLinks } = useLiveQuery(
-		(q) => q.from({ link: commentPhraseLinksCollection }),
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.where(({ link }) => eq(link.deleted, false)),
 		[]
 	)
 
@@ -236,7 +250,10 @@ export function useRequestsByMessageTag(lang: string): {
 } {
 	const { data: tags } = useMessageTags()
 	const { data: tagLinks } = useLiveQuery(
-		(q) => q.from({ link: messageTagLinksCollection }),
+		(q) =>
+			q
+				.from({ link: messageTagLinksCollection })
+				.where(({ link }) => eq(link.deleted, false)),
 		[]
 	)
 	const { data: requests } = useLiveQuery(
@@ -312,7 +329,9 @@ export const useMessageTagsForMessage = (
 				? undefined
 				: q
 						.from({ link: messageTagLinksCollection })
-						.where(({ link }) => eq(link.message_id, messageId))
+						.where(({ link }) =>
+							and(eq(link.message_id, messageId), eq(link.deleted, false))
+						)
 						.join(
 							{ tag: messageTagsCollection },
 							({ link, tag }) => eq(link.tag_slug, tag.slug),
@@ -334,7 +353,9 @@ export function useAnyonesComments(
 		(q) => {
 			let query = q
 				.from({ comment: commentsCollection })
-				.where(({ comment }) => eq(comment.uid, uid))
+				.where(({ comment }) =>
+					and(eq(comment.uid, uid), eq(comment.deleted, false))
+				)
 				.join(
 					{ request: phraseRequestsCollection },
 					({ comment, request }) => eq(comment.request_id, request.id),
