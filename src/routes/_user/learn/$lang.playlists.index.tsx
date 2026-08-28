@@ -28,9 +28,10 @@ function RouteComponent() {
 					<Plus /> Create playlist
 				</Link>
 			</div>
-			{isLoading ?
+			{isLoading ? (
 				<Loader />
-			:	<div className="divide-y border" data-testid="playlist-list">
+			) : (
+				<div className="divide-y border" data-testid="playlist-list">
 					{playlists?.map((p) => (
 						<Link
 							key={p.id}
@@ -47,7 +48,7 @@ function RouteComponent() {
 						</Link>
 					))}
 				</div>
-			}
+			)}
 		</main>
 	)
 }

@@ -263,9 +263,7 @@ export function AddTags({
 function RemovableTagBadge({ tag }: { tag: PhraseTagType }) {
 	const { userId, isAdmin } = useAuth()
 
-	// Removing a tag flips its link row's `deleted` flag, and the policy behind
-	// that update is `added_by = auth.uid() or is_admin()`. Anyone else gets
-	// the badge without the X.
+	// The general public gets a badge with no 'x'
 	if (!isAdmin && tag.addedBy !== userId)
 		return <Badge variant="secondary">{tag.name}</Badge>
 

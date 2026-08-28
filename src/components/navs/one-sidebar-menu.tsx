@@ -47,9 +47,7 @@ export default function OneSidebarMenu({
 							>
 								{!item.Icon ? null : <item.Icon />}
 								<span>{item.title ?? item.name}</span>
-								{item.useBadge ?
-									<TinyBadge useBadge={item.useBadge} />
-								:	null}
+								{item.useBadge ? <TinyBadge useBadge={item.useBadge} /> : null}
 							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>

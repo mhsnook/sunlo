@@ -188,14 +188,6 @@ export const commentsCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		// No onDelete: deleting a comment flips `deleted`, which the onUpdate
-		// handler above persists. The FK cascade that used to take the replies
-		// and phrase links with it is now `cascade_soft_delete_comment`, a
-		// trigger — the replies belong to other people, so no client could flag
-		// them under RLS. Those replies stay unflagged in the local collection
-		// until the next fetch, and never render: they only mount inside the
-		// parent comment, which is gone from every live query the moment the
-		// flag lands.
 	})
 )
 
@@ -412,10 +404,6 @@ export const messageTagLinksCollection = createCollection(
 			await Promise.all(
 				groupUpdatesByChanges(transaction.mutations).map(
 					async ({ changes, keys }) => {
-						// .select() so we can confirm rows were actually affected:
-						// RLS-protected UPDATE silently returns 0 rows when the
-						// caller lacks permission (no PostgREST error). Throwing
-						// rolls the optimistic state back and surfaces the failure.
 						const { data } = await supabase
 							.from('message_tag_link')
 							.update(changes)

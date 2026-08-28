@@ -70,11 +70,9 @@ export function detachMessageTag(messageIds: Array<uuid>, tagSlug: string) {
 }
 
 /**
- * Removing a comment leaves a tombstone: the row stays in the thread as the
- * thing its replies are replying to, and `blank_removed_comment` clears the
- * text server-side. The phrase links go with it, so this is one optimistic
- * action across two collections rather than two `collection.update` calls that
- * could half succeed.
+ * One action, not two `collection.update` calls that could half succeed: a
+ * removed comment and its phrase links go together. See docs/database.md for
+ * what a tombstone leaves behind.
  */
 export const deleteComment = createOptimisticAction<uuid>({
 	onMutate: (commentId) => {

@@ -65,8 +65,6 @@ export const phrasesComposed = createLiveQueryCollection({
 					.select(({ link, tag }) => ({
 						id: tag.id,
 						name: tag.name,
-						// The link, so a badge can tell whether this reader may
-						// remove the tag without a query of its own per badge.
 						linkId: link.id,
 						addedBy: link.added_by,
 					}))

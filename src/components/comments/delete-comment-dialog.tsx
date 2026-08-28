@@ -49,8 +49,8 @@ export function DeleteCommentDialog({
 				<AlertDialogHeader>
 					<AlertDialogTitle>Remove comment?</AlertDialogTitle>
 					<AlertDialogDescription>
-						This removes your comment and the phrases you attached to it.
-						Replies to it stay in the thread. You can't undo this.
+						This removes your comment and its links to phrases (but does not
+						remove any phrases you may have added to the library).
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

@@ -60,12 +60,10 @@ export function useCompositePids(lang: string) {
 			(phrasesMap.get(pid1)?.count_learners ?? 0)
 	)
 	const newest = pidsNotInDeck.toSorted((pid1, pid2) =>
-		(
-			(phrasesMap.get(pid2)?.created_at ?? '') >
-			(phrasesMap.get(pid1)?.created_at ?? '')
-		) ?
-			1
-		:	-1
+		(phrasesMap.get(pid2)?.created_at ?? '') >
+		(phrasesMap.get(pid1)?.created_at ?? '')
+			? 1
+			: -1
 	)
 	// Pick the top 8, ensuring no overlaps
 	const popular8 = popular.slice(0, 8)

@@ -17,14 +17,15 @@ export function NotEnoughCards({
 		<Callout variant="ghost" Icon={MessageCircleWarningIcon}>
 			<p>
 				It looks like you don't have {noCards ? 'any ' : 'enough new '} cards
-				{noCards ?
+				{noCards ? (
 					" to review. You'll have to add at least a few before you can proceed"
-				:	<>
+				) : (
+					<>
 						{' '}
 						in your deck to meet your goal of{' '}
 						<strong className="italic">{countNeeded} new cards a day</strong>
 					</>
-				}
+				)}
 				.
 			</p>
 			<div className="my-2 flex flex-wrap gap-2 [&>*]:flex-1">

@@ -3,35 +3,24 @@
 ## Commands
 
 ```bash
-# Create migration from local changes
-pnpm run migrate
-
-# Regenerate TypeScript types from database schema
-pnpm run types
-
-# Regenerate base schema file (curate before committing!)
-pnpm run seeds:schema
-
-# Dump current seed data
-pnpm run seeds:data
-
-# Reseed the local database
-pnpm run db-reseed
-
-# Regenerate schema + types + format in one step
-pnpm run db-schema
+pnpm migrate       # write a migration from local schema changes
+pnpm types         # regenerate src/types/supabase.ts
+pnpm schema        # regenerate supabase/schemas/base.sql
+pnpm seeds:data    # dump current seed data
+pnpm seeds:corpus  # dump the search corpus only
+pnpm db-reseed     # reseed the local database
+pnpm db-reset      # supabase db reset
 ```
 
-**Important**: When regenerating `base.sql` and running the seeding script (`pnpm seeds:data`), be careful not to commit unintended deletions (like realtime table configurations). Always review the diff carefully.
+**Important**: review the `base.sql` and seed diffs before committing — a regeneration can silently drop things like the realtime publication list.
 
 ## Workflow
 
 1. Use Supabase Studio (http://localhost:54323) to modify schema/data
-2. When feature works, run `pnpm run migrate` to create migration
-3. Run `pnpm run seeds:schema` to update base.sql (review carefully!), update supabase types, run formatter
-4. Run `pnpm run types` to regenerate TypeScript types
+2. When the feature works, run `pnpm migrate` to create the migration
+3. Run `pnpm types && pnpm schema` to regenerate the types and `base.sql`
 
-Schema definitions live in `supabase/schemas/`, migrations in `supabase/migrations/`, and seed files (`supabase/seed-*.sql`) load in alphabetical order.
+The whole schema is one file, `supabase/schemas/base.sql`. Migrations live in `supabase/migrations/`, and seed files (`supabase/seeds/seed-*.sql`) load in alphabetical order.
 
 ## Web sessions / no Docker: validating migrations natively
 
@@ -66,12 +55,19 @@ header of `scripts/db-native.sh`.
 - **Table names**: Singular (e.g., `phrase` not `phrases`)
 - **Timestamps**: Use `created_at timestamp with time zone default now() not null`
 - **User data**: Private tables use `uid` field with Row Level Security (RLS)
-- **Soft delete**: A row a user can remove and then restore — an upvote, a request, a playlist — carries `deleted boolean default false not null` and is never deleted outright. Realtime is the reason: Supabase broadcasts DELETE to every subscriber of the table without an RLS check, while an UPDATE reaches only the users who can read the row. Queries and views filter on `deleted = false`; see `docs/mutations.md`.
-- **Link tables key on `id`, not on the pair.** A join row carries `id uuid default gen_random_uuid()` as its primary key, and the pair it links gets a **partial unique index** — `unique (a_id, b_id) where deleted = false`. The constraint still says a pair is linked once, and a removed link can sit behind its replacement. `phrase_tag` and `message_tag_link` moved this way in v0.34.
-- **Removing a row that others replied to leaves a tombstone.** `request_comment` clears its own text on removal (`blank_removed_comment`) and keeps an open SELECT policy, so the replies underneath it still have a parent to hang from. Where nothing points at the row, narrow the SELECT policy instead — `deleted = false or uid = auth.uid()`.
-- **A realtime-published table must NOT narrow its SELECT policy on `deleted`.** Supabase tests an UPDATE frame against the subscriber's SELECT policy using the **new** row. A policy reading `deleted = false or uid = auth.uid()` therefore drops the very frame that says "this row is gone" for everyone except its owner, and their client keeps showing the row until the next fetch. The three upvote tables are published and soft-deleted, and their policies are plain `uid = auth.uid()` with no `deleted` clause — that is why un-upvoting propagates. `phrase_request` and `phrase_playlist` do narrow, and can, because neither is in the `supabase_realtime` publication.
+- **Soft delete**: users mark rows `deleted` or `archived`, never hard delete (it messes with realtime — see Gotchas).
+- **Every row gets an `id`**, join tables included, so client collection keys are uniform. Where a pair must be unique, say so with a partial unique index over the live rows: `unique (a_id, b_id) where deleted = false`.
+- **Tombstones**: if a removed row still holds active comments, blank its text and leave the row in place, public, so the replies keep a parent. `request_comment` is the only one today: `blank_removed_comment` clears `content`, and the UI hides the author. The `uid` column stays, because the UPDATE policy and the upvote joins key on it.
 
-  So the two are a package: **publish the table, or narrow the policy — never both.** Before adding a soft-deleted table to `supabase_realtime`, drop the `deleted` clause from its SELECT policy and let the live queries do the filtering. As of v0.34 none of `phrase_tag`, `playlist_phrase_link`, `comment_phrase_link`, `message_tag_link` publishes, so each narrows safely.
+### The three soft-delete shapes in use
+
+| Shape                                                                    | Example                                          | Where                                                 |
+| ------------------------------------------------------------------------ | ------------------------------------------------ | ----------------------------------------------------- |
+| Public, archived, still visible to its owner and admins                  | `phrase.archived`, `phrase_translation.archived` | `src/components/cards/admin-archive-phrase.tsx:8`     |
+| Private, archived, only ever visible to its owner                        | `user_deck.archived`                             | `src/routes/_user/learn/-archive-deck-button.tsx:32`  |
+| Public, not recoverable, keeps its replies and shows a "removed" message | `request_comment.deleted`                        | `src/components/comments/comment-with-replies.tsx:85` |
+
+Join and upvote tables all use the first shape with `deleted` rather than `archived`.
 
 ## Row Level Security (RLS)
 
@@ -98,3 +94,13 @@ created_at = current_date - 4 + interval '2 minute' day_session = (current_date 
 ```
 
 This ensures seed data remains relevant (cards "created 4 days ago" are always 4 days old). When modifying seeds, maintain this pattern for dates.
+
+## Gotchas
+
+**A realtime-published table must not narrow its SELECT policy on `deleted`.** Supabase tests an UPDATE frame against the subscriber's SELECT policy using the _new_ row, so `deleted = false or uid = auth.uid()` drops the very frame that says the row is gone — for everyone but its owner, whose client keeps showing it until the next fetch. Publish the table, or narrow the policy, never both.
+
+The three published soft-delete tables (the upvotes) have plain `uid = auth.uid()` policies with no `deleted` clause, which is why un-upvoting propagates. `phrase_request` and `phrase_playlist` narrow, and can, because neither publishes. Before adding a soft-deleted table to `supabase_realtime`, drop the `deleted` clause from its SELECT policy first.
+
+**A partial unique index only constrains the live rows.** `unique (a_id, b_id) where deleted = false` lets a removed link and its replacement coexist, so anyone can re-add a pair someone else removed. Two _live_ rows for the same pair are still rejected.
+
+**`pnpm db-full` is broken** — a stray backtick, and it calls `pnpm run db-schema`, which no longer exists. Use `pnpm db-reset && pnpm types && pnpm schema`.
