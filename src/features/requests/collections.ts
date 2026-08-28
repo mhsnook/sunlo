@@ -385,30 +385,25 @@ export const messageTagLinksCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => MessageTagLinkSchema.parse(item)) ?? []
 		},
-		// composite PK; getKey just needs to be stable+unique per row
-		getKey: (item: MessageTagLinkType) =>
-			`${item.message_id}--${item.tag_slug}`,
+		getKey: (item: MessageTagLinkType) => item.id,
 		queryClient,
 		schema: MessageTagLinkSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
-		// Upsert, not insert: re-attaching a tag an admin detached has to revive
-		// the soft-deleted row, which an insert would hit the
-		// (message_id, tag_slug) primary key on.
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
 				message_id: m.modified.message_id,
 				tag_slug: m.modified.tag_slug,
-				deleted: false,
 			}))
 			const { data } = await supabase
 				.from('message_tag_link')
-				.upsert(submitted, { onConflict: 'message_id,tag_slug' })
+				.insert(submitted)
 				.select()
 				.throwOnError()
 			const returned = data?.map((row) => MessageTagLinkSchema.parse(row)) ?? []
 			should(
-				'message_tag_link upsert returned one row per link added',
+				'message_tag_link insert returned one row per link added',
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
@@ -416,32 +411,32 @@ export const messageTagLinksCollection = createCollection(
 			return { refetch: false }
 		},
 		// No onDelete: unlinking a tag flips `deleted`, which arrives here as an
-		// ordinary update. A composite key can't be batched with `.in()`, which
-		// matches a column rather than a tuple, so the update fans out per row.
+		// ordinary update.
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					// .select() so we can confirm rows were actually affected:
-					// RLS-protected UPDATE silently returns 0 rows when the
-					// caller lacks permission (no PostgREST error). Throwing
-					// rolls the optimistic state back and surfaces the failure.
-					const { data } = await supabase
-						.from('message_tag_link')
-						.update(m.changes)
-						.eq('message_id', m.original.message_id)
-						.eq('tag_slug', m.original.tag_slug)
-						.select()
-						.throwOnError()
-					if (!data || data.length === 0) {
-						throw new Error(
-							`Update on message_tag_link (${m.original.message_id}, ${m.original.tag_slug}) affected no rows (permission denied or row removed).`
+				groupUpdatesByChanges(transaction.mutations).map(
+					async ({ changes, keys }) => {
+						// .select() so we can confirm rows were actually affected:
+						// RLS-protected UPDATE silently returns 0 rows when the
+						// caller lacks permission (no PostgREST error). Throwing
+						// rolls the optimistic state back and surfaces the failure.
+						const { data } = await supabase
+							.from('message_tag_link')
+							.update(changes)
+							.in('id', keys)
+							.select()
+							.throwOnError()
+						if ((data?.length ?? 0) !== keys.length) {
+							throw new Error(
+								`Update on message_tag_link affected ${data?.length ?? 0} of ${keys.length} rows (permission denied or row removed).`
+							)
+						}
+						writeSyncedRows(
+							messageTagLinksCollection,
+							data?.map((row) => MessageTagLinkSchema.parse(row)) ?? []
 						)
 					}
-					writeSyncedRow(
-						messageTagLinksCollection,
-						MessageTagLinkSchema.parse(data[0])
-					)
-				})
+				)
 			)
 			return { refetch: false }
 		},

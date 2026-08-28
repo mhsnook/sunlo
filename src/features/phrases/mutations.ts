@@ -194,7 +194,7 @@ type BulkAddPhrasesInput = {
 		onlyReverse: boolean
 		translations: Array<{ id: uuid; lang: string; text: string }>
 		cards: Array<{ id: uuid; direction: 'forward' | 'reverse' }>
-		tagIds: Array<uuid>
+		tagLinks: Array<{ linkId: uuid; tagId: uuid }>
 	}>
 }
 
@@ -247,12 +247,14 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					updated_at: now,
 				})
 			}
-			for (const tagId of p.tagIds) {
+			for (const link of p.tagLinks) {
 				phraseTagLinksCollection.insert({
+					id: link.linkId,
 					phrase_id: p.phraseId,
-					tag_id: tagId,
+					tag_id: link.tagId,
 					added_by: uid,
 					created_at: now,
+					deleted: false,
 				})
 			}
 		}
@@ -314,9 +316,10 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 			await supabase.from('user_card').insert(cardRows).throwOnError()
 		}
 		const linkRows = phrases.flatMap((p) =>
-			p.tagIds.map((tagId) => ({
+			p.tagLinks.map((link) => ({
+				id: link.linkId,
 				phrase_id: p.phraseId,
-				tag_id: tagId,
+				tag_id: link.tagId,
 				added_by: uid,
 			}))
 		)
@@ -372,12 +375,14 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					updated_at: now,
 				})
 			}
-			for (const tagId of p.tagIds) {
+			for (const link of p.tagLinks) {
 				phraseTagLinksCollection.utils.writeInsert({
+					id: link.linkId,
 					phrase_id: p.phraseId,
-					tag_id: tagId,
+					tag_id: link.tagId,
 					added_by: uid,
 					created_at: now,
+					deleted: false,
 				})
 			}
 		}

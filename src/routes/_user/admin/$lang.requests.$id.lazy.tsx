@@ -29,11 +29,12 @@ import {
 import { WithPhrase } from '@/components/with-phrase'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
-import {
-	messageTagLinksCollection,
-	phraseRequestsCollection,
-} from '@/features/requests/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import { type PhraseRequestType } from '@/features/requests/schemas'
+import {
+	attachMessageTag,
+	detachMessageTag,
+} from '@/features/requests/mutations'
 import {
 	useMessageTags,
 	useMessageTagsForMessage,
@@ -197,7 +198,7 @@ function MessageSection({
 										type="button"
 										className="ms-1 -me-1 inline-flex items-center"
 										aria-label={`Remove ${tag.label}`}
-										onClick={() => detachTag(messageId, tag.slug)}
+										onClick={() => detachMessageTag(messageId, tag.slug)}
 									>
 										<X className="h-3 w-3" />
 									</button>
@@ -262,8 +263,8 @@ function AddTagPopover({
 									<Checkbox
 										checked={isOn}
 										onCheckedChange={(checked) => {
-											if (checked) attachTag(messageId, tag.slug)
-											else detachTag(messageId, tag.slug)
+											if (checked) attachMessageTag(messageId, tag.slug)
+											else detachMessageTag(messageId, tag.slug)
 										}}
 									/>
 									<span>{tag.label}</span>
@@ -275,42 +276,6 @@ function AddTagPopover({
 			</PopoverContent>
 		</Popover>
 	)
-}
-
-function attachTag(messageId: uuid, tagSlug: string) {
-	// A tag an admin detached is still in the collection with `deleted` set, so
-	// re-attaching it revives that row rather than inserting a second one under
-	// the same (message_id, tag_slug) key.
-	const key = `${messageId}--${tagSlug}` as const
-	const existing = messageTagLinksCollection.get(key)
-	if (existing && !existing.deleted) return
-	const tx = existing
-		? messageTagLinksCollection.update(key, (draft) => {
-				draft.deleted = false
-			})
-		: messageTagLinksCollection.insert({
-				message_id: messageId,
-				tag_slug: tagSlug,
-				created_at: new Date().toISOString(),
-				deleted: false,
-			})
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to add tag')
-		console.error(err)
-	})
-}
-
-function detachTag(messageId: uuid, tagSlug: string) {
-	const tx = messageTagLinksCollection.update(
-		`${messageId}--${tagSlug}`,
-		(draft) => {
-			draft.deleted = true
-		}
-	)
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to remove tag')
-		console.error(err)
-	})
 }
 
 function RelatedRequestsSection({

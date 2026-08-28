@@ -67,6 +67,8 @@ header of `scripts/db-native.sh`.
 - **Timestamps**: Use `created_at timestamp with time zone default now() not null`
 - **User data**: Private tables use `uid` field with Row Level Security (RLS)
 - **Soft delete**: A row a user can remove and then restore — an upvote, a request, a playlist — carries `deleted boolean default false not null` and is never deleted outright. Realtime is the reason: Supabase broadcasts DELETE to every subscriber of the table without an RLS check, while an UPDATE reaches only the users who can read the row. Queries and views filter on `deleted = false`; see `docs/mutations.md`.
+- **Link tables key on `id`, not on the pair.** A join row carries `id uuid default gen_random_uuid()` as its primary key, and the pair it links gets a **partial unique index** — `unique (a_id, b_id) where deleted = false`. The constraint still says a pair is linked once, and a removed link can sit behind its replacement. `phrase_tag` and `message_tag_link` moved this way in v0.34.
+- **Removing a row that others replied to leaves a tombstone.** `request_comment` clears its own text on removal (`blank_removed_comment`) and keeps an open SELECT policy, so the replies underneath it still have a parent to hang from. Where nothing points at the row, narrow the SELECT policy instead — `deleted = false or uid = auth.uid()`.
 
 ## Row Level Security (RLS)
 

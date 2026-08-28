@@ -31,10 +31,10 @@ export function DeleteCommentDialog({
 			linkIds: (phraseLinks ?? []).map((link) => link.id),
 		})
 		tx.isPersisted.promise.then(
-			() => toastSuccess('Comment deleted'),
+			() => toastSuccess('Comment removed'),
 			(err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(`Failed to delete comment: ${message}`)
+				toastError(`Failed to remove comment: ${message}`)
 			}
 		)
 	}
@@ -44,7 +44,7 @@ export function DeleteCommentDialog({
 			<Button
 				variant="ghost"
 				size="icon"
-				aria-label="Delete comment"
+				aria-label="Remove comment"
 				data-testid="delete-comment-button"
 				onClick={() => setOpen(true)}
 			>
@@ -52,9 +52,10 @@ export function DeleteCommentDialog({
 			</Button>
 			<AlertDialogContent data-testid="delete-comment-dialog">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Delete comment?</AlertDialogTitle>
+					<AlertDialogTitle>Remove comment?</AlertDialogTitle>
 					<AlertDialogDescription>
-						This removes your comment and all its replies. You can't undo this.
+						This removes your comment and the phrases you attached to it.
+						Replies to it stay in the thread. You can't undo this.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
@@ -64,7 +65,7 @@ export function DeleteCommentDialog({
 						className="bg-destructive text-destructive-foreground"
 						data-testid="confirm-delete-comment-button"
 					>
-						Delete
+						Remove
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

@@ -11,6 +11,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
 import {
 	allRowsMatch,
 	rowMatches,
@@ -169,7 +170,7 @@ export const phraseTagLinksCollection = createCollection(
 	queryCollectionOptions({
 		id: 'phrase_tag_links',
 		queryKey: ['public', 'phrase_tag'],
-		getKey: (item: PhraseTagLinkType) => `${item.phrase_id}--${item.tag_id}`,
+		getKey: (item: PhraseTagLinkType) => item.id,
 		queryFn: async () => {
 			console.log(`Loading phraseTagLinksCollection`)
 			const { data } = await supabase
@@ -182,25 +183,21 @@ export const phraseTagLinksCollection = createCollection(
 		queryClient,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
-		// Upsert, not insert: re-adding a tag someone removed has to revive the
-		// soft-deleted row, which an insert would hit the (phrase_id, tag_id)
-		// primary key on. `added_by` is left to its column default so the
-		// revive path touches nothing but `deleted`, which is all
-		// `guard_soft_delete_only` allows.
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
 				phrase_id: m.modified.phrase_id,
 				tag_id: m.modified.tag_id,
-				deleted: false,
+				added_by: m.modified.added_by,
 			}))
 			const { data } = await supabase
 				.from('phrase_tag')
-				.upsert(submitted, { onConflict: 'phrase_id,tag_id' })
+				.insert(submitted)
 				.select()
 				.throwOnError()
 			const returned = data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
 			should(
-				'phrase_tag upsert returned one row per tag link added',
+				'phrase_tag insert returned one row per tag link added',
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
@@ -208,31 +205,30 @@ export const phraseTagLinksCollection = createCollection(
 			return { refetch: false }
 		},
 		// No onDelete: removing a tag flips `deleted`, which arrives here as an
-		// ordinary update. A composite key can't be batched with `.in()`, which
-		// matches a column rather than a tuple, so the update fans out per row.
+		// ordinary update.
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const changes = m.changes as TablesUpdate<'phrase_tag'>
-					const { data } = await supabase
-						.from('phrase_tag')
-						.update(changes)
-						.eq('phrase_id', m.original.phrase_id)
-						.eq('tag_id', m.original.tag_id)
-						.select()
-						.throwOnError()
-					const row = data?.[0]
-					should(
-						`phrase_tag (${m.original.phrase_id}, ${m.original.tag_id}) server row matches the submitted update`,
-						rowMatches(changes, row),
-						{ submitted: changes, returned: row }
-					)
-					if (row)
-						writeSyncedRow(
-							phraseTagLinksCollection,
-							PhraseTagLinkSchema.parse(row)
+				groupUpdatesByChanges(transaction.mutations).map(
+					async ({ changes, keys }) => {
+						const { data } = await supabase
+							.from('phrase_tag')
+							.update(changes as TablesUpdate<'phrase_tag'>)
+							.in('id', keys)
+							.select()
+							.throwOnError()
+						const rows =
+							data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
+						should(
+							'phrase_tag update returned one row per tag link changed',
+							allRowsMatch(
+								keys.map(() => changes),
+								rows
+							),
+							{ submitted: { changes, keys }, returned: rows }
 						)
-				})
+						writeSyncedRows(phraseTagLinksCollection, rows)
+					}
+				)
 			)
 			return { refetch: false }
 		},

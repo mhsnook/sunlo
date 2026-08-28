@@ -62,6 +62,10 @@ import {
 	PhraseRequestSchema,
 	type MessageTagType,
 } from '@/features/requests/schemas'
+import {
+	attachMessageTag,
+	detachMessageTag,
+} from '@/features/requests/mutations'
 
 export const Route = createLazyFileRoute('/_user/admin/messages/')({
 	component: AdminMessagesPage,
@@ -902,78 +906,40 @@ function SelectionBar({
 	const applyTag = (slug: string) => {
 		const ids = Array.from(selected)
 		Promise.all(
-			ids.map(async (message_id) => {
-				try {
-					// A tag an admin detached is still in the collection with
-					// `deleted` set, so re-attaching it revives that row rather
-					// than inserting a second one under the same
-					// (message_id, tag_slug) key.
-					const key = `${message_id}--${slug}` as const
-					const existing = messageTagLinksCollection.get(key)
-					if (existing && !existing.deleted) return
-					const tx = existing
-						? messageTagLinksCollection.update(key, (draft) => {
-								draft.deleted = false
-							})
-						: messageTagLinksCollection.insert({
-								message_id,
-								tag_slug: slug,
-								created_at: new Date().toISOString(),
-								deleted: false,
-							})
-					await tx.isPersisted.promise
-				} catch (err) {
-					// Duplicate (already tagged) is fine; surface other errors.
-					if (
-						err instanceof Error &&
-						!err.message.toLowerCase().includes('duplicate')
-					) {
-						throw err
-					}
-				}
-			})
+			ids
+				.map(
+					(message_id) =>
+						attachMessageTag(message_id, slug)?.isPersisted.promise
+				)
+				.filter((pending) => pending !== undefined)
 		).then(
 			() => {
 				toastSuccess(`Applied "${slug}" to ${ids.length}`)
 				setTagPickerOpen(false)
 			},
-			(err: unknown) => {
-				toastError('Failed to apply tag to some messages')
-				console.error(err)
-			}
+			// Each failure already reported itself; this just stops the
+			// success toast.
+			() => setTagPickerOpen(false)
 		)
 	}
 
 	const removeTag = (slug: string) => {
 		const ids = Array.from(selected)
 		Promise.all(
-			ids.map(async (message_id) => {
-				try {
-					const tx = messageTagLinksCollection.update(
-						`${message_id}--${slug}`,
-						(draft) => {
-							draft.deleted = true
-						}
-					)
-					await tx.isPersisted.promise
-				} catch (err) {
-					if (
-						err instanceof Error &&
-						!err.message.toLowerCase().includes('not found')
-					) {
-						throw err
-					}
-				}
-			})
+			ids
+				.map(
+					(message_id) =>
+						detachMessageTag(message_id, slug)?.isPersisted.promise
+				)
+				.filter((pending) => pending !== undefined)
 		).then(
 			() => {
 				toastSuccess(`Removed "${slug}" from ${ids.length}`)
 				setTagPickerOpen(false)
 			},
-			(err: unknown) => {
-				toastError('Failed to remove tag from some messages')
-				console.error(err)
-			}
+			// Each failure already reported itself; this just stops the
+			// success toast.
+			() => setTagPickerOpen(false)
 		)
 	}
 
@@ -1147,7 +1113,7 @@ function MessageRowItem({
 									<button
 										type="button"
 										className="ms-1 -me-1 inline-flex items-center"
-										onClick={() => detachTag(row.message_id, tag.slug)}
+										onClick={() => detachMessageTag(row.message_id, tag.slug)}
 										aria-label={`Remove ${tag.label}`}
 									>
 										<X className="h-3 w-3" />
@@ -1170,17 +1136,4 @@ function MessageRowItem({
 			</Link>
 		</li>
 	)
-}
-
-function detachTag(messageId: string, slug: string) {
-	const tx = messageTagLinksCollection.update(
-		`${messageId}--${slug}`,
-		(draft) => {
-			draft.deleted = true
-		}
-	)
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to remove tag')
-		console.error(err)
-	})
 }

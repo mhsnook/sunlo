@@ -135,12 +135,17 @@ $$;
 
 alter function "public"."bump_phrase_updated_at" () owner to "postgres";
 
+create or replace function "public"."blank_removed_comment" () returns "trigger" language "plpgsql" as $$
+begin
+  new.content = '';
+  return new;
+end;
+$$;
+
+alter function "public"."blank_removed_comment" () owner to "postgres";
+
 create or replace function "public"."cascade_soft_delete_comment" () returns "trigger" language "plpgsql" security definer as $$
 begin
-  update public.request_comment
-  set deleted = true
-  where parent_comment_id = new.id and deleted = false;
-
   update public.comment_phrase_link
   set deleted = true
   where comment_id = new.id and deleted = false;
@@ -1356,7 +1361,8 @@ create table if not exists "public"."message_tag_link" (
 	"message_id" "uuid" not null,
 	"tag_slug" "text" not null,
 	"created_at" timestamp with time zone default "now" () not null,
-	"deleted" boolean default false not null
+	"deleted" boolean default false not null,
+	"id" "uuid" default "gen_random_uuid" () not null
 );
 
 alter table "public"."message_tag_link" owner to "postgres";
@@ -1480,7 +1486,8 @@ create table if not exists "public"."phrase_tag" (
 	"tag_id" "uuid" not null,
 	"created_at" timestamp with time zone default "now" () not null,
 	"added_by" "uuid" default "auth"."uid" () not null,
-	"deleted" boolean default false not null
+	"deleted" boolean default false not null,
+	"id" "uuid" default "gen_random_uuid" () not null
 );
 
 alter table "public"."phrase_tag" owner to "postgres";
@@ -1841,7 +1848,7 @@ alter table only "public"."message"
 add constraint "message_pkey" primary key ("id");
 
 alter table only "public"."message_tag_link"
-add constraint "message_tag_link_pkey" primary key ("message_id", "tag_slug");
+add constraint "message_tag_link_pkey" primary key ("id");
 
 alter table only "public"."message_tag"
 add constraint "message_tag_pkey" primary key ("slug");
@@ -1865,7 +1872,7 @@ alter table only "public"."phrase_request_upvote"
 add constraint "phrase_request_upvote_pkey" primary key ("request_id", "uid");
 
 alter table only "public"."phrase_tag"
-add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
+add constraint "phrase_tag_pkey" primary key ("id");
 
 alter table only "public"."playlist_phrase_link"
 add constraint "playlist_phrase_link_pkey" primary key ("id");
@@ -1959,9 +1966,17 @@ create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid"
 
 create index "idx_user_review_milestone_session_created" on "public"."user_review_milestone" using "btree" ("uid", "lang", "day_session", "created_at" desc);
 
+create unique index "message_tag_link_message_id_tag_slug_live_idx" on "public"."message_tag_link" using "btree" ("message_id", "tag_slug")
+where
+	("deleted" = false);
+
 create index "message_tag_link_tag_slug_idx" on "public"."message_tag_link" using "btree" ("tag_slug");
 
 create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btree" ("uid");
+
+create unique index "phrase_tag_phrase_id_tag_id_live_idx" on "public"."phrase_tag" using "btree" ("phrase_id", "tag_id")
+where
+	("deleted" = false);
 
 create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
 
@@ -1990,6 +2005,15 @@ create index "search_text_index_text_normalized_trgm_idx" on "public"."search_te
 create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
+
+create or replace trigger "blank_removed_comment"
+before update on "public"."request_comment" for each row when (
+	(
+		("old"."deleted" = false)
+		and ("new"."deleted" = true)
+	)
+)
+execute function "public"."blank_removed_comment" ();
 
 create or replace trigger "bump_phrase_updated_at"
 before update on "public"."phrase" for each row
@@ -2641,17 +2665,7 @@ select
 
 create policy "Enable read access for all users" on "public"."request_comment" for
 select
-	using (
-		(
-			("deleted" = false)
-			or (
-				"uid" = (
-					select
-						"auth"."uid" () as "uid"
-				)
-			)
-		)
-	);
+	using (true);
 
 create policy "Enable read access for all users" on "public"."tag" for
 select
@@ -3531,6 +3545,12 @@ grant all on function "public"."cosine_distance" ("public"."vector", "public"."v
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "authenticated";
 
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."blank_removed_comment" () to "anon";
+
+grant all on function "public"."blank_removed_comment" () to "authenticated";
+
+grant all on function "public"."blank_removed_comment" () to "service_role";
 
 grant all on function "public"."cascade_soft_delete_comment" () to "anon";
 

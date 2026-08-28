@@ -27,12 +27,31 @@ $$;
 alter function public.guard_soft_delete_only () owner to postgres;
 
 -- 2. phrase_tag. Anyone signed in can tag a phrase, and the badge's X button
--- is offered to every reader, but only the DELETE policy's admins ever
+-- was offered to every reader, but only the DELETE policy's admins ever
 -- removed one — everyone else's delete matched no row and reported success.
 -- The UPDATE policy follows the INSERT policy's ownership rule instead: the
--- person who added the tag can remove it, and so can an admin.
+-- person who added the tag can remove it, and so can an admin. The UI hides
+-- the X from everyone else.
 alter table public.phrase_tag
 add column deleted boolean not null default false;
+
+-- The composite primary key goes. Every collection keys on the row's own
+-- `id`, and a link table that keys on its own columns cannot hold both a
+-- removed row and its replacement. As a partial unique index the constraint
+-- still says what it always said — a phrase carries a tag once — while
+-- letting the removed rows pile up behind it.
+alter table public.phrase_tag
+add column id uuid not null default gen_random_uuid();
+
+alter table public.phrase_tag
+drop constraint phrase_tag_pkey;
+
+alter table public.phrase_tag
+add constraint phrase_tag_pkey primary key (id);
+
+create unique index phrase_tag_phrase_id_tag_id_live_idx on public.phrase_tag using btree (phrase_id, tag_id)
+where
+	(deleted = false);
 
 create policy "Taggers and admins can soft-delete phrase tags" on public.phrase_tag
 for update
@@ -128,6 +147,19 @@ select
 alter table public.message_tag_link
 add column deleted boolean not null default false;
 
+alter table public.message_tag_link
+add column id uuid not null default gen_random_uuid();
+
+alter table public.message_tag_link
+drop constraint message_tag_link_pkey;
+
+alter table public.message_tag_link
+add constraint message_tag_link_pkey primary key (id);
+
+create unique index message_tag_link_message_id_tag_slug_live_idx on public.message_tag_link using btree (message_id, tag_slug)
+where
+	(deleted = false);
+
 create policy "Admins can update message tag links" on public.message_tag_link
 for update
 	to authenticated using (public.is_admin ())
@@ -147,37 +179,38 @@ select
 		or public.is_admin ()
 	);
 
--- 6. request_comment, and the cascade the hard delete used to get for free.
--- Deleting a comment removed its replies and its phrase links by FK cascade.
--- A soft delete has no cascade, so this trigger does it: the direct replies
--- and the comment's own phrase links get the flag, and each flagged reply
--- fires the trigger again, so the whole subtree goes down in one statement.
--- `and deleted = false` is what stops the recursion.
+-- 6. request_comment. Removing a comment is a tombstone, not a hole: the
+-- replies people wrote under it stay readable, and the comment keeps its
+-- place in the thread as the thing they are replying to.
 --
--- The replies belong to other people, so no client could flag them under RLS
--- — this has to be the database's job, and the function is security definer
--- for that reason.
+-- So the row stays selectable and the text goes instead. `blank_removed_comment`
+-- clears the content in the same statement that sets the flag, which is what
+-- makes leaving the SELECT policy open safe — a removed comment carries
+-- nothing left to read.
 alter table public.request_comment
 add column deleted boolean not null default false;
 
-drop policy if exists "Enable read access for all users" on public.request_comment;
+create or replace function public.blank_removed_comment () returns trigger language plpgsql as $$
+begin
+  new.content = '';
+  return new;
+end;
+$$;
 
-create policy "Enable read access for all users" on public.request_comment for
-select
-	using (
-		deleted = false
-		or uid = (
-			select
-				auth.uid ()
-		)
-	);
+alter function public.blank_removed_comment () owner to postgres;
 
+create or replace trigger blank_removed_comment
+before update on public.request_comment for each row when (
+	old.deleted = false
+	and new.deleted = true
+)
+execute function public.blank_removed_comment ();
+
+-- The phrase links a removed comment contributed do go with it: they are the
+-- commenter's own rows, and a phrase nobody can read the case for should not
+-- keep counting as an answer to the request.
 create or replace function public.cascade_soft_delete_comment () returns trigger language plpgsql security definer as $$
 begin
-  update public.request_comment
-  set deleted = true
-  where parent_comment_id = new.id and deleted = false;
-
   update public.comment_phrase_link
   set deleted = true
   where comment_id = new.id and deleted = false;

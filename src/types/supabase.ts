@@ -421,18 +421,21 @@ export type Database = {
 				Row: {
 					created_at: string
 					deleted: boolean
+					id: string
 					message_id: string
 					tag_slug: string
 				}
 				Insert: {
 					created_at?: string
 					deleted?: boolean
+					id?: string
 					message_id: string
 					tag_slug: string
 				}
 				Update: {
 					created_at?: string
 					deleted?: boolean
+					id?: string
 					message_id?: string
 					tag_slug?: string
 				}
@@ -895,6 +898,7 @@ export type Database = {
 					added_by: string
 					created_at: string
 					deleted: boolean
+					id: string
 					phrase_id: string
 					tag_id: string
 				}
@@ -902,6 +906,7 @@ export type Database = {
 					added_by?: string
 					created_at?: string
 					deleted?: boolean
+					id?: string
 					phrase_id: string
 					tag_id: string
 				}
@@ -909,6 +914,7 @@ export type Database = {
 					added_by?: string
 					created_at?: string
 					deleted?: boolean
+					id?: string
 					phrase_id?: string
 					tag_id?: string
 				}

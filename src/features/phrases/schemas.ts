@@ -56,8 +56,11 @@ export const PhraseSchema = z.object({
 export type PhraseType = z.infer<typeof PhraseSchema>
 
 // PhraseTagLinkSchema — the row shape of `phrase_tag`, the join table
-// between phrase and tag. Composite primary key (phrase_id, tag_id).
+// between phrase and tag. Keyed on its own `id`; a partial unique index on
+// (phrase_id, tag_id) holds the one-tag-per-phrase rule over the live rows,
+// so a removed link and its replacement can both exist.
 export const PhraseTagLinkSchema = z.object({
+	id: z.string().uuid(),
 	phrase_id: z.string().uuid(),
 	tag_id: z.string().uuid(),
 	created_at: z.string(),

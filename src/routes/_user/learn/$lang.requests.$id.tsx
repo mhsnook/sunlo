@@ -272,20 +272,42 @@ function TopLevelComments({
 	requestId: uuid
 	lang: string
 }) {
-	const { data: comments, isLoading } = useLiveQuery(
+	const { data: threads, isLoading } = useLiveQuery(
 		(q) =>
 			q
 				.from({ comment: commentsCollection })
 				.where(({ comment }) =>
 					and(
 						eq(comment.request_id, requestId),
-						isNull(comment.parent_comment_id),
-						eq(comment.deleted, false)
+						isNull(comment.parent_comment_id)
 					)
 				)
 				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
 		[requestId]
 	)
+
+	// A removed comment stays only as long as it is holding up a reply. With
+	// nothing under it there is nothing to anchor, so it goes.
+	const { data: liveReplies } = useLiveQuery(
+		(q) =>
+			q
+				.from({ reply: commentsCollection })
+				.where(({ reply }) =>
+					and(eq(reply.request_id, requestId), eq(reply.deleted, false))
+				)
+				.select(({ reply }) => ({
+					parent_comment_id: reply.parent_comment_id,
+				})),
+		[requestId]
+	)
+	const parentsWithReplies = new Set(
+		(liveReplies ?? []).map((reply) => reply.parent_comment_id)
+	)
+	const comments = (threads ?? []).filter(
+		(comment) => !comment.deleted || parentsWithReplies.has(comment.id)
+	)
+	// A tombstone is a place in the thread, not a comment, so it doesn't count.
+	const commentCount = comments.filter((comment) => !comment.deleted).length
 
 	if (isLoading) return <Loader />
 
@@ -293,8 +315,7 @@ function TopLevelComments({
 		<>
 			<div className="my-4 space-y-3">
 				<p className="text-muted-foreground px-4 text-sm">
-					Showing {comments.length} comment
-					{comments.length !== 1 ? 's' : ''}.
+					Showing {commentCount} comment{commentCount !== 1 ? 's' : ''}.
 				</p>
 				<div className="divide-y border">
 					{comments.map((comment) => (

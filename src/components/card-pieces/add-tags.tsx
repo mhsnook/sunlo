@@ -3,7 +3,8 @@ import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Tags, X } from 'lucide-react'
-import { createOptimisticAction } from '@tanstack/db'
+import { and, createOptimisticAction, eq } from '@tanstack/db'
+import { useLiveQuery } from '@tanstack/react-db'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -27,7 +28,7 @@ import {
 	type PhraseTagLinkType,
 } from '@/features/phrases/schemas'
 import { writeSyncedRows } from '@/lib/collections/synced-row'
-import { useUserId } from '@/lib/use-auth'
+import { useAuth, useUserId } from '@/lib/use-auth'
 import { useAppForm } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
 
@@ -44,7 +45,7 @@ type AddTagsAction = {
 	phraseId: string
 	lang: string
 	uid: string
-	tags: Array<{ tagId: string; name: string; isNew: boolean }>
+	tags: Array<{ linkId: string; tagId: string; name: string; isNew: boolean }>
 }
 
 const addTagsAction = createOptimisticAction<AddTagsAction>({
@@ -60,24 +61,14 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 					created_at: now,
 				})
 			}
-			// A tag someone removed is still in the collection with `deleted`
-			// set, so re-adding it revives that row rather than inserting a
-			// second one under the same (phrase_id, tag_id) key.
-			const key = `${phraseId}--${t.tagId}` as const
-			const existing = phraseTagLinksCollection.get(key)
-			if (!existing) {
-				phraseTagLinksCollection.insert({
-					phrase_id: phraseId,
-					tag_id: t.tagId,
-					added_by: uid,
-					created_at: now,
-					deleted: false,
-				})
-			} else if (existing.deleted) {
-				phraseTagLinksCollection.update(key, (draft) => {
-					draft.deleted = false
-				})
-			}
+			phraseTagLinksCollection.insert({
+				id: t.linkId,
+				phrase_id: phraseId,
+				tag_id: t.tagId,
+				added_by: uid,
+				created_at: now,
+				deleted: false,
+			})
 		}
 	},
 	mutationFn: async ({ phraseId, lang, uid, tags }) => {
@@ -88,20 +79,17 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 		if (newRows.length) {
 			await supabase.from('tag').insert(newRows).throwOnError()
 		}
-		// Upsert, not insert: a tag someone removed is still there with
-		// `deleted` set, and its (phrase_id, tag_id) primary key would reject
-		// the insert. `added_by` is left to its column default so the revive
-		// path touches nothing but `deleted`.
 		const linkRows = tags.map((t) => ({
+			id: t.linkId,
 			phrase_id: phraseId,
 			tag_id: t.tagId,
-			deleted: false,
+			added_by: uid,
 		}))
 		let confirmedLinks: Array<PhraseTagLinkType> = []
 		if (linkRows.length) {
 			const { data } = await supabase
 				.from('phrase_tag')
-				.upsert(linkRows, { onConflict: 'phrase_id,tag_id' })
+				.insert(linkRows)
 				.select()
 				.throwOnError()
 			confirmedLinks = data?.map((row) => PhraseTagLinkSchema.parse(row)) ?? []
@@ -140,6 +128,7 @@ export function AddTags({
 		const resolved: AddTagsAction['tags'] = values.tags.map((name) => {
 			const existing = (allLangTags ?? []).find((t) => t.name === name)
 			return {
+				linkId: crypto.randomUUID(),
 				tagId: existing?.id ?? crypto.randomUUID(),
 				name,
 				isNew: !existing,
@@ -282,13 +271,31 @@ function RemovableTagBadge({
 	tag: { id: string; name: string }
 	phraseId: string
 }) {
+	const { userId, isAdmin } = useAuth()
+	// The link row, not just the tag: removing one flips its `deleted` flag,
+	// and the policy behind that update is `added_by = auth.uid() or
+	// is_admin()`. Anyone else gets the badge without the X.
+	const { data: links } = useLiveQuery(
+		(q) =>
+			q
+				.from({ link: phraseTagLinksCollection })
+				.where(({ link }) =>
+					and(
+						eq(link.phrase_id, phraseId),
+						eq(link.tag_id, tag.id),
+						eq(link.deleted, false)
+					)
+				),
+		[phraseId, tag.id]
+	)
+	const link = links?.[0]
+	const canRemove = !!link && (isAdmin || link.added_by === userId)
+
 	const removeTag = () => {
-		const tx = phraseTagLinksCollection.update(
-			`${phraseId}--${tag.id}`,
-			(draft) => {
-				draft.deleted = true
-			}
-		)
+		if (!link) return
+		const tx = phraseTagLinksCollection.update(link.id, (draft) => {
+			draft.deleted = true
+		})
 		tx.isPersisted.promise.then(
 			() => toastSuccess(`Tag "${tag.name}" removed`),
 			(err: Error) => {
@@ -298,11 +305,14 @@ function RemovableTagBadge({
 		)
 	}
 
+	if (!canRemove) return <Badge variant="secondary">{tag.name}</Badge>
+
 	return (
 		<Badge variant="secondary" className="gap-1">
 			{tag.name}
 			<button
 				onClick={removeTag}
+				aria-label={`Remove ${tag.name}`}
 				className="hover:text-destructive -me-1 rounded-full p-0.5"
 			>
 				<X className="size-3" />

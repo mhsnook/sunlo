@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useAuth } from '@/lib/use-auth'
 import { Loader } from '@/components/ui/loader'
 import { Separator } from '@/components/ui/separator'
-import { toastError } from '@/components/ui/sonner'
 import {
 	Popover,
 	PopoverContent,
@@ -18,7 +17,6 @@ import {
 } from '@/components/ui/popover'
 import { ago } from '@/lib/dayjs'
 import {
-	messageTagLinksCollection,
 	messagesCollection,
 	phraseRequestsCollection,
 } from '@/features/requests/collections'
@@ -27,6 +25,10 @@ import {
 	useMessageTagsForMessage,
 } from '@/features/requests/hooks'
 import type { uuid } from '@/types/main'
+import {
+	attachMessageTag,
+	detachMessageTag,
+} from '@/features/requests/mutations'
 
 export const Route = createLazyFileRoute('/_user/admin/messages/$id')({
 	component: AdminMessageDetail,
@@ -102,7 +104,7 @@ function AdminMessageDetail() {
 									type="button"
 									className="ms-1 -me-1 inline-flex items-center"
 									aria-label={`Remove ${tag.label}`}
-									onClick={() => detachTag(message.id, tag.slug)}
+									onClick={() => detachMessageTag(message.id, tag.slug)}
 								>
 									<X className="h-3 w-3" />
 								</button>
@@ -203,8 +205,8 @@ function AddTagPopover({
 									<Checkbox
 										checked={isOn}
 										onCheckedChange={(checked) => {
-											if (checked) attachTag(messageId, tag.slug)
-											else detachTag(messageId, tag.slug)
+											if (checked) attachMessageTag(messageId, tag.slug)
+											else detachMessageTag(messageId, tag.slug)
 										}}
 									/>
 									<span>{tag.label}</span>
@@ -216,40 +218,4 @@ function AddTagPopover({
 			</PopoverContent>
 		</Popover>
 	)
-}
-
-function attachTag(messageId: uuid, tagSlug: string) {
-	// A tag an admin detached is still in the collection with `deleted` set, so
-	// re-attaching it revives that row rather than inserting a second one under
-	// the same (message_id, tag_slug) key.
-	const key = `${messageId}--${tagSlug}` as const
-	const existing = messageTagLinksCollection.get(key)
-	if (existing && !existing.deleted) return
-	const tx = existing
-		? messageTagLinksCollection.update(key, (draft) => {
-				draft.deleted = false
-			})
-		: messageTagLinksCollection.insert({
-				message_id: messageId,
-				tag_slug: tagSlug,
-				created_at: new Date().toISOString(),
-				deleted: false,
-			})
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to add tag')
-		console.error(err)
-	})
-}
-
-function detachTag(messageId: uuid, tagSlug: string) {
-	const tx = messageTagLinksCollection.update(
-		`${messageId}--${tagSlug}`,
-		(draft) => {
-			draft.deleted = true
-		}
-	)
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to remove tag')
-		console.error(err)
-	})
 }

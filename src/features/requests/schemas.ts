@@ -43,6 +43,7 @@ export const MessageTagSchema = z.object({
 export type MessageTagType = z.infer<typeof MessageTagSchema>
 
 export const MessageTagLinkSchema = z.object({
+	id: z.string().uuid(),
 	message_id: z.string().uuid(),
 	tag_slug: z.string(),
 	created_at: z.string(),
