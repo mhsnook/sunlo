@@ -64,7 +64,7 @@ This is the exception, not the default. Most writes are safe to show immediately
 
 ## Write the rows back, then skip the refetch
 
-Returning all affected rows from the supabase API and writing them back to the collection with `writeSyncedRows` allows us to skip refetching the whole table after mutations. `{ refetch: false }` is how the handler says it did that. Write the rows back, or omit the flag and let the collection reload.
+Returning all affected rows from the supabase API and writing them back to the collection with `writeSyncedRows` allows us to skip refetching the whole table after mutations (`{ refetch: false }`).
 
 A collection holds two layers. The optimistic layer carries your change from the moment you make it. The synced layer holds what the server last told us. When the transaction ends, the optimistic entry stops being authoritative, and **the user sees whatever the synced layer holds**. `{ refetch: false }` skips the one step that would have updated it, so a handler that writes nothing back leaves the user looking at the pre-mutation row.
 
