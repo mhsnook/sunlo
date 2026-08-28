@@ -13,12 +13,11 @@ export function WithPhrase({
 	Component: ComponentType<{ phrase: PhraseFullFilteredType }>
 }) {
 	const { data: phrase, status } = usePhrase(pid)
-	return (
-		status === 'pending' ? null
-		: status === 'not-found' ?
-			<Callout variant="ghost" Icon={CircleQuestionMark}>
-				Phrase not found.
-			</Callout>
-		:	<Component phrase={phrase} />
+	return status === 'pending' ? null : status === 'not-found' ? (
+		<Callout variant="ghost" Icon={CircleQuestionMark}>
+			Phrase not found.
+		</Callout>
+	) : (
+		<Component phrase={phrase} />
 	)
 }

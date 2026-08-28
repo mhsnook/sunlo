@@ -1,6 +1,7 @@
 import { createOptimisticAction } from '@tanstack/db'
 
 import supabase from '@/lib/supabase-client'
+import { writeSyncedRows } from '@/lib/collections/synced-row'
 import type { uuid } from '@/types/main'
 import {
 	phrasesCollection,
@@ -194,7 +195,7 @@ type BulkAddPhrasesInput = {
 		onlyReverse: boolean
 		translations: Array<{ id: uuid; lang: string; text: string }>
 		cards: Array<{ id: uuid; direction: 'forward' | 'reverse' }>
-		tagIds: Array<uuid>
+		tagLinks: Array<{ linkId: uuid; tagId: uuid }>
 	}>
 }
 
@@ -247,12 +248,14 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					updated_at: now,
 				})
 			}
-			for (const tagId of p.tagIds) {
+			for (const link of p.tagLinks) {
 				phraseTagLinksCollection.insert({
+					id: link.linkId,
 					phrase_id: p.phraseId,
-					tag_id: tagId,
+					tag_id: link.tagId,
 					added_by: uid,
 					created_at: now,
+					deleted: false,
 				})
 			}
 		}
@@ -314,9 +317,10 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 			await supabase.from('user_card').insert(cardRows).throwOnError()
 		}
 		const linkRows = phrases.flatMap((p) =>
-			p.tagIds.map((tagId) => ({
+			p.tagLinks.map((link) => ({
+				id: link.linkId,
 				phrase_id: p.phraseId,
-				tag_id: tagId,
+				tag_id: link.tagId,
 				added_by: uid,
 			}))
 		)
@@ -372,14 +376,17 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					updated_at: now,
 				})
 			}
-			for (const tagId of p.tagIds) {
-				phraseTagLinksCollection.utils.writeInsert({
+			writeSyncedRows(
+				phraseTagLinksCollection,
+				p.tagLinks.map((link) => ({
+					id: link.linkId,
 					phrase_id: p.phraseId,
-					tag_id: tagId,
+					tag_id: link.tagId,
 					added_by: uid,
 					created_at: now,
-				})
-			}
+					deleted: false,
+				}))
+			)
 		}
 	},
 })

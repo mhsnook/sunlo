@@ -31,7 +31,7 @@ function ChangeEmailConfirmPage() {
 				<CardTitle>Change your registered email</CardTitle>
 			</CardHeader>
 			<CardContent>
-				{data.error ?
+				{data.error ? (
 					<ShowError>
 						<div className="flex flex-col gap-2">
 							<p className="font-bold">Error: {data.error}</p>
@@ -55,7 +55,8 @@ function ChangeEmailConfirmPage() {
 							</p>
 						</div>
 					</ShowError>
-				:	<Callout Icon={SuccessCheckmarkTrans}>
+				) : (
+					<Callout Icon={SuccessCheckmarkTrans}>
 						<p>Success!</p>
 						<p>
 							You've changed your email to <strong>{data.userEmail}</strong>.
@@ -66,7 +67,7 @@ function ChangeEmailConfirmPage() {
 							</Link>
 						</p>
 					</Callout>
-				}
+				)}
 			</CardContent>
 		</>
 	)

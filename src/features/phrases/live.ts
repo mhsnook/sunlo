@@ -1,5 +1,4 @@
 import {
-	and,
 	BasicIndex,
 	createLiveQueryCollection,
 	eq,
@@ -16,20 +15,33 @@ import {
 } from './collections'
 import { langTagsCollection } from '@/features/languages/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
+import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import {
-	playlistPhraseLinksCollection,
-	phrasePlaylistsCollection,
-} from '@/features/playlists/collections'
+	phrasePlaylistsActive,
+	playlistPhraseLinksActive,
+} from '@/features/playlists/live'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import {
-	commentPhraseLinksCollection,
-	commentsCollection,
-	phraseRequestsCollection,
-} from '@/features/requests/collections'
+	commentPhraseLinksActive,
+	commentsActive,
+	phraseRequestsActive,
+} from '@/features/requests/live'
 
 // Phrase row with translations + tags aggregated via toArray(). Used by
 // `useOnePhrase` / `useLangPhrasesRaw` and as the base for `phrasesFull`.
 // Keeping it as a derived collection means the aggregations run once and
 // are reused across consumers.
+/**
+ * Phrase-to-tag links with `deleted = false` pre-filtered.
+ * Use this anywhere you want the tags a phrase actually carries.
+ */
+export const phraseTagLinksActive = createLiveQueryCollection({
+	query: (q) =>
+		q
+			.from({ link: phraseTagLinksCollection })
+			.where(({ link }) => eq(link.deleted, false)),
+})
+
 export const phrasesComposed = createLiveQueryCollection({
 	id: 'phrases_composed',
 	query: (q) =>
@@ -43,14 +55,19 @@ export const phrasesComposed = createLiveQueryCollection({
 			),
 			tags: toArray(
 				q
-					.from({ link: phraseTagLinksCollection })
+					.from({ link: phraseTagLinksActive })
 					.join(
 						{ tag: langTagsCollection },
 						({ link, tag }) => eq(link.tag_id, tag.id),
 						'inner'
 					)
 					.where(({ link }) => eq(link.phrase_id, phrase.id))
-					.select(({ tag }) => ({ id: tag.id, name: tag.name }))
+					.select(({ link, tag }) => ({
+						id: tag.id,
+						name: tag.name,
+						linkId: link.id,
+						addedBy: link.added_by,
+					}))
 			),
 		})),
 })
@@ -128,15 +145,13 @@ export const usePhrasePlaylists = (
 				.select(({ phrase }) => ({
 					id: phrase.id,
 					playlists: q
-						.from({ link: playlistPhraseLinksCollection })
+						.from({ link: playlistPhraseLinksActive })
 						.join(
-							{ playlist: phrasePlaylistsCollection },
+							{ playlist: phrasePlaylistsActive },
 							({ link, playlist }) => eq(link.playlist_id, playlist.id),
 							'inner'
 						)
-						.where(({ link, playlist }) =>
-							and(eq(link.phrase_id, phrase.id), eq(playlist.deleted, false))
-						)
+						.where(({ link }) => eq(link.phrase_id, phrase.id))
 						.select(({ playlist, link }) => ({
 							type: 'playlist' as const,
 							id: link.id,
@@ -169,20 +184,18 @@ export const usePhraseComments = (
 				.select(({ phrase }) => ({
 					id: phrase.id,
 					comments: q
-						.from({ link: commentPhraseLinksCollection })
+						.from({ link: commentPhraseLinksActive })
 						.join(
-							{ comment: commentsCollection },
+							{ comment: commentsActive },
 							({ link, comment }) => eq(link.comment_id, comment.id),
 							'inner'
 						)
 						.join(
-							{ request: phraseRequestsCollection },
+							{ request: phraseRequestsActive },
 							({ comment, request }) => eq(comment.request_id, request.id),
 							'inner'
 						)
-						.where(({ link, request }) =>
-							and(eq(link.phrase_id, phrase.id), eq(request.deleted, false))
-						)
+						.where(({ link }) => eq(link.phrase_id, phrase.id))
 						.select(({ comment, request, link }) => ({
 							type: 'comment' as const,
 							id: link.id,
@@ -228,7 +241,7 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 			playlistIds.length === 0
 				? undefined
 				: q
-						.from({ link: playlistPhraseLinksCollection })
+						.from({ link: playlistPhraseLinksActive })
 						.join(
 							{ playlist: phrasePlaylistsCollection },
 							({ link, playlist }) => eq(link.playlist_id, playlist.id),
@@ -248,7 +261,7 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 			requestIds.length === 0
 				? undefined
 				: q
-						.from({ link: commentPhraseLinksCollection })
+						.from({ link: commentPhraseLinksActive })
 						.join(
 							{ request: phraseRequestsCollection },
 							({ link, request }) => eq(link.request_id, request.id),

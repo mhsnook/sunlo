@@ -62,6 +62,8 @@ import {
 	PhraseRequestSchema,
 	type MessageTagType,
 } from '@/features/requests/schemas'
+import { attachMessageTag, detachMessageTag } from '@/features/requests'
+import { messageTagLinksActive } from '@/features/requests'
 
 export const Route = createLazyFileRoute('/_user/admin/messages/')({
 	component: AdminMessagesPage,
@@ -189,7 +191,7 @@ function AdminMessagesPage() {
 	)
 
 	const { data: allLinks } = useLiveQuery(
-		(q) => q.from({ link: messageTagLinksCollection }),
+		(q) => q.from({ link: messageTagLinksActive }),
 		[]
 	)
 
@@ -898,60 +900,23 @@ function SelectionBar({
 
 	const applyTag = (slug: string) => {
 		const ids = Array.from(selected)
-		Promise.all(
-			ids.map(async (message_id) => {
-				try {
-					const tx = messageTagLinksCollection.insert({
-						message_id,
-						tag_slug: slug,
-						created_at: new Date().toISOString(),
-					})
-					await tx.isPersisted.promise
-				} catch (err) {
-					// Duplicate (already tagged) is fine; surface other errors.
-					if (
-						err instanceof Error &&
-						!err.message.toLowerCase().includes('duplicate')
-					) {
-						throw err
-					}
-				}
-			})
-		).then(
-			() => {
-				toastSuccess(`Applied "${slug}" to ${ids.length}`)
-				setTagPickerOpen(false)
-			},
-			(err: unknown) => {
-				toastError('Failed to apply tag to some messages')
-				console.error(err)
-			}
-		)
+		bulkTag(attachMessageTag(ids, slug), `Applied "${slug}" to ${ids.length}`)
 	}
 
 	const removeTag = (slug: string) => {
 		const ids = Array.from(selected)
-		Promise.all(
-			ids.map(async (message_id) => {
-				try {
-					const tx = messageTagLinksCollection.delete(`${message_id}--${slug}`)
-					await tx.isPersisted.promise
-				} catch (err) {
-					if (
-						err instanceof Error &&
-						!err.message.toLowerCase().includes('not found')
-					) {
-						throw err
-					}
-				}
-			})
-		).then(
-			() => {
-				toastSuccess(`Removed "${slug}" from ${ids.length}`)
-				setTagPickerOpen(false)
-			},
+		bulkTag(detachMessageTag(ids, slug), `Removed "${slug}" from ${ids.length}`)
+	}
+
+	// One transaction covers the whole selection, so there is one thing to
+	// report rather than one toast per message.
+	function bulkTag(tx: ReturnType<typeof attachMessageTag>, done: string) {
+		setTagPickerOpen(false)
+		if (!tx) return
+		tx.isPersisted.promise.then(
+			() => toastSuccess(done),
 			(err: unknown) => {
-				toastError('Failed to remove tag from some messages')
+				toastError('Failed to tag some messages')
 				console.error(err)
 			}
 		)
@@ -1127,7 +1092,7 @@ function MessageRowItem({
 									<button
 										type="button"
 										className="ms-1 -me-1 inline-flex items-center"
-										onClick={() => detachTag(row.message_id, tag.slug)}
+										onClick={() => detachOneTag(row.message_id, tag.slug)}
 										aria-label={`Remove ${tag.label}`}
 									>
 										<X className="h-3 w-3" />
@@ -1152,10 +1117,13 @@ function MessageRowItem({
 	)
 }
 
-function detachTag(messageId: string, slug: string) {
-	const tx = messageTagLinksCollection.delete(`${messageId}--${slug}`)
-	tx.isPersisted.promise.catch((err: unknown) => {
-		toastError('Failed to remove tag')
-		console.error(err)
-	})
+// One message at a time, from a badge's X. The selection bar above calls the
+// feature mutation directly and reports its own aggregate.
+function detachOneTag(messageId: string, tagSlug: string) {
+	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
+		(err: unknown) => {
+			toastError('Failed to remove tag')
+			console.error(err)
+		}
+	)
 }

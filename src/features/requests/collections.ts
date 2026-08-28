@@ -188,28 +188,6 @@ export const commentsCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			const ids = transaction.mutations.map((m) => m.original.id)
-			const { data } = await supabase
-				.from('request_comment')
-				.delete()
-				.in('id', ids)
-				.select()
-				.throwOnError()
-			const returned = data ?? []
-			should(
-				'request_comment delete removed one row per targeted comment',
-				returned.length === ids.length &&
-					ids.every((id) => returned.some((row) => row.id === id)),
-				{ submitted: ids, returned }
-			)
-			// Cascade-deleted replies and phrase links linger in the local
-			// collections until the next stale refetch, but they don't render
-			// (orphaned replies have no parent anchor; orphaned phrase links
-			// filter out of the provenance inner-join). Skipping the full-table
-			// refetch is worth that small inconsistency.
-			return { refetch: false }
-		},
 	})
 )
 
@@ -382,21 +360,6 @@ export const messageTagsCollection = createCollection(
 			)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
-			const slugs = transaction.mutations.map((m) => m.original.slug)
-			const { data } = await supabase
-				.from('message_tag')
-				.delete()
-				.in('slug', slugs)
-				.select()
-				.throwOnError()
-			if ((data?.length ?? 0) !== slugs.length) {
-				throw new Error(
-					`Delete on message_tag affected ${data?.length ?? 0} of ${slugs.length} rows (permission denied or row removed).`
-				)
-			}
-			return { refetch: false }
-		},
 	})
 )
 
@@ -412,15 +375,14 @@ export const messageTagLinksCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => MessageTagLinkSchema.parse(item)) ?? []
 		},
-		// composite PK; getKey just needs to be stable+unique per row
-		getKey: (item: MessageTagLinkType) =>
-			`${item.message_id}--${item.tag_slug}`,
+		getKey: (item: MessageTagLinkType) => item.id,
 		queryClient,
 		schema: MessageTagLinkSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
+				id: m.modified.id,
 				message_id: m.modified.message_id,
 				tag_slug: m.modified.tag_slug,
 			}))
@@ -438,22 +400,34 @@ export const messageTagLinksCollection = createCollection(
 			writeSyncedRows(messageTagLinksCollection, returned)
 			return { refetch: false }
 		},
-		onDelete: async ({ transaction }) => {
+		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const { data } = await supabase
-						.from('message_tag_link')
-						.delete()
-						.eq('message_id', m.original.message_id)
-						.eq('tag_slug', m.original.tag_slug)
-						.select()
-						.throwOnError()
-					if (!data || data.length === 0) {
-						throw new Error(
-							`Delete on message_tag_link (${m.original.message_id}, ${m.original.tag_slug}) affected no rows (permission denied or row already removed).`
+				groupUpdatesByChanges(transaction.mutations).map(
+					async ({ changes, keys }) => {
+						const { data } = await supabase
+							.from('message_tag_link')
+							.update(changes)
+							.in('id', keys)
+							.select()
+							.throwOnError()
+						if ((data?.length ?? 0) !== keys.length) {
+							throw new Error(
+								`Update on message_tag_link affected ${data?.length ?? 0} of ${keys.length} rows (permission denied or row removed).`
+							)
+						}
+						const rows =
+							data?.map((row) => MessageTagLinkSchema.parse(row)) ?? []
+						should(
+							'message_tag_link update returned one row per link changed',
+							allRowsMatch(
+								keys.map(() => changes),
+								rows
+							),
+							{ submitted: { changes, keys }, returned: rows }
 						)
+						writeSyncedRows(messageTagLinksCollection, rows)
 					}
-				})
+				)
 			)
 			return { refetch: false }
 		},

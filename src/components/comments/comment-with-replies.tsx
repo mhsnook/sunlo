@@ -6,12 +6,15 @@ import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { commentsCollection } from '@/features/requests/collections'
-import { useCommentPhraseLinks } from '@/features/requests/hooks'
+import { commentsActive } from '@/features/requests'
+import { useCommentPhraseLinks } from '@/features/requests'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import { WithPhrase } from '@/components/with-phrase'
 import { useUserId } from '@/lib/use-auth'
-import { type RequestCommentType } from '@/features/requests/schemas'
+import {
+	type CommentPhraseLinkType,
+	type RequestCommentType,
+} from '@/features/requests/schemas'
 import { buttonVariants } from '@/components/ui/button'
 
 import { DeleteCommentDialog } from './delete-comment-dialog'
@@ -33,7 +36,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	const { data: repliesData } = useLiveQuery(
 		(q) =>
 			q
-				.from({ reply: commentsCollection })
+				.from({ reply: commentsActive })
 				.where(({ reply }) => eq(reply.parent_comment_id, comment.id))
 				.join({ profile: publicProfilesCollection }, ({ reply, profile }) =>
 					eq(profile.uid, reply.uid)
@@ -44,11 +47,15 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	const replies = repliesData ?? []
 
+	// A removed comment keeps its place in the thread so the replies under it
+	// still have something to hang from. `blank_removed_comment` cleared its
+	// text, so there is nothing to show but the fact that it is gone — and
+	// nothing to collapse, so its replies stay open.
 	const isFocused = search.focus === comment.id
 	const isFocusMode = search.focus && !search.mode
 	const hasHighlightedReply =
 		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
-	const showSubthread = isFocused || hasHighlightedReply
+	const showSubthread = comment.deleted || isFocused || !!hasHighlightedReply
 
 	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
 	const links = phraseLinks ?? []
@@ -75,129 +82,44 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 			}
 		>
 			<div className="w-full">
-				<div className="flex items-center justify-between">
-					<UidPermalinkInline
-						uid={comment.uid}
-						timeValue={comment.created_at}
-						action="commented"
-						timeLinkParams={{ id: comment.request_id, lang }}
-						timeLinkSearch={{ focus: comment.id }}
-						timeLinkTo="/learn/$lang/requests/$id"
-					/>
-
-					<div className="flex gap-2">
-						{isOwner && (
-							<>
-								<Link
-									to="."
-									search={(prev) => ({
-										...prev,
-										focus: comment.id,
-										mode: 'edit' as const,
-									})}
-									className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-									aria-label="Edit comment"
-									data-testid="edit-comment-button"
-								>
-									<Edit className="h-4 w-4" />
-								</Link>
-								<DeleteCommentDialog comment={comment} />
-							</>
-						)}
-						<CommentContextMenu comment={comment} lang={lang} />
-					</div>
-				</div>
-
-				{comment.content && (
-					<div className="mt-2">
-						<Markdown>{comment.content}</Markdown>
-					</div>
-				)}
-
-				{links.length > 0 && (
-					<div
-						className="mt-3 space-y-2"
-						data-testid="comment-phrase-link-badge"
+				{comment.deleted ? (
+					<p
+						className="text-muted-foreground text-sm italic"
+						data-testid="removed-comment-notice"
 					>
-						{links.map((link) => (
-							<WithPhrase
-								key={link.id}
-								pid={link.phrase_id}
-								Component={CardResultSimple}
-							/>
-						))}
-					</div>
+						This comment was removed.
+					</p>
+				) : (
+					<CommentBody
+						comment={comment}
+						links={links}
+						isOwner={isOwner}
+						lang={lang}
+						replyCount={replyCount}
+						showSubthread={showSubthread}
+					/>
 				)}
-
-				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
-					<Upvote comment={comment} />
-
-					{replyCount === 0 && !showSubthread && (
-						<Link
-							className={buttonVariants({
-								variant: 'ghost',
-								size: 'sm',
-							})}
-							to={'.'}
-							search={(search) => ({
-								...search,
-								focus: comment.id,
-								mode: 'reply' as const,
-							})}
-							data-testid="reply-link"
-						>
-							<Reply className="me-1 h-4 w-4" />
-							Reply
-						</Link>
-					)}
-
-					{replyCount > 0 && (
-						<Link
-							className={buttonVariants({
-								variant: showSubthread ? 'soft' : 'ghost',
-								size: 'sm',
-							})}
-							to={'.'}
-							search={(search) => {
-								if (showSubthread) {
-									const { focus: _, ...args } = search
-									return args
-								} else return { ...search, focus: comment.id }
-							}}
-							data-name="show-replies-button"
-						>
-							{showSubthread ? (
-								<ChevronUp className="me-1 h-4 w-4" />
-							) : (
-								<ChevronDown className="me-1 h-4 w-4" />
-							)}
-							<span className="@max-md:sr-only">
-								{showSubthread ? 'Showing' : `Show`}{' '}
-							</span>
-							{replyCount}
-							{replyCount === 1 ? ' reply' : ' replies'}
-						</Link>
-					)}
-				</div>
 
 				{showSubthread && (
 					<div className="mt-3 space-y-2 text-sm">
 						<Separator />
-						<Link
-							to="."
-							search={(prev) => ({
-								...prev,
-								focus: comment.id,
-								mode: 'reply' as const,
-							})}
-							className="mt-2 flex grow cursor-pointer flex-row items-center gap-2 py-2"
-							data-name="add-reply-inline"
-						>
-							<TinySelfAvatar className="h-6 w-6 shrink-0" />
-							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">
-								Type your reply here...
-							</p>
-						</Link>
+						{!comment.deleted && (
+							<Link
+								to="."
+								search={(prev) => ({
+									...prev,
+									focus: comment.id,
+									mode: 'reply' as const,
+								})}
+								className="mt-2 flex grow cursor-pointer flex-row items-center gap-2 py-2"
+								data-name="add-reply-inline"
+							>
+								<TinySelfAvatar className="h-6 w-6 shrink-0" />
+								<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">
+									Type your reply here...
+								</p>
+							</Link>
+						)}
 						{replies.length > 0 && (
 							<div className="divide-y">
 								{replies.map(({ reply }) => (
@@ -209,6 +131,136 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				)}
 			</div>
 		</div>
+	)
+}
+
+/**
+ * Everything a comment shows while it is still there: who wrote it, the text,
+ * the phrases it suggests, and the row of actions. A removed comment renders a
+ * one-line notice in its place and keeps only its replies.
+ */
+function CommentBody({
+	comment,
+	links,
+	isOwner,
+	lang,
+	replyCount,
+	showSubthread,
+}: {
+	comment: RequestCommentType
+	links: Array<CommentPhraseLinkType>
+	isOwner: boolean
+	lang: string
+	replyCount: number
+	showSubthread: boolean
+}) {
+	return (
+		<>
+			<div className="flex items-center justify-between">
+				<UidPermalinkInline
+					uid={comment.uid}
+					timeValue={comment.created_at}
+					action="commented"
+					timeLinkParams={{ id: comment.request_id, lang }}
+					timeLinkSearch={{ focus: comment.id }}
+					timeLinkTo="/learn/$lang/requests/$id"
+				/>
+
+				<div className="flex gap-2">
+					{isOwner && (
+						<>
+							<Link
+								to="."
+								search={(prev) => ({
+									...prev,
+									focus: comment.id,
+									mode: 'edit' as const,
+								})}
+								className={buttonVariants({
+									variant: 'ghost',
+									size: 'icon',
+								})}
+								aria-label="Edit comment"
+								data-testid="edit-comment-button"
+							>
+								<Edit className="h-4 w-4" />
+							</Link>
+							<DeleteCommentDialog comment={comment} />
+						</>
+					)}
+					<CommentContextMenu comment={comment} lang={lang} />
+				</div>
+			</div>
+
+			{comment.content && (
+				<div className="mt-2">
+					<Markdown>{comment.content}</Markdown>
+				</div>
+			)}
+
+			{links.length > 0 && (
+				<div className="mt-3 space-y-2" data-testid="comment-phrase-link-badge">
+					{links.map((link) => (
+						<WithPhrase
+							key={link.id}
+							pid={link.phrase_id}
+							Component={CardResultSimple}
+						/>
+					))}
+				</div>
+			)}
+
+			<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
+				<Upvote comment={comment} />
+
+				{replyCount === 0 && !showSubthread && (
+					<Link
+						className={buttonVariants({
+							variant: 'ghost',
+							size: 'sm',
+						})}
+						to={'.'}
+						search={(search) => ({
+							...search,
+							focus: comment.id,
+							mode: 'reply' as const,
+						})}
+						data-testid="reply-link"
+					>
+						<Reply className="me-1 h-4 w-4" />
+						Reply
+					</Link>
+				)}
+
+				{replyCount > 0 && (
+					<Link
+						className={buttonVariants({
+							variant: showSubthread ? 'soft' : 'ghost',
+							size: 'sm',
+						})}
+						to={'.'}
+						search={(search) => {
+							if (showSubthread) {
+								const { focus: _, ...args } = search
+								return args
+							} else return { ...search, focus: comment.id }
+						}}
+						data-name="show-replies-button"
+					>
+						{showSubthread ? (
+							<ChevronUp className="me-1 h-4 w-4" />
+						) : (
+							<ChevronDown className="me-1 h-4 w-4" />
+						)}
+						<span className="@max-md:sr-only">
+							{showSubthread ? 'Showing' : `Show`}{' '}
+						</span>
+						{replyCount}
+						{replyCount === 1 ? ' reply' : ' replies'}
+					</Link>
+				)}
+			</div>
+		</>
 	)
 }
 

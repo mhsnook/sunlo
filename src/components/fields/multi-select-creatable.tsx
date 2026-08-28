@@ -97,9 +97,9 @@ export function MultiSelectCreatable({
 										<Check
 											className={cn(
 												'mr-2 h-4 w-4',
-												selected.includes(option.value) ? 'opacity-100' : (
-													'opacity-0'
-												)
+												selected.includes(option.value)
+													? 'opacity-100'
+													: 'opacity-0'
 											)}
 										/>
 										{option.label}

@@ -9,6 +9,7 @@ export const PlaylistPhraseLinkSchema = z.object({
 	order: z.number().nullable(),
 	href: z.string().nullable(),
 	created_at: z.string(),
+	deleted: z.boolean().default(false),
 })
 
 export type PlaylistPhraseLinkType = z.infer<typeof PlaylistPhraseLinkSchema>

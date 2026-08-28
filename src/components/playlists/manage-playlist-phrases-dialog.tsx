@@ -85,7 +85,9 @@ function HrefInput({
 }
 
 function removePhrase(linkId: string) {
-	const tx = playlistPhraseLinksCollection.delete(linkId)
+	const tx = playlistPhraseLinksCollection.update(linkId, (draft) => {
+		draft.deleted = true
+	})
 	tx.isPersisted.promise.then(
 		() => toastSuccess('Phrase removed from playlist'),
 		(err: unknown) => {

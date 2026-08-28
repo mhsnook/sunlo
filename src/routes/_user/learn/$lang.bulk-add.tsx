@@ -219,7 +219,10 @@ function BulkAddPhrasesPage() {
 					text: t.text,
 				})),
 				cards,
-				tagIds: staged.tags.map((name) => tagIdByName.get(name)!.id),
+				tagLinks: staged.tags.map((name) => ({
+					linkId: crypto.randomUUID(),
+					tagId: tagIdByName.get(name)!.id,
+				})),
 			}
 		})
 

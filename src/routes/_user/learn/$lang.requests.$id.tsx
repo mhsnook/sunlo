@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
+import { eq, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 import { CSSProperties, useId } from 'react'
 import { Paperclip } from 'lucide-react'
@@ -8,7 +8,7 @@ import type { uuid } from '@/types/main'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import { useRequest } from '@/features/requests/hooks'
+import { useRequest } from '@/features/requests'
 import { Markdown } from '@/components/my-markdown'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
@@ -28,7 +28,8 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 } from '@/features/requests/collections'
-import { useOneComment } from '@/features/requests/hooks'
+import { useOneComment, useRequestThread } from '@/features/requests'
+import { commentPhraseLinksActive } from '@/features/requests'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
 	CommentDialog,
@@ -203,7 +204,7 @@ function AnswersOnlyView() {
 	const { data: links, isLoading } = useLiveQuery(
 		(q) =>
 			q
-				.from({ link: commentPhraseLinksCollection })
+				.from({ link: commentPhraseLinksActive })
 				.where(({ link }) => eq(link.request_id, params.id)),
 		[params.id]
 	)
@@ -270,28 +271,13 @@ function TopLevelComments({
 	requestId: uuid
 	lang: string
 }) {
-	const { data: comments, isLoading } = useLiveQuery(
-		(q) =>
-			q
-				.from({ comment: commentsCollection })
-				.where(({ comment }) =>
-					and(
-						eq(comment.request_id, requestId),
-						isNull(comment.parent_comment_id)
-					)
-				)
-				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
-		[requestId]
-	)
-
-	if (isLoading) return <Loader />
+	const { comments, count } = useRequestThread(requestId)
 
 	return (
 		<>
 			<div className="my-4 space-y-3">
 				<p className="text-muted-foreground px-4 text-sm">
-					Showing {comments.length} comment
-					{comments.length !== 1 ? 's' : ''}.
+					Showing {count} comment{count !== 1 ? 's' : ''}.
 				</p>
 				<div className="divide-y border">
 					{comments.map((comment) => (

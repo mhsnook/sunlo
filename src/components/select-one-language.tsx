@@ -36,9 +36,10 @@ export function SelectOneLanguage({
 	const id = useId()
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
-			{trigger ?
+			{trigger ? (
 				<PopoverTrigger asChild>{trigger}</PopoverTrigger>
-			:	<PopoverTrigger asChild className="w-full">
+			) : (
+				<PopoverTrigger asChild className="w-full">
 					<Button
 						data-testid="language-selector-button"
 						variant="ghost"
@@ -49,27 +50,31 @@ export function SelectOneLanguage({
 						aria-controls={id}
 						className={`placeholder:text-muted-foreground text-foreground justify-between border font-normal ${hasError ? 'border-destructive' : ''}`}
 					>
-						{value ?
-							allLanguageOptions.find((language) => language.value === value)
-								?.label
-						:	'Select language...'}
+						{value
+							? allLanguageOptions.find((language) => language.value === value)
+									?.label
+							: 'Select language...'}
 						<ChevronsUpDown className="ms-2 size-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
-			}
+			)}
 			<PopoverContent id={id} className="p-0" align={popoverAlign}>
 				<Command
 					filter={(value, search) => {
 						search = search.toLocaleLowerCase()
-						return (
-							value === '' ? 1
-							: value === search ? 1
-							: value.startsWith(search) ? 0.9
-							: languages[value].toLowerCase().startsWith(search) ? 0.8
-							: `${value} ${languages[value]}`.toLowerCase().includes(search) ?
-								0.7
-							:	0
-						)
+						return value === ''
+							? 1
+							: value === search
+								? 1
+								: value.startsWith(search)
+									? 0.9
+									: languages[value].toLowerCase().startsWith(search)
+										? 0.8
+										: `${value} ${languages[value]}`
+													.toLowerCase()
+													.includes(search)
+											? 0.7
+											: 0
 					}}
 				>
 					<CommandInput

@@ -10,8 +10,8 @@ import type {
 import {
 	phrasePlaylistsCollection,
 	phrasePlaylistUpvotesCollection,
-	playlistPhraseLinksCollection,
 } from './collections'
+import { playlistPhraseLinksActive } from './live'
 import { phrasesFull } from '@/features/phrases/live'
 import { useUserId } from '@/lib/use-auth'
 
@@ -74,7 +74,7 @@ export function useOnePlaylistPhrases(
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ link: playlistPhraseLinksCollection })
+				.from({ link: playlistPhraseLinksActive })
 				.join(
 					{ phrase: phrasesFull },
 					({ link, phrase }) => eq(link.phrase_id, phrase.id),

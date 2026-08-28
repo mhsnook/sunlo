@@ -72,9 +72,9 @@ export function SocialLearningSection() {
 												sent you a phrase pack
 											</div>
 											<div className="text-xs text-rose-200">
-												{isForFriends ?
-													`"Essential Kannada now that you've moved"`
-												:	'"Essential Punjabi for your trip"'}
+												{isForFriends
+													? `"Essential Kannada now that you've moved"`
+													: '"Essential Punjabi for your trip"'}
 											</div>
 										</div>
 										<Gift className="h-4 w-4 text-rose-300" />
@@ -90,9 +90,9 @@ export function SocialLearningSection() {
 												is practicing with you
 											</div>
 											<div className="text-xs text-rose-200">
-												{isForFriends ?
-													`"Let's learn all the swear words!"`
-												:	`"Let's learn all the best food words!"`}
+												{isForFriends
+													? `"Let's learn all the swear words!"`
+													: `"Let's learn all the best food words!"`}
 											</div>
 										</div>
 										<Users className="h-4 w-4 text-orange-300" />
@@ -108,9 +108,9 @@ export function SocialLearningSection() {
 												shared a memory tip
 											</div>
 											<div className="text-xs text-rose-200">
-												{isForFriends ?
-													'"These drinking songs are fun asf"'
-												:	'"These folk songs are super catchy!"'}
+												{isForFriends
+													? '"These drinking songs are fun asf"'
+													: '"These folk songs are super catchy!"'}
 											</div>
 										</div>
 										<Share className="h-4 w-4 text-pink-300" />
@@ -180,9 +180,9 @@ export function SocialLearningSection() {
 											Personalized Gifts
 										</h3>
 										<p className="text-rose-100">
-											{isForFriends ?
-												'Friends and colleagues '
-											:	'Family members '}
+											{isForFriends
+												? 'Friends and colleagues '
+												: 'Family members '}
 											can send you custom phrase packs, cultural tips, and
 											learning resources tailored to your interests.
 										</p>

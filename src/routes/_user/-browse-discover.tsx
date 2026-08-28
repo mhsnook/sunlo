@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useDeckPids } from '@/features/deck/hooks'
-import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
+import { playlistPhraseLinksActive } from '@/features/playlists/live'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
 import type { RequestTagSet } from '@/features/requests'
 import type { uuid } from '@/types/main'
@@ -126,7 +126,7 @@ export function SetTile({
 	const { data: links } = useLiveQuery(
 		(q) =>
 			q
-				.from({ link: playlistPhraseLinksCollection })
+				.from({ link: playlistPhraseLinksActive })
 				.where(({ link }) => eq(link.playlist_id, playlist.id)),
 		[playlist.id]
 	)
