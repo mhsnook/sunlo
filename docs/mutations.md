@@ -252,20 +252,17 @@ Two features subscribe outside this hook, because they react to an event rather 
 
 The entity a detail route shows, plus the rows that hang on it. This is not full-table slicing: every binding on the channel filters to one entity's id, and the channel lives only while the route is mounted — mount on navigate in, tear down on navigate out.
 
-| Detail route | Hook                      | Bindings (filter column)                                                      |
-| ------------ | ------------------------- | ----------------------------------------------------------------------------- |
-| request      | `useRequestRealtime(id)`  | `phrase_request` (id) · `request_comment`, `comment_phrase_link` (request_id) |
-| playlist     | `usePlaylistRealtime(id)` | `phrase_playlist` (id) · `playlist_phrase_link` (playlist_id)                 |
-| phrase       | `usePhraseRealtime(id)`   | `phrase` (id) · `phrase_translation`, `phrase_tag` (phrase_id)                |
+| Detail route | Hook                      | Bindings (filter column)                              |
+| ------------ | ------------------------- | ----------------------------------------------------- |
+| request      | `useRequestRealtime(id)`  | `request_comment`, `comment_phrase_link` (request_id) |
+| playlist     | `usePlaylistRealtime(id)` | `playlist_phrase_link` (playlist_id)                  |
+| phrase       | `usePhraseRealtime(id)`   | `phrase_tag` (phrase_id)                              |
 
-While you look at a thread, sync is greedy: another user's comment, attached phrase, upvote (via the trigger-maintained `upvote_count` on the parent row), or comment removal lands live. Each hook lives in its feature's `hooks.ts`, opens one channel named `<entity>-thread-<id>`, and shares `bindRows` with posture 1. Frames write into the base collections, and the `*Active` derived collections drop a row the frame flags `deleted` in the same tick.
+While you look at a thread, sync is greedy: another user's comment, attached phrase, or removal lands live. Removals stream because every published table here keeps an open SELECT policy — a removed comment is a blanked tombstone, and the link tables' rows are bare ids, so hiding the flagged ones bought nothing. Each hook lives in its feature's `hooks.ts`, opens one channel named `<entity>-thread-<id>`, and shares `bindRows` with posture 1. Frames write into the base collections, and the `*Active` derived collections drop a row the frame flags `deleted` in the same tick.
 
-Two caveats:
+**The entity rows themselves are not bound yet.** `phrase_request`, `phrase_playlist`, `phrase` and `phrase_translation` narrow their SELECT policies on `deleted`/`archived` to hide flagged rows' content, and a table narrowed that way must not publish — the removal frame would reach only its owner (`docs/database.md` "Gotchas", enforced by `src/lib/realtime-publication.test.ts`). So a request's status, `upvote_count` and prompt edits do not stream yet. Publishing them waits on the two-step `deleting` design in [Realtime is a backstop](#realtime-is-a-backstop-not-the-mechanism); when the `phrase` row does publish, its binding must spread the held row under the frame, because a frame comes off the base table and lacks the `phrase_meta` view's stats columns.
 
-- **A removal the SELECT policy would hide from you does not stream to you.** The link tables (`comment_phrase_link`, `playlist_phrase_link`, `phrase_tag`) narrow their SELECT policy to `deleted = false or owner`, so the UPDATE frame that flags a row passes RLS only for the person who removed it — everyone else holds the row until their next full fetch. `request_comment` keeps its policy open (a removed comment is a blanked tombstone, safe to read), so comment removals do reach everyone. If a lingering link ever matters, the two-step `deleting` design in [Realtime is a backstop](#realtime-is-a-backstop-not-the-mechanism) is the fix.
-- **A view-backed collection needs a merge.** A frame comes off the base table, so columns the collection reads off a view are absent from it. `usePhraseRealtime` spreads the held row under the frame before parsing, the same move as `phrasesCollection.onUpdate`.
-
-### 3. Library text — no realtime
+### 3. Library text — no realtime (yet)
 
 Everything else public: the phrase corpus on browse and search surfaces, languages, tags, message tags, public profiles. Fetched, then kept current by mutation write-backs and the next stale refetch. A phrase someone else adds shows up on the next fetch, and nothing on those screens claims to be a live thread, so that is enough.
 

@@ -27,7 +27,6 @@
 		"seeds:corpus": "deno run --allow-env --allow-net --allow-read --allow-write scripts/dump-new-seeds.ts --corpus-only",
 		"db-reseed": "deno run --allow-env --allow-read --allow-run=docker scripts/dump-new-seeds.ts --reseed",
 		"db-reset": "supabase db reset",
-		"db-full": "supabase db reset && `pnpm run db-schema",
 		"prepare": "husky"
 	},
 	"dependencies": {

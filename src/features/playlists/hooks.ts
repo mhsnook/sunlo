@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import {
-	PhrasePlaylistSchema,
 	PlaylistPhraseLinkSchema,
 	type PhrasePlaylistType,
 	type PhrasePlaylistUpvoteType,
@@ -105,23 +104,18 @@ export const useMyPlaylistUpvote = (
 	).data?.[0]
 
 /**
- * Live updates for one playlist, mounted by the playlist detail route: the
- * playlist row (title, description, upvote_count, soft delete) plus its
- * phrase links. One channel per playlist, torn down on navigate — the
- * "thread tables" posture in docs/mutations.md. A removed link reaches
- * only its owner, because the link's SELECT policy hides deleted rows
- * from everyone else.
+ * Live updates for one playlist, mounted by the playlist detail route: its
+ * phrase links, removals included (a removal is a flagged row, an ordinary
+ * UPDATE frame). One channel per playlist, torn down on navigate — the
+ * "thread tables" posture in docs/mutations.md.
+ *
+ * The `phrase_playlist` row itself is not bound: its SELECT policy hides
+ * deleted rows, and a table narrowed that way must not publish
+ * (docs/database.md "Gotchas"). Binding it waits on the two-step delete.
  */
 export const usePlaylistRealtime = (playlistId: uuid) => {
 	useEffect(() => {
 		let channel = supabase.channel(`playlist-thread-${playlistId}`)
-		channel = bindRows(
-			channel,
-			'phrase_playlist',
-			`id=eq.${playlistId}`,
-			phrasePlaylistsCollection,
-			(row) => PhrasePlaylistSchema.parse(row)
-		)
 		channel = bindRows(
 			channel,
 			'playlist_phrase_link',

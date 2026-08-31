@@ -4,18 +4,12 @@ import { useEffect, useMemo } from 'react'
 
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
 import {
-	PhraseSchema,
 	PhraseTagLinkSchema,
-	TranslationSchema,
 	type PhraseFullFilteredType,
 	type PhraseFullFullType,
 	type PhraseFullType,
 } from './schemas'
-import {
-	phrasesCollection,
-	phraseTagLinksCollection,
-	phraseTranslationsCollection,
-} from './collections'
+import { phraseTagLinksCollection } from './collections'
 import {
 	phrasesFull,
 	phrasesComposed,
@@ -177,36 +171,21 @@ export function usePhraseProvenance(phraseId: uuid): PhraseProvenanceItem[] {
 }
 
 /**
- * Live updates for one phrase, mounted by the phrase detail route: the
- * phrase row (text edits, archival) plus its translations and tag links.
- * One channel per phrase, torn down on navigate — the "thread tables"
- * posture in docs/mutations.md. A removed tag link reaches only its
- * owner, because the link's SELECT policy hides deleted rows from
- * everyone else.
+ * Live updates for one phrase, mounted by the phrase detail route: its tag
+ * links, removals included (a removal is a flagged row, an ordinary UPDATE
+ * frame). One channel per phrase, torn down on navigate — the "thread
+ * tables" posture in docs/mutations.md.
+ *
+ * The `phrase` and `phrase_translation` rows are not bound: their SELECT
+ * policies hide archived rows, and a table narrowed that way must not
+ * publish (docs/database.md "Gotchas"). Binding them waits on the two-step
+ * delete — and the `phrase` binding will need to spread the held row under
+ * the frame, because the frame comes off the base table and lacks the
+ * `phrase_meta` view's stats columns.
  */
 export const usePhraseRealtime = (phraseId: uuid) => {
 	useEffect(() => {
 		let channel = supabase.channel(`phrase-thread-${phraseId}`)
-		channel = bindRows(
-			channel,
-			'phrase',
-			`id=eq.${phraseId}`,
-			phrasesCollection,
-			// The frame comes off the `phrase` base table; the stats columns
-			// the collection reads off the `phrase_meta` view are not on it.
-			// Spread the row we hold under it so they survive the upsert.
-			(row) => {
-				const current = phrasesCollection.get(phraseId)
-				return PhraseSchema.parse({ ...current, ...(row as object) })
-			}
-		)
-		channel = bindRows(
-			channel,
-			'phrase_translation',
-			`phrase_id=eq.${phraseId}`,
-			phraseTranslationsCollection,
-			(row) => TranslationSchema.parse(row)
-		)
 		channel = bindRows(
 			channel,
 			'phrase_tag',
