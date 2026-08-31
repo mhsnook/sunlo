@@ -54,6 +54,7 @@ export {
 	useMyRequestUpvote,
 	useAnyonesPhraseRequests,
 	useOneComment,
+	useRequestRealtime,
 	useRequestThread,
 	useCommentPhraseLinks,
 	useMyCommentUpvote,

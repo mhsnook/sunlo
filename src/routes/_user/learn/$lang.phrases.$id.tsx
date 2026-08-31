@@ -6,6 +6,7 @@ import {
 	phraseTagLinksCollection,
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
+import { usePhraseRealtime } from '@/features/phrases/hooks'
 import { cardsCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 
@@ -32,6 +33,7 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function RouteComponent() {
 	const { id } = Route.useParams()
+	usePhraseRealtime(id)
 	return (
 		<main style={style} data-testid="phrase-detail-page">
 			<BigPhraseCard pid={id} />

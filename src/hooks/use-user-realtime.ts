@@ -1,10 +1,6 @@
 import { useEffect } from 'react'
-import type { RealtimeChannel } from '@supabase/supabase-js'
 import supabase from '@/lib/supabase-client'
-import {
-	writeSyncedRow,
-	type SyncedCollection,
-} from '@/lib/collections/synced-row'
+import { bindRows } from '@/lib/collections/realtime'
 import { useUserId } from '@/lib/use-auth'
 import {
 	PhraseRequestUpvoteSchema,
@@ -31,44 +27,9 @@ import { decksCollection, cardsCollection } from '@/features/deck/collections'
 import { MyProfileSchema } from '@/features/profile/schemas'
 import { myProfileCollection } from '@/features/profile/collections'
 
-/**
- * Fold a table's INSERT and UPDATE frames into its collection.
- *
- * Every table on this channel is one the signed-in user owns, so every binding
- * filters on `uid`. RLS already scopes the stream; the filter lets realtime
- * discard a row before the policy check.
- *
- * No DELETE: Supabase RLS-scopes INSERT and UPDATE frames but broadcasts every
- * DELETE to every subscriber, carrying only the replica identity. See
- * docs/mutations.md.
- */
-function bindRows<T extends object, TKey extends string>(
-	channel: RealtimeChannel,
-	table: string,
-	mine: string,
-	collection: SyncedCollection<T, TKey>,
-	parse: (row: unknown) => T
-): RealtimeChannel {
-	const handle = (payload: { new: unknown }) => {
-		// Ahead of the write's own check, so a route that never loaded this
-		// collection doesn't parse frames it will throw away.
-		if (!collection.isReady()) return
-		writeSyncedRow(collection, parse(payload.new))
-	}
-	return (['INSERT', 'UPDATE'] as const).reduce(
-		(ch, event) =>
-			ch.on(
-				'postgres_changes',
-				{ event, schema: 'public', table, filter: mine },
-				handle
-			),
-		channel
-	)
-}
-
-// Realtime for the user's own tables: RLS scopes each stream to the
-// subscriber, so we fold events straight into their collections. Subscribed in
-// the `_user` layout, torn down on sign-out.
+// Realtime for the user's own tables: every binding filters on `uid`, and
+// RLS scopes each stream to the subscriber, so we fold events straight into
+// their collections. Subscribed in the `_user` layout, torn down on sign-out.
 export const useUserRealtime = () => {
 	const userId = useUserId()
 

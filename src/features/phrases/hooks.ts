@@ -1,13 +1,15 @@
 import { and, eq, ilike, inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
-import type {
-	PhraseFullFilteredType,
-	PhraseFullFullType,
-	PhraseFullType,
+import {
+	PhraseTagLinkSchema,
+	type PhraseFullFilteredType,
+	type PhraseFullFullType,
+	type PhraseFullType,
 } from './schemas'
+import { phraseTagLinksCollection } from './collections'
 import {
 	phrasesFull,
 	phrasesComposed,
@@ -17,6 +19,8 @@ import {
 } from './live'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
+import supabase from '@/lib/supabase-client'
+import { bindRows } from '@/lib/collections/realtime'
 import { useUserId } from '@/lib/use-auth'
 
 export const useLanguagePhrases = (
@@ -164,4 +168,35 @@ export function usePhraseProvenance(phraseId: uuid): PhraseProvenanceItem[] {
 			),
 		[playlists, comments]
 	)
+}
+
+/**
+ * Live updates for one phrase, mounted by the phrase detail route: its tag
+ * links, removals included (a removal is a flagged row, an ordinary UPDATE
+ * frame). One channel per phrase, torn down on navigate — the "thread
+ * tables" posture in docs/mutations.md.
+ *
+ * The `phrase` and `phrase_translation` rows are not bound: their SELECT
+ * policies hide archived rows, and a table narrowed that way must not
+ * publish (docs/database.md "Gotchas"). Binding them waits on the two-step
+ * delete — and the `phrase` binding will need to spread the held row under
+ * the frame, because the frame comes off the base table and lacks the
+ * `phrase_meta` view's stats columns.
+ */
+export const usePhraseRealtime = (phraseId: uuid) => {
+	useEffect(() => {
+		let channel = supabase.channel(`phrase-thread-${phraseId}`)
+		channel = bindRows(
+			channel,
+			'phrase_tag',
+			`phrase_id=eq.${phraseId}`,
+			phraseTagLinksCollection,
+			(row) => PhraseTagLinkSchema.parse(row)
+		)
+		channel.subscribe()
+
+		return () => {
+			void supabase.removeChannel(channel)
+		}
+	}, [phraseId])
 }

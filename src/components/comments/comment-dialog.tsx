@@ -532,8 +532,6 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 		)
 
 		if (linksToDelete.length > 0) {
-			// Unlinking a phrase is a soft delete, so the row stays and the live
-			// queries filter it.
 			const { data: removed } = await supabase
 				.from('comment_phrase_link')
 				.update({ deleted: true })
