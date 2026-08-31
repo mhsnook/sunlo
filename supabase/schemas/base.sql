@@ -3123,6 +3123,9 @@ alter publication "supabase_realtime"
 add table only "public"."chat_message";
 
 alter publication "supabase_realtime"
+add table only "public"."comment_phrase_link";
+
+alter publication "supabase_realtime"
 add table only "public"."comment_upvote";
 
 alter publication "supabase_realtime"
@@ -3132,10 +3135,31 @@ alter publication "supabase_realtime"
 add table only "public"."notification";
 
 alter publication "supabase_realtime"
+add table only "public"."phrase";
+
+alter publication "supabase_realtime"
+add table only "public"."phrase_playlist";
+
+alter publication "supabase_realtime"
 add table only "public"."phrase_playlist_upvote";
 
 alter publication "supabase_realtime"
+add table only "public"."phrase_request";
+
+alter publication "supabase_realtime"
 add table only "public"."phrase_request_upvote";
+
+alter publication "supabase_realtime"
+add table only "public"."phrase_tag";
+
+alter publication "supabase_realtime"
+add table only "public"."phrase_translation";
+
+alter publication "supabase_realtime"
+add table only "public"."playlist_phrase_link";
+
+alter publication "supabase_realtime"
+add table only "public"."request_comment";
 
 alter publication "supabase_realtime"
 add table only "public"."user_card";

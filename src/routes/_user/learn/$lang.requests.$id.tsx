@@ -8,7 +8,7 @@ import type { uuid } from '@/types/main'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import { useRequest } from '@/features/requests'
+import { useRequest, useRequestRealtime } from '@/features/requests'
 import { Markdown } from '@/components/my-markdown'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
@@ -78,6 +78,7 @@ const style = { viewTransitionName: 'main-area' } as CSSProperties
 function RequestThreadPage() {
 	const params = Route.useParams()
 	const { data: request, isLoading } = useRequest(params.id)
+	useRequestRealtime(params.id)
 	const search = Route.useSearch()
 
 	// Look up the comment being edited/focused (if any) for both dialogs
