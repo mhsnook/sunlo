@@ -67,6 +67,8 @@ pnpm dev                # dev server at http://127.0.0.1:5173
 pnpm check              # typecheck
 pnpm lint               # oxlint then eslint
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
+pnpm format:changed     # only your uncommitted work — staged, unstaged, untracked
+pnpm format:changed --check   # report drift, write nothing
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
 
 pnpm run migrate        # create migration from local changes
@@ -81,7 +83,7 @@ pnpm run seeds:schema   # regenerate base.sql — review the diff carefully
 - **Never `vite build` without a populated `.env`.** Missing `VITE_SUPABASE_*` vars don't fail the build — they silently tree-shake the entire Supabase SDK (~640 KB) out of the bundle. Dummy-but-truthy values are fine; sanity-check with `grep -l GoTrueClient dist/assets/*.js`. Details: `docs/deployment.md`.
 - **`collection.utils.refetch()` is a full-table fetch.** Treat it like `useEffect`: a smell needing justification. Prefer `.select()` on the write / RPCs that return rows + `writeSyncedRow`/`writeSyncedRows`. If you're about to add one, stop and check with the human first.
 - **New tests are scenetest scenes** — markdown (`scenetest/scenes/*.spec.md`) by default, `test()` from `@scenetest/scenes` only when the flow needs Playwright mechanics markdown can't express. Never `@playwright/test`. Navigate by clicking, not by reloading (`openTo` is for the entry point only).
-- **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically.
+- **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically. **Never run bare `pnpm format`** on a branch — it rewrites every file that predates the current oxfmt version and buries your change. Use `pnpm format:changed`, which formats your uncommitted work and nothing else. It measures drift with `scripts/format-drift.sh`, extracted from the CI job, so it and the PR gate answer the same way.
 - **Base UI, not Radix** for primitives: selected tabs get `data-active` (style with `data-[active]:`), not `data-state="active"`. Verify attribute names in `node_modules/@base-ui/react/esm/` types.
 - **`dark:` prefixes** — the semantic palettes flip their shade scale in dark mode, so `dark:` is only needed on a stock colour class like `bg-amber-600`. Full system: `docs/styling.md`.
 

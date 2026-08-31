@@ -12,6 +12,7 @@
 		"lint": "oxlint . && eslint .",
 		"preview": "vite preview",
 		"format": "oxfmt . && prettier --write 'supabase/**/*.sql'",
+		"format:changed": "bash scripts/format-changed.sh",
 		"check": "tsc -b",
 		"format:check": "oxfmt --check . && prettier --check 'supabase/**/*.sql'",
 		"scene": "scenetest --no-panel",

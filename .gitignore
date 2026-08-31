@@ -34,3 +34,6 @@ keystore.properties
 
 # Scenetest
 /scenetest/.reports/
+
+# scripts/format-changed.sh --check mirrors the working tree here
+.format-check-worktree/
