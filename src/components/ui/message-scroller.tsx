@@ -9,10 +9,8 @@ import { Button } from '@/components/ui/button'
  * MessageScroller (ui.shadcn.com/docs/react/message-scroller).
  *
  * It follows new messages, but only while the reader is already at the bottom.
- * The hand-rolled version this replaces observed the content and scrolled on
- * every resize, so an image loading mid-history yanked the reader back down.
- * Here the reader owns the scroll position the moment they leave the bottom,
- * and a "jump to latest" button offers the way back.
+ * The reader owns the scroll position the moment they leave it, and the
+ * "Newest" button is the way back.
  */
 
 /** How close to the bottom still counts as "at the bottom", in pixels. */
