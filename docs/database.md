@@ -99,8 +99,8 @@ This ensures seed data remains relevant (cards "created 4 days ago" are always 4
 
 **A realtime-published table must not narrow its SELECT policy on `deleted`.** Supabase tests an UPDATE frame against the subscriber's SELECT policy using the _new_ row, so `deleted = false or uid = auth.uid()` drops the very frame that says the row is gone — for everyone but its owner, whose client keeps showing it until the next fetch. Publish the table, or narrow the policy, never both.
 
-The three published soft-delete tables (the upvotes) have plain `uid = auth.uid()` policies with no `deleted` clause, which is why un-upvoting propagates. `phrase_request` and `phrase_playlist` narrow, and can, because neither publishes. Before adding a soft-deleted table to `supabase_realtime`, drop the `deleted` clause from its SELECT policy first.
+The published soft-delete tables carry no `deleted` clause in their SELECT policies, which is why removals propagate: the three upvotes read plain `uid = auth.uid()`, and `request_comment` plus the three link tables (`comment_phrase_link`, `playlist_phrase_link`, `phrase_tag`) read `using (true)` — a removed comment is a blanked tombstone and a link row is bare ids, so there is nothing to hide. `phrase_request` and `phrase_playlist` narrow, and can, because neither publishes. Before adding a soft-deleted table to `supabase_realtime`, drop the `deleted` clause from its SELECT policy first.
 
 **A partial unique index only constrains the live rows.** `unique (a_id, b_id) where deleted = false` lets a removed link and its replacement coexist, so anyone can re-add a pair someone else removed. Two _live_ rows for the same pair are still rejected.
 
-**`pnpm db-full` is broken** — a stray backtick, and it calls `pnpm run db-schema`, which no longer exists. Use `pnpm db-reset && pnpm types && pnpm schema`.
+**A full reset-and-regenerate is three commands**: `pnpm db-reset && pnpm types && pnpm schema`.

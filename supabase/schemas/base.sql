@@ -2552,17 +2552,7 @@ with
 
 create policy "Enable read access for all users" on "public"."comment_phrase_link" for
 select
-	using (
-		(
-			("deleted" = false)
-			or (
-				"uid" = (
-					select
-						"auth"."uid" () as "uid"
-				)
-			)
-		)
-	);
+	using (true);
 
 create policy "Enable read access for all users" on "public"."language" for
 select
@@ -2618,18 +2608,7 @@ select
 
 create policy "Enable read access for all users" on "public"."phrase_tag" for
 select
-	using (
-		(
-			("deleted" = false)
-			or (
-				"added_by" = (
-					select
-						"auth"."uid" () as "uid"
-				)
-			)
-			or "public"."is_admin" ()
-		)
-	);
+	using (true);
 
 create policy "Enable read access for all users" on "public"."phrase_translation" for
 select
@@ -2648,17 +2627,7 @@ select
 
 create policy "Enable read access for all users" on "public"."playlist_phrase_link" for
 select
-	using (
-		(
-			("deleted" = false)
-			or (
-				"uid" = (
-					select
-						"auth"."uid" () as "uid"
-				)
-			)
-		)
-	);
+	using (true);
 
 create policy "Enable read access for all users" on "public"."request_comment" for
 select
@@ -3123,6 +3092,9 @@ alter publication "supabase_realtime"
 add table only "public"."chat_message";
 
 alter publication "supabase_realtime"
+add table only "public"."comment_phrase_link";
+
+alter publication "supabase_realtime"
 add table only "public"."comment_upvote";
 
 alter publication "supabase_realtime"
@@ -3136,6 +3108,15 @@ add table only "public"."phrase_playlist_upvote";
 
 alter publication "supabase_realtime"
 add table only "public"."phrase_request_upvote";
+
+alter publication "supabase_realtime"
+add table only "public"."phrase_tag";
+
+alter publication "supabase_realtime"
+add table only "public"."playlist_phrase_link";
+
+alter publication "supabase_realtime"
+add table only "public"."request_comment";
 
 alter publication "supabase_realtime"
 add table only "public"."user_card";

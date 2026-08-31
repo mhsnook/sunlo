@@ -166,7 +166,7 @@ A new site outside those two is a sign the row should go through the collection.
 
 A realtime frame arrives after the database commits, so it carries the truth and is safe to write into the synced layer. But a collection that is only correct once the frame lands is wrong until then, and stays wrong whenever the socket is down. Make the handler correct on its own; let realtime cover the writes made by other clients and other devices.
 
-Bind frames with `bindRows(channel, table, collection, parse)` in `useUserRealtime`, which folds INSERT and UPDATE through `writeSyncedRow` (above).
+Bind frames with `bindRows(channel, table, filter, collection, parse)` from `src/lib/collections/realtime.ts`, which folds INSERT and UPDATE through `writeSyncedRow` (above). Which channel a binding belongs on is a posture decision — see [Sync postures](#sync-postures--which-tables-sync-how).
 
 **INSERT and UPDATE frames are RLS-scoped; DELETE frames are not.** Supabase tests each subscriber's policies against the new row, so an insert or update reaches you only if you could have fetched that row yourself. It cannot do the same for a delete, because the row is already gone by then. So every delete on a published table reaches every subscriber of that table, whoever owned the row.
 
@@ -230,9 +230,13 @@ Forms use **TanStack Form** through the app's composed hook — `useAppForm` fro
 4. In `onSubmit`, call the collection mutation (`collection.insert/update`) and wire toasts to `tx.isPersisted.promise`
 5. Copy an existing form (e.g. `src/components/requests/request-form.tsx`, `src/components/login-card-body.tsx`) rather than wiring from scratch
 
-## Realtime Patterns
+## Sync postures — which tables sync how
 
-Every user-owned table folds through one channel, `useUserRealtime` in `src/hooks/use-user-realtime.ts`. It is subscribed in the `_user` layout and torn down on sign-out, and each table is one `bindRows` call:
+Every collection loads with a full-table fetch: RLS scopes a user table to the subscriber's own rows, and the public tables are small enough to take whole. What differs is how a collection hears about **other people's writes** after that fetch. Three postures cover the app; pick one before wiring any new realtime.
+
+### 1. User tables — one long-lived channel, filtered on `uid`
+
+The tables the signed-in user owns: decks, cards, reviews, upvotes, profile. `useUserRealtime` (`src/hooks/use-user-realtime.ts`) binds all of them onto one channel filtered on `uid=eq.<userId>`, subscribed in the `_user` layout and torn down on sign-out. Each table is one `bindRows` call:
 
 ```typescript
 channel = bindRows(channel, 'user_card', mine, cardsCollection, (row) =>
@@ -240,9 +244,35 @@ channel = bindRows(channel, 'user_card', mine, cardsCollection, (row) =>
 )
 ```
 
-`bindRows` binds INSERT and UPDATE (never DELETE), filters server-side on `uid=eq.<userId>`, skips frames for a collection the route never loaded, and writes through `writeSyncedRow`. Adding a table means adding a `bindRows` line and putting the table in the `supabase_realtime` publication — check `docs/database.md` first if the table soft-deletes.
+This posture is what keeps two devices in step. If these tables grow, the initial fetch can add a recency filter later; the realtime binding stays the same either way.
 
-Two features subscribe outside this hook, because they react to an event rather than sync a collection: `src/features/notifications/hooks.ts` and `src/features/social/hooks.ts`.
+Two features subscribe outside this hook, because they react to an event rather than sync a collection: `src/features/notifications/hooks.ts` and `src/features/social/hooks.ts`. The social tables are also the two-party exception to the filter: both sides of a chat need the frame, so those bindings carry no `uid` filter and lean on RLS alone.
+
+### 2. Thread tables — a surgical per-entity channel, mounted on the detail route
+
+The entity a detail route shows, plus the rows that hang on it. This is not full-table slicing: every binding on the channel filters to one entity's id, and the channel lives only while the route is mounted — mount on navigate in, tear down on navigate out.
+
+| Detail route | Hook                      | Bindings (filter column)                              |
+| ------------ | ------------------------- | ----------------------------------------------------- |
+| request      | `useRequestRealtime(id)`  | `request_comment`, `comment_phrase_link` (request_id) |
+| playlist     | `usePlaylistRealtime(id)` | `playlist_phrase_link` (playlist_id)                  |
+| phrase       | `usePhraseRealtime(id)`   | `phrase_tag` (phrase_id)                              |
+
+While you look at a thread, sync is greedy: another user's comment, attached phrase, or removal lands live. Removals stream because every published table here keeps an open SELECT policy — a removed comment is a blanked tombstone, and the link tables' rows are bare ids, so hiding the flagged ones bought nothing. Each hook lives in its feature's `hooks.ts`, opens one channel named `<entity>-thread-<id>`, and shares `bindRows` with posture 1. Frames write into the base collections, and the `*Active` derived collections drop a row the frame flags `deleted` in the same tick.
+
+**The entity rows themselves are not bound yet.** `phrase_request`, `phrase_playlist`, `phrase` and `phrase_translation` narrow their SELECT policies on `deleted`/`archived` to hide flagged rows' content, and a table narrowed that way must not publish — the removal frame would reach only its owner (`docs/database.md` "Gotchas", enforced by `src/lib/realtime-publication.test.ts`). So a request's status, `upvote_count` and prompt edits do not stream yet. Publishing them waits on the two-step `deleting` design in [Realtime is a backstop](#realtime-is-a-backstop-not-the-mechanism); when the `phrase` row does publish, its binding must spread the held row under the frame, because a frame comes off the base table and lacks the `phrase_meta` view's stats columns.
+
+### 3. Library text — no realtime (yet)
+
+Everything else public: the phrase corpus on browse and search surfaces, languages, tags, message tags, public profiles. Fetched, then kept current by mutation write-backs and the next stale refetch. A phrase someone else adds shows up on the next fetch, and nothing on those screens claims to be a live thread, so that is enough.
+
+The posture is per-context, not per-table: `phrase` is library text on a browse list and a thread table on its own detail page. The table joins the realtime publication once; whether any client hears its frames depends on which route is mounted.
+
+### Adding a new realtime surface
+
+1. Pick the posture: a new user table joins the `useUserRealtime` channel; a new detail route gets its own `use<Entity>Realtime` hook in its feature's `hooks.ts`; library text gets nothing.
+2. Add the table to the `supabase_realtime` publication in a migration (idempotent DO-block pattern: `supabase/migrations/20260831120000_enable_realtime_for_thread_tables.sql`). A table not in the publication streams nothing, silently — and check `docs/database.md` first if the table soft-deletes, because the SELECT policy decides who hears the removal.
+3. Bind with `bindRows` and let `writeSyncedRow` do the writing. INSERT and UPDATE only.
 
 ## Query Configuration
 

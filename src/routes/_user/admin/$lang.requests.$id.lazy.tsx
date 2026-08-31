@@ -36,6 +36,7 @@ import {
 	useMessageTags,
 	useMessageTagsForMessage,
 	useRequestLinksPhraseIds,
+	useRequestRealtime,
 } from '@/features/requests'
 import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { useAuth } from '@/lib/use-auth'
@@ -49,6 +50,7 @@ export const Route = createLazyFileRoute('/_user/admin/$lang/requests/$id')({
 function AdminRequestDetail() {
 	const { lang, id } = Route.useParams()
 	const { isAdmin } = useAuth()
+	useRequestRealtime(id)
 	const { data: request, isLoading } = useLiveQuery(
 		(q) =>
 			q

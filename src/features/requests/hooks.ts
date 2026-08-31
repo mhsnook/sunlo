@@ -1,8 +1,11 @@
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
+import supabase from '@/lib/supabase-client'
+import { bindRows } from '@/lib/collections/realtime'
 import {
+	commentPhraseLinksCollection,
 	commentsCollection,
 	commentUpvotesCollection,
 	messageTagsCollection,
@@ -15,13 +18,15 @@ import {
 	messageTagLinksActive,
 	phraseRequestsActive,
 } from './live'
-import type {
-	CommentPhraseLinkType,
-	CommentUpvoteType,
-	MessageTagType,
-	PhraseRequestType,
-	PhraseRequestUpvoteType,
-	RequestCommentType,
+import {
+	CommentPhraseLinkSchema,
+	RequestCommentSchema,
+	type CommentPhraseLinkType,
+	type CommentUpvoteType,
+	type MessageTagType,
+	type PhraseRequestType,
+	type PhraseRequestUpvoteType,
+	type RequestCommentType,
 } from './schemas'
 
 export const useRequestLinksPhraseIds = (
@@ -399,4 +404,41 @@ export function useAnyonesComments(
 		},
 		[lang, uid]
 	)
+}
+
+/**
+ * Live updates for one request's thread, mounted by the request detail
+ * routes: every comment and comment→phrase link under the request. One
+ * channel per request, torn down on navigate — the "thread tables" posture
+ * in docs/mutations.md, not a full-table stream. Removals stream too: a
+ * removed comment is a blanked tombstone and a removed link is a flagged
+ * row, both ordinary UPDATE frames.
+ *
+ * The `phrase_request` row itself is not bound: its SELECT policy hides
+ * deleted rows, and a table narrowed that way must not publish
+ * (docs/database.md "Gotchas"). Binding it waits on the two-step delete.
+ */
+export const useRequestRealtime = (requestId: uuid) => {
+	useEffect(() => {
+		let channel = supabase.channel(`request-thread-${requestId}`)
+		channel = bindRows(
+			channel,
+			'request_comment',
+			`request_id=eq.${requestId}`,
+			commentsCollection,
+			(row) => RequestCommentSchema.parse(row)
+		)
+		channel = bindRows(
+			channel,
+			'comment_phrase_link',
+			`request_id=eq.${requestId}`,
+			commentPhraseLinksCollection,
+			(row) => CommentPhraseLinkSchema.parse(row)
+		)
+		channel.subscribe()
+
+		return () => {
+			void supabase.removeChannel(channel)
+		}
+	}, [requestId])
 }
