@@ -1,12 +1,20 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
-import { Send, UserPlus } from 'lucide-react'
+import { Plus, UserPlus } from 'lucide-react'
 
 import type { PublicProfileType } from '@/features/profile/schemas'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Input } from '@/components/ui/input'
+import { Bubble } from '@/components/ui/bubble'
+import { ComposeBar } from '@/components/ui/compose-bar'
+import { MessageScroller } from '@/components/ui/message-scroller'
+import {
+	Message,
+	MessageAvatar,
+	MessageContent,
+	MessageHeader,
+	MessageMarker,
+} from '@/components/ui/message'
 import {
 	markChatRead,
 	useOneFriendChat,
@@ -31,14 +39,26 @@ export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	},
 })
 
+/**
+ * A text message the user typed here. `chat_message` has no body column and
+ * `MessageTypeEnumSchema` has no text variant, so these live in component
+ * state and disappear on navigation. They exist to exercise the compose bar
+ * and the text bubble until the schema catches up.
+ */
+type LocalDraftType = {
+	id: string
+	body: string
+	created_at: string
+}
+
 function ChatPage() {
 	const { friendUid } = Route.useParams()
 	const { data: relation } = useOneRelation(friendUid)
 	const userId = useUserId()
-	const bottomRef = useRef<HTMLDivElement>(null)
-	const messagesContainerRef = useRef<HTMLDivElement>(null)
 	// Track which messages we've already sent mark-as-read for
 	const markedAsReadRef = useRef<Set<string>>(new Set())
+	const [draft, setDraft] = useState('')
+	const [localDrafts, setLocalDrafts] = useState<Array<LocalDraftType>>([])
 
 	const messagesQuery = useOneFriendChat(friendUid)
 
@@ -61,23 +81,6 @@ function ChatPage() {
 			markChatRead({ friendUid, recipientUid: userId, read_at })
 		}
 	}, [messagesQuery.data, friendUid, userId])
-
-	useLayoutEffect(() => {
-		const container = messagesContainerRef.current
-		if (!container) return
-
-		const scrollToBottom = () => {
-			bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-		}
-
-		// Scroll when new messages are added, or when content resizes (e.g. images load)
-		const resizeObserver = new ResizeObserver(scrollToBottom)
-		resizeObserver.observe(container)
-
-		// Initial scroll
-		scrollToBottom()
-		return () => resizeObserver.disconnect()
-	}, [messagesQuery.data])
 
 	if (!relation?.profile || messagesQuery.isLoading) {
 		return (
@@ -119,13 +122,15 @@ function ChatPage() {
 				</div>
 			</CardHeader>
 			<CardContent className="min-h-0 flex-1 p-0">
-				<ScrollArea className="h-full px-4">
+				<MessageScroller
+					dependency={[messagesQuery.data, localDrafts]}
+					className="px-4"
+				>
 					<div
-						ref={messagesContainerRef}
-						className="space-y-4 pt-4 pb-2"
+						className="flex flex-col gap-4 pt-4 pb-2"
 						data-testid="chat-messages-container"
 					>
-						{!messagesQuery.data?.length ? (
+						{!messagesQuery.data?.length && !localDrafts.length ? (
 							<EmptyChat profile={relation.profile} />
 						) : (
 							messagesQuery.data?.map((msg) => {
@@ -142,78 +147,96 @@ function ChatPage() {
 														isMine ? 'your' : 'their'
 													} deck`
 								return (
-									<div
+									<Message
 										key={msg.id}
+										align={isMine ? 'end' : 'start'}
 										data-testid="chat-message-bubble"
-										className={cn(
-											'max-w-[80%] items-start gap-2',
-											isMine
-												? 'align-end ms-auto justify-end ps-[10%]'
-												: 'align-start me-auto justify-start pe-[10%]'
-										)}
 									>
-										<div>
-											<div className="mb-1 flex items-center gap-2">
-												{!isMine && (
-													<Avatar className="h-8 w-8 shrink-0">
-														<AvatarImage src={relAvatarUrl} alt={relUsername} />
-														<AvatarFallback seed={friendUid}>
-															{relUsername.charAt(0).toUpperCase()}
-														</AvatarFallback>
-													</Avatar>
+										{!isMine && (
+											<MessageAvatar>
+												<Avatar className="size-8">
+													<AvatarImage src={relAvatarUrl} alt={relUsername} />
+													<AvatarFallback seed={friendUid}>
+														{relUsername.charAt(0).toUpperCase()}
+													</AvatarFallback>
+												</Avatar>
+											</MessageAvatar>
+										)}
+										<MessageContent className="max-w-[85%]">
+											<MessageHeader>
+												<span>{messageLabel}</span>
+												<span>&middot;</span>
+												<span>{ago(msg.created_at)}</span>
+											</MessageHeader>
+											{/* Every payload here brings its own card, so the
+											    bubble stays unframed rather than boxing a box. */}
+											<Bubble variant="ghost">
+												{msg.phrase_id && msg.lang && (
+													<CardPreview pid={msg.phrase_id} isMine={isMine} />
 												)}
-												<p
-													className={cn(
-														'text-muted-foreground grow text-xs',
-														isMine && 'text-end'
-													)}
-												>
-													{isMine ? (
-														<>
-															{messageLabel} &middot; {ago(msg.created_at)}
-														</>
-													) : (
-														<>
-															{ago(msg.created_at)} &middot; {messageLabel}
-														</>
-													)}
-												</p>
-											</div>
-											{msg.phrase_id && msg.lang && (
-												<CardPreview pid={msg.phrase_id} isMine={isMine} />
-											)}
-											{msg.request_id && msg.lang && (
-												<RequestPreview id={msg.request_id} />
-											)}
-											{msg.playlist_id && msg.lang && (
-												<PlaylistPreview id={msg.playlist_id} />
-											)}
-										</div>
-									</div>
+												{msg.request_id && msg.lang && (
+													<RequestPreview id={msg.request_id} />
+												)}
+												{msg.playlist_id && msg.lang && (
+													<PlaylistPreview id={msg.playlist_id} />
+												)}
+											</Bubble>
+										</MessageContent>
+									</Message>
 								)
 							})
 						)}
+						{localDrafts.length > 0 && (
+							<MessageMarker>Only on this device</MessageMarker>
+						)}
+						{localDrafts.map((local) => (
+							<Message
+								key={local.id}
+								align="end"
+								data-testid="chat-message-bubble"
+							>
+								<MessageContent className="max-w-[85%]">
+									<Bubble variant="primary" align="end">
+										{local.body}
+									</Bubble>
+								</MessageContent>
+							</Message>
+						))}
 					</div>
-					<div ref={bottomRef} />
-				</ScrollArea>
+				</MessageScroller>
 			</CardContent>
 			<div className="border-t p-4">
 				{relation.status === 'friends' ? (
-					<div className="relative">
-						<Link
-							to="/friends/chats/$friendUid/recommend"
-							from={Route.fullPath}
-							className="flex items-center gap-2"
-						>
-							<Input
-								placeholder="Send a phrase, playlist, or request..."
-								className="cursor-pointer"
-							/>
-							<span className={buttonVariants({ size: 'icon' })}>
-								<Send className="h-4 w-4" />
-							</span>
-						</Link>
-					</div>
+					<ComposeBar
+						value={draft}
+						onValueChange={setDraft}
+						onSend={(body) => {
+							setLocalDrafts((current) => [
+								...current,
+								{
+									id: crypto.randomUUID(),
+									body,
+									created_at: new Date().toISOString(),
+								},
+							])
+							setDraft('')
+						}}
+						placeholder={`Message ${relUsername}…`}
+						startSlot={
+							<Link
+								to="/friends/chats/$friendUid/recommend"
+								from={Route.fullPath}
+								aria-label="Send a phrase, playlist, or request"
+								data-testid="chat-share-trigger"
+								className={cn(
+									buttonVariants({ variant: 'soft', size: 'icon' }),
+									'mb-1'
+								)}
+							>
+								<Plus />
+							</Link>
+						}
+					/>
 				) : relation.status === 'pending' && !relation.isMostRecentByMe ? (
 					<div className="flex flex-col items-center gap-2 py-2">
 						<p className="text-muted-foreground text-sm">
