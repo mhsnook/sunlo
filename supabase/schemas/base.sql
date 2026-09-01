@@ -2590,6 +2590,7 @@ select
 		(
 			("deleted" = false)
 			or ("uid" = "auth"."uid" ())
+			or "public"."is_admin" ()
 		)
 	);
 
@@ -2603,6 +2604,7 @@ select
 		(
 			("deleted" = false)
 			or ("requester_uid" = "auth"."uid" ())
+			or "public"."is_admin" ()
 		)
 	);
 

@@ -43,6 +43,7 @@ export {
 export {
 	useLanguagePhrases,
 	useLangPhrasesRaw,
+	useAllPhraseTranslations,
 	useOnePhrase,
 	useLanguagePhrasesSearch,
 	useLanguagePhrase,

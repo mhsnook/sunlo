@@ -19,6 +19,7 @@ import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog
 import { Button, ButtonProps } from '@/components/ui/button'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { phraseTranslationsCollection } from '@/features/phrases/collections'
+import { useAllPhraseTranslations } from '@/features/phrases/hooks'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Input } from '@/components/ui/input'
@@ -46,6 +47,9 @@ export function AddTranslationsDialog({
 	phrase: PhraseFullType
 }) {
 	const userId = useUserId()
+	// Not `phrase.translations`: this dialog restores archived translations,
+	// and `phrasesFull` has already dropped them.
+	const { data: translations } = useAllPhraseTranslations(phrase.id)
 	const preferredTranslationLang = usePreferredTranslationLang(phrase.lang)
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()
@@ -118,7 +122,7 @@ export function AddTranslationsDialog({
 				<div className="text-muted-foreground space-y-2 text-sm">
 					<p>Please check to make sure you're not entering a duplicate.</p>
 					<ol className="space-y-2">
-						{(phrase.translations ?? []).map((trans) => (
+						{(translations ?? []).map((trans) => (
 							<TranslationListItem key={trans.id} trans={trans} />
 						))}
 					</ol>

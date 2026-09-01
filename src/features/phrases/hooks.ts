@@ -8,8 +8,12 @@ import {
 	type PhraseFullFilteredType,
 	type PhraseFullFullType,
 	type PhraseFullType,
+	type TranslationType,
 } from './schemas'
-import { phraseTagLinksCollection } from './collections'
+import {
+	phraseTagLinksCollection,
+	phraseTranslationsCollection,
+} from './collections'
 import {
 	phrasesFull,
 	phrasesComposed,
@@ -48,6 +52,26 @@ export const useLangPhrasesRaw = (
 				.from({ phrase: phrasesComposed })
 				.where(({ phrase }) => eq(phrase.lang, lang)),
 		[lang]
+	)
+
+/**
+ * Every translation on a phrase, the archived ones included.
+ *
+ * Only the manage-translations dialog wants this, because it is the surface
+ * that archives and restores them and has to show what it would restore.
+ * Every other reader takes `phrase.translations` off `phrasesFull`, which
+ * has already dropped them.
+ */
+export const useAllPhraseTranslations = (
+	phraseId: uuid
+): UseLiveQueryResult<TranslationType[]> =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ translation: phraseTranslationsCollection })
+				.where(({ translation }) => eq(translation.phrase_id, phraseId))
+				.orderBy(({ translation }) => translation.lang, 'asc'),
+		[phraseId]
 	)
 
 /** A single phrase by id with its translations composed in. */
