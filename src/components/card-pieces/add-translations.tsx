@@ -1,4 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
+import { eq } from '@tanstack/db'
+import { useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
@@ -19,7 +21,6 @@ import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog
 import { Button, ButtonProps } from '@/components/ui/button'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { phraseTranslationsCollection } from '@/features/phrases/collections'
-import { useAllPhraseTranslations } from '@/features/phrases/hooks'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Input } from '@/components/ui/input'
@@ -49,7 +50,14 @@ export function AddTranslationsDialog({
 	const userId = useUserId()
 	// Not `phrase.translations`: this dialog restores archived translations,
 	// which `phrasesFull` drops.
-	const { data: translations } = useAllPhraseTranslations(phrase.id)
+	const { data: translations } = useLiveQuery(
+		(q) =>
+			q
+				.from({ translation: phraseTranslationsCollection })
+				.where(({ translation }) => eq(translation.phrase_id, phrase.id))
+				.orderBy(({ translation }) => translation.lang, 'asc'),
+		[phrase.id]
+	)
 	const preferredTranslationLang = usePreferredTranslationLang(phrase.lang)
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()

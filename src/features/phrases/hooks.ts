@@ -8,12 +8,8 @@ import {
 	type PhraseFullFilteredType,
 	type PhraseFullFullType,
 	type PhraseFullType,
-	type TranslationType,
 } from './schemas'
-import {
-	phraseTagLinksCollection,
-	phraseTranslationsCollection,
-} from './collections'
+import { phraseTagLinksCollection } from './collections'
 import {
 	phrasesFull,
 	phrasesComposed,
@@ -52,27 +48,6 @@ export const useLangPhrasesRaw = (
 				.from({ phrase: phrasesComposed })
 				.where(({ phrase }) => eq(phrase.lang, lang)),
 		[lang]
-	)
-
-/**
- * Every translation on a phrase, archived translations included.
- *
- * `AddTranslationsDialog` is the only caller: the dialog archives and
- * restores a translation, so the dialog must list an archived translation
- * for the user to restore. Every other component reads
- * `phrase.translations` off `phrasesFull`, which drops archived
- * translations.
- */
-export const useAllPhraseTranslations = (
-	phraseId: uuid
-): UseLiveQueryResult<TranslationType[]> =>
-	useLiveQuery(
-		(q) =>
-			q
-				.from({ translation: phraseTranslationsCollection })
-				.where(({ translation }) => eq(translation.phrase_id, phraseId))
-				.orderBy(({ translation }) => translation.lang, 'asc'),
-		[phraseId]
 	)
 
 /** A single phrase by id with its translations composed in. */
