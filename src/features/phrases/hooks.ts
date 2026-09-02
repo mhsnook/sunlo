@@ -55,12 +55,13 @@ export const useLangPhrasesRaw = (
 	)
 
 /**
- * Every translation on a phrase, the archived ones included.
+ * Every translation on a phrase, archived translations included.
  *
- * Only the manage-translations dialog wants this, because it is the surface
- * that archives and restores them and has to show what it would restore.
- * Every other reader takes `phrase.translations` off `phrasesFull`, which
- * has already dropped them.
+ * `AddTranslationsDialog` is the only caller: the dialog archives and
+ * restores a translation, so the dialog must list an archived translation
+ * for the user to restore. Every other component reads
+ * `phrase.translations` off `phrasesFull`, which drops archived
+ * translations.
  */
 export const useAllPhraseTranslations = (
 	phraseId: uuid

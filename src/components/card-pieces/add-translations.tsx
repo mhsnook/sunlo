@@ -48,7 +48,7 @@ export function AddTranslationsDialog({
 }) {
 	const userId = useUserId()
 	// Not `phrase.translations`: this dialog restores archived translations,
-	// and `phrasesFull` has already dropped them.
+	// which `phrasesFull` drops.
 	const { data: translations } = useAllPhraseTranslations(phrase.id)
 	const preferredTranslationLang = usePreferredTranslationLang(phrase.lang)
 	const closeRef = useRef<HTMLButtonElement | null>(null)
