@@ -1,6 +1,6 @@
 {
 	"name": "sunlo-tanstack",
-	"version": "0.33.0",
+	"version": "0.34.0",
 	"private": false,
 	"type": "module",
 	"scripts": {

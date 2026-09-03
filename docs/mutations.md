@@ -264,15 +264,15 @@ While you look at a thread, sync is greedy: another user's comment, attached phr
 
 **The entity rows themselves are not bound yet.** `phrase_request`, `phrase_playlist`, `phrase` and `phrase_translation` narrow their SELECT policies on `deleted`/`archived` to hide flagged rows' content, and a table narrowed that way must not publish — the removal frame would reach only its owner (`docs/database.md` "Gotchas", enforced by `src/lib/realtime-publication.test.ts`). So a request's status, `upvote_count` and prompt edits do not stream yet. Publishing them waits on the two-step `deleting` design in [Realtime is a backstop](#realtime-is-a-backstop-not-the-mechanism); when the `phrase` row does publish, its binding must spread the held row under the frame, because a frame comes off the base table and lacks the `phrase_meta` view's stats columns.
 
-### 3. Library text — no realtime (yet)
+### 3. Public Library content — no realtime (yet)
 
 Everything else public: the phrase corpus on browse and search surfaces, languages, tags, message tags, public profiles. Fetched, then kept current by mutation write-backs and the next stale refetch. A phrase someone else adds shows up on the next fetch, and nothing on those screens claims to be a live thread, so that is enough.
 
-The posture is per-context, not per-table: `phrase` is library text on a browse list and a thread table on its own detail page. The table joins the realtime publication once; whether any client hears its frames depends on which route is mounted.
+The posture is per-context, not per-table: `phrase` is Public Library content on a browse list and a thread entity on its own detail page. A table joins the realtime publication once; whether any client hears its frames depends on which route is mounted. `phrase` itself does not publish yet — see `docs/database.md` "Gotchas" and #793.
 
 ### Adding a new realtime surface
 
-1. Pick the posture: a new user table joins the `useUserRealtime` channel; a new detail route gets its own `use<Entity>Realtime` hook in its feature's `hooks.ts`; library text gets nothing.
+1. Pick the posture: a new user table joins the `useUserRealtime` channel; a new detail route gets its own `use<Entity>Realtime` hook in its feature's `hooks.ts`; Public Library content gets nothing.
 2. Add the table to the `supabase_realtime` publication in a migration (idempotent DO-block pattern: `supabase/migrations/20260831120000_enable_realtime_for_thread_tables.sql`). A table not in the publication streams nothing, silently — and check `docs/database.md` first if the table soft-deletes, because the SELECT policy decides who hears the removal.
 3. Bind with `bindRows` and let `writeSyncedRow` do the writing. INSERT and UPDATE only.
 

@@ -1,5 +1,33 @@
 # Change Log
 
+## v0.34 - Soft Delete Sweep Finished; Realtime Thread Channels
+
+_3 September, 2026_
+
+### Refactors
+
+- Finish the soft-delete transformation (#787): no more onDelete, `id` column on every table, tombstone entries for removed comments, `*Active` derived collections to filter out soft-deleted rows.
+- Detail routes now sync their live thread (#790). `useRequestRealtime`, `usePlaylistRealtime` and `usePhraseRealtime` each open one Supabase channel scoped to a single entity id and its attached tables. Issue #793 details followup work that fixes some complexity for soft deletes propagating across the sync.
+
+### Fixes
+
+- #794 keeps archived phrases and translations off the reading surfaces, and lets admins see a removed request or playlist.
+
+### Testing
+
+- Added a new unit test to fail when a published table violates our soft-delete policy (we need RLS to allow soft deletes to come through the realtime sub).
+
+### Also shipped to `main` since v0.33
+
+- Write the server's rows back in 14 more handlers #784
+- Batch the last fan-out handlers, and drop the unreachable translation delete #785
+
+### Migrations
+
+- `20260828120000_soft_delete_the_last_five.sql` — soft-delete for the last five tables that still hard-deleted: phrase tags, playlist and comment phrase links, comments, message tag links.
+- `20260831120000_enable_realtime_for_thread_tables.sql` — enables realtime for thread-related tables: comments, phrase links (from playlists or comments), phrase tags
+- `20260901120000_admins_can_read_removed_requests.sql` — lets admins see removed requests and playlists, not just their own
+
 ## v0.33 - Every User Table Reads, Writes, and Syncs Directly, Closing #757 and #723; Drop `pgjwt`
 
 _26 August, 2026_
