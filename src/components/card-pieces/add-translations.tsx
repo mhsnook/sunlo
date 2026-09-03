@@ -1,4 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
+import { eq } from '@tanstack/db'
+import { useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
@@ -46,6 +48,16 @@ export function AddTranslationsDialog({
 	phrase: PhraseFullType
 }) {
 	const userId = useUserId()
+	// Not `phrase.translations`: this dialog restores archived translations,
+	// which `phrasesFull` drops.
+	const { data: translations } = useLiveQuery(
+		(q) =>
+			q
+				.from({ translation: phraseTranslationsCollection })
+				.where(({ translation }) => eq(translation.phrase_id, phrase.id))
+				.orderBy(({ translation }) => translation.lang, 'asc'),
+		[phrase.id]
+	)
 	const preferredTranslationLang = usePreferredTranslationLang(phrase.lang)
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()
@@ -118,7 +130,7 @@ export function AddTranslationsDialog({
 				<div className="text-muted-foreground space-y-2 text-sm">
 					<p>Please check to make sure you're not entering a duplicate.</p>
 					<ol className="space-y-2">
-						{(phrase.translations ?? []).map((trans) => (
+						{(translations ?? []).map((trans) => (
 							<TranslationListItem key={trans.id} trans={trans} />
 						))}
 					</ol>

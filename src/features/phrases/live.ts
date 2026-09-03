@@ -74,18 +74,30 @@ export const phrasesComposed = createLiveQueryCollection({
 
 phrasesComposed.createIndex((row) => row.id, { indexType: BasicIndex })
 
+/**
+ * `phrasesComposed` with the archived rows dropped: an archived phrase, and
+ * an archived translation on a phrase that is not archived.
+ *
+ * Browse, search, review and playlists read `phrasesFull`. The two admin
+ * screens read `phrasesComposed` instead, because an admin moderating an
+ * archived phrase has to see the archived phrase. No component filters
+ * `archived` again — docs/mutations.md, "State the filter once".
+ */
 export const phrasesFull = createLiveQueryCollection({
 	id: 'phrases_full',
 	query: (q) =>
 		q
 			.from({ phrase: phrasesComposed })
+			.where(({ phrase }) => eq(phrase.archived, false))
 			.join(
 				{ profile: publicProfilesCollection },
 				({ phrase, profile }) => eq(phrase.added_by, profile.uid),
 				'inner'
 			)
 			.fn.select(({ phrase, profile }) => {
-				const translations = phrase.translations ?? []
+				const translations = (phrase.translations ?? []).filter(
+					(translation) => !translation.archived
+				)
 				const tags = phrase.tags ?? []
 				return {
 					...phrase,
