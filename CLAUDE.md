@@ -71,7 +71,7 @@ pnpm scene [file]       # run scenetest specs (needs dev server + supabase runni
 
 pnpm run migrate        # create migration from local changes
 pnpm run types          # regenerate supabase TS types
-pnpm run seeds:schema   # regenerate base.sql — review the diff carefully
+pnpm run schema         # regenerate base.sql — review the diff carefully
 ```
 
 ## Hard rules
@@ -91,7 +91,7 @@ Sunlo is a language-learning app: FSRS spaced-repetition flashcards, social feat
 
 **Stack**: React 19 + TypeScript + Vite + React Compiler · TanStack Router (file-based) · TanStack DB collections + TanStack Query · Supabase (Postgres/Auth/Realtime/Storage/RPC) · Zod · TanStack Form (`useAppForm` from `src/components/form/`) · ShadCN UI + Tailwind with `@container` queries · PNPM.
 
-**Philosophy**: local-first (optimistic collection writes, live queries over postgres views, RPCs return full objects); RLS-backed privacy (worst case is a broken UI, never leaked data); container queries keep components portable.
+**Philosophy**: local-first (optimistic collection writes, live queries over postgres views, RPCs return full objects); RLS-backed privacy; container queries keep components portable.
 
 **Data flow**: Supabase → collections (`src/features/<domain>/collections.ts`, Zod-validated) → live queries (`useLiveQuery`) → components. Collections fetch base tables only; joins and filtering happen in live queries. Public collections use `startSync: true`; user collections use `startSync: false`, rely on RLS to scope the fetch, and are cleared on logout. Routes preload with `collection.preload()` — `await Promise.all([...])` when the route needs data at first render, `void` for fire-and-forget background loads.
 
@@ -129,7 +129,7 @@ Route context carries `{ auth, queryClient }` — access auth via `Route.useRout
 
 ## Conventions
 
-- **Naming**: camelCase variables; PascalCase Zod schemas (`PhraseFullSchema`) inferring types with a `Type` suffix (`PhraseFullType`); snake_case DB fields; PascalCase components in kebab-case files; `lang` for 3-letter codes, `pid` for phrase ids; type-only files use `.d.ts`.
+- **Naming**: camelCase variables; PascalCase Zod schemas (`PhraseFullSchema`) inferring types with a `Type` suffix (`PhraseFullType`); snake_case DB fields; PascalCase components in kebab-case files; `lang` for 3-letter codes, `pid` for phrase ids; type-only files use `.d.ts`. Prefer a 2-word variable name to a 1-word name that needs a code comment.
 - **Types**: prefer `Array<SomeType>` over `SomeType[]`; ids are `uuid` (string alias in `src/types/main.ts`); generated DB types in `src/types/supabase.ts`.
 - **`getKey` must return the row's real unique id.** Most collections use `item.id`, but not all (decks/languages → `item.lang`, profiles → `item.uid`, upvotes → the foreign key, link/composite-PK tables → composite strings) — always check the source table's unique constraint.
 - **Query keys** mirror collection ids (`['public', 'phrase_full']`).
@@ -137,5 +137,5 @@ Route context carries `{ auth, queryClient }` — access auth via `Route.useRout
 - **UI**: always use the generic components (`<Input>`, `<Textarea>`, `<Button>`); toasts via `toastSuccess()`/`toastError()` from `@/components/ui/sonner`; `cn()` for conditional classes; `start`/`end` not `left`/`right` (RTL); `rounded-2xl` for interactive elements, `rounded` for cards; standard Tailwind classes over arbitrary values. Colors are ordinary Tailwind shades on semantic palettes (`bg-primary-100`, `text-danger-800`, `hover:bg-primary-200`) — full system and button-variant roles in `docs/styling.md`.
 - **DB**: singular table names, uuid primary keys, `created_at timestamptz default now()`, RLS on every `uid` table — never expose one without it. Workflow and seed conventions in `docs/database.md`.
 - **Test selectors**: use semantic `data-testid`s (`affirm-community-norms-button`), `data-key` for list items; register new ids in `scenetest/TEST_IDS.md`.
-- **Realtime**: three sync postures — user tables stream on one long-lived `uid`-filtered channel (`useUserRealtime`); a detail route mounts a per-entity channel for its thread (`useRequestRealtime` / `usePlaylistRealtime` / `usePhraseRealtime`); library text gets no realtime. Bind frames with `bindRows` (`src/lib/collections/realtime.ts`), which writes through `writeSyncedRow`. Full decision guide: `docs/mutations.md`.
+- **Realtime**: three sync postures — user tables stream on one long-lived `uid`-filtered channel (`useUserRealtime`); a detail route mounts a per-entity channel for its thread (`useRequestRealtime` / `usePlaylistRealtime` / `usePhraseRealtime`); Public Library content gets no realtime. Bind frames with `bindRows` (`src/lib/collections/realtime.ts`), which writes through `writeSyncedRow`. Full decision guide: `docs/mutations.md`.
 - **Other libs**: zustand v5 (review + chat stores), dayjs, recharts, sonner, lucide-react, ts-fsrs.
