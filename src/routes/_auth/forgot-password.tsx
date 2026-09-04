@@ -9,7 +9,7 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { useAppForm } from '@/components/form'
-import { webOrigin } from '@/lib/native'
+import { webOrigin } from '@/lib/platform'
 
 export const Route = createFileRoute('/_auth/forgot-password')({
 	component: ForgotPasswordPage,

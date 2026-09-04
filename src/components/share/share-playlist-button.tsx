@@ -10,7 +10,7 @@ import {
 	isShareCancelled,
 	shareLink,
 	webOrigin,
-} from '@/lib/native'
+} from '@/lib/platform'
 
 export function SharePlaylistButton({ id }: { id: uuid }) {
 	const { data: playlist } = useOnePlaylist(id)

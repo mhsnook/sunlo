@@ -8,7 +8,7 @@ import {
 	isShareCancelled,
 	shareLink,
 	webOrigin,
-} from '@/lib/native'
+} from '@/lib/platform'
 import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
 export default function SharePhraseButton({

@@ -47,7 +47,7 @@ import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import { ago } from '@/lib/dayjs'
 import { useCardScheduling } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
-import { webOrigin } from '@/lib/native'
+import { webOrigin } from '@/lib/platform'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)

@@ -16,7 +16,7 @@ import {
 	isShareCancelled,
 	shareLink,
 	webOrigin,
-} from '@/lib/native'
+} from '@/lib/platform'
 
 interface CommentContextMenuProps {
 	comment: RequestCommentType

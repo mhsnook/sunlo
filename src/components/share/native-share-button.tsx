@@ -1,7 +1,7 @@
 import { toastError } from '@/components/ui/sonner'
 import { Share } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { canShareLink, isShareCancelled, shareLink } from '@/lib/native'
+import { canShareLink, isShareCancelled, shareLink } from '@/lib/platform'
 
 export function NativeShareButton({
 	shareData,

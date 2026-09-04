@@ -5,7 +5,8 @@ import { App } from '@capacitor/app'
 import { SplashScreen } from '@capacitor/splash-screen'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { useTheme } from '@/components/theme-provider'
-import { isNativeApp } from '@/lib/native'
+import { useGoBack } from '@/hooks/use-go-back'
+import { isNativeApp } from '@/lib/platform'
 import supabase from '@/lib/supabase-client'
 
 type Router = Register['router']
@@ -19,9 +20,12 @@ function prefersDark(theme: string) {
 }
 
 /**
- * A deep link into the app carries its Supabase tokens in the hash, and the
- * client has already finished its own URL scan by the time the link arrives —
- * so the session has to be set here before the route renders.
+ * A recovery or email-confirmation link ends at our own origin with the new
+ * session in the URL hash — `access_token` and `refresh_token`, because the
+ * client runs Supabase's default implicit flow. On the web supabase-js reads
+ * those itself, but its `detectSessionInUrl` scan runs once when the client is
+ * constructed, and a link that arrives through `appUrlOpen` never touches
+ * `window.location`. So the native build has to set the session by hand.
  */
 async function followDeepLink(rawUrl: string, router: Router) {
 	let url: URL
@@ -42,23 +46,13 @@ async function followDeepLink(rawUrl: string, router: Router) {
 }
 
 /**
- * Wires the parts of the native shell that have no web equivalent: the Android
- * hardware back button, the status bar, the launch splash, and incoming deep
- * links. Every effect no-ops in a browser.
+ * Wires the status bar, the launch splash, and incoming deep links. Called
+ * outside the router, so it cannot touch route state — the hardware back
+ * button lives in `useNativeBackButton` for that reason. Every effect no-ops
+ * in a browser.
  */
 export function useNativeShell(router: Router, isReady: boolean) {
 	const { theme } = useTheme()
-
-	useEffect(() => {
-		if (!isNativeApp) return
-		const listener = App.addListener('backButton', ({ canGoBack }) => {
-			if (canGoBack) router.history.back()
-			else void App.exitApp()
-		})
-		return () => {
-			void listener.then((handle) => handle.remove())
-		}
-	}, [router])
 
 	useEffect(() => {
 		if (!isNativeApp) return
@@ -85,4 +79,27 @@ export function useNativeShell(router: Router, isReady: boolean) {
 		if (!isNativeApp || !isReady) return
 		void SplashScreen.hide()
 	}, [isReady])
+}
+
+/**
+ * Points Android's hardware back button at the same `useGoBack` the navbar
+ * chevron uses, so the two never disagree. Exits the app at the entry route,
+ * where the navbar would instead climb a path segment — an app that cannot be
+ * backed out of traps the user.
+ *
+ * Must be called inside the router: `useGoBack` reads route matches.
+ */
+export function useNativeBackButton() {
+	const { goBack, isAtEntry } = useGoBack()
+
+	useEffect(() => {
+		if (!isNativeApp) return
+		const listener = App.addListener('backButton', () => {
+			if (isAtEntry) void App.exitApp()
+			else goBack()
+		})
+		return () => {
+			void listener.then((handle) => handle.remove())
+		}
+	}, [goBack, isAtEntry])
 }

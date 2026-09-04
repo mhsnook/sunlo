@@ -29,7 +29,10 @@ longer part of the setup.
 
 ## What the WebView changes
 
-Four browser assumptions in the app do not hold inside the shell.
+Four browser assumptions in the app do not hold inside the shell. The fixes
+live in `src/lib/platform.ts`, and every export there works in both a browser
+and the WebView — call them from ordinary component code rather than branching
+on `isNativeApp` at the call site.
 
 ### The origin is not the site
 
@@ -37,11 +40,10 @@ Four browser assumptions in the app do not hold inside the shell.
 from it points at nothing on the recipient's device, which silently breaks
 shared URLs, invite QR codes, and the redirect on an auth email.
 
-Build outgoing links from `webOrigin` in `src/lib/native.ts` instead. It reads
-`VITE_PUBLIC_ORIGIN` on a native build and falls back to
-`window.location.origin` on the web, so preview deploys still share their own
-URL. A native build without `VITE_PUBLIC_ORIGIN` set falls back to
-`https://sunlo.app`.
+Build outgoing links from `webOrigin` instead. It reads `VITE_PUBLIC_ORIGIN`
+on a native build, and stays `window.location.origin` on the web so preview
+deploys still share their own URL. A native build with no
+`VITE_PUBLIC_ORIGIN` set falls back to `https://sunlo.app`.
 
 Links that stay inside the app — router `<Link>`s, `copyLink()` on the current
 page — need no change.
@@ -49,17 +51,28 @@ page — need no change.
 ### The Web Share API is absent
 
 Neither platform WebView implements `navigator.share`, so every share button
-that gated on it hid itself in the native build. Share through
-`shareLink()` from `src/lib/native.ts`, gate on `canShareLink`, and swallow a
-dismissed sheet with `isShareCancelled()`. The helper routes to
-`@capacitor/share` on device and to `navigator.share` on the web.
+that gated on it hid itself in the native build. Share through `shareLink()`,
+gate on `canShareLink`, and swallow a dismissed sheet with
+`isShareCancelled()`. The helper routes to `@capacitor/share` on device and to
+`navigator.share` on the web.
 
-### The Android back button is not history
+### The Android hardware back button is dead by default
 
-Android's hardware back button does nothing unless the app handles it.
-`useNativeShell()` (`src/hooks/use-native-shell.ts`) maps it onto router
-history, and exits the app at the root entry. The same hook themes the status
-bar, hides the launch splash once auth resolves, and receives deep links.
+Android's hardware back button does nothing unless the app handles it, and the
+navbar chevron already carries the app's definition of "back": a route can name
+its own destination through `titleBar.onBackClick`, otherwise the button pops
+history, otherwise it climbs one path segment.
+
+`useGoBack()` (`src/hooks/use-go-back.ts`) holds that logic, and both buttons
+call it, so the two never disagree. The one difference is the third case:
+`useNativeBackButton()` exits the app where the chevron climbs a segment,
+because an app you cannot back out of traps the user.
+
+The hooks split by router context. `useNativeBackButton()` reads route matches,
+so it is called from `RootComponent` inside the router. `useNativeShell()`
+themes the status bar, hides the launch splash once auth resolves, and receives
+deep links — none of which need route state, so it is called from
+`src/routes.tsx` and still runs when the router never mounts.
 
 ### Standalone detection misses the shell
 
@@ -73,6 +86,13 @@ checks `isNativeApp` first.
 `useNativeShell()` listens for `appUrlOpen`, sets a Supabase session from the
 URL hash when one is present, and routes the rest into the app. Android already
 registers the `app.sunlo.mobile://` custom scheme, so that path works today.
+
+The hash carries `access_token` and `refresh_token` because the client runs
+Supabase's default implicit flow. On the web supabase-js reads them itself, but
+its `detectSessionInUrl` scan runs once when the client is constructed, and a
+link arriving through `appUrlOpen` never touches `window.location` — so the
+native build calls `setSession` by hand. Moving the client to the PKCE flow
+would change this to a `?code=` query and `exchangeCodeForSession`.
 
 Getting an `https://sunlo.app/...` link to open the app — which is what a
 password-reset email actually contains — needs two files served from the

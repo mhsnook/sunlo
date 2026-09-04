@@ -4,7 +4,7 @@ import type { DeckType } from '@/features/deck/schemas'
 import { twMerge } from 'tailwind-merge'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
-import { isNativeApp } from '@/lib/native'
+import { isNativeApp } from '@/lib/platform'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))

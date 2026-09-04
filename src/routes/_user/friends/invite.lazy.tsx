@@ -14,7 +14,7 @@ import { useProfile } from '@/features/profile/hooks'
 import { NativeShareButton } from '@/components/share/native-share-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import { copyLink } from '@/lib/utils'
-import { canShareLink, webOrigin } from '@/lib/native'
+import { canShareLink, webOrigin } from '@/lib/platform'
 
 export const Route = createLazyFileRoute('/_user/friends/invite')({
 	component: InviteFriendPage,

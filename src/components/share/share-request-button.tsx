@@ -11,7 +11,7 @@ import {
 	isShareCancelled,
 	shareLink,
 	webOrigin,
-} from '@/lib/native'
+} from '@/lib/platform'
 
 export function ShareRequestButton({
 	id,
