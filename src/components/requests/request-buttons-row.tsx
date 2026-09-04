@@ -8,6 +8,7 @@ import Flagged from '@/components/flagged'
 import { useRequestCounts } from '@/features/requests/hooks'
 import { UpvoteRequest } from './upvote-request-button'
 import { PhraseRequestType } from '@/features/requests/schemas'
+import { webOrigin } from '@/lib/native'
 
 export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 	const counts = useRequestCounts(request.id)
@@ -73,7 +74,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 			<div className="flex flex-row justify-between gap-4">
 				<div className="flex flex-row items-center gap-2">
 					<CopyLinkButton
-						url={`${window.location.host}/learn/${request.lang}/requests/${request.id}`}
+						url={`${webOrigin}/learn/${request.lang}/requests/${request.id}`}
 						variant="ghost"
 						size="icon"
 						text=""

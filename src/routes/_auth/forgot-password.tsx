@@ -9,6 +9,7 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { useAppForm } from '@/components/form'
+import { webOrigin } from '@/lib/native'
 
 export const Route = createFileRoute('/_auth/forgot-password')({
 	component: ForgotPasswordPage,
@@ -28,7 +29,7 @@ function ForgotPasswordPage() {
 		mutationKey: ['forgot-password'],
 		mutationFn: async ({ email }: FormInputs) => {
 			const { error } = await supabase.auth.resetPasswordForEmail(email, {
-				redirectTo: `${window.location.origin}/set-new-password`,
+				redirectTo: `${webOrigin}/set-new-password`,
 			})
 			if (error) {
 				console.log(`Error`, error)

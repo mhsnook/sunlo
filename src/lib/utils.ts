@@ -4,6 +4,7 @@ import type { DeckType } from '@/features/deck/schemas'
 import { twMerge } from 'tailwind-merge'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
+import { isNativeApp } from '@/lib/native'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -199,6 +200,7 @@ export const preventDefaultCallback = (e: { preventDefault: () => void }) =>
 
 export function isNativeAppUserAgent() {
 	return (
+		isNativeApp ||
 		('standalone' in window.navigator && window.navigator?.standalone) ||
 		window.matchMedia('(display-mode: standalone)').matches
 	)

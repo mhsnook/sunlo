@@ -47,6 +47,7 @@ import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import { ago } from '@/lib/dayjs'
 import { useCardScheduling } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
+import { webOrigin } from '@/lib/native'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -210,7 +211,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 			</CardlikeFlashcard>
 			<div className="flex w-full flex-row flex-wrap justify-start gap-4 px-2 py-3">
 				<CopyLinkButton
-					url={`${window.location.host}/learn/${phrase.lang}/phrases/${pid}`}
+					url={`${webOrigin}/learn/${phrase.lang}/phrases/${pid}`}
 					variant="ghost"
 					size="icon"
 					text=""

@@ -24,6 +24,7 @@ import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { UnderConstructionNotice } from '../-homepage/under-construction'
 import { useAppForm } from '@/components/form'
 import { UserRoleField } from './-user-role-field'
+import { webOrigin } from '@/lib/native'
 
 const SearchSchema = z.object({
 	referrer: z.string().uuid().optional(),
@@ -73,7 +74,7 @@ function SignUp() {
 				email,
 				password,
 				options: {
-					emailRedirectTo: `${window.location.origin}/getting-started${referrer ? `?referrer=${referrer}` : ''}`,
+					emailRedirectTo: `${webOrigin}/getting-started${referrer ? `?referrer=${referrer}` : ''}`,
 					data: { role: user_role || 'learner' },
 				},
 			})

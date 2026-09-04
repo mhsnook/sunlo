@@ -6,6 +6,12 @@ import type { ButtonProps } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
 import { useRequest } from '@/features/requests/hooks'
+import {
+	canShareLink,
+	isShareCancelled,
+	shareLink,
+	webOrigin,
+} from '@/lib/native'
 
 export function ShareRequestButton({
 	id,
@@ -23,25 +29,21 @@ export function ShareRequestButton({
 } & ButtonProps) {
 	const { data: request } = useRequest(id)
 
-	const sharePhrase = () => {
+	const shareRequest = () => {
 		if (!request) return
-		navigator
-			.share({
-				title: `Sunlo: ${request?.prompt}`,
-				text: `Check out this request for a phrase in ${languages[request.lang]}: ${request.prompt}`,
-				url: `${window.location.origin}/learn/${request.lang}/requests/${request.id}`,
-			})
-			.catch((error: DOMException) => {
-				if (error.name !== 'AbortError') {
-					toastError('Failed to share')
-				}
-			})
+		void shareLink({
+			title: `Sunlo: ${request.prompt}`,
+			text: `Check out this request for a phrase in ${languages[request.lang]}: ${request.prompt}`,
+			url: `${webOrigin}/learn/${request.lang}/requests/${request.id}`,
+		}).catch((error: unknown) => {
+			if (!isShareCancelled(error)) toastError('Failed to share')
+		})
 	}
 
-	if (!request || !navigator.share) return null
+	if (!request || !canShareLink) return null
 	return (
 		<Button
-			onClick={sharePhrase}
+			onClick={shareRequest}
 			variant={variant}
 			size={size}
 			className={className}

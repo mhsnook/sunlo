@@ -3,6 +3,12 @@ import { Share } from 'lucide-react'
 import { toastError } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
+import {
+	canShareLink,
+	isShareCancelled,
+	shareLink,
+	webOrigin,
+} from '@/lib/native'
 import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
 export default function SharePhraseButton({
@@ -19,20 +25,16 @@ export default function SharePhraseButton({
 } & ButtonProps) {
 	const sharePhrase = () => {
 		if (!phrase) return
-		navigator
-			.share({
-				title: `Sunlo: ${phrase.text}`,
-				text: `Check out this phrase in ${languages[phrase.lang]}: ${phrase.text}`,
-				url: `${window.location.origin}/learn/${phrase.lang}/${phrase.id}`,
-			})
-			.catch((error: DOMException) => {
-				if (error.name !== 'AbortError') {
-					toastError('Failed to share')
-				}
-			})
+		void shareLink({
+			title: `Sunlo: ${phrase.text}`,
+			text: `Check out this phrase in ${languages[phrase.lang]}: ${phrase.text}`,
+			url: `${webOrigin}/learn/${phrase.lang}/${phrase.id}`,
+		}).catch((error: unknown) => {
+			if (!isShareCancelled(error)) toastError('Failed to share')
+		})
 	}
 
-	if (!phrase || !navigator.share) return null
+	if (!phrase || !canShareLink) return null
 	return (
 		<Button
 			onClick={sharePhrase}

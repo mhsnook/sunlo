@@ -1,6 +1,7 @@
 import { toastError } from '@/components/ui/sonner'
 import { Share } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { canShareLink, isShareCancelled, shareLink } from '@/lib/native'
 
 export function NativeShareButton({
 	shareData,
@@ -9,11 +10,9 @@ export function NativeShareButton({
 	shareData: { text: string; title: string }
 	className?: string
 }) {
-	const canShare = typeof navigator?.share === 'function'
-
 	const onClick = () => {
-		void navigator.share(shareData).catch((error: DOMException | TypeError) => {
-			if (error.name !== 'AbortError') {
+		void shareLink(shareData).catch((error: unknown) => {
+			if (!isShareCancelled(error)) {
 				console.log(`Some error has occurred while sharing.`, error)
 				toastError(
 					`Some error has occurred while trying to open your device's share screen. Sorry. Please try something else.`
@@ -22,7 +21,7 @@ export function NativeShareButton({
 		})
 	}
 
-	if (!canShare) return null
+	if (!canShareLink) return null
 
 	return (
 		<Button className={className} size="lg" onClick={onClick}>

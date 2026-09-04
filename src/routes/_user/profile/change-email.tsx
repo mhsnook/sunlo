@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { useAppForm } from '@/components/form'
+import { webOrigin } from '@/lib/native'
 
 export const Route = createFileRoute('/_user/profile/change-email')({
 	component: ChangeEmailPage,
@@ -30,7 +31,7 @@ function ChangeEmailPage() {
 			const { error } = await supabase.auth.updateUser(
 				{ email },
 				{
-					emailRedirectTo: `${window.location.origin}/profile/change-email-confirm`,
+					emailRedirectTo: `${webOrigin}/profile/change-email-confirm`,
 				}
 			)
 			if (error) {

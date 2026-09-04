@@ -14,6 +14,7 @@ import { useProfile } from '@/features/profile/hooks'
 import { NativeShareButton } from '@/components/share/native-share-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import { copyLink } from '@/lib/utils'
+import { canShareLink, webOrigin } from '@/lib/native'
 
 export const Route = createLazyFileRoute('/_user/friends/invite')({
 	component: InviteFriendPage,
@@ -21,13 +22,13 @@ export const Route = createLazyFileRoute('/_user/friends/invite')({
 
 function InviteFriendPage() {
 	const { data: profile } = useProfile()
-	const signupUrl = `${window.location.origin}/signup?referrer=${profile?.uid}`
+	const signupUrl = `${webOrigin}/signup?referrer=${profile?.uid}`
 	const data = {
 		text: `Hello friend, I'm learning a language with Sunlo, a social language learning app. Will you join me? ${signupUrl}`,
 		title: `Invitation! Join ${profile?.username || 'your friend'} on Sunlo.app`,
 	}
 	const share = {
-		can: typeof navigator.canShare === 'function' && navigator.canShare(data),
+		can: canShareLink,
 		data,
 		url: signupUrl,
 		copyUrl: () => copyLink(signupUrl),

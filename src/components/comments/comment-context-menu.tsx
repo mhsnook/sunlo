@@ -11,6 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import Flagged from '../flagged'
+import {
+	canShareLink,
+	isShareCancelled,
+	shareLink,
+	webOrigin,
+} from '@/lib/native'
 
 interface CommentContextMenuProps {
 	comment: RequestCommentType
@@ -23,25 +29,21 @@ const handleReport = () => {
 }
 
 export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
-	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?focus=${comment.id}`
+	const commentUrl = `${webOrigin}/learn/${lang}/requests/${comment.request_id}?focus=${comment.id}`
 
 	const handleShare = () => {
-		if (!navigator.share) {
+		if (!canShareLink) {
 			toastError('Sharing is not supported on this device')
 			return
 		}
 
-		navigator
-			.share({
-				title: 'Sunlo Comment',
-				text: `Check out this comment${comment.content ? `: ${comment.content.slice(0, 100)}${comment.content.length > 100 ? '...' : ''}` : ''}`,
-				url: commentUrl,
-			})
-			.catch((error: DOMException) => {
-				if (error.name !== 'AbortError') {
-					toastError('Failed to share')
-				}
-			})
+		void shareLink({
+			title: 'Sunlo Comment',
+			text: `Check out this comment${comment.content ? `: ${comment.content.slice(0, 100)}${comment.content.length > 100 ? '...' : ''}` : ''}`,
+			url: commentUrl,
+		}).catch((error: unknown) => {
+			if (!isShareCancelled(error)) toastError('Failed to share')
+		})
 	}
 
 	const handleCopyPermalink = () => {

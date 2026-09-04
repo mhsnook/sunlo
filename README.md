@@ -167,8 +167,8 @@ running against a remote project, and the cost shape.
 
 ## The React App
 
-- This app is a full SPA as an architectural choice so that we can use Tauri to compile it to
-  native apps.
+- This app is a full SPA as an architectural choice so that we can compile it to native apps
+  (see [docs/mobile.md](docs/mobile.md)).
 -     We use Tanstack's Router in a React app bundled by Vite, as the front end framework.
 - Data is fetched from the Supabase API using Tanstack DB's QueryCollections, loading up
   whole tables and slices of tables into the local Collections in memory, and then using
@@ -203,10 +203,18 @@ HTML page with OG tags for link previews on Facebook, Twitter, LinkedIn, WhatsAp
 This feature **only works on Vercel** - if you deploy elsewhere, social link previews will
 not work without implementing an equivalent solution for your platform.
 
-## Using Tauri for Native Apps
+## Native Apps with Capacitor
 
-It has always been our intention to cross-compile the JS app for use in a Tauri shell to make
-native versions of the app, but at this time we aren't maintaining or supporting the Tauri build.
+The SPA compiles to iOS and Android apps through Capacitor, which wraps the Vite build in a
+native shell. The whole stack ships unchanged, because a Capacitor app is this same SPA running
+in a system WebView.
 
-The technology and its industry support are improving rapidly so by the time we are finished with
-some other core features, it will make sense to come back and take another try at it.
+```bash
+pnpm cap:sync            # vite build, then copy dist/ into both platforms
+pnpm cap:android         # sync, then open the project in Android Studio
+pnpm cap:ios             # sync, then open the workspace in Xcode
+```
+
+The generated projects are checked in at `android/` and `ios/`. Neither is store-ready yet —
+app icons, deep-link domain association, and signing are still to do. See
+[docs/mobile.md](docs/mobile.md).
