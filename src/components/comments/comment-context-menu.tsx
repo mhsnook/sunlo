@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import Flagged from '../flagged'
 import {
 	canShareLink,
+	copyText,
 	isShareCancelled,
 	shareLink,
 	webOrigin,
@@ -47,8 +48,7 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 	}
 
 	const handleCopyPermalink = () => {
-		navigator.clipboard
-			.writeText(commentUrl)
+		void copyText(commentUrl)
 			.then(() => {
 				toastSuccess('Link copied to clipboard')
 			})

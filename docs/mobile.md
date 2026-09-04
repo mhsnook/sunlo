@@ -29,10 +29,17 @@ longer part of the setup.
 
 ## What the WebView changes
 
-Four browser assumptions in the app do not hold inside the shell. The fixes
-live in `src/lib/platform.ts`, and every export there works in both a browser
-and the WebView — call them from ordinary component code rather than branching
-on `isNativeApp` at the call site.
+Five browser assumptions in the app do not hold inside the shell. The fixes
+live in `src/lib/platform.ts`, which holds the app's capability gates and
+their fallbacks — one API per browser feature the app cannot assume it has.
+
+What varies there is not only native-versus-web. A desktop browser with no Web
+Share API, an insecure context with no clipboard, and the Capacitor WebView are
+three cases of the same question, so they live together. Ask a gate
+(`canShareLink`, `isInstalledApp()`) or call a shim (`shareLink()`,
+`copyText()`) and let it pick the path; do not branch on `isNativeApp` at the
+call site. Nothing in the module shows UI — the toast on success or failure is
+the caller's to write.
 
 ### The origin is not the site
 
@@ -74,12 +81,21 @@ themes the status bar, hides the launch splash once auth resolves, and receives
 deep links — none of which need route state, so it is called from
 `src/routes.tsx` and still runs when the router never mounts.
 
-### Standalone detection misses the shell
+### Installed-app detection misses the shell
 
-`isNativeAppUserAgent()` (`src/lib/utils.ts`) decides whether to skip the
-marketing homepage. It tested `display-mode: standalone` and
-`navigator.standalone`, and a Capacitor WebView reports neither, so it now
-checks `isNativeApp` first.
+The homepage redirect skips the marketing page for someone who already
+installed us. It tested `display-mode: standalone` and `navigator.standalone`,
+and a Capacitor WebView reports neither, so the landing page opened inside the
+app. It now asks `isInstalledApp()`, which checks the shell first.
+
+### The clipboard needs a secure context
+
+`navigator.clipboard` is undefined outside one, and iOS does not grant the
+WebView's `capacitor://` origin that status. `copyText()` falls back to a
+hidden textarea and `execCommand('copy')`, which is still the only path that
+works there. Android avoids the problem another way: `androidScheme: 'https'`
+in `capacitor.config.ts` makes the WebView origin secure, and changing it back
+to the default `http` breaks copying and `crypto.subtle` with no error.
 
 ## Deep links
 

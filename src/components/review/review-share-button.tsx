@@ -1,9 +1,10 @@
 import { Share2 } from 'lucide-react'
-import { toastSuccess } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { useReviewsToday } from '@/features/review/hooks'
 import { firstTryReviewMap } from '@/features/review/review-utils'
 import { useLanguageMeta } from '@/features/languages'
+import { copyText } from '@/lib/platform'
 
 interface ReviewShareButtonProps {
 	lang: string
@@ -45,9 +46,13 @@ export function ReviewShareButton({ lang, dayString }: ReviewShareButtonProps) {
 			`${correct}/${total} recalled • ${Math.round((correct / total) * 100)}%`,
 		].join('\n')
 
-		void navigator.clipboard.writeText(text).then(() => {
-			toastSuccess('Copied to clipboard!')
-		})
+		void copyText(text)
+			.then(() => {
+				toastSuccess('Copied to clipboard!')
+			})
+			.catch(() => {
+				toastError('Failed to copy')
+			})
 	}
 
 	if (manifest.length === 0) return null

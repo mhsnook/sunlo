@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react'
 import { Toaster as Sonner, toast } from 'sonner'
 import { Copy, X, CheckCircle, Info, AlertCircle } from 'lucide-react'
 import { Button } from './button'
+import { copyText } from '@/lib/platform'
 
 // Single Toaster - all toasts bottom-right
 export function Toasters() {
@@ -20,16 +21,10 @@ function copyToClipboard(message: string) {
 	return async (e: MouseEvent): Promise<void> => {
 		e.stopPropagation()
 		try {
-			await navigator.clipboard.writeText(message)
+			await copyText(message)
 			toastSuccess('Copied to clipboard')
 		} catch {
-			const textarea = document.createElement('textarea')
-			textarea.value = message
-			document.body.appendChild(textarea)
-			textarea.select()
-			document.execCommand('copy')
-			document.body.removeChild(textarea)
-			toastSuccess('Copied to clipboard')
+			toastError('Failed to copy')
 		}
 	}
 }

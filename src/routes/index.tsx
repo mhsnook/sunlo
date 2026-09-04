@@ -9,7 +9,8 @@ import { FooterNavigation } from './-homepage/footer-nav'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { useProfile } from '@/features/profile/hooks'
 import { buttonVariants } from '@/components/ui/button'
-import { cn, isNativeAppUserAgent } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { isInstalledApp } from '@/lib/platform'
 import { avatarUrlify } from '@/lib/hooks'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -18,7 +19,7 @@ export const Route = createFileRoute('/')({
 	beforeLoad: ({ context }) => {
 		// If the app was launched from the user's homescreen shortcut
 		// we should skip the homepage and go straight to learning or login
-		if (isNativeAppUserAgent()) {
+		if (isInstalledApp()) {
 			if (context.auth?.isAuth) {
 				console.log(
 					'Issuing redirect to /learn from /index.tsx bc we detected native app user agent'
