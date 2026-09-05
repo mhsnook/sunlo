@@ -23,6 +23,9 @@ skills:
 - task: "Using React bindings — useLiveQuery, useLiveSuspenseQuery, useLiveInfiniteQuery, usePacedMutations from @tanstack/react-db"
   load: "node_modules/@tanstack/react-db/skills/react-db/SKILL.md"
 
+- task: "Booting the local Supabase stack in a Claude Code cloud session — scenetest runs, auth/RLS checks, release-branch work"
+  load: ".claude/skills/supabase-cloud-stack/SKILL.md"
+
 - task: "Reviewing or improving codebase architecture — surfacing shallow modules, deepening seams, improving testability and AI-navigability"
   load: ".claude/skills/improve-codebase-architecture/SKILL.md"
 
@@ -60,8 +63,9 @@ pnpm install
 cp .env.example .env    # populate from supabase outputs
 supabase start          # requires Docker Desktop + Supabase CLI
 supabase db reset       # apply migrations + seeds
-# No Docker (e.g. Claude Code web)? Use scripts/db-native.sh to validate
-# migrations/seeds against a native Postgres — see docs/database.md.
+# Claude Code web session? scripts/supabase-cloud.sh up boots the full stack
+# on demand (≈3 min cold); scripts/db-native.sh validates migrations/seeds
+# against a native Postgres in seconds — see docs/database.md.
 
 pnpm dev                # dev server at http://127.0.0.1:5173
 pnpm check              # typecheck

@@ -22,13 +22,21 @@ pnpm db-reset      # supabase db reset
 
 The whole schema is one file, `supabase/schemas/base.sql`. Migrations live in `supabase/migrations/`, and seed files (`supabase/seeds/seed-*.sql`) load in alphabetical order.
 
-## Web sessions / no Docker: validating migrations natively
+## Web sessions: the full stack on demand
 
-The workflow above needs `supabase start`, which runs the stack as Docker
-containers. Claude Code web sessions have no Docker, so use
-`scripts/db-native.sh` — it stands up a plain Postgres 16 and reproduces the
-minimal Supabase baseline (see `supabase/dev-native/`) so you can exercise a
-migration without pulling to a local machine:
+Claude Code web sessions start with no Docker daemon, but the VM ships one.
+`scripts/supabase-cloud.sh up` starts it, fetches the Supabase CLI, runs
+`supabase start` with CI's service exclusions, and writes the keys to `.env`.
+A cold boot is ≈3 minutes (image pulls), a warm one ≈40 s, so reach for it
+only when the work needs auth, RLS, realtime, storage, or a scenetest run.
+The `supabase-cloud-stack` skill carries the flow and the measured costs.
+
+## Web sessions: validating migrations natively, in seconds
+
+For schema-only checks, `scripts/db-native.sh` stands up a plain Postgres 16
+and reproduces the minimal Supabase baseline (see `supabase/dev-native/`), with
+no Docker and a ≈1 s warm reset, so you can exercise a migration without
+booting the stack:
 
 ```bash
 scripts/db-native.sh reset                              # bootstrap + base.sql + all seeds
