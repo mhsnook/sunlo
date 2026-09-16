@@ -6,8 +6,11 @@
 # the two runs as comparable sets.
 #
 # The commands here are the ones the `pr-checks` job ran inline before this
-# script existed: `pnpm check`, then oxlint and eslint merged into one list,
-# then `pnpm format`'s two formatters. Keep them in step with package.json.
+# script existed: `tsc -b`, then oxlint and eslint merged into one list, then
+# both halves of `pnpm format`. Every one calls the TOOL through `pnpm exec`
+# rather than the package script that wraps it: the base tree is the base
+# branch, and a PR that adds or renames a script would otherwise measure two
+# trees with two different commands. Keep them in step with package.json.
 #
 # NOTE: this script ends by restoring the tree with `git checkout -- .`. That is
 # correct in CI, where the checkout is clean. Run it against a working tree with
@@ -36,9 +39,13 @@ EXCLUDE='^(dist/|\.github/ci/)'
 # Read-only checks run concurrently. The typechecker is the long pole and the
 # linters finish underneath it, so this is close to free.
 (
-	# `pnpm check` is `tsc -b`. The grep drops the summary lines, which change
-	# with the error count and would diff as noise.
-	pnpm check 2>&1 | grep ': error TS' | sort >"$OUT/typecheck.txt"
+	# The TOOL, not the `check` script. Both trees run this script, and the base
+	# tree is the base branch — on the PR that adds or renames a script, base
+	# does not have it. `pnpm check` is `tsc -b`; spell it out.
+	#
+	# The grep drops the summary lines, which change with the error count and
+	# would diff as noise.
+	pnpm exec tsc -b 2>&1 | grep ': error TS' | sort >"$OUT/typecheck.txt"
 	status=${PIPESTATUS[0]}
 
 	# A typechecker that failed but printed nothing the grep recognises would

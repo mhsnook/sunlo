@@ -116,6 +116,11 @@ jobs:
         id: build
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         continue-on-error: true
+        # `shell: bash` is not decoration. The default shell for `run:` is
+        # `bash -e` with NO pipefail, so `pnpm build:test | tee` reports tee's
+        # exit status — always 0 — and a failed build records as a success.
+        # Check 0 would then never fire. This form is `bash -eo pipefail`.
+        shell: bash
         run: |
           mkdir -p /tmp/out
           pnpm build:test 2>&1 | tee /tmp/out/build.log
@@ -223,6 +228,11 @@ jobs:
         id: build
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         continue-on-error: true
+        # `shell: bash` is not decoration. The default shell for `run:` is
+        # `bash -e` with NO pipefail, so `pnpm build:test | tee` reports tee's
+        # exit status — always 0 — and a failed build records as a success.
+        # Check 0 would then never fire. This form is `bash -eo pipefail`.
+        shell: bash
         run: |
           mkdir -p /tmp/out
           pnpm build:test 2>&1 | tee /tmp/out/build.log
@@ -302,5 +312,10 @@ jobs:
 
       # `tee` puts the verdict on the run's summary page, so the reason a
       # required check went red is visible without opening the log.
+      #
+      # `shell: bash` for pipefail, exactly as on the build steps. Without it
+      # this step reports tee's exit status and the gate NEVER fails — silently,
+      # and only visibly wrong on the first run that should have blocked.
       - name: Gate
+        shell: bash
         run: node .github/ci/gate.cjs /tmp/fragments | tee -a "$GITHUB_STEP_SUMMARY"
