@@ -20,7 +20,7 @@
 		"st:link": "pnpm link ../scenetest-js/packages/scenes && pnpm link ../scenetest-js/packages/vite-plugin && pnpm link ../scenetest-js/packages/checks",
 		"st:unlink": "pnpm unlink @scenetest/scenes @scenetest/vite-plugin @scenetest/checks && pnpm install",
 		"test:unit": "vitest run",
-		"migrate": "supabase db diff --use-pg-delta -f new_migration",
+		"migrate": "supabase db diff -f new_migration",
 		"types": "supabase gen types typescript --local > ./src/types/supabase.ts && oxfmt ./src/types/supabase.ts ",
 		"schema": "supabase db dump --local > supabase/schemas/base.sql && prettier --write 'supabase/schemas/base.sql'",
 		"seeds:data": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run=cp scripts/dump-new-seeds.ts",

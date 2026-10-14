@@ -22,6 +22,12 @@ pnpm db-reset      # supabase db reset
 
 The whole schema is one file, `supabase/schemas/base.sql`. Migrations live in `supabase/migrations/`, and seed files (`supabase/seeds/seed-*.sql`) load in alphabetical order.
 
+### The diff engine is pg-delta
+
+`[experimental.pgdelta]` in `supabase/config.toml` makes pg-delta the engine behind `supabase db diff` and `db pull`, so `pnpm migrate` needs no engine flag. It needs Supabase CLI 2.119 or later. pg-delta diffs policy changes, grants, default privileges, publication membership and `pg_cron` jobs, which the old migra engine skipped.
+
+**Do not run `supabase db schema declarative sync` against `base.sql`.** `sync` treats `supabase/schemas/` as the complete schema, and `base.sql` is a `supabase db dump` of the public schema only. Anything outside it reads as a deletion. That includes the `auth.users` triggers that create profiles, the avatar policies on `storage.objects`, the `recount-all-upvotes` cron job, and the default-privilege revokes on `admin_user`, so the generated migration drops all of them. `supabase db schema declarative generate --local` exports a tree that holds those objects, and adopting it means replacing `base.sql` and the tools that read it.
+
 ## Web sessions / no Docker: validating migrations natively
 
 The workflow above needs `supabase start`, which runs the stack as Docker
