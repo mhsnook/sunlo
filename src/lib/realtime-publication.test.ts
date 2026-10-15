@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import schema from '../../supabase/schemas/base.sql?raw'
+
+const schemaFiles = import.meta.glob<string>(
+	[
+		'../../supabase/schemas/_cluster/publications.sql',
+		'../../supabase/schemas/public/tables/*.sql',
+	],
+	{ query: '?raw', import: 'default', eager: true }
+)
+const schema = Object.values(schemaFiles).join('\n')
 
 // Supabase tests an UPDATE frame against each subscriber's SELECT policy using
 // the *new* row. A soft delete is an UPDATE, so a policy reading
@@ -12,10 +20,9 @@ const PUBLICATION = 'supabase_realtime'
 const FLAGS = ['deleted', 'archived'] as const
 
 /**
- * Statements are collected line by line rather than split on `;`, because
- * base.sql carries function bodies whose `$$` quoting is full of semicolons.
- * Neither publication nor policy statements contain a `$$` block, so
- * accumulating from a matching opening line to the first line ending in `;`
+ * Statements are collected line by line rather than split on `;`, because a
+ * policy's `using` clause can hold a semicolon inside a string literal.
+ * Accumulating from a matching opening line to the first line ending in `;`
  * captures exactly one statement.
  */
 function statementsStartingWith(opening: RegExp): Array<string> {
@@ -32,15 +39,15 @@ function statementsStartingWith(opening: RegExp): Array<string> {
 	return found
 }
 
-/** The tables `alter publication ... add table only` puts on the wire. */
+/** The tables `alter publication ... add table` puts on the wire. */
 function publishedTables(): Set<string> {
 	const statements = statementsStartingWith(
-		new RegExp(`^alter publication "${PUBLICATION}"`)
+		new RegExp(`^alter publication "${PUBLICATION}"`, 'i')
 	)
 	return new Set(
 		statements.flatMap((statement) =>
 			Array.from(
-				statement.matchAll(/add table only "public"\."(\w+)"/g),
+				statement.matchAll(/add table (?:only )?"public"\."(\w+)"/gi),
 				(match) => match[1]
 			)
 		)
@@ -53,7 +60,7 @@ function publishedTables(): Set<string> {
  * realtime frame and is deliberately excluded.
  */
 function usingClause(statement: string): string {
-	const keyword = statement.search(/\busing\s*\(/)
+	const keyword = statement.search(/\busing\s*\(/i)
 	if (keyword === -1) return ''
 	const open = statement.indexOf('(', keyword)
 	let depth = 0
@@ -72,18 +79,19 @@ type Policy = { table: string; name: string; flag: string | null }
  * clause defaults to ALL, and ALL covers SELECT, so both count.
  */
 function selectPolicies(): Array<Policy> {
-	return statementsStartingWith(/^create policy/)
+	return statementsStartingWith(/^create policy/i)
 		.filter((statement) => {
-			const command = /\bfor (select|insert|update|delete|all)\b/.exec(
+			const command = /\bfor (select|insert|update|delete|all)\b/i.exec(
 				statement
 			)
-			return !command || command[1] === 'select' || command[1] === 'all'
+			const verb = command?.[1].toLowerCase()
+			return !verb || verb === 'select' || verb === 'all'
 		})
 		.map((statement) => {
 			const clause = usingClause(statement)
 			return {
-				table: /\bon "public"\."(\w+)"/.exec(statement)?.[1] ?? '',
-				name: /^create policy "([^"]+)"/.exec(statement)?.[1] ?? '',
+				table: /\bon "public"\."(\w+)"/i.exec(statement)?.[1] ?? '',
+				name: /^create policy "([^"]+)"/i.exec(statement)?.[1] ?? '',
 				flag:
 					FLAGS.find((flag) => new RegExp(`"?\\b${flag}\\b"?`).test(clause)) ??
 					null,
@@ -98,8 +106,8 @@ describe('realtime publication', () => {
 	const narrowing = policies.filter((policy) => policy.flag !== null)
 
 	// Without these the real assertion below passes on an empty set, so a
-	// reformatting of base.sql would silently retire the check.
-	it('parses tables and policies out of base.sql', () => {
+	// reformatting of the schema files would silently retire the check.
+	it('parses tables and policies out of the schema files', () => {
 		expect(published.size, 'no published table parsed').toBeGreaterThan(0)
 		expect(policies.length, 'no policy parsed').toBeGreaterThan(0)
 		expect(

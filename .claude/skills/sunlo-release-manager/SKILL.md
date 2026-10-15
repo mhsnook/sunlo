@@ -43,9 +43,9 @@ Only when the branch added migrations.
 pnpm db-reset && pnpm types && pnpm schema
 ```
 
-**Review the `base.sql` diff closely.** A regeneration can silently drop the `supabase_realtime` publication list — `docs/database.md` warns about this and `src/lib/realtime-publication.test.ts` only catches part of it.
+**Review the `supabase/schemas/` diff closely.** `pnpm schema` exports the local database, so anything changed in Studio without a migration lands in the tree too. Every changed file should trace back to a migration on the branch.
 
-Without Docker (a Claude Code web session), `scripts/db-native.sh` validates that migrations apply and seeds load, but its `dump` and `types` go through `pg_dump` and a standalone `postgres-meta`, so the output is **not** byte-identical. Hand-edit `base.sql` and `src/types/supabase.ts` to match, and tell the developer they want a real regeneration locally before merging.
+Without Docker (a Claude Code web session), `scripts/db-native.sh` validates that migrations apply and seeds load, but its `dump` and `types` go through the standalone pg-delta and `postgres-meta` packages, so the output is **not** byte-identical. Hand-edit the affected files under `supabase/schemas/` and `src/types/supabase.ts` to match, and tell the developer they want a real regeneration locally before merging.
 
 ## 3. Run the gates
 

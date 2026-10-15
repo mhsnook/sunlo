@@ -5,28 +5,40 @@
 ```bash
 pnpm migrate       # write a migration from local schema changes
 pnpm types         # regenerate src/types/supabase.ts
-pnpm schema        # regenerate supabase/schemas/base.sql
+pnpm schema        # regenerate the supabase/schemas/ tree
 pnpm seeds:data    # dump current seed data
 pnpm seeds:corpus  # dump the search corpus only
 pnpm db-reseed     # reseed the local database
 pnpm db-reset      # supabase db reset
 ```
 
-**Important**: review the `base.sql` and seed diffs before committing — a regeneration can silently drop things like the realtime publication list.
+**Important**: review the schema-tree and seed diffs before committing.
 
 ## Workflow
 
 1. Use Supabase Studio (http://localhost:54323) to modify schema/data
 2. When the feature works, run `pnpm migrate` to create the migration
-3. Run `pnpm types && pnpm schema` to regenerate the types and `base.sql`
+3. Run `pnpm types && pnpm schema` to regenerate the types and the schema tree
 
-The whole schema is one file, `supabase/schemas/base.sql`. Migrations live in `supabase/migrations/`, and seed files (`supabase/seeds/seed-*.sql`) load in alphabetical order.
+Migrations live in `supabase/migrations/`, and seed files (`supabase/seeds/seed-*.sql`) load in alphabetical order.
+
+### The schema tree
+
+`supabase/schemas/` holds the whole schema as one file per object: `public/tables/phrase.sql` carries the table with its indexes, triggers, policies and grants, and functions, views and types get folders of their own. Objects outside `public` that the app depends on live there too: the profile-creating triggers in `auth/tables/users.sql`, the avatar policies in `storage/tables/objects.sql`, the realtime publication in `_cluster/publications.sql`, and the `recount-all-upvotes` cron job in `_cluster/misc.sql`. `.pgdelta-export.json` lists the files pg-delta owns and the order it loads them in.
+
+`pnpm schema` runs `supabase db schema declarative generate`, which writes the tree from the local database. It deletes a file whose object is gone, but only a file it wrote itself, so a hand-added file stays until you delete it. The tree is generated, so `.prettierignore` keeps prettier and oxfmt away from it.
+
+`src/lib/realtime-publication.test.ts` reads the table files and `publications.sql` to check the realtime rule under Gotchas.
 
 ### The diff engine is pg-delta
 
-`[experimental.pgdelta]` in `supabase/config.toml` makes pg-delta the engine behind `supabase db diff` and `db pull`, so `pnpm migrate` needs no engine flag. It needs Supabase CLI 2.119 or later. pg-delta diffs policy changes, grants, default privileges, publication membership and `pg_cron` jobs, which the old migra engine skipped.
+`[experimental.pgdelta]` in `supabase/config.toml` makes pg-delta the engine behind `supabase db diff`, `db pull` and the declarative commands, so `pnpm migrate` needs no engine flag. The CLI pin in `package.json` and in `.github/workflows/test.yaml` must stay at 2.119 or later, because older CLIs refuse to parse that config block. pg-delta diffs policy changes, grants, default privileges, publication membership and `pg_cron` jobs, which the old migra engine skipped.
 
-**Do not run `supabase db schema declarative sync` against `base.sql`.** `sync` treats `supabase/schemas/` as the complete schema, and `base.sql` is a `supabase db dump` of the public schema only. Anything outside it reads as a deletion. That includes the `auth.users` triggers that create profiles, the avatar policies on `storage.objects`, the `recount-all-upvotes` cron job, and the default-privilege revokes on `admin_user`, so the generated migration drops all of them. `supabase db schema declarative generate --local` exports a tree that holds those objects, and adopting it means replacing `base.sql` and the tools that read it.
+`pnpm migrate` diffs the local database against the migrations, so it never reads the tree. `supabase db schema declarative sync --no-apply` goes the other way: edit the tree, and it writes the migration. It also emits a few statements on every run that come from the shadow's base image rather than from Sunlo, so delete them from the generated file:
+
+- `pg_net` is dropped and recreated in `extensions`. The migration that creates it names no schema, so the local database and the migration history disagree on where it lives.
+- `pgjwt` comes back, because the base image ships it and a tree can't say an extension is absent. Migration `20260826120000_drop_pgjwt.sql` dropped it.
+- The `public` schema gets back the stock comment and `pg_database_owner` grants that the migration history has removed.
 
 ## Web sessions / no Docker: validating migrations natively
 
@@ -37,23 +49,24 @@ minimal Supabase baseline (see `supabase/dev-native/`) so you can exercise a
 migration without pulling to a local machine:
 
 ```bash
-scripts/db-native.sh reset                              # bootstrap + base.sql + all seeds
+scripts/db-native.sh reset                              # bootstrap + schema tree + all seeds
 scripts/db-native.sh apply supabase/migrations/<new>.sql  # does the new migration apply?
 scripts/db-native.sh psql -c '\d some_table'            # poke around
 ```
 
 **Use it to validate, not to author the committed artifacts.** It confirms
-migrations apply and seeds load (that's the reliable win). It can also
-`dump` (`base.sql`) and `types` (`supabase.ts`), but those go through
-`pg_dump` / a standalone `postgres-meta` rather than the Docker-only
-`supabase db dump` / `supabase gen types`, so the output is **not**
-byte-identical — keep regenerating the committed `base.sql` and
-`src/types/supabase.ts` locally or in CI with the real Supabase CLI. Known
-limits: `auth.uid()` returns NULL (RLS is effectively off — don't test RLS
-here), and `reset` builds from `base.sql` + applies new migrations on top
-rather than replaying the full history (the plv8 migrations can't run
-natively; CI still replays everything via Docker). Full detail lives in the
-header of `scripts/db-native.sh`.
+migrations apply and seeds load (that's the reliable win). `reset` loads the
+tree with the standalone `@supabase/pg-delta` package, the engine the CLI
+bundles, into a second Postgres cluster that serves as the shadow. It can
+also `dump` (the schema tree) and `types` (`supabase.ts`), but a native dump
+differs from `pnpm schema` in grant order, `vector`'s function comments and
+some whitespace, and it adds a `_custom/README.md` scaffold. Keep regenerating
+the committed tree and `src/types/supabase.ts` locally or in CI with the real
+Supabase CLI. Known limits: `auth.uid()` returns NULL (RLS is effectively
+off — don't test RLS here), and `reset` builds from the tree and `apply` puts
+new migrations on top, rather than replaying the full history (the plv8
+migrations can't run natively; CI still replays everything via Docker). Full
+detail lives in the header of `scripts/db-native.sh`.
 
 ## Schema Patterns
 

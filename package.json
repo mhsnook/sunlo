@@ -22,7 +22,7 @@
 		"test:unit": "vitest run",
 		"migrate": "supabase db diff -f new_migration",
 		"types": "supabase gen types typescript --local > ./src/types/supabase.ts && oxfmt ./src/types/supabase.ts ",
-		"schema": "supabase db dump --local > supabase/schemas/base.sql && prettier --write 'supabase/schemas/base.sql'",
+		"schema": "supabase db schema declarative generate --local --overwrite",
 		"seeds:data": "deno run --allow-env --allow-net --allow-read --allow-write --allow-run=cp scripts/dump-new-seeds.ts",
 		"seeds:corpus": "deno run --allow-env --allow-net --allow-read --allow-write scripts/dump-new-seeds.ts --corpus-only",
 		"db-reseed": "deno run --allow-env --allow-read --allow-run=docker scripts/dump-new-seeds.ts --reseed",
@@ -101,7 +101,7 @@
 		"vitest": "^4.1.6"
 	},
 	"optionalDependencies": {
-		"supabase": "^2.76.14"
+		"supabase": "^2.121.0"
 	},
 	"packageManager": "pnpm@10.25.0"
 }

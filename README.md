@@ -30,7 +30,7 @@ Access the in the browser at `http://127.0.0.1:5173`.
 
 1. Use the local admin at [http://localhost://54323](http://localhost://54323) to make changes to your dev DB. You can point and click to add or modify columns, or use the SQL terminal to create or modify views and functions.
 2. One your feature is working, use `pnpm run migrate` to create migrations based on your local changes.
-3. `pnpm run seeds:schema` to re-create the base.sql schema. Be sure to use a formatter and only commit things you're sure of. (Oftentimes `base.sql` will be created with some key lines removed, like the command that turns on realtime for required tables (because your local doesn't have it turned on), so you have to not commit those deletions.)
+3. `pnpm run schema` to regenerate the schema tree in `supabase/schemas/`. It exports your local database, so review the diff and only commit changes your migrations made.
 4. `pnpm run types` to regenerate typescript types
 
 The migrations should run when the main branch deploys. Or you can `supabase db push` to make it so.

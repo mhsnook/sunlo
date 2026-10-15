@@ -2,17 +2,20 @@
 --
 -- The real Supabase stack (auth/PostgREST/realtime/vault/pg_net/...) is provided
 -- by the supabase/postgres Docker image. This container can't run Docker, so this
--- file reconstructs the *minimum* baseline that `schemas/base.sql`, the migrations,
--- and the seed files assume already exists:
+-- file reconstructs the *minimum* baseline that the `supabase/schemas/` tree, the
+-- migrations, and the seed files assume already exists:
 --
 --   * the anon / authenticated / service_role / authenticator roles
---   * the auth, extensions, graphql, vault, net schemas
+--   * the auth, extensions, graphql, vault, net, cron, storage schemas
 --   * auth.uid()/role()/email()/jwt() (return NULL here — RLS is effectively off,
 --     which is fine: we run as superuser for schema/migration/type/dump work)
 --   * GoTrue-shaped auth.users / auth.identities (superset of the columns the
 --     static seed-0-auth.sql touches) so the auth seed loads
 --   * net.http_post() and vault.decrypted_secrets stubs, because a couple of
 --     schema functions/triggers reference them
+--   * cron.job + cron.schedule_in_database(), because the tree schedules a job
+--     and pg-delta's pg_cron handler reads cron.job to diff jobs
+--   * storage.objects, because the tree puts the avatar policies on it
 --   * the supabase_realtime publication
 --
 -- This is NOT real auth. Do not use it to test RLS behaviour — use CI (Docker) or
@@ -38,6 +41,10 @@ create schema if not exists graphql authorization postgres;
 create schema if not exists vault authorization postgres;
 
 create schema if not exists net authorization postgres;
+
+create schema if not exists cron authorization postgres;
+
+create schema if not exists storage authorization postgres;
 
 -- auth.* helpers: read the request.jwt.* GUCs if a caller sets them, else NULL.
 create or replace function auth.uid () returns uuid language sql stable as $$
@@ -81,6 +88,45 @@ select
 	updated_at
 from
 	vault.secrets;
+
+-- pg_cron stub: the same columns as the real cron.job, so pg-delta's pg_cron
+-- handler can read scheduled jobs back out. Nothing ever runs them.
+create table if not exists cron.job (
+	jobid bigserial primary key,
+	schedule text not null,
+	command text not null,
+	nodename text not null default 'localhost',
+	nodeport int not null default 5432,
+	database text not null default current_database(),
+	username text not null default current_user,
+	active boolean not null default true,
+	jobname text unique
+);
+
+create or replace function cron.schedule_in_database (job_name text, schedule text, command text, database text, username text default null, active boolean default true) returns bigint language sql as $$
+  insert into cron.job (jobname, schedule, command, database, username, active)
+  values (job_name, schedule, command, database, coalesce(username, current_user), active)
+  on conflict (jobname) do update set
+    schedule = excluded.schedule, command = excluded.command,
+    database = excluded.database, username = excluded.username, active = excluded.active
+  returning jobid $$;
+
+create or replace function cron.unschedule (job_name text) returns boolean language sql as $$
+  with gone as (delete from cron.job where jobname = job_name returning 1)
+  select exists (select from gone) $$;
+
+-- storage stub: the policy columns of the real storage.objects.
+create table if not exists storage.objects (
+	id uuid primary key default gen_random_uuid(),
+	bucket_id text,
+	name text,
+	owner uuid,
+	created_at timestamptz default now(),
+	updated_at timestamptz default now(),
+	metadata jsonb
+);
+
+alter table storage.objects enable row level security;
 
 -- GoTrue-shaped auth tables (superset of the columns seed-0-auth.sql inserts/updates).
 create table if not exists auth.users (
@@ -137,7 +183,7 @@ extensions to anon,
 authenticated,
 service_role;
 
--- base.sql does `alter publication supabase_realtime add table ...`; the publication
+-- The tree does `alter publication supabase_realtime add table ...`; the publication
 -- itself is created by Supabase, so create an empty one here.
 do $$ begin
   if not exists (select from pg_publication where pubname = 'supabase_realtime') then

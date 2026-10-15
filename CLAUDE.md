@@ -71,7 +71,7 @@ pnpm scene [file]       # run scenetest specs (needs dev server + supabase runni
 
 pnpm run migrate        # create migration from local changes
 pnpm run types          # regenerate supabase TS types
-pnpm run schema         # regenerate base.sql — review the diff carefully
+pnpm run schema         # regenerate the supabase/schemas/ tree — review the diff carefully
 ```
 
 ## Hard rules

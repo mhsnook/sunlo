@@ -8,10 +8,15 @@
 # Docker containers. Claude Code's web environment can't run Docker, so `supabase
 # start` / `supabase db reset` don't work there. But the container *does* ship the
 # Postgres 16 server binaries, and everything below the API layer — applying
-# migrations, loading seeds, dumping the schema, generating types — only needs a
+# migrations, loading seeds, exporting the schema, generating types — only needs a
 # plain Postgres. This script provisions one and reproduces the minimal Supabase
-# baseline (roles, auth schema, stub extensions) that `base.sql` and the seeds
-# assume. See `supabase/dev-native/bootstrap.sql` and `.../extensions/README.md`.
+# baseline (roles, auth schema, stub extensions) that the `supabase/schemas/` tree
+# and the seeds assume. See `supabase/dev-native/bootstrap.sql` and
+# `.../extensions/README.md`.
+#
+# It runs two clusters. pg-delta loads the declarative tree into a shadow database
+# to work out the desired state, and a shadow that carries the bootstrap baseline
+# must live on a different cluster from the target (`--isolated-shadow`).
 #
 # What it is NOT: real auth. `auth.uid()` returns NULL, so RLS is effectively off.
 # Use CI (Docker) or a real Supabase project to test RLS/auth behaviour.
@@ -19,9 +24,9 @@
 # Usage
 # -----
 #   scripts/db-native.sh up              # provision + start Postgres (idempotent)
-#   scripts/db-native.sh reset           # recreate DB: bootstrap + base.sql + seeds
+#   scripts/db-native.sh reset           # recreate DB: bootstrap + schemas tree + seeds
 #   scripts/db-native.sh apply FILE...   # apply migration file(s) on the running DB
-#   scripts/db-native.sh dump [FILE]     # dump schema (default: supabase/schemas/base.sql)
+#   scripts/db-native.sh dump [DIR]      # export the schema tree (default: supabase/schemas)
 #   scripts/db-native.sh types [FILE]    # gen types (default: src/types/supabase.ts)
 #   scripts/db-native.sh psql [args...]  # open psql against the DB
 #   scripts/db-native.sh status          # show connection info
@@ -30,7 +35,7 @@
 # Typical flow after writing a migration:
 #   scripts/db-native.sh reset
 #   scripts/db-native.sh apply supabase/migrations/<new>.sql   # <- does it apply?
-#   scripts/db-native.sh dump                                  # <- new base.sql to commit
+#   scripts/db-native.sh dump                                  # <- new schema tree to commit
 #   scripts/db-native.sh types                                 # <- regenerate TS types
 #
 set -euo pipefail
@@ -42,11 +47,19 @@ PG_HOME="/home/${PG_OWNER}"
 PGDATA="${PG_HOME}/pgdata"
 PGSOCK="${PG_HOME}/sock"
 PGPORT="54399"
+SHADOW_PGDATA="${PG_HOME}/pgdata-shadow"
+SHADOW_PGPORT="54398"
 DBNAME="sunlo"
-PGVECTOR_VERSION="v0.8.0"      # apt ships 0.6.0; the dump needs halfvec/sparsevec (>=0.7)
+PGVECTOR_VERSION="v0.8.0"      # apt ships 0.6.0; the schema needs halfvec/sparsevec (>=0.7)
 # Supabase extensions with no native build. See dev-native/extensions/README.md.
-FAKE_EXTENSIONS="pg_net supabase_vault pg_graphql pgjwt pg_cron pgsodium"
+FAKE_EXTENSIONS="pg_net supabase_vault pg_graphql pgjwt pg_cron"
 DB_URL="postgresql://postgres@127.0.0.1:${PGPORT}/${DBNAME}"
+SHADOW_URL="postgresql://postgres@127.0.0.1:${SHADOW_PGPORT}/${DBNAME}"
+# The npm `latest` tags of both packages are 0.0.0 placeholders, so pin the alphas.
+PGDELTA_PKG="@supabase/pg-delta@1.0.0-alpha.59"
+PGTOPO_PKG="@supabase/pg-topo@1.0.0-alpha.8"
+# The Supabase CLI's default export formatting, so a native dump reads like `pnpm schema`.
+PGDELTA_FORMAT='{"keywordCase":"upper","indent":2,"maxWidth":180,"commaStyle":"trailing"}'
 
 PGBIN="$(echo /usr/lib/postgresql/*/bin | tr ' ' '\n' | sort -V | tail -1)"
 [ -x "${PGBIN}/postgres" ] || { echo "!! Postgres server binaries not found under /usr/lib/postgresql/*/bin"; exit 1; }
@@ -94,64 +107,90 @@ install_fake_extensions() {
   # Empty stubs so `create extension <name>` succeeds. The objects a couple of
   # functions actually reference live in bootstrap.sql, not here.
   require_root install_fake_extensions
-  local n placement
+  local n
   for n in ${FAKE_EXTENSIONS}; do
-    # pgsodium is the one stub that has to name a schema. base.sql creates it as
-    # a bare `create extension if not exists "pgsodium";`, and the dump runs with
-    # an empty search_path, so a relocatable stub has nowhere to land and the
-    # statement fails with "no schema has been selected to create in". The stub
-    # holds no objects, so the schema it names is nominal.
-    if [ "${n}" = "pgsodium" ]; then
-      placement="relocatable = false"$'\n'"schema = 'public'"
-    else
-      placement="relocatable = true"
-    fi
     cat > "${EXTDIR}/${n}.control" <<CTL
 comment = 'native-dev stub for ${n} (schema/migration/type work only, no runtime behaviour)'
 default_version = '1.0'
-${placement}
+relocatable = true
 CTL
     echo "-- native-dev stub: no objects (see supabase/dev-native/bootstrap.sql)" > "${EXTDIR}/${n}--1.0.sql"
   done
   log "installed fake extension stubs: ${FAKE_EXTENSIONS}"
 }
 
+# init_cluster / start_cluster take a data dir and port, because the shadow is a
+# second cluster with its own lineage.
 init_cluster() {
-  if as_owner test -f "${PGDATA}/PG_VERSION"; then log "cluster already initialised"; return; fi
+  local data="$1"
+  if as_owner test -f "${data}/PG_VERSION"; then log "cluster at ${data} already initialised"; return; fi
   ensure_owner
-  log "initdb at ${PGDATA}"
-  as_owner mkdir -p "${PGDATA}" "${PGSOCK}"
-  as_owner "${PGBIN}/initdb" -D "${PGDATA}" -U postgres --auth=trust --no-sync >/dev/null
+  log "initdb at ${data}"
+  as_owner mkdir -p "${data}" "${PGSOCK}"
+  as_owner "${PGBIN}/initdb" -D "${data}" -U postgres --auth=trust --no-sync >/dev/null
 }
 
 start_cluster() {
-  if as_owner "${PGBIN}/pg_ctl" -D "${PGDATA}" status >/dev/null 2>&1; then log "Postgres already running"; return; fi
-  log "starting Postgres on 127.0.0.1:${PGPORT}"
-  as_owner "${PGBIN}/pg_ctl" -D "${PGDATA}" -w -l "${PG_HOME}/pg.log" \
-    -o "-p ${PGPORT} -k ${PGSOCK} -c listen_addresses=127.0.0.1" start >/dev/null \
-    || { as_owner tail -n 20 "${PG_HOME}/pg.log"; die "Postgres failed to start"; }
+  local data="${1:-${PGDATA}}" port="${2:-${PGPORT}}"
+  if as_owner "${PGBIN}/pg_ctl" -D "${data}" status >/dev/null 2>&1; then log "Postgres on ${port} already running"; return; fi
+  log "starting Postgres on 127.0.0.1:${port}"
+  as_owner "${PGBIN}/pg_ctl" -D "${data}" -w -l "${data}.log" \
+    -o "-p ${port} -k ${PGSOCK} -c listen_addresses=127.0.0.1" start >/dev/null \
+    || { as_owner tail -n 20 "${data}.log"; die "Postgres on ${port} failed to start"; }
 }
 
 cmd_up() {
   ensure_owner
   ensure_pgvector
   install_fake_extensions
-  init_cluster
-  start_cluster
-  log "ready — ${DB_URL}"
+  init_cluster "${PGDATA}"
+  init_cluster "${SHADOW_PGDATA}"
+  start_cluster "${PGDATA}" "${PGPORT}"
+  start_cluster "${SHADOW_PGDATA}" "${SHADOW_PGPORT}"
+  log "ready — ${DB_URL} (shadow ${SHADOW_URL})"
+}
+
+# pg-delta loads and exports the declarative tree, the same engine the Supabase CLI
+# bundles. Kept in a gitignored scratch dir under supabase/dev-native, like typegen.
+PGDELTA_DIR="${REPO_ROOT}/supabase/dev-native/.pgdelta"
+
+ensure_pgdelta() {
+  [ -x "${PGDELTA_DIR}/node_modules/.bin/pgdelta" ] && return
+  log "installing ${PGDELTA_PKG} + ${PGTOPO_PKG} into ${PGDELTA_DIR}"
+  mkdir -p "${PGDELTA_DIR}"
+  printf '{ "name": "sunlo-pgdelta", "private": true, "type": "module" }\n' > "${PGDELTA_DIR}/package.json"
+  # pg-topo's protobufjs ships an install script that only prints a notice, and
+  # pnpm 12 fails an install on an unapproved script. pnpm 10 reads the first key,
+  # pnpm 12 the second.
+  printf 'ignoredBuiltDependencies:\n  - "@launchql/protobufjs"\nallowBuilds:\n  "@launchql/protobufjs": false\n' > "${PGDELTA_DIR}/pnpm-workspace.yaml"
+  ( cd "${PGDELTA_DIR}" && pnpm add "${PGDELTA_PKG}" "${PGTOPO_PKG}" >/dev/null 2>&1 ) || die "failed to install ${PGDELTA_PKG}"
+}
+
+pgdelta() { "${PGDELTA_DIR}/node_modules/.bin/pgdelta" "$@"; }
+
+# Drops and recreates DBNAME on one cluster and lays the Supabase baseline on it.
+# pg-delta only loads pg_cron statements into the database that
+# cron.database_name names, so each database names itself.
+recreate_db() {
+  local port="$1"
+  local url="postgresql://postgres@127.0.0.1:${port}"
+  "${PGBIN}/psql" "${url}/postgres" -v ON_ERROR_STOP=1 -q \
+    -c "drop database if exists ${DBNAME} with (force)" -c "create database ${DBNAME}" \
+    -c "alter database ${DBNAME} set cron.database_name = '${DBNAME}'"
+  "${PGBIN}/psql" "${url}/${DBNAME}" -v ON_ERROR_STOP=1 -q -f "${REPO_ROOT}/supabase/dev-native/bootstrap.sql"
 }
 
 # --- data steps -------------------------------------------------------------
 
 cmd_reset() {
   cmd_up
-  log "recreating database '${DBNAME}'"
-  "${PGBIN}/psql" "postgresql://postgres@127.0.0.1:${PGPORT}/postgres" -v ON_ERROR_STOP=1 -q \
-    -c "drop database if exists ${DBNAME} with (force)" -c "create database ${DBNAME}"
-  log "bootstrap (Supabase baseline shim)"
-  PSQL -q -f "${REPO_ROOT}/supabase/dev-native/bootstrap.sql"
-  log "applying schemas/base.sql"
-  PSQL -q -f "${REPO_ROOT}/supabase/schemas/base.sql"
+  ensure_pgdelta
+  log "recreating database '${DBNAME}' + bootstrap (Supabase baseline shim) on both clusters"
+  recreate_db "${PGPORT}"
+  recreate_db "${SHADOW_PGPORT}"
+  log "applying the supabase/schemas tree via pg-delta"
+  pgdelta schema apply --dir "${REPO_ROOT}/supabase/schemas" \
+    --target "${DB_URL}" --shadow "${SHADOW_URL}" --isolated-shadow --profile supabase
   log "loading seeds"
   local f
   for f in $(ls "${REPO_ROOT}"/supabase/seeds/*.sql | sort); do
@@ -175,14 +214,12 @@ cmd_apply() {
 
 cmd_dump() {
   start_cluster
-  local out="${1:-${REPO_ROOT}/supabase/schemas/base.sql}"
-  # NOTE: `supabase db dump` runs pg_dump inside the pinned supabase/postgres Docker
-  # image, so it can't run here. We use the on-box pg_dump instead. The object
-  # inventory matches `supabase db dump`, but formatting/ordering differ — run the
-  # repo's SQL formatter afterwards and review the diff (as the DB workflow already says).
-  log "dumping schema via pg_dump -> ${out}"
-  "${PGBIN}/pg_dump" "${DB_URL}" --schema-only --schema=public --quote-all-identifiers --no-owner --no-privileges > "${out}"
-  log "wrote ${out} — format it (prettier/oxfmt) and review the diff before committing"
+  ensure_pgdelta
+  local out="${1:-${REPO_ROOT}/supabase/schemas}"
+  log "exporting the schema tree via pg-delta -> ${out}"
+  pgdelta schema export --source "${DB_URL}" --out-dir "${out}" --profile supabase \
+    --format-options "${PGDELTA_FORMAT}"
+  log "wrote ${out} — review the diff before committing"
 }
 
 # postgres-meta is the same generator `supabase gen types` runs; the standalone npm
@@ -213,13 +250,22 @@ cmd_types() {
 
 cmd_psql()   { start_cluster; "${PGBIN}/psql" "${DB_URL}" "$@"; }
 cmd_status() {
-  if as_owner "${PGBIN}/pg_ctl" -D "${PGDATA}" status >/dev/null 2>&1; then
-    echo "Postgres: running   ${DB_URL}"
-  else
-    echo "Postgres: stopped"
-  fi
+  local data url
+  for pair in "${PGDATA}|${DB_URL}" "${SHADOW_PGDATA}|${SHADOW_URL}"; do
+    data="${pair%%|*}"; url="${pair#*|}"
+    if as_owner "${PGBIN}/pg_ctl" -D "${data}" status >/dev/null 2>&1; then
+      echo "Postgres: running   ${url}"
+    else
+      echo "Postgres: stopped   ${url}"
+    fi
+  done
 }
-cmd_stop()   { as_owner "${PGBIN}/pg_ctl" -D "${PGDATA}" -m fast stop >/dev/null 2>&1 && log "stopped" || log "not running"; }
+cmd_stop() {
+  local data
+  for data in "${PGDATA}" "${SHADOW_PGDATA}"; do
+    as_owner "${PGBIN}/pg_ctl" -D "${data}" -m fast stop >/dev/null 2>&1 && log "stopped ${data}" || log "${data} not running"
+  done
+}
 
 # --- dispatch ---------------------------------------------------------------
 cmd="${1:-}"; shift || true

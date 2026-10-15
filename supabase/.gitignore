@@ -7,5 +7,6 @@
 seeds.bak/
 seeds.bak2/
 
-# native-dev type generator (scripts/db-native.sh types)
+# native-dev tool installs (scripts/db-native.sh types, reset, dump)
 dev-native/.typegen/
+dev-native/.pgdelta/
