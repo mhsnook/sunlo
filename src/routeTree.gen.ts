@@ -85,6 +85,7 @@ const ComponentsLazyRouteImport = createFileRoute('/components')()
 const ThemesIndexLazyRouteImport = createFileRoute('/themes/')()
 const ChatsIndexLazyRouteImport = createFileRoute('/chats/')()
 const ThemesTypographyLazyRouteImport = createFileRoute('/themes/typography')()
+const ThemesChatLazyRouteImport = createFileRoute('/themes/chat')()
 const ChatsLangLazyRouteImport = createFileRoute('/chats/$lang')()
 const UserAdminLazyRouteImport = createFileRoute('/_user/admin')()
 const UserSearchIndexLazyRouteImport = createFileRoute('/_user/search/')()
@@ -174,6 +175,11 @@ const ThemesTypographyLazyRoute = ThemesTypographyLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/themes.typography.lazy').then((d) => d.Route),
 )
+const ThemesChatLazyRoute = ThemesChatLazyRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => ThemesLazyRoute,
+} as any).lazy(() => import('./routes/themes.chat.lazy').then((d) => d.Route))
 const ChatsLangLazyRoute = ChatsLangLazyRouteImport.update({
   id: '/$lang',
   path: '/$lang',
@@ -595,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof UserWelcomeRoute
   '/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/chat': typeof ThemesChatLazyRoute
   '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
   '/themes/': typeof ThemesIndexLazyRoute
@@ -669,6 +676,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof UserNotificationsRoute
   '/welcome': typeof UserWelcomeRoute
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/chat': typeof ThemesChatLazyRoute
   '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats': typeof ChatsIndexLazyRoute
   '/themes': typeof ThemesIndexLazyRoute
@@ -746,6 +754,7 @@ export interface FileRoutesById {
   '/_user/welcome': typeof UserWelcomeRoute
   '/_user/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/chat': typeof ThemesChatLazyRoute
   '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
   '/themes/': typeof ThemesIndexLazyRoute
@@ -830,6 +839,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/admin'
     | '/chats/$lang'
+    | '/themes/chat'
     | '/themes/typography'
     | '/chats/'
     | '/themes/'
@@ -904,6 +914,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/welcome'
     | '/chats/$lang'
+    | '/themes/chat'
     | '/themes/typography'
     | '/chats'
     | '/themes'
@@ -980,6 +991,7 @@ export interface FileRouteTypes {
     | '/_user/welcome'
     | '/_user/admin'
     | '/chats/$lang'
+    | '/themes/chat'
     | '/themes/typography'
     | '/chats/'
     | '/themes/'
@@ -1143,6 +1155,13 @@ declare module '@tanstack/react-router' {
       path: '/typography'
       fullPath: '/themes/typography'
       preLoaderRoute: typeof ThemesTypographyLazyRouteImport
+      parentRoute: typeof ThemesLazyRoute
+    }
+    '/themes/chat': {
+      id: '/themes/chat'
+      path: '/chat'
+      fullPath: '/themes/chat'
+      preLoaderRoute: typeof ThemesChatLazyRouteImport
       parentRoute: typeof ThemesLazyRoute
     }
     '/chats/$lang': {
@@ -1949,11 +1968,13 @@ const ChatsRouteChildren: ChatsRouteChildren = {
 const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
 
 interface ThemesLazyRouteChildren {
+  ThemesChatLazyRoute: typeof ThemesChatLazyRoute
   ThemesTypographyLazyRoute: typeof ThemesTypographyLazyRoute
   ThemesIndexLazyRoute: typeof ThemesIndexLazyRoute
 }
 
 const ThemesLazyRouteChildren: ThemesLazyRouteChildren = {
+  ThemesChatLazyRoute: ThemesChatLazyRoute,
   ThemesTypographyLazyRoute: ThemesTypographyLazyRoute,
   ThemesIndexLazyRoute: ThemesIndexLazyRoute,
 }
