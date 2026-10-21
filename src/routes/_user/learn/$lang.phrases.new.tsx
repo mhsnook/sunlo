@@ -37,6 +37,7 @@ import { useDeck, usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
 import { useAppForm } from '@/components/form'
+import { PhotoPhraseExtractor } from '@/components/phrases/photo-phrase-extractor'
 
 export interface SearchParams {
 	text?: string
@@ -221,6 +222,22 @@ function AddPhraseTab() {
 							}}
 							className="mt-2 space-y-4"
 						>
+							<form.Subscribe selector={(s) => s.values.translation_lang}>
+								{(translationLang) => (
+									<PhotoPhraseExtractor
+										lang={lang}
+										translationLang={translationLang}
+										onPick={(phrase) => {
+											form.setFieldValue('phrase_text', phrase.text)
+											form.setFieldValue(
+												'translation_text',
+												phrase.translation ?? ''
+											)
+										}}
+									/>
+								)}
+							</form.Subscribe>
+
 							<form.AppField name="phrase_text">
 								{(field) => (
 									<field.TextareaInput

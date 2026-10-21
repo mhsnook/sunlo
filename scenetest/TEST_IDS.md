@@ -140,6 +140,12 @@ natural wrapper element to label.
 | `add-phrase-page`               | data-testid | Add phrase route      | Container for /learn/$lang/phrases/new                                                                                      |
 | `add-phrase-form`               | data-testid | Add phrase route      | Form element (scope `phrase-text-input` / `translation-text-input` / `submit-button`)                                       |
 | `bulk-add-link`                 | data-testid | Add phrase page       | Link to bulk-add page                                                                                                       |
+| `photo-extract`                 | data-testid | Add phrase page       | Container for the "Add from a photo" control and its results                                                                |
+| `photo-extract-button`          | data-testid | Add phrase page       | Opens the photo picker (camera or library on phones)                                                                        |
+| `photo-extract-input`           | data-testid | Add phrase page       | Hidden file input; set files on it to skip the picker                                                                       |
+| `photo-extract-results`         | data-testid | Add phrase page       | List of phrases read from the photo                                                                                         |
+| `photo-extract-candidate`       | data-testid | Photo results         | One phrase read from the photo (carries `data-key={index}`); click fills the form                                           |
+| `photo-extract-close`           | data-testid | Photo results         | Closes the photo results                                                                                                    |
 | `add-translations-trigger`      | data-testid | Big phrase card       | Pencil icon that opens the manage-translations dialog                                                                       |
 | `add-translations-dialog`       | data-testid | Dialog                | Manage-translations dialog (scope `translation-text-input` / `submit-button`)                                               |
 | `add-tags-trigger`              | data-testid | Big phrase card       | Tags icon that opens the edit-tags dialog                                                                                   |
