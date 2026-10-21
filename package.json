@@ -107,5 +107,8 @@
 	"optionalDependencies": {
 		"supabase": "^2.76.14"
 	},
+	"engines": {
+		"node": "24.x"
+	},
 	"packageManager": "pnpm@10.25.0"
 }
