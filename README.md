@@ -165,15 +165,15 @@ new or stale rows, so it's cheap to re-run after partial syncs.
 See [`scripts/README.md`](./scripts/README.md) for the full flag list,
 running against a remote project, and the cost shape.
 
-## Reading phrases from photos
+## Photo extraction
 
-The new-phrase page has an "Add from a photo" button. On a phone it opens the camera or the photo library; on a desktop it opens a file picker. The browser shrinks the photo to 1600px on its long edge, then sends it to the `extract-phrase` edge function.
+`src/features/phrases/extract.ts` calls the `extract-phrase` edge function, which calls a vision model on Workers AI. The function has no database access and returns suggestions only.
 
-The edge function asks Gemma 4 (`@cf/google/gemma-4-26b-a4b-it` on Workers AI) to read the text in the image. For each phrase, the model returns the text in its original script, a Latin-script transliteration, and a translation into the form's translation language. The learner picks a phrase, the form fills in, and the learner checks it before saving. The edge function writes nothing to the database.
-
-- It uses the same `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` as search. Without them, the edge function answers 503 and the page shows the error.
-- `PHOTO_EXTRACT_MODEL` overrides the model, so a different Workers AI vision model can be tried without a code change.
-- `VITE_PHOTO_EXTRACT_USE_MOCK=true` (set by `pnpm dev:local` and `pnpm build:test`) returns canned results without calling the edge function.
+| Variable                                        | Set in                    | Purpose                                                                               |
+| ----------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | `supabase/functions/.env` | Shared with search. Without them, `extract-phrase` returns 503.                       |
+| `PHOTO_EXTRACT_MODEL`                           | `supabase/functions/.env` | Workers AI model id. Defaults to `@cf/google/gemma-4-26b-a4b-it`.                     |
+| `VITE_PHOTO_EXTRACT_USE_MOCK`                   | `.env`                    | `true` returns canned results without calling the function. `pnpm dev:local` sets it. |
 
 ## The React App
 

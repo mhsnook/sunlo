@@ -1,14 +1,11 @@
 // Edge Function: extract-phrase
 //
+// Reads the text in one image (a data URL) with a Workers AI vision model.
+// Returns phrases with a transliteration and a translation. It has no
+// database access.
+//
 // Signed-in users only: verify_jwt checks the signature, and the handler
 // also requires role = 'authenticated' so the public anon key gets a 403.
-//
-// Accepts one image (a sign, a menu, a screenshot) as a data URL and asks a
-// vision model on Cloudflare Workers AI to read the text in it. For each
-// phrase it finds, the model returns the text as written, a Latin-script
-// transliteration when the script is not Latin, and a translation into the
-// learner's translation language. The client shows the results as
-// suggestions; nothing is written to the database here.
 //
 // Set in Supabase dashboard (deploy) and supabase/functions/.env (local):
 //   CLOUDFLARE_ACCOUNT_ID

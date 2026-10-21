@@ -74,6 +74,8 @@ const createAddPhraseSchema = (phraseLang: string) =>
 			}),
 		translation_text: z.string().min(1, 'Please enter the translation'),
 		only_reverse: z.boolean(),
+		from_photo: z.boolean(),
+		confirmed_correct: z.boolean(),
 	})
 
 type AddPhraseFormValues = z.infer<ReturnType<typeof createAddPhraseSchema>>
@@ -139,6 +141,7 @@ function AddPhraseTab() {
 		const phraseId = crypto.randomUUID()
 		const translationId = crypto.randomUUID()
 		const cards = shouldCreateCard ? buildCardSet(variables.only_reverse) : []
+		const isDraft = variables.from_photo && !variables.confirmed_correct
 
 		const tx = createPhraseWithTranslation({
 			phraseId,
@@ -146,6 +149,7 @@ function AddPhraseTab() {
 			lang,
 			text: variables.phrase_text,
 			onlyReverse: variables.only_reverse,
+			draft: isDraft,
 			translationLang: variables.translation_lang,
 			translationText: variables.translation_text,
 			uid: userId,
@@ -167,22 +171,27 @@ function AddPhraseTab() {
 			translation_text: '',
 			translation_lang: variables.translation_lang || preferredTranslationLang,
 			only_reverse: false,
+			from_photo: false,
+			confirmed_correct: false,
 		})
 
+		const draftNote = isDraft
+			? ' It shows as a draft until a fluent speaker confirms it.'
+			: ''
 		if (didSetupDeck && shouldCreateCard) {
 			const deckAction = hasArchivedDeck
 				? `re-activated your ${languages[lang]} deck`
 				: `started learning ${languages[lang]}`
 			toastSuccess(
-				`Phrase added to the library! You've ${deckAction} and the phrase will appear in your next review.`
+				`Phrase added to the library! You've ${deckAction} and the phrase will appear in your next review.${draftNote}`
 			)
 		} else if (shouldCreateCard) {
 			toastSuccess(
-				'New phrase has been added to the public library and will appear in your next review'
+				`New phrase has been added to the public library and will appear in your next review.${draftNote}`
 			)
 		} else {
 			toastSuccess(
-				'Phrase has been added to the public library (not added to your deck)'
+				`Phrase has been added to the public library (not added to your deck).${draftNote}`
 			)
 		}
 	}
@@ -194,6 +203,8 @@ function AddPhraseTab() {
 			translation_text: '',
 			translation_lang: preferredTranslationLang,
 			only_reverse: false,
+			from_photo: false,
+			confirmed_correct: false,
 		},
 		validators: { onChange: schema },
 		onSubmit: async ({ value }) => {
@@ -229,6 +240,8 @@ function AddPhraseTab() {
 										translationLang={translationLang}
 										onPick={(phrase) => {
 											form.setFieldValue('phrase_text', phrase.text)
+											form.setFieldValue('from_photo', true)
+											form.setFieldValue('confirmed_correct', false)
 											form.setFieldValue(
 												'translation_text',
 												phrase.translation ?? ''
@@ -259,6 +272,44 @@ function AddPhraseTab() {
 							<form.AppField name="translation_lang">
 								{() => <TranslationLanguageField phraseLang={lang} />}
 							</form.AppField>
+
+							<form.Subscribe selector={(s) => s.values.from_photo}>
+								{(fromPhoto) =>
+									fromPhoto ? (
+										<Item variant="outline" data-testid="confirm-correct-item">
+											<ItemMedia>
+												<form.AppField name="confirmed_correct">
+													{(field) => (
+														<Checkbox
+															id="confirmed_correct"
+															data-testid="confirm-correct-checkbox"
+															checked={field.state.value}
+															className="mt-2 mb-3"
+															onCheckedChange={(checked) => {
+																field.handleChange(checked === true)
+																field.handleBlur()
+															}}
+														/>
+													)}
+												</form.AppField>
+											</ItemMedia>
+											<ItemContent>
+												<Label
+													htmlFor="confirmed_correct"
+													className="cursor-pointer text-sm font-normal"
+												>
+													I've checked the phrase and translation, and they're
+													correct
+												</Label>
+												<p className="text-muted-foreground text-xs">
+													If you leave this unchecked, the phrase shows as a
+													draft until a fluent speaker confirms it.
+												</p>
+											</ItemContent>
+										</Item>
+									) : null
+								}
+							</form.Subscribe>
 
 							<form.Subscribe selector={(s) => s.values.phrase_text}>
 								{(phraseText) => (

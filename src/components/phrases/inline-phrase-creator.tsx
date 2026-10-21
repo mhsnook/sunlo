@@ -140,6 +140,7 @@ function InlinePhraseForm({
 			lang,
 			text: values.phrase_text,
 			onlyReverse: values.only_reverse,
+			draft: false,
 			translationLang: values.translation_lang,
 			translationText: values.translation_text,
 			uid: userId,

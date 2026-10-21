@@ -2,10 +2,6 @@ import * as z from 'zod'
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 
-// Reads phrases out of a photo via the `extract-phrase` Edge Function
-// (Gemma 4 vision on Workers AI). The result is a list of suggestions for the
-// new-phrase form; nothing here writes to a collection.
-
 export const ExtractedPhraseSchema = z.object({
 	text: z.string(),
 	lang: z.string(),
@@ -21,8 +17,7 @@ const ExtractResponseSchema = z.object({
 
 const USE_MOCK = import.meta.env.VITE_PHOTO_EXTRACT_USE_MOCK === 'true'
 
-// Long edge of the image sent to the model. Gemma reads small sign text fine
-// at this size, and a phone photo shrinks from ~4 MB to ~300 KB.
+// Must stay under the edge function's MAX_IMAGE_CHARS once base64-encoded.
 const MAX_EDGE_PX = 1600
 const JPEG_QUALITY = 0.85
 

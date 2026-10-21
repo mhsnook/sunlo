@@ -146,6 +146,11 @@ natural wrapper element to label.
 | `photo-extract-results`         | data-testid | Add phrase page       | List of phrases read from the photo                                                                                         |
 | `photo-extract-candidate`       | data-testid | Photo results         | One phrase read from the photo (carries `data-key={index}`); click fills the form                                           |
 | `photo-extract-close`           | data-testid | Photo results         | Closes the photo results                                                                                                    |
+| `confirm-correct-item`          | data-testid | Add phrase page       | Shown after a photo result fills the form; wraps the confirm checkbox                                                       |
+| `confirm-correct-checkbox`      | data-testid | Add phrase page       | Unchecked saves the phrase as a draft                                                                                       |
+| `draft-badge`                   | data-testid | Phrase cards          | "Draft" badge on a phrase no person has confirmed                                                                           |
+| `draft-phrase-notice`           | data-testid | Big phrase card       | Draft explanation under the phrase text                                                                                     |
+| `confirm-draft-button`          | data-testid | Big phrase card       | Clears the draft; shown to admins and fluent speakers only                                                                  |
 | `add-translations-trigger`      | data-testid | Big phrase card       | Pencil icon that opens the manage-translations dialog                                                                       |
 | `add-translations-dialog`       | data-testid | Dialog                | Manage-translations dialog (scope `translation-text-input` / `submit-button`)                                               |
 | `add-tags-trigger`              | data-testid | Big phrase card       | Tags icon that opens the edit-tags dialog                                                                                   |
