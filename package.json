@@ -6,6 +6,10 @@
 	"scripts": {
 		"dev": "vite --host",
 		"dev:local": "VITE_CHAT_USE_MOCK=true vite --host",
+		"admin:dev": "pnpm --filter @sunlo/admin dev",
+		"admin:build": "pnpm --filter @sunlo/admin build",
+		"admin:check": "pnpm --filter @sunlo/admin check",
+		"admin:deploy": "pnpm --filter @sunlo/admin run cf-deploy",
 		"scan": "vite --host & pnpx react-scan@latest localhost:5173",
 		"build": "vite build",
 		"build:test": "VITE_CHAT_USE_MOCK=true SCENETEST_PANEL=0 vite build",
@@ -102,6 +106,9 @@
 	},
 	"optionalDependencies": {
 		"supabase": "^2.76.14"
+	},
+	"engines": {
+		"node": "24.x"
 	},
 	"packageManager": "pnpm@10.25.0"
 }

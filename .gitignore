@@ -34,3 +34,6 @@ keystore.properties
 
 # Scenetest
 /scenetest/.reports/
+
+# cloudflare
+.wrangler
