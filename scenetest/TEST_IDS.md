@@ -321,14 +321,15 @@ natural wrapper element to label.
 
 ## Chat
 
-| Selector                  | Attribute   | Component/Location | Description               |
-| ------------------------- | ----------- | ------------------ | ------------------------- |
-| `chats-page`              | data-testid | Chats route        | Chats page container      |
-| `friend-chat-list`        | data-testid | Chats page         | List of friend chats      |
-| `friend-chat-link`        | data-testid | Chat list          | Link to specific chat     |
-| `unread-badge`            | data-testid | Chat list item     | Unread message indicator  |
-| `chat-messages-container` | data-testid | Chat page          | Messages container        |
-| `chat-message-bubble`     | data-testid | Chat page          | Individual message bubble |
+| Selector                  | Attribute   | Component/Location | Description                                  |
+| ------------------------- | ----------- | ------------------ | -------------------------------------------- |
+| `chats-page`              | data-testid | Chats route        | Chats page container                         |
+| `friend-chat-list`        | data-testid | Chats page         | List of friend chats                         |
+| `friend-chat-link`        | data-testid | Chat list          | Link to specific chat                        |
+| `unread-badge`            | data-testid | Chat list item     | Unread message indicator                     |
+| `chat-messages-container` | data-testid | Chat page          | Messages container                           |
+| `chat-message-bubble`     | data-testid | Chat page          | Individual message bubble                    |
+| `chat-share-trigger`      | data-testid | Chat page          | Opens the phrase / playlist / request picker |
 
 ## Friends / Invite
 
@@ -591,3 +592,15 @@ Prototype-only feature in `src/features/chat/`. Public route, no auth.
 | `admin-not-authorized-warning` | Warning callout for non-admin users    |
 | `admin-archive-button`         | Archive phrase button on detail page   |
 | `admin-unarchive-button`       | Restore archived phrase button         |
+
+## Conversation primitives
+
+Shared by the friend chats and the phrasebook chat. `ComposeBar` takes
+`inputTestId` and `sendTestId` so a surface can keep its own names — the
+phrasebook chat still exposes `chat-input` and `chat-send-button`.
+
+| Selector                | Attribute   | Component/Location                   | Description                                  |
+| ----------------------- | ----------- | ------------------------------------ | -------------------------------------------- |
+| `compose-bar-input`     | data-testid | `components/ui/compose-bar.tsx`      | Auto-growing message textarea (default name) |
+| `compose-bar-send`      | data-testid | `components/ui/compose-bar.tsx`      | Send button (default name)                   |
+| `message-scroller-jump` | data-testid | `components/ui/message-scroller.tsx` | "Newest" button, shown when scrolled up      |
