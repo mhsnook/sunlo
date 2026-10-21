@@ -68,6 +68,7 @@ pnpm check              # typecheck
 pnpm lint               # oxlint then eslint
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
+pnpm admin:dev          # admin app (apps/admin) at http://localhost:5174
 
 pnpm run migrate        # create migration from local changes
 pnpm run types          # regenerate supabase TS types
@@ -120,6 +121,10 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 **Cross-domain hooks** (`src/hooks/`): `usePhrase()` (composite-phrase — full phrase split by known languages), `useCompositePids()` (recommended phrases + pid arrays), a search-hook family (`use-hybrid-search`, `use-local-search`, `use-semantic-search`, `use-trigram-search`, `use-merged-search` + `search-config.ts`), `useLinks()` (nav routes + badges), `useTitleBar()`, `useDebounce`, `useFontPreference()`, `useIntroSeen()`, `useIsMobile()`, `useRequireAuth()`.
 
 **Cross-cutting lib** (`src/lib/`): `supabase-client.ts`, `query-client.ts`, `use-auth.ts` + `auth-lifecycle.ts` (clears user collections on sign-out, preloads profile on sign-in), `collections/` (local-cache, safe-write), `dayjs.ts`, `utils.ts`, `languages.ts`, `flags.ts`, `ui-prefs.ts`.
+
+## Admin app (`apps/admin/`)
+
+The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare with `pnpm admin:deploy`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin-only data comes from security-definer RPCs that check `is_admin()` themselves. Details: `apps/admin/README.md`.
 
 ## Routing (`src/routes/`)
 

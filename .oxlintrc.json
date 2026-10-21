@@ -27,7 +27,12 @@
 	"ignorePatterns": ["dist/", "src-tauri/", "scripts/"],
 	"overrides": [
 		{
-			"files": ["src/**/*.{ts,tsx}", "vite.config.ts"],
+			"files": [
+				"src/**/*.{ts,tsx}",
+				"vite.config.ts",
+				"apps/*/src/**/*.{ts,tsx}",
+				"apps/*/vite.config.ts"
+			],
 			"rules": {
 				"react-in-jsx-scope": "off",
 				"no-console": "off",

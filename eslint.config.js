@@ -56,13 +56,34 @@ export default [
 		},
 	},
 	{
-		files: ['vite.config.ts'],
+		files: ['apps/admin/src/**/*.{ts,tsx}'],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: 'module',
+			parser: tseslint.parser,
+			parserOptions: { project: ['./apps/admin/tsconfig.json'] },
+			globals: { ...globals.browser },
+		},
+		plugins: {
+			'@typescript-eslint': tseslint.plugin,
+			'react-hooks': reactHooks,
+		},
+		rules: {
+			...js.configs.recommended.rules,
+			...tseslint.plugin.configs['recommended'].rules,
+			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
+			...reactHooks.configs.recommended.rules,
+			'@typescript-eslint/only-throw-error': ['error', { allow: ['Redirect'] }],
+		},
+	},
+	{
+		files: ['vite.config.ts', 'apps/admin/vite.config.ts'],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: 'module',
 			parser: tseslint.parser,
 			parserOptions: {
-				project: ['./tsconfig.node.json'],
+				project: ['./tsconfig.node.json', './apps/admin/tsconfig.json'],
 				// tsconfigRootDir: './',
 			},
 		},
