@@ -64,7 +64,7 @@ supabase db reset       # apply migrations + seeds
 # migrations/seeds against a native Postgres — see docs/database.md.
 
 pnpm dev                # dev server at http://127.0.0.1:5173
-pnpm check              # typecheck
+pnpm check              # typecheck with tsrs; `pnpm check:tsc` if tsrs has no binary for your OS
 pnpm lint               # oxlint then eslint
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
