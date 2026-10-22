@@ -1185,7 +1185,8 @@ create table if not exists "public"."phrase" (
 	"text_script" "text",
 	"only_reverse" boolean default false not null,
 	"archived" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" () not null
+	"updated_at" timestamp with time zone default "now" () not null,
+	"draft" boolean default false not null
 );
 
 alter table "public"."phrase" owner to "postgres";
@@ -1195,6 +1196,42 @@ comment on column "public"."phrase"."added_by" is 'User who added this card';
 comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
 comment on column "public"."phrase"."only_reverse" is 'When true, this phrase should only be reviewed in reverse direction (translation -> phrase). Useful for phrases like numbers where the target language is obvious but recalling it is the challenge.';
+
+comment on column "public"."phrase"."draft" is 'True until a person confirms the text and its first translation. Set when the content came from a machine (e.g. photo extraction) and the creator did not confirm it. Cleared by confirm_draft_phrase.';
+
+create or replace function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") returns "public"."phrase" language "plpgsql" security definer
+set
+	"search_path" to '' as $$
+declare
+	v_phrase public.phrase;
+begin
+	select * into v_phrase from public.phrase where id = p_phrase_id and archived = false;
+	if not found then
+		raise exception 'Phrase % not found', p_phrase_id using errcode = 'P0002';
+	end if;
+
+	if not (
+		public.is_admin()
+		or exists (
+			select 1
+			from public.user_profile profile,
+				jsonb_array_elements(profile.languages_known) as known
+			where profile.uid = auth.uid()
+				and known ->> 'lang' = v_phrase.lang
+				and known ->> 'level' = 'fluent'
+		)
+	) then
+		raise exception 'Only fluent speakers of this language can confirm a draft phrase'
+			using errcode = '42501';
+	end if;
+
+	update public.phrase set draft = false where id = p_phrase_id
+	returning * into v_phrase;
+	return v_phrase;
+end;
+$$;
+
+alter function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") owner to "postgres";
 
 create table if not exists "public"."phrase_playlist" (
 	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
@@ -1692,7 +1729,8 @@ select
 	"stats"."avg_difficulty",
 	"stats"."avg_stability",
 	coalesce("tags"."tags", '[]'::"jsonb") as "tags",
-	"phrase"."updated_at"
+	"phrase"."updated_at",
+	"phrase"."draft"
 from
 	(
 		(
@@ -3715,6 +3753,10 @@ grant all on function "public"."cosine_distance" ("public"."vector", "public"."v
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "authenticated";
 
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") to "authenticated";
+
+grant all on function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") to "service_role";
 
 grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "anon";
 

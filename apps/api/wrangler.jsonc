@@ -1,0 +1,21 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "sunlo-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"preview_urls": true,
+	"routes": [{ "pattern": "api.sunlo.app", "custom_domain": true }],
+	"ai": { "binding": "AI", "remote": true },
+	"ratelimits": [
+		{
+			"name": "EXTRACT_LIMITER",
+			"namespace_id": "1001",
+			"simple": { "limit": 10, "period": 60 },
+		},
+	],
+	"vars": {
+		"ALLOWED_ORIGINS": "https://sunlo.app,https://www.sunlo.app,http://localhost:5173,http://127.0.0.1:5173",
+		"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+	},
+	"secrets": { "required": ["SUPABASE_URL", "SUPABASE_ANON_KEY"] },
+}

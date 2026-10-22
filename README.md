@@ -165,6 +165,10 @@ new or stale rows, so it's cheap to re-run after partial syncs.
 See [`scripts/README.md`](./scripts/README.md) for the full flag list,
 running against a remote project, and the cost shape.
 
+## API worker
+
+`apps/api` is a Cloudflare Worker at `api.sunlo.app` that the web app calls with the user's Supabase access token. Setup, secrets and deploy steps are in [`apps/api/README.md`](apps/api/README.md).
+
 ## The React App
 
 - This app is a full SPA as an architectural choice so that we can use Tauri to compile it to

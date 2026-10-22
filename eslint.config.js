@@ -7,7 +7,13 @@ import oxlint from 'eslint-plugin-oxlint'
 
 export default [
 	{
-		ignores: ['dist/', 'src-tauri/', 'scripts/', 'src/types/supabase.ts'],
+		ignores: [
+			'dist/',
+			'src-tauri/',
+			'scripts/',
+			'src/types/supabase.ts',
+			'apps/api/worker-configuration.d.ts',
+		],
 	},
 	{
 		files: ['src/**/*.{ts,tsx}'],
@@ -74,6 +80,25 @@ export default [
 			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
 			...reactHooks.configs.recommended.rules,
 			'@typescript-eslint/only-throw-error': ['error', { allow: ['Redirect'] }],
+		},
+	},
+	{
+		files: ['apps/api/src/**/*.ts'],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: 'module',
+			parser: tseslint.parser,
+			parserOptions: { project: ['./apps/api/tsconfig.json'] },
+			globals: { ...globals.serviceworker },
+		},
+		plugins: { '@typescript-eslint': tseslint.plugin },
+		rules: {
+			...js.configs.recommended.rules,
+			...tseslint.plugin.configs['recommended'].rules,
+			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
+			// `Env` and other Workers globals come from worker-configuration.d.ts,
+			// which only TypeScript sees.
+			'no-undef': 'off',
 		},
 	},
 	{
