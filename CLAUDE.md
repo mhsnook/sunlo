@@ -125,7 +125,7 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 
 ## Admin app (`apps/admin/`)
 
-The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare with `pnpm admin:deploy`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin-only data comes from security-definer RPCs that check `is_admin()` themselves. Details: `apps/admin/README.md`.
+The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare by Workers Builds on every merge to `main`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin-only data comes from security-definer RPCs that check `is_admin()` themselves. Details: `apps/admin/README.md`.
 
 ## Cloudflare worker (`worker/`)
 

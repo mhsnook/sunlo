@@ -8,8 +8,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "tsrs --noEmit",
-		"check:tsc": "tsc --noEmit",
-		"cf-deploy": "vite build && wrangler deploy"
+		"check:tsc": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.106.0",

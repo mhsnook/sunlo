@@ -51,10 +51,11 @@ The point of the gate is that **migrations only ever reach `main` through a `nex
 
 The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `worker/`). Each version holds the Vite build and the worker code, so an app and an API from different commits never run together. Production and previews deploy through separate systems, so a broken preview setup cannot block a production deploy:
 
-| Event        | Deployed by                                                   | Supabase project                  | Result                                                                                                   |
-| ------------ | ------------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Push to main | Workers Builds (Cloudflare's Git integration)                 | Production, from `wrangler.jsonc` | `wrangler deploy`: production serves the new version.                                                    |
-| Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh` | That PR's Supabase preview branch | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. Production never serves it. |
+| Event        | Deployed by                                                       | Supabase project                     | Result                                                                                                   |
+| ------------ | ----------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Push to main | Workers Builds (Cloudflare's Git integration)                     | Production, from `wrangler.jsonc`    | `wrangler deploy`: production serves the new version.                                                    |
+| Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh`     | That PR's Supabase preview branch    | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. Production never serves it. |
+| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables | `wrangler deploy` of the admin app at `admin.sunlo.app`. It has no previews.                             |
 
 The production Supabase URL and publishable key are in `wrangler.jsonc` `vars` (for the worker) and in the Workers Builds build variables (for Vite). Both are public. If one changes, change both.
 
@@ -62,17 +63,18 @@ For a PR, the workflow waits for the `Supabase Preview` check, then reads the br
 
 ### Setup
 
-**Workers Builds (production).** In the Cloudflare dashboard, connect the repo to the `sunlo` Worker:
+**Workers Builds (production).** In the Cloudflare dashboard, connect the repo to each Worker:
 
-| Setting                                                                  | Value                                                                       |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| Production branch                                                        | `main`                                                                      |
-| Build command                                                            | `pnpm build`                                                                |
-| Deploy command                                                           | `npx wrangler deploy` (the default)                                         |
-| Build variables                                                          | `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` |
-| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                    |
+| Setting                                                                  | `sunlo`                                                                  | `sunlo-admin`                       |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------- |
+| Production branch                                                        | `main`                                                                   | `main`                              |
+| Root directory                                                           | `/`                                                                      | `apps/admin`                        |
+| Build command                                                            | `pnpm build`                                                             | `pnpm build`                        |
+| Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default) |
+| Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                 |
+| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | Off. The admin app has no previews. |
 
-`.node-version` pins Node 24 for the build.
+Workers Builds defaults to Node 24, which matches `engines`.
 
 **GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
 
@@ -87,7 +89,7 @@ The first production deploy must happen before the first preview upload, because
 
 Add the preview hostnames to Supabase Auth's redirect allow-list (`additional_redirect_urls` in `supabase/config.toml`) as `https://*-sunlo.<account-subdomain>.workers.dev/**`. Use the account's own subdomain, not a wildcard: anyone can create a `*.workers.dev` host.
 
-Do not deploy production by hand. A local `pnpm build` reads the root `.env`, which points at local Supabase.
+Do not deploy either Worker to production by hand. A local build reads the root `.env`, which points at local Supabase.
 
 ### Moving sunlo.app from Vercel
 

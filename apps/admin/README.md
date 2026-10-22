@@ -20,8 +20,9 @@ Run these from the repo root:
 pnpm admin:dev      # http://localhost:5174, reads the root .env
 pnpm admin:check    # typecheck
 pnpm admin:build    # production build into apps/admin/dist
-pnpm admin:deploy   # build, then wrangler deploy to Cloudflare
 ```
+
+There is no deploy command: Cloudflare deploys on a merge to `main`.
 
 ## How it shares code
 
@@ -31,6 +32,8 @@ pnpm admin:deploy   # build, then wrangler deploy to Cloudflare
 
 ## Deploying
 
-`wrangler.jsonc` serves `dist/` as static assets with an SPA fallback, on the custom domain `admin.sunlo.app`. The custom domain needs the `sunlo.app` zone on the same Cloudflare account. Remove the `routes` entry to deploy to a `*.workers.dev` URL instead.
+Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admin` Worker on every push to `main`, and on no other branch. The dashboard settings are in `docs/deployment.md`, under "Cloudflare" › "Setup".
 
-The build reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at build time. If you build in Cloudflare's CI, set both as build variables there. If either is missing, the build still succeeds but drops the Supabase SDK, and the app cannot sign in. Check with `grep -l GoTrueClient dist/assets/*.js`.
+`wrangler.jsonc` serves `dist/` as static assets with an SPA fallback, on the custom domain `admin.sunlo.app`. The custom domain needs the `sunlo.app` zone on the same Cloudflare account.
+
+The build reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at build time, from the Workers Builds build variables. If either is missing, the build still succeeds but drops the Supabase SDK, and the app cannot sign in. Do not deploy by hand: a local build reads the root `.env`, which points at local Supabase.
