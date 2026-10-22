@@ -1,58 +1,26 @@
-name: Cloudflare
+name: Cloudflare preview
 
-# Builds the web app and uploads it with worker/ as one Worker version
-# (scripts/cf-deploy.sh), so the app and /api never drift apart.
+# Uploads a preview version of the `sunlo` Worker for each PR, against
+# that PR's Supabase preview branch (scripts/cf-preview.sh). A PR with no
+# Supabase preview branch gets no Cloudflare preview.
 #
-# - Push to main: production deploy, against the production Supabase project.
-# - Pull request: a preview version against that PR's Supabase preview
-#   branch. A PR with no Supabase preview branch gets no Cloudflare preview.
-#
+# Production is not deployed here: Cloudflare Workers Builds deploys main.
 # Every job is off until the repo variable CLOUDFLARE_ACCOUNT_ID is set.
 # Setup steps: docs/deployment.md, "Cloudflare".
 
 on:
-  push:
-    branches: [main]
   pull_request:
     types: [opened, reopened, synchronize]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
-  production:
-    if: github.event_name == 'push' && vars.CLOUDFLARE_ACCOUNT_ID != ''
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build and deploy
-        run: ./scripts/cf-deploy.sh production
-
   # Supabase creates the preview branch and runs its migrations after the
   # push, so wait for that before reading the branch's credentials.
   wait-for-supabase:
     if: >-
-      github.event_name == 'pull_request' &&
       vars.CLOUDFLARE_ACCOUNT_ID != '' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
@@ -102,17 +70,19 @@ jobs:
           version: latest
 
       # `-o env` prints SUPABASE_URL plus one SUPABASE_<NAME>_KEY per API
-      # key, including the service role key, so keep only the two public
-      # values and delete the file.
+      # key, including secret keys, so keep only the public values and
+      # delete the file. Production uses a publishable key, so prefer the
+      # branch's publishable key over its legacy anon key.
       - name: Read the Supabase preview branch's credentials
         run: |
           creds="$RUNNER_TEMP/branch.env"
           supabase --experimental branches get "$HEAD_REF" -o env > "$creds"
           read_var() { grep "^$1=" "$creds" | head -1 | cut -d= -f2- | tr -d '"'; }
           url=$(read_var SUPABASE_URL)
-          key=$(read_var SUPABASE_ANON_KEY)
+          key=$(read_var SUPABASE_PUBLISHABLE_KEY)
+          [ -n "$key" ] || key=$(read_var SUPABASE_ANON_KEY)
           if [ -z "$url" ] || [ -z "$key" ]; then
-            echo "::error::No SUPABASE_URL or SUPABASE_ANON_KEY for branch $HEAD_REF. Names returned: $(cut -d= -f1 "$creds" | tr '\n' ' ')"
+            echo "::error::No SUPABASE_URL or public key for branch $HEAD_REF. Names returned: $(cut -d= -f1 "$creds" | tr '\n' ' ')"
             rm -f "$creds"
             exit 1
           fi
@@ -126,7 +96,7 @@ jobs:
       - name: Build and upload the preview
         id: upload
         run: |
-          ./scripts/cf-deploy.sh preview "$HEAD_REF" | tee "$RUNNER_TEMP/upload.log"
+          ./scripts/cf-preview.sh "$HEAD_REF" | tee "$RUNNER_TEMP/upload.log"
           url=$(grep -oE 'https://[a-z0-9-]+-sunlo\.[a-z0-9-]+\.workers\.dev' "$RUNNER_TEMP/upload.log" | tail -1)
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview: $url (Supabase: $VITE_SUPABASE_URL)" >> "$GITHUB_STEP_SUMMARY"

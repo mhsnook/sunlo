@@ -49,27 +49,37 @@ The point of the gate is that **migrations only ever reach `main` through a `nex
 
 ## Cloudflare
 
-The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `worker/`). Each upload holds the Vite build and the worker code, so an app and an API from different commits never run together. `.github/workflows/cloudflare.yaml` runs `scripts/cf-deploy.sh`:
+The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `worker/`). Each version holds the Vite build and the worker code, so an app and an API from different commits never run together. Production and previews deploy through separate systems, so a broken preview setup cannot block a production deploy:
 
-| Event        | Supabase project                  | Result                                                                       |
-| ------------ | --------------------------------- | ---------------------------------------------------------------------------- |
-| Push to main | Production (repo variables)       | `wrangler deploy`: production serves the new version.                        |
-| Pull request | That PR's Supabase preview branch | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. |
+| Event        | Deployed by                                                   | Supabase project                  | Result                                                                                                   |
+| ------------ | ------------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Push to main | Workers Builds (Cloudflare's Git integration)                 | Production, from `wrangler.jsonc` | `wrangler deploy`: production serves the new version.                                                    |
+| Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh` | That PR's Supabase preview branch | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. Production never serves it. |
 
-For a PR, the workflow waits for the `Supabase Preview` check, then reads the branch's URL and anon key with `supabase --experimental branches get <branch> -o env`. A PR with no Supabase preview branch gets no Cloudflare preview. The wait costs up to 15 minutes of runner time before it gives up.
+The production Supabase URL and publishable key are in `wrangler.jsonc` `vars` (for the worker) and in the Workers Builds build variables (for Vite). Both are public. If one changes, change both.
 
-`scripts/cf-deploy.sh` passes the same Supabase values to the Vite build and to the worker (`--var`), so the two always use one project. It refuses a local Supabase URL.
+For a PR, the workflow waits for the `Supabase Preview` check, then reads the branch's URL and publishable key with `supabase --experimental branches get <branch> -o env`. `scripts/cf-preview.sh` passes them to the Vite build and to the worker (`--var` replaces the production values in that version). It refuses a local or production Supabase URL. A PR with no Supabase preview branch gets no Cloudflare preview; the wait costs up to 15 minutes of runner time before it gives up.
 
 ### Setup
 
-Every job is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
+**Workers Builds (production).** In the Cloudflare dashboard, connect the repo to the `sunlo` Worker:
+
+| Setting                                                                  | Value                                                                       |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Production branch                                                        | `main`                                                                      |
+| Build command                                                            | `pnpm build`                                                                |
+| Deploy command                                                           | `npx wrangler deploy` (the default)                                         |
+| Build variables                                                          | `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` |
+| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                    |
+
+`.node-version` pins Node 24 for the build.
+
+**GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
 
 | Name                    | Kind     | Value                                                                |
 | ----------------------- | -------- | -------------------------------------------------------------------- |
 | `CLOUDFLARE_ACCOUNT_ID` | variable | The Cloudflare account that holds the `sunlo.app` zone.              |
 | `CLOUDFLARE_API_TOKEN`  | secret   | A token with the "Edit Cloudflare Workers" template on that account. |
-| `SUPABASE_URL`          | variable | Production project URL.                                              |
-| `SUPABASE_ANON_KEY`     | variable | Production anon key (public).                                        |
 | `SUPABASE_PROJECT_ID`   | variable | Production project ref; the CLI looks up preview branches under it.  |
 | `SUPABASE_ACCESS_TOKEN` | secret   | A Supabase personal access token.                                    |
 
@@ -77,12 +87,14 @@ The first production deploy must happen before the first preview upload, because
 
 Add the preview hostnames to Supabase Auth's redirect allow-list (`additional_redirect_urls` in `supabase/config.toml`) as `https://*-sunlo.<account-subdomain>.workers.dev/**`. Use the account's own subdomain, not a wildcard: anyone can create a `*.workers.dev` host.
 
+Do not deploy production by hand. A local `pnpm build` reads the root `.env`, which points at local Supabase.
+
 ### Moving sunlo.app from Vercel
 
 Until the move, Vercel still serves `sunlo.app` and `middleware.ts` gives it the same Open Graph previews. To move:
 
 1. Check the Worker at `sunlo.<account-subdomain>.workers.dev`.
-2. Add `"routes": [{ "pattern": "sunlo.app", "custom_domain": true }]` to `wrangler.jsonc` and deploy.
+2. Add `"routes": [{ "pattern": "sunlo.app", "custom_domain": true }]` to `wrangler.jsonc` and merge it to main.
 3. Disconnect the Vercel project, then delete `vercel.json` and `middleware.ts`.
 
 ## Build Environment Footgun

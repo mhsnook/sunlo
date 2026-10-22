@@ -129,7 +129,7 @@ The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace p
 
 ## Cloudflare worker (`worker/`)
 
-One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs `worker/` for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. `scripts/cf-deploy.sh` builds and uploads both; CI runs it from `.github/workflows/cloudflare.yaml`. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
+One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs `worker/` for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR against its Supabase preview branch. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
 
 ## Routing (`src/routes/`)
 

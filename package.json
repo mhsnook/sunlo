@@ -11,7 +11,7 @@
 		"admin:check": "pnpm --filter @sunlo/admin check",
 		"admin:deploy": "pnpm --filter @sunlo/admin run cf-deploy",
 		"worker:dev": "mkdir -p dist && CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler dev",
-		"worker:deploy": "./scripts/cf-deploy.sh",
+		"worker:preview": "./scripts/cf-preview.sh",
 		"scan": "vite --host & pnpx react-scan@latest localhost:5173",
 		"build": "vite build",
 		"build:test": "VITE_CHAT_USE_MOCK=true VITE_PHOTO_EXTRACT_USE_MOCK=true SCENETEST_PANEL=0 vite build",

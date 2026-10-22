@@ -23,9 +23,12 @@
 			"simple": { "limit": 10, "period": 60 },
 		},
 	],
-	// SUPABASE_URL and SUPABASE_ANON_KEY are not here: scripts/cf-deploy.sh
-	// passes them with --var, from the values the Vite build used.
+	// Production values, all public. Workers Builds deploys these on a push
+	// to main; its VITE_SUPABASE_* build variables must match them.
+	// scripts/cf-preview.sh overrides the Supabase pair with --var.
 	"vars": {
 		"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
+		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
 	},
 }
