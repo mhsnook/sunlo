@@ -1,0 +1,156 @@
+name: Cloudflare
+
+# Builds the web app and uploads it with worker/ as one Worker version
+# (scripts/cf-deploy.sh), so the app and /api never drift apart.
+#
+# - Push to main: production deploy, against the production Supabase project.
+# - Pull request: a preview version against that PR's Supabase preview
+#   branch. A PR with no Supabase preview branch gets no Cloudflare preview.
+#
+# Every job is off until the repo variable CLOUDFLARE_ACCOUNT_ID is set.
+# Setup steps: docs/deployment.md, "Cloudflare".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  production:
+    if: github.event_name == 'push' && vars.CLOUDFLARE_ACCOUNT_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and deploy
+        run: ./scripts/cf-deploy.sh production
+
+  # Supabase creates the preview branch and runs its migrations after the
+  # push, so wait for that before reading the branch's credentials.
+  wait-for-supabase:
+    if: >-
+      github.event_name == 'pull_request' &&
+      vars.CLOUDFLARE_ACCOUNT_ID != '' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      checks: read
+    outputs:
+      conclusion: ${{ steps.check.outputs.conclusion }}
+    steps:
+      - uses: fountainhead/action-wait-for-check@v1.2.0
+        id: check
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Supabase Preview
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 900
+          intervalSeconds: 20
+
+  preview:
+    needs: wait-for-supabase
+    if: needs.wait-for-supabase.outputs.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+      HEAD_REF: ${{ github.head_ref }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # `-o env` prints SUPABASE_URL plus one SUPABASE_<NAME>_KEY per API
+      # key, including the service role key, so keep only the two public
+      # values and delete the file.
+      - name: Read the Supabase preview branch's credentials
+        run: |
+          creds="$RUNNER_TEMP/branch.env"
+          supabase --experimental branches get "$HEAD_REF" -o env > "$creds"
+          read_var() { grep "^$1=" "$creds" | head -1 | cut -d= -f2- | tr -d '"'; }
+          url=$(read_var SUPABASE_URL)
+          key=$(read_var SUPABASE_ANON_KEY)
+          if [ -z "$url" ] || [ -z "$key" ]; then
+            echo "::error::No SUPABASE_URL or SUPABASE_ANON_KEY for branch $HEAD_REF. Names returned: $(cut -d= -f1 "$creds" | tr '\n' ' ')"
+            rm -f "$creds"
+            exit 1
+          fi
+          rm -f "$creds"
+          echo "VITE_SUPABASE_URL=$url" >> "$GITHUB_ENV"
+          echo "VITE_SUPABASE_ANON_KEY=$key" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and upload the preview
+        id: upload
+        run: |
+          ./scripts/cf-deploy.sh preview "$HEAD_REF" | tee "$RUNNER_TEMP/upload.log"
+          url=$(grep -oE 'https://[a-z0-9-]+-sunlo\.[a-z0-9-]+\.workers\.dev' "$RUNNER_TEMP/upload.log" | tail -1)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview: $url (Supabase: $VITE_SUPABASE_URL)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment the preview URL on the PR
+        if: steps.upload.outputs.url != ''
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.upload.outputs.url }}
+        with:
+          script: |
+            const marker = '### Cloudflare preview';
+            const body = [
+              marker,
+              '',
+              `${process.env.PREVIEW_URL} — app and \`/api\` from ${context.payload.pull_request.head.sha.slice(0, 7)}, on this PR's Supabase preview branch.`,
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+            }

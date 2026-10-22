@@ -47,6 +47,44 @@ The point of the gate is that **migrations only ever reach `main` through a `nex
 - **Changelog has two modes**: a running "Recent changes" section for fast-track items, and named/versioned release entries (`v0.28`) for migration-track batches.
 - **Ship UI, architect the database.** UI changes should flow fast; schema changes deserve ceremony.
 
+## Cloudflare
+
+The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `worker/`). Each upload holds the Vite build and the worker code, so an app and an API from different commits never run together. `.github/workflows/cloudflare.yaml` runs `scripts/cf-deploy.sh`:
+
+| Event        | Supabase project                  | Result                                                                       |
+| ------------ | --------------------------------- | ---------------------------------------------------------------------------- |
+| Push to main | Production (repo variables)       | `wrangler deploy`: production serves the new version.                        |
+| Pull request | That PR's Supabase preview branch | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. |
+
+For a PR, the workflow waits for the `Supabase Preview` check, then reads the branch's URL and anon key with `supabase --experimental branches get <branch> -o env`. A PR with no Supabase preview branch gets no Cloudflare preview. The wait costs up to 15 minutes of runner time before it gives up.
+
+`scripts/cf-deploy.sh` passes the same Supabase values to the Vite build and to the worker (`--var`), so the two always use one project. It refuses a local Supabase URL.
+
+### Setup
+
+Every job is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
+
+| Name                    | Kind     | Value                                                                |
+| ----------------------- | -------- | -------------------------------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID` | variable | The Cloudflare account that holds the `sunlo.app` zone.              |
+| `CLOUDFLARE_API_TOKEN`  | secret   | A token with the "Edit Cloudflare Workers" template on that account. |
+| `SUPABASE_URL`          | variable | Production project URL.                                              |
+| `SUPABASE_ANON_KEY`     | variable | Production anon key (public).                                        |
+| `SUPABASE_PROJECT_ID`   | variable | Production project ref; the CLI looks up preview branches under it.  |
+| `SUPABASE_ACCESS_TOKEN` | secret   | A Supabase personal access token.                                    |
+
+The first production deploy must happen before the first preview upload, because `wrangler versions upload` adds a version to an existing Worker.
+
+Add the preview hostnames to Supabase Auth's redirect allow-list (`additional_redirect_urls` in `supabase/config.toml`) as `https://*-sunlo.<account-subdomain>.workers.dev/**`. Use the account's own subdomain, not a wildcard: anyone can create a `*.workers.dev` host.
+
+### Moving sunlo.app from Vercel
+
+Until the move, Vercel still serves `sunlo.app` and `middleware.ts` gives it the same Open Graph previews. To move:
+
+1. Check the Worker at `sunlo.<account-subdomain>.workers.dev`.
+2. Add `"routes": [{ "pattern": "sunlo.app", "custom_domain": true }]` to `wrangler.jsonc` and deploy.
+3. Disconnect the Vercel project, then delete `vercel.json` and `middleware.ts`.
+
 ## Build Environment Footgun
 
 **`.env` must be populated before any production build.** `src/lib/supabase-client.ts` throws when `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are unset. A `vite build` with those vars missing does **not** error — instead the guard constant-folds to `if (true) throw`, the `createClient()` call below it becomes dead code, and the bundler silently tree-shakes out the **entire `@supabase/*` SDK (~640 KB)**. The build "succeeds" but ships without Supabase, and any bundle-size measurement is off by roughly a third. Always build with `.env` populated — dummy-but-truthy `VITE_*` values are enough, the build never connects — and sanity-check that large expected dependencies actually appear in `dist/` (e.g. `grep -l GoTrueClient dist/assets/*.js`). The same applies to any tooling that builds the app, including bundle analyzers.

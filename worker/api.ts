@@ -1,42 +1,15 @@
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { ExtractRequestSchema, extractPhrases } from './extract-phrase'
+import { supabaseFor } from './supabase'
 
 type AppEnv = { Bindings: Env; Variables: { uid: string } }
 
-let supabase: SupabaseClient | undefined
-// One client per isolate, so getClaims() reuses its cached JWKS.
-function supabaseFor(env: Env) {
-	supabase ??= createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-		auth: {
-			persistSession: false,
-			autoRefreshToken: false,
-			detectSessionInUrl: false,
-		},
-	})
-	return supabase
-}
-
-const app = new Hono<AppEnv>()
-
-app.use(
-	'*',
-	cors({
-		origin: (origin, c) =>
-			(c.env as Env).ALLOWED_ORIGINS.split(',').includes(origin)
-				? origin
-				: null,
-		allowMethods: ['POST', 'OPTIONS'],
-		allowHeaders: ['authorization', 'content-type'],
-		maxAge: 86400,
-	})
-)
+// The web app calls these routes from its own origin, so they need no CORS.
+const app = new Hono<AppEnv>().basePath('/api')
 
 // Every route needs a signed-in Sunlo user. The anon key is a valid JWT
 // too, so check the role claim, not only the signature.
 app.use('*', async (c, next) => {
-	if (c.req.method === 'OPTIONS') return next()
 	const token = c.req.header('authorization')?.replace(/^Bearer\s+/i, '')
 	if (!token) return c.json({ error: 'Sign in to use this' }, 401)
 	// getClaims() throws, rather than returning `error`, on some malformed

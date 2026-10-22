@@ -6,6 +6,8 @@ src/supabase/.temp
 src/*.gen.ts
 apps/*/src/*.gen.ts
 apps/*/.wrangler
+.wrangler
+worker/worker-configuration.d.ts
 out
 src-tauri/target
 src-tauri/gen

@@ -5,7 +5,7 @@ vi.mock('@supabase/supabase-js', () => ({
 	createClient: () => ({ auth: { getClaims } }),
 }))
 
-const { default: app } = await import('./index')
+const { default: app } = await import('./api')
 
 const IMAGE = 'data:image/jpeg;base64,AAAA'
 const BODY = {
@@ -26,7 +26,6 @@ function makeEnv(overrides: { limitOk?: boolean; content?: unknown } = {}) {
 		choices: [{ message: { content: overrides.content ?? '{"phrases":[]}' } }],
 	})
 	const env = {
-		ALLOWED_ORIGINS: 'https://sunlo.app,http://localhost:5173',
 		PHOTO_EXTRACT_MODEL: '@cf/google/gemma-4-26b-a4b-it',
 		SUPABASE_URL: 'http://supabase.test',
 		SUPABASE_ANON_KEY: 'anon',
@@ -40,13 +39,12 @@ function makeEnv(overrides: { limitOk?: boolean; content?: unknown } = {}) {
 
 function post(env: Env, body: unknown = BODY, token = 'user-token') {
 	return app.request(
-		'/extract-phrase',
+		'/api/extract-phrase',
 		{
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
 				authorization: `Bearer ${token}`,
-				origin: 'https://sunlo.app',
 			},
 			body: JSON.stringify(body),
 		},
@@ -62,49 +60,11 @@ beforeEach(() => {
 	})
 })
 
-describe('CORS', () => {
-	it('answers a preflight from an allowed origin without auth', async () => {
-		const { env } = makeEnv()
-		const res = await app.request(
-			'/extract-phrase',
-			{
-				method: 'OPTIONS',
-				headers: {
-					origin: 'http://localhost:5173',
-					'access-control-request-method': 'POST',
-				},
-			},
-			env
-		)
-		expect(res.status).toBe(204)
-		expect(res.headers.get('access-control-allow-origin')).toBe(
-			'http://localhost:5173'
-		)
-		expect(getClaims).not.toHaveBeenCalled()
-	})
-
-	it('does not echo an unknown origin', async () => {
-		const { env } = makeEnv()
-		const res = await app.request(
-			'/extract-phrase',
-			{
-				method: 'OPTIONS',
-				headers: {
-					origin: 'https://evil.example',
-					'access-control-request-method': 'POST',
-				},
-			},
-			env
-		)
-		expect(res.headers.get('access-control-allow-origin')).toBeNull()
-	})
-})
-
 describe('auth', () => {
 	it('rejects a request with no token', async () => {
 		const { env } = makeEnv()
 		const res = await app.request(
-			'/extract-phrase',
+			'/api/extract-phrase',
 			{ method: 'POST', body: JSON.stringify(BODY) },
 			env
 		)

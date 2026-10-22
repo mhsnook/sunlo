@@ -16,9 +16,9 @@ const ExtractResponseSchema = z.object({
 })
 
 const USE_MOCK = import.meta.env.VITE_PHOTO_EXTRACT_USE_MOCK === 'true'
-const API_URL = import.meta.env.VITE_API_URL as string | undefined
 
-// Must stay under the API worker's MAX_IMAGE_CHARS once base64-encoded.
+// Must stay under MAX_IMAGE_CHARS in worker/extract-phrase.ts once
+// base64-encoded.
 const MAX_EDGE_PX = 1600
 const JPEG_QUALITY = 0.85
 
@@ -51,9 +51,8 @@ export async function extractPhrasesFromImage({
 }): Promise<Array<ExtractedPhraseType>> {
 	if (USE_MOCK) return mockExtract(lang, translationLang)
 
-	if (!API_URL) throw new Error('Photo reading is not set up (VITE_API_URL)')
 	const { data } = await supabase.auth.getSession()
-	const res = await fetch(`${API_URL}/extract-phrase`, {
+	const res = await fetch('/api/extract-phrase', {
 		method: 'POST',
 		headers: {
 			'content-type': 'application/json',
