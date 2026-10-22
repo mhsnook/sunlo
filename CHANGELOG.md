@@ -1,5 +1,29 @@
 # Change Log
 
+## v0.35 - Admin App; Phrases from a Photo; One Cloudflare Worker
+
+_22 October, 2026_
+
+### Improvements
+
+- Admin dashboard at `admin.sunlo.app` #796: active and new users, plus deck and library activity, over 7, 14 or 30 days.
+- Add phrases from a photo #797. A vision model suggests the phrases, and a phrase the learner doesn't confirm saves as a draft until a fluent speaker confirms it.
+
+### Refactors
+
+- #799 serves the app and `/api` from one Cloudflare Worker, so a preview never pairs an app and an API from different commits. Each PR gets a preview on its own Supabase preview branch, and `sunlo.app` stays on Vercel until the move in `docs/deployment.md`.
+- Typecheck with tsrs #798
+
+### Also shipped to `main` since v0.34
+
+- Extract conversation primitives into reusable components #792
+- Rewrite the release skill against how we actually cut a release
+
+### Migrations
+
+- `20261021120000_admin_activity_stats.sql` — adds the admin-only functions behind the dashboard: daily activity counts, and the most active and newest users
+- `20261022120000_phrase_draft.sql` — lets a phrase be a draft, and lets admins and fluent speakers confirm one
+
 ## v0.34 - Soft Delete Sweep Finished; Realtime Thread Channels
 
 _3 September, 2026_
