@@ -3,6 +3,7 @@
 	"name": "sunlo-api",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-10-01",
+	"preview_urls": true,
 	"routes": [{ "pattern": "api.sunlo.app", "custom_domain": true }],
 	"ai": { "binding": "AI", "remote": true },
 	"ratelimits": [
