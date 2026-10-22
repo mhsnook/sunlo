@@ -12,7 +12,7 @@ export default [
 			'src-tauri/',
 			'scripts/',
 			'src/types/supabase.ts',
-			'apps/api/worker-configuration.d.ts',
+			'worker/worker-configuration.d.ts',
 		],
 	},
 	{
@@ -83,12 +83,12 @@ export default [
 		},
 	},
 	{
-		files: ['apps/api/src/**/*.ts'],
+		files: ['worker/**/*.ts'],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: 'module',
 			parser: tseslint.parser,
-			parserOptions: { project: ['./apps/api/tsconfig.json'] },
+			parserOptions: { project: ['./tsconfig.worker.json'] },
 			globals: { ...globals.serviceworker },
 		},
 		plugins: { '@typescript-eslint': tseslint.plugin },

@@ -7,8 +7,8 @@
 		"dev": "vite --host",
 		"build": "vite build",
 		"preview": "vite preview",
-		"check": "tsc --noEmit",
-		"cf-deploy": "vite build && wrangler deploy"
+		"check": "tsrs --noEmit",
+		"check:tsc": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.106.0",
@@ -27,6 +27,7 @@
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.2",
 		"tailwindcss": "^4.3.0",
+		"tsrs": "0.18.0-ts7.1.0-dev.20260929",
 		"typescript": "^6.0.3",
 		"vite": "^8.0.13",
 		"wrangler": "^4"

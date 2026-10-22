@@ -69,7 +69,7 @@ pnpm lint               # oxlint then eslint
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
 pnpm admin:dev          # admin app (apps/admin) at http://localhost:5174
-pnpm api:dev            # API worker (apps/api) at http://localhost:8787
+pnpm worker:dev         # Cloudflare worker (worker/) at http://localhost:8787; Vite proxies /api to it
 
 pnpm run migrate        # create migration from local changes
 pnpm run types          # regenerate supabase TS types
@@ -125,11 +125,11 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 
 ## Admin app (`apps/admin/`)
 
-The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare with `pnpm admin:deploy`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin-only data comes from security-definer RPCs that check `is_admin()` themselves. Details: `apps/admin/README.md`.
+The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare by Workers Builds on every merge to `main`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin-only data comes from security-definer RPCs that check `is_admin()` themselves. Details: `apps/admin/README.md`.
 
-## API worker (`apps/api/`)
+## Cloudflare worker (`worker/`)
 
-A Cloudflare Worker at `api.sunlo.app` for endpoints that call Cloudflare services through bindings (Workers AI today). It is a Hono app, deployed with `pnpm api:deploy`. Every route requires a signed-in user's Supabase access token; the main app sends it from `src/features/phrases/extract.ts` to `VITE_API_URL`. It shares no code with `src/`. Details: `apps/api/README.md`.
+One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs `worker/` for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR against its Supabase preview branch. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
 
 ## Routing (`src/routes/`)
 
