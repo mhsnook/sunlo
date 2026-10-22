@@ -1,0 +1,10 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "sunlo-admin",
+	"compatibility_date": "2026-10-01",
+	"assets": {
+		"directory": "./dist",
+		"not_found_handling": "single-page-application",
+	},
+	"routes": [{ "pattern": "admin.sunlo.app", "custom_domain": true }],
+}

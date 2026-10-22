@@ -602,3 +602,11 @@ Prototype-only feature in `src/features/chat/`. Public route, no auth.
 | `admin-not-authorized-warning` | Warning callout for non-admin users    |
 | `admin-archive-button`         | Archive phrase button on detail page   |
 | `admin-unarchive-button`       | Restore archived phrase button         |
+
+## Admin app dashboard (`apps/admin`)
+
+| Selector                                   | Purpose                                                 |
+| ------------------------------------------ | ------------------------------------------------------- |
+| `admin-stat-tile`                          | Headline number tile (active users, new users, reviews) |
+| `admin-metric-panel` + `data-key=<metric>` | Daily chart panel for one metric (e.g. `reviews`)       |
+| `admin-range-option` + `data-key=<days>`   | Date range link: 7, 14 or 30 days                       |

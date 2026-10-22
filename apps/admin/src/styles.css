@@ -1,0 +1,4 @@
+@import '../../../src/styles/globals.css';
+
+/* Tailwind only scans this package by default. */
+@source '../../../src/components/ui';

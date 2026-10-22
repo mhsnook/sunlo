@@ -1859,6 +1859,11 @@ export type Database = {
 			}
 		}
 		Functions: {
+			admin_activity_overview: { Args: { p_days?: number }; Returns: Json }
+			admin_user_activity: {
+				Args: { p_days?: number; p_limit?: number }
+				Returns: Json
+			}
 			are_friends: { Args: { uid1: string; uid2: string }; Returns: boolean }
 			confirm_draft_phrase: {
 				Args: { p_phrase_id: string }
