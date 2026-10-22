@@ -4,8 +4,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"postinstall": "wrangler types",
 		"dev": "wrangler dev",
-		"check": "wrangler types && tsc --noEmit",
+		"check": "tsc --noEmit",
 		"test": "vitest run",
 		"cf-deploy": "wrangler deploy"
 	},
