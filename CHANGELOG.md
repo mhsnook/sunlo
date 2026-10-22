@@ -6,7 +6,7 @@ _22 October, 2026_
 
 ### Improvements
 
-- Admin dashboard at `admin.sunlo.app` #796: active and new users, plus deck and library activity, over 7, 14 or 30 days.
+- Admin dashboard at `admin.sunlo.app` #796: active and new users, plus deck and library activity, over 7, 14 or 30 days. Its numbers come from SQL in the admin Worker, run as a read-only role, so a new chart needs no migration.
 - Add phrases from a photo #797. A vision model suggests the phrases, and a phrase the learner doesn't confirm saves as a draft until a fluent speaker confirms it.
 
 ### Refactors
@@ -21,7 +21,7 @@ _22 October, 2026_
 
 ### Migrations
 
-- `20261021120000_admin_activity_stats.sql` — adds the admin-only functions behind the dashboard: daily activity counts, and the most active and newest users
+- `20261023120000_admin_reader_role.sql` — creates `admin_reader`, the read-only role the admin Worker reads the database as. It cannot see message bodies, error logs or anything in `auth` beyond an account's id, email and sign-in dates.
 - `20261022120000_phrase_draft.sql` — lets a phrase be a draft, and lets admins and fluent speakers confirm one
 
 ## v0.34 - Soft Delete Sweep Finished; Realtime Thread Channels

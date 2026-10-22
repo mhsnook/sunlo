@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { z } from 'zod'
-import supabase from '@/lib/supabase-client'
+import { getSession } from './session'
 
 export const rangeOptions = [7, 14, 30] as const
 export type RangeDays = (typeof rangeOptions)[number]
@@ -73,27 +73,39 @@ export const UserActivitySchema = z.object({
 	newest: z.array(NewestUserSchema),
 })
 
+// The admin Worker (apps/admin/worker) answers /api on this origin. It checks
+// the token and the admin_user table itself.
+async function fetchStats(path: string, params: Record<string, number>) {
+	const session = await getSession()
+	const query = new URLSearchParams(
+		Object.entries(params).map(([key, value]) => [key, String(value)])
+	)
+	const res = await fetch(`/api/${path}?${query}`, {
+		headers: { authorization: `Bearer ${session?.access_token ?? ''}` },
+	})
+	if (!res.ok) {
+		const body = (await res.json().catch(() => null)) as {
+			error?: string
+		} | null
+		throw new Error(body?.error ?? `The stats request failed (${res.status})`)
+	}
+	return res.json() as Promise<unknown>
+}
+
 export const activityOverviewQuery = (days: RangeDays) =>
 	queryOptions({
 		queryKey: ['admin', 'activity-overview', days],
-		queryFn: async () => {
-			const { data, error } = await supabase.rpc('admin_activity_overview', {
-				p_days: days,
-			})
-			if (error) throw error
-			return ActivityOverviewSchema.parse(data)
-		},
+		queryFn: async () =>
+			ActivityOverviewSchema.parse(
+				await fetchStats('activity-overview', { days })
+			),
 	})
 
 export const userActivityQuery = (days: RangeDays) =>
 	queryOptions({
 		queryKey: ['admin', 'user-activity', days],
-		queryFn: async () => {
-			const { data, error } = await supabase.rpc('admin_user_activity', {
-				p_days: days,
-				p_limit: 20,
-			})
-			if (error) throw error
-			return UserActivitySchema.parse(data)
-		},
+		queryFn: async () =>
+			UserActivitySchema.parse(
+				await fetchStats('user-activity', { days, limit: 20 })
+			),
 	})

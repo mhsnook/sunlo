@@ -55,7 +55,7 @@ The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `w
 | ------------ | ----------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | Push to main | Workers Builds (Cloudflare's Git integration)                     | Production, from `wrangler.jsonc`    | `wrangler deploy`: production serves the new version.                                                    |
 | Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh`     | That PR's Supabase preview branch    | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. Production never serves it. |
-| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables | `wrangler deploy` of the admin app at `admin.sunlo.app`. It has no previews.                             |
+| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables | `wrangler deploy` of the admin app and its `/api` Worker at `admin.sunlo.app`. It has no previews.       |
 
 The production Supabase URL and publishable key are in `wrangler.jsonc` `vars` (for the worker) and in the Workers Builds build variables (for Vite). Both are public. If one changes, change both.
 
@@ -72,9 +72,17 @@ For a PR, the workflow waits for the `Supabase Preview` check, then reads the br
 | Build command                                                            | `pnpm build`                                                             | `pnpm build`                        |
 | Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default) |
 | Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                 |
+| Secrets (Settings › Variables and Secrets)                               | None                                                                     | `ADMIN_DATABASE_URL`, below         |
 | Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | Off. The admin app has no previews. |
 
 Workers Builds defaults to Node 24, which matches `engines`.
+
+**The admin Worker's database role.** `sunlo-admin` reads the database as `admin_reader`, a read-only role that the migration `20261023120000_admin_reader_role.sql` creates without a password. After the release that carries it merges, two steps by hand, once per database:
+
+1. In the Supabase SQL editor, set the password: `alter role admin_reader password '<a long random password>';`
+2. On the `sunlo-admin` Worker, set the secret `ADMIN_DATABASE_URL` to the transaction pooler URL (Project Settings › Database › Connection string › Transaction pooler, port 6543), with the user `admin_reader.<project-ref>` and that password. `wrangler secret put ADMIN_DATABASE_URL` from `apps/admin` also works.
+
+Until both are done, `/api` on the admin app returns a 500 that names the missing secret, and the dashboard shows that error. The Worker uses TLS for every host except localhost, so the URL needs no `sslmode` parameter. Local development sets the same two things against local Supabase: `apps/admin/README.md`, "Local development".
 
 **GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
 

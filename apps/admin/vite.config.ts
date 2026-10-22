@@ -25,5 +25,8 @@ export default defineConfig({
 		port: 5174,
 		strictPort: true,
 		fs: { allow: [repoRoot] },
+		// `pnpm admin:worker:dev` serves /api on :8788. In production the same
+		// worker serves the app, so the app always calls its own origin.
+		proxy: { '/api': 'http://localhost:8788' },
 	},
 })

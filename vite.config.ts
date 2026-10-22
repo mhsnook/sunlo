@@ -78,7 +78,11 @@ export default defineConfig(() => {
 			},
 		},
 		test: {
-			include: ['src/**/*.test.ts', 'worker/**/*.test.ts'],
+			include: [
+				'src/**/*.test.ts',
+				'worker/**/*.test.ts',
+				'apps/admin/worker/**/*.test.ts',
+			],
 		},
 	}
 })
