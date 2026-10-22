@@ -16,8 +16,9 @@ const ExtractResponseSchema = z.object({
 })
 
 const USE_MOCK = import.meta.env.VITE_PHOTO_EXTRACT_USE_MOCK === 'true'
+const API_URL = import.meta.env.VITE_API_URL as string | undefined
 
-// Must stay under the edge function's MAX_IMAGE_CHARS once base64-encoded.
+// Must stay under the API worker's MAX_IMAGE_CHARS once base64-encoded.
 const MAX_EDGE_PX = 1600
 const JPEG_QUALITY = 0.85
 
@@ -50,31 +51,32 @@ export async function extractPhrasesFromImage({
 }): Promise<Array<ExtractedPhraseType>> {
 	if (USE_MOCK) return mockExtract(lang, translationLang)
 
-	const result = await supabase.functions.invoke<unknown>('extract-phrase', {
-		body: {
+	if (!API_URL) throw new Error('Photo reading is not set up (VITE_API_URL)')
+	const { data } = await supabase.auth.getSession()
+	const res = await fetch(`${API_URL}/extract-phrase`, {
+		method: 'POST',
+		headers: {
+			'content-type': 'application/json',
+			authorization: `Bearer ${data.session?.access_token ?? ''}`,
+		},
+		body: JSON.stringify({
 			image,
 			lang,
 			langName: languages[lang] ?? lang,
 			translationLang,
 			translationLangName: languages[translationLang] ?? translationLang,
-		},
+		}),
 	})
-	if (result.error)
-		throw new Error(await readFunctionError(result.error as Error))
-	return ExtractResponseSchema.parse(result.data).phrases
-}
-
-// FunctionsHttpError keeps the Response in `context`; the edge function puts
-// a human-readable reason in its `error` field.
-async function readFunctionError(error: Error): Promise<string> {
-	const context = (error as { context?: Response }).context
-	try {
-		const body = (await context?.json()) as { error?: unknown } | undefined
-		if (typeof body?.error === 'string') return body.error
-	} catch {
-		// Not JSON; fall through to the generic message.
+	const body: unknown = await res.json().catch(() => null)
+	if (!res.ok) {
+		const reason = (body as { error?: unknown } | null)?.error
+		throw new Error(
+			typeof reason === 'string'
+				? reason
+				: `Photo reading failed (${res.status})`
+		)
 	}
-	return error.message
+	return ExtractResponseSchema.parse(body).phrases
 }
 
 async function mockExtract(

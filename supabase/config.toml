@@ -286,10 +286,6 @@ enabled = true
 # service-role tokens get a 403.
 verify_jwt = true
 
-[functions.extract-phrase]
-enabled = true
-verify_jwt = true
-
 [analytics]
 enabled = false
 port = 54327

@@ -165,15 +165,9 @@ new or stale rows, so it's cheap to re-run after partial syncs.
 See [`scripts/README.md`](./scripts/README.md) for the full flag list,
 running against a remote project, and the cost shape.
 
-## Photo extraction
+## API worker
 
-`src/features/phrases/extract.ts` calls the `extract-phrase` edge function, which calls a vision model on Workers AI. The function has no database access and returns suggestions only.
-
-| Variable                                        | Set in                    | Purpose                                                                               |
-| ----------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | `supabase/functions/.env` | Shared with search. Without them, `extract-phrase` returns 503.                       |
-| `PHOTO_EXTRACT_MODEL`                           | `supabase/functions/.env` | Workers AI model id. Defaults to `@cf/google/gemma-4-26b-a4b-it`.                     |
-| `VITE_PHOTO_EXTRACT_USE_MOCK`                   | `.env`                    | `true` returns canned results without calling the function. `pnpm dev:local` sets it. |
+`apps/api` is a Cloudflare Worker at `api.sunlo.app` that the web app calls with the user's Supabase access token. Setup, secrets and deploy steps are in [`apps/api/README.md`](apps/api/README.md).
 
 ## The React App
 
