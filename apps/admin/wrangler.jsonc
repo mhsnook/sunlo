@@ -13,11 +13,18 @@
 		"run_worker_first": ["/api/*"],
 	},
 	"preview_urls": true,
+	// The usage reporter (worker/reporter/agent.ts). One instance, named
+	// "team", keeps its reports and notes in its own SQLite.
+	"durable_objects": {
+		"bindings": [{ "name": "REPORTER", "class_name": "Reporter" }],
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["Reporter"] }],
 	"routes": [{ "pattern": "admin.sunlo.app", "custom_domain": true }],
 	// Production values, both public, the same as the root wrangler.jsonc.
-	// The Worker also needs one secret, set with `wrangler secret put`:
+	// The Worker also needs two secrets, set with `wrangler secret put`:
 	// ADMIN_DATABASE_URL, the transaction-pooler URL for the admin_reader
-	// role (docs/deployment.md, "Cloudflare" › "Setup").
+	// role (docs/deployment.md, "Cloudflare" › "Setup"), and
+	// ANTHROPIC_API_KEY, for the usage reporter.
 	"vars": {
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",

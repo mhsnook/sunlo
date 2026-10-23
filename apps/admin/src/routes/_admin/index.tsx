@@ -14,6 +14,7 @@ import { StatTile } from '~/components/stat-tile'
 import { DailyBarChart } from '~/components/daily-bar-chart'
 import { MetricPanel } from '~/components/metric-panel'
 import { MostActiveTable, NewestUsersTable } from '~/components/user-tables'
+import { CheckInReport } from '~/components/check-in-report'
 
 type DashboardSearch = { days?: RangeDays }
 
@@ -70,6 +71,8 @@ function Dashboard() {
 				</div>
 				<RangePicker days={days} />
 			</div>
+
+			<CheckInReport />
 
 			<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
 				<StatTile

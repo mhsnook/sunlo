@@ -1,5 +1,7 @@
 import api from './api'
 
+export { Reporter } from './reporter/agent'
+
 // One worker serves the admin app's static files and /api. It only runs
 // for the paths in wrangler.jsonc `run_worker_first`.
 export default {

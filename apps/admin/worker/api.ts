@@ -1,3 +1,4 @@
+import { getAgentByName } from 'agents'
 import { Hono } from 'hono'
 import type { Sql } from 'postgres'
 import { z } from 'zod'
@@ -5,7 +6,10 @@ import { connect } from './db'
 import { activityOverview, userActivity } from './stats'
 import { supabaseFor } from './supabase'
 
-type AppEnv = { Bindings: Env; Variables: { sql: Sql } }
+type AppEnv = {
+	Bindings: Env
+	Variables: { sql: Sql; admin: { uid: string; email: string } }
+}
 
 // The admin app calls these routes from its own origin, so they need no CORS.
 const app = new Hono<AppEnv>().basePath('/api')
@@ -46,6 +50,7 @@ app.use('*', async (c, next) => {
 			return c.json({ error: 'This account is not an admin' }, 403)
 		}
 		c.set('sql', sql)
+		c.set('admin', { uid: claims.sub, email: claims.email ?? claims.sub })
 		await next()
 	} finally {
 		await sql.end({ timeout: 5 })
@@ -73,6 +78,34 @@ app.get('/user-activity', async (c) => {
 		return c.json({ error: 'limit must be a whole number from 1 to 200' }, 400)
 	}
 	return c.json(await userActivity(c.get('sql'), days.data, limit.data))
+})
+
+const reporterFor = (env: Env) => getAgentByName(env.REPORTER, 'team')
+
+app.post('/reporter/check-in', async (c) => {
+	const reporter = await reporterFor(c.env)
+	const fresh = c.req.query('fresh') === '1'
+	return c.json(await reporter.checkIn(c.get('admin'), { fresh }))
+})
+
+app.get('/reporter/reports/:id', async (c) => {
+	const reporter = await reporterFor(c.env)
+	const report = await reporter.getReport(c.req.param('id'), c.get('admin').uid)
+	if (!report) return c.json({ error: 'No report with that id' }, 404)
+	return c.json(report)
+})
+
+app.get('/reporter/notes', async (c) => {
+	const reporter = await reporterFor(c.env)
+	return c.json(await reporter.listNotes())
+})
+
+app.delete('/reporter/notes/:id', async (c) => {
+	const id = z.coerce.number().int().safeParse(c.req.param('id'))
+	if (!id.success) return c.json({ error: 'Note ids are whole numbers' }, 400)
+	const reporter = await reporterFor(c.env)
+	await reporter.forgetNote(id.data)
+	return c.json({ ok: true })
 })
 
 export default app

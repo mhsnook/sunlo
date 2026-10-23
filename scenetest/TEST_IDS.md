@@ -623,3 +623,5 @@ phrasebook chat still exposes `chat-input` and `chat-send-button`.
 | `admin-stat-tile`                          | Headline number tile (active users, new users, reviews) |
 | `admin-metric-panel` + `data-key=<metric>` | Daily chart panel for one metric (e.g. `reviews`)       |
 | `admin-range-option` + `data-key=<days>`   | Date range link: 7, 14 or 30 days                       |
+| `admin-check-in-report`                    | The usage reporter's "Since you last checked in" card   |
+| `admin-fresh-report-button`                | Starts a new report even when a recent one exists       |

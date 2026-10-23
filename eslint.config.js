@@ -117,6 +117,12 @@ export default [
 			...tseslint.plugin.configs['recommended'].rules,
 			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
 			'no-undef': 'off',
+			// The Agents SDK runs Durable Object SQL as a tagged template
+			// statement: this.sql`create table ...`.
+			'@typescript-eslint/no-unused-expressions': [
+				'error',
+				{ allowTaggedTemplates: true },
+			],
 		},
 	},
 	{
