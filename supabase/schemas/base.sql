@@ -38,6 +38,10 @@ with
 
 create extension if not exists "pgsodium";
 
+create schema if not exists "admin";
+
+alter schema "admin" owner to "postgres";
+
 alter schema "public" owner to "postgres";
 
 create extension if not exists "pg_graphql"
@@ -99,168 +103,6 @@ comment on type "public"."learning_goal" is 'why are you learning this language?
 create type "public"."notification_type" as enum('request_commented', 'comment_replied', 'phrase_translated', 'phrase_referenced', 'request_upvoted', 'change_suggested');
 
 alter type "public"."notification_type" owner to "postgres";
-
-create or replace function "public"."admin_activity_overview" ("p_days" integer default 7) returns "jsonb" language "plpgsql" stable security definer
-set
-	"search_path" to '' as $$
-declare
-  v_since timestamptz;
-  v_prev_since timestamptz;
-begin
-  if not public.is_admin() then
-    raise exception 'Only admins can read activity stats' using errcode = '42501';
-  end if;
-  if p_days is null or p_days < 1 or p_days > 90 then
-    raise exception 'p_days must be between 1 and 90' using errcode = '22023';
-  end if;
-
-  v_since := (date_trunc('day', now() at time zone 'utc') - make_interval(days => p_days - 1)) at time zone 'utc';
-  v_prev_since := v_since - make_interval(days => p_days);
-
-  return (
-    with events as (
-      select 'review' as kind, r.uid, r.created_at from public.user_card_review r where r.created_at >= v_prev_since
-      -- user_card holds a forward and a reverse card per phrase: count the phrase once
-      union all select 'card_added', c.uid, min(c.created_at) from public.user_card c where c.created_at >= v_prev_since group by c.uid, c.phrase_id
-      union all select 'deck_created', d.uid, d.created_at from public.user_deck d where d.created_at >= v_prev_since
-      union all select 'phrase_added', p.added_by, p.created_at from public.phrase p where p.created_at >= v_prev_since
-      union all select 'translation_added', t.added_by, t.created_at from public.phrase_translation t where t.created_at >= v_prev_since
-      union all select 'request_added', q.requester_uid, q.created_at from public.phrase_request q where q.created_at >= v_prev_since
-      union all select 'comment_added', m.uid, m.created_at from public.request_comment m where m.created_at >= v_prev_since
-      union all select 'playlist_added', l.uid, l.created_at from public.phrase_playlist l where l.created_at >= v_prev_since
-      union all select 'chat_message', x.sender_uid, x.created_at from public.chat_message x where x.created_at >= v_prev_since
-      union all select 'signup', u.id, u.created_at from auth.users u where u.created_at >= v_prev_since
-    ),
-    days as (
-      select (v_since at time zone 'utc')::date + i as day from generate_series(0, p_days - 1) as i
-    ),
-    per_day as (
-      select (e.created_at at time zone 'utc')::date as day, e.kind, count(*) as n
-      from events e where e.created_at >= v_since
-      group by 1, 2
-    ),
-    active_per_day as (
-      select (e.created_at at time zone 'utc')::date as day, count(distinct e.uid) as n
-      from events e where e.created_at >= v_since and e.kind <> 'signup'
-      group by 1
-    ),
-    reviewers_per_day as (
-      select (e.created_at at time zone 'utc')::date as day, count(distinct e.uid) as n
-      from events e where e.created_at >= v_since and e.kind = 'review'
-      group by 1
-    )
-    select jsonb_build_object(
-      'since', v_since,
-      'days', (
-        select jsonb_agg(jsonb_build_object(
-          'day', to_char(d.day, 'YYYY-MM-DD'),
-          'active_users', coalesce(a.n, 0),
-          'new_users', coalesce((select n from per_day p where p.day = d.day and p.kind = 'signup'), 0),
-          'reviewers', coalesce(rv.n, 0),
-          'reviews', coalesce((select n from per_day p where p.day = d.day and p.kind = 'review'), 0),
-          'cards_added', coalesce((select n from per_day p where p.day = d.day and p.kind = 'card_added'), 0),
-          'decks_created', coalesce((select n from per_day p where p.day = d.day and p.kind = 'deck_created'), 0),
-          'phrases_added', coalesce((select n from per_day p where p.day = d.day and p.kind = 'phrase_added'), 0),
-          'translations_added', coalesce((select n from per_day p where p.day = d.day and p.kind = 'translation_added'), 0),
-          'requests_added', coalesce((select n from per_day p where p.day = d.day and p.kind = 'request_added'), 0),
-          'comments_added', coalesce((select n from per_day p where p.day = d.day and p.kind = 'comment_added'), 0),
-          'playlists_added', coalesce((select n from per_day p where p.day = d.day and p.kind = 'playlist_added'), 0),
-          'chat_messages', coalesce((select n from per_day p where p.day = d.day and p.kind = 'chat_message'), 0)
-        ) order by d.day)
-        from days d
-        left join active_per_day a on a.day = d.day
-        left join reviewers_per_day rv on rv.day = d.day
-      ),
-      'totals', jsonb_build_object(
-        'total_users', (select count(*) from auth.users),
-        'onboarded_users', (select count(*) from public.user_profile where username is not null),
-        'active_users', (select count(distinct e.uid) from events e where e.created_at >= v_since and e.kind <> 'signup'),
-        'active_users_prev', (select count(distinct e.uid) from events e where e.created_at < v_since and e.kind <> 'signup'),
-        'new_users', (select count(*) from events e where e.created_at >= v_since and e.kind = 'signup'),
-        'new_users_prev', (select count(*) from events e where e.created_at < v_since and e.kind = 'signup'),
-        'reviews', (select count(*) from events e where e.created_at >= v_since and e.kind = 'review'),
-        'reviews_prev', (select count(*) from events e where e.created_at < v_since and e.kind = 'review')
-      )
-    )
-  );
-end;
-$$;
-
-alter function "public"."admin_activity_overview" ("p_days" integer) owner to "postgres";
-
-create or replace function "public"."admin_user_activity" ("p_days" integer default 7, "p_limit" integer default 20) returns "jsonb" language "plpgsql" stable security definer
-set
-	"search_path" to '' as $$
-declare
-  v_since timestamptz;
-begin
-  if not public.is_admin() then
-    raise exception 'Only admins can read user activity' using errcode = '42501';
-  end if;
-  if p_days is null or p_days < 1 or p_days > 90 then
-    raise exception 'p_days must be between 1 and 90' using errcode = '22023';
-  end if;
-  if p_limit is null or p_limit < 1 or p_limit > 200 then
-    raise exception 'p_limit must be between 1 and 200' using errcode = '22023';
-  end if;
-
-  v_since := (date_trunc('day', now() at time zone 'utc') - make_interval(days => p_days - 1)) at time zone 'utc';
-
-  return (
-    with events as (
-      select 'review' as kind, r.uid, r.created_at from public.user_card_review r where r.created_at >= v_since
-      union all select 'card_added', c.uid, min(c.created_at) from public.user_card c where c.created_at >= v_since group by c.uid, c.phrase_id
-      union all select 'deck_created', d.uid, d.created_at from public.user_deck d where d.created_at >= v_since
-      union all select 'phrase_added', p.added_by, p.created_at from public.phrase p where p.created_at >= v_since
-      union all select 'translation_added', t.added_by, t.created_at from public.phrase_translation t where t.created_at >= v_since
-      union all select 'request_added', q.requester_uid, q.created_at from public.phrase_request q where q.created_at >= v_since
-      union all select 'comment_added', m.uid, m.created_at from public.request_comment m where m.created_at >= v_since
-      union all select 'playlist_added', l.uid, l.created_at from public.phrase_playlist l where l.created_at >= v_since
-      union all select 'chat_message', x.sender_uid, x.created_at from public.chat_message x where x.created_at >= v_since
-    ),
-    per_user as (
-      select
-        e.uid,
-        count(*) as actions,
-        count(*) filter (where e.kind = 'review') as reviews,
-        count(*) filter (where e.kind in ('phrase_added', 'translation_added', 'request_added', 'comment_added', 'playlist_added')) as contributions,
-        count(distinct (e.created_at at time zone 'utc')::date) as active_days,
-        max(e.created_at) as last_active_at
-      from events e
-      group by e.uid
-    )
-    select jsonb_build_object(
-      'most_active', coalesce((
-        select jsonb_agg(row_to_json(x) order by x.actions desc, x.last_active_at desc)
-        from (
-          select pu.uid, pr.username, u.email, pu.actions, pu.reviews, pu.contributions, pu.active_days, pu.last_active_at,
-            (select array_agg(d.lang order by d.created_at) from public.user_deck d where d.uid = pu.uid and not d.archived) as deck_langs
-          from per_user pu
-          join auth.users u on u.id = pu.uid
-          left join public.user_profile pr on pr.uid = pu.uid
-          order by pu.actions desc, pu.last_active_at desc
-          limit p_limit
-        ) x
-      ), '[]'::jsonb),
-      'newest', coalesce((
-        select jsonb_agg(row_to_json(y) order by y.created_at desc)
-        from (
-          select u.id as uid, pr.username, u.email, u.created_at, u.last_sign_in_at,
-            pr.username is not null as onboarded,
-            (select array_agg(d.lang order by d.created_at) from public.user_deck d where d.uid = u.id and not d.archived) as deck_langs,
-            (select count(*) from public.user_card_review r where r.uid = u.id) as reviews
-          from auth.users u
-          left join public.user_profile pr on pr.uid = u.id
-          order by u.created_at desc
-          limit p_limit
-        ) y
-      ), '[]'::jsonb)
-    )
-  );
-end;
-$$;
-
-alter function "public"."admin_user_activity" ("p_days" integer, "p_limit" integer) owner to "postgres";
 
 create or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
   SELECT EXISTS (
@@ -1111,6 +953,17 @@ comment on function "public"."validate_friend_request_action" () is 'Validates f
 
 set
 	default_tablespace = '';
+
+create or replace view "admin"."user_account" as
+select
+	"id",
+	"email",
+	"created_at",
+	"last_sign_in_at"
+from
+	"auth"."users";
+
+alter table "admin"."user_account" owner to "postgres";
 
 set
 	default_table_access_method = "heap";
@@ -3338,6 +3191,8 @@ add table only "public"."user_review_milestone";
 alter publication "supabase_realtime"
 add table only "public"."user_review_session";
 
+grant usage on schema "admin" to "admin_reader";
+
 revoke usage on schema "public"
 from
 	public;
@@ -3347,6 +3202,8 @@ grant usage on schema "public" to "anon";
 grant usage on schema "public" to "authenticated";
 
 grant usage on schema "public" to "service_role";
+
+grant usage on schema "public" to "admin_reader";
 
 grant all on function "public"."gtrgm_in" ("cstring") to "postgres";
 
@@ -3667,22 +3524,6 @@ grant all on function "public"."vector" ("public"."vector", integer, boolean) to
 grant all on function "public"."vector" ("public"."vector", integer, boolean) to "authenticated";
 
 grant all on function "public"."vector" ("public"."vector", integer, boolean) to "service_role";
-
-revoke all on function "public"."admin_activity_overview" ("p_days" integer)
-from
-	public;
-
-grant all on function "public"."admin_activity_overview" ("p_days" integer) to "authenticated";
-
-grant all on function "public"."admin_activity_overview" ("p_days" integer) to "service_role";
-
-revoke all on function "public"."admin_user_activity" ("p_days" integer, "p_limit" integer)
-from
-	public;
-
-grant all on function "public"."admin_user_activity" ("p_days" integer, "p_limit" integer) to "authenticated";
-
-grant all on function "public"."admin_user_activity" ("p_days" integer, "p_limit" integer) to "service_role";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
 
@@ -4785,11 +4626,19 @@ grant all on function "public"."sum" ("public"."vector") to "authenticated";
 
 grant all on function "public"."sum" ("public"."vector") to "service_role";
 
+grant
+select
+	on table "admin"."user_account" to "admin_reader";
+
 grant all on table "public"."admin_user" to "service_role";
 
 grant
 select
 	on table "public"."admin_user" to "authenticated";
+
+grant
+select
+	on table "public"."admin_user" to "admin_reader";
 
 grant all on table "public"."chat_message" to "anon";
 
@@ -4797,17 +4646,37 @@ grant all on table "public"."chat_message" to "authenticated";
 
 grant all on table "public"."chat_message" to "service_role";
 
+grant
+select
+	("id") on table "public"."chat_message" to "admin_reader";
+
+grant
+select
+	("created_at") on table "public"."chat_message" to "admin_reader";
+
+grant
+select
+	("sender_uid") on table "public"."chat_message" to "admin_reader";
+
 grant all on table "public"."comment_phrase_link" to "anon";
 
 grant all on table "public"."comment_phrase_link" to "authenticated";
 
 grant all on table "public"."comment_phrase_link" to "service_role";
 
+grant
+select
+	on table "public"."comment_phrase_link" to "admin_reader";
+
 grant all on table "public"."comment_upvote" to "anon";
 
 grant all on table "public"."comment_upvote" to "authenticated";
 
 grant all on table "public"."comment_upvote" to "service_role";
+
+grant
+select
+	on table "public"."comment_upvote" to "admin_reader";
 
 grant all on table "public"."db_meta" to "anon";
 
@@ -4821,11 +4690,19 @@ grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
 
+grant
+select
+	on table "public"."phrase" to "admin_reader";
+
 grant all on table "public"."phrase_playlist" to "anon";
 
 grant all on table "public"."phrase_playlist" to "authenticated";
 
 grant all on table "public"."phrase_playlist" to "service_role";
+
+grant
+select
+	on table "public"."phrase_playlist" to "admin_reader";
 
 grant all on table "public"."phrase_request" to "anon";
 
@@ -4833,11 +4710,19 @@ grant all on table "public"."phrase_request" to "authenticated";
 
 grant all on table "public"."phrase_request" to "service_role";
 
+grant
+select
+	on table "public"."phrase_request" to "admin_reader";
+
 grant all on table "public"."user_card" to "anon";
 
 grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
+
+grant
+select
+	on table "public"."user_card" to "admin_reader";
 
 grant all on table "public"."user_card_review" to "authenticated";
 
@@ -4845,11 +4730,19 @@ grant all on table "public"."user_card_review" to "service_role";
 
 grant all on table "public"."user_card_review" to "anon";
 
+grant
+select
+	on table "public"."user_card_review" to "admin_reader";
+
 grant all on table "public"."phrase_stats" to "anon";
 
 grant all on table "public"."phrase_stats" to "authenticated";
 
 grant all on table "public"."phrase_stats" to "service_role";
+
+grant
+select
+	on table "public"."phrase_stats" to "admin_reader";
 
 grant all on table "public"."playlist_phrase_link" to "anon";
 
@@ -4857,11 +4750,19 @@ grant all on table "public"."playlist_phrase_link" to "authenticated";
 
 grant all on table "public"."playlist_phrase_link" to "service_role";
 
+grant
+select
+	on table "public"."playlist_phrase_link" to "admin_reader";
+
 grant all on table "public"."feed_activities" to "anon";
 
 grant all on table "public"."feed_activities" to "authenticated";
 
 grant all on table "public"."feed_activities" to "service_role";
+
+grant
+select
+	on table "public"."feed_activities" to "admin_reader";
 
 grant all on table "public"."friend_request_action" to "anon";
 
@@ -4869,11 +4770,19 @@ grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
 
+grant
+select
+	on table "public"."friend_request_action" to "admin_reader";
+
 grant all on table "public"."friend_summary" to "anon";
 
 grant all on table "public"."friend_summary" to "authenticated";
 
 grant all on table "public"."friend_summary" to "service_role";
+
+grant
+select
+	on table "public"."friend_summary" to "admin_reader";
 
 grant all on table "public"."language" to "anon";
 
@@ -4881,11 +4790,19 @@ grant all on table "public"."language" to "authenticated";
 
 grant all on table "public"."language" to "service_role";
 
+grant
+select
+	on table "public"."language" to "admin_reader";
+
 grant all on table "public"."message" to "anon";
 
 grant all on table "public"."message" to "authenticated";
 
 grant all on table "public"."message" to "service_role";
+
+grant
+select
+	on table "public"."message" to "admin_reader";
 
 grant all on table "public"."message_tag" to "anon";
 
@@ -4893,11 +4810,19 @@ grant all on table "public"."message_tag" to "authenticated";
 
 grant all on table "public"."message_tag" to "service_role";
 
+grant
+select
+	on table "public"."message_tag" to "admin_reader";
+
 grant all on table "public"."message_tag_link" to "anon";
 
 grant all on table "public"."message_tag_link" to "authenticated";
 
 grant all on table "public"."message_tag_link" to "service_role";
+
+grant
+select
+	on table "public"."message_tag_link" to "admin_reader";
 
 grant all on table "public"."user_deck" to "anon";
 
@@ -4905,11 +4830,19 @@ grant all on table "public"."user_deck" to "authenticated";
 
 grant all on table "public"."user_deck" to "service_role";
 
+grant
+select
+	on table "public"."user_deck" to "admin_reader";
+
 grant all on table "public"."meta_language" to "anon";
 
 grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
+
+grant
+select
+	on table "public"."meta_language" to "admin_reader";
 
 grant all on table "public"."notification" to "anon";
 
@@ -4917,11 +4850,31 @@ grant all on table "public"."notification" to "authenticated";
 
 grant all on table "public"."notification" to "service_role";
 
+grant
+select
+	("id") on table "public"."notification" to "admin_reader";
+
+grant
+select
+	("uid") on table "public"."notification" to "admin_reader";
+
+grant
+select
+	("type") on table "public"."notification" to "admin_reader";
+
+grant
+select
+	("created_at") on table "public"."notification" to "admin_reader";
+
 grant all on table "public"."phrase_tag" to "anon";
 
 grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
+
+grant
+select
+	on table "public"."phrase_tag" to "admin_reader";
 
 grant all on table "public"."tag" to "anon";
 
@@ -4929,11 +4882,19 @@ grant all on table "public"."tag" to "authenticated";
 
 grant all on table "public"."tag" to "service_role";
 
+grant
+select
+	on table "public"."tag" to "admin_reader";
+
 grant all on table "public"."phrase_meta" to "anon";
 
 grant all on table "public"."phrase_meta" to "authenticated";
 
 grant all on table "public"."phrase_meta" to "service_role";
+
+grant
+select
+	on table "public"."phrase_meta" to "admin_reader";
 
 grant all on table "public"."phrase_playlist_upvote" to "anon";
 
@@ -4941,11 +4902,19 @@ grant all on table "public"."phrase_playlist_upvote" to "authenticated";
 
 grant all on table "public"."phrase_playlist_upvote" to "service_role";
 
+grant
+select
+	on table "public"."phrase_playlist_upvote" to "admin_reader";
+
 grant all on table "public"."phrase_relation" to "anon";
 
 grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
+
+grant
+select
+	on table "public"."phrase_relation" to "admin_reader";
 
 grant all on table "public"."phrase_request_upvote" to "anon";
 
@@ -4953,11 +4922,19 @@ grant all on table "public"."phrase_request_upvote" to "authenticated";
 
 grant all on table "public"."phrase_request_upvote" to "service_role";
 
+grant
+select
+	on table "public"."phrase_request_upvote" to "admin_reader";
+
 grant all on table "public"."phrase_translation" to "anon";
 
 grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
+
+grant
+select
+	on table "public"."phrase_translation" to "admin_reader";
 
 grant all on table "public"."user_profile" to "anon";
 
@@ -4965,11 +4942,19 @@ grant all on table "public"."user_profile" to "authenticated";
 
 grant all on table "public"."user_profile" to "service_role";
 
+grant
+select
+	on table "public"."user_profile" to "admin_reader";
+
 grant all on table "public"."public_profile" to "anon";
 
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
+
+grant
+select
+	on table "public"."public_profile" to "admin_reader";
 
 grant all on table "public"."request_comment" to "anon";
 
@@ -4977,11 +4962,19 @@ grant all on table "public"."request_comment" to "authenticated";
 
 grant all on table "public"."request_comment" to "service_role";
 
+grant
+select
+	on table "public"."request_comment" to "admin_reader";
+
 grant all on table "public"."search_corpus" to "anon";
 
 grant all on table "public"."search_corpus" to "authenticated";
 
 grant all on table "public"."search_corpus" to "service_role";
+
+grant
+select
+	on table "public"."search_corpus" to "admin_reader";
 
 grant all on table "public"."search_text_index" to "anon";
 
@@ -4989,11 +4982,27 @@ grant all on table "public"."search_text_index" to "authenticated";
 
 grant all on table "public"."search_text_index" to "service_role";
 
+grant
+select
+	on table "public"."search_text_index" to "admin_reader";
+
 grant all on table "public"."user_client_event" to "anon";
 
 grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
+
+grant
+select
+	("id") on table "public"."user_client_event" to "admin_reader";
+
+grant
+select
+	("created_at") on table "public"."user_client_event" to "admin_reader";
+
+grant
+select
+	("uid") on table "public"."user_client_event" to "admin_reader";
 
 grant all on table "public"."user_review_milestone" to "anon";
 
@@ -5001,11 +5010,19 @@ grant all on table "public"."user_review_milestone" to "authenticated";
 
 grant all on table "public"."user_review_milestone" to "service_role";
 
+grant
+select
+	on table "public"."user_review_milestone" to "admin_reader";
+
 grant all on table "public"."user_review_session" to "anon";
 
 grant all on table "public"."user_review_session" to "authenticated";
 
 grant all on table "public"."user_review_session" to "service_role";
+
+grant
+select
+	on table "public"."user_review_session" to "admin_reader";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";
@@ -5042,3 +5059,8 @@ grant all on tables to "authenticated";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on tables to "service_role";
+
+alter default privileges for role "postgres" in schema "public"
+grant
+select
+	on tables to "admin_reader";

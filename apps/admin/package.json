@@ -5,15 +5,19 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite --host",
+		"worker:dev": "mkdir -p dist && CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler dev --port 8788",
 		"build": "vite build",
 		"preview": "vite preview",
-		"check": "tsrs --noEmit",
-		"check:tsc": "tsc --noEmit"
+		"check": "tsrs --noEmit && tsrs --noEmit -p tsconfig.worker.json",
+		"check:tsc": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
+		"postinstall": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types worker/worker-configuration.d.ts"
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.106.0",
 		"@tanstack/react-query": "^5.90.12",
 		"@tanstack/react-router": "1.170.4",
+		"hono": "^4.13.13",
+		"postgres": "^3.4.9",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
 		"recharts": "^3.7.0",

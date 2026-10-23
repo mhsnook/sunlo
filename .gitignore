@@ -39,3 +39,4 @@ keystore.properties
 .wrangler
 .dev.vars
 worker/worker-configuration.d.ts
+apps/admin/worker/worker-configuration.d.ts
