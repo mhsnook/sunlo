@@ -67,7 +67,7 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.76.14
 
       # `-o env` prints SUPABASE_URL plus one SUPABASE_<NAME>_KEY per API
       # key, including secret keys, so keep only the public values and
