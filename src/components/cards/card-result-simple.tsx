@@ -6,6 +6,7 @@ import {
 	PhraseFullFullType,
 } from '@/features/phrases/schemas'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { DraftBadge } from '@/components/card-pieces/draft-phrase-notice'
 
 export function CardResultSimple({
 	phrase,
@@ -19,6 +20,7 @@ export function CardResultSimple({
 			<div className="grow py-6">
 				<div className="space-x-2 pb-2">
 					<LangBadge lang={phrase.lang} />
+					{phrase.draft && <DraftBadge />}
 					<h4 className="inline-flex gap-2 align-baseline font-semibold">
 						&ldquo;{phrase.text}&rdquo;
 					</h4>

@@ -140,6 +140,17 @@ natural wrapper element to label.
 | `add-phrase-page`               | data-testid | Add phrase route      | Container for /learn/$lang/phrases/new                                                                                      |
 | `add-phrase-form`               | data-testid | Add phrase route      | Form element (scope `phrase-text-input` / `translation-text-input` / `submit-button`)                                       |
 | `bulk-add-link`                 | data-testid | Add phrase page       | Link to bulk-add page                                                                                                       |
+| `photo-extract`                 | data-testid | Add phrase page       | Container for the "Add from a photo" control and its results                                                                |
+| `photo-extract-button`          | data-testid | Add phrase page       | Opens the photo picker (camera or library on phones)                                                                        |
+| `photo-extract-input`           | data-testid | Add phrase page       | Hidden file input; set files on it to skip the picker                                                                       |
+| `photo-extract-results`         | data-testid | Add phrase page       | List of phrases read from the photo                                                                                         |
+| `photo-extract-candidate`       | data-testid | Photo results         | One phrase read from the photo (carries `data-key={index}`); click fills the form                                           |
+| `photo-extract-close`           | data-testid | Photo results         | Closes the photo results                                                                                                    |
+| `confirm-correct-item`          | data-testid | Add phrase page       | Shown after a photo result fills the form; wraps the confirm checkbox                                                       |
+| `confirm-correct-checkbox`      | data-testid | Add phrase page       | Unchecked saves the phrase as a draft                                                                                       |
+| `draft-badge`                   | data-testid | Phrase cards          | "Draft" badge on a phrase no person has confirmed                                                                           |
+| `draft-phrase-notice`           | data-testid | Big phrase card       | Draft explanation under the phrase text                                                                                     |
+| `confirm-draft-button`          | data-testid | Big phrase card       | Clears the draft; shown to admins and fluent speakers only                                                                  |
 | `add-translations-trigger`      | data-testid | Big phrase card       | Pencil icon that opens the manage-translations dialog                                                                       |
 | `add-translations-dialog`       | data-testid | Dialog                | Manage-translations dialog (scope `translation-text-input` / `submit-button`)                                               |
 | `add-tags-trigger`              | data-testid | Big phrase card       | Tags icon that opens the edit-tags dialog                                                                                   |
@@ -604,3 +615,11 @@ phrasebook chat still exposes `chat-input` and `chat-send-button`.
 | `compose-bar-input`     | data-testid | `components/ui/compose-bar.tsx`      | Auto-growing message textarea (default name) |
 | `compose-bar-send`      | data-testid | `components/ui/compose-bar.tsx`      | Send button (default name)                   |
 | `message-scroller-jump` | data-testid | `components/ui/message-scroller.tsx` | "Newest" button, shown when scrolled up      |
+
+## Admin app dashboard (`apps/admin`)
+
+| Selector                                   | Purpose                                                 |
+| ------------------------------------------ | ------------------------------------------------------- |
+| `admin-stat-tile`                          | Headline number tile (active users, new users, reviews) |
+| `admin-metric-panel` + `data-key=<metric>` | Daily chart panel for one metric (e.g. `reviews`)       |
+| `admin-range-option` + `data-key=<days>`   | Date range link: 7, 14 or 30 days                       |

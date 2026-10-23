@@ -1,8 +1,10 @@
 packages:
   - .
+  - apps/*
 
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
   - supabase
   - unrs-resolver
+  - workerd

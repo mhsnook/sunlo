@@ -554,6 +554,7 @@ export type Database = {
 					added_by: string
 					archived: boolean
 					created_at: string
+					draft: boolean
 					id: string
 					lang: string
 					only_reverse: boolean
@@ -565,6 +566,7 @@ export type Database = {
 					added_by?: string
 					archived?: boolean
 					created_at?: string
+					draft?: boolean
 					id?: string
 					lang: string
 					only_reverse?: boolean
@@ -576,6 +578,7 @@ export type Database = {
 					added_by?: string
 					archived?: boolean
 					created_at?: string
+					draft?: boolean
 					id?: string
 					lang?: string
 					only_reverse?: boolean
@@ -1759,6 +1762,7 @@ export type Database = {
 					avg_stability: number | null
 					count_learners: number | null
 					created_at: string | null
+					draft: boolean | null
 					id: string | null
 					lang: string | null
 					only_reverse: boolean | null
@@ -1856,6 +1860,21 @@ export type Database = {
 		}
 		Functions: {
 			are_friends: { Args: { uid1: string; uid2: string }; Returns: boolean }
+			confirm_draft_phrase: {
+				Args: { p_phrase_id: string }
+				Returns: {
+					added_by: string
+					archived: boolean
+					created_at: string
+					draft: boolean
+					id: string
+					lang: string
+					only_reverse: boolean
+					text: string
+					text_script: string | null
+					updated_at: string
+				}
+			}
 			create_comment_with_phrases: {
 				Args: {
 					p_content: string

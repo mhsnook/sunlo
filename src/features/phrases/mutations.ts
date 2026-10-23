@@ -1,8 +1,9 @@
 import { createOptimisticAction } from '@tanstack/db'
 
 import supabase from '@/lib/supabase-client'
-import { writeSyncedRows } from '@/lib/collections/synced-row'
+import { writeSyncedRow, writeSyncedRows } from '@/lib/collections/synced-row'
 import type { uuid } from '@/types/main'
+import { PhraseSchema } from './schemas'
 import {
 	phrasesCollection,
 	phraseTagLinksCollection,
@@ -21,6 +22,7 @@ type CreatePhraseWithTranslationInput = {
 	lang: string
 	text: string
 	onlyReverse: boolean
+	draft: boolean
 	translationLang: string
 	translationText: string
 	uid: uuid
@@ -38,6 +40,7 @@ export const createPhraseWithTranslation =
 			lang,
 			text,
 			onlyReverse,
+			draft,
 			translationLang,
 			translationText,
 			uid,
@@ -49,6 +52,7 @@ export const createPhraseWithTranslation =
 				lang,
 				text,
 				only_reverse: onlyReverse,
+				draft,
 				added_by: uid,
 				archived: false,
 				created_at: now,
@@ -85,6 +89,7 @@ export const createPhraseWithTranslation =
 			lang,
 			text,
 			onlyReverse,
+			draft,
 			translationLang,
 			translationText,
 			uid,
@@ -98,6 +103,7 @@ export const createPhraseWithTranslation =
 					lang,
 					text,
 					only_reverse: onlyReverse,
+					draft,
 					added_by: uid,
 				})
 				.throwOnError()
@@ -134,6 +140,7 @@ export const createPhraseWithTranslation =
 				lang,
 				text,
 				only_reverse: onlyReverse,
+				draft,
 				added_by: uid,
 				archived: false,
 				created_at: now,
@@ -388,5 +395,27 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 				}))
 			)
 		}
+	},
+})
+
+// `phrase` UPDATE is admin-only under RLS, so the collection's onUpdate
+// would match zero rows for a fluent speaker. The RPC checks fluency itself.
+export const confirmDraftPhrase = createOptimisticAction<{ phraseId: uuid }>({
+	onMutate: ({ phraseId }) => {
+		phrasesCollection.update(phraseId, (draft) => {
+			draft.draft = false
+		})
+	},
+	mutationFn: async ({ phraseId }) => {
+		const { data } = await supabase
+			.rpc('confirm_draft_phrase', { p_phrase_id: phraseId })
+			.throwOnError()
+		// The RPC returns a `phrase` row; the columns `phrase_meta` computes
+		// come from the row we already hold.
+		const current = phrasesCollection.get(phraseId)
+		writeSyncedRow(
+			phrasesCollection,
+			PhraseSchema.parse({ ...current, ...data })
+		)
 	},
 })

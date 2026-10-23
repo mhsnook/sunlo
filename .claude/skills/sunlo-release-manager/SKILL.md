@@ -51,7 +51,7 @@ Without Docker (a Claude Code web session), `scripts/db-native.sh` validates tha
 
 ```bash
 pnpm format          # oxfmt for TS/JS/CSS/MD/JSON, prettier for SQL
-pnpm check           # tsc -b
+pnpm check           # tsrs -b
 pnpm lint            # oxlint then eslint
 pnpm test:unit       # vitest
 pnpm scene           # needs supabase running + a dev server

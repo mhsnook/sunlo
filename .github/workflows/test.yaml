@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -59,8 +59,8 @@ jobs:
       # unchanged from when these were three jobs.
       - name: Collect PR branch results
         run: |
-          # tsc and lint are read-only, so run them concurrently — tsc is the
-          # long pole and the lint pass completes underneath it.
+          # The typecheck (tsrs) and lint are read-only, so run them
+          # concurrently. Lint is the long pole; tsrs takes ≈1.5 s.
           ( pnpm check 2>&1 | grep ': error TS' | sort > /tmp/pr-errors.txt || true ) &
           ( pnpm exec oxlint . -f unix > /tmp/pr-oxlint.txt 2>&1 || true
             pnpm exec eslint . -f unix > /tmp/pr-eslint.txt 2>&1 || true
@@ -323,7 +323,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
 
       - name: Set up dummy env for build
@@ -486,7 +486,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
 
       - name: Set up dummy env for build
@@ -516,7 +516,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -540,7 +540,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'pnpm'
 
       - name: Install Supabase CLI

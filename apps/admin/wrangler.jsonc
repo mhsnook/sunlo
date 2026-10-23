@@ -1,0 +1,25 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "sunlo-admin",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-10-01",
+	// postgres.js needs node:net and node:tls.
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application",
+		// Every other path is a static file and never runs the worker.
+		"run_worker_first": ["/api/*"],
+	},
+	"preview_urls": true,
+	"routes": [{ "pattern": "admin.sunlo.app", "custom_domain": true }],
+	// Production values, both public, the same as the root wrangler.jsonc.
+	// The Worker also needs one secret, set with `wrangler secret put`:
+	// ADMIN_DATABASE_URL, the transaction-pooler URL for the admin_reader
+	// role (docs/deployment.md, "Cloudflare" › "Setup").
+	"vars": {
+		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
+		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
+	},
+}

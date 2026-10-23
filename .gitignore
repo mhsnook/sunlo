@@ -34,3 +34,9 @@ keystore.properties
 
 # Scenetest
 /scenetest/.reports/
+
+# cloudflare
+.wrangler
+.dev.vars
+worker/worker-configuration.d.ts
+apps/admin/worker/worker-configuration.d.ts

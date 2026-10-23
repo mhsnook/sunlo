@@ -165,6 +165,10 @@ new or stale rows, so it's cheap to re-run after partial syncs.
 See [`scripts/README.md`](./scripts/README.md) for the full flag list,
 running against a remote project, and the cost shape.
 
+## Cloudflare worker
+
+One Cloudflare Worker serves the web app's static files and the API at `/api`, so the app and the API always deploy together. The code is in `worker/` and the config in `wrangler.jsonc`. Setup and deploy steps are in [`worker/README.md`](worker/README.md).
+
 ## The React App
 
 - This app is a full SPA as an architectural choice so that we can use Tauri to compile it to

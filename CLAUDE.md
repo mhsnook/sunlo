@@ -64,10 +64,13 @@ supabase db reset       # apply migrations + seeds
 # migrations/seeds against a native Postgres — see docs/database.md.
 
 pnpm dev                # dev server at http://127.0.0.1:5173
-pnpm check              # typecheck
+pnpm check              # typecheck with tsrs; `pnpm check:tsc` if tsrs has no binary for your OS
 pnpm lint               # oxlint then eslint
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
+pnpm admin:dev          # admin app (apps/admin) at http://localhost:5174; Vite proxies /api to :8788
+pnpm admin:worker:dev   # admin Worker (apps/admin/worker) at http://localhost:8788
+pnpm worker:dev         # Cloudflare worker (worker/) at http://localhost:8787; Vite proxies /api to it
 
 pnpm run migrate        # create migration from local changes
 pnpm run types          # regenerate supabase TS types
@@ -120,6 +123,14 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 **Cross-domain hooks** (`src/hooks/`): `usePhrase()` (composite-phrase — full phrase split by known languages), `useCompositePids()` (recommended phrases + pid arrays), a search-hook family (`use-hybrid-search`, `use-local-search`, `use-semantic-search`, `use-trigram-search`, `use-merged-search` + `search-config.ts`), `useLinks()` (nav routes + badges), `useTitleBar()`, `useDebounce`, `useFontPreference()`, `useIntroSeen()`, `useIsMobile()`, `useRequireAuth()`.
 
 **Cross-cutting lib** (`src/lib/`): `supabase-client.ts`, `query-client.ts`, `use-auth.ts` + `auth-lifecycle.ts` (clears user collections on sign-out, preloads profile on sign-in), `collections/` (local-cache, safe-write), `dayjs.ts`, `utils.ts`, `languages.ts`, `flags.ts`, `ui-prefs.ts`.
+
+## Admin app (`apps/admin/`)
+
+The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare by Workers Builds on every merge to `main` as the `sunlo-admin` Worker, which serves the static files and `apps/admin/worker/` for `/api/*`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin reads are SQL in the Worker, run as `admin_reader`, a read-only Postgres role with `bypassrls` and column grants that hide message bodies; never add an RPC for an admin read. The Worker verifies the admin's Supabase token and checks `admin_user` itself. Writes (none yet) go through the admin's own session and RLS. Details: `apps/admin/README.md`.
+
+## Cloudflare worker (`worker/`)
+
+One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs `worker/` for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR against its Supabase preview branch. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
 
 ## Routing (`src/routes/`)
 

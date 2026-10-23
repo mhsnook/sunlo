@@ -38,6 +38,10 @@ with
 
 create extension if not exists "pgsodium";
 
+create schema if not exists "admin";
+
+alter schema "admin" owner to "postgres";
+
 alter schema "public" owner to "postgres";
 
 create extension if not exists "pg_graphql"
@@ -950,6 +954,17 @@ comment on function "public"."validate_friend_request_action" () is 'Validates f
 set
 	default_tablespace = '';
 
+create or replace view "admin"."user_account" as
+select
+	"id",
+	"email",
+	"created_at",
+	"last_sign_in_at"
+from
+	"auth"."users";
+
+alter table "admin"."user_account" owner to "postgres";
+
 set
 	default_table_access_method = "heap";
 
@@ -1023,7 +1038,8 @@ create table if not exists "public"."phrase" (
 	"text_script" "text",
 	"only_reverse" boolean default false not null,
 	"archived" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" () not null
+	"updated_at" timestamp with time zone default "now" () not null,
+	"draft" boolean default false not null
 );
 
 alter table "public"."phrase" owner to "postgres";
@@ -1033,6 +1049,42 @@ comment on column "public"."phrase"."added_by" is 'User who added this card';
 comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
 comment on column "public"."phrase"."only_reverse" is 'When true, this phrase should only be reviewed in reverse direction (translation -> phrase). Useful for phrases like numbers where the target language is obvious but recalling it is the challenge.';
+
+comment on column "public"."phrase"."draft" is 'True until a person confirms the text and its first translation. Set when the content came from a machine (e.g. photo extraction) and the creator did not confirm it. Cleared by confirm_draft_phrase.';
+
+create or replace function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") returns "public"."phrase" language "plpgsql" security definer
+set
+	"search_path" to '' as $$
+declare
+	v_phrase public.phrase;
+begin
+	select * into v_phrase from public.phrase where id = p_phrase_id and archived = false;
+	if not found then
+		raise exception 'Phrase % not found', p_phrase_id using errcode = 'P0002';
+	end if;
+
+	if not (
+		public.is_admin()
+		or exists (
+			select 1
+			from public.user_profile profile,
+				jsonb_array_elements(profile.languages_known) as known
+			where profile.uid = auth.uid()
+				and known ->> 'lang' = v_phrase.lang
+				and known ->> 'level' = 'fluent'
+		)
+	) then
+		raise exception 'Only fluent speakers of this language can confirm a draft phrase'
+			using errcode = '42501';
+	end if;
+
+	update public.phrase set draft = false where id = p_phrase_id
+	returning * into v_phrase;
+	return v_phrase;
+end;
+$$;
+
+alter function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") owner to "postgres";
 
 create table if not exists "public"."phrase_playlist" (
 	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
@@ -1530,7 +1582,8 @@ select
 	"stats"."avg_difficulty",
 	"stats"."avg_stability",
 	coalesce("tags"."tags", '[]'::"jsonb") as "tags",
-	"phrase"."updated_at"
+	"phrase"."updated_at",
+	"phrase"."draft"
 from
 	(
 		(
@@ -3138,6 +3191,8 @@ add table only "public"."user_review_milestone";
 alter publication "supabase_realtime"
 add table only "public"."user_review_session";
 
+grant usage on schema "admin" to "admin_reader";
+
 revoke usage on schema "public"
 from
 	public;
@@ -3147,6 +3202,8 @@ grant usage on schema "public" to "anon";
 grant usage on schema "public" to "authenticated";
 
 grant usage on schema "public" to "service_role";
+
+grant usage on schema "public" to "admin_reader";
 
 grant all on function "public"."gtrgm_in" ("cstring") to "postgres";
 
@@ -3537,6 +3594,10 @@ grant all on function "public"."cosine_distance" ("public"."vector", "public"."v
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "authenticated";
 
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") to "authenticated";
+
+grant all on function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") to "service_role";
 
 grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "anon";
 
@@ -4565,11 +4626,19 @@ grant all on function "public"."sum" ("public"."vector") to "authenticated";
 
 grant all on function "public"."sum" ("public"."vector") to "service_role";
 
+grant
+select
+	on table "admin"."user_account" to "admin_reader";
+
 grant all on table "public"."admin_user" to "service_role";
 
 grant
 select
 	on table "public"."admin_user" to "authenticated";
+
+grant
+select
+	on table "public"."admin_user" to "admin_reader";
 
 grant all on table "public"."chat_message" to "anon";
 
@@ -4577,17 +4646,37 @@ grant all on table "public"."chat_message" to "authenticated";
 
 grant all on table "public"."chat_message" to "service_role";
 
+grant
+select
+	("id") on table "public"."chat_message" to "admin_reader";
+
+grant
+select
+	("created_at") on table "public"."chat_message" to "admin_reader";
+
+grant
+select
+	("sender_uid") on table "public"."chat_message" to "admin_reader";
+
 grant all on table "public"."comment_phrase_link" to "anon";
 
 grant all on table "public"."comment_phrase_link" to "authenticated";
 
 grant all on table "public"."comment_phrase_link" to "service_role";
 
+grant
+select
+	on table "public"."comment_phrase_link" to "admin_reader";
+
 grant all on table "public"."comment_upvote" to "anon";
 
 grant all on table "public"."comment_upvote" to "authenticated";
 
 grant all on table "public"."comment_upvote" to "service_role";
+
+grant
+select
+	on table "public"."comment_upvote" to "admin_reader";
 
 grant all on table "public"."db_meta" to "anon";
 
@@ -4601,11 +4690,19 @@ grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
 
+grant
+select
+	on table "public"."phrase" to "admin_reader";
+
 grant all on table "public"."phrase_playlist" to "anon";
 
 grant all on table "public"."phrase_playlist" to "authenticated";
 
 grant all on table "public"."phrase_playlist" to "service_role";
+
+grant
+select
+	on table "public"."phrase_playlist" to "admin_reader";
 
 grant all on table "public"."phrase_request" to "anon";
 
@@ -4613,11 +4710,19 @@ grant all on table "public"."phrase_request" to "authenticated";
 
 grant all on table "public"."phrase_request" to "service_role";
 
+grant
+select
+	on table "public"."phrase_request" to "admin_reader";
+
 grant all on table "public"."user_card" to "anon";
 
 grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
+
+grant
+select
+	on table "public"."user_card" to "admin_reader";
 
 grant all on table "public"."user_card_review" to "authenticated";
 
@@ -4625,11 +4730,19 @@ grant all on table "public"."user_card_review" to "service_role";
 
 grant all on table "public"."user_card_review" to "anon";
 
+grant
+select
+	on table "public"."user_card_review" to "admin_reader";
+
 grant all on table "public"."phrase_stats" to "anon";
 
 grant all on table "public"."phrase_stats" to "authenticated";
 
 grant all on table "public"."phrase_stats" to "service_role";
+
+grant
+select
+	on table "public"."phrase_stats" to "admin_reader";
 
 grant all on table "public"."playlist_phrase_link" to "anon";
 
@@ -4637,11 +4750,19 @@ grant all on table "public"."playlist_phrase_link" to "authenticated";
 
 grant all on table "public"."playlist_phrase_link" to "service_role";
 
+grant
+select
+	on table "public"."playlist_phrase_link" to "admin_reader";
+
 grant all on table "public"."feed_activities" to "anon";
 
 grant all on table "public"."feed_activities" to "authenticated";
 
 grant all on table "public"."feed_activities" to "service_role";
+
+grant
+select
+	on table "public"."feed_activities" to "admin_reader";
 
 grant all on table "public"."friend_request_action" to "anon";
 
@@ -4649,11 +4770,19 @@ grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
 
+grant
+select
+	on table "public"."friend_request_action" to "admin_reader";
+
 grant all on table "public"."friend_summary" to "anon";
 
 grant all on table "public"."friend_summary" to "authenticated";
 
 grant all on table "public"."friend_summary" to "service_role";
+
+grant
+select
+	on table "public"."friend_summary" to "admin_reader";
 
 grant all on table "public"."language" to "anon";
 
@@ -4661,11 +4790,19 @@ grant all on table "public"."language" to "authenticated";
 
 grant all on table "public"."language" to "service_role";
 
+grant
+select
+	on table "public"."language" to "admin_reader";
+
 grant all on table "public"."message" to "anon";
 
 grant all on table "public"."message" to "authenticated";
 
 grant all on table "public"."message" to "service_role";
+
+grant
+select
+	on table "public"."message" to "admin_reader";
 
 grant all on table "public"."message_tag" to "anon";
 
@@ -4673,11 +4810,19 @@ grant all on table "public"."message_tag" to "authenticated";
 
 grant all on table "public"."message_tag" to "service_role";
 
+grant
+select
+	on table "public"."message_tag" to "admin_reader";
+
 grant all on table "public"."message_tag_link" to "anon";
 
 grant all on table "public"."message_tag_link" to "authenticated";
 
 grant all on table "public"."message_tag_link" to "service_role";
+
+grant
+select
+	on table "public"."message_tag_link" to "admin_reader";
 
 grant all on table "public"."user_deck" to "anon";
 
@@ -4685,11 +4830,19 @@ grant all on table "public"."user_deck" to "authenticated";
 
 grant all on table "public"."user_deck" to "service_role";
 
+grant
+select
+	on table "public"."user_deck" to "admin_reader";
+
 grant all on table "public"."meta_language" to "anon";
 
 grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
+
+grant
+select
+	on table "public"."meta_language" to "admin_reader";
 
 grant all on table "public"."notification" to "anon";
 
@@ -4697,11 +4850,31 @@ grant all on table "public"."notification" to "authenticated";
 
 grant all on table "public"."notification" to "service_role";
 
+grant
+select
+	("id") on table "public"."notification" to "admin_reader";
+
+grant
+select
+	("uid") on table "public"."notification" to "admin_reader";
+
+grant
+select
+	("type") on table "public"."notification" to "admin_reader";
+
+grant
+select
+	("created_at") on table "public"."notification" to "admin_reader";
+
 grant all on table "public"."phrase_tag" to "anon";
 
 grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
+
+grant
+select
+	on table "public"."phrase_tag" to "admin_reader";
 
 grant all on table "public"."tag" to "anon";
 
@@ -4709,11 +4882,19 @@ grant all on table "public"."tag" to "authenticated";
 
 grant all on table "public"."tag" to "service_role";
 
+grant
+select
+	on table "public"."tag" to "admin_reader";
+
 grant all on table "public"."phrase_meta" to "anon";
 
 grant all on table "public"."phrase_meta" to "authenticated";
 
 grant all on table "public"."phrase_meta" to "service_role";
+
+grant
+select
+	on table "public"."phrase_meta" to "admin_reader";
 
 grant all on table "public"."phrase_playlist_upvote" to "anon";
 
@@ -4721,11 +4902,19 @@ grant all on table "public"."phrase_playlist_upvote" to "authenticated";
 
 grant all on table "public"."phrase_playlist_upvote" to "service_role";
 
+grant
+select
+	on table "public"."phrase_playlist_upvote" to "admin_reader";
+
 grant all on table "public"."phrase_relation" to "anon";
 
 grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
+
+grant
+select
+	on table "public"."phrase_relation" to "admin_reader";
 
 grant all on table "public"."phrase_request_upvote" to "anon";
 
@@ -4733,11 +4922,19 @@ grant all on table "public"."phrase_request_upvote" to "authenticated";
 
 grant all on table "public"."phrase_request_upvote" to "service_role";
 
+grant
+select
+	on table "public"."phrase_request_upvote" to "admin_reader";
+
 grant all on table "public"."phrase_translation" to "anon";
 
 grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
+
+grant
+select
+	on table "public"."phrase_translation" to "admin_reader";
 
 grant all on table "public"."user_profile" to "anon";
 
@@ -4745,11 +4942,19 @@ grant all on table "public"."user_profile" to "authenticated";
 
 grant all on table "public"."user_profile" to "service_role";
 
+grant
+select
+	on table "public"."user_profile" to "admin_reader";
+
 grant all on table "public"."public_profile" to "anon";
 
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
+
+grant
+select
+	on table "public"."public_profile" to "admin_reader";
 
 grant all on table "public"."request_comment" to "anon";
 
@@ -4757,11 +4962,19 @@ grant all on table "public"."request_comment" to "authenticated";
 
 grant all on table "public"."request_comment" to "service_role";
 
+grant
+select
+	on table "public"."request_comment" to "admin_reader";
+
 grant all on table "public"."search_corpus" to "anon";
 
 grant all on table "public"."search_corpus" to "authenticated";
 
 grant all on table "public"."search_corpus" to "service_role";
+
+grant
+select
+	on table "public"."search_corpus" to "admin_reader";
 
 grant all on table "public"."search_text_index" to "anon";
 
@@ -4769,11 +4982,27 @@ grant all on table "public"."search_text_index" to "authenticated";
 
 grant all on table "public"."search_text_index" to "service_role";
 
+grant
+select
+	on table "public"."search_text_index" to "admin_reader";
+
 grant all on table "public"."user_client_event" to "anon";
 
 grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
+
+grant
+select
+	("id") on table "public"."user_client_event" to "admin_reader";
+
+grant
+select
+	("created_at") on table "public"."user_client_event" to "admin_reader";
+
+grant
+select
+	("uid") on table "public"."user_client_event" to "admin_reader";
 
 grant all on table "public"."user_review_milestone" to "anon";
 
@@ -4781,11 +5010,19 @@ grant all on table "public"."user_review_milestone" to "authenticated";
 
 grant all on table "public"."user_review_milestone" to "service_role";
 
+grant
+select
+	on table "public"."user_review_milestone" to "admin_reader";
+
 grant all on table "public"."user_review_session" to "anon";
 
 grant all on table "public"."user_review_session" to "authenticated";
 
 grant all on table "public"."user_review_session" to "service_role";
+
+grant
+select
+	on table "public"."user_review_session" to "admin_reader";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";
@@ -4822,3 +5059,8 @@ grant all on tables to "authenticated";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on tables to "service_role";
+
+alter default privileges for role "postgres" in schema "public"
+grant
+select
+	on tables to "admin_reader";

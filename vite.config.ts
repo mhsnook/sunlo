@@ -56,6 +56,9 @@ export default defineConfig(() => {
 		server: {
 			port: 5173,
 			strictPort: true,
+			// `pnpm worker:dev` serves /api on :8787. In production the same
+			// worker serves the app, so the app always calls its own origin.
+			proxy: { '/api': 'http://localhost:8787' },
 			watch: {
 				ignored: [
 					'**/supabase/**',
@@ -70,11 +73,16 @@ export default defineConfig(() => {
 					'**/dist',
 					'**/node_modules',
 					'**/scenetest/**',
+					'**/.wrangler/**',
 				],
 			},
 		},
 		test: {
-			include: ['src/**/*.test.ts'],
+			include: [
+				'src/**/*.test.ts',
+				'worker/**/*.test.ts',
+				'apps/admin/worker/**/*.test.ts',
+			],
 		},
 	}
 })

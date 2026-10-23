@@ -7,7 +7,14 @@ import oxlint from 'eslint-plugin-oxlint'
 
 export default [
 	{
-		ignores: ['dist/', 'src-tauri/', 'scripts/', 'src/types/supabase.ts'],
+		ignores: [
+			'dist/',
+			'src-tauri/',
+			'scripts/',
+			'src/types/supabase.ts',
+			'worker/worker-configuration.d.ts',
+			'apps/admin/worker/worker-configuration.d.ts',
+		],
 	},
 	{
 		files: ['src/**/*.{ts,tsx}'],
@@ -56,13 +63,70 @@ export default [
 		},
 	},
 	{
-		files: ['vite.config.ts'],
+		files: ['apps/admin/src/**/*.{ts,tsx}'],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: 'module',
+			parser: tseslint.parser,
+			parserOptions: { project: ['./apps/admin/tsconfig.json'] },
+			globals: { ...globals.browser },
+		},
+		plugins: {
+			'@typescript-eslint': tseslint.plugin,
+			'react-hooks': reactHooks,
+		},
+		rules: {
+			...js.configs.recommended.rules,
+			...tseslint.plugin.configs['recommended'].rules,
+			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
+			...reactHooks.configs.recommended.rules,
+			'@typescript-eslint/only-throw-error': ['error', { allow: ['Redirect'] }],
+		},
+	},
+	{
+		files: ['worker/**/*.ts'],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: 'module',
+			parser: tseslint.parser,
+			parserOptions: { project: ['./tsconfig.worker.json'] },
+			globals: { ...globals.serviceworker },
+		},
+		plugins: { '@typescript-eslint': tseslint.plugin },
+		rules: {
+			...js.configs.recommended.rules,
+			...tseslint.plugin.configs['recommended'].rules,
+			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
+			// `Env` and other Workers globals come from worker-configuration.d.ts,
+			// which only TypeScript sees.
+			'no-undef': 'off',
+		},
+	},
+	{
+		files: ['apps/admin/worker/**/*.ts'],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: 'module',
+			parser: tseslint.parser,
+			parserOptions: { project: ['./apps/admin/tsconfig.worker.json'] },
+			globals: { ...globals.serviceworker },
+		},
+		plugins: { '@typescript-eslint': tseslint.plugin },
+		rules: {
+			...js.configs.recommended.rules,
+			...tseslint.plugin.configs['recommended'].rules,
+			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
+			'no-undef': 'off',
+		},
+	},
+	{
+		files: ['vite.config.ts', 'apps/admin/vite.config.ts'],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: 'module',
 			parser: tseslint.parser,
 			parserOptions: {
-				project: ['./tsconfig.node.json'],
+				project: ['./tsconfig.node.json', './apps/admin/tsconfig.json'],
 				// tsconfigRootDir: './',
 			},
 		},
