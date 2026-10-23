@@ -26,6 +26,9 @@ skills:
 - task: "Reviewing or improving codebase architecture — surfacing shallow modules, deepening seams, improving testability and AI-navigability"
   load: ".claude/skills/improve-codebase-architecture/SKILL.md"
 
+- task: "Writing SQL, migrations, RLS policies, indexes or database functions — load with docs/database.md; where the two disagree, docs/database.md wins (the 4am review day, the soft-delete shapes, uuid ids on every table)"
+  load: ".claude/skills/supabase-postgres-best-practices/SKILL.md"
+
 <!-- intent-skills:end -->
 
 docs:
