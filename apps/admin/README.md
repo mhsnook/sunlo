@@ -41,7 +41,7 @@ The dashboard opens with "Since you last checked in": a short report written by 
 
 - **What it is:** `worker/reporter/agent.ts`, a Cloudflare Agents SDK Durable Object named `Reporter`. One instance, `team`, serves every admin. Its own SQLite holds each admin's reports and the notes the agent chooses to keep, so its memory lives in the Durable Object, not in Postgres.
 - **When it runs:** opening the dashboard calls `POST /api/reporter/check-in`. The window starts where your last finished report ended (the last 7 days on your first visit) and ends now. A check-in within 30 minutes of a report that is writing or done returns that report instead of starting a new run. "Write a fresh report" skips that rule.
-- **How it works:** the check-in schedules `writeReport` on the Durable Object, so the run outlives the request. The run drives Claude (`claude-opus-5-5`) with the Anthropic SDK's tool runner and four tools:
+- **How it works:** the check-in schedules `writeReport` on the Durable Object, so the run outlives the request. The run drives Claude (`claude-opus-5-5`) with the Anthropic SDK's tool runner and these tools, plus the GitHub tools below when they are set up:
   - `activity_between`: a preset query with signups, reviews and each reviewer, new decks, and library and chat counts for a window
   - `run_sql`: one SELECT of the agent's own, run as `admin_reader` with an 8-second timeout and at most 200 rows
   - `remember` and `forget`: notes kept for future reports, listed under the report as "What the reporter remembers"
@@ -49,6 +49,38 @@ The dashboard opens with "Since you last checked in": a short report written by 
 - **Cost:** every report is one model run with a handful of tool calls. Requests use the server-side refusal fallback (`fallbacks: "default"`), so a declined request is retried on another model instead of failing.
 
 The reporter needs the `ANTHROPIC_API_KEY` secret on the `sunlo-admin` Worker. Without it, every report fails with a message that names the secret.
+
+### Filing GitHub issues
+
+When three more secrets are set, the reporter also gets `list_my_issues`, `file_issue` and `comment_on_issue`, and files issues on `mhsnook/sunlo` (the `GITHUB_REPO` var) as its own GitHub App. It files only for something that looks broken in the product or the data, never for usage commentary. Without the secrets it has no GitHub tools, and reports work as before.
+
+The repository is public, so the tools enforce these limits in code, whatever the prompt says:
+
+- **No personal data.** An issue or comment that contains an email address, a user's id or a username is refused, and the agent is told to rewrite it.
+- **No duplicates.** The agent keeps every issue it files in its SQLite. It checks that list first, and it can comment only on its own issues.
+- **Rate limits.** At most 2 issues per run and 5 per 24 hours, and 3 comments per run.
+- **A label and a footer.** Every issue gets the `from-reporter` label and ends with "Filed by the Sunlo usage reporter."
+
+To set it up, once:
+
+1. On GitHub, open **Settings › Developer settings › GitHub Apps › New GitHub App**. Name it, for example, "Sunlo Reporter". Turn off **Webhook › Active**. Under **Repository permissions**, set **Issues** to **Read and write**. Leave everything else at No access. Create the app and note its **App ID**.
+2. On the app's page, **Generate a private key**. GitHub downloads a `.pem` file in PKCS#1 format, and Workers can only read PKCS#8, so convert it:
+
+   ```bash
+   openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in sunlo-reporter.pem -out sunlo-reporter-pkcs8.pem
+   ```
+
+3. **Install App** on your account, with **Only select repositories** set to `mhsnook/sunlo`. The installation id is the number at the end of the page's URL (`github.com/settings/installations/<id>`).
+4. In the repository, create the label `from-reporter`, so the app does not depend on creating it.
+5. Set the secrets from `apps/admin`, then delete both `.pem` files:
+
+   ```bash
+   pnpm exec wrangler secret put GITHUB_APP_ID
+   pnpm exec wrangler secret put GITHUB_APP_INSTALLATION_ID
+   pnpm exec wrangler secret put GITHUB_APP_PRIVATE_KEY < sunlo-reporter-pkcs8.pem
+   ```
+
+If the key is still in PKCS#1 format, the report says GitHub filing is unavailable and why, and the rest of the report still runs.
 
 ## Commands
 

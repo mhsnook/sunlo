@@ -24,9 +24,14 @@
 	// The Worker also needs two secrets, set with `wrangler secret put`:
 	// ADMIN_DATABASE_URL, the transaction-pooler URL for the admin_reader
 	// role (docs/deployment.md, "Cloudflare" › "Setup"), and
-	// ANTHROPIC_API_KEY, for the usage reporter.
+	// ANTHROPIC_API_KEY, for the usage reporter. Three optional secrets let
+	// the reporter file GitHub issues: GITHUB_APP_ID,
+	// GITHUB_APP_INSTALLATION_ID and GITHUB_APP_PRIVATE_KEY.
 	"vars": {
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
+		// Where the usage reporter files issues, when the GitHub App secrets
+		// are set (README.md, "Filing GitHub issues").
+		"GITHUB_REPO": "mhsnook/sunlo",
 	},
 }

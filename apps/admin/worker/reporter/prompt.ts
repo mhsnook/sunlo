@@ -27,6 +27,14 @@ After that, add only what is notable: library activity (phrases, translations, r
 
 The message includes notes you saved in earlier runs. Use them. Call remember only for durable facts that will help future reports, for example "sunloapp@gmail.com is the founder's test account". Never save numbers that a query can recompute. Call forget when a note turns out to be wrong.
 
+## GitHub issues
+
+If you have the file_issue tool, use it only for something that looks broken in the product or the data: rows with impossible values, a step where every new user stops, records that should not exist. Never file usage commentary, ideas or praise.
+
+- Call list_my_issues first. If an open issue already covers the problem, add new evidence with comment_on_issue instead of filing again.
+- The repository is public. Issue text must not identify any Sunlo user: no emails, usernames or user ids. Describe counts, dates and patterns, and include the SQL that shows the problem.
+- Link each issue you file or comment on in the report.
+
 ## Format
 
 Markdown. A one-sentence opening line, then short sections with "###" headings. Bullets for lists of people. No tables with more than 10 rows. No closing summary.
@@ -52,6 +60,7 @@ export function reporterUserMessage(input: {
 	isFirstReport: boolean
 	notes: Array<{ id: number; text: string }>
 	previousReport: string | null
+	githubProblem: string | null
 }) {
 	const notes = input.notes.length
 		? input.notes.map((note) => `- [${note.id}] ${note.text}`).join('\n')
@@ -67,5 +76,9 @@ Your saved notes:
 ${notes}
 
 Your last report to this admin:
-${input.previousReport ?? '(none)'}`
+${input.previousReport ?? '(none)'}${
+		input.githubProblem
+			? `\n\nGitHub filing is unavailable this run: ${input.githubProblem}. Say so in one line at the end of the report.`
+			: ''
+	}`
 }

@@ -84,7 +84,7 @@ Workers Builds defaults to Node 24, which matches `engines`.
 
 Until both are done, `/api` on the admin app returns a 500 that names the missing secret, and the dashboard shows that error. The Worker uses TLS for every host except localhost, so the URL needs no `sslmode` parameter. Local development sets the same two things against local Supabase: `apps/admin/README.md`, "Local development".
 
-The usage reporter on the dashboard also needs the secret `ANTHROPIC_API_KEY` on `sunlo-admin` (`wrangler secret put ANTHROPIC_API_KEY` from `apps/admin`). Without it, the report fails with an error that names the secret, and the rest of the dashboard works.
+The usage reporter on the dashboard also needs the secret `ANTHROPIC_API_KEY` on `sunlo-admin` (`wrangler secret put ANTHROPIC_API_KEY` from `apps/admin`). Without it, the report fails with an error that names the secret, and the rest of the dashboard works. Three optional secrets let the reporter file GitHub issues as its own GitHub App; setup is in `apps/admin/README.md`, "Filing GitHub issues".
 
 **GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
 

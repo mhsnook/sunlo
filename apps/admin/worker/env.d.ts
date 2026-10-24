@@ -3,4 +3,7 @@
 interface Env {
 	ADMIN_DATABASE_URL: string
 	ANTHROPIC_API_KEY: string
+	GITHUB_APP_ID?: string
+	GITHUB_APP_INSTALLATION_ID?: string
+	GITHUB_APP_PRIVATE_KEY?: string
 }

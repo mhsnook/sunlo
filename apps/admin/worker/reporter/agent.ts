@@ -4,6 +4,14 @@ import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError'
 import { Agent } from 'agents'
 import { z } from 'zod'
 import { connect } from '../db'
+import {
+	COMMENTS_PER_RUN,
+	findPersonalData,
+	githubFor,
+	ISSUES_PER_DAY,
+	ISSUES_PER_RUN,
+	type PeopleIndex,
+} from './github'
 import { REPORTER_SYSTEM_PROMPT, reporterUserMessage } from './prompt'
 import {
 	activityBetween,
@@ -53,6 +61,14 @@ export class Reporter extends Agent<Env> {
 			)`
 		this
 			.sql`create index if not exists report_uid_created on report (uid, created_at)`
+		this.sql`
+			create table if not exists filed_issue (
+				number integer primary key,
+				title text not null,
+				url text not null,
+				report_id text not null,
+				created_at text not null
+			)`
 		this.sql`
 			create table if not exists note (
 				id integer primary key autoincrement,
@@ -151,6 +167,15 @@ export class Reporter extends Agent<Env> {
 		if (!this.env.ANTHROPIC_API_KEY) {
 			throw new Error('ANTHROPIC_API_KEY is not set on this Worker')
 		}
+		// A broken GitHub setup costs the report its GitHub tools, not the
+		// report itself.
+		let github: ReturnType<typeof githubFor> = null
+		let githubProblem: string | null = null
+		try {
+			github = githubFor(this.env)
+		} catch (error) {
+			githubProblem = error instanceof Error ? error.message : String(error)
+		}
 		const client = new Anthropic({ apiKey: this.env.ANTHROPIC_API_KEY })
 		const message = await client.beta.messages.toolRunner({
 			model: 'claude-opus-5-5',
@@ -162,7 +187,10 @@ export class Reporter extends Agent<Env> {
 			fallbacks: 'default',
 			cache_control: { type: 'ephemeral' },
 			system: REPORTER_SYSTEM_PROMPT,
-			tools: this.tools(db),
+			tools: [
+				...this.tools(db),
+				...(github ? this.githubTools(github, db, report.id) : []),
+			],
 			messages: [
 				{
 					role: 'user',
@@ -173,6 +201,7 @@ export class Reporter extends Agent<Env> {
 						isFirstReport: !previous,
 						notes: this.listNotes(),
 						previousReport: previous?.body ?? null,
+						githubProblem,
 					}),
 				},
 			],
@@ -248,6 +277,126 @@ export class Reporter extends Agent<Env> {
 			}),
 		]
 	}
+
+	private githubTools(
+		github: NonNullable<ReturnType<typeof githubFor>>,
+		db: ReturnType<typeof connect>,
+		reportId: string
+	) {
+		let people: Promise<PeopleIndex> | undefined
+		let issuesThisRun = 0
+		let commentsThisRun = 0
+		const rejectPersonalData = async (text: string) => {
+			people ??= loadPeople(db)
+			const found = findPersonalData(text, await people)
+			if (found) {
+				throw new ToolError(
+					`The text contains ${found}. The repository is public, so describe counts and patterns without identifying anyone, then try again.`
+				)
+			}
+		}
+		const footer = `\n\n---\n_Filed by the Sunlo usage reporter._`
+
+		return [
+			betaZodTool({
+				name: 'list_my_issues',
+				description:
+					'List the GitHub issues you filed in earlier runs, with whether each is still open. Call it before filing, so you comment on an open issue instead of filing a duplicate.',
+				inputSchema: z.object({}),
+				run: async () => {
+					const filed = this.sql<{
+						number: number
+						title: string
+						url: string
+						created_at: string
+					}>`
+						select number, title, url, created_at from filed_issue
+						order by created_at desc limit 20`
+					const states = await Promise.all(
+						filed.map((issue) =>
+							github.issueState(issue.number).catch(() => 'unknown')
+						)
+					)
+					return JSON.stringify(
+						filed.map(({ number, title, url, created_at }, index) => ({
+							number,
+							title,
+							url,
+							created_at,
+							state: states.at(index),
+						}))
+					)
+				},
+			}),
+			betaZodTool({
+				name: 'file_issue',
+				description: `File a GitHub issue on Sunlo's public repository for something that looks broken in the product or the data. At most ${ISSUES_PER_RUN} per run and ${ISSUES_PER_DAY} per day. The text must not identify any user: no emails, usernames or user ids.`,
+				inputSchema: z.object({
+					title: z.string().min(5).max(120),
+					body: z.string().min(20).max(6000),
+				}),
+				run: async ({ title, body }) => {
+					if (issuesThisRun >= ISSUES_PER_RUN) {
+						throw new ToolError(
+							`You have filed ${ISSUES_PER_RUN} issues in this run, the limit. Mention the rest in the report instead.`
+						)
+					}
+					const since = new Date(Date.now() - 86_400_000).toISOString()
+					const [{ today }] = this.sql<{ today: number }>`
+						select count(*) as today from filed_issue where created_at >= ${since}`
+					if (today >= ISSUES_PER_DAY) {
+						throw new ToolError(
+							`${ISSUES_PER_DAY} issues were filed in the last 24 hours, the limit. Mention this one in the report instead.`
+						)
+					}
+					await rejectPersonalData(`${title}\n${body}`)
+					const issue = await github.fileIssue(title, body + footer)
+					issuesThisRun += 1
+					this.sql`
+						insert into filed_issue (number, title, url, report_id, created_at)
+						values (${issue.number}, ${issue.title}, ${issue.url}, ${reportId}, ${new Date().toISOString()})`
+					return `Filed issue #${issue.number}: ${issue.url}`
+				},
+			}),
+			betaZodTool({
+				name: 'comment_on_issue',
+				description: `Add new evidence to an issue you filed earlier, instead of filing a duplicate. At most ${COMMENTS_PER_RUN} per run. Same rule: no emails, usernames or user ids.`,
+				inputSchema: z.object({
+					number: z.number().int(),
+					body: z.string().min(20).max(4000),
+				}),
+				run: async ({ number, body }) => {
+					const [mine] = this.sql<{ number: number }>`
+						select number from filed_issue where number = ${number}`
+					if (!mine) {
+						throw new ToolError(
+							`Issue #${number} was not filed by you. Comment only on issues from list_my_issues.`
+						)
+					}
+					if (commentsThisRun >= COMMENTS_PER_RUN) {
+						throw new ToolError(
+							`You have commented ${COMMENTS_PER_RUN} times in this run, the limit.`
+						)
+					}
+					await rejectPersonalData(body)
+					const url = await github.commentOnIssue(number, body + footer)
+					commentsThisRun += 1
+					return `Commented: ${url}`
+				},
+			}),
+		]
+	}
+}
+
+async function loadPeople(db: ReturnType<typeof connect>) {
+	const rows = await db<Array<{ uid: string; username: string | null }>>`
+		select uid::text, lower(username) as username from public.user_profile`
+	const people: PeopleIndex = { usernames: new Set(), uids: new Set() }
+	for (const row of rows) {
+		people.uids.add(row.uid.toLowerCase())
+		if (row.username) people.usernames.add(row.username)
+	}
+	return people
 }
 
 function toView(row: ReportRow): ReportView {
