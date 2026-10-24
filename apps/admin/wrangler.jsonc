@@ -13,11 +13,23 @@
 		"run_worker_first": ["/api/*"],
 	},
 	"preview_urls": true,
-	"routes": [{ "pattern": "admin.sunlo.app", "custom_domain": true }],
+	"routes": [
+		{
+			"pattern": "admin.sunlo.app",
+			"custom_domain": true,
+		},
+	],
+	// The database, as the read-only admin_reader role. The Hyperdrive config
+	// holds the production connection string (docs/deployment.md,
+	// "Cloudflare" › "Setup"); `wrangler dev` connects to the local string.
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "d22b56aafb6c420781c880b4c6777490",
+			"localConnectionString": "postgresql://admin_reader:admin_reader@127.0.0.1:54322/postgres",
+		},
+	],
 	// Production values, both public, the same as the root wrangler.jsonc.
-	// The Worker also needs one secret, set with `wrangler secret put`:
-	// ADMIN_DATABASE_URL, the transaction-pooler URL for the admin_reader
-	// role (docs/deployment.md, "Cloudflare" › "Setup").
 	"vars": {
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",

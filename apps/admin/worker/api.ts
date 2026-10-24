@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Sql } from 'postgres'
 import { z } from 'zod'
-import { connect } from './db'
+import { connect, withDeadline } from './db'
 import { activityOverview, userActivity } from './stats'
 import { supabaseFor } from './supabase'
 
@@ -29,19 +29,17 @@ app.use('*', async (c, next) => {
 	if (claims?.role !== 'authenticated') {
 		return c.json({ error: 'Sign in to use this' }, 401)
 	}
-	if (!c.env.ADMIN_DATABASE_URL) {
-		return c.json(
-			{ error: 'ADMIN_DATABASE_URL is not set on this Worker' },
-			500
-		)
-	}
 
-	const sql = connect(c.env.ADMIN_DATABASE_URL)
+	const sql = connect(c.env.HYPERDRIVE)
 	try {
-		const [{ is_admin }] = await sql<[{ is_admin: boolean }]>`
-			select exists (
-				select 1 from public.admin_user where uid = ${claims.sub}
-			) as is_admin`
+		const [{ is_admin }] = await withDeadline(
+			sql<[{ is_admin: boolean }]>`
+				select exists (
+					select 1 from public.admin_user where uid = ${claims.sub}
+				) as is_admin`,
+			15_000,
+			'The database'
+		)
 		if (!is_admin) {
 			return c.json({ error: 'This account is not an admin' }, 403)
 		}
