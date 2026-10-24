@@ -51,7 +51,7 @@ There is no deploy command: Cloudflare deploys on a merge to `main`.
 
 ## Local development
 
-The Worker needs `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`. `ADMIN_DATABASE_URL` is a local connection string for `admin_reader`, and the migration creates that role with no password, so set one once:
+The Worker needs `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`. The database connection is the Hyperdrive binding's `localConnectionString` in `wrangler.jsonc`, which `wrangler dev` uses in place of the production Hyperdrive config. It connects to local Supabase as `admin_reader` with the password `admin_reader`, and the migration creates that role with no password, so set one once:
 
 ```bash
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "alter role admin_reader password 'admin_reader'"
@@ -74,6 +74,6 @@ Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admi
 
 `wrangler.jsonc` serves `dist/` as static assets with an SPA fallback and runs `worker/index.ts` for `/api/*`, on the custom domain `admin.sunlo.app`. The custom domain needs the `sunlo.app` zone on the same Cloudflare account.
 
-The Worker has one secret, `ADMIN_DATABASE_URL`: the transaction-pooler connection string for `admin_reader`, set with `wrangler secret put` or in the dashboard. Until it is set, every `/api` route returns a 500 that names it, and the dashboard shows that error.
+The Worker reaches the database through [Hyperdrive](https://developers.cloudflare.com/hyperdrive/), bound as `HYPERDRIVE` in `wrangler.jsonc`. The Hyperdrive config holds the production connection string for `admin_reader`, so the Worker has no database secret of its own. Hyperdrive is required, not an optimisation: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs rather than failing. Hyperdrive makes the TLS connection on the Worker's behalf. If the database stops answering, every `/api` route returns a 500 after 15 seconds instead of hanging, and the Worker logs the reason.
 
 The build reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at build time, from the Workers Builds build variables. If either is missing, the build still succeeds but drops the Supabase SDK, and the app cannot sign in. Do not deploy by hand: a local build reads the root `.env`, which points at local Supabase.

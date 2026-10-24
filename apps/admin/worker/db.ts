@@ -1,20 +1,36 @@
 import postgres from 'postgres'
 
-const localHosts = new Set(['localhost', '127.0.0.1', '[::1]'])
-
-// Local Supabase speaks plain TCP; everything else must use TLS.
-export function sslFor(url: string) {
-	return localHosts.has(new URL(url).hostname) ? false : 'require'
-}
-
-// One connection per request, through Supabase's transaction pooler, which
-// rejects named prepared statements. The caller ends it.
-export function connect(url: string) {
-	return postgres(url, {
+// One connection per request. Hyperdrive holds the pool and the TLS session
+// to Supabase: the pooler's certificate comes from Supabase's private CA,
+// which a Worker's own TLS socket cannot verify, and from Cloudflare's
+// network that handshake hangs instead of failing. The caller ends it.
+// Prepared statements stay on: Hyperdrive caches them, and its docs warn
+// that `prepare: false` can make queries hang.
+export function connect(hyperdrive: Hyperdrive) {
+	return postgres(hyperdrive.connectionString, {
 		max: 1,
-		prepare: false,
 		fetch_types: false,
 		connect_timeout: 10,
-		ssl: sslFor(url),
+		connection: { application_name: 'Cloudflare Hyperdrive' },
+	})
+}
+
+// Rejects when `promise` has not settled after `ms`, so a connection that
+// neither answers nor errors becomes a 500 instead of a request the browser
+// gives up on five minutes later.
+export function withDeadline<T>(
+	promise: Promise<T>,
+	ms: number,
+	what: string
+): Promise<T> {
+	let timer: ReturnType<typeof setTimeout> | null = null
+	const deadline = new Promise<never>((_, reject) => {
+		timer = setTimeout(
+			() => reject(new Error(`${what} did not answer within ${ms / 1000}s`)),
+			ms
+		)
+	})
+	return Promise.race([promise, deadline]).finally(() => {
+		if (timer !== null) clearTimeout(timer)
 	})
 }

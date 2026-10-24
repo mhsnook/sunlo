@@ -1,21 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { sslFor } from './db'
+import { withDeadline } from './db'
 
-describe('sslFor', () => {
-	it('uses plain TCP for local Supabase', () => {
-		expect(
-			sslFor('postgresql://admin_reader:pw@127.0.0.1:54322/postgres')
-		).toBe(false)
-		expect(
-			sslFor('postgresql://admin_reader:pw@localhost:54322/postgres')
-		).toBe(false)
+describe('withDeadline', () => {
+	it('passes a value through when the promise settles in time', async () => {
+		await expect(
+			withDeadline(Promise.resolve(1), 50, 'The database')
+		).resolves.toBe(1)
 	})
 
-	it('requires TLS for every other host', () => {
-		expect(
-			sslFor(
-				'postgresql://admin_reader.ref:pw@aws-0-eu-west-1.pooler.supabase.com:6543/postgres'
+	it('rejects with the original error when the promise fails in time', async () => {
+		await expect(
+			withDeadline(
+				Promise.reject(new Error('bad password')),
+				50,
+				'The database'
 			)
-		).toBe('require')
+		).rejects.toThrow('bad password')
+	})
+
+	it('rejects with a named timeout when the promise never settles', async () => {
+		await expect(
+			withDeadline(new Promise(() => {}), 10, 'The database')
+		).rejects.toThrow('The database did not answer within 0.01s')
 	})
 })

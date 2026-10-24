@@ -65,24 +65,30 @@ For a PR, the workflow waits for the `Supabase Preview` check, then reads the br
 
 **Workers Builds (production).** In the Cloudflare dashboard, connect the repo to each Worker:
 
-| Setting                                                                  | `sunlo`                                                                  | `sunlo-admin`                       |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------- |
-| Production branch                                                        | `main`                                                                   | `main`                              |
-| Root directory                                                           | `/`                                                                      | `apps/admin`                        |
-| Build command                                                            | `pnpm build`                                                             | `pnpm build`                        |
-| Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default) |
-| Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                 |
-| Secrets (Settings › Variables and Secrets)                               | None                                                                     | `ADMIN_DATABASE_URL`, below         |
-| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | Off. The admin app has no previews. |
+| Setting                                                                  | `sunlo`                                                                  | `sunlo-admin`                           |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------ | --------------------------------------- |
+| Production branch                                                        | `main`                                                                   | `main`                                  |
+| Root directory                                                           | `/`                                                                      | `apps/admin`                            |
+| Build command                                                            | `pnpm build`                                                             | `pnpm build`                            |
+| Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default)     |
+| Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                     |
+| Secrets (Settings › Variables and Secrets)                               | None                                                                     | None; the database is Hyperdrive, below |
+| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | Off. The admin app has no previews.     |
 
 Workers Builds defaults to Node 24, which matches `engines`.
 
-**The admin Worker's database role.** `sunlo-admin` reads the database as `admin_reader`, a read-only role that the migration `20261023120000_admin_reader_role.sql` creates without a password. After the release that carries it merges, two steps by hand, once per database:
+**The admin Worker's database connection.** `sunlo-admin` reads the database as `admin_reader`, a read-only role that the migration `20261023120000_admin_reader_role.sql` creates without a password. The Worker connects through a Hyperdrive config, never to Supabase directly: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs instead of failing. After the release that carries the migration merges, three steps by hand, once per database:
 
 1. In the Supabase SQL editor, set the password: `alter role admin_reader password '<a long random password>';`
-2. On the `sunlo-admin` Worker, set the secret `ADMIN_DATABASE_URL` to the transaction pooler URL (Project Settings › Database › Connection string › Transaction pooler, port 6543), with the user `admin_reader.<project-ref>` and that password. `wrangler secret put ADMIN_DATABASE_URL` from `apps/admin` also works.
+2. Create the Hyperdrive config from `apps/admin`, with the direct connection string (Project Settings › Database › Connection string › Direct connection, port 5432, user `admin_reader`) and that password. Hyperdrive checks the credentials before it saves them, and prints the config's id:
 
-Until both are done, `/api` on the admin app returns a 500 that names the missing secret, and the dashboard shows that error. The Worker uses TLS for every host except localhost, so the URL needs no `sslmode` parameter. Local development sets the same two things against local Supabase: `apps/admin/README.md`, "Local development".
+   ```bash
+   npx wrangler hyperdrive create sunlo-prod-admin-reader --connection-string="postgresql://admin_reader:<password>@db.<project-ref>.supabase.co:5432/postgres"
+   ```
+
+3. Put that id in `apps/admin/wrangler.jsonc` under `hyperdrive[0].id` and merge it. Workers Builds binds the config on the next deploy.
+
+The connection string lives in the Hyperdrive config, so the Worker needs no secret and the Workers Builds dashboard holds no database value. If Hyperdrive cannot reach the direct host, the session pooler (port 5432, user `admin_reader.<project-ref>`) works in its place. Local development uses the binding's `localConnectionString` against local Supabase: `apps/admin/README.md`, "Local development".
 
 **GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
 
