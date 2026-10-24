@@ -1,7 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
-import { betaZodTool } from '@anthropic-ai/sdk/helpers/beta/zod'
-import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError'
 import { Agent } from 'agents'
+import { createAI } from 'agents/models/ai-sdk'
+import { generateText, isStepCount, tool } from 'ai'
 import { z } from 'zod'
 import { connect } from '../db'
 import {
@@ -37,6 +36,7 @@ export type NoteView = { id: number; text: string; created_at: string }
 type ReportRow = ReportView & { uid: string; email: string }
 
 const FIRST_WINDOW_DAYS = 7
+const MAX_STEPS = 15
 // A reload inside this window shows the report already written instead of
 // paying for a new run.
 const REUSE_REPORT_MS = 30 * 60 * 1000
@@ -164,9 +164,6 @@ export class Reporter extends Agent<Env> {
 			select body from report
 			where uid = ${report.uid} and status = 'done' and id != ${report.id}
 			order by created_at desc limit 1`
-		if (!this.env.ANTHROPIC_API_KEY) {
-			throw new Error('ANTHROPIC_API_KEY is not set on this Worker')
-		}
 		// A broken GitHub setup costs the report its GitHub tools, not the
 		// report itself.
 		let github: ReturnType<typeof githubFor> = null
@@ -176,88 +173,67 @@ export class Reporter extends Agent<Env> {
 		} catch (error) {
 			githubProblem = error instanceof Error ? error.message : String(error)
 		}
-		const client = new Anthropic({ apiKey: this.env.ANTHROPIC_API_KEY })
-		const message = await client.beta.messages.toolRunner({
-			model: 'claude-opus-5-5',
-			max_tokens: 16000,
-			max_iterations: 15,
-			thinking: { type: 'adaptive' },
-			output_config: { effort: 'high' },
-			betas: ['server-side-fallback-2026-07-01'],
-			fallbacks: 'default',
-			cache_control: { type: 'ephemeral' },
-			system: REPORTER_SYSTEM_PROMPT,
-			tools: [
+		const ai = createAI({ binding: this.env.AI })
+		const result = await generateText({
+			model: ai(this.env.REPORTER_MODEL),
+			instructions: REPORTER_SYSTEM_PROMPT,
+			prompt: reporterUserMessage({
+				adminEmail: report.email,
+				since: report.since,
+				until: report.until,
+				isFirstReport: !previous,
+				notes: this.listNotes(),
+				previousReport: previous?.body ?? null,
+				githubProblem,
+			}),
+			tools: {
 				...this.tools(db),
-				...(github ? this.githubTools(github, db, report.id) : []),
-			],
-			messages: [
-				{
-					role: 'user',
-					content: reporterUserMessage({
-						adminEmail: report.email,
-						since: report.since,
-						until: report.until,
-						isFirstReport: !previous,
-						notes: this.listNotes(),
-						previousReport: previous?.body ?? null,
-						githubProblem,
-					}),
-				},
-			],
+				...(github ? this.githubTools(github, db, report.id) : {}),
+			},
+			stopWhen: isStepCount(MAX_STEPS),
 		})
-		if (message.stop_reason === 'refusal') {
-			throw new Error('The model declined to write this report.')
-		}
-		const body = message.content
-			.flatMap((block) => (block.type === 'text' ? [block.text] : []))
-			.join('\n\n')
-			.trim()
+		const body = result.text.trim()
 		if (!body) {
 			throw new Error(
-				`The model finished without writing a report (stop reason: ${message.stop_reason}).`
+				`The model finished without writing a report (finish reason: ${result.finishReason}).`
 			)
 		}
 		return body
 	}
 
 	private tools(db: ReturnType<typeof connect>) {
-		return [
-			betaZodTool({
-				name: 'activity_between',
+		return {
+			activity_between: tool({
 				description:
 					'Everything that happened on Sunlo in a time window: signups (with usernames and whether they onboarded), active users, reviews and each reviewer, new decks, phrases added to decks, library counts and friend chat volume. Use it first, for the report window.',
 				inputSchema: z.object({
 					since: z.string().describe('Window start, ISO 8601, inclusive'),
 					until: z.string().describe('Window end, ISO 8601, exclusive'),
 				}),
-				run: async ({ since, until }) =>
+				execute: async ({ since, until }) =>
 					JSON.stringify(await activityBetween(db, since, until)),
 			}),
-			betaZodTool({
-				name: 'run_sql',
+			run_sql: tool({
 				description: `Run one read-only Postgres SELECT (a WITH clause is fine) and get the rows as JSON. At most 200 rows; 8-second timeout. Use it for follow-up questions that activity_between does not answer.`,
 				inputSchema: z.object({
 					query: z.string().describe('One SELECT statement, no semicolons'),
 				}),
-				run: async ({ query }) => {
+				execute: async ({ query }) => {
 					try {
 						return await runReadOnlyQuery(db, query)
 					} catch (error) {
-						if (error instanceof QueryRejectedError)
-							throw new ToolError(error.message)
+						if (error instanceof QueryRejectedError) throw error
 						const message =
 							error instanceof Error ? error.message : String(error)
-						throw new ToolError(`The query failed: ${message}`)
+						throw new Error(`The query failed: ${message}`, { cause: error })
 					}
 				},
 			}),
-			betaZodTool({
-				name: 'remember',
+			remember: tool({
 				description:
 					'Save a durable fact for future reports, such as which account is a test account. Never save numbers a query can recompute.',
 				inputSchema: z.object({ note: z.string().min(1).max(500) }),
-				run: ({ note }) => {
+				execute: ({ note }) => {
 					const [saved] = this.sql<{ id: number }>`
 						insert into note (text, created_at)
 						values (${note}, ${new Date().toISOString()})
@@ -265,17 +241,16 @@ export class Reporter extends Agent<Env> {
 					return Promise.resolve(`Saved as note ${saved.id}.`)
 				},
 			}),
-			betaZodTool({
-				name: 'forget',
+			forget: tool({
 				description:
 					'Delete one of your saved notes, by its number, when it is wrong or out of date.',
 				inputSchema: z.object({ id: z.number().int() }),
-				run: ({ id }) => {
+				execute: ({ id }) => {
 					this.forgetNote(id)
 					return Promise.resolve(`Forgot note ${id}.`)
 				},
 			}),
-		]
+		}
 	}
 
 	private githubTools(
@@ -290,20 +265,19 @@ export class Reporter extends Agent<Env> {
 			people ??= loadPeople(db)
 			const found = findPersonalData(text, await people)
 			if (found) {
-				throw new ToolError(
+				throw new Error(
 					`The text contains ${found}. The repository is public, so describe counts and patterns without identifying anyone, then try again.`
 				)
 			}
 		}
 		const footer = `\n\n---\n_Filed by the Sunlo usage reporter._`
 
-		return [
-			betaZodTool({
-				name: 'list_my_issues',
+		return {
+			list_my_issues: tool({
 				description:
 					'List the GitHub issues you filed in earlier runs, with whether each is still open. Call it before filing, so you comment on an open issue instead of filing a duplicate.',
 				inputSchema: z.object({}),
-				run: async () => {
+				execute: async () => {
 					const filed = this.sql<{
 						number: number
 						title: string
@@ -328,16 +302,15 @@ export class Reporter extends Agent<Env> {
 					)
 				},
 			}),
-			betaZodTool({
-				name: 'file_issue',
+			file_issue: tool({
 				description: `File a GitHub issue on Sunlo's public repository for something that looks broken in the product or the data. At most ${ISSUES_PER_RUN} per run and ${ISSUES_PER_DAY} per day. The text must not identify any user: no emails, usernames or user ids.`,
 				inputSchema: z.object({
 					title: z.string().min(5).max(120),
 					body: z.string().min(20).max(6000),
 				}),
-				run: async ({ title, body }) => {
+				execute: async ({ title, body }) => {
 					if (issuesThisRun >= ISSUES_PER_RUN) {
-						throw new ToolError(
+						throw new Error(
 							`You have filed ${ISSUES_PER_RUN} issues in this run, the limit. Mention the rest in the report instead.`
 						)
 					}
@@ -345,7 +318,7 @@ export class Reporter extends Agent<Env> {
 					const [{ today }] = this.sql<{ today: number }>`
 						select count(*) as today from filed_issue where created_at >= ${since}`
 					if (today >= ISSUES_PER_DAY) {
-						throw new ToolError(
+						throw new Error(
 							`${ISSUES_PER_DAY} issues were filed in the last 24 hours, the limit. Mention this one in the report instead.`
 						)
 					}
@@ -358,23 +331,22 @@ export class Reporter extends Agent<Env> {
 					return `Filed issue #${issue.number}: ${issue.url}`
 				},
 			}),
-			betaZodTool({
-				name: 'comment_on_issue',
+			comment_on_issue: tool({
 				description: `Add new evidence to an issue you filed earlier, instead of filing a duplicate. At most ${COMMENTS_PER_RUN} per run. Same rule: no emails, usernames or user ids.`,
 				inputSchema: z.object({
 					number: z.number().int(),
 					body: z.string().min(20).max(4000),
 				}),
-				run: async ({ number, body }) => {
+				execute: async ({ number, body }) => {
 					const [mine] = this.sql<{ number: number }>`
 						select number from filed_issue where number = ${number}`
 					if (!mine) {
-						throw new ToolError(
+						throw new Error(
 							`Issue #${number} was not filed by you. Comment only on issues from list_my_issues.`
 						)
 					}
 					if (commentsThisRun >= COMMENTS_PER_RUN) {
-						throw new ToolError(
+						throw new Error(
 							`You have commented ${COMMENTS_PER_RUN} times in this run, the limit.`
 						)
 					}
@@ -384,7 +356,7 @@ export class Reporter extends Agent<Env> {
 					return `Commented: ${url}`
 				},
 			}),
-		]
+		}
 	}
 }
 

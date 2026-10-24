@@ -4,5 +4,3 @@
 SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_ANON_KEY=
 ADMIN_DATABASE_URL=postgresql://admin_reader:admin_reader@127.0.0.1:54322/postgres
-# For the usage reporter. Leave empty to run everything except the report.
-ANTHROPIC_API_KEY=

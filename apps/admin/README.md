@@ -41,14 +41,14 @@ The dashboard opens with "Since you last checked in": a short report written by 
 
 - **What it is:** `worker/reporter/agent.ts`, a Cloudflare Agents SDK Durable Object named `Reporter`. One instance, `team`, serves every admin. Its own SQLite holds each admin's reports and the notes the agent chooses to keep, so its memory lives in the Durable Object, not in Postgres.
 - **When it runs:** opening the dashboard calls `POST /api/reporter/check-in`. The window starts where your last finished report ended (the last 7 days on your first visit) and ends now. A check-in within 30 minutes of a report that is writing or done returns that report instead of starting a new run. "Write a fresh report" skips that rule.
-- **How it works:** the check-in schedules `writeReport` on the Durable Object, so the run outlives the request. The run drives Claude (`claude-opus-5-5`) with the Anthropic SDK's tool runner and these tools, plus the GitHub tools below when they are set up:
+- **How it works:** the check-in schedules `writeReport` on the Durable Object, so the run outlives the request. The run is an AI SDK `generateText` tool loop (at most 15 steps) on Workers AI, through the Agents SDK's model provider and the Worker's `AI` binding, so it needs no model API key. The `REPORTER_MODEL` var in `wrangler.jsonc` names the model (`@cf/moonshotai/kimi-k2.6` today); any Workers AI model that takes tools works, and changing it is the only step. The loop has these tools, plus the GitHub tools below when they are set up:
   - `activity_between`: a preset query with signups, reviews and each reviewer, new decks, and library and chat counts for a window
   - `run_sql`: one SELECT of the agent's own, run as `admin_reader` with an 8-second timeout and at most 200 rows
   - `remember` and `forget`: notes kept for future reports, listed under the report as "What the reporter remembers"
 - **How the app follows it:** the app polls `GET /api/reporter/reports/:id` every 3 seconds until the report is done or failed. A failed run records its error on the report and is never retried automatically, because a retry pays for the whole model run again.
-- **Cost:** every report is one model run with a handful of tool calls. Requests use the server-side refusal fallback (`fallbacks: "default"`), so a declined request is retried on another model instead of failing.
+- **Cost:** every report is one model run with a handful of tool calls, billed to the Cloudflare account as Workers AI usage.
 
-The reporter needs the `ANTHROPIC_API_KEY` secret on the `sunlo-admin` Worker. Without it, every report fails with a message that names the secret.
+Local development: the `AI` binding always runs remotely, so `pnpm admin:worker:dev` needs `wrangler login` (or `CLOUDFLARE_API_TOKEN`) for reports to run.
 
 ### Filing GitHub issues
 
@@ -121,9 +121,9 @@ Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admi
 
 `wrangler.jsonc` serves `dist/` as static assets with an SPA fallback and runs `worker/index.ts` for `/api/*`, on the custom domain `admin.sunlo.app`. The custom domain needs the `sunlo.app` zone on the same Cloudflare account.
 
-The Worker has two secrets, set with `wrangler secret put` or in the dashboard:
+The Worker's secrets, set with `wrangler secret put` or in the dashboard:
 
 - `ADMIN_DATABASE_URL`: the transaction-pooler connection string for `admin_reader`. Until it is set, every `/api` route returns a 500 that names it, and the dashboard shows that error.
-- `ANTHROPIC_API_KEY`: for the usage reporter. Until it is set, reports fail with an error that names it, and the rest of the dashboard works.
+- `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY`: optional, for the usage reporter's GitHub issues ("Filing GitHub issues", above).
 
 The build reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at build time, from the Workers Builds build variables. If either is missing, the build still succeeds but drops the Supabase SDK, and the app cannot sign in. Do not deploy by hand: a local build reads the root `.env`, which points at local Supabase.
