@@ -44,5 +44,7 @@ apps/admin/worker/worker-configuration.d.ts
 # agent config
 .claude/settings.local.json
 .impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/hook.pending.json
 # The impeccable launcher downloads a version-pinned engine on first run
 .claude/skills/impeccable/scripts/bin/
