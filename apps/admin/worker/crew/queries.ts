@@ -3,7 +3,7 @@ import type { Sql } from 'postgres'
 export const MAX_ROWS = 200
 const MAX_RESULT_CHARS = 30_000
 
-// Everything the reporter needs for "what happened between since and until",
+// Everything an agent needs for "what happened between since and until",
 // as one jsonb value: signups, reviews and who did them, new decks, and the
 // library and social counts. The window is [since, until).
 export async function activityBetween(sql: Sql, since: string, until: string) {

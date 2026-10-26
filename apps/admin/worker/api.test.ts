@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActivityOverviewSchema, UserActivitySchema } from '../src/lib/stats'
-import { ReportSchema } from '../src/lib/reporter'
 
 // stats.ts pulls in the browser Supabase client, which needs VITE_* vars.
 vi.mock('../../../src/lib/supabase-client', () => ({ default: {} }))
@@ -90,26 +89,8 @@ const sql = Object.assign(
 const postgres = vi.fn(() => sql)
 vi.mock('postgres', () => ({ default: postgres }))
 
-const REPORT = {
-	id: 'report-1',
-	since: '2026-10-21T10:00:00.000Z',
-	until: '2026-10-23T10:00:00.000Z',
-	status: 'writing',
-	body: null,
-	error: null,
-	created_at: '2026-10-23T10:00:00.000Z',
-	finished_at: null,
-}
-const reporter = {
-	checkIn: vi.fn(),
-	getReport: vi.fn(),
-	listNotes: vi.fn(),
-	forgetNote: vi.fn(),
-}
-const getAgentByName = vi.fn(() => Promise.resolve(reporter))
-vi.mock('agents', () => ({ getAgentByName }))
-
-const { default: app } = await import('./api')
+const { createApi } = await import('./api')
+const app = createApi()
 
 const HYPERDRIVE_URL = 'postgresql://admin_reader:pw@hyperdrive.local/postgres'
 
@@ -141,8 +122,6 @@ beforeEach(() => {
 	end.mockClear()
 	postgres.mockClear()
 	getClaims.mockReset()
-	getAgentByName.mockClear()
-	for (const method of Object.values(reporter)) method.mockReset()
 	getClaims.mockResolvedValue({
 		data: { claims: { role: 'authenticated', sub: 'user-1' } },
 		error: null,
@@ -175,7 +154,7 @@ describe('auth', () => {
 		const res = await get('/api/activity-overview')
 		expect(res.status).toBe(403)
 		expect(queries).toHaveLength(1)
-		expect(queries[0].values).toEqual(['user-1'])
+		expect(queries[0].values).toEqual(['user-1', 'user-1'])
 		expect(end).toHaveBeenCalledOnce()
 	})
 
@@ -223,70 +202,12 @@ describe('GET /api/user-activity', () => {
 	})
 })
 
-describe('reporter', () => {
-	it('checks in as the signed-in admin and returns the report the app parses', async () => {
-		getClaims.mockResolvedValue({
-			data: {
-				claims: {
-					role: 'authenticated',
-					sub: 'user-1',
-					email: 'ana@example.test',
-				},
-			},
-			error: null,
-		})
-		reporter.checkIn.mockResolvedValue(REPORT)
-		const res = await get(
-			'/api/reporter/check-in',
-			makeEnv(),
-			'user-token',
-			'POST'
-		)
-		expect(res.status).toBe(200)
-		expect(ReportSchema.parse(await res.json())).toEqual(REPORT)
-		expect(getAgentByName).toHaveBeenCalledWith(undefined, 'team')
-		expect(reporter.checkIn).toHaveBeenCalledWith(
-			{ uid: 'user-1', email: 'ana@example.test' },
-			{ fresh: false }
-		)
-	})
-
-	it('passes fresh=1 through', async () => {
-		reporter.checkIn.mockResolvedValue(REPORT)
-		await get('/api/reporter/check-in?fresh=1', makeEnv(), 'user-token', 'POST')
-		expect(reporter.checkIn).toHaveBeenCalledWith(
-			{ uid: 'user-1', email: 'user-1' },
-			{ fresh: true }
-		)
-	})
-
-	it('never reaches the agent for a non-admin', async () => {
-		isAdmin = false
-		const res = await get(
-			'/api/reporter/check-in',
-			makeEnv(),
-			'user-token',
-			'POST'
-		)
-		expect(res.status).toBe(403)
-		expect(getAgentByName).not.toHaveBeenCalled()
-	})
-
-	it("looks up a report by the caller's uid, so admins only see their own", async () => {
-		reporter.getReport.mockResolvedValue(null)
-		const res = await get('/api/reporter/reports/report-1')
+describe('GET /api/crew/live', () => {
+	it('skips the token check, because the crew room checks a ticket instead', async () => {
+		const res = await get('/api/crew/live', makeEnv(), null)
+		// 404: worker/api.ts passed it on, and only .flue/app.ts mounts it.
 		expect(res.status).toBe(404)
-		expect(reporter.getReport).toHaveBeenCalledWith('report-1', 'user-1')
-	})
-
-	it('rejects a note id that is not a whole number', async () => {
-		const res = await get(
-			'/api/reporter/notes/abc',
-			makeEnv(),
-			'user-token',
-			'DELETE'
-		)
-		expect(res.status).toBe(400)
-		expect(reporter.forgetNote).not.toHaveBeenCalled()
+		expect(getClaims).not.toHaveBeenCalled()
+		expect(postgres).not.toHaveBeenCalled()
 	})
 })

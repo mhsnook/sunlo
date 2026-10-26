@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin/index'
+import { Route as AdminActivityRouteImport } from './routes/_admin/activity'
+import { Route as AdminCrewAgentRouteImport } from './routes/_admin/crew.$agent'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -27,27 +29,49 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCrewAgentRoute = AdminCrewAgentRouteImport.update({
+  id: '/crew/$agent',
+  path: '/crew/$agent',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
+  '/activity': typeof AdminActivityRoute
+  '/crew/$agent': typeof AdminCrewAgentRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/activity': typeof AdminActivityRoute
   '/': typeof AdminIndexRoute
+  '/crew/$agent': typeof AdminCrewAgentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/_admin/activity': typeof AdminActivityRoute
   '/_admin/': typeof AdminIndexRoute
+  '/_admin/crew/$agent': typeof AdminCrewAgentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths: '/' | '/login' | '/activity' | '/crew/$agent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/'
-  id: '__root__' | '/_admin' | '/login' | '/_admin/'
+  to: '/login' | '/activity' | '/' | '/crew/$agent'
+  id:
+    | '__root__'
+    | '/_admin'
+    | '/login'
+    | '/_admin/activity'
+    | '/_admin/'
+    | '/_admin/crew/$agent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +102,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/activity': {
+      id: '/_admin/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/crew/$agent': {
+      id: '/_admin/crew/$agent'
+      path: '/crew/$agent'
+      fullPath: '/crew/$agent'
+      preLoaderRoute: typeof AdminCrewAgentRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminActivityRoute: typeof AdminActivityRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCrewAgentRoute: typeof AdminCrewAgentRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminActivityRoute: AdminActivityRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminCrewAgentRoute: AdminCrewAgentRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

@@ -27,14 +27,6 @@
 	"ignorePatterns": ["dist/", "src-tauri/", "scripts/"],
 	"overrides": [
 		{
-			// The Agents SDK runs Durable Object SQL as a tagged template
-			// statement: this.sql`create table ...`.
-			"files": ["apps/admin/worker/**/*.ts"],
-			"rules": {
-				"no-unused-expressions": ["error", { "allowTaggedTemplates": true }]
-			}
-		},
-		{
 			"files": [
 				"src/**/*.{ts,tsx}",
 				"vite.config.ts",

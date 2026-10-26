@@ -1,25 +1,31 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "sunlo-admin",
-	"main": "worker/index.ts",
+	// No "main": @flue/vite sets it to the generated Worker entry, which serves
+	// .flue/app.ts and exports the agent and crew Durable Objects.
 	"compatibility_date": "2026-10-01",
-	// postgres.js needs node:net and node:tls.
+	// postgres.js needs node:net and node:tls; Flue needs it too.
 	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
-		"directory": "./dist",
+		"directory": "./dist/client",
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application",
 		// Every other path is a static file and never runs the worker.
 		"run_worker_first": ["/api/*"],
 	},
 	"preview_urls": true,
-	// The usage reporter (worker/reporter/agent.ts). One instance, named
-	// "team", keeps its reports and notes in its own SQLite.
 	"ai": { "binding": "AI" },
+	// The crew room (worker/crew/room.ts). Flue adds a binding for each agent,
+	// such as FLUE_PRODUCT_AGENT; never write those here. The migrations are
+	// ours, and append-only once deployed: a new agent is a new entry.
 	"durable_objects": {
-		"bindings": [{ "name": "REPORTER", "class_name": "Reporter" }],
+		"bindings": [{ "name": "CREW_ROOM", "class_name": "CrewRoom" }],
 	},
-	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["Reporter"] }],
+	"migrations": [
+		{ "tag": "v1", "new_sqlite_classes": ["CrewRoom", "FlueProductAgent"] },
+	],
+	// Product's daily run at 07:00 UTC (.flue/cloudflare.ts).
+	"triggers": { "crons": ["0 7 * * *"] },
 	"routes": [
 		{
 			"pattern": "admin.sunlo.app",
@@ -36,19 +42,19 @@
 			"localConnectionString": "postgresql://admin_reader:admin_reader@127.0.0.1:54322/postgres",
 		},
 	],
-	// Production values, both public, the same as the root wrangler.jsonc.
-	// Three optional secrets, set with `wrangler secret put`, let the usage
-	// reporter file GitHub issues: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID
-	// and GITHUB_APP_PRIVATE_KEY.
+	// Public values. The Supabase pair matches the root wrangler.jsonc.
 	"vars": {
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
-		// Where the usage reporter files issues, when the GitHub App secrets
-		// are set (README.md, "Filing GitHub issues").
+		// The Workers AI model every crew agent runs on. Any model that takes
+		// tools works; @cf/deepseek-ai/deepseek-v4-pro-0813 is the other one
+		// we considered.
+		"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
+		// The small model CLEF uses to decide whether a message wakes an agent.
+		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
+		// Where agents will file issues once Monitor starts and the GitHub App
+		// secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
+		// GITHUB_APP_PRIVATE_KEY (README.md, "Filing GitHub issues").
 		"GITHUB_REPO": "mhsnook/sunlo",
-		// The Workers AI model the usage reporter runs on. Any model that
-		// takes tools works; @cf/deepseek-ai/deepseek-v4-pro-0813 is the
-		// other one we considered.
-		"REPORTER_MODEL": "@cf/moonshotai/kimi-k2.6",
 	},
 }

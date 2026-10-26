@@ -1,15 +1,15 @@
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/core'
 
-export const ISSUE_LABEL = 'from-reporter'
+export const ISSUE_LABEL = 'from-crew'
 export const ISSUES_PER_RUN = 2
 export const ISSUES_PER_DAY = 5
 export const COMMENTS_PER_RUN = 3
 
 export type GitHubIssue = { number: number; title: string; url: string }
 
-// Null when the GitHub App secrets are not set: the agent then gets no
-// GitHub tools at all, and reports work as before.
+// Null when the GitHub App secrets are not set: agents then get no
+// GitHub tools at all.
 export function githubFor(env: Env) {
 	if (
 		!env.GITHUB_APP_ID ||

@@ -1,13 +1,24 @@
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import { cloudflare } from '@cloudflare/vite-plugin'
+import { flue, flueWorkerConfig } from '@flue/vite'
 
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url))
 
 export default defineConfig({
 	plugins: [
+		flue({ providers: ['cloudflare'] }),
+		cloudflare({
+			config: flueWorkerConfig(),
+			// The AI binding always runs remotely, which needs `wrangler login`.
+			// ADMIN_REMOTE_BINDINGS=false starts without it: the crew room
+			// works, but CLEF and every agent run fail.
+			remoteBindings: process.env.ADMIN_REMOTE_BINDINGS !== 'false',
+		}),
 		tailwindcss(),
 		tanstackRouter({ autoCodeSplitting: true }),
 		react(),
@@ -25,8 +36,5 @@ export default defineConfig({
 		port: 5174,
 		strictPort: true,
 		fs: { allow: [repoRoot] },
-		// `pnpm admin:worker:dev` serves /api on :8788. In production the same
-		// worker serves the app, so the app always calls its own origin.
-		proxy: { '/api': 'http://localhost:8788' },
 	},
 })
