@@ -24,7 +24,7 @@
 	"env": {
 		"builtin": true
 	},
-	"ignorePatterns": ["dist/", "src-tauri/", "scripts/"],
+	"ignorePatterns": ["dist/", "src-tauri/", "scripts/", ".claude/"],
 	"overrides": [
 		{
 			"files": [

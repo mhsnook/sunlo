@@ -11,6 +11,7 @@ export default [
 			'dist/',
 			'src-tauri/',
 			'scripts/',
+			'.claude/',
 			'src/types/supabase.ts',
 			'worker/worker-configuration.d.ts',
 			'apps/admin/worker/worker-configuration.d.ts',

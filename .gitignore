@@ -40,3 +40,9 @@ keystore.properties
 .dev.vars
 worker/worker-configuration.d.ts
 apps/admin/worker/worker-configuration.d.ts
+
+# agent config
+.claude/settings.local.json
+.impeccable/config.local.json
+# The impeccable launcher downloads a version-pinned engine on first run
+.claude/skills/impeccable/scripts/bin/
