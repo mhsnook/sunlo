@@ -1,11 +1,12 @@
 import { dispatch, type Agent } from '@flue/runtime'
+import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
 import type { CrewKey } from '../shared/crew'
 import { TEAM, type CrewRoom, type Wake } from '../worker/crew/room'
 import { Product } from './agents/product'
 
 export const roomFor = (bindings: Env = env) =>
-	(bindings.CREW_ROOM as DurableObjectNamespace<CrewRoom>).getByName(TEAM)
+	getAgentByName(bindings.CREW_ROOM as DurableObjectNamespace<CrewRoom>, TEAM)
 
 // A function, not a constant: agent modules import this file, and the agent
 // they export is not initialised yet while this module evaluates.

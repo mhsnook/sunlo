@@ -53,7 +53,7 @@ The roster lives in `shared/crew.ts`. A planned agent has a workspace page, and 
 ### Where things live
 
 - **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueProductAgent`, bound as `FLUE_PRODUCT_AGENT`) and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
-- **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `team`. Its SQLite holds the timeline, each agent's to-dos, memory and open items, CLEF's examples, and the admins' WebSockets. It is not in Postgres, so no migration touches it.
+- **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `team`. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the timeline, each agent's to-dos, memory and open items, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
 - **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the 07:00 cron.
 
 ### How a message reaches an agent
@@ -64,7 +64,9 @@ CLEF decides where each admin message goes, and the compose bar shows its decisi
 2. An @mention of a started agent **sends** the message to that agent.
 3. Otherwise a small Workers AI model (`CLEF_MODEL`) chooses between **sending** it to an agent and **leaving it in the room**. Agents read the room at their next run either way.
 
-Click the chip to change the decision. The room saves every change as an example, and CLEF reads the latest 20 the next time it decides.
+Click the chip to change the decision before you send. After you send, the note under your message opens the same menu: correct it there, and any agent the message should have woken wakes now.
+
+The room logs every decision in `clef_decision`: what CLEF suggested, what the message did, your correction if you made one, and, for each agent the message woke, whether its run posted anything ("posted") or nothing ("silent"). The rows where you changed or corrected CLEF are its labels, and CLEF reads the latest 20 the next time it decides.
 
 A message sent to an agent becomes a signal in that agent's `team` conversation. The 1:1 chat on a workspace page is a separate conversation, `dm-<admin uid>`, which only that admin can open.
 

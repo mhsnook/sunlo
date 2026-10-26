@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useRef } from 'react'
+import { useAgent } from 'agents/react'
 import {
 	queryOptions,
 	useMutation,
@@ -23,9 +24,11 @@ import {
 	type CrewMessageType,
 	type RoomEvent,
 	type RoomSnapshotType,
+	type RoomStateType,
 	type RoutingType,
 } from '../../shared/crew'
 import { adminFetch } from './api'
+import { getSession } from './session'
 
 export const crewIcons: Record<CrewKey, LucideIcon> = {
 	monitor: Activity,
@@ -97,6 +100,20 @@ export function usePostToRoom() {
 	})
 }
 
+export function useCorrectRouting() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: async (input: { messageId: string; routing: RoutingType }) =>
+			CrewMessageSchema.parse(
+				await adminFetch(`crew/messages/${input.messageId}/correct`, {
+					method: 'POST',
+					body: JSON.stringify({ routing: input.routing }),
+				})
+			),
+		onSuccess: (message) => upsertMessage(queryClient, message),
+	})
+}
+
 export function useAnswerCard() {
 	return useMutation({
 		mutationFn: (input: { messageId: string; actionId: string }) =>
@@ -119,85 +136,41 @@ export function markRoomSeen(queryClient: QueryClient, leaving: boolean) {
 	})
 }
 
-// Follows the crew room over its WebSocket for as long as the admin layout
-// is mounted, and reconnects with a growing delay when the socket drops.
+// Follows the crew room for as long as the admin layout is mounted.
+// useAgent owns the socket and reconnects it; the room's synced state
+// carries agent statuses, and its messages carry room events.
 export function useCrewLive() {
 	const queryClient = useQueryClient()
-	useEffect(() => {
-		let socket: WebSocket | null = null
-		let ping: ReturnType<typeof setInterval> | undefined
-		let retry: ReturnType<typeof setTimeout> | undefined
-		let attempts = 0
-		let stopped = false
-
-		const onEvent = (event: RoomEvent) => {
-			if (event.type === 'message') upsertMessage(queryClient, event.message)
-			if (event.type === 'status') {
-				queryClient.setQueryData<RoomSnapshotType>(['crew', 'room'], (room) =>
-					room
-						? {
-								...room,
-								statuses: { ...room.statuses, [event.agent]: event.status },
-							}
-						: room
-				)
+	const opened = useRef(false)
+	useAgent<RoomStateType>({
+		agent: 'crew-room',
+		basePath: 'api/crew/live',
+		query: async () => ({ token: (await getSession())?.access_token ?? null }),
+		// Shorter than the Supabase token's hour, so a reconnect gets a live one.
+		cacheTtl: 60_000,
+		onOpen: () => {
+			// Anything posted while the socket was down arrives in a fresh
+			// snapshot.
+			if (opened.current) {
+				void queryClient.invalidateQueries({ queryKey: ['crew'] })
 			}
-			if (event.type === 'workspace' || event.type === 'status') {
+			opened.current = true
+		},
+		onStateUpdate: (state) => {
+			queryClient.setQueryData<RoomSnapshotType>(['crew', 'room'], (room) =>
+				room ? { ...room, statuses: state.statuses } : room
+			)
+		},
+		onMessage: ({ data }: MessageEvent) => {
+			const event = JSON.parse(String(data)) as RoomEvent
+			if (event.type === 'message') upsertMessage(queryClient, event.message)
+			if (event.type === 'workspace') {
 				void queryClient.invalidateQueries({
 					queryKey: ['crew', 'workspace', event.agent],
 				})
 			}
-		}
-
-		const connect = async () => {
-			try {
-				const { ticket } = (await adminFetch('crew/ticket', {
-					method: 'POST',
-				})) as { ticket: string }
-				if (stopped) return
-				const url = new URL('/api/crew/live', location.href)
-				url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-				url.searchParams.set('ticket', ticket)
-				socket = new WebSocket(url)
-				socket.addEventListener('open', () => {
-					// Anything posted while the socket was down arrives in a
-					// fresh snapshot.
-					if (attempts > 0) {
-						void queryClient.invalidateQueries({ queryKey: ['crew'] })
-					}
-					attempts = 0
-					ping = setInterval(() => socket?.send('ping'), 30_000)
-				})
-				socket.addEventListener('message', ({ data }) => {
-					if (data === 'pong') return
-					onEvent(JSON.parse(String(data)) as RoomEvent)
-				})
-				socket.addEventListener('close', () => {
-					clearInterval(ping)
-					scheduleRetry()
-				})
-			} catch {
-				scheduleRetry()
-			}
-		}
-
-		const scheduleRetry = () => {
-			if (stopped) return
-			attempts += 1
-			retry = setTimeout(
-				() => void connect(),
-				Math.min(30_000, 1000 * 2 ** attempts)
-			)
-		}
-
-		void connect()
-		return () => {
-			stopped = true
-			clearTimeout(retry)
-			clearInterval(ping)
-			socket?.close()
-		}
-	}, [queryClient])
+		},
+	})
 }
 
 // An agent counts as working only for a while: a run that crashed without

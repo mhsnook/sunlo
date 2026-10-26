@@ -628,24 +628,25 @@ The activity dashboard at `/activity`:
 
 The crew room at `/` and each agent's workspace at `/crew/<agent>`:
 
-| Selector                                       | Purpose                                                              |
-| ---------------------------------------------- | -------------------------------------------------------------------- |
-| `crew-sidebar-item` + `data-key=<crew\|agent>` | Sidebar link to the room (`crew`) or an agent's workspace            |
-| `crew-message-group` + `data-key=<message id>` | Consecutive messages from one author                                 |
-| `crew-message` + `data-key=<message id>`       | One message in the room                                              |
-| `crew-new-since`                               | The "New since …" line                                               |
-| `crew-working`                                 | "Product is working…" under the timeline                             |
-| `crew-card-action` + `data-key=<action id>`    | A button on an agent's question or proposed change (`do`, `not-yet`) |
-| `crew-compose-input`, `crew-compose-send`      | The room's compose bar                                               |
-| `crew-clef-chip`                               | Where CLEF will send the draft; opens the menu to change it          |
-| `crew-clef-option` + `data-key=<kind><agents>` | One choice in that menu, e.g. `routeproduct`, `room`, `stack`        |
-| `crew-overview-button`, `crew-overview`        | The Overview toggle and its panel                                    |
-| `crew-overview-range` + `data-key=<days>`      | Date range button in the Overview                                    |
-| `crew-overview-card` + `data-key=<metrics>`    | One chart card in the Overview                                       |
-| `agent-not-started`                            | The note on a planned agent's workspace                              |
-| `agent-todos`, `agent-todo` + `data-key=<id>`  | The workspace to-do list and one to-do                               |
-| `agent-open-item` + `data-key=<id>`            | One "Open with you" item                                             |
-| `agent-memory`                                 | The workspace memory list                                            |
-| `agent-chat`, `agent-chat-open`                | The floating 1:1 chat, and the button that reopens it                |
-| `agent-chat-input`, `agent-chat-send`          | The 1:1 chat's compose bar                                           |
-| `agent-chat-message` + `data-key=<message id>` | One message in the 1:1 chat                                          |
+| Selector                                          | Purpose                                                               |
+| ------------------------------------------------- | --------------------------------------------------------------------- |
+| `crew-sidebar-item` + `data-key=<crew\|agent>`    | Sidebar link to the room (`crew`) or an agent's workspace             |
+| `crew-message-group` + `data-key=<message id>`    | Consecutive messages from one author                                  |
+| `crew-message` + `data-key=<message id>`          | One message in the room                                               |
+| `crew-new-since`                                  | The "New since …" line                                                |
+| `crew-working`                                    | "Product is working…" under the timeline                              |
+| `crew-card-action` + `data-key=<action id>`       | A button on an agent's question or proposed change (`do`, `not-yet`)  |
+| `crew-compose-input`, `crew-compose-send`         | The room's compose bar                                                |
+| `crew-clef-chip`                                  | Where CLEF will send the draft; opens the menu to change it           |
+| `crew-routing-option` + `data-key=<kind><agents>` | One choice in a routing menu, e.g. `routeproduct`, `room`, `stack`    |
+| `crew-routing-correct`                            | The routing note under your own message; opens the menu to correct it |
+| `crew-overview-button`, `crew-overview`           | The Overview toggle and its panel                                     |
+| `crew-overview-range` + `data-key=<days>`         | Date range button in the Overview                                     |
+| `crew-overview-card` + `data-key=<metrics>`       | One chart card in the Overview                                        |
+| `agent-not-started`                               | The note on a planned agent's workspace                               |
+| `agent-todos`, `agent-todo` + `data-key=<id>`     | The workspace to-do list and one to-do                                |
+| `agent-open-item` + `data-key=<id>`               | One "Open with you" item                                              |
+| `agent-memory`                                    | The workspace memory list                                             |
+| `agent-chat`, `agent-chat-open`                   | The floating 1:1 chat, and the button that reopens it                 |
+| `agent-chat-input`, `agent-chat-send`             | The 1:1 chat's compose bar                                            |
+| `agent-chat-message` + `data-key=<message id>`    | One message in the 1:1 chat                                           |

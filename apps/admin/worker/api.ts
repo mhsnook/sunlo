@@ -32,10 +32,11 @@ export function createApi() {
 	// Every route needs a signed-in Sunlo user who is in admin_user. The anon
 	// key is a valid JWT too, so check the role claim, not only the signature.
 	app.use('*', async (c, next) => {
-		// The crew room's WebSocket. Browsers cannot send a token with one, so it
-		// carries a one-minute ticket from POST /api/crew/ticket instead.
-		if (c.req.path === '/api/crew/live') return next()
-		const token = c.req.header('authorization')?.replace(/^Bearer\s+/i, '')
+		// Browsers cannot set headers on a WebSocket, so the crew room's socket
+		// (/api/crew/live, opened by useAgent) sends the token as ?token=.
+		const token =
+			c.req.header('authorization')?.replace(/^Bearer\s+/i, '') ??
+			(c.req.path === '/api/crew/live' ? c.req.query('token') : undefined)
 		if (!token) return c.json({ error: 'Sign in to use this' }, 401)
 		// getClaims() throws, rather than returning `error`, on some malformed
 		// tokens (e.g. no `exp` claim).

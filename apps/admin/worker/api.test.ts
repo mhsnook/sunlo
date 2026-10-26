@@ -203,11 +203,26 @@ describe('GET /api/user-activity', () => {
 })
 
 describe('GET /api/crew/live', () => {
-	it('skips the token check, because the crew room checks a ticket instead', async () => {
+	it('rejects a socket with no token', async () => {
 		const res = await get('/api/crew/live', makeEnv(), null)
-		// 404: worker/api.ts passed it on, and only .flue/app.ts mounts it.
-		expect(res.status).toBe(404)
-		expect(getClaims).not.toHaveBeenCalled()
+		expect(res.status).toBe(401)
 		expect(postgres).not.toHaveBeenCalled()
+	})
+
+	it('reads the token from the query string, because a socket has no headers', async () => {
+		const res = await get('/api/crew/live?token=socket-token', makeEnv(), null)
+		// 404: worker/api.ts let it through, and only .flue/app.ts mounts it.
+		expect(res.status).toBe(404)
+		expect(getClaims).toHaveBeenCalledWith('socket-token')
+	})
+
+	it('ignores a query token on every other route', async () => {
+		const res = await get(
+			'/api/activity-overview?token=socket-token',
+			makeEnv(),
+			null
+		)
+		expect(res.status).toBe(401)
+		expect(getClaims).not.toHaveBeenCalled()
 	})
 })

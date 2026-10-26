@@ -1,4 +1,4 @@
-import { DurableObject } from 'cloudflare:workers'
+import { Agent } from 'agents'
 import {
 	crew,
 	crewKeys,
@@ -7,6 +7,7 @@ import {
 	mentionedCrew,
 	type ActionType,
 	type AgentStatusType,
+	type RoomStateType,
 	type CrewKey,
 	type CrewMessageType,
 	type RoomEvent,
@@ -33,13 +34,13 @@ type MessageRow = {
 	answer: string | null
 	place: 'room' | 'dm'
 	conversation: string
+	corrected: string | null
 }
 
 // An agent's mention of another agent wakes it, at most this many times an
 // hour, so two agents cannot keep waking each other.
 const AGENT_WAKES_PER_HOUR = 6
 const SNAPSHOT_MESSAGES = 200
-const CLEF_EXAMPLES_KEPT = 200
 const CLEF_EXAMPLES_SHOWN = 20
 
 const now = () => new Date().toISOString()
@@ -56,22 +57,26 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 		? (JSON.parse(row.answer) as CrewMessageType['answer'])
 		: null,
 	place: row.place,
+	corrected: row.corrected ? (JSON.parse(row.corrected) as RoutingType) : null,
 })
 
 // Room times for the model: minutes are enough, and UTC is explicit.
 const stamp = (iso: string) => `${iso.slice(0, 16).replace('T', ' ')} UTC`
 
 // One instance, named "team", holds the crew room: the shared timeline, each
-// agent's workspace (to-dos, memory, open items), CLEF's examples, and the
-// admins' WebSockets. Flue's agent Durable Objects keep only their own
-// conversations; everything the admin app shows lives here.
-export class CrewRoom extends DurableObject<Env> {
-	private sql: SqlStorage
+// agent's workspace (to-dos, memory, open items), CLEF's decision log, and
+// the admins' WebSockets. It is an Agents SDK Agent with no model: browsers
+// connect with useAgent, and its state (each agent's status) syncs to them.
+// Flue's agent Durable Objects keep only their own conversations.
+export class CrewRoom extends Agent<Env, RoomStateType> {
+	initialState: RoomStateType = { statuses: {} }
+	// Not `sql`: Agent already has a tagged-template method by that name.
+	private db: SqlStorage
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
-		this.sql = ctx.storage.sql
-		this.sql.exec(`
+		this.db = ctx.storage.sql
+		this.db.exec(`
 			create table if not exists message (
 				id text primary key,
 				at text not null,
@@ -108,39 +113,38 @@ export class CrewRoom extends DurableObject<Env> {
 				at text not null,
 				closed_at text
 			);
-			create table if not exists status (
-				agent text primary key,
-				state text not null,
-				since text not null
-			);
 			create table if not exists cursor (
 				agent text primary key,
 				at text,
 				pending_at text
 			);
 			create table if not exists seen (uid text primary key, at text not null);
-			create table if not exists clef_example (
-				id integer primary key autoincrement,
+			create table if not exists clef_decision (
+				message_id text primary key,
 				text text not null,
-				routing text not null,
+				predicted text not null,
+				final text not null,
+				corrected text,
+				outcomes text not null default '{}',
 				at text not null
-			);
-			create table if not exists ticket (
-				id text primary key,
-				uid text not null,
-				expires_at integer not null
 			);
 			create table if not exists agent_wake (at text not null);
 		`)
-		ctx.setWebSocketAutoResponse(
-			new WebSocketRequestResponsePair('ping', 'pong')
-		)
+		const columns = this.db
+			.exec<{ name: string }>(
+				'select name from pragma_table_info(?)',
+				'message'
+			)
+			.toArray()
+		if (!columns.some((column) => column.name === 'corrected')) {
+			this.db.exec('alter table message add column corrected text')
+		}
 	}
 
 	// ---- The timeline -------------------------------------------------------
 
 	snapshot(uid: string): RoomSnapshotType {
-		const rows = this.sql
+		const rows = this.db
 			.exec<MessageRow>(
 				`select * from (
 					select * from message where place = 'room' order by at desc, id desc limit ?
@@ -148,18 +152,18 @@ export class CrewRoom extends DurableObject<Env> {
 				SNAPSHOT_MESSAGES
 			)
 			.toArray()
-		const seen = this.sql
+		const seen = this.db
 			.exec<{ at: string }>('select at from seen where uid = ?', uid)
 			.toArray()[0]
 		return {
 			messages: rows.map(toMessage),
-			statuses: this.statuses(),
+			statuses: this.state.statuses,
 			seenAt: seen?.at ?? null,
 		}
 	}
 
 	markSeen(uid: string) {
-		this.sql.exec(
+		this.db.exec(
 			'insert into seen (uid, at) values (?, ?) on conflict (uid) do update set at = excluded.at',
 			uid,
 			now()
@@ -173,9 +177,12 @@ export class CrewRoom extends DurableObject<Env> {
 		const fixed = fixedRouting(text)
 		if (fixed) return fixed
 		const active = crewKeys.filter((key) => crew[key].active)
-		const examples = this.sql
+		// The admin's corrections, before and after sending, are the labels.
+		const examples = this.db
 			.exec<{ text: string; routing: string }>(
-				'select text, routing from clef_example order by id desc limit ?',
+				`select text, coalesce(corrected, final) as routing from clef_decision
+				where corrected is not null or predicted != final
+				order by at desc limit ?`,
 				CLEF_EXAMPLES_SHOWN
 			)
 			.toArray()
@@ -211,26 +218,15 @@ export class CrewRoom extends DurableObject<Env> {
 		// What the compose chip showed when the admin sent. Absent when the
 		// app sent before CLEF answered.
 		routing: RoutingType | null
-		// What CLEF suggested, when the admin changed it.
+		// What CLEF suggested before the admin sent. Absent when the app sent
+		// before CLEF answered.
 		predicted: RoutingType | null
 	}): Promise<{ message: CrewMessageType; wake: Array<Wake> }> {
+		const fixed = fixedRouting(input.body)
+		const predicted =
+			fixed ?? input.predicted ?? (await this.classify(input.body))
 		const routing =
-			fixedRouting(input.body) ??
-			(input.routing
-				? sanitize(input.routing)
-				: await this.classify(input.body))
-		if (input.predicted && !sameRouting(input.predicted, routing)) {
-			this.sql.exec(
-				'insert into clef_example (text, routing, at) values (?, ?, ?)',
-				input.body,
-				JSON.stringify({ kind: routing.kind, agents: routing.agents }),
-				now()
-			)
-			this.sql.exec(
-				'delete from clef_example where id not in (select id from clef_example order by id desc limit ?)',
-				CLEF_EXAMPLES_KEPT
-			)
-		}
+			fixed ?? (input.routing ? sanitize(input.routing) : predicted)
 		const author = `admin:${input.uid}`
 		const stacked = routing.kind === 'route' ? this.stackedBodies(author) : []
 		const message = this.insert({
@@ -242,6 +238,15 @@ export class CrewRoom extends DurableObject<Env> {
 			place: 'room',
 			conversation: TEAM,
 		})
+		this.db.exec(
+			`insert into clef_decision (message_id, text, predicted, final, at)
+			values (?, ?, ?, ?, ?)`,
+			message.id,
+			input.body,
+			labelOf(predicted),
+			labelOf(routing),
+			message.at
+		)
 		const body = [...stacked, input.body].join('\n')
 		const wake = routing.agents.map((agent) => ({
 			agent,
@@ -250,6 +255,52 @@ export class CrewRoom extends DurableObject<Env> {
 		}))
 		for (const { agent } of wake) this.markWorking(agent)
 		return { message, wake }
+	}
+
+	// The admin says, after sending, where a message should have gone. The
+	// correction becomes a CLEF label, and agents it names that the message
+	// did not wake are woken now. A run that already happened stays done.
+	correct(input: {
+		messageId: string
+		uid: string
+		routing: RoutingType
+	}):
+		| { ok: true; message: CrewMessageType; wake: Array<Wake> }
+		| { ok: false; status: 404; error: string } {
+		const row = this.db
+			.exec<MessageRow>(
+				'select * from message where id = ? and author = ?',
+				input.messageId,
+				`admin:${input.uid}`
+			)
+			.toArray()[0]
+		if (!row?.routing) {
+			return {
+				ok: false,
+				status: 404,
+				error: 'You sent no message with that id',
+			}
+		}
+		const original = toMessage(row)
+		const corrected = sanitize({ ...input.routing, by: 'you' })
+		this.db.exec(
+			'update message set corrected = ? where id = ?',
+			JSON.stringify(corrected),
+			row.id
+		)
+		this.db.exec(
+			'update clef_decision set corrected = ? where message_id = ?',
+			labelOf(corrected),
+			row.id
+		)
+		const message = { ...original, corrected }
+		this.push({ type: 'message', message })
+		const woken = original.routing?.agents ?? []
+		const wake = corrected.agents
+			.filter((agent) => !woken.includes(agent))
+			.map((agent) => ({ agent, body: row.body, messageId: row.id }))
+		for (const { agent } of wake) this.markWorking(agent)
+		return { ok: true, message, wake }
 	}
 
 	postFromAgent(input: {
@@ -272,7 +323,7 @@ export class CrewRoom extends DurableObject<Env> {
 			place: input.place,
 			conversation: input.conversation,
 		})
-		if (input.card) this.broadcast({ type: 'workspace', agent: input.agent })
+		if (input.card) this.push({ type: 'workspace', agent: input.agent })
 		const wake: Array<Wake> = []
 		if (input.place === 'room') {
 			for (const agent of mentionedCrew(input.body)) {
@@ -292,7 +343,7 @@ export class CrewRoom extends DurableObject<Env> {
 	}):
 		| { ok: true; agent: CrewKey; conversation: string; body: string }
 		| { ok: false; status: 404 | 409; error: string } {
-		const row = this.sql
+		const row = this.db
 			.exec<MessageRow>('select * from message where id = ?', input.messageId)
 			.toArray()[0]
 		const message = row && toMessage(row)
@@ -321,7 +372,7 @@ export class CrewRoom extends DurableObject<Env> {
 			by: input.name,
 			at,
 		}
-		this.sql.exec(
+		this.db.exec(
 			'update message set answer = ? where id = ?',
 			JSON.stringify(answer),
 			message.id
@@ -337,8 +388,8 @@ export class CrewRoom extends DurableObject<Env> {
 				this.remember(agent, `${input.name} said not yet on ${day}: ${subject}`)
 			}
 		}
-		this.broadcast({ type: 'message', message: { ...message, answer } })
-		this.broadcast({ type: 'workspace', agent })
+		this.push({ type: 'message', message: { ...message, answer } })
+		this.push({ type: 'workspace', agent })
 		const what = message.card.kind === 'change' ? 'proposed change' : 'question'
 		return {
 			ok: true,
@@ -360,14 +411,14 @@ export class CrewRoom extends DurableObject<Env> {
 	agentContext(agent: CrewKey, conversation: string): string {
 		const sections = [`It is now ${stamp(now())}.`, this.workspaceText(agent)]
 		if (conversation === TEAM) {
-			const cursor = this.sql
+			const cursor = this.db
 				.exec<{ at: string | null }>(
 					'select at from cursor where agent = ?',
 					agent
 				)
 				.toArray()[0]?.at
 			const rows = cursor
-				? this.sql
+				? this.db
 						.exec<MessageRow>(
 							`select * from (
 								select * from message where place = 'room' and at > ? order by at desc limit 60
@@ -378,7 +429,7 @@ export class CrewRoom extends DurableObject<Env> {
 				: this.latestRoomRows(30)
 			const last = rows.at(-1)?.at
 			if (last) {
-				this.sql.exec(
+				this.db.exec(
 					`insert into cursor (agent, pending_at) values (?, ?)
 					on conflict (agent) do update set pending_at = excluded.pending_at`,
 					agent,
@@ -401,13 +452,14 @@ export class CrewRoom extends DurableObject<Env> {
 	}
 
 	finishRun(agent: CrewKey, conversation: string) {
-		if (conversation === TEAM) {
-			this.sql.exec(
-				'update cursor set at = coalesce(pending_at, at), pending_at = null where agent = ?',
-				agent
-			)
-			this.setStatus(agent, { state: 'idle', since: now() })
-		}
+		if (conversation !== TEAM) return
+		this.db.exec(
+			'update cursor set at = coalesce(pending_at, at), pending_at = null where agent = ?',
+			agent
+		)
+		const since = this.state.statuses[agent]?.since
+		if (since) this.recordOutcomes(agent, since)
+		this.setStatus(agent, { state: 'idle', since: now() })
 	}
 
 	recentRoom(limit: number): string {
@@ -417,7 +469,7 @@ export class CrewRoom extends DurableObject<Env> {
 	// ---- Workspaces ---------------------------------------------------------
 
 	workspace(agent: CrewKey): WorkspaceType {
-		const todos = this.sql
+		const todos = this.db
 			.exec<{
 				id: number
 				text: string
@@ -440,19 +492,19 @@ export class CrewRoom extends DurableObject<Env> {
 				at: row.at,
 				doneAt: row.done_at,
 			}))
-		const memory = this.sql
+		const memory = this.db
 			.exec<{ id: number; text: string; at: string }>(
 				'select id, text, at from memory where agent = ? order by id',
 				agent
 			)
 			.toArray()
-		const openItems = this.sql
+		const openItems = this.db
 			.exec<{ id: number; title: string; tag: string | null; at: string }>(
 				'select id, title, tag, at from open_item where agent = ? and closed_at is null order by id',
 				agent
 			)
 			.toArray()
-		const cards = this.sql
+		const cards = this.db
 			.exec<MessageRow>(
 				'select * from message where author = ? and card is not null order by at desc limit 50',
 				agent
@@ -465,12 +517,11 @@ export class CrewRoom extends DurableObject<Env> {
 			memory,
 			openItems,
 			cards,
-			status: this.statuses()[agent] ?? null,
 		}
 	}
 
 	addTodo(agent: CrewKey, text: string, note: string | null) {
-		const [{ id }] = this.sql
+		const [{ id }] = this.db
 			.exec<{ id: number }>(
 				'insert into todo (agent, text, note, at) values (?, ?, ?, ?) returning id',
 				agent,
@@ -479,7 +530,7 @@ export class CrewRoom extends DurableObject<Env> {
 				now()
 			)
 			.toArray()
-		this.broadcast({ type: 'workspace', agent })
+		this.push({ type: 'workspace', agent })
 		return id
 	}
 
@@ -488,12 +539,12 @@ export class CrewRoom extends DurableObject<Env> {
 		id: number,
 		change: { done?: boolean; note?: string | null }
 	) {
-		const exists = this.sql
+		const exists = this.db
 			.exec('select id from todo where id = ? and agent = ?', id, agent)
 			.toArray()
 		if (!exists.length) return false
 		if (change.done !== undefined) {
-			this.sql.exec(
+			this.db.exec(
 				'update todo set done = ?, done_at = ? where id = ?',
 				Number(change.done),
 				change.done ? now() : null,
@@ -501,14 +552,14 @@ export class CrewRoom extends DurableObject<Env> {
 			)
 		}
 		if (change.note !== undefined) {
-			this.sql.exec('update todo set note = ? where id = ?', change.note, id)
+			this.db.exec('update todo set note = ? where id = ?', change.note, id)
 		}
-		this.broadcast({ type: 'workspace', agent })
+		this.push({ type: 'workspace', agent })
 		return true
 	}
 
 	remember(agent: CrewKey, text: string) {
-		const [{ id }] = this.sql
+		const [{ id }] = this.db
 			.exec<{ id: number }>(
 				'insert into memory (agent, text, at) values (?, ?, ?) returning id',
 				agent,
@@ -516,24 +567,24 @@ export class CrewRoom extends DurableObject<Env> {
 				now()
 			)
 			.toArray()
-		this.broadcast({ type: 'workspace', agent })
+		this.push({ type: 'workspace', agent })
 		return id
 	}
 
 	forget(agent: CrewKey, id: number) {
-		const deleted = this.sql
+		const deleted = this.db
 			.exec(
 				'delete from memory where id = ? and agent = ? returning id',
 				id,
 				agent
 			)
 			.toArray()
-		if (deleted.length) this.broadcast({ type: 'workspace', agent })
+		if (deleted.length) this.push({ type: 'workspace', agent })
 		return deleted.length > 0
 	}
 
 	addOpenItem(agent: CrewKey, title: string, tag: string | null) {
-		const [{ id }] = this.sql
+		const [{ id }] = this.db
 			.exec<{ id: number }>(
 				'insert into open_item (agent, title, tag, at) values (?, ?, ?, ?) returning id',
 				agent,
@@ -542,12 +593,12 @@ export class CrewRoom extends DurableObject<Env> {
 				now()
 			)
 			.toArray()
-		this.broadcast({ type: 'workspace', agent })
+		this.push({ type: 'workspace', agent })
 		return id
 	}
 
 	closeOpenItem(agent: CrewKey, id: number) {
-		const closed = this.sql
+		const closed = this.db
 			.exec(
 				'update open_item set closed_at = ? where id = ? and agent = ? and closed_at is null returning id',
 				now(),
@@ -555,44 +606,8 @@ export class CrewRoom extends DurableObject<Env> {
 				agent
 			)
 			.toArray()
-		if (closed.length) this.broadcast({ type: 'workspace', agent })
+		if (closed.length) this.push({ type: 'workspace', agent })
 		return closed.length > 0
-	}
-
-	// ---- Live updates -------------------------------------------------------
-
-	// Browsers cannot set headers on a WebSocket, so the app first asks the
-	// authenticated API for a ticket and opens the socket with it.
-	issueTicket(uid: string) {
-		const id = crypto.randomUUID()
-		this.sql.exec('delete from ticket where expires_at < ?', Date.now())
-		this.sql.exec(
-			'insert into ticket (id, uid, expires_at) values (?, ?, ?)',
-			id,
-			uid,
-			Date.now() + 60_000
-		)
-		return id
-	}
-
-	fetch(request: Request) {
-		if (request.headers.get('upgrade') !== 'websocket') {
-			return new Response('Open this with a WebSocket', { status: 426 })
-		}
-		const ticket = new URL(request.url).searchParams.get('ticket') ?? ''
-		const valid = this.sql
-			.exec(
-				'delete from ticket where id = ? and expires_at >= ? returning uid',
-				ticket,
-				Date.now()
-			)
-			.toArray()
-		if (!valid.length) {
-			return new Response('The live link expired', { status: 401 })
-		}
-		const pair = new WebSocketPair()
-		this.ctx.acceptWebSocket(pair[1])
-		return new Response(null, { status: 101, webSocket: pair[0] })
 	}
 
 	// ---- Internals ----------------------------------------------------------
@@ -617,8 +632,9 @@ export class CrewRoom extends DurableObject<Env> {
 			answer: null,
 			place: input.place,
 			conversation: input.conversation,
+			corrected: null,
 		}
-		this.sql.exec(
+		this.db.exec(
 			`insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation)
 			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			row.id,
@@ -633,13 +649,13 @@ export class CrewRoom extends DurableObject<Env> {
 			row.conversation
 		)
 		const message = toMessage(row)
-		if (message.place === 'room') this.broadcast({ type: 'message', message })
+		if (message.place === 'room') this.push({ type: 'message', message })
 		return message
 	}
 
 	// The admin's "..." messages since their last message that was not one.
 	private stackedBodies(author: string) {
-		const rows = this.sql
+		const rows = this.db
 			.exec<{ body: string; routing: string | null }>(
 				'select body, routing from message where author = ? order by at desc, id desc limit 20',
 				author
@@ -657,7 +673,7 @@ export class CrewRoom extends DurableObject<Env> {
 	}
 
 	private latestRoomRows(limit: number) {
-		return this.sql
+		return this.db
 			.exec<MessageRow>(
 				`select * from (
 					select * from message where place = 'room' order by at desc, id desc limit ?
@@ -692,49 +708,67 @@ export class CrewRoom extends DurableObject<Env> {
 		].join('\n\n')
 	}
 
-	private statuses() {
-		const statuses: Record<string, AgentStatusType> = {}
-		for (const row of this.sql
-			.exec<{ agent: string; state: 'idle' | 'working'; since: string }>(
-				'select * from status'
-			)
-			.toArray()) {
-			statuses[row.agent] = { state: row.state, since: row.since }
-		}
-		return statuses
+	private setStatus(agent: CrewKey, status: AgentStatusType) {
+		this.setState({
+			statuses: { ...this.state.statuses, [agent]: status },
+		})
 	}
 
-	private setStatus(agent: CrewKey, status: AgentStatusType) {
-		this.sql.exec(
-			`insert into status (agent, state, since) values (?, ?, ?)
-			on conflict (agent) do update set state = excluded.state, since = excluded.since`,
-			agent,
-			status.state,
-			status.since
-		)
-		this.broadcast({ type: 'status', agent, status })
+	// Labels each CLEF decision that woke this agent since `since` with
+	// whether the run posted anything. "silent" is a weak sign that the
+	// message did not need the agent.
+	private recordOutcomes(agent: CrewKey, since: string) {
+		const [{ posted }] = this.db
+			.exec<{ posted: number }>(
+				'select count(*) as posted from message where author = ? and at >= ?',
+				agent,
+				since
+			)
+			.toArray()
+		const windowStart = new Date(Date.parse(since) - 60_000).toISOString()
+		const decisions = this.db
+			.exec<{
+				message_id: string
+				final: string
+				corrected: string | null
+				outcomes: string
+			}>(
+				'select message_id, final, corrected, outcomes from clef_decision where at >= ?',
+				windowStart
+			)
+			.toArray()
+		for (const decision of decisions) {
+			const outcomes = JSON.parse(decision.outcomes) as Record<string, string>
+			const woke = [decision.final, decision.corrected].some(
+				(label) =>
+					label !== null &&
+					(JSON.parse(label) as Pick<RoutingType, 'agents'>).agents.includes(
+						agent
+					)
+			)
+			if (!woke || outcomes[agent]) continue
+			outcomes[agent] = posted > 0 ? 'posted' : 'silent'
+			this.db.exec(
+				'update clef_decision set outcomes = ? where message_id = ?',
+				JSON.stringify(outcomes),
+				decision.message_id
+			)
+		}
 	}
 
 	private takeAgentWake() {
 		const hourAgo = new Date(Date.now() - 3_600_000).toISOString()
-		this.sql.exec('delete from agent_wake where at < ?', hourAgo)
-		const [{ count }] = this.sql
+		this.db.exec('delete from agent_wake where at < ?', hourAgo)
+		const [{ count }] = this.db
 			.exec<{ count: number }>('select count(*) as count from agent_wake')
 			.toArray()
 		if (count >= AGENT_WAKES_PER_HOUR) return false
-		this.sql.exec('insert into agent_wake (at) values (?)', now())
+		this.db.exec('insert into agent_wake (at) values (?)', now())
 		return true
 	}
 
-	private broadcast(event: RoomEvent) {
-		const data = JSON.stringify(event)
-		for (const socket of this.ctx.getWebSockets()) {
-			try {
-				socket.send(data)
-			} catch {
-				// A socket that closed between getWebSockets() and send().
-			}
-		}
+	private push(event: RoomEvent) {
+		this.broadcast(JSON.stringify(event))
 	}
 }
 
@@ -746,11 +780,13 @@ function sanitize(routing: RoutingType): RoutingType {
 		: { kind: 'room', agents: [], by: routing.by }
 }
 
-function sameRouting(a: RoutingType, b: RoutingType) {
-	return (
-		a.kind === b.kind &&
-		a.agents.toSorted().join() === b.agents.toSorted().join()
-	)
+// The part of a routing that CLEF decides, with agents in a fixed order, so
+// two labels compare equal as strings.
+function labelOf(routing: RoutingType) {
+	return JSON.stringify({
+		kind: routing.kind,
+		agents: routing.agents.toSorted(),
+	})
 }
 
 function roomText(rows: Array<MessageRow>) {

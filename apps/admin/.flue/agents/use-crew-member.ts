@@ -30,11 +30,11 @@ export function useCrewMember(agent: CrewKey, conversation: string) {
 			kind: 'signal',
 			type: 'crew.context',
 			tagName: 'crew-context',
-			body: await roomFor().agentContext(agent, conversation),
+			body: await (await roomFor()).agentContext(agent, conversation),
 		})
 	})
 	useAgentFinish(async () => {
-		await roomFor().finishRun(agent, conversation)
+		await (await roomFor()).finishRun(agent, conversation)
 	})
 
 	useInstruction(crewInstructions(agent))

@@ -5,9 +5,8 @@ import { createApi } from '../worker/api'
 import { Product } from './agents/product'
 import { deliver, roomFor, wake } from './crew'
 
-// worker/api.ts checks the admin on every /api route except /api/crew/live,
-// which checks a ticket instead. These routes add the crew room and the
-// agents to that app.
+// worker/api.ts checks the admin on every /api route. These routes add the
+// crew room and the agents to that app.
 
 const api = createApi()
 
@@ -18,11 +17,11 @@ const PostSchema = z.object({
 })
 
 api.get('/crew/room', async (c) => {
-	return c.json(await roomFor(c.env).snapshot(c.get('admin').uid))
+	return c.json(await (await roomFor(c.env)).snapshot(c.get('admin').uid))
 })
 
 api.post('/crew/seen', async (c) => {
-	await roomFor(c.env).markSeen(c.get('admin').uid)
+	await (await roomFor(c.env)).markSeen(c.get('admin').uid)
 	return c.json({ ok: true })
 })
 
@@ -31,7 +30,7 @@ api.post('/crew/clef', async (c) => {
 		.object({ text: z.string().trim().min(1).max(8000) })
 		.safeParse(await c.req.json().catch(() => null))
 	if (!body.success) return c.json({ error: 'Send { text }' }, 400)
-	return c.json(await roomFor(c.env).classify(body.data.text))
+	return c.json(await (await roomFor(c.env)).classify(body.data.text))
 })
 
 api.post('/crew/messages', async (c) => {
@@ -40,7 +39,9 @@ api.post('/crew/messages', async (c) => {
 		return c.json({ error: 'Send { body, routing?, predicted? }' }, 400)
 	}
 	const admin = c.get('admin')
-	const { message, wake: wakes } = await roomFor(c.env).postFromAdmin({
+	const { message, wake: wakes } = await (
+		await roomFor(c.env)
+	).postFromAdmin({
 		uid: admin.uid,
 		name: admin.name,
 		body: input.data.body,
@@ -56,7 +57,7 @@ api.post('/crew/messages/:id/answer', async (c) => {
 		.object({ actionId: z.string().min(1) })
 		.safeParse(await c.req.json().catch(() => null))
 	if (!input.success) return c.json({ error: 'Send { actionId }' }, 400)
-	const room = roomFor(c.env)
+	const room = await roomFor(c.env)
 	const result = await room.answer({
 		messageId: c.req.param('id'),
 		actionId: input.data.actionId,
@@ -68,21 +69,35 @@ api.post('/crew/messages/:id/answer', async (c) => {
 	return c.json({ ok: true })
 })
 
+api.post('/crew/messages/:id/correct', async (c) => {
+	const input = z
+		.object({ routing: RoutingSchema })
+		.safeParse(await c.req.json().catch(() => null))
+	if (!input.success) return c.json({ error: 'Send { routing }' }, 400)
+	const admin = c.get('admin')
+	const result = await (
+		await roomFor(c.env)
+	).correct({
+		messageId: c.req.param('id'),
+		uid: admin.uid,
+		routing: input.data.routing,
+	})
+	if (!result.ok) return c.json({ error: result.error }, result.status)
+	await wake(result.wake, admin.name)
+	return c.json(result.message)
+})
+
 api.get('/crew/agents/:agent', async (c) => {
 	const agent = c.req.param('agent')
 	if (!isCrewKey(agent)) {
 		return c.json({ error: `Crew members are ${crewKeys.join(', ')}` }, 404)
 	}
-	return c.json(await roomFor(c.env).workspace(agent))
+	return c.json(await (await roomFor(c.env)).workspace(agent))
 })
 
-api.post('/crew/ticket', async (c) => {
-	return c.json({
-		ticket: await roomFor(c.env).issueTicket(c.get('admin').uid),
-	})
-})
-
-api.get('/crew/live', (c) => roomFor(c.env).fetch(c.req.raw))
+// The room's WebSocket, opened by useAgent. worker/api.ts has checked the
+// admin, from the token in the query string.
+api.get('/crew/live', async (c) => (await roomFor(c.env)).fetch(c.req.raw))
 
 // A 1:1 chat with an agent is the conversation "dm-<admin uid>", so an admin
 // can only open their own. Room runs use the conversation "team", which is

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { createFileRoute, notFound } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { crew, isCrewKey } from '../../../shared/crew'
-import { isWorking, workspaceQuery } from '~/lib/crew'
+import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
 import { AgentChat } from '~/components/crew/agent-chat'
 import {
 	AgentAvatar,
@@ -31,6 +31,7 @@ function WorkspacePage() {
 	const { agent } = Route.useParams()
 	const { session } = Route.useRouteContext()
 	const { data: workspace } = useSuspenseQuery(workspaceQuery(agent))
+	const { data: room } = useQuery(roomQuery())
 	const member = crew[agent]
 	const waiting = workspace.cards.filter((card) => !card.answer)
 	const openCount = waiting.length + workspace.openItems.length
@@ -47,9 +48,7 @@ function WorkspacePage() {
 							<p className="text-muted-foreground text-sm">
 								{member.title}
 								{member.schedule ? ` · ${member.schedule}` : ''}
-								{isWorking(workspace.status ?? undefined)
-									? ' · working now'
-									: ''}
+								{isWorking(room?.statuses[agent]) ? ' · working now' : ''}
 							</p>
 						</div>
 					</header>

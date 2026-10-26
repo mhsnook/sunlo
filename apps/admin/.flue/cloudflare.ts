@@ -8,7 +8,7 @@ export { CrewRoom } from '../worker/crew/room'
 export default {
 	// wrangler.jsonc `triggers.crons`: "0 7 * * *", Product's daily run.
 	async scheduled(controller, env) {
-		await roomFor(env).markWorking('product')
+		await (await roomFor(env)).markWorking('product')
 		await dispatch(Product, {
 			id: TEAM,
 			message: {

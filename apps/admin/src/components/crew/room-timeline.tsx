@@ -1,7 +1,9 @@
 import { Fragment } from 'react'
 import { Link } from '@tanstack/react-router'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Bubble } from '@/components/ui/bubble'
+import { toastError } from '@/components/ui/sonner'
 import {
 	Message,
 	MessageAvatar,
@@ -11,12 +13,7 @@ import {
 	MessageHeader,
 	MessageMarker,
 } from '@/components/ui/message'
-import {
-	crew,
-	isCrewKey,
-	type CrewMessageType,
-	type RoutingType,
-} from '../../../shared/crew'
+import { crew, isCrewKey, type CrewMessageType } from '../../../shared/crew'
 import {
 	AgentAvatar,
 	CardActions,
@@ -25,6 +22,8 @@ import {
 	dayLabel,
 	timeLabel,
 } from './crew-parts'
+import { RoutingMenu, routingNote } from './routing-menu'
+import { useCorrectRouting } from '~/lib/crew'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
 
@@ -177,7 +176,9 @@ function AuthorGroup({
 							)}
 							{asksYou && <CardActions message={message} />}
 							{mine && message.routing && (
-								<MessageFooter>{routingNote(message.routing)}</MessageFooter>
+								<MessageFooter>
+									<RoutingCorrection message={message} />
+								</MessageFooter>
 							)}
 						</MessageContent>
 					</Message>
@@ -187,8 +188,30 @@ function AuthorGroup({
 	)
 }
 
-export function routingNote(routing: RoutingType) {
-	if (routing.kind === 'stack') return 'Stacked with your next message'
-	if (routing.kind === 'room') return 'Left in the room'
-	return `Sent to ${routing.agents.map((key) => crew[key].name).join(' and ')}`
+// The routing note under the admin's own message. Choosing another place
+// corrects CLEF, and wakes any agent the message should have woken.
+function RoutingCorrection({ message }: { message: CrewMessageType }) {
+	const correct = useCorrectRouting()
+	const shown = message.corrected ?? message.routing
+	if (!shown) return null
+	return (
+		<RoutingMenu
+			label="Where should this have gone?"
+			includeStack={false}
+			disabled={correct.isPending}
+			testId="crew-routing-correct"
+			className="hover:text-foreground inline-flex items-center gap-1"
+			onChoose={(routing) =>
+				correct.mutate(
+					{ messageId: message.id, routing },
+					{ onError: (error) => toastError(error.message) }
+				)
+			}
+		>
+			{message.corrected
+				? `Corrected: ${routingNote(shown).toLowerCase()}`
+				: routingNote(shown)}
+			<ChevronDown className="size-3" />
+		</RoutingMenu>
+	)
 }

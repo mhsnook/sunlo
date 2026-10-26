@@ -167,6 +167,8 @@ export const CrewMessageSchema = z.object({
 	// "room" for the crew room; "dm" for a card raised in a 1:1 chat, which
 	// shows in the agent's workspace but not in the room.
 	place: z.enum(['room', 'dm']),
+	// Where the admin said, after sending, this message should have gone.
+	corrected: RoutingSchema.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -175,6 +177,12 @@ export const AgentStatusSchema = z.object({
 	since: z.string(),
 })
 export type AgentStatusType = z.infer<typeof AgentStatusSchema>
+
+// The crew room's synced state: what every connected browser holds live.
+export const RoomStateSchema = z.object({
+	statuses: z.record(z.string(), AgentStatusSchema),
+})
+export type RoomStateType = z.infer<typeof RoomStateSchema>
 
 export const RoomSnapshotSchema = z.object({
 	messages: z.array(CrewMessageSchema),
@@ -217,12 +225,10 @@ export const WorkspaceSchema = z.object({
 	openItems: z.array(OpenItemSchema),
 	// This agent's cards from the room and from 1:1 chats, newest first.
 	cards: z.array(CrewMessageSchema),
-	status: AgentStatusSchema.nullable(),
 })
 export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 
 // What the room pushes over its WebSocket.
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
-	| { type: 'status'; agent: CrewKey; status: AgentStatusType }
 	| { type: 'workspace'; agent: CrewKey }

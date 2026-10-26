@@ -32,8 +32,8 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		}),
 		durable: true,
 		async run({ data, step }) {
-			const { message, wake: wakes } = await step.do('post', () =>
-				roomFor().postFromAgent({
+			const { message, wake: wakes } = await step.do('post', async () =>
+				(await roomFor()).postFromAgent({
 					agent,
 					body: data.body,
 					card: data.options
@@ -70,8 +70,8 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		}),
 		durable: true,
 		async run({ data, step }) {
-			const { message } = await step.do('post', () =>
-				roomFor().postFromAgent({
+			const { message } = await step.do('post', async () =>
+				(await roomFor()).postFromAgent({
 					agent,
 					body: data.why,
 					card: {
@@ -99,7 +99,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		}),
 		annotations: { readOnlyHint: true },
 		async run({ data }) {
-			return await roomFor().recentRoom(data.limit)
+			return await (await roomFor()).recentRoom(data.limit)
 		},
 	})
 
@@ -112,7 +112,9 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			note: v.optional(v.pipe(Text, v.maxLength(80))),
 		}),
 		async run({ data }) {
-			const id = await roomFor().addTodo(agent, data.text, data.note ?? null)
+			const id = await (
+				await roomFor()
+			).addTodo(agent, data.text, data.note ?? null)
 			return { output: { id } }
 		},
 	})
@@ -127,7 +129,9 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			note: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(80))),
 		}),
 		async run({ data }) {
-			const ok = await roomFor().updateTodo(agent, data.id, {
+			const ok = await (
+				await roomFor()
+			).updateTodo(agent, data.id, {
 				done: data.done,
 				note: data.note === undefined ? undefined : data.note || null,
 			})
@@ -142,7 +146,9 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			'Save a durable fact or decision to your memory, which you read at the start of every run. Never save numbers a query can recompute.',
 		input: v.object({ text: v.pipe(Text, v.maxLength(400)) }),
 		async run({ data }) {
-			return { output: { id: await roomFor().remember(agent, data.text) } }
+			return {
+				output: { id: await (await roomFor()).remember(agent, data.text) },
+			}
 		},
 	})
 
@@ -151,7 +157,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		description: 'Delete a memory that is wrong or no longer true.',
 		input: v.object({ id: Id }),
 		async run({ data }) {
-			if (!(await roomFor().forget(agent, data.id))) {
+			if (!(await (await roomFor()).forget(agent, data.id))) {
 				throw new Error(`You have no memory with id ${data.id}`)
 			}
 			return 'Forgotten.'
@@ -167,11 +173,9 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			tag: v.optional(v.pipe(Text, v.maxLength(20))),
 		}),
 		async run({ data }) {
-			const id = await roomFor().addOpenItem(
-				agent,
-				data.title,
-				data.tag ?? null
-			)
+			const id = await (
+				await roomFor()
+			).addOpenItem(agent, data.title, data.tag ?? null)
 			return { output: { id } }
 		},
 	})
@@ -182,7 +186,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			'Close an "Open with you" item that is done or no longer open.',
 		input: v.object({ id: Id }),
 		async run({ data }) {
-			if (!(await roomFor().closeOpenItem(agent, data.id))) {
+			if (!(await (await roomFor()).closeOpenItem(agent, data.id))) {
 				throw new Error(`You have no open item with id ${data.id}`)
 			}
 			return 'Closed.'
