@@ -140,7 +140,7 @@ export class Reporter extends Agent<Env> {
 		const [report] = this
 			.sql<ReportRow>`select * from report where id = ${reportId}`
 		if (!report || report.status !== 'writing') return
-		const db = connect(this.env.ADMIN_DATABASE_URL)
+		const db = connect(this.env.HYPERDRIVE)
 		try {
 			const body = await this.runModel(report, db)
 			this.sql`

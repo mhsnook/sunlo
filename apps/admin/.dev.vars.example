@@ -1,6 +1,5 @@
-# Copy to .dev.vars for `pnpm admin:worker:dev`. Supabase values come from
-# `supabase status`. The password is the one you set on admin_reader with
-# psql (apps/admin/README.md, "Local development").
+# Copy to .dev.vars for `pnpm admin:worker:dev`. Values come from
+# `supabase status`. The database connection is the Hyperdrive binding's
+# localConnectionString in wrangler.jsonc, not a variable here.
 SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_ANON_KEY=
-ADMIN_DATABASE_URL=postgresql://admin_reader:admin_reader@127.0.0.1:54322/postgres

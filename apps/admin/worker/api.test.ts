@@ -70,6 +70,7 @@ const USER_ACTIVITY = {
 }
 
 let isAdmin = true
+let adminCheck: Promise<unknown> | undefined
 const end = vi.fn().mockResolvedValue(undefined)
 const queries: Array<{ text: string; values: Array<unknown> }> = []
 const sql = Object.assign(
@@ -77,7 +78,7 @@ const sql = Object.assign(
 		const text = strings.join('$')
 		queries.push({ text, values })
 		if (text.includes('public.admin_user')) {
-			return Promise.resolve([{ is_admin: isAdmin }])
+			return adminCheck ?? Promise.resolve([{ is_admin: isAdmin }])
 		}
 		if (text.includes("'most_active'")) {
 			return Promise.resolve([{ result: USER_ACTIVITY }])
@@ -110,15 +111,13 @@ vi.mock('agents', () => ({ getAgentByName }))
 
 const { default: app } = await import('./api')
 
-const DATABASE_URL =
-	'postgresql://admin_reader.ref:pw@aws-0-eu-west-1.pooler.supabase.com:6543/postgres'
+const HYPERDRIVE_URL = 'postgresql://admin_reader:pw@hyperdrive.local/postgres'
 
-function makeEnv(overrides: Partial<Env> = {}) {
+function makeEnv() {
 	return {
 		SUPABASE_URL: 'http://supabase.test',
 		SUPABASE_ANON_KEY: 'anon',
-		ADMIN_DATABASE_URL: DATABASE_URL,
-		...overrides,
+		HYPERDRIVE: { connectionString: HYPERDRIVE_URL },
 	} as unknown as Env
 }
 
@@ -137,6 +136,7 @@ function get(
 
 beforeEach(() => {
 	isAdmin = true
+	adminCheck = undefined
 	queries.length = 0
 	end.mockClear()
 	postgres.mockClear()
@@ -179,16 +179,12 @@ describe('auth', () => {
 		expect(end).toHaveBeenCalledOnce()
 	})
 
-	it('fails with a clear error when the database secret is missing', async () => {
-		const res = await get(
-			'/api/activity-overview',
-			makeEnv({ ADMIN_DATABASE_URL: '' })
-		)
+	it('answers 500 and closes the connection when the admin check throws', async () => {
+		adminCheck = Promise.reject(new Error('password authentication failed'))
+		const res = await get('/api/activity-overview')
 		expect(res.status).toBe(500)
-		expect(await res.json()).toEqual({
-			error: 'ADMIN_DATABASE_URL is not set on this Worker',
-		})
-		expect(postgres).not.toHaveBeenCalled()
+		expect(await res.json()).toEqual({ error: 'The database query failed' })
+		expect(end).toHaveBeenCalledOnce()
 	})
 })
 
@@ -206,8 +202,8 @@ describe('GET /api/activity-overview', () => {
 		expect(ActivityOverviewSchema.parse(body)).toEqual(OVERVIEW)
 		expect(queries[1].values).toContain(14)
 		expect(postgres).toHaveBeenCalledWith(
-			DATABASE_URL,
-			expect.objectContaining({ prepare: false, ssl: 'require', max: 1 })
+			HYPERDRIVE_URL,
+			expect.objectContaining({ max: 1, fetch_types: false })
 		)
 		expect(end).toHaveBeenCalledOnce()
 	})
