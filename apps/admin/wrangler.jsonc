@@ -38,4 +38,21 @@
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
 	},
+	// Previews: Workers Builds runs `wrangler preview` on every branch except
+	// main and serves it at <branch>-sunlo-admin.<subdomain>.workers.dev. A
+	// Preview inherits no top-level bindings, so they repeat here with the
+	// production values on purpose: a preview signs the admin in against
+	// production and reads the database as admin_reader, read-only.
+	"previews": {
+		"vars": {
+			"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
+			"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
+		},
+		"hyperdrive": [
+			{
+				"binding": "HYPERDRIVE",
+				"id": "d22b56aafb6c420781c880b4c6777490",
+			},
+		],
+	},
 }

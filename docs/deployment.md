@@ -51,11 +51,12 @@ The point of the gate is that **migrations only ever reach `main` through a `nex
 
 The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `worker/`). Each version holds the Vite build and the worker code, so an app and an API from different commits never run together. Production and previews deploy through separate systems, so a broken preview setup cannot block a production deploy:
 
-| Event        | Deployed by                                                       | Supabase project                     | Result                                                                                                   |
-| ------------ | ----------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| Push to main | Workers Builds (Cloudflare's Git integration)                     | Production, from `wrangler.jsonc`    | `wrangler deploy`: production serves the new version.                                                    |
-| Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh`     | That PR's Supabase preview branch    | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. Production never serves it. |
-| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables | `wrangler deploy` of the admin app and its `/api` Worker at `admin.sunlo.app`. It has no previews.       |
+| Event        | Deployed by                                                       | Supabase project                     | Result                                                                                                                        |
+| ------------ | ----------------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Push to main | Workers Builds (Cloudflare's Git integration)                     | Production, from `wrangler.jsonc`    | `wrangler deploy`: production serves the new version.                                                                         |
+| Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh`     | That PR's Supabase preview branch    | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. Production never serves it.                      |
+| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables | `wrangler deploy` of the admin app and its `/api` Worker at `admin.sunlo.app`.                                                |
+| Other branch | The same `sunlo-admin` project                                    | Production, as `admin_reader`        | `wrangler preview`: a Preview at `<branch>-sunlo-admin.<subdomain>.workers.dev` that reads the production database read-only. |
 
 The production Supabase URL and publishable key are in `wrangler.jsonc` `vars` (for the worker) and in the Workers Builds build variables (for Vite). Both are public. If one changes, change both.
 
@@ -65,15 +66,15 @@ For a PR, the workflow waits for the `Supabase Preview` check, then reads the br
 
 **Workers Builds (production).** In the Cloudflare dashboard, connect the repo to each Worker:
 
-| Setting                                                                  | `sunlo`                                                                  | `sunlo-admin`                           |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------ | --------------------------------------- |
-| Production branch                                                        | `main`                                                                   | `main`                                  |
-| Root directory                                                           | `/`                                                                      | `apps/admin`                            |
-| Build command                                                            | `pnpm build`                                                             | `pnpm build`                            |
-| Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default)     |
-| Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                     |
-| Secrets (Settings › Variables and Secrets)                               | None                                                                     | None; the database is Hyperdrive, below |
-| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | Off. The admin app has no previews.     |
+| Setting                                                     | `sunlo`                                                                  | `sunlo-admin`                           |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------- |
+| Production branch                                           | `main`                                                                   | `main`                                  |
+| Root directory                                              | `/`                                                                      | `apps/admin`                            |
+| Build command                                               | `pnpm build`                                                             | `pnpm build`                            |
+| Deploy command                                              | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default)     |
+| Build variables                                             | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                     |
+| Secrets (Settings › Variables and Secrets)                  | None                                                                     | None; the database is Hyperdrive, below |
+| Settings › Build › Branch control › "Enable Preview Builds" | Off. The GitHub workflow makes previews.                                 | On. See "Admin previews", below.        |
 
 Workers Builds defaults to Node 24, which matches `engines`.
 
@@ -89,6 +90,8 @@ Workers Builds defaults to Node 24, which matches `engines`.
 3. Put that id in `apps/admin/wrangler.jsonc` under `hyperdrive[0].id` and merge it. Workers Builds binds the config on the next deploy.
 
 The connection string lives in the Hyperdrive config, so the Worker needs no secret and the Workers Builds dashboard holds no database value. If Hyperdrive cannot reach the direct host, the session pooler (port 5432, user `admin_reader.<project-ref>`) works in its place. Local development uses the binding's `localConnectionString` against local Supabase: `apps/admin/README.md`, "Local development".
+
+**Admin previews.** With "Enable Preview Builds" on, every push to a branch other than `main` builds a Preview of `sunlo-admin` at `<branch>-sunlo-admin.<subdomain>.workers.dev`, and the GitHub check "Workers Builds: sunlo-admin" links to it. A Preview inherits none of the top-level bindings, so the `previews` block in `apps/admin/wrangler.jsonc` repeats the Supabase vars and the Hyperdrive binding with the production values: a preview signs the admin in against production and reads the production database as `admin_reader`, read-only, which is the same thing production does. The main app does not use Preview Builds because each of its previews needs that PR's Supabase branch, which only the GitHub workflow can look up.
 
 **GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
 

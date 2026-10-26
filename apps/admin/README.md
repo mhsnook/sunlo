@@ -70,7 +70,7 @@ Roles belong to the Postgres cluster, not the database, so the password survives
 
 ## Deploying
 
-Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admin` Worker on every push to `main`, and on no other branch. The dashboard settings are in `docs/deployment.md`, under "Cloudflare" › "Setup".
+Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admin` Worker on every push to `main`. A push to any other branch builds a Preview at `<branch>-sunlo-admin.<subdomain>.workers.dev` instead, which signs in against production and reads the production database as `admin_reader`, the same as production. The dashboard settings are in `docs/deployment.md`, under "Cloudflare" › "Setup".
 
 `wrangler.jsonc` serves `dist/` as static assets with an SPA fallback and runs `worker/index.ts` for `/api/*`, on the custom domain `admin.sunlo.app`. The custom domain needs the `sunlo.app` zone on the same Cloudflare account.
 
