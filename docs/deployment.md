@@ -55,7 +55,8 @@ The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `w
 | ------------ | ----------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | Push to main | Workers Builds (Cloudflare's Git integration)                     | Production, from `wrangler.jsonc`    | `wrangler deploy`: production serves the new version.                                                    |
 | Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh`     | That PR's Supabase preview branch    | `wrangler versions upload --preview-alias <branch>`: a URL for this PR only. Production never serves it. |
-| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables | `wrangler deploy` of the admin app and its `/api` Worker at `admin.sunlo.app`. It has no previews.       |
+| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables | `wrangler deploy` of the admin app and its `/api` Worker at `admin.sunlo.app`.                           |
+| Other branch | Workers Builds, the `sunlo-admin` project                         | Production                           | A Worker Preview at `<branch>-sunlo-admin.<subdomain>.workers.dev`, from the `previews` block.           |
 
 The production Supabase URL and publishable key are in `wrangler.jsonc` `vars` (for the worker) and in the Workers Builds build variables (for Vite). Both are public. If one changes, change both.
 
@@ -73,7 +74,7 @@ For a PR, the workflow waits for the `Supabase Preview` check, then reads the br
 | Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default)     |
 | Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                     |
 | Secrets (Settings › Variables and Secrets)                               | None                                                                     | None; the database is Hyperdrive, below |
-| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | Off. The admin app has no previews.     |
+| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | On. Each branch gets a Worker Preview.  |
 
 Workers Builds defaults to Node 24, which matches `engines`.
 

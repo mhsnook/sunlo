@@ -68,4 +68,28 @@
 		// GITHUB_APP_PRIVATE_KEY (README.md, "Filing GitHub issues").
 		"GITHUB_REPO": "mhsnook/sunlo",
 	},
+	// Worker Previews: Workers Builds makes one per branch off main, at
+	// <branch>-sunlo-admin.<account subdomain>.workers.dev. Nothing in this block
+	// is inherited from the top level, so the vars and bindings are repeated.
+	// A preview gets its own CrewRoom; Flue's agents resolve their namespaces
+	// through ctx.exports, which previews isolate too, so their bindings are
+	// not listed here. Crons do not run in previews.
+	"previews": {
+		"vars": {
+			"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
+			"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
+			"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
+			"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
+			"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
+			"GITHUB_REPO": "mhsnook/sunlo",
+		},
+		"durable_objects": {
+			"bindings": [{ "name": "CREW_ROOM", "class_name": "CrewRoom" }],
+		},
+		// The production database, as the same read-only role.
+		"hyperdrive": [
+			{ "binding": "HYPERDRIVE", "id": "d22b56aafb6c420781c880b4c6777490" },
+		],
+		"ai": { "binding": "AI" },
+	},
 }
