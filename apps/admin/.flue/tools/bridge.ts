@@ -53,7 +53,7 @@ export function bridgeTools(agent: CrewKey) {
 
 	const bringToAdmin = defineTool({
 		name: 'bring_to_admin',
-		description: `Bring the admin a card in the Enterprise thread: the short list they read instead of the whole Conference Room. Kinds:
+		description: `Bring the admin a card in the Enterprise thread: the short list they read instead of the whole Common Room. Kinds:
 - decide: you need their call, and the matter is on hold until they answer. Give 2 or 3 short options, or leave them out for Yes and No.
 - confirm: you already acted in their stead, and ask whether that was right. Only for reversible actions that the charter clearly covers.
 - know: worth knowing, nothing to answer. One or two sentences.
@@ -144,7 +144,7 @@ export function rikerTools() {
 	const closeMeeting = defineTool({
 		name: 'close_meeting',
 		description:
-			'End the weekly meeting with the admin, once they say it is done. Posts the minutes in the Conference Room, then one message to each fleet ship with its directive: the priority in a sentence, and any suggested edits as a short list, each marked as a command or a suggestion.',
+			'End the weekly meeting with the admin, once they say it is done. Posts the minutes in the Common Room, then one message to each fleet ship with its directive: the priority in a sentence, and any suggested edits as a short list, each marked as a command or a suggestion.',
 		input: v.object({
 			minutes: v.pipe(Text, v.maxLength(6000)),
 			directives: v.optional(
@@ -164,7 +164,7 @@ export function rikerTools() {
 				(await roomFor()).closeMeeting(data)
 			)
 			await step.do('wake', () => wake(wakes, 'Riker').then(() => true))
-			return 'The meeting is closed, and the minutes and directives are in the Conference Room.'
+			return 'The meeting is closed, and the minutes and directives are in the Common Room.'
 		},
 	})
 

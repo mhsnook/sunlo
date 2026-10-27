@@ -19,10 +19,11 @@ import {
 	type LucideIcon,
 } from 'lucide-react'
 import {
-	CrewMemorySchema,
+	CommonKnowledgeSchema,
 	CrewMessageSchema,
 	EnterpriseSchema,
 	RoomSnapshotSchema,
+	SitrepLineSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
@@ -69,47 +70,75 @@ export const enterpriseQuery = () =>
 		staleTime: Infinity,
 	})
 
-// What every agent knows about the admin. The live socket keeps it current.
-export const crewMemoryQuery = () =>
+// Where each vertical stands. The live socket keeps it current.
+export const sitrepQuery = () =>
 	queryOptions({
-		queryKey: ['crew', 'memory'],
+		queryKey: ['crew', 'sitrep'],
 		queryFn: async () =>
-			z.array(CrewMemorySchema).parse(await adminFetch('crew/memory')),
+			z.array(SitrepLineSchema).parse(await adminFetch('crew/sitrep')),
+		staleTime: Infinity,
+	})
+
+export function useSetSitrep() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: (input: { agent: CrewKey; track: string; text: string }) =>
+			adminFetch(
+				`crew/sitrep/${input.agent}/${encodeURIComponent(input.track)}`,
+				{ method: 'PUT', json: { text: input.text } }
+			),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: sitrepQuery().queryKey }),
+	})
+}
+
+// What every agent knows about the admin. The live socket keeps it current.
+export const commonKnowledgeQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'knowledge'],
+		queryFn: async () =>
+			z.array(CommonKnowledgeSchema).parse(await adminFetch('crew/knowledge')),
 		staleTime: Infinity,
 	})
 
 // The socket tells other tabs; this tab refetches itself, since the socket
 // may not be connected yet.
-export function useAddCrewMemory() {
+export function useAddCommonKnowledge() {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: (text: string) =>
-			adminFetch('crew/memory', { method: 'POST', json: { text } }),
+			adminFetch('crew/knowledge', { method: 'POST', json: { text } }),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: crewMemoryQuery().queryKey }),
+			queryClient.invalidateQueries({
+				queryKey: commonKnowledgeQuery().queryKey,
+			}),
 	})
 }
 
-export function useForgetCrewMemory() {
+export function useForgetCommonKnowledge() {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: (id: number) =>
-			adminFetch(`crew/memory/${id}`, { method: 'DELETE' }),
+			adminFetch(`crew/knowledge/${id}`, { method: 'DELETE' }),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: crewMemoryQuery().queryKey }),
+			queryClient.invalidateQueries({
+				queryKey: commonKnowledgeQuery().queryKey,
+			}),
 	})
 }
 
-export function useEditCrewMemory() {
+export function useEditCommonKnowledge() {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: (input: { id: number; text: string }) =>
-			adminFetch(`crew/memory/${input.id}`, {
+			adminFetch(`crew/knowledge/${input.id}`, {
 				method: 'PATCH',
 				json: { text: input.text },
 			}),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: crewMemoryQuery().queryKey }),
+			queryClient.invalidateQueries({
+				queryKey: commonKnowledgeQuery().queryKey,
+			}),
 	})
 }
 
@@ -321,9 +350,14 @@ export function useCrewLive() {
 		onMessage: ({ data }: MessageEvent) => {
 			const event = JSON.parse(String(data)) as RoomEvent
 			if (event.type === 'message') upsertMessage(queryClient, event.message)
-			if (event.type === 'crew-memory') {
+			if (event.type === 'common-knowledge') {
 				void queryClient.invalidateQueries({
-					queryKey: crewMemoryQuery().queryKey,
+					queryKey: commonKnowledgeQuery().queryKey,
+				})
+			}
+			if (event.type === 'sitrep') {
+				void queryClient.invalidateQueries({
+					queryKey: sitrepQuery().queryKey,
 				})
 			}
 			if (event.type === 'enterprise') {

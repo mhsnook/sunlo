@@ -5,34 +5,34 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
 import {
-	crewMemoryQuery,
-	useAddCrewMemory,
-	useEditCrewMemory,
-	useForgetCrewMemory,
+	commonKnowledgeQuery,
+	useAddCommonKnowledge,
+	useEditCommonKnowledge,
+	useForgetCommonKnowledge,
 } from '~/lib/crew'
 import { EditableEntry } from './editable-entry'
 
 // The few things every agent knows about the admin, such as their name and
 // how to refer to them. Only the admin writes here.
-export function CrewMemoryPanel({ onClose }: { onClose: () => void }) {
-	const { data: entries } = useSuspenseQuery(crewMemoryQuery())
-	const add = useAddCrewMemory()
-	const edit = useEditCrewMemory()
-	const forget = useForgetCrewMemory()
+export function CommonKnowledgePanel({ onClose }: { onClose: () => void }) {
+	const { data: entries } = useSuspenseQuery(commonKnowledgeQuery())
+	const add = useAddCommonKnowledge()
+	const edit = useEditCommonKnowledge()
+	const forget = useForgetCommonKnowledge()
 	const [draft, setDraft] = useState('')
 
 	return (
 		<aside
-			aria-label="Crew memory"
-			data-testid="crew-memory"
+			aria-label="Common Knowledge"
+			data-testid="common-knowledge"
 			className="bg-background flex h-full w-full flex-col border-s md:w-96"
 		>
 			<div className="flex items-center gap-2 border-b px-4 py-3">
-				<h2 className="me-auto font-semibold">Crew memory</h2>
+				<h2 className="me-auto font-semibold">Common Knowledge</h2>
 				<Button
 					variant="ghost"
 					size="icon"
-					aria-label="Close the crew memory"
+					aria-label="Close Common Knowledge"
 					onClick={onClose}
 				>
 					<X />
@@ -51,13 +51,13 @@ export function CrewMemoryPanel({ onClose }: { onClose: () => void }) {
 								key={entry.id}
 								id={entry.id}
 								text={entry.text}
-								label="Crew memory"
+								label="Common Knowledge entry"
 								busy={edit.isPending || forget.isPending}
 								onSave={(text) => edit.mutateAsync({ id: entry.id, text })}
 								onDelete={() => forget.mutateAsync(entry.id)}
 								deleteLabel="Forget this"
 								className="bg-card rounded border p-3"
-								testId="crew-memory-entry"
+								testId="common-knowledge-entry"
 							>
 								{entry.text}
 							</EditableEntry>
@@ -81,13 +81,13 @@ export function CrewMemoryPanel({ onClose }: { onClose: () => void }) {
 						onChange={(event) => setDraft(event.target.value)}
 						placeholder="Name is Sam, she/her. Also goes by Captain."
 						rows={3}
-						data-testid="crew-memory-input"
+						data-testid="common-knowledge-input"
 					/>
 					<Button
 						type="submit"
 						size="sm"
 						disabled={!draft.trim() || add.isPending}
-						data-testid="crew-memory-add"
+						data-testid="common-knowledge-add"
 					>
 						Add for the whole crew
 					</Button>

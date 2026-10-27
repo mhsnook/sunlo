@@ -4,18 +4,20 @@ import {
 	bridgeKeys,
 	crew,
 	crewKeys,
+	crewList,
 	fixedRouting,
 	meetingDue,
 	isCrewKey,
 	mentionedCrew,
 	endsWithEllipsis,
+	sitrepMax,
 	type ActionType,
 	type AgentStatusType,
 	type RoomStateType,
 	type CrewKey,
 	type CrewMessageType,
 	type CardType,
-	type CrewMemoryType,
+	type CommonKnowledgeType,
 	type CharterEntryType,
 	type EnterpriseType,
 	type WeeklyType,
@@ -24,9 +26,11 @@ import {
 	type RoomEvent,
 	type RoomSnapshotType,
 	type RoutingType,
+	type SitrepLineType,
 	type WorkspaceType,
 } from '../../shared/crew'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
+import { sitrepContext } from './sitrep'
 
 // The room's one instance. Renaming it starts a fresh room: its tables are
 // created once, so a room made before a schema change keeps the old ones.
@@ -36,7 +40,7 @@ export const ROOM = 'crew'
 // agent uses `dm-<admin uid>` instead.
 export const TEAM = 'team'
 // Riker and Data's one conversation: everything reaches them here, from the
-// Conference Room and from the Enterprise thread, so neither runs twice at
+// Common Room and from the Enterprise thread, so neither runs twice at
 // once and each keeps one memory of the day.
 export const BRIDGE = 'bridge'
 
@@ -77,6 +81,14 @@ type CharterRow = {
 	kept_at: string | null
 }
 
+type SitrepRow = {
+	agent: CrewKey
+	track: string
+	text: string
+	by: string
+	by_name: string
+	at: string
+}
 type IdRow = { id: number }
 type CountRow = { count: number }
 
@@ -123,7 +135,7 @@ const toCharter = (row: CharterRow): CharterEntryType => ({
 // Room times for the model: minutes are enough, and UTC is explicit.
 const stamp = (iso: string) => `${iso.slice(0, 16).replace('T', ' ')} UTC`
 
-// One instance, named ROOM, holds the Conference Room and the Enterprise
+// One instance, named ROOM, holds the Common Room and the Enterprise
 // thread, each agent's workspace (to-dos, memory, open items), the charter,
 // CLEF's decision log, and the admin's WebSockets. It is an Agents SDK Agent with no model: browsers
 // connect with useAgent, and its state (each agent's status) syncs to them.
@@ -141,6 +153,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
+		// The production room holds its Common Knowledge under the old name.
+		const oldName = this.sql`
+			select name from sqlite_master where type = 'table' and name = 'crew_memory'`
+		if (oldName.length)
+			this.sql`alter table crew_memory rename to common_knowledge`
 		this.sql`
 			create table if not exists message (
 				id text primary key,
@@ -213,10 +230,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				brief_at text primary key,
 				started_at text not null
 			);
-			create table if not exists crew_memory (
+			create table if not exists common_knowledge (
 				id integer primary key autoincrement,
 				text text not null,
 				at text not null
+			);
+			-- One line per crew member and track; Riker's line is his note.
+			create table if not exists sitrep (
+				agent text not null,
+				track text not null,
+				text text not null,
+				by text not null,
+				by_name text not null,
+				at text not null,
+				primary key (agent, track)
 			);
 			-- Data's pre-meeting report for each week's brief.
 			create table if not exists meeting_report (
@@ -456,7 +483,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const place = input.place
 		if (place === 'dm') return { message, wake }
 		// In the Enterprise thread only Riker and Data answer; Riker carries
-		// anything for the fleet to the Conference Room himself.
+		// anything for the fleet to the Common Room himself.
 		const reachable = mentionedCrew(input.body).filter(
 			(agent) =>
 				agent !== input.agent &&
@@ -554,7 +581,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// ---- Agent runs ---------------------------------------------------------
 
-	// What an agent should wake up knowing: its workspace, the Conference Room
+	// What an agent should wake up knowing: its workspace, the Common Room
 	// and, for Riker and Data, the charter and the Enterprise thread. A run in
 	// a shared timeline reads everything since its last finished run there; a
 	// 1:1 chat reads the latest messages and moves no cursor. Called once for
@@ -575,16 +602,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					values (${agent}, ${messageId})`
 			}
 		}
-		const sections = [`It is now ${stamp(now())}.`, this.crewMemoryText()]
+		const sections = [
+			`It is now ${stamp(now())}.`,
+			this.commonKnowledgeText(),
+			sitrepContext(this.sitrep(), stamp),
+		]
 		if (bridgeKeys.includes(agent)) sections.push(this.bridgeText())
 		sections.push(this.workspaceText(agent))
 		if (!shared) {
 			sections.push(
-				'## The Conference Room, latest messages',
+				'## The Common Room, latest messages',
 				roomText(this.latestRows('room', 15)) || '(empty)'
 			)
 		} else {
-			sections.push(...this.unread(agent, 'room', 'The Conference Room'))
+			sections.push(...this.unread(agent, 'room', 'The Common Room'))
 			if (conversation === BRIDGE) {
 				sections.push(...this.unread(agent, 'bridge', 'The Enterprise thread'))
 			}
@@ -897,7 +928,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// Closes the meeting, then posts the minutes and each ship's directive in
-	// the Conference Room, in that order.
+	// the Common Room, in that order.
 	closeMeeting(input: {
 		minutes: string
 		directives: Array<{ ship: CrewKey; text: string }>
@@ -936,42 +967,93 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return author ? author.slice('admin:'.length) : null
 	}
 
-	crewMemory(): Array<CrewMemoryType> {
-		return this.sql<CrewMemoryType>`
-			select id, text, at from crew_memory order by id`
+	commonKnowledge(): Array<CommonKnowledgeType> {
+		return this.sql<CommonKnowledgeType>`
+			select id, text, at from common_knowledge order by id`
 	}
 
-	addCrewMemory(text: string) {
+	addCommonKnowledge(text: string) {
 		const { id } = this.sql<IdRow>`
-			insert into crew_memory (text, at)
+			insert into common_knowledge (text, at)
 			values (${text}, ${now()})
 			returning id`[0]
-		this.push({ type: 'crew-memory' })
+		this.push({ type: 'common-knowledge' })
 		return id
 	}
 
-	forgetCrewMemory(id: number) {
+	forgetCommonKnowledge(id: number) {
 		const deleted = this.sql`
-			delete from crew_memory where id = ${id} returning id`
-		if (deleted.length) this.push({ type: 'crew-memory' })
+			delete from common_knowledge where id = ${id} returning id`
+		if (deleted.length) this.push({ type: 'common-knowledge' })
 		return deleted.length > 0
 	}
 
-	editCrewMemory(id: number, text: string) {
+	editCommonKnowledge(id: number, text: string) {
 		const edited = this.sql`
-			update crew_memory set text = ${text} where id = ${id} returning id`
-		if (edited.length) this.push({ type: 'crew-memory' })
+			update common_knowledge set text = ${text} where id = ${id} returning id`
+		if (edited.length) this.push({ type: 'common-knowledge' })
 		return edited.length > 0
 	}
 
-	private crewMemoryText() {
-		const entries = this.crewMemory()
+	private commonKnowledgeText() {
+		const entries = this.commonKnowledge()
 			.map((entry) => `- ${entry.text}`)
 			.join('\n')
 		return [
-			'## The crew memory: what the admin wants every agent to know',
+			'## Common Knowledge: what the admin wants every agent to know',
 			entries || '(empty)',
 		].join('\n\n')
+	}
+
+	sitrep(): Array<SitrepLineType> {
+		const rows = this.sql<SitrepRow>`select * from sitrep`
+		return crewList.flatMap((member) =>
+			member.tracks.flatMap((track) => {
+				const row = rows.find(
+					(r) => r.agent === member.key && r.track === track
+				)
+				return row
+					? [
+							{
+								agent: member.key,
+								track,
+								text: row.text,
+								by: row.by,
+								byName: row.by_name,
+								at: row.at,
+							},
+						]
+					: []
+			})
+		)
+	}
+
+	// An empty text clears the line. False for a track the member does not
+	// keep, or a text over its limit.
+	setSitrep(input: {
+		agent: CrewKey
+		track: string
+		text: string
+		by: string
+		byName: string
+	}) {
+		const text = input.text.trim()
+		if (!crew[input.agent].tracks.includes(input.track)) return false
+		if (text.length > sitrepMax(input.agent)) return false
+		if (text) {
+			this.sql`
+				insert into sitrep (agent, track, text, by, by_name, at)
+				values (${input.agent}, ${input.track}, ${text}, ${input.by}, ${input.byName}, ${now()})
+				on conflict (agent, track) do update set
+					text = excluded.text, by = excluded.by,
+					by_name = excluded.by_name, at = excluded.at`
+		} else {
+			this.sql`
+				delete from sitrep
+				where agent = ${input.agent} and track = ${input.track}`
+		}
+		this.push({ type: 'sitrep' })
+		return true
 	}
 
 	private meetingStartedAt() {

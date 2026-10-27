@@ -26,6 +26,9 @@ export type CrewMember = {
 	// A planned agent has a workspace page but no agent behind it yet, so
 	// messages for it stay in the room until it starts.
 	active: boolean
+	// The lines this member keeps in the Situation Report, one per track.
+	// Empty for a specialist like Data, who serves every vertical.
+	tracks: Array<string>
 }
 
 export const crew: Record<CrewKey, CrewMember> = {
@@ -41,6 +44,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: 'writes the weekly brief on Sunday at 04:00',
 		active: true,
+		tracks: ['Note'],
 	},
 	data: {
 		key: 'data',
@@ -53,6 +57,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: null,
 		active: true,
+		tracks: [],
 	},
 	monitor: {
 		key: 'monitor',
@@ -65,6 +70,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: null,
 		active: false,
+		tracks: ['App health'],
 	},
 	moderator: {
 		key: 'moderator',
@@ -76,6 +82,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: null,
 		active: false,
+		tracks: ['Community'],
 	},
 	product: {
 		key: 'product',
@@ -89,6 +96,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: 'runs daily at 07:00 UTC',
 		active: true,
+		tracks: ['Product', 'Engineering'],
 	},
 	library: {
 		key: 'library',
@@ -102,6 +110,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: null,
 		active: false,
+		tracks: ['Library'],
 	},
 	growth: {
 		key: 'growth',
@@ -110,6 +119,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 		looksAfter: ['Signups, invites and where new people come from'],
 		schedule: null,
 		active: false,
+		tracks: ['Growth', 'Retention'],
 	},
 }
 
@@ -212,7 +222,7 @@ export const CrewMessageSchema = z.object({
 			at: z.string(),
 		})
 		.nullable(),
-	// "room" for the Conference Room; "bridge" for the Enterprise thread; "dm"
+	// "room" for the Common Room; "bridge" for the Enterprise thread; "dm"
 	// for a card raised in a 1:1 chat, which shows in the agent's workspace.
 	place: z.enum(['room', 'bridge', 'dm']),
 	// Where the admin said, after sending, this message should have gone.
@@ -279,12 +289,32 @@ export type MemoryType = z.infer<typeof MemorySchema>
 
 // What the whole crew knows about the admin, such as their name and how to
 // refer to them. Only the admin writes it; every agent reads it every run.
-export const CrewMemorySchema = z.object({
+export const CommonKnowledgeSchema = z.object({
 	id: z.number(),
 	text: z.string(),
 	at: z.string(),
 })
-export type CrewMemoryType = z.infer<typeof CrewMemorySchema>
+export type CommonKnowledgeType = z.infer<typeof CommonKnowledgeSchema>
+
+// Riker's line is a note of a few paragraphs; every other line is one line.
+export const SITREP_LINE_MAX = 240
+export const SITREP_NOTE_MAX = 1500
+export const sitrepMax = (agent: CrewKey) =>
+	agent === 'riker' ? SITREP_NOTE_MAX : SITREP_LINE_MAX
+
+// The Situation Report: where each vertical stands right now, in a line per
+// track, and Riker's note on the whole. Small enough for every agent to read
+// at the top of every run.
+export const SitrepLineSchema = z.object({
+	agent: z.enum(crewKeys),
+	track: z.string(),
+	text: z.string(),
+	// A crew key, or "admin:<uid>".
+	by: z.string(),
+	byName: z.string(),
+	at: z.string(),
+})
+export type SitrepLineType = z.infer<typeof SitrepLineSchema>
 
 export const OpenItemSchema = z.object({
 	id: z.number(),
@@ -334,4 +364,5 @@ export type RoomEvent =
 	| { type: 'workspace'; agent: CrewKey }
 	// The Enterprise snapshot changed: the charter, or the meeting.
 	| { type: 'enterprise' }
-	| { type: 'crew-memory' }
+	| { type: 'common-knowledge' }
+	| { type: 'sitrep' }

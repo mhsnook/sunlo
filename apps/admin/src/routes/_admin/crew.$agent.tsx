@@ -59,7 +59,7 @@ function WorkspacePage() {
 							data-testid="agent-not-started"
 						>
 							{member.name} has not started yet. Messages for {member.name} stay
-							in the Conference Room until it does.
+							in the Common Room until it does.
 						</p>
 					)}
 

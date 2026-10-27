@@ -3,8 +3,10 @@ import * as v from 'valibot'
 import {
 	bridgeKeys,
 	crew,
+	crewKeys,
 	fleetKeys,
 	mentionedCrew,
+	sitrepMax,
 	type CrewKey,
 } from '../../shared/crew'
 import { BRIDGE } from '../../worker/crew/room'
@@ -15,7 +17,7 @@ const Id = v.pipe(v.number(), v.integer())
 
 // The room and workspace tools for one agent. `conversation` is "team" for a
 // fleet agent's room runs, "bridge" for Riker and Data, and "dm-<uid>" for a
-// 1:1 chat. A card goes where the conversation lives: the Conference Room,
+// 1:1 chat. A card goes where the conversation lives: the Common Room,
 // the Enterprise thread, or the 1:1 chat.
 export function crewTools(agent: CrewKey, conversation: string) {
 	const name = crew[agent].name
@@ -26,9 +28,9 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			: 'room'
 
 	const postToCrew = defineTool({
-		name: 'post_to_conference_room',
+		name: 'post_to_common_room',
 		description:
-			'Post a message in the Conference Room, where the admin and the other agents read it. Write @Name to address a crew member. Add `options` (2 or 3 short button labels, such as "Hide it" and "Show me") only when you need the admin to choose; their answer comes back to you.',
+			'Post a message in the Common Room, where the admin and the other agents read it. Write @Name to address a crew member. Add `options` (2 or 3 short button labels, such as "Hide it" and "Show me") only when you need the admin to choose; their answer comes back to you.',
 		input: v.object({
 			body: Text,
 			options: v.optional(Options),
@@ -73,7 +75,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 	const proposeChange = defineTool({
 		name: 'propose_change',
 		description:
-			'Propose a change to your plan. The admin gets a "Change to the plan" card with Do it and Not yet. Do it saves the decision to your memory and adds the title as a to-do; Not yet saves that to your memory. Either way the answer comes back to you. The card shows where you are talking: a 1:1 chat, the Enterprise thread, or the Conference Room.',
+			'Propose a change to your plan. The admin gets a "Change to the plan" card with Do it and Not yet. Do it saves the decision to your memory and adds the title as a to-do; Not yet saves that to your memory. Either way the answer comes back to you. The card shows where you are talking: a 1:1 chat, the Enterprise thread, or the Common Room.',
 		input: v.object({
 			title: v.pipe(Text, v.maxLength(120)),
 			why: v.pipe(Text, v.maxLength(600)),
@@ -105,7 +107,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 	const readRoom = defineTool({
 		name: 'read_room',
 		description:
-			'Read the latest messages in the Conference Room, oldest first, when the room context you were given is not enough.',
+			'Read the latest messages in the Common Room, oldest first, when the room context you were given is not enough.',
 		input: v.object({
 			limit: v.optional(v.pipe(Id, v.minValue(1), v.maxValue(100)), 40),
 		}),
@@ -206,11 +208,11 @@ export function crewTools(agent: CrewKey, conversation: string) {
 	})
 
 	// A fleet ship's interview or long back-and-forth with the admin belongs
-	// in its 1:1 chat, not the Conference Room.
+	// in its 1:1 chat, not the Common Room.
 	const takeToOneToOne = defineTool({
 		name: 'take_to_one_to_one',
 		description:
-			'Move a conversation with the admin that needs more than a question or two, such as an interview, to your 1:1 chat with them. Posts a one-line pointer in the Conference Room, then opens the 1:1 chat with your first message.',
+			'Move a conversation with the admin that needs more than a question or two, such as an interview, to your 1:1 chat with them. Posts a one-line pointer in the Common Room, then opens the 1:1 chat with your first message.',
 		input: v.object({ topic: v.pipe(Text, v.maxLength(200)) }),
 		async run({ data }) {
 			const room = await roomFor()
@@ -227,14 +229,46 @@ export function crewTools(agent: CrewKey, conversation: string) {
 				agent,
 				`dm-${uid}`,
 				'dm.open',
-				`You moved this conversation from the Conference Room: ${data.topic}. Open it.`
+				`You moved this conversation from the Common Room: ${data.topic}. Open it.`
 			)
 			return 'The pointer is in the room, and the 1:1 chat opens with your next run there.'
 		},
 	})
 
+	// Riker keeps his note and may rewrite any line; every other vertical
+	// keeps its own lines. A line is "<crew key>/<track>".
+	const sitrepLines = (agent === 'riker' ? crewKeys : [agent]).flatMap((key) =>
+		crew[key].tracks.map((track) => `${key}/${track}`)
+	)
+	const updateSitrep = defineTool({
+		name: 'update_situation_report',
+		description:
+			'Rewrite one line of the Situation Report, which every agent reads at the top of every run. Say where things stand now and what comes next, not a history; leave numbers to queries. An empty text clears the line.',
+		input: v.object({
+			line: v.picklist(sitrepLines.length ? sitrepLines : ['none']),
+			text: v.pipe(v.string(), v.trim()),
+		}),
+		async run({ data }) {
+			const [key, track] = data.line.split('/') as [CrewKey, string]
+			const ok = await (
+				await roomFor()
+			).setSitrep({
+				agent: key,
+				track,
+				text: data.text,
+				by: agent,
+				byName: name,
+			})
+			if (!ok) {
+				throw new Error(`That line holds at most ${sitrepMax(key)} characters.`)
+			}
+			return 'Updated.'
+		},
+	})
+
 	return [
 		postToCrew,
+		...(sitrepLines.length ? [updateSitrep] : []),
 		...(bridgeKeys.includes(agent) ? [] : [takeToOneToOne]),
 		proposeChange,
 		readRoom,

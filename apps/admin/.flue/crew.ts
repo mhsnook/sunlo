@@ -52,7 +52,7 @@ export async function wake(wakes: Array<Wake>, from: string) {
 			deliver(
 				agent,
 				conversationOf(agent),
-				place === 'bridge' ? 'enterprise.message' : 'conference.message',
+				place === 'bridge' ? 'enterprise.message' : 'common-room.message',
 				body,
 				{ from, messageId }
 			).catch((error: unknown) =>
@@ -71,8 +71,8 @@ export const requestReport = () =>
 		'The weekly meeting just started, and there is no pre-meeting report for it yet. Write one now with file_report.'
 	)
 
-// One signal to one conversation of an agent. `type` "conference.message" arrives
-// as a <conference-message> tag.
+// One signal to one conversation of an agent. `type` "common-room.message" arrives
+// as a <common-room-message> tag.
 export async function deliver(
 	agent: CrewKey,
 	conversation: string,

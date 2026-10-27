@@ -37,9 +37,11 @@ Writes, when the admin app gets them, go through the admin's own Supabase sessio
 
 ## The crew
 
-The dashboard opens on the **Conference Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. A fleet ship that needs more than a question or two from you, such as an interview, takes it to your 1:1 chat with `take_to_one_to_one` and leaves a pointer in the room.
+The dashboard opens on the **Common Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. A fleet ship that needs more than a question or two from you, such as an interview, takes it to your 1:1 chat with `take_to_one_to_one` and leaves a pointer in the room.
 
-**Crew memory**, a panel in the Conference Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you. The sidebar lists the Conference Room, then the ships.
+**Common Knowledge**, a panel in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
+
+**The Situation Report**, beside the room on a wide screen, says where each vertical stands now: one line per track, under Riker's note on the whole. Product keeps a Product line and an Engineering line, and Growth a Growth line and a Retention line, so that a track that stalls shows. Every agent reads it after Common Knowledge. Each vertical rewrites its own lines with `update_situation_report`, Riker may rewrite any of them, and you edit all of them in the panel. The sidebar lists the Common Room, then the ships.
 
 The agents sail as ships. **The Enterprise** is your own ship: Riker, your first officer, and Data, his science officer. You talk with them in one thread, the Enterprise thread, and everything that needs you arrives there. **The fleet** is every other agent, each a ship of its own and the expert on its own area. Each fleet ship has a page with its job, its to-do list, what is open with you, its memory, and a 1:1 chat.
 
@@ -61,7 +63,7 @@ Riker is your proxy. He knows three things well: the **charter** (your principle
 
 At `/enterprise`, what you write goes to Riker unless you write @Data. When Riker wants a second opinion, the two of them talk it through in the thread, where you can watch and interject; they take at most 8 turns in a row before you speak. The **ship's log** beside the thread holds the charter, both officers' to-dos and memory, and Data's playbook, and you can edit or prune all of it there.
 
-Riker and Data each keep one Flue conversation, `bridge`, so a message reaches them the same way from the Conference Room and from the thread, and neither runs twice at once.
+Riker and Data each keep one Flue conversation, `bridge`, so a message reaches them the same way from the Common Room and from the thread, and neither runs twice at once.
 
 What needs you arrives in the thread as a card:
 
@@ -75,7 +77,7 @@ What needs you arrives in the thread as a card:
 
 The sidebar counts the cards that wait on you. Anything you want to add to an answer, write in the thread: your answers, and the times you overrule Riker, are how the Enterprise learns you.
 
-**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the ship's log; Cloudflare crons are UTC only) and has Riker post the week's brief in the thread. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the thread begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the thread. Riker holds directives for the fleet until you say the meeting is done: a Conference Room post of his that @mentions a ship is refused while the meeting is in progress. Then he closes the meeting with minutes in the Conference Room, followed by one directive per ship, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
+**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the ship's log; Cloudflare crons are UTC only) and has Riker post the week's brief in the thread. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the thread begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the thread. Riker holds directives for the fleet until you say the meeting is done: a Common Room post of his that @mentions a ship is refused while the meeting is in progress. Then he closes the meeting with minutes in the Common Room, followed by one directive per ship, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
 
 ### Components in messages
 
@@ -84,12 +86,12 @@ Any agent can put components in its markdown as a fenced block whose language na
 ### Where things live
 
 - **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueProductAgent`, bound as `FLUE_PRODUCT_AGENT`) and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
-- **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). Its tables are created once, so until the room holds data worth keeping, a schema change ships with a new instance name, which starts every environment, previews included, on an empty room. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Conference Room and the Enterprise thread, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
+- **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). Its tables are created once, so until the room holds data worth keeping, a schema change ships with a new instance name, which starts every environment, previews included, on an empty room. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Common Room and the Enterprise thread, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
 - **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: USS Product's daily run at 07:00 UTC, and Riker's brief.
 
 ### How a message reaches an agent
 
-CLEF decides where each Conference Room message goes when you send it:
+CLEF decides where each Common Room message goes when you send it:
 
 1. A message that ends in "..." **stacks**: it wakes nobody, and it rides along with your next message that does.
 2. An @mention of a started agent **sends** the message to that agent.
@@ -99,7 +101,7 @@ While you type, the chip above the compose bar shows the first two rules as they
 
 The room logs every decision in `clef_decision`: what CLEF suggested, what the message did, your correction if you made one, and, for each agent the message woke, whether its run posted anything ("posted") or nothing ("silent"). The rows where you picked a place or corrected CLEF are its labels, and CLEF reads the latest 20 the next time it decides.
 
-A message sent to a fleet agent becomes a signal in that agent's `team` conversation, and one sent to Riker or Data a signal in their `bridge` conversation. The 1:1 chat on a fleet ship's page is a separate conversation, `dm-<admin uid>`, which only that admin can open. CLEF decides for the Conference Room only; in the Enterprise thread, Riker answers unless you name Data.
+A message sent to a fleet agent becomes a signal in that agent's `team` conversation, and one sent to Riker or Data a signal in their `bridge` conversation. The 1:1 chat on a fleet ship's page is a separate conversation, `dm-<admin uid>`, which only that admin can open. CLEF decides for the Common Room only; in the Enterprise thread, Riker answers unless you name Data.
 
 ### What an agent can do
 
@@ -107,7 +109,7 @@ Every run starts with the time, the agent's workspace, and the room messages sin
 
 - `activity_between`: signups, reviews and each reviewer, new decks, and library and chat counts for a window
 - `run_sql`: one SELECT, run as `admin_reader` with an 8-second timeout and at most 200 rows
-- `post_to_conference_room`: a message in the room, optionally with 2 or 3 buttons
+- `post_to_common_room`: a message in the room, optionally with 2 or 3 buttons
 - `propose_change`: a "Change to the plan" card. "Do it" saves the decision to the agent's memory and adds a to-do; "Not yet" saves that to memory.
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
 - Riker and Data also have `post_to_enterprise`, `bring_to_admin` (a card in the thread) and `propose_charter`; Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the thread) and `close_meeting`, and Data has `note_playbook` and `file_report`.

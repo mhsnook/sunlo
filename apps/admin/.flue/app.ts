@@ -1,7 +1,14 @@
 import { createAgentRouter } from '@flue/runtime/routing'
 import { validator } from 'hono/validator'
 import { z } from 'zod'
-import { crewKeys, fleetKeys, isCrewKey, RoutingSchema } from '../shared/crew'
+import {
+	adminAuthor,
+	crewKeys,
+	fleetKeys,
+	isCrewKey,
+	RoutingSchema,
+	SITREP_NOTE_MAX,
+} from '../shared/crew'
 import { createApi } from '../worker/api'
 import { crewAgents, deliver, requestReport, roomFor, wake } from './crew'
 
@@ -176,41 +183,71 @@ api.post('/crew/enterprise/meeting', async (c) => {
 	return c.json(started.message)
 })
 
-api.get('/crew/memory', async (c) => {
-	return c.json(await (await roomFor()).crewMemory())
+api.get('/crew/knowledge', async (c) => {
+	return c.json(await (await roomFor()).commonKnowledge())
 })
 
 api.post(
-	'/crew/memory',
+	'/crew/knowledge',
 	json(z.object({ text: z.string().trim().min(1).max(500) }), 'Send { text }'),
 	async (c) => {
-		const id = await (await roomFor()).addCrewMemory(c.req.valid('json').text)
+		const id = await (
+			await roomFor()
+		).addCommonKnowledge(c.req.valid('json').text)
 		return c.json({ id })
 	}
 )
 
 api.delete(
-	'/crew/memory/:id',
-	numericId('No crew memory with that id'),
+	'/crew/knowledge/:id',
+	numericId('No Common Knowledge entry with that id'),
 	async (c) => {
-		const ok = await (await roomFor()).forgetCrewMemory(c.req.valid('param').id)
+		const ok = await (
+			await roomFor()
+		).forgetCommonKnowledge(c.req.valid('param').id)
 		return ok
 			? c.json({ ok })
-			: c.json({ error: 'No crew memory with that id' }, 404)
+			: c.json({ error: 'No Common Knowledge entry with that id' }, 404)
 	}
 )
 
 api.patch(
-	'/crew/memory/:id',
-	numericId('No crew memory with that id'),
+	'/crew/knowledge/:id',
+	numericId('No Common Knowledge entry with that id'),
 	json(z.object({ text: z.string().trim().min(1).max(500) }), 'Send { text }'),
 	async (c) => {
 		const ok = await (
 			await roomFor()
-		).editCrewMemory(c.req.valid('param').id, c.req.valid('json').text)
+		).editCommonKnowledge(c.req.valid('param').id, c.req.valid('json').text)
 		return ok
 			? c.json({ ok })
-			: c.json({ error: 'No crew memory with that id' }, 404)
+			: c.json({ error: 'No Common Knowledge entry with that id' }, 404)
+	}
+)
+
+api.get('/crew/sitrep', async (c) => {
+	return c.json(await (await roomFor()).sitrep())
+})
+
+api.put(
+	'/crew/sitrep/:agent/:track',
+	json(z.object({ text: z.string().max(SITREP_NOTE_MAX) }), 'Send { text }'),
+	async (c) => {
+		const { agent, track } = c.req.param()
+		if (!isCrewKey(agent)) return c.json({ error: 'No such crew member' }, 404)
+		const admin = c.get('admin')
+		const ok = await (
+			await roomFor()
+		).setSitrep({
+			agent,
+			track,
+			text: c.req.valid('json').text,
+			by: adminAuthor(admin.uid),
+			byName: admin.name,
+		})
+		return ok
+			? c.json({ ok })
+			: c.json({ error: `That line is not in the report, or is too long` }, 400)
 	}
 )
 
