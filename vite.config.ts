@@ -81,7 +81,7 @@ export default defineConfig(() => {
 			include: [
 				'src/**/*.test.ts',
 				'worker/**/*.test.ts',
-				'apps/admin/worker/**/*.test.ts',
+				'apps/admin/{worker,src}/**/*.test.ts',
 			],
 		},
 	}

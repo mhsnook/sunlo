@@ -122,6 +122,7 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 		: null,
 	place: row.place,
 	corrected: row.corrected ? (JSON.parse(row.corrected) as RoutingType) : null,
+	receipt: row.receipt === 1,
 })
 
 const toCharter = (row: CharterRow): CharterEntryType => ({

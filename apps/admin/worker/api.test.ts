@@ -227,3 +227,86 @@ describe('GET /api/crew/live', () => {
 		expect(getClaims).not.toHaveBeenCalled()
 	})
 })
+
+describe('/api/voice', () => {
+	const run = vi.fn()
+	const voiceEnv = () => ({ ...makeEnv(), AI: { run } }) as unknown as Env
+	const post = (path: string, body: BodyInit, contentType: string) =>
+		app.request(
+			path,
+			{
+				method: 'POST',
+				body,
+				headers: {
+					authorization: 'Bearer user-token',
+					'content-type': contentType,
+				},
+			},
+			voiceEnv()
+		)
+
+	beforeEach(() => run.mockReset())
+
+	it('needs an admin, like every route', async () => {
+		const res = await app.request(
+			'/api/voice/transcribe',
+			{ method: 'POST', body: 'x' },
+			voiceEnv()
+		)
+		expect(res.status).toBe(401)
+		expect(run).not.toHaveBeenCalled()
+	})
+
+	it('transcribes a recording with nova-3, without the codecs parameter', async () => {
+		run.mockResolvedValue({
+			results: {
+				channels: [{ alternatives: [{ transcript: 'Hey Riker, sitrep?' }] }],
+			},
+		})
+		const res = await post(
+			'/api/voice/transcribe',
+			new Uint8Array([1, 2, 3]),
+			'audio/webm;codecs=opus'
+		)
+		expect(res.status).toBe(200)
+		expect(await res.json()).toEqual({ text: 'Hey Riker, sitrep?' })
+		expect(run.mock.calls[0][0]).toBe('@cf/deepgram/nova-3')
+		expect(run.mock.calls[0][1]).toMatchObject({
+			audio: { contentType: 'audio/webm' },
+			smart_format: true,
+		})
+	})
+
+	it('refuses a body that is not audio', async () => {
+		const res = await post('/api/voice/transcribe', '{}', 'application/json')
+		expect(res.status).toBe(400)
+		expect(run).not.toHaveBeenCalled()
+	})
+
+	it('speaks in the agent’s own voice, as MP3', async () => {
+		run.mockResolvedValue(new Response(new Uint8Array([9, 9])))
+		const res = await post(
+			'/api/voice/speak',
+			JSON.stringify({ text: 'Aye, captain.', agent: 'riker' }),
+			'application/json'
+		)
+		expect(res.status).toBe(200)
+		expect(res.headers.get('content-type')).toBe('audio/mpeg')
+		expect(run.mock.calls[0][0]).toBe('@cf/deepgram/aura-2-en')
+		expect(run.mock.calls[0][1]).toMatchObject({
+			text: 'Aye, captain.',
+			speaker: 'orion',
+			encoding: 'mp3',
+		})
+	})
+
+	it('refuses a speaker who is not on the crew', async () => {
+		const res = await post(
+			'/api/voice/speak',
+			JSON.stringify({ text: 'Hello', agent: 'worf' }),
+			'application/json'
+		)
+		expect(res.status).toBe(400)
+		expect(run).not.toHaveBeenCalled()
+	})
+})

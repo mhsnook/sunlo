@@ -637,6 +637,8 @@ The Common Room at `/`, the Enterprise thread at `/enterprise`, and each fleet s
 | `crew-working`                                                                               | "USS Product is working…" under the timeline                                             |
 | `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                               |
 | `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it         |
+| `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                    |
+| `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                          |
 | `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                                   |
 | `crew-clef-chip`                                                                             | A rule's place for the draft, or "CLEF decides"; opens the menu                          |
 | `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routeproduct`, `room`, `stack`                       |

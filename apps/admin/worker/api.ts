@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { withSql } from './db'
 import { activityOverview, userActivity } from './stats'
 import { supabaseFor } from './supabase'
+import { voiceRoutes } from './voice'
 
 export type AppEnv = {
 	Bindings: Env
@@ -73,6 +74,8 @@ export function createApi() {
 		c.set('admin', { uid: claims.sub, email, name: username ?? email })
 		await next()
 	})
+
+	app.route('/voice', voiceRoutes)
 
 	app.get('/activity-overview', async (c) => {
 		const days = DaysSchema.safeParse(c.req.query('days') ?? 7)

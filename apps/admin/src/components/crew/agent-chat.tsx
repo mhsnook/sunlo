@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useFlueAgent } from '@flue/react'
 import type { FlueConversationMessage } from '@flue/sdk'
@@ -18,7 +18,9 @@ import { toastError } from '@/components/ui/sonner'
 import { hasBlocks } from '../../../shared/blocks'
 import { crew, type CrewKey } from '../../../shared/crew'
 import { dmClient, workspaceQuery } from '~/lib/crew'
+import { speakInTurn, useVoiceReplies } from '~/lib/voice'
 import { AgentAvatar, ChangeCard, CrewText } from './crew-parts'
+import { ReadAloudButton, VoiceControls } from './voice-controls'
 
 // A 1:1 chat with one agent, as the Flue conversation "dm-<admin uid>". It
 // floats over the workspace on a wide screen and fills the screen on a phone.
@@ -42,6 +44,7 @@ export function AgentChat({ agent, uid }: { agent: CrewKey; uid: string }) {
 			)
 	)
 	const busy = chat.status === 'submitted' || chat.status === 'streaming'
+	useReadFinishedReply(agent, busy, visible.at(-1))
 	const member = crew[agent]
 	const send = (body: string, onError?: () => void) =>
 		chat.sendMessage(body).catch((error: Error) => {
@@ -119,6 +122,15 @@ export function AgentChat({ agent, uid }: { agent: CrewKey; uid: string }) {
 						void send(body, () => setDraft(body))
 					}}
 					busy={busy}
+					startSlot={
+						<VoiceControls
+							onText={(text) =>
+								setDraft((current) =>
+									current.trim() ? `${current.trimEnd()} ${text}` : text
+								)
+							}
+						/>
+					}
 					placeholder={`Message ${member.name}`}
 					inputTestId="agent-chat-input"
 					sendTestId="agent-chat-send"
@@ -155,7 +167,7 @@ function ChatMessage({
 			<MessageContent>
 				{parts.map(({ part, key }) => {
 					if (part.type === 'text' && part.text.trim()) {
-						return (
+						const bubble = (
 							<Bubble
 								key={key}
 								variant={
@@ -163,12 +175,33 @@ function ChatMessage({
 								}
 								align={mine ? 'end' : 'start'}
 								className={cn(
-									'whitespace-normal',
+									'min-w-0 whitespace-normal',
 									hasBlocks(part.text) && 'w-full max-w-full'
 								)}
 							>
 								<CrewText text={part.text} />
 							</Bubble>
+						)
+						return mine ? (
+							bubble
+						) : (
+							<div
+								key={key}
+								className={cn(
+									'group/speech flex items-end gap-1',
+									hasBlocks(part.text)
+										? 'w-full'
+										: 'max-w-[80%] *:data-[slot=bubble]:max-w-full'
+								)}
+							>
+								{bubble}
+								<ReadAloudButton
+									id={`${message.id}-${key}`}
+									text={part.text}
+									agent={agent}
+									className="shrink-0 opacity-0 group-hover/speech:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
+								/>
+							</div>
 						)
 					}
 					if (part.type === 'dynamic-tool') {
@@ -219,6 +252,25 @@ function ToolNote({ part, agent }: { part: ToolPart; agent: CrewKey }) {
 					: ''}
 		</p>
 	)
+}
+
+// With voice replies on, reads the agent's reply once it finishes streaming.
+function useReadFinishedReply(
+	agent: CrewKey,
+	busy: boolean,
+	last: FlueConversationMessage | undefined
+) {
+	const voiceReplies = useVoiceReplies()
+	const wasBusy = useRef(busy)
+	useEffect(() => {
+		const finished = wasBusy.current && !busy
+		wasBusy.current = busy
+		if (!finished || !voiceReplies || last?.role !== 'assistant') return
+		const text = last.parts
+			.flatMap((part) => (part.type === 'text' ? [part.text] : []))
+			.join('\n\n')
+		if (text.trim()) speakInTurn({ id: last.id, text, agent })
+	}, [agent, busy, last, voiceReplies])
 }
 
 // The card lives in the crew room's store; the workspace query carries its

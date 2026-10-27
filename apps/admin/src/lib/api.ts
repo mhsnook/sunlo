@@ -2,18 +2,16 @@ import { accessToken, signOutHere } from './session'
 
 // The admin Worker (apps/admin/worker) answers /api on this origin. It checks
 // the token and the admin_user table itself.
-export async function adminFetch(
+export async function adminRequest(
 	path: string,
-	init: { method?: string; json?: unknown } = {}
+	init: { method?: string; body?: BodyInit; contentType?: string } = {}
 ) {
 	const res = await fetch(`/api/${path}`, {
 		method: init.method,
-		body: init.json === undefined ? undefined : JSON.stringify(init.json),
+		body: init.body,
 		headers: {
 			authorization: `Bearer ${await accessToken()}`,
-			...(init.json === undefined
-				? {}
-				: { 'content-type': 'application/json' }),
+			...(init.contentType ? { 'content-type': init.contentType } : {}),
 		},
 	})
 	// The Worker asks the auth server, which can end a session that this
@@ -25,5 +23,18 @@ export async function adminFetch(
 		} | null
 		throw new Error(body?.error ?? `The admin request failed (${res.status})`)
 	}
+	return res
+}
+
+export async function adminFetch(
+	path: string,
+	init: { method?: string; json?: unknown } = {}
+) {
+	const res = await adminRequest(path, {
+		method: init.method,
+		...(init.json === undefined
+			? {}
+			: { body: JSON.stringify(init.json), contentType: 'application/json' }),
+	})
 	return res.json() as Promise<unknown>
 }
