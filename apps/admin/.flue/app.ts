@@ -116,7 +116,7 @@ api.get('/crew/agents/:agent', async (c) => {
 	if (!isCrewKey(agent)) {
 		return c.json({ error: `Crew members are ${crewKeys.join(', ')}` }, 404)
 	}
-	return c.json(await (await roomFor()).workspace(agent))
+	return c.json(await (await roomFor()).workspace(agent, c.get('admin').uid))
 })
 
 api.delete(

@@ -44,6 +44,7 @@ type MessageRow = {
 	place: 'room' | 'dm'
 	conversation: string
 	corrected: string | null
+	receipt: number
 }
 
 type StackRow = {
@@ -159,7 +160,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				answer text,
 				place text not null,
 				conversation text not null,
-				corrected text
+				corrected text,
+				-- 1 for the room's receipt of an agent's edits, not the agent speaking.
+				receipt integer not null default 0
 			);
 			create index if not exists message_at on message (at);
 			create index if not exists message_author on message (author, at);
@@ -558,7 +561,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// ---- Workspaces ---------------------------------------------------------
 
-	workspace(agent: CrewKey): WorkspaceType {
+	// `uid` is the admin reading it: they see room cards and the cards from
+	// their own 1:1 chat. Without it (the agent's own context), every card.
+	workspace(agent: CrewKey, uid?: string): WorkspaceType {
 		const todos = this.sql<{
 			id: number
 			text: string
@@ -586,6 +591,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const cards = this.sql<MessageRow>`
 			select * from message
 			where author = ${agent} and card is not null
+				and (${uid ?? null} is null or place = 'room' or conversation = ${`dm-${uid}`})
 			order by at desc
 			limit 50`.map(toMessage)
 		return {
@@ -836,6 +842,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		card: CrewMessageType['card']
 		place: 'room' | 'dm'
 		conversation: string
+		receipt?: boolean
 	}): CrewMessageType {
 		const row: MessageRow = {
 			id: `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
@@ -849,10 +856,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			place: input.place,
 			conversation: input.conversation,
 			corrected: null,
+			receipt: input.receipt ? 1 : 0,
 		}
 		this.sql`
-			insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation)
-			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.conversation})`
+			insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation, receipt)
+			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.conversation}, ${row.receipt})`
 		const message = toMessage(row)
 		if (message.place === 'room') this.push({ type: 'message', message })
 		return message
@@ -988,6 +996,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			card: null,
 			place: 'room',
 			conversation: TEAM,
+			receipt: true,
 		})
 	}
 
@@ -1004,13 +1013,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// True while Riker and Data have spoken fewer than BRIDGE_TURNS times in a
-	// row since the last message from an admin.
+	// row since the last message from an admin. Receipts are not turns.
 	private bridgeTurnLeft() {
 		const recent = this.sql<{
 			author: string
 		}>`
 			select author from message
-			where place = 'room'
+			where place = 'room' and receipt = 0
 			order by at desc, id desc
 			limit ${BRIDGE_TURNS}`
 		return (

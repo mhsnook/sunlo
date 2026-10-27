@@ -32,7 +32,11 @@ export function AgentChat({
 	uid: string
 	starter?: { label: string; message: string }
 }) {
-	const [open, setOpen] = useState(true)
+	// Below md the chat covers the page, so a phone opens on the workspace,
+	// unless there is a meeting to start.
+	const [open, setOpen] = useState(
+		() => !!starter || window.matchMedia('(min-width: 48rem)').matches
+	)
 	const [draft, setDraft] = useState('')
 	const client = useMemo(() => dmClient(agent, uid), [agent, uid])
 	const chat = useFlueAgent({ client })
