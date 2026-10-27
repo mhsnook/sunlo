@@ -185,4 +185,4 @@ The Worker reaches the database through [Hyperdrive](https://developers.cloudfla
 
 GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("Filing GitHub issues", above).
 
-The build reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at build time, from the Workers Builds build variables. If either is missing, the build still succeeds but drops the Supabase SDK, and the app cannot sign in. Do not deploy by hand: a local build reads the root `.env`, which points at local Supabase.
+On Workers Builds, `vite.config.ts` sets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from `wrangler.jsonc`: `vars` on `main`, and `previews.vars` on any other branch. The app and the Worker therefore always point at the same Supabase project, and the dashboard needs no build variables. Do not deploy by hand: a local build reads the root `.env`, which points at local Supabase, and a local build with those two variables missing silently drops the Supabase SDK (`docs/deployment.md`, "Build Environment Footgun").

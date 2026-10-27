@@ -7,8 +7,38 @@ import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { cloudflare } from '@cloudflare/vite-plugin'
 import { flue, flueWorkerConfig } from '@flue/vite'
+import { unstable_readConfig } from 'wrangler'
+import { z } from 'zod'
 
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url))
+
+const SupabaseVars = z.object({
+	SUPABASE_URL: z.string().url(),
+	SUPABASE_ANON_KEY: z.string().min(1),
+})
+const WranglerVars = z.object({
+	vars: SupabaseVars,
+	previews: z.object({ vars: SupabaseVars }).optional(),
+})
+
+// On Workers Builds (WORKERS_CI=1) the app takes its Supabase project from
+// wrangler.jsonc, the values the Worker runs with: `vars` on main, and
+// `previews.vars` on any other branch. So the app and its Worker cannot
+// disagree, and the dashboard needs no build variables. A local build still
+// reads the root .env; process.env set here wins over .env files.
+if (process.env.WORKERS_CI) {
+	const config = WranglerVars.parse(
+		unstable_readConfig({
+			config: fileURLToPath(new URL('wrangler.jsonc', import.meta.url)),
+		})
+	)
+	const vars =
+		process.env.WORKERS_CI_BRANCH === 'main'
+			? config.vars
+			: (config.previews?.vars ?? config.vars)
+	process.env.VITE_SUPABASE_URL = vars.SUPABASE_URL
+	process.env.VITE_SUPABASE_ANON_KEY = vars.SUPABASE_ANON_KEY
+}
 
 export default defineConfig({
 	plugins: [

@@ -72,7 +72,7 @@ For a PR, the workflow waits for the `Supabase Preview` check, then reads the br
 | Root directory                                                           | `/`                                                                      | `apps/admin`                            |
 | Build command                                                            | `pnpm build`                                                             | `pnpm build`                            |
 | Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default)     |
-| Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | The same two values                     |
+| Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | None: its build reads `wrangler.jsonc`  |
 | Secrets (Settings › Variables and Secrets)                               | None                                                                     | None; the database is Hyperdrive, below |
 | Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | On. Each branch gets a Worker Preview.  |
 
