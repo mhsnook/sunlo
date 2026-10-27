@@ -102,6 +102,16 @@ api.get('/crew/agents/:agent', async (c) => {
 	return c.json(await (await roomFor(c.env)).workspace(agent))
 })
 
+api.delete('/crew/agents/:agent/memory/:id', async (c) => {
+	const agent = c.req.param('agent')
+	const id = z.coerce.number().int().safeParse(c.req.param('id'))
+	if (!isCrewKey(agent) || !id.success) {
+		return c.json({ error: 'No memory there' }, 404)
+	}
+	const ok = await (await roomFor(c.env)).forget(agent, id.data)
+	return ok ? c.json({ ok }) : c.json({ error: 'No memory with that id' }, 404)
+})
+
 api.get('/crew/stack', async (c) => {
 	return c.json(await (await roomFor(c.env)).stack())
 })

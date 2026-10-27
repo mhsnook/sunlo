@@ -6,6 +6,7 @@ import {
 	useTool,
 } from '@flue/runtime'
 import { env } from 'cloudflare:workers'
+import { BLOCKS_GUIDE } from '../../shared/blocks'
 import { crew, crewList, type CrewKey } from '../../shared/crew'
 import { TEAM } from '../../worker/crew/room'
 import { roomFor } from '../crew'
@@ -45,6 +46,7 @@ export function useCrewMember(
 	})
 
 	useInstruction(crewInstructions(agent))
+	useInstruction(BLOCKS_GUIDE)
 	useInstruction(conversation === TEAM ? ROOM_RUN : ONE_TO_ONE)
 	if (database) useInstruction(DATABASE_NOTES)
 }

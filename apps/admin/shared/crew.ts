@@ -187,25 +187,6 @@ export function fixedRouting(text: string): RoutingType | null {
 export const ActionSchema = z.object({ id: z.string(), label: z.string() })
 export type ActionType = z.infer<typeof ActionSchema>
 
-// Something Data attaches to a message: a chart the app draws, or an HTML
-// explorer the app shows in a sandboxed frame.
-export const ChartSchema = z.object({
-	type: z.enum(['line', 'bar']),
-	// The key in each row that holds the x value.
-	x: z.string(),
-	series: z.array(z.object({ key: z.string(), label: z.string() })),
-	rows: z.array(
-		z.record(z.string(), z.union([z.string(), z.number(), z.null()]))
-	),
-})
-export type ChartType = z.infer<typeof ChartSchema>
-
-export const ExhibitSchema = z.discriminatedUnion('kind', [
-	z.object({ kind: z.literal('chart'), title: z.string(), chart: ChartSchema }),
-	z.object({ kind: z.literal('html'), title: z.string(), html: z.string() }),
-])
-export type ExhibitType = z.infer<typeof ExhibitSchema>
-
 export const CrewMessageSchema = z.object({
 	id: z.string(),
 	at: z.string(),
@@ -237,7 +218,6 @@ export const CrewMessageSchema = z.object({
 	place: z.enum(['room', 'dm']),
 	// Where the admin said, after sending, this message should have gone.
 	corrected: RoutingSchema.nullable(),
-	exhibit: ExhibitSchema.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -289,6 +269,10 @@ export type TodoType = z.infer<typeof TodoSchema>
 
 export const MemorySchema = z.object({
 	id: z.number(),
+	// "metric" and "chart" are Data's playbook: the metrics the admin likes in
+	// each domain, and how they like charts drawn.
+	kind: z.enum(['fact', 'metric', 'chart']),
+	domain: z.string().nullable(),
 	text: z.string(),
 	at: z.string(),
 })

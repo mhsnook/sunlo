@@ -1,4 +1,6 @@
 import Markdown from 'react-markdown'
+import { isBlockKind } from '../../../shared/blocks'
+import { Block } from './blocks'
 import { Inbox, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -44,7 +46,9 @@ export function AdminAvatar({ name }: { name: string }) {
 	)
 }
 
-// Agents write light markdown. @mentions render bold, as in the design.
+// Agents write markdown. @mentions render bold, as in the design, and a
+// fenced block in a component's language (```chart, ```stats, ```table)
+// renders as that component.
 export function CrewText({ text }: { text: string }) {
 	return (
 		<Markdown
@@ -56,17 +60,54 @@ export function CrewText({ text }: { text: string }) {
 				ol: ({ children }) => (
 					<ol className="list-decimal ps-5 not-first:mt-2">{children}</ol>
 				),
+				h3: ({ children }) => (
+					<h3 className="font-semibold not-first:mt-3">{children}</h3>
+				),
 				a: ({ children, href }) => (
 					<a href={href} className="underline" target="_blank" rel="noreferrer">
 						{children}
 					</a>
 				),
+				pre: ({ node, children }) => {
+					const code = node?.children[0]
+					const language =
+						code?.type === 'element'
+							? String(
+									(
+										code.properties.className as Array<string> | undefined
+									)?.[0] ?? ''
+								).replace(/^language-/, '')
+							: ''
+					const source =
+						code?.type === 'element' && code.children[0]?.type === 'text'
+							? code.children[0].value
+							: ''
+					if (isBlockKind(language)) {
+						return <Block kind={language} source={source} />
+					}
+					return (
+						<pre className="bg-muted my-2 overflow-x-auto rounded p-2 text-xs">
+							{children}
+						</pre>
+					)
+				},
 			}}
 		>
-			{text.replace(/(^|\s)@([A-Za-z][\w-]*)/g, '$1**@$2**')}
+			{boldMentions(text)}
 		</Markdown>
 	)
 }
+
+// Outside code fences only, so JSON in a component block stays intact.
+const boldMentions = (text: string) =>
+	text
+		.split(/(```[\s\S]*?```)/g)
+		.map((part, index) =>
+			index % 2 === 1
+				? part
+				: part.replace(/(^|\s)@([A-Za-z][\w-]*)/g, '$1**@$2**')
+		)
+		.join('')
 
 const timeFormat = new Intl.DateTimeFormat(undefined, {
 	hour: '2-digit',

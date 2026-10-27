@@ -56,7 +56,11 @@ The roster and the ships live in `shared/crew.ts`. A planned agent has a workspa
 
 ### The bridge: Riker and Data
 
-Riker is your proxy. He knows three things well: the **charter** (your principles and lessons, which you curate together), where the agents overlap or disagree, and the directives he has given each agent. Everything else he asks the expert for. Data argues from the evidence: he runs the database queries, takes more steps on a bigger model (`DATA_MODEL`), and attaches **exhibits** to his messages, either a chart the app draws or an HTML explorer that runs in a sandboxed frame with no access to the app. They are two separate agents that share the charter, so you can @mention either, and when Riker wants a second opinion the two of them talk it through in the room, where you can watch and interject. They take at most 8 turns in a row before one of the admins speaks.
+Riker is your proxy. He knows three things well: the **charter** (your principles and lessons, which you curate together), where the agents overlap or disagree, and the directives he has given each agent. Everything else he asks the expert for. Data argues from the evidence: he runs the database queries and takes more steps on a bigger model (`DATA_MODEL`). He also keeps a **playbook**: the metrics you like in each domain and how you like charts drawn, which he learns from your reactions and you can prune on his page. They are two separate agents that share the charter, so you can @mention either, and when Riker wants a second opinion the two of them talk it through in the room, where you can watch and interject. They take at most 8 turns in a row before one of the admins speaks.
+
+### Components in messages
+
+Any agent can put components in its markdown as a fenced block whose language names the component and whose body is JSON: `chart` (line, bar or area), `stats` (a row of headline numbers) and `table` (sortable, optionally filterable). The catalog and its schemas are in `shared/blocks.ts`, and `src/components/crew/blocks.tsx` draws them with the app's own components, in the room, the stack, briefs and the 1:1 chats. It is the generative-UI pattern without MDX: an agent describes a component and the app decides how it looks, and no agent-written markup or code ever runs. Every tool that posts text refuses a block that does not parse and tells the agent what to fix, so a broken block never reaches you.
 
 What they need from you lands in **Brought to you** (`/stack`), and you can clear that page without reading the room:
 

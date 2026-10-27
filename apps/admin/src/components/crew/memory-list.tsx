@@ -1,0 +1,111 @@
+import type { ReactNode } from 'react'
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { toastError } from '@/components/ui/sonner'
+import type { CrewKey, MemoryType } from '../../../shared/crew'
+import { useForgetMemory } from '~/lib/crew'
+import { dayLabel } from './crew-parts'
+
+// An agent's memory, which the admin can prune. Data's playbook entries
+// (metrics by domain, chart preferences) get their own headings.
+export function MemoryList({
+	agent,
+	memory,
+	agentName,
+}: {
+	agent: CrewKey
+	memory: Array<MemoryType>
+	agentName: string
+}) {
+	const metrics = memory.filter((entry) => entry.kind === 'metric')
+	const charts = memory.filter((entry) => entry.kind === 'chart')
+	const facts = memory.filter((entry) => entry.kind === 'fact')
+	const domains = [
+		...new Set(metrics.map((entry) => entry.domain ?? 'General')),
+	]
+	return (
+		<div className="space-y-5">
+			{metrics.length > 0 && (
+				<Group title="The metrics you like">
+					{domains.map((domain) => (
+						<div key={domain} className="space-y-1">
+							<p className="text-xs font-semibold">{domain}</p>
+							<Entries
+								agent={agent}
+								entries={metrics.filter(
+									(entry) => (entry.domain ?? 'General') === domain
+								)}
+							/>
+						</div>
+					))}
+				</Group>
+			)}
+			{charts.length > 0 && (
+				<Group title="How you like charts">
+					<Entries agent={agent} entries={charts} />
+				</Group>
+			)}
+			<Group title="Memory">
+				{facts.length ? (
+					<Entries agent={agent} entries={facts} />
+				) : (
+					<p className="text-muted-foreground text-sm">
+						{agentName} has not saved anything yet.
+					</p>
+				)}
+			</Group>
+		</div>
+	)
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+	return (
+		<section className="space-y-2">
+			<h2 className="text-muted-foreground text-sm font-semibold">{title}</h2>
+			{children}
+		</section>
+	)
+}
+
+function Entries({
+	agent,
+	entries,
+}: {
+	agent: CrewKey
+	entries: Array<MemoryType>
+}) {
+	const forget = useForgetMemory(agent)
+	return (
+		<ul className="space-y-1" data-testid="agent-memory">
+			{entries.map((entry) => (
+				<li
+					key={entry.id}
+					className="group flex items-start gap-2 text-sm"
+					data-testid="agent-memory-entry"
+					data-key={entry.id}
+				>
+					<span className="flex-1">
+						{entry.text}
+						<span className="text-muted-foreground ms-2 text-xs">
+							{dayLabel(entry.at)}
+						</span>
+					</span>
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label="Delete this memory"
+						className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+						disabled={forget.isPending}
+						onClick={() =>
+							forget.mutate(entry.id, {
+								onError: (error) => toastError(error.message),
+							})
+						}
+					>
+						<Trash2 />
+					</Button>
+				</li>
+			))}
+		</ul>
+	)
+}

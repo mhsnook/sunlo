@@ -83,6 +83,13 @@ export function useAnswerStack() {
 	})
 }
 
+export function useForgetMemory(agent: CrewKey) {
+	return useMutation({
+		mutationFn: (id: number) =>
+			adminFetch(`crew/agents/${agent}/memory/${id}`, { method: 'DELETE' }),
+	})
+}
+
 export function useEditCharter() {
 	const queryClient = useQueryClient()
 	return useMutation({

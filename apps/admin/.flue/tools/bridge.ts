@@ -1,8 +1,9 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
-import { crew, type CrewKey, type StackItemType } from '../../shared/crew'
+import type { CrewKey, StackItemType } from '../../shared/crew'
 import { TEAM } from '../../worker/crew/room'
-import { roomFor, wake } from '../crew'
+import { roomFor } from '../crew'
+import { assertBlocks } from './check-blocks'
 
 const Text = v.pipe(v.string(), v.trim(), v.minLength(1))
 const Label = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(24))
@@ -47,6 +48,7 @@ Their answer comes back to you.`,
 		}),
 		durable: true,
 		async run({ data, step }) {
+			assertBlocks(data.body)
 			const id = await step.do('bring', async () =>
 				(await roomFor()).bringToAdmin({
 					author: agent,
@@ -98,6 +100,7 @@ export function rikerTools() {
 		}),
 		durable: true,
 		async run({ data, step }) {
+			assertBlocks(data.body)
 			const id = await step.do('brief', async () =>
 				(await roomFor()).recordBrief({ author: 'riker', ...data })
 			)
@@ -112,6 +115,7 @@ export function rikerTools() {
 		input: v.object({ minutes: v.pipe(Text, v.maxLength(6000)) }),
 		durable: true,
 		async run({ data, step }) {
+			assertBlocks(data.minutes)
 			await step.do('close', async () => {
 				const room = await roomFor()
 				await room.closeMeeting()
@@ -131,55 +135,27 @@ export function rikerTools() {
 	return [writeBrief, closeMeeting]
 }
 
-const Cell = v.union([v.string(), v.number(), v.null()])
-
-// Data's exhibits: a chart the app draws, or a self-contained HTML explorer.
+// Data's playbook: the metrics the admin likes in each domain, and how they
+// like charts drawn. Data keeps it himself; the admin can delete entries.
 export function dataTools() {
-	const postExhibit = defineTool({
-		name: 'post_exhibit',
-		description: `Post a message in the crew room with an exhibit attached. Give exactly one of:
-- chart: a line or bar chart. "x" names the row key for the x axis; each series names a numeric row key. At most 400 rows.
-- html: a complete, self-contained HTML document for an interactive explorer (tables, filters, small charts). Inline all data, CSS and JS; it runs in a sandbox with no network and no access to the app.`,
-		input: v.pipe(
-			v.object({
-				body: v.pipe(Text, v.maxLength(4000)),
-				title: v.pipe(Text, v.maxLength(120)),
-				chart: v.optional(
-					v.object({
-						type: v.picklist(['line', 'bar']),
-						x: Text,
-						series: v.pipe(
-							v.array(v.object({ key: Text, label: Text })),
-							v.minLength(1),
-							v.maxLength(6)
-						),
-						rows: v.pipe(v.array(v.record(v.string(), Cell)), v.maxLength(400)),
-					})
-				),
-				html: v.optional(v.pipe(Text, v.maxLength(200_000))),
-			}),
-			v.check(
-				(input) => (input.chart === undefined) !== (input.html === undefined),
-				'Give exactly one of chart or html'
-			)
-		),
-		durable: true,
-		async run({ data, step }) {
-			const { message, wake: wakes } = await step.do('post', async () =>
-				(await roomFor()).postFromAgent({
-					agent: 'data',
-					body: data.body,
-					card: null,
-					place: 'room',
-					conversation: TEAM,
-					exhibit: data.chart
-						? { kind: 'chart', title: data.title, chart: data.chart }
-						: { kind: 'html', title: data.title, html: data.html ?? '' },
-				})
-			)
-			await step.do('wake', () => wake(wakes, crew.data.name).then(() => true))
-			return { output: { messageId: message.id } }
+	const notePlaybook = defineTool({
+		name: 'note_playbook',
+		description:
+			'Add to your playbook. "metric": a metric the admin likes for a domain, such as retention (day-7 returners over signups) or library health. "chart": how they like charts, such as "line charts for anything over time; no pie charts". Note what their reactions tell you, and check the playbook before you choose metrics or draw.',
+		input: v.object({
+			kind: v.picklist(['metric', 'chart']),
+			domain: v.optional(v.pipe(Text, v.maxLength(40))),
+			text: v.pipe(Text, v.maxLength(300)),
+		}),
+		async run({ data }) {
+			const id = await (
+				await roomFor()
+			).remember('data', data.text, {
+				kind: data.kind,
+				domain: data.domain ?? null,
+			})
+			return { output: { id } }
 		},
 	})
-	return [postExhibit]
+	return [notePlaybook]
 }

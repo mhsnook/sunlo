@@ -12,7 +12,6 @@ import {
 	type RoomStateType,
 	type CrewKey,
 	type CrewMessageType,
-	type ExhibitType,
 	type StackItemType,
 	type StackType,
 	type CharterEntryType,
@@ -42,7 +41,6 @@ type MessageRow = {
 	place: 'room' | 'dm'
 	conversation: string
 	corrected: string | null
-	exhibit: string | null
 }
 
 type StackRow = {
@@ -97,7 +95,6 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 		: null,
 	place: row.place,
 	corrected: row.corrected ? (JSON.parse(row.corrected) as RoutingType) : null,
-	exhibit: row.exhibit ? (JSON.parse(row.exhibit) as ExhibitType) : null,
 })
 
 const toStackItem = (row: StackRow): StackItemType => ({
@@ -171,7 +168,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				id integer primary key autoincrement,
 				agent text not null,
 				text text not null,
-				at text not null
+				at text not null,
+				kind text not null default 'fact',
+				domain text
 			);
 			create table if not exists open_item (
 				id integer primary key autoincrement,
@@ -233,10 +232,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				'message'
 			)
 			.toArray()
-		for (const column of ['corrected', 'exhibit']) {
-			if (!columns.some((existing) => existing.name === column)) {
-				this.db.exec(`alter table message add column ${column} text`)
-			}
+		if (!columns.some((column) => column.name === 'corrected')) {
+			this.db.exec('alter table message add column corrected text')
+		}
+		const memoryColumns = this.db
+			.exec<{ name: string }>('select name from pragma_table_info(?)', 'memory')
+			.toArray()
+		if (!memoryColumns.some((column) => column.name === 'kind')) {
+			this.db.exec(
+				"alter table memory add column kind text not null default 'fact'"
+			)
+			this.db.exec('alter table memory add column domain text')
 		}
 	}
 
@@ -426,7 +432,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		} | null
 		place: 'room' | 'dm'
 		conversation: string
-		exhibit?: ExhibitType | null
 	}): { message: CrewMessageType; wake: Array<Wake> } {
 		const message = this.insert({
 			author: input.agent,
@@ -436,7 +441,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			card: input.card,
 			place: input.place,
 			conversation: input.conversation,
-			exhibit: input.exhibit ?? null,
 		})
 		if (input.card) this.push({ type: 'workspace', agent: input.agent })
 		const wake: Array<Wake> = []
@@ -615,8 +619,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				doneAt: row.done_at,
 			}))
 		const memory = this.db
-			.exec<{ id: number; text: string; at: string }>(
-				'select id, text, at from memory where agent = ? order by id',
+			.exec<{
+				id: number
+				kind: 'fact' | 'metric' | 'chart'
+				domain: string | null
+				text: string
+				at: string
+			}>(
+				'select id, kind, domain, text, at from memory where agent = ? order by kind, domain, id',
 				agent
 			)
 			.toArray()
@@ -689,13 +699,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return true
 	}
 
-	remember(agent: CrewKey, text: string) {
+	remember(
+		agent: CrewKey,
+		text: string,
+		playbook: { kind: 'metric' | 'chart'; domain: string | null } | null = null
+	) {
 		const [{ id }] = this.db
 			.exec<{ id: number }>(
-				'insert into memory (agent, text, at) values (?, ?, ?) returning id',
+				'insert into memory (agent, text, at, kind, domain) values (?, ?, ?, ?, ?) returning id',
 				agent,
 				text,
-				now()
+				now(),
+				playbook?.kind ?? 'fact',
+				playbook?.domain ?? null
 			)
 			.toArray()
 		this.logEdit(agent, `saved memory "${text}"`)
@@ -936,7 +952,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		card: CrewMessageType['card']
 		place: 'room' | 'dm'
 		conversation: string
-		exhibit?: ExhibitType | null
 	}): CrewMessageType {
 		const row: MessageRow = {
 			id: `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
@@ -950,11 +965,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			place: input.place,
 			conversation: input.conversation,
 			corrected: null,
-			exhibit: input.exhibit ? JSON.stringify(input.exhibit) : null,
 		}
 		this.db.exec(
-			`insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation, exhibit)
-			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			`insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation)
+			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			row.id,
 			row.at,
 			row.author,
@@ -964,8 +978,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			row.card,
 			row.answer,
 			row.place,
-			row.conversation,
-			row.exhibit
+			row.conversation
 		)
 		const message = toMessage(row)
 		if (message.place === 'room') this.push({ type: 'message', message })
@@ -1010,7 +1023,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					`- [${t.id}]${t.done ? ' (done)' : ''} ${t.text}${t.note ? ` — ${t.note}` : ''}`
 			)
 			.join('\n')
-		const memory = ws.memory.map((m) => `- [${m.id}] ${m.text}`).join('\n')
+		const memory = ws.memory
+			.map(
+				(m) =>
+					`- [${m.id}]${m.kind === 'fact' ? '' : ` (${m.kind}${m.domain ? `, ${m.domain}` : ''})`} ${m.text}`
+			)
+			.join('\n')
 		const open = ws.openItems
 			.map((o) => `- [${o.id}] ${o.title}${o.tag ? ` (${o.tag})` : ''}`)
 			.join('\n')

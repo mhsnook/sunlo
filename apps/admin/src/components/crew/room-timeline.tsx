@@ -13,6 +13,7 @@ import {
 	MessageHeader,
 	MessageMarker,
 } from '@/components/ui/message'
+import { hasBlocks } from '../../../shared/blocks'
 import { crew, isCrewKey, type CrewMessageType } from '../../../shared/crew'
 import {
 	AgentAvatar,
@@ -22,7 +23,6 @@ import {
 	dayLabel,
 	timeLabel,
 } from './crew-parts'
-import { Exhibit } from './exhibit'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { useCorrectRouting } from '~/lib/crew'
 
@@ -167,15 +167,19 @@ function AuthorGroup({
 											? 'primary'
 											: asksYou && !message.answer
 												? 'soft'
-												: 'muted'
+												: hasBlocks(message.body)
+													? 'outline'
+													: 'muted'
 									}
 									align={mine ? 'end' : 'start'}
-									className="whitespace-normal"
+									className={cn(
+										'whitespace-normal',
+										hasBlocks(message.body) && 'w-full max-w-2xl'
+									)}
 								>
 									<CrewText text={message.body} />
 								</Bubble>
 							)}
-							{message.exhibit && <Exhibit exhibit={message.exhibit} />}
 							{asksYou && <CardActions message={message} />}
 							{mine && message.routing && (
 								<MessageFooter>

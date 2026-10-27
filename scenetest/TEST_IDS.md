@@ -647,10 +647,12 @@ The crew room at `/`, "Brought to you" at `/stack`, and each agent's workspace a
 | `agent-todos`, `agent-todo` + `data-key=<id>`                   | The workspace to-do list and one to-do                                |
 | `agent-open-item` + `data-key=<id>`                             | One "Open with you" item                                              |
 | `agent-memory`                                                  | The workspace memory list                                             |
+| `agent-memory-entry` + `data-key=<id>`                          | One memory or playbook entry, with its delete button                  |
 | `agent-chat`, `agent-chat-open`                                 | The floating 1:1 chat, and the button that reopens it                 |
 | `agent-chat-input`, `agent-chat-send`                           | The 1:1 chat's compose bar                                            |
 | `agent-chat-message` + `data-key=<message id>`                  | One message in the 1:1 chat                                           |
-| `crew-exhibit` + `data-key=<chart\|html>`                       | A chart or HTML explorer attached to a message                        |
+| `crew-block` + `data-key=<chart\|stats\|table>`                 | A component an agent put in its message                               |
+| `crew-block-filter`                                             | The filter box on a filterable table component                        |
 | `crew-meeting-banner`, `crew-start-meeting`                     | The weekly meeting invitation and its start button                    |
 | `stack-open`, `stack-item` + `data-key=<id>`                    | The open items on "Brought to you", and one item                      |
 | `stack-item-note`, `stack-item-action` + `data-key=<action id>` | An item's optional note, and its answer buttons                       |

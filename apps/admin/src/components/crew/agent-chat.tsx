@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import { toastError } from '@/components/ui/sonner'
+import { hasBlocks } from '../../../shared/blocks'
 import { crew, type CrewKey } from '../../../shared/crew'
 import { dmClient, workspaceQuery } from '~/lib/crew'
 import { AgentAvatar, ChangeCard, CrewText } from './crew-parts'
@@ -147,9 +148,14 @@ function ChatMessage({
 						return (
 							<Bubble
 								key={index}
-								variant={mine ? 'primary' : 'muted'}
+								variant={
+									mine ? 'primary' : hasBlocks(part.text) ? 'outline' : 'muted'
+								}
 								align={mine ? 'end' : 'start'}
-								className="whitespace-normal"
+								className={cn(
+									'whitespace-normal',
+									hasBlocks(part.text) && 'w-full max-w-full'
+								)}
 							>
 								<CrewText text={part.text} />
 							</Bubble>
@@ -181,6 +187,11 @@ const toolLabels: Record<string, string> = {
 	forget: 'Forgot a memory',
 	add_open_item: 'Added an open item',
 	close_open_item: 'Closed an open item',
+	bring_to_admin: 'Brought something to you',
+	propose_charter: 'Proposed a charter entry',
+	write_brief: 'Wrote the weekly brief',
+	close_meeting: 'Closed the meeting',
+	note_playbook: 'Noted it in the playbook',
 }
 
 function ToolNote({ part, agent }: { part: ToolPart; agent: CrewKey }) {

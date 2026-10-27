@@ -3,6 +3,7 @@ import * as v from 'valibot'
 import { crew, type CrewKey } from '../../shared/crew'
 import { TEAM } from '../../worker/crew/room'
 import { roomFor, wake } from '../crew'
+import { assertBlocks } from './check-blocks'
 
 const Text = v.pipe(v.string(), v.trim(), v.minLength(1))
 const Id = v.pipe(v.number(), v.integer())
@@ -32,6 +33,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		}),
 		durable: true,
 		async run({ data, step }) {
+			assertBlocks(data.body)
 			const { message, wake: wakes } = await step.do('post', async () =>
 				(await roomFor()).postFromAgent({
 					agent,
@@ -70,6 +72,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		}),
 		durable: true,
 		async run({ data, step }) {
+			assertBlocks(data.why)
 			const { message } = await step.do('post', async () =>
 				(await roomFor()).postFromAgent({
 					agent,

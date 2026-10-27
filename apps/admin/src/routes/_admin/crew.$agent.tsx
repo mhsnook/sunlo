@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { crew, isCrewKey } from '../../../shared/crew'
 import { isWorking, roomQuery, stackQuery, workspaceQuery } from '~/lib/crew'
 import { CharterPanel } from '~/components/crew/charter-panel'
+import { MemoryList } from '~/components/crew/memory-list'
 import { AgentChat } from '~/components/crew/agent-chat'
 import {
 	AgentAvatar,
@@ -171,22 +172,11 @@ function WorkspacePage() {
 						)}
 					</Section>
 
-					<Section title="Memory">
-						{workspace.memory.length ? (
-							<ul className="space-y-2" data-testid="agent-memory">
-								{workspace.memory.map((memory) => (
-									<li key={memory.id} className="text-sm">
-										{memory.text}
-										<span className="text-muted-foreground ms-2 text-xs">
-											{dayLabel(memory.at)}
-										</span>
-									</li>
-								))}
-							</ul>
-						) : (
-							<Empty>{member.name} has not saved anything yet.</Empty>
-						)}
-					</Section>
+					<MemoryList
+						agent={agent}
+						memory={workspace.memory}
+						agentName={member.name}
+					/>
 				</div>
 			</div>
 			{member.active && (
