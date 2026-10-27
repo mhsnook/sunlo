@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import supabase from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
@@ -24,9 +25,13 @@ function AdminLayout() {
 }
 
 function CrewLayout() {
-	useCrewLive()
 	return (
 		<div className="flex h-dvh">
+			{/* useAgent suspends while it refreshes the token for its socket,
+			    every cacheTtl; outside this boundary that blanks the page. */}
+			<Suspense fallback={null}>
+				<CrewLive />
+			</Suspense>
 			<aside className="bg-primary-50 hidden w-72 shrink-0 border-e md:block">
 				<CrewSidebar />
 			</aside>
@@ -36,6 +41,11 @@ function CrewLayout() {
 			</main>
 		</div>
 	)
+}
+
+function CrewLive() {
+	useCrewLive()
+	return null
 }
 
 function NotAdmin() {
