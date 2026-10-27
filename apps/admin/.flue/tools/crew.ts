@@ -1,8 +1,14 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
-import { crew, type CrewKey } from '../../shared/crew'
+import {
+	bridgeKeys,
+	crew,
+	fleetKeys,
+	mentionedCrew,
+	type CrewKey,
+} from '../../shared/crew'
 import { BRIDGE } from '../../worker/crew/room'
-import { roomFor, wake } from '../crew'
+import { deliver, roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
 const Id = v.pipe(v.number(), v.integer())
@@ -30,6 +36,14 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.body)
+			const directive =
+				bridgeKeys.includes(agent) &&
+				mentionedCrew(data.body).some((key) => fleetKeys.includes(key))
+			if (directive && (await (await roomFor()).meetingInProgress())) {
+				throw new Error(
+					'Nothing was posted. The weekly meeting is in progress, so directives to the fleet wait: pass them to close_meeting, which posts them once the admin is done.'
+				)
+			}
 			const { message, wake: wakes } = await step.do('post', async () =>
 				(await roomFor()).postFromAgent({
 					agent,
@@ -191,8 +205,37 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		},
 	})
 
+	// A fleet ship's interview or long back-and-forth with the admin belongs
+	// in its 1:1 chat, not the Conference Room.
+	const takeToOneToOne = defineTool({
+		name: 'take_to_one_to_one',
+		description:
+			'Move a conversation with the admin that needs more than a question or two, such as an interview, to your 1:1 chat with them. Posts a one-line pointer in the Conference Room, then opens the 1:1 chat with your first message.',
+		input: v.object({ topic: v.pipe(Text, v.maxLength(200)) }),
+		async run({ data }) {
+			const room = await roomFor()
+			const uid = await room.latestAdminUid()
+			if (!uid) throw new Error('No admin has written in the room yet.')
+			await room.postFromAgent({
+				agent,
+				body: `Let's take this to our 1:1 chat: ${data.topic}`,
+				card: null,
+				place: 'room',
+				conversation,
+			})
+			await deliver(
+				agent,
+				`dm-${uid}`,
+				'dm.open',
+				`You moved this conversation from the Conference Room: ${data.topic}. Open it.`
+			)
+			return 'The pointer is in the room, and the 1:1 chat opens with your next run there.'
+		},
+	})
+
 	return [
 		postToCrew,
+		...(bridgeKeys.includes(agent) ? [] : [takeToOneToOne]),
 		proposeChange,
 		readRoom,
 		addTodo,

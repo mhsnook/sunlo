@@ -160,6 +160,30 @@ api.post('/crew/enterprise/meeting', async (c) => {
 	return c.json(started.message)
 })
 
+api.get('/crew/memory', async (c) => {
+	return c.json(await (await roomFor()).crewMemory())
+})
+
+api.post(
+	'/crew/memory',
+	json(z.object({ text: z.string().trim().min(1).max(500) }), 'Send { text }'),
+	async (c) => {
+		const id = await (await roomFor()).addCrewMemory(c.req.valid('json').text)
+		return c.json({ id })
+	}
+)
+
+api.delete(
+	'/crew/memory/:id',
+	numericId('No crew memory with that id'),
+	async (c) => {
+		const ok = await (await roomFor()).forgetCrewMemory(c.req.valid('param').id)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No crew memory with that id' }, 404)
+	}
+)
+
 api.patch(
 	'/crew/charter/:id',
 	numericId('No charter entry with that id'),

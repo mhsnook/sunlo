@@ -276,6 +276,15 @@ export const MemorySchema = z.object({
 })
 export type MemoryType = z.infer<typeof MemorySchema>
 
+// What the whole crew knows about the admin, such as their name and how to
+// refer to them. Only the admin writes it; every agent reads it every run.
+export const CrewMemorySchema = z.object({
+	id: z.number(),
+	text: z.string(),
+	at: z.string(),
+})
+export type CrewMemoryType = z.infer<typeof CrewMemorySchema>
+
 export const OpenItemSchema = z.object({
 	id: z.number(),
 	title: z.string(),
@@ -324,3 +333,4 @@ export type RoomEvent =
 	| { type: 'workspace'; agent: CrewKey }
 	// The Enterprise snapshot changed: the charter, or the meeting.
 	| { type: 'enterprise' }
+	| { type: 'crew-memory' }

@@ -15,6 +15,7 @@ import {
 	type CrewKey,
 	type CrewMessageType,
 	type CardType,
+	type CrewMemoryType,
 	type CharterEntryType,
 	type EnterpriseType,
 	type WeeklyType,
@@ -211,6 +212,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			create table if not exists meeting (
 				brief_at text primary key,
 				started_at text not null
+			);
+			create table if not exists crew_memory (
+				id integer primary key autoincrement,
+				text text not null,
+				at text not null
 			);
 			-- Data's pre-meeting report for each week's brief.
 			create table if not exists meeting_report (
@@ -569,7 +575,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					values (${agent}, ${messageId})`
 			}
 		}
-		const sections = [`It is now ${stamp(now())}.`]
+		const sections = [`It is now ${stamp(now())}.`, this.crewMemoryText()]
 		if (bridgeKeys.includes(agent)) sections.push(this.bridgeText())
 		sections.push(this.workspaceText(agent))
 		if (!shared) {
@@ -881,9 +887,75 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return messageId
 	}
 
-	closeMeeting() {
+	// Closes the meeting, then posts the minutes and each ship's directive in
+	// the Conference Room, in that order.
+	closeMeeting(input: {
+		minutes: string
+		directives: Array<{ ship: CrewKey; text: string }>
+	}): Array<Wake> {
 		this.setWeekly({ meetingAt: now() })
 		this.push({ type: 'enterprise' })
+		const posts = [
+			`**Minutes of this week's meeting**\n\n${input.minutes}`,
+			...input.directives.map(
+				(directive) => `@${crew[directive.ship].name} ${directive.text}`
+			),
+		]
+		return posts.flatMap(
+			(body) =>
+				this.postFromAgent({
+					agent: 'riker',
+					body,
+					card: null,
+					place: 'room',
+					conversation: BRIDGE,
+				}).wake
+		)
+	}
+
+	meetingInProgress() {
+		return this.meetingStartedAt() !== null
+	}
+
+	// The admin a fleet agent opens a 1:1 chat with: whoever wrote last.
+	latestAdminUid() {
+		const author = this.sql<{ author: string }>`
+			select author from message
+			where author like 'admin:%'
+			order by at desc
+			limit 1`[0]?.author
+		return author ? author.slice('admin:'.length) : null
+	}
+
+	crewMemory(): Array<CrewMemoryType> {
+		return this.sql<CrewMemoryType>`
+			select id, text, at from crew_memory order by id`
+	}
+
+	addCrewMemory(text: string) {
+		const { id } = this.sql<IdRow>`
+			insert into crew_memory (text, at)
+			values (${text}, ${now()})
+			returning id`[0]
+		this.push({ type: 'crew-memory' })
+		return id
+	}
+
+	forgetCrewMemory(id: number) {
+		const deleted = this.sql`
+			delete from crew_memory where id = ${id} returning id`
+		if (deleted.length) this.push({ type: 'crew-memory' })
+		return deleted.length > 0
+	}
+
+	private crewMemoryText() {
+		const entries = this.crewMemory()
+			.map((entry) => `- ${entry.text}`)
+			.join('\n')
+		return [
+			'## The crew memory: what the admin wants every agent to know',
+			entries || '(empty)',
+		].join('\n\n')
 	}
 
 	private meetingStartedAt() {

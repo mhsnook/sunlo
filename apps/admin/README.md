@@ -37,7 +37,9 @@ Writes, when the admin app gets them, go through the admin's own Supabase sessio
 
 ## The crew
 
-The dashboard opens on the **Conference Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. The sidebar lists the Conference Room, then the ships.
+The dashboard opens on the **Conference Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. A fleet ship that needs more than a question or two from you, such as an interview, takes it to your 1:1 chat with `take_to_one_to_one` and leaves a pointer in the room.
+
+**Crew memory**, a panel in the Conference Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you. The sidebar lists the Conference Room, then the ships.
 
 The agents sail as ships. **The Enterprise** is your own ship: Riker, your first officer, and Data, his science officer. You talk with them in one thread, the Enterprise thread, and everything that needs you arrives there. **The fleet** is every other agent, each a ship of its own and the expert on its own area. Each fleet ship has a page with its job, its to-do list, what is open with you, its memory, and a 1:1 chat.
 
@@ -73,7 +75,7 @@ What needs you arrives in the thread as a card:
 
 The sidebar counts the cards that wait on you. Anything you want to add to an answer, write in the thread: your answers, and the times you overrule Riker, are how the Enterprise learns you.
 
-**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the ship's log; Cloudflare crons are UTC only) and has Riker post the week's brief in the thread. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the thread begins it. Riker closes the meeting with minutes in the Conference Room, then carries the directives to the fleet: one message per agent, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
+**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the ship's log; Cloudflare crons are UTC only) and has Riker post the week's brief in the thread. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the thread begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the thread. Riker holds directives for the fleet until you say the meeting is done: a Conference Room post of his that @mentions a ship is refused while the meeting is in progress. Then he closes the meeting with minutes in the Conference Room, followed by one directive per ship, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
 
 ### Components in messages
 

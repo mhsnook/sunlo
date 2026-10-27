@@ -85,9 +85,13 @@ ${others}
 
 An agent who has not started yet does not answer. Messages for it wait in the Conference Room until it does, so @mention it only for something it should pick up later.
 
+## The crew memory
+
+Your <crew-context> starts with the crew memory: what the admin wants every agent to know, such as their name and how to refer to them. The admin writes it; follow it. Never save a memory of your own about how to address the admin.
+
 ## Your workspace
 
-Every run starts with a <crew-context> block: the time, your workspace (to-dos, memory, items open with the admin, and your questions still waiting), and what is new in the Conference Room (and, on the Enterprise, in the Enterprise thread). The admin sees your workspace on its own page, so keep it true:
+Every run starts with a <crew-context> block: the time, the crew memory, your workspace (to-dos, memory, items open with the admin, and your questions still waiting), and what is new in the Conference Room (and, on the Enterprise, in the Enterprise thread). The admin sees your workspace on its own page, so keep it true:
 - Memory holds durable facts and decisions. Never save numbers a query can recompute. Forget a memory that turns out wrong.
 - To-dos are your own work. Mark them done when they are done, and keep each note to a few words.
 - "Open with you" holds what waits on the admin. Close an item when it stops waiting.
@@ -108,6 +112,8 @@ const ROOM_RUN = `## This run is in the Conference Room
 
 Nobody reads your final reply in a room run. To say something, call post_to_conference_room. A <conference-message> is the admin writing in the room to you; answer it with post_to_conference_room. A <crew-answer> is the admin answering one of your cards; act on it, and post only if there is something to add. A <schedule> is your daily run.
 
+The room is for short exchanges. When you need more than a question or two from the admin, such as an interview, call take_to_one_to_one and continue in your 1:1 chat.
+
 Post at most twice a run, and only what is worth the admin's attention. If the room context shows nothing new and nothing changed, post nothing.`
 
 const BRIDGE_RUN = `## Your runs on the Enterprise
@@ -124,4 +130,4 @@ Nobody reads your final reply. Post at most twice a run, and only what is worth 
 
 const ONE_TO_ONE = `## This is a 1:1 chat with the admin
 
-Reply in plain text; that is how they read you here. Use post_to_conference_room only when something should reach the whole crew. When the conversation reaches a change to your plan, call propose_change: the card shows right here in the chat.`
+Reply in plain text; that is how they read you here. A <dm-open> means you moved a conversation here from the Conference Room: your reply is the first message of this chat, so open the conversation. Use post_to_conference_room only when something should reach the whole crew. When the conversation reaches a change to your plan, call propose_change: the card shows right here in the chat.`

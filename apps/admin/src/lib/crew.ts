@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useAgent } from 'agents/react'
+import { z } from 'zod'
 import { createFlueClient } from '@flue/sdk'
 import {
 	queryOptions,
@@ -18,6 +19,7 @@ import {
 	type LucideIcon,
 } from 'lucide-react'
 import {
+	CrewMemorySchema,
 	CrewMessageSchema,
 	EnterpriseSchema,
 	RoomSnapshotSchema,
@@ -66,6 +68,37 @@ export const enterpriseQuery = () =>
 			EnterpriseSchema.parse(await adminFetch('crew/enterprise')),
 		staleTime: Infinity,
 	})
+
+// What every agent knows about the admin. The live socket keeps it current.
+export const crewMemoryQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'memory'],
+		queryFn: async () =>
+			z.array(CrewMemorySchema).parse(await adminFetch('crew/memory')),
+		staleTime: Infinity,
+	})
+
+// The socket tells other tabs; this tab refetches itself, since the socket
+// may not be connected yet.
+export function useAddCrewMemory() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: (text: string) =>
+			adminFetch('crew/memory', { method: 'POST', json: { text } }),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: crewMemoryQuery().queryKey }),
+	})
+}
+
+export function useForgetCrewMemory() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: (id: number) =>
+			adminFetch(`crew/memory/${id}`, { method: 'DELETE' }),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: crewMemoryQuery().queryKey }),
+	})
+}
 
 export function useForgetMemory(agent: CrewKey) {
 	return useMutation({
@@ -255,6 +288,11 @@ export function useCrewLive() {
 		onMessage: ({ data }: MessageEvent) => {
 			const event = JSON.parse(String(data)) as RoomEvent
 			if (event.type === 'message') upsertMessage(queryClient, event.message)
+			if (event.type === 'crew-memory') {
+				void queryClient.invalidateQueries({
+					queryKey: crewMemoryQuery().queryKey,
+				})
+			}
 			if (event.type === 'enterprise') {
 				void queryClient.invalidateQueries({
 					queryKey: enterpriseQuery().queryKey,

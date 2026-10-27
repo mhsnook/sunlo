@@ -1,21 +1,26 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, Brain } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import { adminAuthor, crew, crewKeys, crewList } from '../../../shared/crew'
-import { isWorking, markSeen, roomQuery } from '~/lib/crew'
+import { crewMemoryQuery, isWorking, markSeen, roomQuery } from '~/lib/crew'
 import { AgentAvatar } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
+import { CrewMemoryPanel } from '~/components/crew/crew-memory-panel'
 import { OverviewPanel } from '~/components/crew/overview-panel'
 import { RoomCompose } from '~/components/crew/room-compose'
 import { RoomTimeline } from '~/components/crew/room-timeline'
 
 export const Route = createFileRoute('/_admin/')({
-	loader: ({ context }) => context.queryClient.ensureQueryData(roomQuery()),
+	loader: ({ context }) =>
+		Promise.all([
+			context.queryClient.ensureQueryData(roomQuery()),
+			context.queryClient.ensureQueryData(crewMemoryQuery()),
+		]),
 	// Marks the room read on arrival and again on leaving, so messages that
 	// arrive while the admin is here do not count as unread afterwards.
 	onEnter: ({ context }) => void markSeen(context.queryClient, 'room', false),
@@ -28,7 +33,9 @@ function CrewRoomPage() {
 	const { data: room } = useSuspenseQuery(roomQuery())
 	// Captured once, so the "New since" line stays put while the admin reads.
 	const [newSince] = useState(room.seenAt)
-	const [overviewOpen, setOverviewOpen] = useState(false)
+	const [panel, setPanel] = useState<'overview' | 'memory' | null>(null)
+	const toggle = (next: 'overview' | 'memory') =>
+		setPanel((open) => (open === next ? null : next))
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
 	const active = crewList.filter((member) => member.active).length
 
@@ -46,9 +53,17 @@ function CrewRoomPage() {
 					</div>
 					<Button
 						variant="ghost"
+						data-testid="crew-memory-button"
+						aria-pressed={panel === 'memory'}
+						onClick={() => toggle('memory')}
+					>
+						<Brain /> <span className="max-sm:sr-only">Crew memory</span>
+					</Button>
+					<Button
+						variant="ghost"
 						data-testid="crew-overview-button"
-						aria-pressed={overviewOpen}
-						onClick={() => setOverviewOpen((open) => !open)}
+						aria-pressed={panel === 'overview'}
+						onClick={() => toggle('overview')}
 					>
 						<BarChart3 /> <span className="max-sm:sr-only">Overview</span>
 					</Button>
@@ -75,14 +90,18 @@ function CrewRoomPage() {
 				</MessageScroller>
 				<RoomCompose />
 			</section>
-			{overviewOpen && (
+			{panel && (
 				<div
 					className={cn(
 						'max-md:bg-background max-md:fixed max-md:inset-0 max-md:z-40',
 						'md:shrink-0'
 					)}
 				>
-					<OverviewPanel onClose={() => setOverviewOpen(false)} />
+					{panel === 'overview' ? (
+						<OverviewPanel onClose={() => setPanel(null)} />
+					) : (
+						<CrewMemoryPanel onClose={() => setPanel(null)} />
+					)}
 				</div>
 			)}
 		</div>
