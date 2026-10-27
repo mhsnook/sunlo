@@ -1,17 +1,24 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { BarChart3, Brain } from 'lucide-react'
+import { BarChart3, Brain, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import { adminAuthor, crew, crewKeys, crewList } from '../../../shared/crew'
-import { crewMemoryQuery, isWorking, markSeen, roomQuery } from '~/lib/crew'
+import {
+	commonKnowledgeQuery,
+	isWorking,
+	markSeen,
+	roomQuery,
+	sitrepQuery,
+} from '~/lib/crew'
 import { AgentAvatar } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
-import { CrewMemoryPanel } from '~/components/crew/crew-memory-panel'
+import { CommonKnowledgePanel } from '~/components/crew/common-knowledge-panel'
 import { OverviewPanel } from '~/components/crew/overview-panel'
+import { SitrepPanel } from '~/components/crew/sitrep-panel'
 import { RoomCompose } from '~/components/crew/room-compose'
 import { RoomTimeline } from '~/components/crew/room-timeline'
 
@@ -19,7 +26,8 @@ export const Route = createFileRoute('/_admin/')({
 	loader: ({ context }) =>
 		Promise.all([
 			context.queryClient.ensureQueryData(roomQuery()),
-			context.queryClient.ensureQueryData(crewMemoryQuery()),
+			context.queryClient.ensureQueryData(commonKnowledgeQuery()),
+			context.queryClient.ensureQueryData(sitrepQuery()),
 		]),
 	// Marks the room read on arrival and again on leaving, so messages that
 	// arrive while the admin is here do not count as unread afterwards.
@@ -28,36 +36,52 @@ export const Route = createFileRoute('/_admin/')({
 	component: CrewRoomPage,
 })
 
+type Panel = 'sitrep' | 'knowledge' | 'overview'
+
 function CrewRoomPage() {
 	const { session } = Route.useRouteContext()
 	const { data: room } = useSuspenseQuery(roomQuery())
 	// Captured once, so the "New since" line stays put while the admin reads.
 	const [newSince] = useState(room.seenAt)
-	const [panel, setPanel] = useState<'overview' | 'memory' | null>(null)
-	const toggle = (next: 'overview' | 'memory') =>
+	// The Situation Report sits beside the room on a wide screen, since the
+	// room is where the admin comes for the overview.
+	const [panel, setPanel] = useState<Panel | null>(() =>
+		window.matchMedia('(min-width: 64rem)').matches ? 'sitrep' : null
+	)
+	const toggle = (next: Panel) =>
 		setPanel((open) => (open === next ? null : next))
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
 	const active = crewList.filter((member) => member.active).length
 
 	return (
 		<div className="flex h-full min-h-0">
-			<section className="flex min-w-0 flex-1 flex-col">
+			<section className="@container flex min-w-0 flex-1 flex-col">
 				<header className="flex items-center gap-3 border-b px-4 py-3">
 					<MobileSidebarButton />
 					<AgentAvatar agent="crew" />
-					<div className="me-auto">
-						<h1 className="leading-tight font-semibold">Conference Room</h1>
-						<p className="text-muted-foreground text-xs">
+					<div className="me-auto min-w-0">
+						<h1 className="truncate leading-tight font-semibold">
+							Common Room
+						</h1>
+						<p className="text-muted-foreground truncate text-xs">
 							You and {active} agents, {crewList.length - active} more planned
 						</p>
 					</div>
 					<Button
 						variant="ghost"
-						data-testid="crew-memory-button"
-						aria-pressed={panel === 'memory'}
-						onClick={() => toggle('memory')}
+						data-testid="sitrep-button"
+						aria-pressed={panel === 'sitrep'}
+						onClick={() => toggle('sitrep')}
 					>
-						<Brain /> <span className="max-sm:sr-only">Crew memory</span>
+						<ClipboardList /> <span className="@max-3xl:sr-only">Sitrep</span>
+					</Button>
+					<Button
+						variant="ghost"
+						data-testid="common-knowledge-button"
+						aria-pressed={panel === 'knowledge'}
+						onClick={() => toggle('knowledge')}
+					>
+						<Brain /> <span className="@max-3xl:sr-only">Knowledge</span>
 					</Button>
 					<Button
 						variant="ghost"
@@ -65,7 +89,7 @@ function CrewRoomPage() {
 						aria-pressed={panel === 'overview'}
 						onClick={() => toggle('overview')}
 					>
-						<BarChart3 /> <span className="max-sm:sr-only">Overview</span>
+						<BarChart3 /> <span className="@max-3xl:sr-only">Overview</span>
 					</Button>
 				</header>
 				<MessageScroller dependency={room.messages.length + working.length}>
@@ -97,10 +121,12 @@ function CrewRoomPage() {
 						'md:shrink-0'
 					)}
 				>
-					{panel === 'overview' ? (
+					{panel === 'sitrep' && <SitrepPanel onClose={() => setPanel(null)} />}
+					{panel === 'knowledge' && (
+						<CommonKnowledgePanel onClose={() => setPanel(null)} />
+					)}
+					{panel === 'overview' && (
 						<OverviewPanel onClose={() => setPanel(null)} />
-					) : (
-						<CrewMemoryPanel onClose={() => setPanel(null)} />
 					)}
 				</div>
 			)}
@@ -116,7 +142,7 @@ function EmptyRoom() {
 					<AgentAvatar key={key} agent={key} size="sm" />
 				))}
 			</div>
-			<h2 className="text-xl font-semibold">Conference Room</h2>
+			<h2 className="text-xl font-semibold">Common Room</h2>
 			<p className="text-muted-foreground text-sm">
 				The whole crew reads this room. Write @ and a name to ask someone; Riker
 				and Data bring what needs you to the Enterprise. USS Product posts after

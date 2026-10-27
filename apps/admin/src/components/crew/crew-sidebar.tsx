@@ -49,7 +49,7 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 			<ul className="flex-1 space-y-1 overflow-y-auto px-2">
 				<SidebarItem
 					avatar={<AgentAvatar agent="crew" />}
-					name="Conference Room"
+					name="Common Room"
 					preview={
 						last
 							? `${last.author === myAuthor ? 'You' : last.authorName}: ${last.body}`

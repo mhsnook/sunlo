@@ -3,11 +3,18 @@ import { isBlockKind } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { remarkCrew } from './remark-crew'
 import { useState } from 'react'
-import { Rocket, Users } from 'lucide-react'
+import { Rocket, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
-import type { CardType, CrewKey, CrewMessageType } from '../../../shared/crew'
+import {
+	crew,
+	isCrewKey,
+	type CardType,
+	type CrewKey,
+	type CrewMessageType,
+} from '../../../shared/crew'
 import { crewIcons, useAnswerCard } from '~/lib/crew'
 
 export function AgentAvatar({
@@ -96,12 +103,61 @@ export function CrewText({ text }: { text: string }) {
 
 export function CardActions({ message }: { message: CrewMessageType }) {
 	const answer = useAnswerCard()
+	// Null until the admin starts dismissing; then the feedback they type.
+	const [feedback, setFeedback] = useState<string | null>(null)
 	if (!message.card) return null
 	if (message.answer) {
 		return (
 			<p className="text-muted-foreground px-1 text-xs">
-				{message.answer.by} chose “{message.answer.label}”
+				{message.answer.actionId === 'dismiss'
+					? `${message.answer.by} dismissed this`
+					: `${message.answer.by} chose “${message.answer.label}”`}
 			</p>
+		)
+	}
+	const send = (actionId: string, text?: string) =>
+		answer.mutate(
+			{ messageId: message.id, actionId, feedback: text },
+			{ onError: (error) => toastError(error.message) }
+		)
+	const author = isCrewKey(message.author) ? crew[message.author].name : null
+	if (feedback !== null) {
+		return (
+			<form
+				className="space-y-2"
+				onSubmit={(event) => {
+					event.preventDefault()
+					send('dismiss', feedback.trim() || undefined)
+				}}
+			>
+				<Textarea
+					value={feedback}
+					onChange={(event) => setFeedback(event.target.value)}
+					placeholder={`Why not? ${author ?? 'The agent'} learns from this. Optional.`}
+					rows={2}
+					aria-label="Feedback"
+					data-testid="crew-card-feedback"
+					ref={(field) => field?.focus()}
+				/>
+				<div className="flex gap-1">
+					<Button
+						type="submit"
+						size="sm"
+						disabled={answer.isPending}
+						data-testid="crew-card-dismiss-send"
+					>
+						Dismiss
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						variant="ghost"
+						onClick={() => setFeedback(null)}
+					>
+						Cancel
+					</Button>
+				</div>
+			</form>
 		)
 	}
 	return (
@@ -114,16 +170,21 @@ export function CardActions({ message }: { message: CrewMessageType }) {
 					disabled={answer.isPending}
 					data-testid="crew-card-action"
 					data-key={action.id}
-					onClick={() =>
-						answer.mutate(
-							{ messageId: message.id, actionId: action.id },
-							{ onError: (error) => toastError(error.message) }
-						)
-					}
+					onClick={() => send(action.id)}
 				>
 					{action.label}
 				</Button>
 			))}
+			<Button
+				size="sm"
+				variant="ghost"
+				className="text-muted-foreground ms-auto"
+				disabled={answer.isPending}
+				data-testid="crew-card-dismiss"
+				onClick={() => setFeedback('')}
+			>
+				<X /> Dismiss
+			</Button>
 		</div>
 	)
 }
