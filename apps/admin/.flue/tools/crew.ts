@@ -39,6 +39,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 								kind: 'question' as const,
 								title: null,
 								actions: toActions(data.options),
+								ref: null,
 							}
 						: null,
 					place: 'room',
@@ -77,6 +78,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 							{ id: 'do', label: 'Do it' },
 							{ id: 'not-yet', label: 'Not yet' },
 						],
+						ref: null,
 					},
 					place,
 					conversation,

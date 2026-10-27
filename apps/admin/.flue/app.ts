@@ -41,23 +41,14 @@ api.post(
 )
 
 api.post(
-	'/crew/clef',
-	json(z.object({ text: Text }), 'Send { text }'),
-	async (c) => {
-		const { text } = c.req.valid('json')
-		return c.json(await (await roomFor()).classify(text))
-	}
-)
-
-api.post(
 	'/crew/messages',
 	json(
 		z.object({
 			body: Text,
-			routing: RoutingSchema.nullable().optional(),
-			predicted: RoutingSchema.nullable().optional(),
+			// The place the admin picked from the chip, or null for CLEF.
+			routing: RoutingSchema.nullable(),
 		}),
-		'Send { body, routing?, predicted? }'
+		'Send { body, routing }'
 	),
 	async (c) => {
 		const input = c.req.valid('json')
@@ -68,8 +59,7 @@ api.post(
 			uid: admin.uid,
 			name: admin.name,
 			body: input.body,
-			routing: input.routing ?? null,
-			predicted: input.predicted ?? null,
+			routing: input.routing,
 		})
 		await wake(wakes, admin.name)
 		return c.json(message)

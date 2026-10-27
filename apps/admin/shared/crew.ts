@@ -187,7 +187,7 @@ export const CardSchema = z.object({
 	// Empty for a card with nothing to answer.
 	actions: z.array(ActionSchema),
 	// The charter entry a "charter" card proposes.
-	ref: z.number().nullable().optional(),
+	ref: z.number().nullable(),
 })
 export type CardType = z.infer<typeof CardSchema>
 

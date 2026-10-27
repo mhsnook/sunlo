@@ -1,6 +1,6 @@
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
+import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import { bridgeKeys, crew, isCrewKey } from '../../../shared/crew'
+import { crew, fleetKeys, type CrewKey } from '../../../shared/crew'
 import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
 import { MemoryList } from '~/components/crew/memory-list'
 import { AgentChat } from '~/components/crew/agent-chat'
@@ -15,14 +15,12 @@ import { Empty, Section, TodoList } from '~/components/crew/workspace-parts'
 
 export const Route = createFileRoute('/_admin/crew/$agent')({
 	params: {
+		// Fleet ships only: Riker and Data live on the Enterprise.
 		parse: ({ agent }) => {
-			if (!isCrewKey(agent)) throw notFound()
-			return { agent }
+			const ship = fleetKeys.find((key): key is CrewKey => key === agent)
+			if (!ship) throw notFound()
+			return { agent: ship }
 		},
-	},
-	// Riker and Data live on the Enterprise.
-	beforeLoad: ({ params }) => {
-		if (bridgeKeys.includes(params.agent)) throw redirect({ to: '/enterprise' })
 	},
 	loader: ({ context, params }) =>
 		context.queryClient.ensureQueryData(workspaceQuery(params.agent)),

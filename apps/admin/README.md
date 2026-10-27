@@ -86,15 +86,15 @@ Any agent can put components in its markdown as a fenced block whose language na
 
 ### How a message reaches an agent
 
-CLEF decides where each admin message goes, and the compose bar shows its decision on a chip before you send:
+CLEF decides where each Conference Room message goes when you send it:
 
 1. A message that ends in "..." **stacks**: it wakes nobody, and it rides along with your next message that does.
 2. An @mention of a started agent **sends** the message to that agent.
 3. Otherwise a small Workers AI model (`CLEF_MODEL`) chooses between **sending** it to an agent and **leaving it in the room**. Agents read the room at their next run either way.
 
-Click the chip to change the decision before you send. After you send, the note under your message opens the same menu: correct it there, and any agent the message should have woken wakes now.
+While you type, the chip above the compose bar shows the first two rules as they apply, and otherwise says CLEF decides when you send. The model runs only on send. Click the chip to pick a place yourself before you send. After you send, the note under your message opens the same menu: correct it there, and any agent the message should have woken wakes now.
 
-The room logs every decision in `clef_decision`: what CLEF suggested, what the message did, your correction if you made one, and, for each agent the message woke, whether its run posted anything ("posted") or nothing ("silent"). The rows where you changed or corrected CLEF are its labels, and CLEF reads the latest 20 the next time it decides.
+The room logs every decision in `clef_decision`: what CLEF suggested, what the message did, your correction if you made one, and, for each agent the message woke, whether its run posted anything ("posted") or nothing ("silent"). The rows where you picked a place or corrected CLEF are its labels, and CLEF reads the latest 20 the next time it decides.
 
 A message sent to a fleet agent becomes a signal in that agent's `team` conversation, and one sent to Riker or Data a signal in their `bridge` conversation. The 1:1 chat on a fleet ship's page is a separate conversation, `dm-<admin uid>`, which only that admin can open. CLEF decides for the Conference Room only; in the Enterprise thread, Riker answers unless you name Data.
 

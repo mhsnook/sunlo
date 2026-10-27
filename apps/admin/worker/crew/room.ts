@@ -295,16 +295,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		uid: string
 		name: string
 		body: string
-		// What the compose chip showed when the admin sent. Absent when the
-		// app sent before CLEF answered.
+		// The place the admin picked from the chip before sending, if any.
 		routing: RoutingType | null
-		// What CLEF suggested before the admin sent. Absent when the app sent
-		// before CLEF answered.
-		predicted: RoutingType | null
 	}): Promise<{ message: CrewMessageType; wake: Array<Wake> }> {
 		const fixed = fixedRouting(input.body)
-		const predicted =
-			fixed ?? input.predicted ?? (await this.classify(input.body))
+		// Asked even when the admin picked a place, so the pick is a label.
+		const predicted = fixed ?? (await this.classify(input.body))
 		const routing =
 			fixed ?? (input.routing ? sanitize(input.routing) : predicted)
 		const author = adminAuthor(input.uid)

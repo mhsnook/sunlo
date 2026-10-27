@@ -21,7 +21,6 @@ import {
 	CrewMessageSchema,
 	EnterpriseSchema,
 	RoomSnapshotSchema,
-	RoutingSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
@@ -107,20 +106,6 @@ export const dmClient = (agent: CrewKey, uid: string) =>
 		headers: async () => ({ authorization: `Bearer ${await accessToken()}` }),
 	})
 
-export const clefQuery = (text: string) =>
-	queryOptions({
-		queryKey: ['crew', 'clef', text],
-		queryFn: async () =>
-			RoutingSchema.parse(
-				await adminFetch('crew/clef', {
-					method: 'POST',
-					json: { text },
-				})
-			),
-		staleTime: Infinity,
-		retry: false,
-	})
-
 const upsert = (messages: Array<CrewMessageType>, message: CrewMessageType) => {
 	const index = messages.findIndex((m) => m.id === message.id)
 	return index === -1 ? [...messages, message] : messages.with(index, message)
@@ -144,11 +129,7 @@ function upsertMessage(queryClient: QueryClient, message: CrewMessageType) {
 export function usePostToRoom() {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: async (input: {
-			body: string
-			routing: RoutingType | null
-			predicted: RoutingType | null
-		}) =>
+		mutationFn: async (input: { body: string; routing: RoutingType | null }) =>
 			CrewMessageSchema.parse(
 				await adminFetch('crew/messages', {
 					method: 'POST',

@@ -637,7 +637,7 @@ The crew room at `/`, "Brought to you" at `/stack`, and each agent's workspace a
 | `crew-working`                                             | "Product is working…" under the timeline                              |
 | `crew-card-action` + `data-key=<action id>`                | A button on an agent's card (`do`, `not-yet`, `keep`, ...)            |
 | `crew-compose-input`, `crew-compose-send`                  | The room's compose bar                                                |
-| `crew-clef-chip`                                           | Where CLEF will send the draft; opens the menu to change it           |
+| `crew-clef-chip`                                           | A rule's place for the draft, or "CLEF decides"; opens the menu       |
 | `crew-routing-option` + `data-key=<kind><agents>`          | One choice in a routing menu, e.g. `routeproduct`, `room`, `stack`    |
 | `crew-routing-correct`                                     | The routing note under your own message; opens the menu to correct it |
 | `crew-overview-button`, `crew-overview`                    | The Overview toggle and its panel                                     |
