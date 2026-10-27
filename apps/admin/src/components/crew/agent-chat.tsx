@@ -22,20 +22,10 @@ import { AgentAvatar, ChangeCard, CrewText } from './crew-parts'
 
 // A 1:1 chat with one agent, as the Flue conversation "dm-<admin uid>". It
 // floats over the workspace on a wide screen and fills the screen on a phone.
-// `starter` is a one-tap first message, such as starting the weekly meeting.
-export function AgentChat({
-	agent,
-	uid,
-	starter,
-}: {
-	agent: CrewKey
-	uid: string
-	starter?: { label: string; message: string }
-}) {
-	// Below md the chat covers the page, so a phone opens on the workspace,
-	// unless there is a meeting to start.
+export function AgentChat({ agent, uid }: { agent: CrewKey; uid: string }) {
+	// Below md the chat covers the page, so a phone opens on the workspace.
 	const [open, setOpen] = useState(
-		() => !!starter || window.matchMedia('(min-width: 48rem)').matches
+		() => window.matchMedia('(min-width: 48rem)').matches
 	)
 	const [draft, setDraft] = useState('')
 	const client = useMemo(() => dmClient(agent, uid), [agent, uid])
@@ -121,16 +111,6 @@ export function AgentChat({
 				</div>
 			</MessageScroller>
 			<div className="space-y-2 border-t p-3">
-				{starter && !busy && (
-					<Button
-						size="sm"
-						variant="soft"
-						data-testid="agent-chat-starter"
-						onClick={() => void send(starter.message)}
-					>
-						{starter.label}
-					</Button>
-				)}
 				<ComposeBar
 					value={draft}
 					onValueChange={setDraft}
@@ -217,11 +197,6 @@ const toolLabels: Record<string, string> = {
 	forget: 'Forgot a memory',
 	add_open_item: 'Added an open item',
 	close_open_item: 'Closed an open item',
-	bring_to_admin: 'Brought something to you',
-	propose_charter: 'Proposed a charter entry',
-	write_brief: 'Wrote the weekly brief',
-	close_meeting: 'Closed the meeting',
-	note_playbook: 'Noted it in the playbook',
 }
 
 function ToolNote({ part, agent }: { part: ToolPart; agent: CrewKey }) {

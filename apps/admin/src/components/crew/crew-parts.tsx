@@ -2,11 +2,12 @@ import Markdown from 'react-markdown'
 import { isBlockKind } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { remarkCrew } from './remark-crew'
-import { Inbox, Users } from 'lucide-react'
+import { useState } from 'react'
+import { Rocket, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
-import type { CrewKey, CrewMessageType } from '../../../shared/crew'
+import type { CardType, CrewKey, CrewMessageType } from '../../../shared/crew'
 import { crewIcons, useAnswerCard } from '~/lib/crew'
 
 export function AgentAvatar({
@@ -14,12 +15,16 @@ export function AgentAvatar({
 	size = 'md',
 	className,
 }: {
-	agent: CrewKey | 'crew' | 'stack'
+	agent: CrewKey | 'crew' | 'enterprise'
 	size?: 'sm' | 'md' | 'lg'
 	className?: string
 }) {
 	const Icon =
-		agent === 'crew' ? Users : agent === 'stack' ? Inbox : crewIcons[agent]
+		agent === 'crew'
+			? Users
+			: agent === 'enterprise'
+				? Rocket
+				: crewIcons[agent]
 	return (
 		<span
 			aria-hidden
@@ -134,6 +139,46 @@ export function ChangeCard({ message }: { message: CrewMessageType }) {
 			<div className="text-sm">
 				<CrewText text={message.body} />
 			</div>
+			<CardActions message={message} />
+		</div>
+	)
+}
+
+const bridgeLabels: Partial<Record<CardType['kind'], string>> = {
+	decide: 'Your call · on hold',
+	confirm: 'Done in your stead · confirm',
+	escalate: 'Needs more than the crew has',
+	charter: 'For the charter',
+	know: 'Worth knowing',
+	brief: 'Weekly brief',
+}
+
+// A card Riker or Data brings the admin in the Enterprise thread. A brief
+// starts folded.
+export function BridgeCard({ message }: { message: CrewMessageType }) {
+	const [unfolded, setUnfolded] = useState(false)
+	const card = message.card
+	if (!card) return null
+	const folded = card.kind === 'brief' && !unfolded
+	return (
+		<div
+			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
+			data-testid="bridge-card"
+			data-key={card.kind}
+		>
+			<p className="text-muted-foreground text-xs font-medium">
+				{bridgeLabels[card.kind]}
+			</p>
+			{card.title && <p className="text-sm font-semibold">{card.title}</p>}
+			{folded ? (
+				<Button size="sm" variant="soft" onClick={() => setUnfolded(true)}>
+					Read the brief
+				</Button>
+			) : (
+				<div className="text-sm">
+					<CrewText text={message.body} />
+				</div>
+			)}
 			<CardActions message={message} />
 		</div>
 	)

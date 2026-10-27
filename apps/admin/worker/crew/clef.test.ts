@@ -13,9 +13,9 @@ describe('the fixed CLEF rules', () => {
 	})
 
 	it('finds crew mentions in roster order, ignoring case and strangers', () => {
-		expect(mentionedCrew('@product and @Monitor, ask @em')).toEqual([
-			'monitor',
+		expect(mentionedCrew('@Monitor and @product, ask @em')).toEqual([
 			'product',
+			'monitor',
 		])
 	})
 
@@ -45,7 +45,7 @@ describe('parseClefReply', () => {
 
 	it('drops agents that are not active, and routes to the only active one', () => {
 		expect(
-			parseClefReply('{"kind":"route","agents":["curator"]}', ['product'])
+			parseClefReply('{"kind":"route","agents":["library"]}', ['product'])
 		).toEqual({ kind: 'route', agents: ['product'], by: 'model' })
 	})
 

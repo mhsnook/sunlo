@@ -2,7 +2,13 @@ import { dispatch, observe, type Agent } from '@flue/runtime'
 import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
 import { crewKeys, type CrewKey } from '../shared/crew'
-import { TEAM, type CrewRoom, type Wake } from '../worker/crew/room'
+import {
+	BRIDGE,
+	conversationOf,
+	TEAM,
+	type CrewRoom,
+	type Wake,
+} from '../worker/crew/room'
 import { Data } from './agents/data'
 import { Product } from './agents/product'
 import { Riker } from './agents/riker'
@@ -19,13 +25,13 @@ export const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 	product: Product,
 })
 
-// A room run that fails or is aborted settles without useAgentFinish, so
-// the room hears about it here instead.
+// A run that fails or is aborted settles without useAgentFinish, so the room
+// hears about it here instead.
 observe((event) => {
 	if (
 		event.type === 'submission_settled' &&
 		event.outcome !== 'completed' &&
-		event.instanceId === TEAM
+		(event.instanceId === TEAM || event.instanceId === BRIDGE)
 	) {
 		// Flue names an agent by its identity ("Riker"), not its crew key.
 		const key = crewKeys.find((candidate) => {
@@ -36,14 +42,20 @@ observe((event) => {
 	}
 })
 
-// Delivers room messages to the agents CLEF or an @mention woke. Every run
-// in the room shares one conversation per agent, "team". The message is
-// already in the room, so a dispatch that fails is logged, not thrown.
+// Delivers messages to the agents CLEF or an @mention woke, each in its own
+// conversation (`conversationOf`). The message is already in its timeline,
+// so a dispatch that fails is logged, not thrown.
 export async function wake(wakes: Array<Wake>, from: string) {
 	await Promise.all(
-		wakes.map(({ agent, body, messageId }) =>
-			deliver(agent, TEAM, 'crew.message', body, { from, messageId }).catch(
-				(error: unknown) => console.error(`Could not wake ${agent}`, error)
+		wakes.map(({ agent, body, messageId, place }) =>
+			deliver(
+				agent,
+				conversationOf(agent),
+				place === 'bridge' ? 'enterprise.message' : 'crew.message',
+				body,
+				{ from, messageId }
+			).catch((error: unknown) =>
+				console.error(`Could not wake ${agent}`, error)
 			)
 		)
 	)

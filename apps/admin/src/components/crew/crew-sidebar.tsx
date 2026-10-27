@@ -13,22 +13,21 @@ import {
 } from '@/components/ui/sheet'
 import {
 	adminAuthor,
-	crewList,
-	vessels,
+	bridgeKeys,
+	crew,
+	fleetKeys,
 	type CrewKey,
-	type VesselKey,
 } from '../../../shared/crew'
-import { isWorking, roomQuery } from '~/lib/crew'
+import { enterpriseQuery, isWorking, roomQuery } from '~/lib/crew'
 import { AdminAvatar, AgentAvatar } from './crew-parts'
 import { shortWhen } from '~/lib/format'
-
-const vesselKeys = Object.keys(vessels) as Array<VesselKey>
 
 export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 	const { session } = useRouteContext({ from: '/_admin' })
 	const email = session.user.email ?? ''
 	const myAuthor = adminAuthor(session.user.id)
 	const { data: room } = useQuery(roomQuery())
+	const { data: thread } = useQuery(enterpriseQuery())
 	const pathname = useRouterState({
 		select: (state) => state.location.pathname,
 	})
@@ -39,6 +38,10 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 			? 0
 			: messages.filter((m) => m.at > room.seenAt! && m.author !== myAuthor)
 					.length
+	const lastOnBridge = thread?.messages.at(-1)
+	const bridgeWorking = bridgeKeys.filter((key) =>
+		isWorking(room?.statuses[key])
+	)
 
 	return (
 		<nav aria-label="The crew" className="flex h-full flex-col">
@@ -46,7 +49,7 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 			<ul className="flex-1 space-y-1 overflow-y-auto px-2">
 				<SidebarItem
 					avatar={<AgentAvatar agent="crew" />}
-					name="The crew"
+					name="Conference Room"
 					preview={
 						last
 							? `${last.author === myAuthor ? 'You' : last.authorName}: ${last.body}`
@@ -58,52 +61,46 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 					onNavigate={onNavigate}
 				/>
 				<SidebarItem
-					avatar={<AgentAvatar agent="stack" />}
-					name="Brought to you"
+					avatar={<AgentAvatar agent="enterprise" />}
+					name="Enterprise"
 					preview={
-						room?.stackCount ? 'From Riker and Data' : 'Nothing waiting on you'
+						bridgeWorking.length
+							? `${bridgeWorking.map((key) => crew[key].name).join(' and ')} working…`
+							: lastOnBridge
+								? `${lastOnBridge.author === myAuthor ? 'You' : lastOnBridge.authorName}: ${lastOnBridge.card?.title ?? lastOnBridge.body}`
+								: 'Riker and Data'
 					}
-					count={room?.stackCount ?? 0}
-					target="stack"
+					when={lastOnBridge?.at}
+					count={room?.enterpriseOpen ?? 0}
+					target="enterprise"
 					onNavigate={onNavigate}
 				/>
-				{vesselKeys.map((vessel) => (
-					<li key={vessel} className="list-none">
-						<p className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-semibold">
-							{vessels[vessel].name}
-							<span className="font-normal"> · {vessels[vessel].note}</span>
-						</p>
-						<ul className="space-y-1">
-							{crewList
-								.filter((member) => member.vessel === vessel)
-								.map((member) => {
-									const own = messages.filter((m) => m.author === member.key)
-									const latest = own.at(-1)
-									const waiting = own.filter((m) => m.card && !m.answer).length
-									const working = isWorking(room?.statuses[member.key])
-									return (
-										<SidebarItem
-											key={member.key}
-											avatar={<AgentAvatar agent={member.key} />}
-											name={member.name}
-											preview={
-												!member.active
-													? 'Not started yet'
-													: working
-														? 'Working…'
-														: (latest?.body ?? member.title)
-											}
-											when={latest?.at}
-											count={waiting}
-											dim={!member.active}
-											target={member.key}
-											onNavigate={onNavigate}
-										/>
-									)
-								})}
-						</ul>
-					</li>
-				))}
+				{fleetKeys.map((key) => {
+					const member = crew[key]
+					const own = messages.filter((m) => m.author === key)
+					const latest = own.at(-1)
+					const waiting = own.filter((m) => m.card && !m.answer).length
+					const working = isWorking(room?.statuses[key])
+					return (
+						<SidebarItem
+							key={key}
+							avatar={<AgentAvatar agent={key} />}
+							name={member.name}
+							preview={
+								!member.active
+									? 'Not started yet'
+									: working
+										? 'Working…'
+										: (latest?.body ?? member.title)
+							}
+							when={latest?.at}
+							count={waiting}
+							dim={!member.active}
+							target={key}
+							onNavigate={onNavigate}
+						/>
+					)
+				})}
 			</ul>
 			<div className="flex items-center gap-2 border-t px-4 py-3 text-sm">
 				<AdminAvatar name={email} />
@@ -146,7 +143,7 @@ function SidebarItem({
 	when?: string
 	count: number
 	dim?: boolean
-	target: CrewKey | 'crew' | 'stack'
+	target: CrewKey | 'crew' | 'enterprise'
 	onNavigate?: () => void
 }) {
 	return (
@@ -154,8 +151,8 @@ function SidebarItem({
 			<Link
 				{...(target === 'crew'
 					? { to: '/' as const }
-					: target === 'stack'
-						? { to: '/stack' as const }
+					: target === 'enterprise'
+						? { to: '/enterprise' as const }
 						: { to: '/crew/$agent' as const, params: { agent: target } })}
 				onClick={onNavigate}
 				data-testid="crew-sidebar-item"

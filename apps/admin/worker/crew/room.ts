@@ -8,14 +8,15 @@ import {
 	meetingDue,
 	isCrewKey,
 	mentionedCrew,
+	endsWithEllipsis,
 	type ActionType,
 	type AgentStatusType,
 	type RoomStateType,
 	type CrewKey,
 	type CrewMessageType,
-	type StackItemType,
-	type StackType,
+	type CardType,
 	type CharterEntryType,
+	type EnterpriseType,
 	type WeeklyType,
 	type MemoryType,
 	type OpenItemType,
@@ -26,11 +27,25 @@ import {
 } from '../../shared/crew'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 
-// The conversation id every room-driven agent run uses. A 1:1 chat with an
+// The Flue conversation a fleet agent's room runs use. A 1:1 chat with an
 // agent uses `dm-<admin uid>` instead.
 export const TEAM = 'team'
+// Riker and Data's one conversation: everything reaches them here, from the
+// Conference Room and from the Enterprise thread, so neither runs twice at
+// once and each keeps one memory of the day.
+export const BRIDGE = 'bridge'
 
-export type Wake = { agent: CrewKey; body: string; messageId: string }
+export const conversationOf = (agent: CrewKey) =>
+	bridgeKeys.includes(agent) ? BRIDGE : TEAM
+
+type Place = CrewMessageType['place']
+
+export type Wake = {
+	agent: CrewKey
+	body: string
+	messageId: string
+	place: 'room' | 'bridge'
+}
 
 type MessageRow = {
 	id: string
@@ -41,23 +56,10 @@ type MessageRow = {
 	routing: string | null
 	card: string | null
 	answer: string | null
-	place: 'room' | 'dm'
+	place: Place
 	conversation: string
 	corrected: string | null
 	receipt: number
-}
-
-type StackRow = {
-	id: number
-	kind: StackItemType['kind']
-	author: CrewKey
-	title: string
-	body: string
-	actions: string
-	answer: string | null
-	status: 'open' | 'done'
-	ref: number | null
-	at: string
 }
 
 type CharterRow = {
@@ -85,7 +87,7 @@ const SNAPSHOT_MESSAGES = 200
 const CLEF_EXAMPLES_SHOWN = 20
 
 const now = () => new Date().toISOString()
-// Done to-dos and answered stack items stay in view this long.
+// Done to-dos stay in view this long.
 const twoWeeksAgo = () => new Date(Date.now() - 14 * 86_400_000).toISOString()
 
 const toMessage = (row: MessageRow): CrewMessageType => ({
@@ -103,20 +105,6 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 	corrected: row.corrected ? (JSON.parse(row.corrected) as RoutingType) : null,
 })
 
-const toStackItem = (row: StackRow): StackItemType => ({
-	id: row.id,
-	kind: row.kind,
-	author: row.author,
-	title: row.title,
-	body: row.body,
-	actions: JSON.parse(row.actions) as StackItemType['actions'],
-	answer: row.answer
-		? (JSON.parse(row.answer) as StackItemType['answer'])
-		: null,
-	status: row.status,
-	at: row.at,
-})
-
 const toCharter = (row: CharterRow): CharterEntryType => ({
 	id: row.id,
 	kind: row.kind,
@@ -130,9 +118,9 @@ const toCharter = (row: CharterRow): CharterEntryType => ({
 // Room times for the model: minutes are enough, and UTC is explicit.
 const stamp = (iso: string) => `${iso.slice(0, 16).replace('T', ' ')} UTC`
 
-// One instance, named "team", holds the crew room: the shared timeline, each
-// agent's workspace (to-dos, memory, open items), CLEF's decision log, and
-// the admins' WebSockets. It is an Agents SDK Agent with no model: browsers
+// One instance, named "team", holds the Conference Room and the Enterprise
+// thread, each agent's workspace (to-dos, memory, open items), the charter,
+// CLEF's decision log, and the admin's WebSockets. It is an Agents SDK Agent with no model: browsers
 // connect with useAgent, and its state (each agent's status) syncs to them.
 // Flue's agent Durable Objects keep only their own conversations.
 export class CrewRoom extends Agent<Env, RoomStateType> {
@@ -143,7 +131,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			meetingAt: null,
 			timezone: 'America/New_York',
 		},
-		stackCount: 0,
+		enterpriseOpen: 0,
 	}
 
 	constructor(ctx: DurableObjectState, env: Env) {
@@ -191,12 +179,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null,
 				closed_at text
 			);
+			-- How far an agent has read each timeline ("room" or "bridge").
 			create table if not exists cursor (
-				agent text primary key,
+				agent text not null,
+				place text not null,
 				at text,
-				pending_at text
+				pending_at text,
+				primary key (agent, place)
 			);
-			create table if not exists seen (uid text primary key, at text not null);
+			create table if not exists seen (
+				uid text not null,
+				place text not null,
+				at text not null,
+				primary key (uid, place)
+			);
 			create table if not exists clef_decision (
 				message_id text primary key,
 				text text not null,
@@ -228,41 +224,32 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null,
 				kept_at text
 			);
-			create table if not exists stack_item (
-				id integer primary key autoincrement,
-				kind text not null,
-				author text not null,
-				title text not null,
-				body text not null,
-				actions text not null,
-				answer text,
-				status text not null default 'open',
-				-- The charter entry a "charter" item proposes.
-				ref integer,
-				at text not null,
-				done_at text
-			);
 		`
 	}
 
 	// ---- The timeline -------------------------------------------------------
 
 	snapshot(uid: string): RoomSnapshotType {
-		const seen = this.sql<{
-			at: string
-		}>`select at from seen where uid = ${uid}`[0]
 		return {
 			...this.state,
-			messages: this.latestRoomRows(SNAPSHOT_MESSAGES).map(toMessage),
-			seenAt: seen?.at ?? null,
+			messages: this.latestRows('room', SNAPSHOT_MESSAGES).map(toMessage),
+			seenAt: this.seenAt(uid, 'room'),
 		}
 	}
 
-	markSeen(uid: string) {
+	enterprise(uid: string): EnterpriseType {
+		return {
+			messages: this.latestRows('bridge', SNAPSHOT_MESSAGES).map(toMessage),
+			charter: this.charter(),
+			seenAt: this.seenAt(uid, 'bridge'),
+		}
+	}
+
+	markSeen(uid: string, place: 'room' | 'bridge') {
 		this.sql`
-			insert into seen (uid, at)
-			values (${uid}, ${now()})
-			on conflict (uid) do update set at = excluded.at`
+			insert into seen (uid, place, at)
+			values (${uid}, ${place}, ${now()})
+			on conflict (uid, place) do update set at = excluded.at`
 	}
 
 	// CLEF: a trailing "..." always stacks, an @mention always routes, and
@@ -321,7 +308,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const routing =
 			fixed ?? (input.routing ? sanitize(input.routing) : predicted)
 		const author = adminAuthor(input.uid)
-		const stacked = routing.kind === 'route' ? this.stackedBodies(author) : []
+		const stacked =
+			routing.kind === 'route' ? this.stackedBodies(author, 'room') : []
 		const message = this.insert({
 			author,
 			authorName: input.name,
@@ -334,11 +322,49 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`insert into clef_decision (message_id, text, predicted, final, at)
 			values (${message.id}, ${input.body}, ${labelOf(predicted)}, ${labelOf(routing)}, ${message.at})`
 		const body = [...stacked, input.body].join('\n')
-		const wake = routing.agents.map((agent) => ({
-			agent,
-			body,
-			messageId: message.id,
-		}))
+		const wake = routing.agents.map(
+			(agent): Wake => ({ agent, body, messageId: message.id, place: 'room' })
+		)
+		return { message, wake }
+	}
+
+	// The admin writing in the Enterprise thread. It goes to Riker unless it
+	// names Data; a trailing "..." waits for the next message, as in the room.
+	postToEnterprise(input: { uid: string; name: string; body: string }): {
+		message: CrewMessageType
+		wake: Array<Wake>
+	} {
+		const author = adminAuthor(input.uid)
+		const named = mentionedCrew(input.body).filter((key) =>
+			bridgeKeys.includes(key)
+		)
+		const routing: RoutingType = endsWithEllipsis(input.body)
+			? { kind: 'stack', agents: [], by: 'rule' }
+			: {
+					kind: 'route',
+					agents: named.length ? named : ['riker'],
+					by: 'rule',
+				}
+		const stacked =
+			routing.kind === 'route' ? this.stackedBodies(author, 'bridge') : []
+		const message = this.insert({
+			author,
+			authorName: input.name,
+			body: input.body,
+			routing,
+			card: null,
+			place: 'bridge',
+			conversation: BRIDGE,
+		})
+		const body = [...stacked, input.body].join('\n')
+		const wake = routing.agents.map(
+			(agent): Wake => ({
+				agent,
+				body,
+				messageId: message.id,
+				place: 'bridge',
+			})
+		)
 		return { message, wake }
 	}
 
@@ -378,19 +404,22 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.push({ type: 'message', message })
 		const wake = corrected.agents
 			.filter((agent) => !woken.has(agent))
-			.map((agent) => ({ agent, body: row.body, messageId: row.id }))
+			.map(
+				(agent): Wake => ({
+					agent,
+					body: row.body,
+					messageId: row.id,
+					place: 'room',
+				})
+			)
 		return { ok: true, message, wake }
 	}
 
 	postFromAgent(input: {
 		agent: CrewKey
 		body: string
-		card: {
-			kind: 'question' | 'change'
-			title: string | null
-			actions: Array<ActionType>
-		} | null
-		place: 'room' | 'dm'
+		card: CardType | null
+		place: Place
 		conversation: string
 	}): { message: CrewMessageType; wake: Array<Wake> } {
 		const message = this.insert({
@@ -402,18 +431,28 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			place: input.place,
 			conversation: input.conversation,
 		})
-		if (input.card) this.push({ type: 'workspace', agent: input.agent })
+		if (input.card) {
+			this.push({ type: 'workspace', agent: input.agent })
+			if (input.place === 'bridge') this.enterpriseChanged()
+		}
 		const wake: Array<Wake> = []
-		if (input.place === 'room') {
-			for (const agent of mentionedCrew(input.body)) {
-				if (agent === input.agent || !crew[agent].active) continue
-				const bridgeTalk =
-					bridgeKeys.includes(agent) && bridgeKeys.includes(input.agent)
-				if (bridgeTalk ? !this.bridgeTurnLeft() : !this.takeAgentWake()) {
-					continue
-				}
-				wake.push({ agent, body: input.body, messageId: message.id })
+		const place = input.place
+		if (place === 'dm') return { message, wake }
+		// In the Enterprise thread only Riker and Data answer; Riker carries
+		// anything for the fleet to the Conference Room himself.
+		const reachable = mentionedCrew(input.body).filter(
+			(agent) =>
+				agent !== input.agent &&
+				crew[agent].active &&
+				(place === 'room' || bridgeKeys.includes(agent))
+		)
+		for (const agent of reachable) {
+			const bridgeTalk =
+				bridgeKeys.includes(agent) && bridgeKeys.includes(input.agent)
+			if (bridgeTalk ? !this.bridgeTurnLeft(place) : !this.takeAgentWake()) {
+				continue
 			}
+			wake.push({ agent, body: input.body, messageId: message.id, place })
 		}
 		return { message, wake }
 	}
@@ -471,9 +510,23 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				)
 			}
 		}
+		const ref = message.card.ref
+		if (message.card.kind === 'charter' && ref) {
+			const keep = action.id === 'keep'
+			this.sql`
+				update charter set status = ${keep ? 'kept' : 'dropped'}, kept_at = ${keep ? at : null}
+				where id = ${ref}`
+			this.push({ type: 'charter' })
+		}
 		this.push({ type: 'message', message: { ...message, answer } })
 		this.push({ type: 'workspace', agent })
-		const what = message.card.kind === 'change' ? 'proposed change' : 'question'
+		if (message.place === 'bridge') this.enterpriseChanged()
+		const what =
+			message.card.kind === 'change'
+				? 'proposed change'
+				: message.card.kind === 'question'
+					? 'question'
+					: `${message.card.kind} card`
 		return {
 			ok: true,
 			agent,
@@ -484,16 +537,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// ---- Agent runs ---------------------------------------------------------
 
-	// What an agent should wake up knowing: its workspace, and the room. A
-	// room run reads everything since its last finished room run; a 1:1 chat
-	// reads the latest messages and moves no cursor. Called once for each
-	// message a run receives: messages that reach a busy agent join its run.
+	// What an agent should wake up knowing: its workspace, the Conference Room
+	// and, for Riker and Data, the charter and the Enterprise thread. A run in
+	// a shared timeline reads everything since its last finished run there; a
+	// 1:1 chat reads the latest messages and moves no cursor. Called once for
+	// each message a run receives: messages that reach a busy agent join it.
 	agentContext(
 		agent: CrewKey,
 		conversation: string,
 		messageId: string | null
 	): string {
-		if (conversation === TEAM) {
+		const shared = conversation === TEAM || conversation === BRIDGE
+		if (shared) {
 			if (this.state.statuses[agent]?.state !== 'working') {
 				this.setStatus(agent, { state: 'working', since: now() })
 			}
@@ -506,57 +561,45 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const sections = [`It is now ${stamp(now())}.`]
 		if (bridgeKeys.includes(agent)) sections.push(this.bridgeText())
 		sections.push(this.workspaceText(agent))
-		if (conversation === TEAM) {
-			const cursor = this.sql<{
-				at: string | null
-			}>`select at from cursor where agent = ${agent}`[0]?.at
-			const rows = cursor
-				? this.sql<MessageRow>`select * from (
-								select * from message where place = 'room' and at > ${cursor} order by at desc limit 60
-							) order by at, id`
-				: this.latestRoomRows(30)
-			const last = rows.at(-1)?.at
-			if (last) {
-				this.sql`
-					insert into cursor (agent, pending_at) values (${agent}, ${last})
-					on conflict (agent) do update set pending_at = excluded.pending_at`
-			}
+		if (!shared) {
 			sections.push(
-				cursor
-					? '## The crew room since your last run'
-					: '## The crew room, latest messages',
-				roomText(rows) || '(nothing new)'
+				'## The Conference Room, latest messages',
+				roomText(this.latestRows('room', 15)) || '(empty)'
 			)
 		} else {
-			sections.push(
-				'## The crew room, latest messages',
-				roomText(this.latestRoomRows(15)) || '(empty)'
-			)
+			sections.push(...this.unread(agent, 'room', 'The Conference Room'))
+			if (conversation === BRIDGE) {
+				sections.push(...this.unread(agent, 'bridge', 'The Enterprise thread'))
+			}
 		}
 		return sections.join('\n\n')
 	}
 
 	finishRun(agent: CrewKey, conversation: string) {
-		if (conversation !== TEAM) return
+		if (conversation !== TEAM && conversation !== BRIDGE) return
 		this.sql`
 			update cursor set at = coalesce(pending_at, at), pending_at = null
 			where agent = ${agent}`
 		const since = this.state.statuses[agent]?.since
 		if (since) {
 			this.recordOutcomes(agent, since)
-			this.postReceipt(agent, since)
+			this.postReceipt(
+				agent,
+				since,
+				conversation === BRIDGE ? 'bridge' : 'room'
+			)
 		}
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
 
-	// A room run that failed or was aborted never reaches finishRun.
+	// A run that failed or was aborted never reaches finishRun.
 	failRun(agent: CrewKey) {
 		this.sql`delete from run_message where agent = ${agent}`
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
 
 	recentRoom(limit: number): string {
-		return roomText(this.latestRoomRows(limit)) || '(empty)'
+		return roomText(this.latestRows('room', limit)) || '(empty)'
 	}
 
 	// ---- Workspaces ---------------------------------------------------------
@@ -675,36 +718,45 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return closed.length > 0
 	}
 
-	// ---- The bridge: the admin's stack, the charter, the weekly cycle -----
+	// ---- The Enterprise: cards for the admin, the charter, the weekly cycle
 
-	stack(): StackType {
-		const items = this.sql<StackRow>`select * from stack_item
-				where status = 'open' or done_at > ${twoWeeksAgo()}
-				order by status = 'open' desc, at desc limit 100`.map(toStackItem)
-		const charter = this.sql<CharterRow>`
+	charter(): Array<CharterEntryType> {
+		return this.sql<CharterRow>`
 			select * from charter
 			where status != 'dropped'
 			order by kind, id`.map(toCharter)
-		return { items, charter }
 	}
 
+	// Riker or Data bringing the admin something: a card in the Enterprise
+	// thread. A card with no actions (know, brief) has nothing to answer.
 	bringToAdmin(input: {
 		author: CrewKey
-		kind: StackItemType['kind']
+		kind: CardType['kind']
 		title: string
 		body: string
-		actions: StackItemType['actions']
-		ref?: number | null
+		actions: Array<ActionType>
+		ref?: number
 	}) {
-		const { id } = this.sql<IdRow>`
-			insert into stack_item (kind, author, title, body, actions, ref, at)
-			values (${input.kind}, ${input.author}, ${input.title}, ${input.body}, ${JSON.stringify(input.actions)}, ${input.ref ?? null}, ${now()})
-			returning id`[0]
-		this.stackChanged()
-		return id
+		const message = this.insert({
+			author: input.author,
+			authorName: crew[input.author].name,
+			body: input.body,
+			routing: null,
+			card: {
+				kind: input.kind,
+				title: input.title,
+				actions: input.actions,
+				ref: input.ref ?? null,
+			},
+			place: 'bridge',
+			conversation: BRIDGE,
+		})
+		this.push({ type: 'workspace', agent: input.author })
+		this.enterpriseChanged()
+		return message.id
 	}
 
-	// A principle or lesson waits in the admin's stack until they keep it.
+	// A principle or lesson waits as a card until the admin keeps it.
 	proposeCharter(input: {
 		author: CrewKey
 		kind: CharterEntryType['kind']
@@ -715,6 +767,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			insert into charter (kind, text, why, status, at)
 			values (${input.kind}, ${input.text}, ${input.why}, 'proposed', ${now()})
 			returning id`[0]
+		this.push({ type: 'charter' })
 		return this.bringToAdmin({
 			author: input.author,
 			kind: 'charter',
@@ -738,54 +791,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			update charter set text = ${change.text ?? row.text}, status = ${change.status ?? row.status}, kept_at = ${change.status === 'kept' ? now() : row.kept_at}
 			where id = ${id}`
-		this.stackChanged()
+		this.push({ type: 'charter' })
 		return true
-	}
-
-	answerStack(input: {
-		id: number
-		actionId: string
-		note: string | null
-		name: string
-	}):
-		| { ok: true; author: CrewKey; body: string; wake: boolean }
-		| { ok: false; status: 404 | 409; error: string } {
-		const row = this.sql<StackRow>`
-			select * from stack_item
-			where id = ${input.id}`[0]
-		if (!row) return { ok: false, status: 404, error: 'No item with that id' }
-		const item = toStackItem(row)
-		if (item.status === 'done') {
-			return { ok: false, status: 409, error: 'That item is already done' }
-		}
-		const action =
-			item.actions.find((a) => a.id === input.actionId) ??
-			(input.actionId === 'done' ? { id: 'done', label: 'Done' } : null)
-		if (!action) {
-			return { ok: false, status: 404, error: 'That item has no such answer' }
-		}
-		const at = now()
-		this.sql`update stack_item set answer = ${JSON.stringify({
-			actionId: action.id,
-			label: action.label,
-			note: input.note,
-			at,
-		})}, status = 'done', done_at = ${at} where id = ${item.id}`
-		if (item.kind === 'charter' && row.ref !== null) {
-			this.sql`
-				update charter set status = ${action.id === 'keep' ? 'kept' : 'dropped'}, kept_at = ${action.id === 'keep' ? at : null}
-				where id = ${row.ref}`
-		}
-		this.stackChanged()
-		const note = input.note ? ` They added: "${input.note}"` : ''
-		return {
-			ok: true,
-			author: item.author,
-			body: `${input.name} answered "${action.label}" to "${item.title}" (${item.kind}).${note}`,
-			// An item with choices asked something; a brief or a "know" item
-			// only leaves the stack.
-			wake: item.actions.length > 0,
-		}
 	}
 
 	weekly(): WeeklyType {
@@ -840,7 +847,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		body: string
 		routing: RoutingType | null
 		card: CrewMessageType['card']
-		place: 'room' | 'dm'
+		place: Place
 		conversation: string
 		receipt?: boolean
 	}): CrewMessageType {
@@ -862,18 +869,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation, receipt)
 			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.conversation}, ${row.receipt})`
 		const message = toMessage(row)
-		if (message.place === 'room') this.push({ type: 'message', message })
+		if (message.place !== 'dm') this.push({ type: 'message', message })
 		return message
 	}
 
-	// The admin's "..." messages since their last message that was not one.
-	private stackedBodies(author: string) {
+	// The admin's "..." messages in this timeline since their last message
+	// there that was not one.
+	private stackedBodies(author: string, place: 'room' | 'bridge') {
 		const rows = this.sql<{
 			body: string
 			routing: string | null
 		}>`
 			select body, routing from message
-			where author = ${author}
+			where author = ${author} and place = ${place}
 			order by at desc, id desc
 			limit 20`
 		const stacked: Array<string> = []
@@ -887,10 +895,41 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return stacked
 	}
 
-	private latestRoomRows(limit: number) {
+	private latestRows(place: 'room' | 'bridge', limit: number) {
 		return this.sql<MessageRow>`select * from (
-					select * from message where place = 'room' order by at desc, id desc limit ${limit}
+					select * from message where place = ${place} order by at desc, id desc limit ${limit}
 				) order by at, id`
+	}
+
+	// The messages in one timeline since the agent last finished a run there,
+	// as a context section. The cursor moves when the run finishes.
+	private unread(agent: CrewKey, place: 'room' | 'bridge', name: string) {
+		const cursor = this.sql<{
+			at: string | null
+		}>`select at from cursor where agent = ${agent} and place = ${place}`[0]?.at
+		const rows = cursor
+			? this.sql<MessageRow>`select * from (
+							select * from message where place = ${place} and at > ${cursor} order by at desc limit 60
+						) order by at, id`
+			: this.latestRows(place, 30)
+		const last = rows.at(-1)?.at
+		if (last) {
+			this.sql`
+				insert into cursor (agent, place, pending_at) values (${agent}, ${place}, ${last})
+				on conflict (agent, place) do update set pending_at = excluded.pending_at`
+		}
+		return [
+			cursor ? `## ${name} since your last run` : `## ${name}, latest messages`,
+			roomText(rows) || '(nothing new)',
+		]
+	}
+
+	private seenAt(uid: string, place: 'room' | 'bridge') {
+		return (
+			this.sql<{ at: string }>`
+				select at from seen where uid = ${uid} and place = ${place}`[0]?.at ??
+			null
+		)
 	}
 
 	private workspaceText(agent: CrewKey) {
@@ -943,7 +982,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	private recordOutcomes(agent: CrewKey, since: string) {
 		const { posted } = this.sql<{ posted: number }>`
 			select count(*) as posted from message
-			where author = ${agent} and place = 'room' and at >= ${since}`[0]
+			where author = ${agent} and place in ('room', 'bridge') and at >= ${since}`[0]
 		const decisions = this.sql<{
 			message_id: string
 			outcomes: string
@@ -978,9 +1017,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.push({ type: 'workspace', agent })
 	}
 
-	// A room run that changed the agent's workspace ends with a receipt in
-	// the room, built from the edits it made rather than from its own account.
-	private postReceipt(agent: CrewKey, since: string) {
+	// A run that changed the agent's workspace ends with a receipt in its
+	// timeline, built from the edits it made rather than from its own account.
+	private postReceipt(agent: CrewKey, since: string, place: 'room' | 'bridge') {
 		const edits = this.sql<{
 			what: string
 		}>`
@@ -994,32 +1033,34 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			body: `👍 ${edits.length === 1 ? 'one edit' : `${edits.length} edits`}: ${edits.map((edit) => edit.what).join('; ')}`,
 			routing: null,
 			card: null,
-			place: 'room',
-			conversation: TEAM,
+			place,
+			conversation: conversationOf(agent),
 			receipt: true,
 		})
 	}
 
-	private openStackCount() {
-		const { count } = this.sql<CountRow>`
-			select count(*) as count from stack_item
-			where status = 'open'`[0]
-		return count
+	// Cards in the Enterprise thread that wait on the admin's answer.
+	private openCards() {
+		return this.sql<MessageRow>`
+			select * from message
+			where place = 'bridge' and card is not null and answer is null
+				and json_array_length(card, '$.actions') > 0
+			order by at`.map(toMessage)
 	}
 
-	private stackChanged() {
-		this.setState({ ...this.state, stackCount: this.openStackCount() })
-		this.push({ type: 'stack' })
+	private enterpriseChanged() {
+		this.setState({ ...this.state, enterpriseOpen: this.openCards().length })
 	}
 
 	// True while Riker and Data have spoken fewer than BRIDGE_TURNS times in a
-	// row since the last message from an admin. Receipts are not turns.
-	private bridgeTurnLeft() {
+	// row in this timeline since the admin last wrote there. Receipts are not
+	// turns.
+	private bridgeTurnLeft(place: 'room' | 'bridge') {
 		const recent = this.sql<{
 			author: string
 		}>`
 			select author from message
-			where place = 'room' and receipt = 0
+			where place = ${place} and receipt = 0
 			order by at desc, id desc
 			limit ${BRIDGE_TURNS}`
 		return (
@@ -1028,9 +1069,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		)
 	}
 
-	// The bridge's shared memory of the admin, and what waits in their stack.
+	// The bridge's shared memory of the admin, and what waits on them.
 	private bridgeText() {
-		const { items, charter } = this.stack()
+		const charter = this.charter()
 		const kept = charter
 			.filter((entry) => entry.status === 'kept')
 			.map((entry) => `- [${entry.kind} ${entry.id}] ${entry.text}`)
@@ -1039,19 +1080,21 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			.filter((entry) => entry.status === 'proposed')
 			.map((entry) => `- [${entry.kind} ${entry.id}] ${entry.text}`)
 			.join('\n')
-		const open = items
-			.filter((item) => item.status === 'open')
+		const open = this.openCards()
 			.map(
-				(item) =>
-					`- [${item.kind}, from ${crew[item.author].name}] ${item.title}`
+				(message) =>
+					`- [${message.card?.kind}, from ${message.authorName}] ${message.card?.title ?? message.body}`
 			)
 			.join('\n')
-		const answered = items
-			.filter((item) => item.answer)
-			.slice(0, 10)
+		const answered = this.sql<MessageRow>`
+			select * from message
+			where place = 'bridge' and answer is not null
+			order by at desc
+			limit 10`
+			.map(toMessage)
 			.map(
-				(item) =>
-					`- ${item.title}: "${item.answer?.label}"${item.answer?.note ? ` — ${item.answer.note}` : ''}`
+				(message) =>
+					`- ${message.card?.title ?? message.body}: "${message.answer?.label}"`
 			)
 			.join('\n')
 		const weekly = this.weekly()
@@ -1063,8 +1106,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			kept || '(nothing kept yet)',
 			'Proposed, waiting for the admin:',
 			proposed || '(none)',
-			"## The admin's stack",
-			`Open:\n${open || '(empty)'}`,
+			'## Cards in the Enterprise thread',
+			`Waiting on the admin:\n${open || '(none)'}`,
 			`Recently answered:\n${answered || '(none)'}`,
 			'## The weekly cycle',
 			`${meeting} The admin's time zone is ${weekly.timezone}.`,

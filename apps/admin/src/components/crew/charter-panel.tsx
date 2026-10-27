@@ -6,23 +6,23 @@ import { Input } from '@/components/ui/input'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import type { CharterEntryType } from '../../../shared/crew'
 import {
+	enterpriseQuery,
 	roomQuery,
-	stackQuery,
 	useEditCharter,
 	useSetTimezone,
 } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 
-// What the bridge knows about the admin, on Riker's workspace page. The
-// admin edits it directly; agents can only propose entries.
+// What the Enterprise knows about the admin, in the ship's log. The admin
+// edits it directly; Riker and Data can only propose entries.
 export function CharterPanel() {
-	const { data: stack } = useSuspenseQuery(stackQuery())
-	const kept = stack.charter.filter((entry) => entry.status === 'kept')
-	const proposed = stack.charter.filter((entry) => entry.status === 'proposed')
+	const { data: thread } = useSuspenseQuery(enterpriseQuery())
+	const kept = thread.charter.filter((entry) => entry.status === 'kept')
+	const proposed = thread.charter.filter((entry) => entry.status === 'proposed')
 	return (
 		<section className="space-y-3" data-testid="charter-panel">
 			<h2 className="text-muted-foreground text-sm font-semibold">
-				What the bridge knows about you · {kept.length}
+				The charter: what the Enterprise knows about you · {kept.length}
 			</h2>
 			{kept.length ? (
 				<ul className="space-y-2">
@@ -38,7 +38,7 @@ export function CharterPanel() {
 			)}
 			{proposed.length > 0 && (
 				<p className="text-muted-foreground text-sm">
-					{proposed.length} more waiting for you in “Brought to you”.
+					{proposed.length} more waiting for you in the thread.
 				</p>
 			)}
 			<WeeklySettings />

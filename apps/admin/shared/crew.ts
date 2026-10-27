@@ -6,27 +6,16 @@ import { z } from 'zod'
 export const crewKeys = [
 	'riker',
 	'data',
+	'product',
 	'monitor',
 	'moderator',
-	'product',
-	'languages',
-	'curator',
+	'library',
 	'growth',
 ] as const
 export type CrewKey = (typeof crewKeys)[number]
 
-// A vessel is a crew that works as a unit. The Enterprise is the admin's own
-// bridge: agents that extend the admin's judgement into the room. The fleet
-// is everyone else, each an independent expert on its own area.
-export const vessels = {
-	enterprise: { name: 'The Enterprise', note: 'Your bridge' },
-	fleet: { name: 'The fleet', note: 'Experts on their own areas' },
-} as const
-export type VesselKey = keyof typeof vessels
-
 export type CrewMember = {
 	key: CrewKey
-	vessel: VesselKey
 	name: string
 	title: string
 	// Shown under the title, and read by CLEF to decide who a message is for.
@@ -41,7 +30,6 @@ export type CrewMember = {
 export const crew: Record<CrewKey, CrewMember> = {
 	riker: {
 		key: 'riker',
-		vessel: 'enterprise',
 		name: 'Riker',
 		title: 'First officer',
 		looksAfter: [
@@ -55,7 +43,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	data: {
 		key: 'data',
-		vessel: 'enterprise',
 		name: 'Data',
 		title: 'Science officer',
 		looksAfter: [
@@ -68,7 +55,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	monitor: {
 		key: 'monitor',
-		vessel: 'fleet',
 		name: 'Monitor',
 		title: 'Site reliability',
 		looksAfter: [
@@ -81,7 +67,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	moderator: {
 		key: 'moderator',
-		vessel: 'fleet',
 		name: 'Moderator',
 		title: 'Community moderator',
 		looksAfter: [
@@ -93,7 +78,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	product: {
 		key: 'product',
-		vessel: 'fleet',
 		name: 'Product',
 		title: 'Product manager',
 		looksAfter: [
@@ -105,34 +89,21 @@ export const crew: Record<CrewKey, CrewMember> = {
 		schedule: 'runs daily at 07:00 UTC',
 		active: true,
 	},
-	languages: {
-		key: 'languages',
-		vessel: 'fleet',
-		name: 'Languages',
-		title: 'Language lead',
+	library: {
+		key: 'library',
+		name: 'Library',
+		title: 'Learning content',
 		looksAfter: [
+			'The phrase library: duplicates, near-duplicates and gaps',
+			'The phrase requests space, playlists and the template language',
 			'How learners and phrases spread across languages',
 			'When to hire a native-speaking translator',
 		],
 		schedule: null,
 		active: false,
 	},
-	curator: {
-		key: 'curator',
-		vessel: 'fleet',
-		name: 'Curator',
-		title: 'Library curator',
-		looksAfter: [
-			'The shape of the phrase requests space',
-			'Duplicate and near-duplicate phrases',
-			'Playlists and the template language',
-		],
-		schedule: null,
-		active: false,
-	},
 	growth: {
 		key: 'growth',
-		vessel: 'fleet',
 		name: 'Growth',
 		title: 'Growth',
 		looksAfter: ['Signups, invites and where new people come from'],
@@ -143,9 +114,11 @@ export const crew: Record<CrewKey, CrewMember> = {
 
 export const crewList = crewKeys.map((key) => crew[key])
 
-export const bridgeKeys: ReadonlyArray<CrewKey> = crewKeys.filter(
-	(key) => crew[key].vessel === 'enterprise'
-)
+// The Enterprise is the admin's own ship: Riker, their first officer, and
+// Data. They share one thread with the admin, and bring the admin what needs
+// them. Every other agent is a ship of its own in the fleet.
+export const bridgeKeys: ReadonlyArray<CrewKey> = ['riker', 'data']
+export const fleetKeys = crewKeys.filter((key) => !bridgeKeys.includes(key))
 
 export const isCrewKey = (value: string): value is CrewKey =>
 	(crewKeys as ReadonlyArray<string>).includes(value)
@@ -193,6 +166,31 @@ export function fixedRouting(text: string): RoutingType | null {
 export const ActionSchema = z.object({ id: z.string(), label: z.string() })
 export type ActionType = z.infer<typeof ActionSchema>
 
+// Something an agent brings the admin, with the buttons they answer with.
+// - question: any agent's question; change: a proposed change to its plan
+// - From Riker or Data, in the Enterprise thread: decide (on hold until the
+//   admin answers), confirm (acted in their stead; was that right?), know
+//   (nothing to answer), escalate (needs more than the crew has), charter (a
+//   proposed charter entry, `ref`) and brief (the weekly brief)
+export const CardSchema = z.object({
+	kind: z.enum([
+		'question',
+		'change',
+		'decide',
+		'confirm',
+		'know',
+		'escalate',
+		'charter',
+		'brief',
+	]),
+	title: z.string().nullable(),
+	// Empty for a card with nothing to answer.
+	actions: z.array(ActionSchema),
+	// The charter entry a "charter" card proposes.
+	ref: z.number().nullable().optional(),
+})
+export type CardType = z.infer<typeof CardSchema>
+
 export const CrewMessageSchema = z.object({
 	id: z.string(),
 	at: z.string(),
@@ -202,15 +200,7 @@ export const CrewMessageSchema = z.object({
 	body: z.string(),
 	// Set on admin messages only.
 	routing: RoutingSchema.nullable(),
-	// Buttons the admin answers with. A "change" card is a proposed change to
-	// the agent's plan, with "Do it" and "Not yet".
-	card: z
-		.object({
-			kind: z.enum(['question', 'change']),
-			title: z.string().nullable(),
-			actions: z.array(ActionSchema),
-		})
-		.nullable(),
+	card: CardSchema.nullable(),
 	answer: z
 		.object({
 			actionId: z.string(),
@@ -219,9 +209,9 @@ export const CrewMessageSchema = z.object({
 			at: z.string(),
 		})
 		.nullable(),
-	// "room" for the crew room; "dm" for a card raised in a 1:1 chat, which
-	// shows in the agent's workspace but not in the room.
-	place: z.enum(['room', 'dm']),
+	// "room" for the Conference Room; "bridge" for the Enterprise thread; "dm"
+	// for a card raised in a 1:1 chat, which shows in the agent's workspace.
+	place: z.enum(['room', 'bridge', 'dm']),
 	// Where the admin said, after sending, this message should have gone.
 	corrected: RoutingSchema.nullable(),
 })
@@ -250,8 +240,8 @@ export const meetingDue = (weekly: WeeklyType) =>
 export const RoomStateSchema = z.object({
 	statuses: z.record(z.string(), AgentStatusSchema),
 	weekly: WeeklySchema,
-	// Open items in the admin's stack, for the sidebar count.
-	stackCount: z.number(),
+	// Cards in the Enterprise thread waiting on the admin, for the sidebar.
+	enterpriseOpen: z.number(),
 })
 export type RoomStateType = z.infer<typeof RoomStateSchema>
 
@@ -294,7 +284,7 @@ export type OpenItemType = z.infer<typeof OpenItemSchema>
 
 // What the bridge knows about the admin: principles (philosophy, strategy,
 // taste) and lessons (how they decide). An entry counts only once the admin
-// keeps it; until then it is a proposal in their stack.
+// keeps it; until then it is a card in the Enterprise thread.
 export const CharterEntrySchema = z.object({
 	id: z.number(),
 	kind: z.enum(['principle', 'lesson']),
@@ -306,38 +296,13 @@ export const CharterEntrySchema = z.object({
 })
 export type CharterEntryType = z.infer<typeof CharterEntrySchema>
 
-// One thing the bridge brought to the admin.
-// - decide: on hold until the admin answers
-// - confirm: the bridge acted in the admin's stead, and asks if that was right
-// - know: worth knowing, nothing to answer
-// - escalate: needs more than the crew has, such as a Claude Code session
-// - brief: the weekly brief
-// - charter: a proposed principle or lesson
-export const StackItemSchema = z.object({
-	id: z.number(),
-	kind: z.enum(['decide', 'confirm', 'know', 'escalate', 'brief', 'charter']),
-	author: z.enum(crewKeys),
-	title: z.string(),
-	body: z.string(),
-	actions: z.array(ActionSchema),
-	answer: z
-		.object({
-			actionId: z.string(),
-			label: z.string(),
-			note: z.string().nullable(),
-			at: z.string(),
-		})
-		.nullable(),
-	status: z.enum(['open', 'done']),
-	at: z.string(),
-})
-export type StackItemType = z.infer<typeof StackItemSchema>
-
-export const StackSchema = z.object({
-	items: z.array(StackItemSchema),
+// The Enterprise thread, with the charter beside it.
+export const EnterpriseSchema = z.object({
+	messages: z.array(CrewMessageSchema),
 	charter: z.array(CharterEntrySchema),
+	seenAt: z.string().nullable(),
 })
-export type StackType = z.infer<typeof StackSchema>
+export type EnterpriseType = z.infer<typeof EnterpriseSchema>
 
 export const WorkspaceSchema = z.object({
 	agent: z.enum(crewKeys),
@@ -353,4 +318,4 @@ export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
 	| { type: 'workspace'; agent: CrewKey }
-	| { type: 'stack' }
+	| { type: 'charter' }

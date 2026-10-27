@@ -1,8 +1,7 @@
 import { createAgentRouter } from '@flue/runtime/routing'
 import { validator } from 'hono/validator'
 import { z } from 'zod'
-import { crewKeys, isCrewKey, RoutingSchema } from '../shared/crew'
-import { TEAM } from '../worker/crew/room'
+import { crewKeys, fleetKeys, isCrewKey, RoutingSchema } from '../shared/crew'
 import { createApi } from '../worker/api'
 import { crewAgents, deliver, roomFor, wake } from './crew'
 
@@ -30,10 +29,16 @@ api.get('/crew/room', async (c) => {
 	return c.json(await (await roomFor()).snapshot(c.get('admin').uid))
 })
 
-api.post('/crew/seen', async (c) => {
-	await (await roomFor()).markSeen(c.get('admin').uid)
-	return c.json({ ok: true })
-})
+api.post(
+	'/crew/seen',
+	json(z.object({ place: z.enum(['room', 'bridge']) }), 'Send { place }'),
+	async (c) => {
+		await (
+			await roomFor()
+		).markSeen(c.get('admin').uid, c.req.valid('json').place)
+		return c.json({ ok: true })
+	}
+)
 
 api.post(
 	'/crew/clef',
@@ -133,37 +138,24 @@ api.delete(
 	}
 )
 
-api.get('/crew/stack', async (c) => {
-	return c.json(await (await roomFor()).stack())
+api.get('/crew/enterprise', async (c) => {
+	return c.json(await (await roomFor()).enterprise(c.get('admin').uid))
 })
 
 api.post(
-	'/crew/stack/:id/answer',
-	numericId('No item with that id'),
-	json(
-		z.object({
-			actionId: z.string().min(1),
-			note: z.string().trim().max(2000).nullable().optional(),
-		}),
-		'Send { actionId, note? }'
-	),
+	'/crew/enterprise/messages',
+	json(z.object({ body: Text }), 'Send { body }'),
 	async (c) => {
-		const input = c.req.valid('json')
-		const result = await (
+		const admin = c.get('admin')
+		const { message, wake: wakes } = await (
 			await roomFor()
-		).answerStack({
-			id: c.req.valid('param').id,
-			actionId: input.actionId,
-			note: input.note || null,
-			name: c.get('admin').name,
+		).postToEnterprise({
+			uid: admin.uid,
+			name: admin.name,
+			body: c.req.valid('json').body,
 		})
-		if (!result.ok) return c.json({ error: result.error }, result.status)
-		if (result.wake) {
-			await deliver(result.author, TEAM, 'crew.answer', result.body).catch(
-				logFailedDelivery
-			)
-		}
-		return c.json({ ok: true })
+		await wake(wakes, admin.name)
+		return c.json(message)
 	}
 )
 
@@ -203,9 +195,9 @@ api.put(
 // admin, from the token in the query string.
 api.get('/crew/live', async (c) => (await roomFor()).fetch(c.req.raw))
 
-// A 1:1 chat with an agent is the conversation "dm-<admin uid>", so an admin
-// can only open their own. Room runs use the conversation "team", which is
-// dispatch-only.
+// A 1:1 chat with a fleet agent is the conversation "dm-<admin uid>", so an
+// admin can only open their own. Room runs ("team") are dispatch-only, and
+// Riker and Data talk to the admin in the Enterprise thread instead.
 api.use('/agents/*', async (c, next) => {
 	// /api/agents/<agent>/<conversation>[/...]
 	const conversation = c.req.path.split('/')[4]
@@ -214,8 +206,9 @@ api.use('/agents/*', async (c, next) => {
 	}
 	return next()
 })
-for (const [key, agent] of Object.entries(crewAgents())) {
-	api.route(`/agents/${key}`, createAgentRouter(agent))
+for (const key of fleetKeys) {
+	const agent = crewAgents()[key]
+	if (agent) api.route(`/agents/${key}`, createAgentRouter(agent))
 }
 
 export default api

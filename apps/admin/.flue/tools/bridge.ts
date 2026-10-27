@@ -1,13 +1,13 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
-import type { CrewKey, StackItemType } from '../../shared/crew'
-import { TEAM } from '../../worker/crew/room'
+import type { ActionType, CrewKey } from '../../shared/crew'
+import { BRIDGE } from '../../worker/crew/room'
 import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
 const defaultActions: Record<
 	'decide' | 'confirm' | 'know' | 'escalate',
-	StackItemType['actions']
+	Array<ActionType>
 > = {
 	decide: [
 		{ id: 'yes', label: 'Yes' },
@@ -24,12 +24,36 @@ const defaultActions: Record<
 	],
 }
 
-// Tools every bridge agent has: bringing things to the admin's stack, and
-// proposing what the bridge should remember about them.
+// Tools Riker and Data both have: talking in the Enterprise thread, bringing
+// the admin cards there, and proposing what to remember about the admin.
 export function bridgeTools(agent: CrewKey) {
+	const postToEnterprise = defineTool({
+		name: 'post_to_enterprise',
+		description:
+			'Post a message in the Enterprise thread, where the admin talks with Riker and Data. Answer an <enterprise-message> here. Write @Riker or @Data to hand the other officer the floor.',
+		input: v.object({ body: Text }),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.body)
+			const { message, wake: wakes } = await step.do('post', async () =>
+				(await roomFor()).postFromAgent({
+					agent,
+					body: data.body,
+					card: null,
+					place: 'bridge',
+					conversation: BRIDGE,
+				})
+			)
+			await step.do('wake', () =>
+				wake(wakes, agent === 'riker' ? 'Riker' : 'Data').then(() => true)
+			)
+			return { output: { messageId: message.id } }
+		},
+	})
+
 	const bringToAdmin = defineTool({
 		name: 'bring_to_admin',
-		description: `Put an item in the admin's stack, the short list they read instead of the whole room. Kinds:
+		description: `Bring the admin a card in the Enterprise thread: the short list they read instead of the whole Conference Room. Kinds:
 - decide: you need their call, and the matter is on hold until they answer. Give 2 or 3 short options, or leave them out for Yes and No.
 - confirm: you already acted in their stead, and ask whether that was right. Only for reversible actions that the charter clearly covers.
 - know: worth knowing, nothing to answer. One or two sentences.
@@ -44,7 +68,7 @@ Their answer comes back to you.`,
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.body)
-			const id = await step.do('bring', async () =>
+			const messageId = await step.do('bring', async () =>
 				(await roomFor()).bringToAdmin({
 					author: agent,
 					kind: data.kind,
@@ -55,7 +79,7 @@ Their answer comes back to you.`,
 						: defaultActions[data.kind],
 				})
 			)
-			return { output: { id } }
+			return { output: { messageId } }
 		},
 	})
 
@@ -70,14 +94,14 @@ Their answer comes back to you.`,
 		}),
 		durable: true,
 		async run({ data, step }) {
-			const id = await step.do('propose', async () =>
+			const messageId = await step.do('propose', async () =>
 				(await roomFor()).proposeCharter({ author: agent, ...data })
 			)
-			return { output: { stackItem: id } }
+			return { output: { messageId } }
 		},
 	})
 
-	return [bringToAdmin, proposeCharter]
+	return [postToEnterprise, bringToAdmin, proposeCharter]
 }
 
 // Riker's weekly cycle.
@@ -85,7 +109,7 @@ export function rikerTools() {
 	const writeBrief = defineTool({
 		name: 'write_brief',
 		description:
-			"Put this week's brief at the top of the admin's stack. Markdown: what happened, what is open with them, what you propose to change, and the agenda for the weekly meeting.",
+			"Post this week's brief in the Enterprise thread. Markdown: what happened, what is open with the admin, what you propose to change, and the agenda for the weekly meeting.",
 		input: v.object({
 			title: v.pipe(Text, v.maxLength(140)),
 			body: v.pipe(Text, v.maxLength(12000)),
@@ -93,17 +117,17 @@ export function rikerTools() {
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.body)
-			const id = await step.do('brief', async () =>
+			const messageId = await step.do('brief', async () =>
 				(await roomFor()).recordBrief({ author: 'riker', ...data })
 			)
-			return { output: { stackItem: id } }
+			return { output: { messageId } }
 		},
 	})
 
 	const closeMeeting = defineTool({
 		name: 'close_meeting',
 		description:
-			'End the weekly meeting with the admin. Posts the minutes in the crew room: decisions, charter changes, and the directives each agent will get from you next.',
+			'End the weekly meeting with the admin. Posts the minutes in the Conference Room: decisions, charter changes, and the directives each agent will get from you next.',
 		input: v.object({ minutes: v.pipe(Text, v.maxLength(6000)) }),
 		durable: true,
 		async run({ data, step }) {
@@ -116,12 +140,12 @@ export function rikerTools() {
 					body: `**Minutes of this week's meeting**\n\n${data.minutes}`,
 					card: null,
 					place: 'room',
-					conversation: TEAM,
+					conversation: BRIDGE,
 				})
 				return posted.wake
 			})
 			await step.do('wake', () => wake(wakes, 'Riker').then(() => true))
-			return 'The meeting is closed and the minutes are in the room.'
+			return 'The meeting is closed and the minutes are in the Conference Room.'
 		},
 	})
 

@@ -1,23 +1,28 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
 import { crew, type CrewKey } from '../../shared/crew'
-import { TEAM } from '../../worker/crew/room'
+import { BRIDGE } from '../../worker/crew/room'
 import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
 const Id = v.pipe(v.number(), v.integer())
 
 // The room and workspace tools for one agent. `conversation` is "team" for a
-// run in the crew room and "dm-<uid>" for a 1:1 chat; a card raised in a 1:1
-// chat shows in that chat and the workspace, not in the room.
+// fleet agent's room runs, "bridge" for Riker and Data, and "dm-<uid>" for a
+// 1:1 chat. A card goes where the conversation lives: the Conference Room,
+// the Enterprise thread, or the 1:1 chat.
 export function crewTools(agent: CrewKey, conversation: string) {
 	const name = crew[agent].name
-	const place = conversation === TEAM ? 'room' : 'dm'
+	const place = conversation.startsWith('dm-')
+		? 'dm'
+		: conversation === BRIDGE
+			? 'bridge'
+			: 'room'
 
 	const postToCrew = defineTool({
 		name: 'post_to_crew',
 		description:
-			'Post a message in the crew room, where the admin and the other agents read it. Write @Name to address a crew member. Add `options` (2 or 3 short button labels, such as "Hide it" and "Show me") only when you need the admin to choose; their answer comes back to you.',
+			'Post a message in the Conference Room, where the admin and the other agents read it. Write @Name to address a crew member. Add `options` (2 or 3 short button labels, such as "Hide it" and "Show me") only when you need the admin to choose; their answer comes back to you.',
 		input: v.object({
 			body: Text,
 			options: v.optional(Options),
@@ -53,7 +58,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 	const proposeChange = defineTool({
 		name: 'propose_change',
 		description:
-			'Propose a change to your plan. The admin gets a "Change to the plan" card with Do it and Not yet. Do it saves the decision to your memory and adds the title as a to-do; Not yet saves that to your memory. Either way the answer comes back to you. In a 1:1 chat the card shows in the chat; otherwise it shows in the crew room.',
+			'Propose a change to your plan. The admin gets a "Change to the plan" card with Do it and Not yet. Do it saves the decision to your memory and adds the title as a to-do; Not yet saves that to your memory. Either way the answer comes back to you. The card shows where you are talking: a 1:1 chat, the Enterprise thread, or the Conference Room.',
 		input: v.object({
 			title: v.pipe(Text, v.maxLength(120)),
 			why: v.pipe(Text, v.maxLength(600)),
@@ -84,7 +89,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 	const readRoom = defineTool({
 		name: 'read_room',
 		description:
-			'Read the latest messages in the crew room, oldest first, when the room context you were given is not enough.',
+			'Read the latest messages in the Conference Room, oldest first, when the room context you were given is not enough.',
 		input: v.object({
 			limit: v.optional(v.pipe(Id, v.minValue(1), v.maxValue(100)), 40),
 		}),

@@ -14,8 +14,19 @@ import {
 	MessageMarker,
 } from '@/components/ui/message'
 import { hasBlocks } from '../../../shared/blocks'
-import { crew, isCrewKey, type CrewMessageType } from '../../../shared/crew'
-import { AgentAvatar, CardActions, ChangeCard, CrewText } from './crew-parts'
+import {
+	bridgeKeys,
+	crew,
+	isCrewKey,
+	type CrewMessageType,
+} from '../../../shared/crew'
+import {
+	AgentAvatar,
+	BridgeCard,
+	CardActions,
+	ChangeCard,
+	CrewText,
+} from './crew-parts'
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { useCorrectRouting } from '~/lib/crew'
@@ -127,7 +138,11 @@ function AuthorGroup({
 					>
 						{!mine && (
 							<MessageAvatar className={cn(!last && 'invisible')}>
-								{agent ? (
+								{agent && bridgeKeys.includes(agent) ? (
+									<Link to="/enterprise" aria-label="The Enterprise">
+										<AgentAvatar agent={agent} size="sm" />
+									</Link>
+								) : agent ? (
 									<Link
 										to="/crew/$agent"
 										params={{ agent }}
@@ -151,6 +166,8 @@ function AuthorGroup({
 							)}
 							{message.card?.kind === 'change' ? (
 								<ChangeCard message={message} />
+							) : message.card && message.card.kind !== 'question' ? (
+								<BridgeCard message={message} />
 							) : (
 								<Bubble
 									variant={
@@ -172,11 +189,16 @@ function AuthorGroup({
 								</Bubble>
 							)}
 							{asksYou && <CardActions message={message} />}
-							{mine && message.routing && (
+							{mine && message.routing && message.place === 'room' && (
 								<MessageFooter>
 									<RoutingCorrection message={message} />
 								</MessageFooter>
 							)}
+							{mine &&
+								message.routing?.kind === 'stack' &&
+								message.place === 'bridge' && (
+									<MessageFooter>{routingNote(message.routing)}</MessageFooter>
+								)}
 						</MessageContent>
 					</Message>
 				)

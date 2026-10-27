@@ -43,7 +43,7 @@ export function MemoryList({
 					<Entries agent={agent} entries={charts} />
 				</Group>
 			)}
-			<Group title="Memory">
+			<Group title={`What ${crew[agent].name} remembers`}>
 				{facts.length ? (
 					<Entries agent={agent} entries={facts} />
 				) : (

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { meetingDue } from '../../../shared/crew'
@@ -8,10 +8,15 @@ import { dayLabel } from '~/lib/format'
 
 // The weekly meeting's standing invitation. It shows from the moment Riker's
 // brief lands until the meeting closes, wherever the admin is. The meeting
-// itself starts in Riker's chat.
+// itself happens in the Enterprise thread.
 export function MeetingBanner() {
 	const { data: room } = useQuery(roomQuery())
-	if (!room?.weekly.briefAt || !meetingDue(room.weekly)) return null
+	const onBridge = useRouterState({
+		select: (state) => state.location.pathname === '/enterprise',
+	})
+	if (onBridge || !room?.weekly.briefAt || !meetingDue(room.weekly)) {
+		return null
+	}
 	return (
 		<aside
 			aria-label="Weekly meeting"
@@ -23,15 +28,8 @@ export function MeetingBanner() {
 				Riker’s brief is ready ({dayLabel(room.weekly.briefAt)}), and your
 				weekly meeting hasn’t happened yet.
 			</span>
-			<Link to="/stack" className="underline">
-				Read the brief
-			</Link>
 			<Button size="sm" asChild>
-				<Link
-					to="/crew/$agent"
-					params={{ agent: 'riker' }}
-					data-testid="crew-go-to-meeting"
-				>
+				<Link to="/enterprise" data-testid="crew-go-to-meeting">
 					Go to the meeting
 				</Link>
 			</Button>

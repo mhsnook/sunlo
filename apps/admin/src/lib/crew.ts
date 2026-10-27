@@ -11,8 +11,7 @@ import {
 	Activity,
 	Compass,
 	Cpu,
-	Languages,
-	MessageSquareQuote,
+	Library,
 	Shield,
 	Sprout,
 	Star,
@@ -20,9 +19,9 @@ import {
 } from 'lucide-react'
 import {
 	CrewMessageSchema,
+	EnterpriseSchema,
 	RoomSnapshotSchema,
 	RoutingSchema,
-	StackSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
@@ -39,8 +38,7 @@ export const crewIcons: Record<CrewKey, LucideIcon> = {
 	monitor: Activity,
 	moderator: Shield,
 	product: Compass,
-	languages: Languages,
-	curator: MessageSquareQuote,
+	library: Library,
 	growth: Sprout,
 }
 
@@ -61,26 +59,14 @@ export const workspaceQuery = (agent: CrewKey) =>
 		staleTime: Infinity,
 	})
 
-export const stackQuery = () =>
+// The Enterprise thread and the charter. The live socket keeps it current.
+export const enterpriseQuery = () =>
 	queryOptions({
-		queryKey: ['crew', 'stack'],
-		queryFn: async () => StackSchema.parse(await adminFetch('crew/stack')),
+		queryKey: ['crew', 'enterprise'],
+		queryFn: async () =>
+			EnterpriseSchema.parse(await adminFetch('crew/enterprise')),
 		staleTime: Infinity,
 	})
-
-export function useAnswerStack() {
-	return useMutation({
-		mutationFn: (input: {
-			id: number
-			actionId: string
-			note: string | null
-		}) =>
-			adminFetch(`crew/stack/${input.id}/answer`, {
-				method: 'POST',
-				json: { actionId: input.actionId, note: input.note },
-			}),
-	})
-}
 
 export function useForgetMemory(agent: CrewKey) {
 	return useMutation({
@@ -135,16 +121,24 @@ export const clefQuery = (text: string) =>
 		retry: false,
 	})
 
+const upsert = (messages: Array<CrewMessageType>, message: CrewMessageType) => {
+	const index = messages.findIndex((m) => m.id === message.id)
+	return index === -1 ? [...messages, message] : messages.with(index, message)
+}
+
+// Into whichever timeline the message belongs to.
 function upsertMessage(queryClient: QueryClient, message: CrewMessageType) {
-	queryClient.setQueryData(roomQuery().queryKey, (room) => {
-		if (!room) return room
-		const index = room.messages.findIndex((m) => m.id === message.id)
-		const messages =
-			index === -1
-				? [...room.messages, message]
-				: room.messages.with(index, message)
-		return { ...room, messages }
-	})
+	if (message.place === 'bridge') {
+		queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
+			thread
+				? { ...thread, messages: upsert(thread.messages, message) }
+				: thread
+		)
+	} else if (message.place === 'room') {
+		queryClient.setQueryData(roomQuery().queryKey, (room) =>
+			room ? { ...room, messages: upsert(room.messages, message) } : room
+		)
+	}
 }
 
 export function usePostToRoom() {
@@ -159,6 +153,20 @@ export function usePostToRoom() {
 				await adminFetch('crew/messages', {
 					method: 'POST',
 					json: input,
+				})
+			),
+		onSuccess: (message) => upsertMessage(queryClient, message),
+	})
+}
+
+export function usePostToEnterprise() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: async (body: string) =>
+			CrewMessageSchema.parse(
+				await adminFetch('crew/enterprise/messages', {
+					method: 'POST',
+					json: { body },
 				})
 			),
 		onSuccess: (message) => upsertMessage(queryClient, message),
@@ -190,14 +198,25 @@ export function useAnswerCard() {
 }
 
 // On leaving, the cached seenAt moves too, which clears the sidebar's unread
-// count. On arrival it must not: the room page reads the old value to draw
-// its "New since" line.
-export function markRoomSeen(queryClient: QueryClient, leaving: boolean) {
-	void adminFetch('crew/seen', { method: 'POST' }).then(() => {
+// count. On arrival it must not: the page reads the old value to draw its
+// "New since" line.
+export function markSeen(
+	queryClient: QueryClient,
+	place: 'room' | 'bridge',
+	leaving: boolean
+) {
+	void adminFetch('crew/seen', { method: 'POST', json: { place } }).then(() => {
 		if (!leaving) return
-		queryClient.setQueryData(roomQuery().queryKey, (room) =>
-			room ? { ...room, seenAt: new Date().toISOString() } : room
-		)
+		const seenAt = new Date().toISOString()
+		if (place === 'room') {
+			queryClient.setQueryData(roomQuery().queryKey, (room) =>
+				room ? { ...room, seenAt } : room
+			)
+		} else {
+			queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
+				thread ? { ...thread, seenAt } : thread
+			)
+		}
 	})
 }
 
@@ -219,7 +238,7 @@ export function useCrewLive() {
 			if (opened.current) {
 				for (const queryKey of [
 					roomQuery().queryKey,
-					stackQuery().queryKey,
+					enterpriseQuery().queryKey,
 					['crew', 'workspace'],
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
@@ -235,9 +254,9 @@ export function useCrewLive() {
 		onMessage: ({ data }: MessageEvent) => {
 			const event = JSON.parse(String(data)) as RoomEvent
 			if (event.type === 'message') upsertMessage(queryClient, event.message)
-			if (event.type === 'stack') {
+			if (event.type === 'charter') {
 				void queryClient.invalidateQueries({
-					queryKey: stackQuery().queryKey,
+					queryKey: enterpriseQuery().queryKey,
 				})
 			}
 			if (event.type === 'workspace') {

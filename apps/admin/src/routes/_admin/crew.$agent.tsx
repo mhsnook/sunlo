@@ -1,11 +1,7 @@
-import type { ReactNode } from 'react'
-import { createFileRoute, notFound } from '@tanstack/react-router'
+import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import { Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { crew, isCrewKey, meetingDue } from '../../../shared/crew'
-import { isWorking, roomQuery, stackQuery, workspaceQuery } from '~/lib/crew'
-import { CharterPanel } from '~/components/crew/charter-panel'
+import { bridgeKeys, crew, isCrewKey } from '../../../shared/crew'
+import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
 import { MemoryList } from '~/components/crew/memory-list'
 import { AgentChat } from '~/components/crew/agent-chat'
 import {
@@ -14,8 +10,8 @@ import {
 	ChangeCard,
 	CrewText,
 } from '~/components/crew/crew-parts'
-import { dayLabel } from '~/lib/format'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
+import { Empty, Section, TodoList } from '~/components/crew/workspace-parts'
 
 export const Route = createFileRoute('/_admin/crew/$agent')({
 	params: {
@@ -24,13 +20,12 @@ export const Route = createFileRoute('/_admin/crew/$agent')({
 			return { agent }
 		},
 	},
+	// Riker and Data live on the Enterprise.
+	beforeLoad: ({ params }) => {
+		if (bridgeKeys.includes(params.agent)) throw redirect({ to: '/enterprise' })
+	},
 	loader: ({ context, params }) =>
-		Promise.all([
-			context.queryClient.ensureQueryData(workspaceQuery(params.agent)),
-			params.agent === 'riker'
-				? context.queryClient.ensureQueryData(stackQuery())
-				: null,
-		]),
+		context.queryClient.ensureQueryData(workspaceQuery(params.agent)),
 	component: WorkspacePage,
 })
 
@@ -66,11 +61,9 @@ function WorkspacePage() {
 							data-testid="agent-not-started"
 						>
 							{member.name} has not started yet. Messages for {member.name} stay
-							in the crew room until it does.
+							in the Conference Room until it does.
 						</p>
 					)}
-
-					{agent === 'riker' && <CharterPanel />}
 
 					<Section title="Looks after">
 						<ul className="space-y-1">
@@ -82,43 +75,7 @@ function WorkspacePage() {
 
 					<Section title="To-do">
 						{workspace.todos.length ? (
-							<ul className="space-y-3" data-testid="agent-todos">
-								{workspace.todos.map((todo) => (
-									<li
-										key={todo.id}
-										className="flex gap-3"
-										data-testid="agent-todo"
-										data-key={todo.id}
-									>
-										<span
-											aria-label={todo.done ? 'Done' : 'Not done'}
-											className={cn(
-												'mt-0.5 grid size-5 shrink-0 place-items-center rounded border',
-												todo.done &&
-													'bg-primary-700 border-primary-700 text-paper'
-											)}
-										>
-											{todo.done && <Check className="size-3.5" />}
-										</span>
-										<span>
-											<span
-												className={cn(
-													todo.done && 'text-muted-foreground line-through'
-												)}
-											>
-												{todo.text}
-											</span>
-											{(todo.note || todo.doneAt) && (
-												<span className="text-muted-foreground block text-xs">
-													{todo.done && todo.doneAt
-														? `Done ${dayLabel(todo.doneAt)}`
-														: todo.note}
-												</span>
-											)}
-										</span>
-									</li>
-								))}
-							</ul>
+							<TodoList todos={workspace.todos} />
 						) : (
 							<Empty>Nothing on {member.name}'s list.</Empty>
 						)}
@@ -169,33 +126,8 @@ function WorkspacePage() {
 				</div>
 			</div>
 			{member.active && (
-				<AgentChat
-					key={agent}
-					agent={agent}
-					uid={session.user.id}
-					starter={
-						agent === 'riker' && room && meetingDue(room.weekly)
-							? {
-									label: 'Start the weekly meeting',
-									message: "Let's have our weekly meeting.",
-								}
-							: undefined
-					}
-				/>
+				<AgentChat key={agent} agent={agent} uid={session.user.id} />
 			)}
 		</div>
 	)
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-	return (
-		<section className="space-y-2">
-			<h2 className="text-muted-foreground text-sm font-semibold">{title}</h2>
-			{children}
-		</section>
-	)
-}
-
-function Empty({ children }: { children: ReactNode }) {
-	return <p className="text-muted-foreground text-sm">{children}</p>
 }

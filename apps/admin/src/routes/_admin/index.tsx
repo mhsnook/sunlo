@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import { adminAuthor, crew, crewKeys, crewList } from '../../../shared/crew'
-import { isWorking, markRoomSeen, roomQuery } from '~/lib/crew'
+import { isWorking, markSeen, roomQuery } from '~/lib/crew'
 import { AgentAvatar } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 import { OverviewPanel } from '~/components/crew/overview-panel'
@@ -18,8 +18,8 @@ export const Route = createFileRoute('/_admin/')({
 	loader: ({ context }) => context.queryClient.ensureQueryData(roomQuery()),
 	// Marks the room read on arrival and again on leaving, so messages that
 	// arrive while the admin is here do not count as unread afterwards.
-	onEnter: ({ context }) => markRoomSeen(context.queryClient, false),
-	onLeave: ({ context }) => markRoomSeen(context.queryClient, true),
+	onEnter: ({ context }) => markSeen(context.queryClient, 'room', false),
+	onLeave: ({ context }) => markSeen(context.queryClient, 'room', true),
 	component: CrewRoomPage,
 })
 
@@ -39,7 +39,7 @@ function CrewRoomPage() {
 					<MobileSidebarButton />
 					<AgentAvatar agent="crew" />
 					<div className="me-auto">
-						<h1 className="leading-tight font-semibold">The crew</h1>
+						<h1 className="leading-tight font-semibold">Conference Room</h1>
 						<p className="text-muted-foreground text-xs">
 							You and {active} agents, {crewList.length - active} more planned
 						</p>
@@ -97,11 +97,11 @@ function EmptyRoom() {
 					<AgentAvatar key={key} agent={key} size="sm" />
 				))}
 			</div>
-			<h2 className="text-xl font-semibold">The crew</h2>
+			<h2 className="text-xl font-semibold">Conference Room</h2>
 			<p className="text-muted-foreground text-sm">
-				Riker and Data are your bridge: ask them anything with @Riker or @Data,
-				and they bring what needs you to “Brought to you”. Product posts after
-				its daily run. A message that ends in “...” waits for your next one.
+				The whole crew reads this room. Write @ and a name to ask someone; Riker
+				and Data bring what needs you to the Enterprise. Product posts after its
+				daily run. A message that ends in “...” waits for your next one.
 			</p>
 		</div>
 	)
