@@ -154,6 +154,22 @@ export function usePostToEnterprise() {
 	})
 }
 
+export function useStartMeeting() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: async () =>
+			CrewMessageSchema.parse(
+				await adminFetch('crew/enterprise/meeting', { method: 'POST' })
+			),
+		onSuccess: (message) => {
+			upsertMessage(queryClient, message)
+			queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
+				thread ? { ...thread, meetingStartedAt: message.at } : thread
+			)
+		},
+	})
+}
+
 export function useCorrectRouting() {
 	const queryClient = useQueryClient()
 	return useMutation({
@@ -239,7 +255,7 @@ export function useCrewLive() {
 		onMessage: ({ data }: MessageEvent) => {
 			const event = JSON.parse(String(data)) as RoomEvent
 			if (event.type === 'message') upsertMessage(queryClient, event.message)
-			if (event.type === 'charter') {
+			if (event.type === 'enterprise') {
 				void queryClient.invalidateQueries({
 					queryKey: enterpriseQuery().queryKey,
 				})

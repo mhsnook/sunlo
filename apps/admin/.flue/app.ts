@@ -149,6 +149,16 @@ api.post(
 	}
 )
 
+api.post('/crew/enterprise/meeting', async (c) => {
+	const admin = c.get('admin')
+	const started = await (
+		await roomFor()
+	).startMeeting({ uid: admin.uid, name: admin.name })
+	if (!started) return c.json({ error: 'No weekly meeting is due' }, 409)
+	await wake(started.wake, admin.name)
+	return c.json(started.message)
+})
+
 api.patch(
 	'/crew/charter/:id',
 	numericId('No charter entry with that id'),

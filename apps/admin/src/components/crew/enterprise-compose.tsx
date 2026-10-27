@@ -3,13 +3,20 @@ import { Button } from '@/components/ui/button'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
 import { meetingDue, type WeeklyType } from '../../../shared/crew'
-import { usePostToEnterprise } from '~/lib/crew'
+import { usePostToEnterprise, useStartMeeting } from '~/lib/crew'
 
 // Riker answers unless the message names Data. While the weekly meeting is
-// due, one tap starts it.
-export function EnterpriseCompose({ weekly }: { weekly: WeeklyType }) {
+// due and not yet started, one tap starts it.
+export function EnterpriseCompose({
+	weekly,
+	meetingStartedAt,
+}: {
+	weekly: WeeklyType
+	meetingStartedAt: string | null
+}) {
 	const [draft, setDraft] = useState('')
 	const post = usePostToEnterprise()
+	const start = useStartMeeting()
 	const send = (body: string) =>
 		post.mutate(body, {
 			onSuccess: () => setDraft(''),
@@ -18,13 +25,17 @@ export function EnterpriseCompose({ weekly }: { weekly: WeeklyType }) {
 
 	return (
 		<div className="mx-auto w-full max-w-3xl space-y-2 px-4 pt-2 pb-3">
-			{meetingDue(weekly) && !draft && (
+			{meetingDue(weekly) && !meetingStartedAt && !draft && (
 				<Button
 					size="sm"
 					variant="soft"
-					disabled={post.isPending}
+					disabled={start.isPending}
 					data-testid="enterprise-start-meeting"
-					onClick={() => send("Let's have our weekly meeting.")}
+					onClick={() =>
+						start.mutate(undefined, {
+							onError: (error) => toastError(error.message),
+						})
+					}
 				>
 					Start the weekly meeting
 				</Button>

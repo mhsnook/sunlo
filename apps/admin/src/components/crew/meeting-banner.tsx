@@ -3,7 +3,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { meetingDue } from '../../../shared/crew'
-import { roomQuery } from '~/lib/crew'
+import { enterpriseQuery, roomQuery } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 
 // The weekly meeting's standing invitation. It shows from the moment Riker's
@@ -11,6 +11,7 @@ import { dayLabel } from '~/lib/format'
 // itself happens in the Enterprise thread.
 export function MeetingBanner() {
 	const { data: room } = useQuery(roomQuery())
+	const { data: thread } = useQuery(enterpriseQuery())
 	const onBridge = useRouterState({
 		select: (state) => state.location.pathname === '/enterprise',
 	})
@@ -25,12 +26,15 @@ export function MeetingBanner() {
 		>
 			<CalendarClock className="size-4 shrink-0" />
 			<span className="me-auto">
-				Riker’s brief is ready ({dayLabel(room.weekly.briefAt)}), and your
-				weekly meeting hasn’t happened yet.
+				{thread?.meetingStartedAt
+					? 'Your weekly meeting with Riker is under way.'
+					: `Riker’s brief is ready (${dayLabel(room.weekly.briefAt)}), and your weekly meeting hasn’t happened yet.`}
 			</span>
 			<Button size="sm" asChild>
 				<Link to="/enterprise" data-testid="crew-go-to-meeting">
-					Go to the meeting
+					{thread?.meetingStartedAt
+						? 'Back to the meeting'
+						: 'Go to the meeting'}
 				</Link>
 			</Button>
 		</aside>

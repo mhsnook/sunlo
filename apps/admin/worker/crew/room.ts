@@ -207,6 +207,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null
 			);
 			create table if not exists agent_wake (at text not null);
+			-- When the admin started the meeting for each week's brief.
+			create table if not exists meeting (
+				brief_at text primary key,
+				started_at text not null
+			);
 			-- The room messages delivered to an agent's current run.
 			create table if not exists run_message (
 				agent text not null,
@@ -246,6 +251,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			messages: this.latestRows('bridge', SNAPSHOT_MESSAGES).map(toMessage),
 			charter: this.charter(),
 			seenAt: this.seenAt(uid, 'bridge'),
+			meetingStartedAt: this.meetingStartedAt(),
 		}
 	}
 
@@ -516,7 +522,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			this.sql`
 				update charter set status = ${keep ? 'kept' : 'dropped'}, kept_at = ${keep ? at : null}
 				where id = ${ref}`
-			this.push({ type: 'charter' })
+			this.push({ type: 'enterprise' })
 		}
 		this.push({ type: 'message', message: { ...message, answer } })
 		this.push({ type: 'workspace', agent })
@@ -767,7 +773,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			insert into charter (kind, text, why, status, at)
 			values (${input.kind}, ${input.text}, ${input.why}, 'proposed', ${now()})
 			returning id`[0]
-		this.push({ type: 'charter' })
+		this.push({ type: 'enterprise' })
 		return this.bringToAdmin({
 			author: input.author,
 			kind: 'charter',
@@ -791,7 +797,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			update charter set text = ${change.text ?? row.text}, status = ${change.status ?? row.status}, kept_at = ${change.status === 'kept' ? now() : row.kept_at}
 			where id = ${id}`
-		this.push({ type: 'charter' })
+		this.push({ type: 'enterprise' })
 		return true
 	}
 
@@ -815,8 +821,34 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return id
 	}
 
+	// The admin starting the weekly meeting: Riker takes it from here, and the
+	// meeting counts as started until he closes it.
+	startMeeting(input: { uid: string; name: string }) {
+		const { briefAt } = this.weekly()
+		if (!briefAt || !meetingDue(this.weekly())) return null
+		this.sql`
+			insert or ignore into meeting (brief_at, started_at)
+			values (${briefAt}, ${now()})`
+		this.push({ type: 'enterprise' })
+		return this.postToEnterprise({
+			...input,
+			body: "Let's have our weekly meeting.",
+		})
+	}
+
 	closeMeeting() {
 		this.setWeekly({ meetingAt: now() })
+		this.push({ type: 'enterprise' })
+	}
+
+	private meetingStartedAt() {
+		const { briefAt } = this.weekly()
+		if (!briefAt || !meetingDue(this.weekly())) return null
+		return (
+			this.sql<{ started_at: string }>`
+				select started_at from meeting where brief_at = ${briefAt}`[0]
+				?.started_at ?? null
+		)
 	}
 
 	// ---- Internals ----------------------------------------------------------
@@ -1098,9 +1130,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			)
 			.join('\n')
 		const weekly = this.weekly()
-		const meeting = meetingDue(weekly)
-			? `The weekly meeting is due: Riker wrote the brief at ${stamp(weekly.briefAt ?? now())}, and the admin has not met with Riker since. It comes before anything else. Something truly critical becomes item 1 of the meeting; it does not replace the meeting.`
-			: `The last weekly meeting was ${weekly.meetingAt ? stamp(weekly.meetingAt) : 'never'}.`
+		const startedAt = this.meetingStartedAt()
+		const meeting = startedAt
+			? `The weekly meeting is in progress in the Enterprise thread: the admin started it at ${stamp(startedAt)}. Go through the agenda one item at a time, and call close_meeting with the minutes when it is done.`
+			: meetingDue(weekly)
+				? `The weekly meeting is due: Riker wrote the brief at ${stamp(weekly.briefAt ?? now())}, and the admin has not met with Riker since. It comes before anything else. Something truly critical becomes item 1 of the meeting; it does not replace the meeting.`
+				: `The last weekly meeting was ${weekly.meetingAt ? stamp(weekly.meetingAt) : 'never'}.`
 		return [
 			'## The charter: what the admin has told the bridge about themselves',
 			kept || '(nothing kept yet)',

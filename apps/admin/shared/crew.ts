@@ -301,6 +301,8 @@ export const EnterpriseSchema = z.object({
 	messages: z.array(CrewMessageSchema),
 	charter: z.array(CharterEntrySchema),
 	seenAt: z.string().nullable(),
+	// Set while this week's meeting is under way.
+	meetingStartedAt: z.string().nullable(),
 })
 export type EnterpriseType = z.infer<typeof EnterpriseSchema>
 
@@ -318,4 +320,5 @@ export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
 	| { type: 'workspace'; agent: CrewKey }
-	| { type: 'charter' }
+	// The Enterprise snapshot changed: the charter, or the meeting.
+	| { type: 'enterprise' }

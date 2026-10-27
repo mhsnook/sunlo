@@ -88,7 +88,10 @@ function EnterprisePage() {
 						</MessageMarker>
 					)}
 				</MessageScroller>
-				<EnterpriseCompose weekly={room.weekly} />
+				<EnterpriseCompose
+					weekly={room.weekly}
+					meetingStartedAt={thread.meetingStartedAt}
+				/>
 			</section>
 			{logOpen && (
 				<div
