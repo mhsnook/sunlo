@@ -1,17 +1,20 @@
 import { accessToken, signOutHere } from './session'
 
 // The admin Worker (apps/admin/worker) answers /api on this origin. It checks
-// the token and the admin_user table itself.
+// the token and the admin_user table itself. A JSON body goes as `json`; any
+// other body, such as a recording, as `body` with its own type.
 export async function adminRequest(
 	path: string,
-	init: { method?: string; body?: BodyInit; contentType?: string } = {}
+	init: { method?: string; json?: unknown; body?: Blob } = {}
 ) {
+	const contentType =
+		init.json !== undefined ? 'application/json' : init.body?.type
 	const res = await fetch(`/api/${path}`, {
 		method: init.method,
-		body: init.body,
+		body: init.json !== undefined ? JSON.stringify(init.json) : init.body,
 		headers: {
 			authorization: `Bearer ${await accessToken()}`,
-			...(init.contentType ? { 'content-type': init.contentType } : {}),
+			...(contentType ? { 'content-type': contentType } : {}),
 		},
 	})
 	// The Worker asks the auth server, which can end a session that this
@@ -26,15 +29,7 @@ export async function adminRequest(
 	return res
 }
 
-export async function adminFetch(
+export const adminFetch = async (
 	path: string,
 	init: { method?: string; json?: unknown } = {}
-) {
-	const res = await adminRequest(path, {
-		method: init.method,
-		...(init.json === undefined
-			? {}
-			: { body: JSON.stringify(init.json), contentType: 'application/json' }),
-	})
-	return res.json() as Promise<unknown>
-}
+) => (await adminRequest(path, init)).json() as Promise<unknown>

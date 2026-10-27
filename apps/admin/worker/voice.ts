@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { isCrewKey, MAX_SPEECH_CHARS, type CrewKey } from '../shared/crew'
+import { crewKeys, MAX_SPEECH_CHARS, type CrewKey } from '../shared/crew'
 import type { AppEnv } from './api'
 
 type Speaker = NonNullable<Ai_Cf_Deepgram_Aura_2_En_Input['speaker']>
 
 // Each agent speaks in its own Deepgram Aura 2 voice.
-export const voices: Record<CrewKey, Speaker> = {
+const voices: Record<CrewKey, Speaker> = {
 	riker: 'orion',
 	data: 'arcas',
 	product: 'athena',
@@ -19,11 +19,7 @@ export const voices: Record<CrewKey, Speaker> = {
 // Push-to-talk clips are seconds long; this only stops a runaway upload.
 const MAX_AUDIO_BYTES = 20 * 1024 * 1024
 
-export async function transcribe(
-	ai: Ai,
-	audio: ReadableStream,
-	contentType: string
-) {
+async function transcribe(ai: Ai, audio: ReadableStream, contentType: string) {
 	const result = await ai.run('@cf/deepgram/nova-3', {
 		audio: { body: audio, contentType },
 		smart_format: true,
@@ -32,7 +28,7 @@ export async function transcribe(
 	return result.results?.channels?.[0]?.alternatives?.[0]?.transcript ?? ''
 }
 
-export function speak(ai: Ai, text: string, agent: CrewKey) {
+function speak(ai: Ai, text: string, agent: CrewKey) {
 	return ai.run(
 		'@cf/deepgram/aura-2-en',
 		{ text, speaker: voices[agent], encoding: 'mp3' },
@@ -60,10 +56,10 @@ export const voiceRoutes = new Hono<AppEnv>()
 		const body = z
 			.object({
 				text: z.string().trim().min(1).max(MAX_SPEECH_CHARS),
-				agent: z.string(),
+				agent: z.enum(crewKeys),
 			})
 			.safeParse(await c.req.json().catch(() => null))
-		if (!body.success || !isCrewKey(body.data.agent)) {
+		if (!body.success) {
 			return c.json({ error: 'Send { text, agent }' }, 400)
 		}
 		const audio = await speak(c.env.AI, body.data.text, body.data.agent)

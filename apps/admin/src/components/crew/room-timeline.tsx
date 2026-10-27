@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react'
+import { Fragment } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,7 +18,7 @@ import {
 	bridgeKeys,
 	crew,
 	isCrewKey,
-	type CrewKey,
+	speakerOf,
 	type CrewMessageType,
 } from '../../../shared/crew'
 import {
@@ -30,7 +30,8 @@ import {
 } from './crew-parts'
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { RoutingMenu, routingNote } from './routing-menu'
-import { ReadAloudButton, useReadNewReplies } from './voice-controls'
+import { SpeakableBubble } from './voice-controls'
+import { useReadOnArrival } from '~/lib/voice'
 import { useCorrectRouting } from '~/lib/crew'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
@@ -67,7 +68,12 @@ export function RoomTimeline({
 	// Draw "New since …" before the first message from someone else after this.
 	newSince: string | null
 }) {
-	useReadNewReplies(messages)
+	useReadOnArrival(
+		messages.flatMap((message) => {
+			const agent = speakerOf(message)
+			return agent ? [{ id: message.id, text: message.body, agent }] : []
+		})
+	)
 	const firstNew = newSince
 		? messages.find((m) => m.at > newSince && m.author !== myAuthor)?.id
 		: undefined
@@ -132,6 +138,7 @@ function AuthorGroup({
 			{messages.map((message, index) => {
 				const last = index === messages.length - 1
 				const asksYou = !!message.card && message.card.kind === 'question'
+				const blocks = hasBlocks(message.body)
 				return (
 					<Message
 						key={message.id}
@@ -173,8 +180,10 @@ function AuthorGroup({
 								<BridgeCard message={message} />
 							) : (
 								<SpeakableBubble
-									message={message}
-									agent={agent && !message.receipt ? agent : null}
+									id={message.id}
+									text={message.body}
+									agent={speakerOf(message)}
+									blocks={blocks}
 								>
 									<Bubble
 										variant={
@@ -182,14 +191,14 @@ function AuthorGroup({
 												? 'primary'
 												: asksYou && !message.answer
 													? 'soft'
-													: hasBlocks(message.body)
+													: blocks
 														? 'outline'
 														: 'muted'
 										}
 										align={mine ? 'end' : 'start'}
 										className={cn(
 											'min-w-0 whitespace-normal',
-											hasBlocks(message.body) && 'w-full max-w-2xl'
+											blocks && 'w-full max-w-2xl'
 										)}
 									>
 										<CrewText text={message.body} />
@@ -212,38 +221,6 @@ function AuthorGroup({
 				)
 			})}
 		</MessageGroup>
-	)
-}
-
-// An agent's bubble, with a button beside it that reads it aloud. It shows on
-// hover, and always on a touch screen.
-function SpeakableBubble({
-	message,
-	agent,
-	children,
-}: {
-	message: CrewMessageType
-	agent: CrewKey | null
-	children: ReactNode
-}) {
-	if (!agent) return children
-	return (
-		<div
-			className={cn(
-				'group/speech flex items-end gap-1',
-				hasBlocks(message.body)
-					? 'w-full'
-					: 'max-w-[80%] *:data-[slot=bubble]:max-w-full'
-			)}
-		>
-			{children}
-			<ReadAloudButton
-				id={message.id}
-				text={message.body}
-				agent={agent}
-				className="shrink-0 opacity-0 group-hover/speech:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
-			/>
-		</div>
 	)
 }
 

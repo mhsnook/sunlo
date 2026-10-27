@@ -46,15 +46,7 @@ export function EnterpriseCompose({
 				onValueChange={setDraft}
 				onSend={send}
 				busy={post.isPending}
-				startSlot={
-					<VoiceControls
-						onText={(text) =>
-							setDraft((current) =>
-								current.trim() ? `${current.trimEnd()} ${text}` : text
-							)
-						}
-					/>
-				}
+				startSlot={<VoiceControls setDraft={setDraft} />}
 				placeholder="Message Riker, or @Data"
 				inputTestId="enterprise-compose-input"
 				sendTestId="enterprise-compose-send"

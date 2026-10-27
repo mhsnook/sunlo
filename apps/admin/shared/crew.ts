@@ -232,6 +232,11 @@ export const CrewMessageSchema = z.object({
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
+// The agent who speaks a message: null for the admin's own messages and for
+// the room's receipts.
+export const speakerOf = (message: CrewMessageType): CrewKey | null =>
+	isCrewKey(message.author) && !message.receipt ? message.author : null
+
 export const AgentStatusSchema = z.object({
 	state: z.enum(['idle', 'working']),
 	since: z.string(),

@@ -1,4 +1,6 @@
-import { useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { z } from 'zod'
 import { toastError } from '@/components/ui/sonner'
 import type { CrewKey } from '../../shared/crew'
@@ -55,7 +57,6 @@ async function transcribe(audio: Blob) {
 	const res = await adminRequest('voice/transcribe', {
 		method: 'POST',
 		body: audio,
-		contentType: audio.type,
 	})
 	return z
 		.object({ text: z.string() })
@@ -63,71 +64,101 @@ async function transcribe(audio: Blob) {
 		.text.trim()
 }
 
+// Dictation joins the draft after a space, so talking twice adds a sentence.
+export const appendDictation = (draft: string, text: string) =>
+	draft.trim() ? `${draft.trimEnd()} ${text}` : text
+
 // ---- Text to speech -------------------------------------------------------
 
-// One voice speaks at a time. Pressing play on a message stops whatever is
-// speaking; replies read aloud on arrival wait their turn in the queue.
 type Speech = { id: string; text: string; agent: CrewKey }
 
-let playing: string | null = null
-let audio: HTMLAudioElement | null = null
-const queue: Array<Speech> = []
-const listeners = new Set<() => void>()
+// What is speaking, and whether replies are read aloud on arrival. Only the
+// second outlives the page.
+type VoiceState = { playing: string | null; voiceReplies: boolean }
 
-function setPlaying(id: string | null) {
-	playing = id
-	for (const listener of listeners) listener()
+const useVoice = create<VoiceState>()(
+	persist((): VoiceState => ({ playing: null, voiceReplies: false }), {
+		name: 'sunlo-admin-voice',
+		partialize: (state) => ({ voiceReplies: state.voiceReplies }),
+	})
+)
+
+export const useIsSpeaking = (id: string) =>
+	useVoice((state) => state.playing === id)
+export const useVoiceReplies = () => useVoice((state) => state.voiceReplies)
+
+export function setVoiceReplies(on: boolean) {
+	useVoice.setState({ voiceReplies: on })
+	if (!on) stopSpeech()
 }
 
-export function useSpeaking() {
-	return useSyncExternalStore(
-		(listener) => {
-			listeners.add(listener)
-			return () => listeners.delete(listener)
-		},
-		() => playing
-	)
+// The last few clips, by message id, so a replay costs no second request.
+// A queued reply starts loading here as soon as it is queued.
+const clips = new Map<string, Promise<Blob>>()
+const CLIPS_KEPT = 10
+
+// `words` is the text already made speakable.
+function loadClip(id: string, words: string, agent: CrewKey) {
+	let clip = clips.get(id)
+	if (!clip) {
+		clip = adminRequest('voice/speak', {
+			method: 'POST',
+			json: { text: words, agent },
+		}).then((res) => res.blob())
+		clip.catch(() => clips.delete(id))
+		clips.set(id, clip)
+		const oldest = clips.keys().next().value
+		if (clips.size > CLIPS_KEPT && oldest) clips.delete(oldest)
+	}
+	return { id, clip }
+}
+
+// One voice speaks at a time. Play on a message stops whatever is speaking;
+// replies read on arrival wait their turn.
+const queue: Array<{ id: string; clip: Promise<Blob> }> = []
+let current: { audio: HTMLAudioElement; url: string } | null = null
+
+function release() {
+	if (!current) return
+	current.audio.pause()
+	URL.revokeObjectURL(current.url)
+	current = null
 }
 
 export function stopSpeech() {
 	queue.length = 0
-	audio?.pause()
-	audio = null
-	setPlaying(null)
+	release()
+	useVoice.setState({ playing: null })
 }
 
-export function speakNow(speech: Speech) {
+export function speakNow({ id, text, agent }: Speech) {
 	stopSpeech()
-	void play(speech)
+	const words = speakable(text)
+	if (words) void play(loadClip(id, words, agent))
 }
 
-export function speakInTurn(speech: Speech) {
-	if (playing) queue.push(speech)
-	else void play(speech)
+export function speakInTurn({ id, text, agent }: Speech) {
+	const words = speakable(text)
+	if (!words) return
+	const item = loadClip(id, words, agent)
+	if (useVoice.getState().playing) queue.push(item)
+	else void play(item)
 }
 
-async function play(speech: Speech) {
-	const text = speakable(speech.text)
-	if (!text) return playNext()
-	setPlaying(speech.id)
+async function play({ id, clip }: { id: string; clip: Promise<Blob> }) {
+	useVoice.setState({ playing: id })
 	try {
-		const res = await adminRequest('voice/speak', {
-			method: 'POST',
-			body: JSON.stringify({ text, agent: speech.agent }),
-			contentType: 'application/json',
+		const blob = await clip
+		// Stopped, or replaced by another message, while the clip loaded.
+		if (useVoice.getState().playing !== id) return
+		const audio = new Audio(URL.createObjectURL(blob))
+		current = { audio, url: audio.src }
+		audio.addEventListener('ended', () => {
+			if (current?.audio === audio) playNext()
 		})
-		const url = URL.createObjectURL(await res.blob())
-		// Stopped, or replaced by another message, while the audio loaded.
-		if (playing !== speech.id) return URL.revokeObjectURL(url)
-		const sound = new Audio(url)
-		sound.onended = () => {
-			URL.revokeObjectURL(url)
-			if (audio === sound) playNext()
-		}
-		audio = sound
-		await sound.play()
+		await audio.play()
 	} catch (error) {
-		if (playing === speech.id) {
+		if (useVoice.getState().playing === id) {
 			toastError((error as Error).message)
 			playNext()
 		}
@@ -135,43 +166,27 @@ async function play(speech: Speech) {
 }
 
 function playNext() {
-	audio = null
+	release()
 	const next = queue.shift()
 	if (next) void play(next)
-	else setPlaying(null)
+	else useVoice.setState({ playing: null })
 }
 
-// ---- Voice replies --------------------------------------------------------
-
-// Whether new replies are read aloud as they arrive, remembered per browser.
-const VOICE_REPLIES_KEY = 'sunlo-admin-voice-replies'
-let voiceReplies = (() => {
-	try {
-		return localStorage.getItem(VOICE_REPLIES_KEY) === 'on'
-	} catch {
-		return false
-	}
-})()
-const voiceListeners = new Set<() => void>()
-
-export function setVoiceReplies(on: boolean) {
-	voiceReplies = on
-	try {
-		localStorage.setItem(VOICE_REPLIES_KEY, on ? 'on' : 'off')
-	} catch {
-		// Storage can be refused, as in a private window; the choice then
-		// lasts until the page reloads.
-	}
-	if (!on) stopSpeech()
-	for (const listener of voiceListeners) listener()
-}
-
-export function useVoiceReplies() {
-	return useSyncExternalStore(
-		(listener) => {
-			voiceListeners.add(listener)
-			return () => voiceListeners.delete(listener)
-		},
-		() => voiceReplies
-	)
+// Reads each finished reply that arrives while the page is open, when voice
+// replies are on. Replies already there when `ready` turns true stay quiet.
+export function useReadOnArrival(replies: Array<Speech>, ready = true) {
+	const voiceReplies = useVoiceReplies()
+	const seen = useRef<Set<string> | null>(null)
+	useEffect(() => {
+		if (!ready) return
+		if (!seen.current) {
+			seen.current = new Set(replies.map((reply) => reply.id))
+			return
+		}
+		for (const reply of replies) {
+			if (seen.current.has(reply.id)) continue
+			seen.current.add(reply.id)
+			if (voiceReplies) speakInTurn(reply)
+		}
+	}, [replies, ready, voiceReplies])
 }

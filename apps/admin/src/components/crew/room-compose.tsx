@@ -82,15 +82,7 @@ export function RoomCompose() {
 				}}
 				onSend={send}
 				busy={post.isPending}
-				startSlot={
-					<VoiceControls
-						onText={(text) =>
-							setDraft((current) =>
-								current.trim() ? `${current.trimEnd()} ${text}` : text
-							)
-						}
-					/>
-				}
+				startSlot={<VoiceControls setDraft={setDraft} />}
 				placeholder="Message the crew, or @ someone"
 				inputTestId="crew-compose-input"
 				sendTestId="crew-compose-send"

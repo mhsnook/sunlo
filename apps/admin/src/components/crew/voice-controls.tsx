@@ -1,26 +1,28 @@
-import { useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import { Loader2, Mic, Square, Volume2, VolumeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import type { CrewKey } from '../../../shared/crew'
 import {
-	isCrewKey,
-	type CrewKey,
-	type CrewMessageType,
-} from '../../../shared/crew'
-import {
+	appendDictation,
 	setVoiceReplies,
-	speakInTurn,
 	speakNow,
 	stopSpeech,
 	useDictation,
-	useSpeaking,
+	useIsSpeaking,
 	useVoiceReplies,
 } from '~/lib/voice'
 
-// The mic and the voice-replies toggle, for a compose bar's start slot.
-// What the admin says lands in the draft, to read before sending.
-export function VoiceControls({ onText }: { onText: (text: string) => void }) {
-	const dictation = useDictation(onText)
+// The mic and the voice-replies toggle, for a compose bar's start slot. What
+// the admin says joins the draft, to read before sending.
+export function VoiceControls({
+	setDraft,
+}: {
+	setDraft: (update: (draft: string) => string) => void
+}) {
+	const dictation = useDictation((text) =>
+		setDraft((draft) => appendDictation(draft, text))
+	)
 	const voiceReplies = useVoiceReplies()
 	return (
 		<>
@@ -69,19 +71,46 @@ export function VoiceControls({ onText }: { onText: (text: string) => void }) {
 	)
 }
 
-// Plays one message, or stops it while it speaks.
-export function ReadAloudButton({
+// An agent's bubble with a button beside it that reads it aloud, shown on
+// hover and always on a touch screen. Anything else renders as it is.
+export function SpeakableBubble({
 	id,
 	text,
 	agent,
-	className,
+	blocks,
+	children,
+}: {
+	id: string
+	text: string
+	agent: CrewKey | null
+	// A bubble with a chart or other block spans the full width.
+	blocks: boolean
+	children: ReactNode
+}) {
+	if (!agent) return children
+	return (
+		<div
+			className={cn(
+				'group/speech flex items-end gap-1',
+				blocks ? 'w-full' : 'max-w-[80%] *:data-[slot=bubble]:max-w-full'
+			)}
+		>
+			{children}
+			<ReadAloudButton id={id} text={text} agent={agent} />
+		</div>
+	)
+}
+
+function ReadAloudButton({
+	id,
+	text,
+	agent,
 }: {
 	id: string
 	text: string
 	agent: CrewKey
-	className?: string
 }) {
-	const speaking = useSpeaking() === id
+	const speaking = useIsSpeaking(id)
 	return (
 		<Button
 			type="button"
@@ -90,34 +119,13 @@ export function ReadAloudButton({
 			aria-label={speaking ? 'Stop reading' : 'Read aloud'}
 			data-testid="voice-read"
 			data-key={id}
-			className={cn('size-7', className, speaking && 'opacity-100')}
+			className={cn(
+				'size-7 shrink-0 opacity-0 group-hover/speech:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100',
+				speaking && 'opacity-100'
+			)}
 			onClick={() => (speaking ? stopSpeech() : speakNow({ id, text, agent }))}
 		>
 			{speaking ? <Square /> : <Volume2 />}
 		</Button>
 	)
-}
-
-// Reads each agent message that arrives while the page is open, when voice
-// replies are on. Messages already on the page when it opened stay quiet.
-export function useReadNewReplies(messages: Array<CrewMessageType>) {
-	const voiceReplies = useVoiceReplies()
-	const seen = useRef<Set<string> | null>(null)
-	useEffect(() => {
-		if (!seen.current) {
-			seen.current = new Set(messages.map((message) => message.id))
-			return
-		}
-		for (const message of messages) {
-			if (seen.current.has(message.id)) continue
-			seen.current.add(message.id)
-			if (voiceReplies && isCrewKey(message.author) && !message.receipt) {
-				speakInTurn({
-					id: message.id,
-					text: message.body,
-					agent: message.author,
-				})
-			}
-		}
-	}, [messages, voiceReplies])
 }

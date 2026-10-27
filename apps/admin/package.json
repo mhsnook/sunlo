@@ -31,7 +31,8 @@
 		"recharts": "^3.7.0",
 		"unist-util-visit": "^5.0.0",
 		"valibot": "^1.5.0",
-		"zod": "^4.3.6"
+		"zod": "^4.3.6",
+		"zustand": "^5.0.9"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.29.0",

@@ -19,7 +19,6 @@ export function speakable(markdown: string) {
 function spoken(node: Nodes): string {
 	switch (node.type) {
 		case 'text':
-			return node.value
 		case 'inlineCode':
 			return node.value
 		case 'code':
@@ -28,10 +27,6 @@ function spoken(node: Nodes): string {
 				: ''
 		case 'table':
 			return '\nThere is a table in the message.\n'
-		case 'image':
-		case 'html':
-		case 'thematicBreak':
-			return ''
 		case 'break':
 			return '\n'
 		case 'paragraph':
@@ -39,6 +34,7 @@ function spoken(node: Nodes): string {
 		case 'listItem':
 		case 'blockquote':
 			return `\n${node.children.map(spoken).join('')}\n`
+		// Images, HTML and rules have no words, and no children.
 		default:
 			return 'children' in node ? node.children.map(spoken).join('') : ''
 	}
