@@ -153,10 +153,13 @@ export const isCrewKey = (value: string): value is CrewKey =>
 // A message's author: a crew key, or this for an admin.
 export const adminAuthor = (uid: string) => `admin:${uid}`
 
-// Every @name in the text that names a crew member, in roster order.
+// Every @name in the text that names a crew member, in roster order. The @
+// must start a word, so the domain of an email address is not a mention.
 export function mentionedCrew(text: string): Array<CrewKey> {
 	const names = new Set(
-		[...text.matchAll(/@([a-z]+)/gi)].map((match) => match[1].toLowerCase())
+		[...text.matchAll(/(?<![\w.])@([a-z]+)/gi)].map((match) =>
+			match[1].toLowerCase()
+		)
 	)
 	return crewKeys.filter((key) => names.has(key))
 }

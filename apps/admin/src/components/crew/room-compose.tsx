@@ -22,7 +22,13 @@ export function RoomCompose() {
 		...clefQuery(settled),
 		enabled: !!settled && !rule && settled === text,
 	})
-	const predicted = rule ?? (settled === text ? clef.data : undefined) ?? null
+	// When CLEF fails, the message stays in the room, as the server decides too.
+	const predicted =
+		rule ??
+		(settled === text ? clef.data : undefined) ??
+		(clef.isError
+			? { kind: 'room' as const, agents: [], by: 'model' as const }
+			: null)
 	// "..." always stacks; the chip cannot change that.
 	const locked = rule?.kind === 'stack'
 	const routing = locked ? predicted : (override ?? predicted)

@@ -18,6 +18,10 @@ describe('the fixed CLEF rules', () => {
 			'product',
 		])
 	})
+
+	it('does not read the domain of an email address as a mention', () => {
+		expect(mentionedCrew('write to sam@product.io and @data')).toEqual(['data'])
+	})
 })
 
 describe('parseClefReply', () => {

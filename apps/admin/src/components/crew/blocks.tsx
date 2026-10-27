@@ -201,9 +201,11 @@ function TableBlock({ table }: { table: TableBlockType }) {
 		table.sortBy ? { key: table.sortBy, descending: true } : null
 	)
 	const needle = filter.trim().toLowerCase()
+	// A row's position in the block is its identity through filtering and sorting.
 	const rows = table.rows
+		.map((row, position) => ({ row, position }))
 		.filter(
-			(row) =>
+			({ row }) =>
 				!needle ||
 				table.columns.some((column) =>
 					String(row[column.key] ?? '')
@@ -212,7 +214,9 @@ function TableBlock({ table }: { table: TableBlockType }) {
 				)
 		)
 		.toSorted((a, b) =>
-			sort ? compare(a[sort.key], b[sort.key]) * (sort.descending ? -1 : 1) : 0
+			sort
+				? compare(a.row[sort.key], b.row[sort.key]) * (sort.descending ? -1 : 1)
+				: 0
 		)
 	return (
 		<figure
@@ -284,8 +288,8 @@ function TableBlock({ table }: { table: TableBlockType }) {
 						</tr>
 					</thead>
 					<tbody>
-						{rows.map((row, index) => (
-							<tr key={index} className="border-t">
+						{rows.map(({ row, position }) => (
+							<tr key={position} className="border-t">
 								{table.columns.map((column) => (
 									<td
 										key={column.key}

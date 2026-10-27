@@ -83,7 +83,12 @@ api.post(
 			name: c.get('admin').name,
 		})
 		if (!result.ok) return c.json({ error: result.error }, result.status)
-		await deliver(result.agent, result.conversation, 'crew.answer', result.body)
+		await deliver(
+			result.agent,
+			result.conversation,
+			'crew.answer',
+			result.body
+		).catch(logFailedDelivery)
 		return c.json({ ok: true })
 	}
 )
@@ -154,7 +159,9 @@ api.post(
 		})
 		if (!result.ok) return c.json({ error: result.error }, result.status)
 		if (result.wake) {
-			await deliver(result.author, TEAM, 'crew.answer', result.body)
+			await deliver(result.author, TEAM, 'crew.answer', result.body).catch(
+				logFailedDelivery
+			)
 		}
 		return c.json({ ok: true })
 	}
@@ -212,6 +219,12 @@ for (const [key, agent] of Object.entries(crewAgents())) {
 }
 
 export default api
+
+// The answer is already saved, so a dispatch that fails must not become a
+// 500 that invites the admin to answer again.
+function logFailedDelivery(error: unknown) {
+	console.error('Could not deliver an answer to its agent', error)
+}
 
 function isTimeZone(timezone: string) {
 	try {

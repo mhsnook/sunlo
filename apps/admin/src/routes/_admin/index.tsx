@@ -30,6 +30,7 @@ function CrewRoomPage() {
 	const [newSince] = useState(room.seenAt)
 	const [overviewOpen, setOverviewOpen] = useState(false)
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
+	const active = crewList.filter((member) => member.active).length
 
 	return (
 		<div className="flex h-full min-h-0">
@@ -40,7 +41,7 @@ function CrewRoomPage() {
 					<div className="me-auto">
 						<h1 className="leading-tight font-semibold">The crew</h1>
 						<p className="text-muted-foreground text-xs">
-							You and {crewList.length} agents
+							You and {active} agents, {crewList.length - active} more planned
 						</p>
 					</div>
 					<Button

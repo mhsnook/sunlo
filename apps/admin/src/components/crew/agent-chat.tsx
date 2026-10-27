@@ -152,6 +152,11 @@ function ChatMessage({
 	agent: CrewKey
 }) {
 	const mine = message.role === 'user'
+	// A text part has no id of its own; its position in the message is stable.
+	const parts = message.parts.map((part, position) => ({
+		part,
+		key: part.type === 'dynamic-tool' ? part.toolCallId : `text-${position}`,
+	}))
 	return (
 		<Message
 			align={mine ? 'end' : 'start'}
@@ -164,11 +169,11 @@ function ChatMessage({
 				</MessageAvatar>
 			)}
 			<MessageContent>
-				{message.parts.map((part, index) => {
+				{parts.map(({ part, key }) => {
 					if (part.type === 'text' && part.text.trim()) {
 						return (
 							<Bubble
-								key={index}
+								key={key}
 								variant={
 									mine ? 'primary' : hasBlocks(part.text) ? 'outline' : 'muted'
 								}
@@ -183,7 +188,7 @@ function ChatMessage({
 						)
 					}
 					if (part.type === 'dynamic-tool') {
-						return <ToolNote key={part.toolCallId} part={part} agent={agent} />
+						return <ToolNote key={key} part={part} agent={agent} />
 					}
 					return null
 				})}
