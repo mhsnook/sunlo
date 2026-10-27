@@ -11,6 +11,7 @@ import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
 import { fixedRouting, type RoutingType } from '../../../shared/crew'
 import { usePostToRoom } from '~/lib/crew'
+import { VoiceControls } from './voice-controls'
 import { RoutingMenu, routingNote } from './routing-menu'
 
 // While the admin types, the chip shows only what is certain: "..." stacks
@@ -81,6 +82,7 @@ export function RoomCompose() {
 				}}
 				onSend={send}
 				busy={post.isPending}
+				startSlot={<VoiceControls setDraft={setDraft} />}
 				placeholder="Message the crew, or @ someone"
 				inputTestId="crew-compose-input"
 				sendTestId="crew-compose-send"

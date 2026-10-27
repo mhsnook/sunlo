@@ -18,6 +18,7 @@ import {
 	bridgeKeys,
 	crew,
 	isCrewKey,
+	speakerOf,
 	type CrewMessageType,
 } from '../../../shared/crew'
 import {
@@ -29,6 +30,8 @@ import {
 } from './crew-parts'
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { RoutingMenu, routingNote } from './routing-menu'
+import { SpeakableBubble } from './voice-controls'
+import { useReadOnArrival } from '~/lib/voice'
 import { useCorrectRouting } from '~/lib/crew'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
@@ -65,6 +68,12 @@ export function RoomTimeline({
 	// Draw "New since …" before the first message from someone else after this.
 	newSince: string | null
 }) {
+	useReadOnArrival(
+		messages.flatMap((message) => {
+			const agent = speakerOf(message)
+			return agent ? [{ id: message.id, text: message.body, agent }] : []
+		})
+	)
 	const firstNew = newSince
 		? messages.find((m) => m.at > newSince && m.author !== myAuthor)?.id
 		: undefined
@@ -129,6 +138,7 @@ function AuthorGroup({
 			{messages.map((message, index) => {
 				const last = index === messages.length - 1
 				const asksYou = !!message.card && message.card.kind === 'question'
+				const blocks = hasBlocks(message.body)
 				return (
 					<Message
 						key={message.id}
@@ -169,24 +179,31 @@ function AuthorGroup({
 							) : message.card && message.card.kind !== 'question' ? (
 								<BridgeCard message={message} />
 							) : (
-								<Bubble
-									variant={
-										mine
-											? 'primary'
-											: asksYou && !message.answer
-												? 'soft'
-												: hasBlocks(message.body)
-													? 'outline'
-													: 'muted'
-									}
-									align={mine ? 'end' : 'start'}
-									className={cn(
-										'whitespace-normal',
-										hasBlocks(message.body) && 'w-full max-w-2xl'
-									)}
+								<SpeakableBubble
+									id={message.id}
+									text={message.body}
+									agent={speakerOf(message)}
+									blocks={blocks}
 								>
-									<CrewText text={message.body} />
-								</Bubble>
+									<Bubble
+										variant={
+											mine
+												? 'primary'
+												: asksYou && !message.answer
+													? 'soft'
+													: blocks
+														? 'outline'
+														: 'muted'
+										}
+										align={mine ? 'end' : 'start'}
+										className={cn(
+											'min-w-0 whitespace-normal',
+											blocks && 'w-full max-w-2xl'
+										)}
+									>
+										<CrewText text={message.body} />
+									</Bubble>
+								</SpeakableBubble>
 							)}
 							{asksYou && <CardActions message={message} />}
 							{mine && message.routing && message.place === 'room' && (

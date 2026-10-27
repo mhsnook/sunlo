@@ -4,6 +4,7 @@ import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
 import { meetingDue, type WeeklyType } from '../../../shared/crew'
 import { usePostToEnterprise, useStartMeeting } from '~/lib/crew'
+import { VoiceControls } from './voice-controls'
 
 // Riker answers unless the message names Data. While the weekly meeting is
 // due and not yet started, one tap starts it.
@@ -45,6 +46,7 @@ export function EnterpriseCompose({
 				onValueChange={setDraft}
 				onSend={send}
 				busy={post.isPending}
+				startSlot={<VoiceControls setDraft={setDraft} />}
 				placeholder="Message Riker, or @Data"
 				inputTestId="enterprise-compose-input"
 				sendTestId="enterprise-compose-send"

@@ -227,8 +227,15 @@ export const CrewMessageSchema = z.object({
 	place: z.enum(['room', 'bridge', 'dm']),
 	// Where the admin said, after sending, this message should have gone.
 	corrected: RoutingSchema.nullable(),
+	// The room's list of the edits an agent's run made, not the agent speaking.
+	receipt: z.boolean(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
+
+// The agent who speaks a message: null for the admin's own messages and for
+// the room's receipts.
+export const speakerOf = (message: CrewMessageType): CrewKey | null =>
+	isCrewKey(message.author) && !message.receipt ? message.author : null
 
 export const AgentStatusSchema = z.object({
 	state: z.enum(['idle', 'working']),
@@ -295,6 +302,9 @@ export const CommonKnowledgeSchema = z.object({
 	at: z.string(),
 })
 export type CommonKnowledgeType = z.infer<typeof CommonKnowledgeSchema>
+
+// The longest text the voice model reads in one request.
+export const MAX_SPEECH_CHARS = 2000
 
 // Riker's line is a note of a few paragraphs; every other line is one line.
 export const SITREP_LINE_MAX = 240

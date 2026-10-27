@@ -43,6 +43,8 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 **The Situation Report**, beside the room on a wide screen, says where each vertical stands now: one line per track, under Riker's note on the whole. Product keeps a Product line and an Engineering line, and Growth a Growth line and a Retention line, so that a track that stalls shows. Every agent reads it after Common Knowledge. Each vertical rewrites its own lines with `update_situation_report`, Riker may rewrite any of them, and you edit all of them in the panel. The sidebar lists the Common Room, then the ships.
 
+**Voice.** Every compose bar has a mic: press it, talk, and press it again, and what you said lands in the draft for you to read before sending. The speaker button beside it turns on voice replies, which reads each new reply aloud in the agent's own voice as it arrives. Any agent message also has its own read-aloud button. The Worker does both with Workers AI: Deepgram Nova 3 for speech to text and Aura 2 for text to speech (`worker/voice.ts`).
+
 The agents sail as ships. **The Enterprise** is your own ship: Riker, your first officer, and Data, his science officer. You talk with them in one thread, the Enterprise thread, and everything that needs you arrives there. **The fleet** is every other agent, each a ship of its own and the expert on its own area. Each fleet ship has a page with its job, its to-do list, what is open with you, its memory, and a 1:1 chat. Every card an agent brings you can also be dismissed, with or without a line of feedback. The agent hears why, and feedback becomes one of its memories, so it learns what you do not want.
 
 | Ship       | Agent       | Job                 | Status                                                 |
