@@ -73,8 +73,7 @@ function CrewRoomPage() {
 						aria-pressed={panel === 'sitrep'}
 						onClick={() => toggle('sitrep')}
 					>
-						<ClipboardList />{' '}
-						<span className="@max-3xl:sr-only">Situation Report</span>
+						<ClipboardList /> <span className="@max-3xl:sr-only">Sitrep</span>
 					</Button>
 					<Button
 						variant="ghost"
@@ -82,7 +81,7 @@ function CrewRoomPage() {
 						aria-pressed={panel === 'knowledge'}
 						onClick={() => toggle('knowledge')}
 					>
-						<Brain /> <span className="@max-3xl:sr-only">Common Knowledge</span>
+						<Brain /> <span className="@max-3xl:sr-only">Knowledge</span>
 					</Button>
 					<Button
 						variant="ghost"

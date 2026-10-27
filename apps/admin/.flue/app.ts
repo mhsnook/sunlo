@@ -75,13 +75,20 @@ api.post(
 
 api.post(
 	'/crew/messages/:id/answer',
-	json(z.object({ actionId: z.string().min(1) }), 'Send { actionId }'),
+	json(
+		z.object({
+			actionId: z.string().min(1),
+			feedback: z.string().trim().max(2000).optional(),
+		}),
+		'Send { actionId, feedback? }'
+	),
 	async (c) => {
 		const result = await (
 			await roomFor()
 		).answer({
 			messageId: c.req.param('id'),
 			actionId: c.req.valid('json').actionId,
+			feedback: c.req.valid('json').feedback || null,
 			name: c.get('admin').name,
 		})
 		if (!result.ok) return c.json({ error: result.error }, result.status)

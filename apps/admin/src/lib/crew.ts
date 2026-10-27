@@ -281,10 +281,14 @@ export function useCorrectRouting() {
 
 export function useAnswerCard() {
 	return useMutation({
-		mutationFn: (input: { messageId: string; actionId: string }) =>
+		mutationFn: (input: {
+			messageId: string
+			actionId: string
+			feedback?: string
+		}) =>
 			adminFetch(`crew/messages/${input.messageId}/answer`, {
 				method: 'POST',
-				json: { actionId: input.actionId },
+				json: { actionId: input.actionId, feedback: input.feedback },
 			}),
 	})
 }

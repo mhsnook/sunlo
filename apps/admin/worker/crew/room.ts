@@ -89,6 +89,8 @@ type SitrepRow = {
 	by_name: string
 	at: string
 }
+const DISMISS = { id: 'dismiss', label: 'Dismissed' }
+
 type IdRow = { id: number }
 type CountRow = { count: number }
 
@@ -501,9 +503,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return { message, wake }
 	}
 
+	// Every card can also be dismissed, with or without feedback, which the
+	// agent keeps as a memory so it learns what the admin does not want.
 	answer(input: {
 		messageId: string
 		actionId: string
+		feedback: string | null
 		name: string
 	}):
 		| { ok: true; agent: CrewKey; conversation: string; body: string }
@@ -522,7 +527,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				error: `${message.answer.by} already answered "${message.answer.label}"`,
 			}
 		}
-		const action = message.card.actions.find((a) => a.id === input.actionId)
+		const dismissed = input.actionId === DISMISS.id
+		const action = dismissed
+			? DISMISS
+			: message.card.actions.find((a) => a.id === input.actionId)
 		if (!action) {
 			return {
 				ok: false,
@@ -542,8 +550,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			where id = ${message.id}`
 		const agent = message.author
 		const subject = message.card.title ?? message.body
-		if (message.card.kind === 'change') {
-			const day = at.slice(0, 10)
+		const day = at.slice(0, 10)
+		if (dismissed && input.feedback) {
+			this.saveMemory(
+				agent,
+				`${input.name} dismissed on ${day}: ${subject}. Their feedback: ${input.feedback}`
+			)
+		} else if (message.card.kind === 'change' && !dismissed) {
 			if (action.id === 'do') {
 				this.saveMemory(agent, `${input.name} agreed on ${day}: ${subject}`)
 				this.saveTodo(agent, subject, null)
@@ -575,7 +588,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			ok: true,
 			agent,
 			conversation: row.conversation,
-			body: `${input.name} answered "${action.label}" to your ${what}: ${subject}`,
+			body: dismissed
+				? `${input.name} dismissed your ${what}: ${subject}${input.feedback ? `\n\nTheir feedback: ${input.feedback}` : ''}`
+				: `${input.name} answered "${action.label}" to your ${what}: ${subject}`,
 		}
 	}
 
