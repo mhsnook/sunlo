@@ -189,7 +189,7 @@ type ToolPart = Extract<
 const toolLabels: Record<string, string> = {
 	activity_between: 'Checked the activity numbers',
 	run_sql: 'Ran a database query',
-	post_to_crew: 'Posted in the crew room',
+	post_to_conference_room: 'Posted in the Conference Room',
 	read_room: 'Read the crew room',
 	add_todo: 'Added a to-do',
 	update_todo: 'Updated a to-do',

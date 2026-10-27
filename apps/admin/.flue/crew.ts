@@ -52,7 +52,7 @@ export async function wake(wakes: Array<Wake>, from: string) {
 			deliver(
 				agent,
 				conversationOf(agent),
-				place === 'bridge' ? 'enterprise.message' : 'crew.message',
+				place === 'bridge' ? 'enterprise.message' : 'conference.message',
 				body,
 				{ from, messageId }
 			).catch((error: unknown) =>
@@ -62,8 +62,8 @@ export async function wake(wakes: Array<Wake>, from: string) {
 	)
 }
 
-// One signal to one conversation of an agent. `type` "crew.message" arrives
-// as a <crew-message> tag.
+// One signal to one conversation of an agent. `type` "conference.message" arrives
+// as a <conference-message> tag.
 export async function deliver(
 	agent: CrewKey,
 	conversation: string,

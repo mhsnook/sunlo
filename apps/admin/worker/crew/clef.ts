@@ -26,15 +26,15 @@ export function clefPrompt(
 	const system = `You route messages in a team chat between the founder of Sunlo, a language-learning app, and AI agents.
 
 For each message, decide one thing:
-- "route": the message asks a question, gives an instruction, or needs an answer now. Name the agents who should answer.
+- "route": the message asks a question, gives an instruction, or needs an answer now. Name the one agent who should answer. If more than one could, or you cannot tell who, name "riker": he is the founder's first officer, and he passes it on.
 - "room": the message is a note, a thought, an update, or context. Nobody answers now; agents read it at their next run.
 
-When unsure, choose "room".
+When unsure whether the message needs an answer now, choose "room".
 
 The agents:
 ${roster}
 
-Reply with JSON only, like {"kind":"route","agents":["product"]} or {"kind":"room","agents":[]}.`
+Reply with JSON only, like {"kind":"route","agents":["product"]} or {"kind":"room","agents":[]}. Never name more than one agent.`
 	const shots = examples.flatMap(
 		(example): Array<ChatMessage> => [
 			{ role: 'user', content: example.text },
@@ -55,8 +55,9 @@ Reply with JSON only, like {"kind":"route","agents":["product"]} or {"kind":"roo
 }
 
 // Workers AI returns the reply as a string, or as parsed JSON for some
-// models. Anything that is not a clear "route" to an active agent becomes
-// "room", which wakes nobody.
+// models. Anything that is not a "route" becomes "room", which wakes nobody.
+// A route wakes one agent: when the model names several, or none it may
+// wake, the message goes to Riker, who passes it on.
 export function parseClefReply(
 	reply: unknown,
 	active: Array<CrewKey>
@@ -83,7 +84,13 @@ export function parseClefReply(
 					active.includes(agent)
 			)
 		: []
-	// With one active agent, "route" can only mean that agent.
-	const chosen = named.length ? named : active.length === 1 ? active : []
-	return chosen.length ? { kind: 'route', agents: chosen, by: 'model' } : room
+	const chosen =
+		named.length === 1
+			? named[0]
+			: active.includes('riker')
+				? 'riker'
+				: active.length === 1
+					? active[0]
+					: null
+	return chosen ? { kind: 'route', agents: [chosen], by: 'model' } : room
 }

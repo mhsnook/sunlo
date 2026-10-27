@@ -20,7 +20,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			: 'room'
 
 	const postToCrew = defineTool({
-		name: 'post_to_crew',
+		name: 'post_to_conference_room',
 		description:
 			'Post a message in the Conference Room, where the admin and the other agents read it. Write @Name to address a crew member. Add `options` (2 or 3 short button labels, such as "Hide it" and "Show me") only when you need the admin to choose; their answer comes back to you.',
 		input: v.object({

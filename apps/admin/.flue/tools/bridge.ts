@@ -124,6 +124,19 @@ export function rikerTools() {
 		},
 	})
 
+	const startMeeting = defineTool({
+		name: 'start_meeting',
+		description:
+			'Mark the weekly meeting as started, when the admin asks for it anywhere but the "Start the weekly meeting" button. Then open the meeting in the Enterprise thread with post_to_enterprise.',
+		input: v.object({}),
+		async run() {
+			const started = await (await roomFor()).recordMeetingStart()
+			return started
+				? 'The meeting is marked as started. Open it in the Enterprise thread.'
+				: 'No weekly meeting is due: there is no brief since the last meeting.'
+		},
+	})
+
 	const closeMeeting = defineTool({
 		name: 'close_meeting',
 		description:
@@ -149,7 +162,7 @@ export function rikerTools() {
 		},
 	})
 
-	return [writeBrief, closeMeeting]
+	return [writeBrief, startMeeting, closeMeeting]
 }
 
 // Data's playbook: the metrics the admin likes in each domain, and how they

@@ -49,6 +49,38 @@ describe('parseClefReply', () => {
 		).toEqual({ kind: 'route', agents: ['product'], by: 'model' })
 	})
 
+	it('sends a message the model gives to several agents to Riker alone', () => {
+		expect(
+			parseClefReply('{"kind":"route","agents":["riker","data","product"]}', [
+				'riker',
+				'data',
+				'product',
+			])
+		).toEqual({ kind: 'route', agents: ['riker'], by: 'model' })
+		expect(
+			parseClefReply('{"kind":"route","agents":["data","product"]}', [
+				'riker',
+				'data',
+				'product',
+			])
+		).toEqual({ kind: 'route', agents: ['riker'], by: 'model' })
+	})
+
+	it('sends a route to an agent it cannot wake to Riker', () => {
+		expect(
+			parseClefReply('{"kind":"route","agents":["library"]}', [
+				'riker',
+				'product',
+			])
+		).toEqual({ kind: 'route', agents: ['riker'], by: 'model' })
+	})
+
+	it('keeps one clear agent', () => {
+		expect(
+			parseClefReply('{"kind":"route","agents":["data"]}', ['riker', 'data'])
+		).toEqual({ kind: 'route', agents: ['data'], by: 'model' })
+	})
+
 	it('leaves anything unclear in the room', () => {
 		for (const reply of [undefined, 'no idea', '{"kind":"maybe"}', '{bad']) {
 			expect(parseClefReply(reply, ['product'])).toEqual({

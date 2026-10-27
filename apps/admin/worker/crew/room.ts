@@ -824,16 +824,23 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// The admin starting the weekly meeting: Riker takes it from here, and the
 	// meeting counts as started until he closes it.
 	startMeeting(input: { uid: string; name: string }) {
-		const { briefAt } = this.weekly()
-		if (!briefAt || !meetingDue(this.weekly())) return null
-		this.sql`
-			insert or ignore into meeting (brief_at, started_at)
-			values (${briefAt}, ${now()})`
-		this.push({ type: 'enterprise' })
+		if (!this.recordMeetingStart()) return null
 		return this.postToEnterprise({
 			...input,
 			body: "Let's have our weekly meeting.",
 		})
+	}
+
+	// False when no meeting is due. Riker calls this when the admin asks for
+	// the meeting somewhere other than the start button.
+	recordMeetingStart() {
+		const { briefAt } = this.weekly()
+		if (!briefAt || !meetingDue(this.weekly())) return false
+		this.sql`
+			insert or ignore into meeting (brief_at, started_at)
+			values (${briefAt}, ${now()})`
+		this.push({ type: 'enterprise' })
+		return true
 	}
 
 	closeMeeting() {

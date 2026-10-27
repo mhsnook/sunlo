@@ -90,7 +90,7 @@ CLEF decides where each Conference Room message goes when you send it:
 
 1. A message that ends in "..." **stacks**: it wakes nobody, and it rides along with your next message that does.
 2. An @mention of a started agent **sends** the message to that agent.
-3. Otherwise a small Workers AI model (`CLEF_MODEL`) chooses between **sending** it to an agent and **leaving it in the room**. Agents read the room at their next run either way.
+3. Otherwise a small Workers AI model (`CLEF_MODEL`) chooses between **sending** it to one agent and **leaving it in the room**. When more than one agent could answer, or CLEF cannot tell who, it sends the message to Riker, who passes it on. Agents read the room at their next run either way.
 
 While you type, the chip above the compose bar shows the first two rules as they apply, and otherwise says CLEF decides when you send. The model runs only on send. Click the chip to pick a place yourself before you send. After you send, the note under your message opens the same menu: correct it there, and any agent the message should have woken wakes now.
 
@@ -104,10 +104,10 @@ Every run starts with the time, the agent's workspace, and the room messages sin
 
 - `activity_between`: signups, reviews and each reviewer, new decks, and library and chat counts for a window
 - `run_sql`: one SELECT, run as `admin_reader` with an 8-second timeout and at most 200 rows
-- `post_to_crew`: a message in the room, optionally with 2 or 3 buttons
+- `post_to_conference_room`: a message in the room, optionally with 2 or 3 buttons
 - `propose_change`: a "Change to the plan" card. "Do it" saves the decision to the agent's memory and adds a to-do; "Not yet" saves that to memory.
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
-- Riker and Data also have `post_to_enterprise`, `bring_to_admin` (a card in the thread) and `propose_charter`; Riker has `write_brief` and `close_meeting`, and Data has `note_playbook`.
+- Riker and Data also have `post_to_enterprise`, `bring_to_admin` (a card in the thread) and `propose_charter`; Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the thread) and `close_meeting`, and Data has `note_playbook`.
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today), through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 
