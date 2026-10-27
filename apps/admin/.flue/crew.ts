@@ -5,6 +5,7 @@ import { crewKeys, type CrewKey } from '../shared/crew'
 import {
 	BRIDGE,
 	conversationOf,
+	ROOM,
 	TEAM,
 	type CrewRoom,
 	type Wake,
@@ -14,7 +15,7 @@ import { Product } from './agents/product'
 import { Riker } from './agents/riker'
 
 export const roomFor = () =>
-	getAgentByName(env.CREW_ROOM as DurableObjectNamespace<CrewRoom>, TEAM)
+	getAgentByName(env.CREW_ROOM as DurableObjectNamespace<CrewRoom>, ROOM)
 
 // The crew members that run. A function, not a constant: agent modules
 // import this file, and the agent they export is not initialised yet while

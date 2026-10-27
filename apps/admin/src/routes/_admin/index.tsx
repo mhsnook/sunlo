@@ -18,8 +18,8 @@ export const Route = createFileRoute('/_admin/')({
 	loader: ({ context }) => context.queryClient.ensureQueryData(roomQuery()),
 	// Marks the room read on arrival and again on leaving, so messages that
 	// arrive while the admin is here do not count as unread afterwards.
-	onEnter: ({ context }) => markSeen(context.queryClient, 'room', false),
-	onLeave: ({ context }) => markSeen(context.queryClient, 'room', true),
+	onEnter: ({ context }) => void markSeen(context.queryClient, 'room', false),
+	onLeave: ({ context }) => void markSeen(context.queryClient, 'room', true),
 	component: CrewRoomPage,
 })
 

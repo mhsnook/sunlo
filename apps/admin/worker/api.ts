@@ -26,7 +26,15 @@ export function createApi() {
 	app.onError((err, c) => {
 		if (err instanceof HTTPException) return err.getResponse()
 		console.error('admin api failed', err)
-		return c.json({ error: 'The database query failed' }, 500)
+		// The cause only for a verified admin: the admin check itself can throw.
+		return c.json(
+			{
+				error: c.get('admin')
+					? `The admin API failed: ${err.message}`
+					: 'The admin API failed',
+			},
+			500
+		)
 	})
 
 	// Every route needs a signed-in Sunlo user who is in admin_user. The anon

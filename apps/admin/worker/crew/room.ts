@@ -27,6 +27,10 @@ import {
 } from '../../shared/crew'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 
+// The room's one instance. Renaming it starts a fresh room: its tables are
+// created once, so a room made before a schema change keeps the old ones.
+export const ROOM = 'crew'
+
 // The Flue conversation a fleet agent's room runs use. A 1:1 chat with an
 // agent uses `dm-<admin uid>` instead.
 export const TEAM = 'team'
@@ -118,7 +122,7 @@ const toCharter = (row: CharterRow): CharterEntryType => ({
 // Room times for the model: minutes are enough, and UTC is explicit.
 const stamp = (iso: string) => `${iso.slice(0, 16).replace('T', ' ')} UTC`
 
-// One instance, named "team", holds the Conference Room and the Enterprise
+// One instance, named ROOM, holds the Conference Room and the Enterprise
 // thread, each agent's workspace (to-dos, memory, open items), the charter,
 // CLEF's decision log, and the admin's WebSockets. It is an Agents SDK Agent with no model: browsers
 // connect with useAgent, and its state (each agent's status) syncs to them.

@@ -162,7 +162,7 @@ describe('auth', () => {
 		adminCheck = Promise.reject(new Error('password authentication failed'))
 		const res = await get('/api/activity-overview')
 		expect(res.status).toBe(500)
-		expect(await res.json()).toEqual({ error: 'The database query failed' })
+		expect(await res.json()).toEqual({ error: 'The admin API failed' })
 		expect(end).toHaveBeenCalledOnce()
 	})
 })

@@ -29,8 +29,8 @@ export const Route = createFileRoute('/_admin/enterprise')({
 				context.queryClient.ensureQueryData(workspaceQuery(agent))
 			),
 		]),
-	onEnter: ({ context }) => markSeen(context.queryClient, 'bridge', false),
-	onLeave: ({ context }) => markSeen(context.queryClient, 'bridge', true),
+	onEnter: ({ context }) => void markSeen(context.queryClient, 'bridge', false),
+	onLeave: ({ context }) => void markSeen(context.queryClient, 'bridge', true),
 	component: EnterprisePage,
 })
 

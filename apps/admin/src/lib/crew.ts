@@ -181,24 +181,28 @@ export function useAnswerCard() {
 // On leaving, the cached seenAt moves too, which clears the sidebar's unread
 // count. On arrival it must not: the page reads the old value to draw its
 // "New since" line.
-export function markSeen(
+export async function markSeen(
 	queryClient: QueryClient,
 	place: 'room' | 'bridge',
 	leaving: boolean
 ) {
-	void adminFetch('crew/seen', { method: 'POST', json: { place } }).then(() => {
-		if (!leaving) return
-		const seenAt = new Date().toISOString()
-		if (place === 'room') {
-			queryClient.setQueryData(roomQuery().queryKey, (room) =>
-				room ? { ...room, seenAt } : room
-			)
-		} else {
-			queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
-				thread ? { ...thread, seenAt } : thread
-			)
-		}
-	})
+	try {
+		await adminFetch('crew/seen', { method: 'POST', json: { place } })
+	} catch (error) {
+		console.error('Could not mark this timeline seen', error)
+		return
+	}
+	if (!leaving) return
+	const seenAt = new Date().toISOString()
+	if (place === 'room') {
+		queryClient.setQueryData(roomQuery().queryKey, (room) =>
+			room ? { ...room, seenAt } : room
+		)
+	} else {
+		queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
+			thread ? { ...thread, seenAt } : thread
+		)
+	}
 }
 
 // Follows the crew room for as long as the admin layout is mounted.
