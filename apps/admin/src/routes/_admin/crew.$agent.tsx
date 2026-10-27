@@ -40,36 +40,48 @@ function WorkspacePage() {
 		<div className="bg-primary-50/40 min-h-full">
 			<div className="px-4 py-6 md:px-8 md:pe-[26rem]">
 				<div className="max-w-3xl space-y-8">
-					<header className="flex items-center gap-4">
-						<MobileSidebarButton />
-						<AgentAvatar agent={agent} size="lg" />
-						<div>
-							<h1 className="text-2xl font-semibold">{member.name}</h1>
-							<p className="text-muted-foreground text-sm">
-								{member.title}
-								{member.schedule ? ` · ${member.schedule}` : ''}
-								{isWorking(room?.statuses[agent]) ? ' · working now' : ''}
-							</p>
+					<header className="bg-card @container rounded border shadow-xs">
+						<div className="flex items-center gap-4 p-5">
+							<MobileSidebarButton />
+							<AgentAvatar agent={agent} size="lg" />
+							<div className="min-w-0">
+								<h1 className="text-2xl font-semibold">{member.name}</h1>
+								<p className="text-muted-foreground text-sm">
+									{member.title}
+									{member.schedule ? ` · ${member.schedule}` : ''}
+									{isWorking(room?.statuses[agent]) ? ' · working now' : ''}
+								</p>
+							</div>
 						</div>
+						<div className="border-t px-5 py-4">
+							<h2 className="text-muted-foreground mb-3 text-xs font-semibold">
+								Looks after
+							</h2>
+							<ul
+								className="grid gap-x-8 gap-y-2.5 text-sm @xl:grid-cols-2"
+								data-testid="agent-looks-after"
+							>
+								{member.looksAfter.map((line) => (
+									<li key={line} className="flex gap-2.5">
+										<span
+											aria-hidden
+											className="bg-primary-400 mt-2 size-1.5 shrink-0 rounded-full"
+										/>
+										{line}
+									</li>
+								))}
+							</ul>
+						</div>
+						{!member.active && (
+							<p
+								className="text-muted-foreground border-t px-5 py-3 text-sm"
+								data-testid="agent-not-started"
+							>
+								{member.name} has not started yet. Messages for {member.name}{' '}
+								stay in the Common Room until it does.
+							</p>
+						)}
 					</header>
-
-					{!member.active && (
-						<p
-							className="bg-card rounded border p-4 text-sm"
-							data-testid="agent-not-started"
-						>
-							{member.name} has not started yet. Messages for {member.name} stay
-							in the Common Room until it does.
-						</p>
-					)}
-
-					<Section title="Looks after">
-						<ul className="space-y-1">
-							{member.looksAfter.map((line) => (
-								<li key={line}>{line}</li>
-							))}
-						</ul>
-					</Section>
 
 					<Section title="To-do">
 						{workspace.todos.length ? (

@@ -650,6 +650,7 @@ The Common Room at `/`, the Enterprise thread at `/enterprise`, and each fleet s
 | `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One Common Knowledge entry, and the box and button that add one                          |
 | `crew-overview-range` + `data-key=<days>`                                                    | Date range button in the Overview                                                        |
 | `crew-overview-card` + `data-key=<metrics>`                                                  | One chart card in the Overview                                                           |
+| `agent-looks-after`                                                                          | The "Looks after" list in a fleet ship's profile card                                    |
 | `agent-not-started`                                                                          | The note on a planned agent's workspace                                                  |
 | `agent-todos`, `agent-todo` + `data-key=<id>`                                                | The workspace to-do list and one to-do                                                   |
 | `agent-open-item` + `data-key=<id>`                                                          | One "Open with you" item                                                                 |
