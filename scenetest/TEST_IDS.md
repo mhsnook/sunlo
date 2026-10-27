@@ -626,7 +626,7 @@ The activity dashboard at `/activity`:
 | `admin-metric-panel` + `data-key=<metric>` | Daily chart panel for one metric (e.g. `reviews`)       |
 | `admin-range-option` + `data-key=<days>`   | Date range link: 7, 14 or 30 days                       |
 
-The crew room at `/`, "Brought to you" at `/stack`, and each agent's workspace at `/crew/<agent>`:
+The Conference Room at `/`, the Enterprise thread at `/enterprise`, and each fleet ship's workspace at `/crew/<agent>`:
 
 | Selector                                                   | Purpose                                                               |
 | ---------------------------------------------------------- | --------------------------------------------------------------------- |
