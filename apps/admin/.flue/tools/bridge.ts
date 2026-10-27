@@ -2,7 +2,7 @@ import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
 import type { ActionType, CrewKey } from '../../shared/crew'
 import { BRIDGE } from '../../worker/crew/room'
-import { roomFor, wake } from '../crew'
+import { requestReport, roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
 const defaultActions: Record<
@@ -130,10 +130,14 @@ export function rikerTools() {
 			'Mark the weekly meeting as started, when the admin asks for it anywhere but the "Start the weekly meeting" button. Then open the meeting in the Enterprise thread with post_to_enterprise.',
 		input: v.object({}),
 		async run() {
-			const started = await (await roomFor()).recordMeetingStart()
-			return started
-				? 'The meeting is marked as started. Open it in the Enterprise thread.'
-				: 'No weekly meeting is due: there is no brief since the last meeting.'
+			const start = await (await roomFor()).recordMeetingStart()
+			if (!start.started) {
+				return 'No weekly meeting is due: there is no brief since the last meeting.'
+			}
+			if (start.needsReport) await requestReport()
+			return start.needsReport
+				? 'The meeting is marked as started, and Data is writing the pre-meeting report. Open the meeting in the Enterprise thread.'
+				: 'The meeting is marked as started. Open it in the Enterprise thread.'
 		},
 	})
 
@@ -187,5 +191,22 @@ export function dataTools() {
 			return { output: { id } }
 		},
 	})
-	return [notePlaybook]
+	const fileReport = defineTool({
+		name: 'file_report',
+		description:
+			"File the pre-meeting report for this week's meeting: the numbers behind each item on the brief's agenda, with charts or tables where they help, and the caveats. It shows in the Enterprise thread folded, with its title and opening lines, so lead with the finding. Use this whenever the admin asks for a pre-meeting briefing too, so the meeting does not ask for a second one.",
+		input: v.object({
+			title: v.pipe(Text, v.maxLength(140)),
+			body: v.pipe(Text, v.maxLength(12000)),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.body)
+			const messageId = await step.do('report', async () =>
+				(await roomFor()).fileReport(data)
+			)
+			return { output: { messageId } }
+		},
+	})
+	return [notePlaybook, fileReport]
 }

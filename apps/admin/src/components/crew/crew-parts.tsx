@@ -151,15 +151,62 @@ const bridgeLabels: Partial<Record<CardType['kind'], string>> = {
 	charter: 'For the charter',
 	know: 'Worth knowing',
 	brief: 'Weekly brief',
+	report: 'Pre-meeting report',
+}
+
+const folds: Partial<Record<CardType['kind'], string>> = {
+	brief: 'Riker posts the weekly brief',
+	report: 'Data submits the pre-meeting report',
+}
+
+// The opening prose of a markdown body, for a folded card's preview.
+function openingLines(body: string) {
+	const paragraph =
+		body
+			.split(/\n\s*\n/)
+			.map((part) => part.trim())
+			.find((part) => part && !/^(#|```|~~~|\|)/.test(part)) ?? ''
+	const text = paragraph
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+		.replace(/[*_`>#]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+	return text.length > 220 ? `${text.slice(0, 219)}…` : text
 }
 
 // A card Riker or Data brings the admin in the Enterprise thread. A brief
-// starts folded.
+// or a report arrives folded, like a link preview: its title and opening
+// lines, and the whole of it a click away.
 export function BridgeCard({ message }: { message: CrewMessageType }) {
 	const [unfolded, setUnfolded] = useState(false)
 	const card = message.card
 	if (!card) return null
-	const folded = card.kind === 'brief' && !unfolded
+	const fold = folds[card.kind]
+	if (fold && !unfolded) {
+		return (
+			<div className="w-full max-w-xl space-y-1">
+				<p className="text-muted-foreground text-sm italic">{fold}</p>
+				<Button
+					variant="neutral"
+					className="bg-card hover:bg-primary-50 border-border h-auto w-full flex-col items-start gap-1 rounded-2xl p-3 text-start whitespace-normal shadow-none"
+					data-testid="bridge-card"
+					data-key={card.kind}
+					aria-expanded={false}
+					onClick={() => setUnfolded(true)}
+				>
+					{card.title && (
+						<span className="block text-sm font-semibold">{card.title}</span>
+					)}
+					<span className="text-muted-foreground line-clamp-3 block text-sm">
+						{openingLines(message.body)}
+					</span>
+					<span className="text-primary-700 block text-xs font-medium">
+						Open the {card.kind}
+					</span>
+				</Button>
+			</div>
+		)
+	}
 	return (
 		<div
 			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
@@ -170,15 +217,9 @@ export function BridgeCard({ message }: { message: CrewMessageType }) {
 				{bridgeLabels[card.kind]}
 			</p>
 			{card.title && <p className="text-sm font-semibold">{card.title}</p>}
-			{folded ? (
-				<Button size="sm" variant="soft" onClick={() => setUnfolded(true)}>
-					Read the brief
-				</Button>
-			) : (
-				<div className="text-sm">
-					<CrewText text={message.body} />
-				</div>
-			)}
+			<div className="text-sm">
+				<CrewText text={message.body} />
+			</div>
 			<CardActions message={message} />
 		</div>
 	)

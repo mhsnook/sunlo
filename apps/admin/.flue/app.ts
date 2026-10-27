@@ -3,7 +3,7 @@ import { validator } from 'hono/validator'
 import { z } from 'zod'
 import { crewKeys, fleetKeys, isCrewKey, RoutingSchema } from '../shared/crew'
 import { createApi } from '../worker/api'
-import { crewAgents, deliver, roomFor, wake } from './crew'
+import { crewAgents, deliver, requestReport, roomFor, wake } from './crew'
 
 // worker/api.ts checks the admin on every /api route. These routes add the
 // crew room and the agents to that app.
@@ -156,6 +156,7 @@ api.post('/crew/enterprise/meeting', async (c) => {
 	).startMeeting({ uid: admin.uid, name: admin.name })
 	if (!started) return c.json({ error: 'No weekly meeting is due' }, 409)
 	await wake(started.wake, admin.name)
+	if (started.needsReport) await requestReport().catch(logFailedDelivery)
 	return c.json(started.message)
 })
 

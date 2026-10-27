@@ -212,6 +212,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				brief_at text primary key,
 				started_at text not null
 			);
+			-- Data's pre-meeting report for each week's brief.
+			create table if not exists meeting_report (
+				brief_at text primary key,
+				message_id text not null
+			);
 			-- The room messages delivered to an agent's current run.
 			create table if not exists run_message (
 				agent text not null,
@@ -824,23 +829,56 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// The admin starting the weekly meeting: Riker takes it from here, and the
 	// meeting counts as started until he closes it.
 	startMeeting(input: { uid: string; name: string }) {
-		if (!this.recordMeetingStart()) return null
-		return this.postToEnterprise({
-			...input,
-			body: "Let's have our weekly meeting.",
-		})
+		const start = this.recordMeetingStart()
+		if (!start.started) return null
+		return {
+			...this.postToEnterprise({
+				...input,
+				body: "Let's have our weekly meeting.",
+			}),
+			needsReport: start.needsReport,
+		}
 	}
 
-	// False when no meeting is due. Riker calls this when the admin asks for
-	// the meeting somewhere other than the start button.
-	recordMeetingStart() {
+	// Riker calls this too, when the admin asks for the meeting somewhere
+	// other than the start button. `needsReport` is true only for the call
+	// that starts the meeting, and only when Data has not filed a report for
+	// this week's brief, so a second start never asks for a second report.
+	recordMeetingStart(): { started: boolean; needsReport: boolean } {
 		const { briefAt } = this.weekly()
-		if (!briefAt || !meetingDue(this.weekly())) return false
-		this.sql`
+		if (!briefAt || !meetingDue(this.weekly())) {
+			return { started: false, needsReport: false }
+		}
+		const inserted = this.sql`
 			insert or ignore into meeting (brief_at, started_at)
-			values (${briefAt}, ${now()})`
+			values (${briefAt}, ${now()})
+			returning brief_at`
 		this.push({ type: 'enterprise' })
-		return true
+		const filed = this.sql`
+			select 1 from meeting_report where brief_at = ${briefAt}`
+		return {
+			started: true,
+			needsReport: inserted.length > 0 && filed.length === 0,
+		}
+	}
+
+	// Data's pre-meeting report: a folded card in the Enterprise thread, and
+	// the one report for this week's meeting.
+	fileReport(input: { title: string; body: string }) {
+		const messageId = this.bringToAdmin({
+			author: 'data',
+			kind: 'report',
+			title: input.title,
+			body: input.body,
+			actions: [],
+		})
+		const { briefAt } = this.weekly()
+		if (briefAt) {
+			this.sql`
+				insert or replace into meeting_report (brief_at, message_id)
+				values (${briefAt}, ${messageId})`
+		}
+		return messageId
 	}
 
 	closeMeeting() {

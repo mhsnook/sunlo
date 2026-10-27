@@ -171,7 +171,8 @@ export type ActionType = z.infer<typeof ActionSchema>
 // - From Riker or Data, in the Enterprise thread: decide (on hold until the
 //   admin answers), confirm (acted in their stead; was that right?), know
 //   (nothing to answer), escalate (needs more than the crew has), charter (a
-//   proposed charter entry, `ref`) and brief (the weekly brief)
+//   proposed charter entry, `ref`), brief (the weekly brief) and report
+//   (Data's pre-meeting report)
 export const CardSchema = z.object({
 	kind: z.enum([
 		'question',
@@ -182,6 +183,7 @@ export const CardSchema = z.object({
 		'escalate',
 		'charter',
 		'brief',
+		'report',
 	]),
 	title: z.string().nullable(),
 	// Empty for a card with nothing to answer.

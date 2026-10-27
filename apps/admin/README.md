@@ -69,6 +69,7 @@ What needs you arrives in the thread as a card:
 - **For the charter**: a principle or lesson Riker proposes. It counts only once you keep it.
 - **Worth knowing**: nothing to answer.
 - **Weekly brief**: the week, folded until you open it.
+- **Pre-meeting report**: Data's numbers for the brief's agenda, folded the same way. Data files one whenever a meeting starts without one; if you ask him for a pre-meeting briefing first, that is the report.
 
 The sidebar counts the cards that wait on you. Anything you want to add to an answer, write in the thread: your answers, and the times you overrule Riker, are how the Enterprise learns you.
 
@@ -107,7 +108,7 @@ Every run starts with the time, the agent's workspace, and the room messages sin
 - `post_to_conference_room`: a message in the room, optionally with 2 or 3 buttons
 - `propose_change`: a "Change to the plan" card. "Do it" saves the decision to the agent's memory and adds a to-do; "Not yet" saves that to memory.
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
-- Riker and Data also have `post_to_enterprise`, `bring_to_admin` (a card in the thread) and `propose_charter`; Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the thread) and `close_meeting`, and Data has `note_playbook`.
+- Riker and Data also have `post_to_enterprise`, `bring_to_admin` (a card in the thread) and `propose_charter`; Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the thread) and `close_meeting`, and Data has `note_playbook` and `file_report`.
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today), through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 

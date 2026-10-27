@@ -62,6 +62,15 @@ export async function wake(wakes: Array<Wake>, from: string) {
 	)
 }
 
+// Asks Data for the pre-meeting report, when a meeting starts without one.
+export const requestReport = () =>
+	deliver(
+		'data',
+		BRIDGE,
+		'meeting.report',
+		'The weekly meeting just started, and there is no pre-meeting report for it yet. Write one now with file_report.'
+	)
+
 // One signal to one conversation of an agent. `type` "conference.message" arrives
 // as a <conference-message> tag.
 export async function deliver(
