@@ -7,6 +7,10 @@ export async function getSession() {
 	return data.session
 }
 
+// Ends the session in this browser only, so the admin stays signed in on
+// their other devices.
+export const signOutHere = () => supabase.auth.signOut({ scope: 'local' })
+
 export const accessToken = async () => (await getSession())?.access_token ?? ''
 
 export const isAdminQuery = (uid: uuid) =>

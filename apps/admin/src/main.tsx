@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Loader } from '@/components/ui/loader'
+import { RouteError } from './components/route-error'
 import { routeTree } from './routeTree.gen'
 
 import './styles.css'
@@ -22,6 +23,7 @@ const router = createRouter({
 	defaultPendingComponent: () => (
 		<Loader size={48} className="mt-20 opacity-50" />
 	),
+	defaultErrorComponent: RouteError,
 })
 
 declare module '@tanstack/react-router' {
