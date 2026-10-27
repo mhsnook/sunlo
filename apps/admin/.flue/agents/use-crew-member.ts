@@ -17,13 +17,20 @@ import {
 import { crewTools } from '../tools/crew'
 
 // Everything a crew agent shares: the model, the room and workspace tools,
-// the database tools, and the context it wakes up with. An agent module
-// calls this, then returns its own persona.
-export function useCrewMember(agent: CrewKey, conversation: string) {
-	useModel(`cloudflare/${env.CREW_MODEL}`)
+// the context it wakes up with, and, unless it opts out, the database tools.
+// An agent module calls this, then returns its own persona.
+export function useCrewMember(
+	agent: CrewKey,
+	conversation: string,
+	options: { model?: string; database?: boolean } = {}
+) {
+	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
 	for (const tool of crewTools(agent, conversation)) useTool(tool)
-	useTool(activityBetweenTool)
-	useTool(runSqlTool)
+	const database = options.database ?? true
+	if (database) {
+		useTool(activityBetweenTool)
+		useTool(runSqlTool)
+	}
 
 	useAgentStart(async ({ append }) => {
 		append({
@@ -39,7 +46,7 @@ export function useCrewMember(agent: CrewKey, conversation: string) {
 
 	useInstruction(crewInstructions(agent))
 	useInstruction(conversation === TEAM ? ROOM_RUN : ONE_TO_ONE)
-	useInstruction(DATABASE_NOTES)
+	if (database) useInstruction(DATABASE_NOTES)
 }
 
 function crewInstructions(agent: CrewKey) {
@@ -52,7 +59,7 @@ function crewInstructions(agent: CrewKey) {
 		.join('\n')
 	return `## The crew
 
-You are ${crew[agent].name}, one of six agents who help the founders run Sunlo. You share one chat, the crew room, with the founders. The others:
+You are ${crew[agent].name}, one of the agents who help the founders run Sunlo. You share one chat, the crew room, with the founders. The crew sails as ships: the Enterprise is the admin's own bridge (Riker and Data), which extends the admin's judgement into the room; the fleet is everyone else, each the expert on its own area. The others:
 ${others}
 
 An agent who has not started yet does not answer. Messages for it wait in the room until it does, so @mention it only for something it should pick up later.
@@ -63,6 +70,10 @@ Every run starts with a <crew-context> block: the time, your workspace (to-dos, 
 - Memory holds durable facts and decisions. Never save numbers a query can recompute. Forget a memory that turns out wrong.
 - To-dos are your own work. Mark them done when they are done, and keep each note to a few words.
 - "Open with you" holds what waits on the admin. Close an item when it stops waiting.
+
+## Directives
+
+Riker, or the admin, sometimes sends you directives in the room: priorities, and suggested edits to your memory and to-dos. Read them like a capable officer. A command you carry out; a suggestion you weigh, and you may decline it. Make the changes you accept with your workspace tools. The room posts a receipt of the edits you made, so do not list them yourself. Reply only to decline something, and say why in one sentence.
 
 ## Writing
 

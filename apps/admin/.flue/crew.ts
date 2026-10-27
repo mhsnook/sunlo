@@ -3,7 +3,9 @@ import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
 import type { CrewKey } from '../shared/crew'
 import { TEAM, type CrewRoom, type Wake } from '../worker/crew/room'
+import { Data } from './agents/data'
 import { Product } from './agents/product'
+import { Riker } from './agents/riker'
 
 export const roomFor = (bindings: Env = env) =>
 	getAgentByName(bindings.CREW_ROOM as DurableObjectNamespace<CrewRoom>, TEAM)
@@ -11,7 +13,11 @@ export const roomFor = (bindings: Env = env) =>
 // A function, not a constant: agent modules import this file, and the agent
 // they export is not initialised yet while this module evaluates.
 const agentFor = (key: CrewKey) => {
-	const agents: Partial<Record<CrewKey, Agent>> = { product: Product }
+	const agents: Partial<Record<CrewKey, Agent>> = {
+		riker: Riker,
+		data: Data,
+		product: Product,
+	}
 	return agents[key]
 }
 

@@ -11,7 +11,14 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from '@/components/ui/sheet'
-import { crewList, type CrewKey } from '../../../shared/crew'
+import {
+	crewList,
+	vessels,
+	type CrewKey,
+	type VesselKey,
+} from '../../../shared/crew'
+
+const vesselKeys = Object.keys(vessels) as Array<VesselKey>
 import { isWorking, roomQuery } from '~/lib/crew'
 import { AdminAvatar, AgentAvatar, shortWhen } from './crew-parts'
 
@@ -54,32 +61,55 @@ export function CrewSidebar({
 					target="crew"
 					onNavigate={onNavigate}
 				/>
-				{crewList.map((member) => {
-					const own = messages.filter((m) => m.author === member.key)
-					const latest = own.at(-1)
-					const waiting = own.filter((m) => m.card && !m.answer).length
-					const working = isWorking(room?.statuses[member.key])
-					return (
-						<SidebarItem
-							key={member.key}
-							active={pathname === `/crew/${member.key}`}
-							avatar={<AgentAvatar agent={member.key} />}
-							name={member.name}
-							preview={
-								!member.active
-									? 'Not started yet'
-									: working
-										? 'Working…'
-										: (latest?.body ?? member.title)
-							}
-							when={latest?.at}
-							count={waiting}
-							dim={!member.active}
-							target={member.key}
-							onNavigate={onNavigate}
-						/>
-					)
-				})}
+				<SidebarItem
+					active={pathname === '/stack'}
+					avatar={<AgentAvatar agent="stack" />}
+					name="Brought to you"
+					preview={
+						room?.stackCount ? 'From Riker and Data' : 'Nothing waiting on you'
+					}
+					count={room?.stackCount ?? 0}
+					target="stack"
+					onNavigate={onNavigate}
+				/>
+				{vesselKeys.map((vessel) => (
+					<li key={vessel} className="list-none">
+						<p className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-semibold">
+							{vessels[vessel].name}
+							<span className="font-normal"> · {vessels[vessel].note}</span>
+						</p>
+						<ul className="space-y-1">
+							{crewList
+								.filter((member) => member.vessel === vessel)
+								.map((member) => {
+									const own = messages.filter((m) => m.author === member.key)
+									const latest = own.at(-1)
+									const waiting = own.filter((m) => m.card && !m.answer).length
+									const working = isWorking(room?.statuses[member.key])
+									return (
+										<SidebarItem
+											key={member.key}
+											active={pathname === `/crew/${member.key}`}
+											avatar={<AgentAvatar agent={member.key} />}
+											name={member.name}
+											preview={
+												!member.active
+													? 'Not started yet'
+													: working
+														? 'Working…'
+														: (latest?.body ?? member.title)
+											}
+											when={latest?.at}
+											count={waiting}
+											dim={!member.active}
+											target={member.key}
+											onNavigate={onNavigate}
+										/>
+									)
+								})}
+						</ul>
+					</li>
+				))}
 			</ul>
 			<div className="flex items-center gap-2 border-t px-4 py-3 text-sm">
 				<AdminAvatar name={email} />
@@ -124,7 +154,7 @@ function SidebarItem({
 	when?: string
 	count: number
 	dim?: boolean
-	target: CrewKey | 'crew'
+	target: CrewKey | 'crew' | 'stack'
 	onNavigate?: () => void
 }) {
 	return (
@@ -132,7 +162,9 @@ function SidebarItem({
 			<Link
 				{...(target === 'crew'
 					? { to: '/' as const }
-					: { to: '/crew/$agent' as const, params: { agent: target } })}
+					: target === 'stack'
+						? { to: '/stack' as const }
+						: { to: '/crew/$agent' as const, params: { agent: target } })}
 				onClick={onNavigate}
 				data-testid="crew-sidebar-item"
 				data-key={target}

@@ -4,7 +4,8 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { crew, isCrewKey } from '../../../shared/crew'
-import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
+import { isWorking, roomQuery, stackQuery, workspaceQuery } from '~/lib/crew'
+import { CharterPanel } from '~/components/crew/charter-panel'
 import { AgentChat } from '~/components/crew/agent-chat'
 import {
 	AgentAvatar,
@@ -15,7 +16,13 @@ import {
 } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 
+type WorkspaceSearch = { meeting?: string }
+
 export const Route = createFileRoute('/_admin/crew/$agent')({
+	// Set when the weekly meeting starts. It keys the chat, so a chat that
+	// mounted before the conversation existed reads it afresh.
+	validateSearch: (search: Record<string, unknown>): WorkspaceSearch =>
+		typeof search.meeting === 'string' ? { meeting: search.meeting } : {},
 	params: {
 		parse: ({ agent }) => {
 			if (!isCrewKey(agent)) throw notFound()
@@ -23,12 +30,18 @@ export const Route = createFileRoute('/_admin/crew/$agent')({
 		},
 	},
 	loader: ({ context, params }) =>
-		context.queryClient.ensureQueryData(workspaceQuery(params.agent)),
+		Promise.all([
+			context.queryClient.ensureQueryData(workspaceQuery(params.agent)),
+			params.agent === 'riker'
+				? context.queryClient.ensureQueryData(stackQuery())
+				: null,
+		]),
 	component: WorkspacePage,
 })
 
 function WorkspacePage() {
 	const { agent } = Route.useParams()
+	const { meeting } = Route.useSearch()
 	const { session } = Route.useRouteContext()
 	const { data: workspace } = useSuspenseQuery(workspaceQuery(agent))
 	const { data: room } = useQuery(roomQuery())
@@ -62,6 +75,8 @@ function WorkspacePage() {
 							in the crew room until it does.
 						</p>
 					)}
+
+					{agent === 'riker' && <CharterPanel />}
 
 					<Section title="Looks after">
 						<ul className="space-y-1">
@@ -175,7 +190,11 @@ function WorkspacePage() {
 				</div>
 			</div>
 			{member.active && (
-				<AgentChat key={agent} agent={agent} uid={session.user.id} />
+				<AgentChat
+					key={`${agent}:${meeting ?? ''}`}
+					agent={agent}
+					uid={session.user.id}
+				/>
 			)}
 		</div>
 	)

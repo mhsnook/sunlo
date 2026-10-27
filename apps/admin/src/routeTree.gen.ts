@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin/index'
+import { Route as AdminStackRouteImport } from './routes/_admin/stack'
 import { Route as AdminActivityRouteImport } from './routes/_admin/activity'
 import { Route as AdminCrewAgentRouteImport } from './routes/_admin/crew.$agent'
 
@@ -29,6 +30,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStackRoute = AdminStackRouteImport.update({
+  id: '/stack',
+  path: '/stack',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminActivityRoute = AdminActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -44,11 +50,13 @@ export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
+  '/stack': typeof AdminStackRoute
   '/crew/$agent': typeof AdminCrewAgentRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
+  '/stack': typeof AdminStackRoute
   '/': typeof AdminIndexRoute
   '/crew/$agent': typeof AdminCrewAgentRoute
 }
@@ -57,19 +65,21 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/_admin/activity': typeof AdminActivityRoute
+  '/_admin/stack': typeof AdminStackRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/crew/$agent': typeof AdminCrewAgentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/activity' | '/crew/$agent'
+  fullPaths: '/' | '/login' | '/activity' | '/stack' | '/crew/$agent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/activity' | '/' | '/crew/$agent'
+  to: '/login' | '/activity' | '/stack' | '/' | '/crew/$agent'
   id:
     | '__root__'
     | '/_admin'
     | '/login'
     | '/_admin/activity'
+    | '/_admin/stack'
     | '/_admin/'
     | '/_admin/crew/$agent'
   fileRoutesById: FileRoutesById
@@ -102,6 +112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/stack': {
+      id: '/_admin/stack'
+      path: '/stack'
+      fullPath: '/stack'
+      preLoaderRoute: typeof AdminStackRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/activity': {
       id: '/_admin/activity'
       path: '/activity'
@@ -121,12 +138,14 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
+  AdminStackRoute: typeof AdminStackRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCrewAgentRoute: typeof AdminCrewAgentRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminActivityRoute: AdminActivityRoute,
+  AdminStackRoute: AdminStackRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCrewAgentRoute: AdminCrewAgentRoute,
 }

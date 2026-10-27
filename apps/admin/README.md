@@ -37,24 +37,44 @@ Writes, when the admin app gets them, go through the admin's own Supabase sessio
 
 ## The crew
 
-The dashboard opens on the crew room: a group chat between the admins and six AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. Questions for an admin carry buttons. Each agent also has a workspace page with its job, its to-do list, what is open with you, its memory, and a 1:1 chat.
+The dashboard opens on the crew room: a group chat between the admins and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. Each agent also has a workspace page with its job, its to-do list, what is open with you, its memory, and a 1:1 chat.
 
-| Agent     | Job                 | Status                                    |
-| --------- | ------------------- | ----------------------------------------- |
-| Product   | Product manager     | Runs: daily at 07:00 UTC, and when called |
-| Monitor   | Site reliability    | Planned                                   |
-| Moderator | Community moderator | Planned                                   |
-| Languages | Language lead       | Planned                                   |
-| Curator   | Library curator     | Planned                                   |
-| Growth    | Growth              | Planned                                   |
+The agents sail as ships. **The Enterprise** is your bridge: two agents that extend your judgement into the room, so you can read what they bring you instead of the whole conversation. **The fleet** is everyone else, each the expert on its own area.
 
-The roster lives in `shared/crew.ts`. A planned agent has a workspace page, and messages for it wait in the room until it starts.
+| Ship       | Agent     | Job                 | Status                                                 |
+| ---------- | --------- | ------------------- | ------------------------------------------------------ |
+| Enterprise | Riker     | First officer       | Runs: weekly brief on Sunday at 04:00, and when called |
+| Enterprise | Data      | Science officer     | Runs when called                                       |
+| Fleet      | Product   | Product manager     | Runs: daily at 07:00 UTC, and when called              |
+| Fleet      | Monitor   | Site reliability    | Planned                                                |
+| Fleet      | Moderator | Community moderator | Planned                                                |
+| Fleet      | Languages | Language lead       | Planned                                                |
+| Fleet      | Curator   | Library curator     | Planned                                                |
+| Fleet      | Growth    | Growth              | Planned                                                |
+
+The roster and the ships live in `shared/crew.ts`. A planned agent has a workspace page, and messages for it wait in the room until it starts.
+
+### The bridge: Riker and Data
+
+Riker is your proxy. He knows three things well: the **charter** (your principles and lessons, which you curate together), where the agents overlap or disagree, and the directives he has given each agent. Everything else he asks the expert for. Data argues from the evidence: he runs the database queries, takes more steps on a bigger model (`DATA_MODEL`), and attaches **exhibits** to his messages, either a chart the app draws or an HTML explorer that runs in a sandboxed frame with no access to the app. They are two separate agents that share the charter, so you can @mention either, and when Riker wants a second opinion the two of them talk it through in the room, where you can watch and interject. They take at most 8 turns in a row before one of the admins speaks.
+
+What they need from you lands in **Brought to you** (`/stack`), and you can clear that page without reading the room:
+
+- **Decide**: your call, and the matter is on hold until you answer.
+- **Confirm**: Riker acted in your stead, on a reversible matter that a kept charter entry covers, and asks whether that was right.
+- **Escalate**: it needs more than the crew has, with a brief you could hand to a Claude Code session.
+- **For the charter**: a principle or lesson Riker proposes. It counts only once you keep it. You can edit or drop kept entries on Riker's page.
+- **Worth knowing**: nothing to answer.
+
+Every answer can carry a note, and your notes and overrides are how the bridge learns you.
+
+**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set on Riker's page; Cloudflare crons are UTC only) and has Riker write the week's brief. From then on, a banner on every page invites you to the weekly meeting until it happens. "Start the meeting" opens it in your 1:1 with Riker. Riker closes the meeting with minutes in the room, then carries the directives to the fleet: one message per agent, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
 
 ### Where things live
 
 - **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueProductAgent`, bound as `FLUE_PRODUCT_AGENT`) and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
 - **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `team`. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the timeline, each agent's to-dos, memory and open items, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
-- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the 07:00 cron.
+- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: Product's daily run at 07:00 UTC, and Riker's brief.
 
 ### How a message reaches an agent
 

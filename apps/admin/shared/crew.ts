@@ -4,6 +4,8 @@ import { z } from 'zod'
 // (worker/, .flue/) and by the app (src/), so it holds no runtime-specific code.
 
 export const crewKeys = [
+	'riker',
+	'data',
 	'monitor',
 	'moderator',
 	'product',
@@ -13,8 +15,18 @@ export const crewKeys = [
 ] as const
 export type CrewKey = (typeof crewKeys)[number]
 
+// A vessel is a crew that works as a unit. The Enterprise is the admin's own
+// bridge: agents that extend the admin's judgement into the room. The fleet
+// is everyone else, each an independent expert on its own area.
+export const vessels = {
+	enterprise: { name: 'The Enterprise', note: 'Your bridge' },
+	fleet: { name: 'The fleet', note: 'Experts on their own areas' },
+} as const
+export type VesselKey = keyof typeof vessels
+
 export type CrewMember = {
 	key: CrewKey
+	vessel: VesselKey
 	name: string
 	title: string
 	// Shown under the title, and read by CLEF to decide who a message is for.
@@ -27,8 +39,36 @@ export type CrewMember = {
 }
 
 export const crew: Record<CrewKey, CrewMember> = {
+	riker: {
+		key: 'riker',
+		vessel: 'enterprise',
+		name: 'Riker',
+		title: 'First officer',
+		looksAfter: [
+			"The admin's wishes, priorities and judgement, in the charter they keep together",
+			'Where agents overlap or disagree',
+			'What to bring to the admin, and what to decide or hold for them',
+			'The weekly brief and the weekly meeting',
+		],
+		schedule: 'writes the weekly brief on Sunday at 04:00',
+		active: true,
+	},
+	data: {
+		key: 'data',
+		vessel: 'enterprise',
+		name: 'Data',
+		title: 'Science officer',
+		looksAfter: [
+			'Questions that need numbers, careful analysis or several thinking steps',
+			'Charts and explorers built from the database',
+			'Checking Riker’s instincts against the evidence',
+		],
+		schedule: null,
+		active: true,
+	},
 	monitor: {
 		key: 'monitor',
+		vessel: 'fleet',
 		name: 'Monitor',
 		title: 'Site reliability',
 		looksAfter: [
@@ -41,6 +81,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	moderator: {
 		key: 'moderator',
+		vessel: 'fleet',
 		name: 'Moderator',
 		title: 'Community moderator',
 		looksAfter: [
@@ -52,6 +93,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	product: {
 		key: 'product',
+		vessel: 'fleet',
 		name: 'Product',
 		title: 'Product manager',
 		looksAfter: [
@@ -65,6 +107,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	languages: {
 		key: 'languages',
+		vessel: 'fleet',
 		name: 'Languages',
 		title: 'Language lead',
 		looksAfter: [
@@ -76,6 +119,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	curator: {
 		key: 'curator',
+		vessel: 'fleet',
 		name: 'Curator',
 		title: 'Library curator',
 		looksAfter: [
@@ -88,6 +132,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	growth: {
 		key: 'growth',
+		vessel: 'fleet',
 		name: 'Growth',
 		title: 'Growth',
 		looksAfter: ['Signups, invites and where new people come from'],
@@ -97,6 +142,10 @@ export const crew: Record<CrewKey, CrewMember> = {
 }
 
 export const crewList = crewKeys.map((key) => crew[key])
+
+export const bridgeKeys: ReadonlyArray<CrewKey> = crewKeys.filter(
+	(key) => crew[key].vessel === 'enterprise'
+)
 
 export const isCrewKey = (value: string): value is CrewKey =>
 	(crewKeys as ReadonlyArray<string>).includes(value)
@@ -138,6 +187,25 @@ export function fixedRouting(text: string): RoutingType | null {
 export const ActionSchema = z.object({ id: z.string(), label: z.string() })
 export type ActionType = z.infer<typeof ActionSchema>
 
+// Something Data attaches to a message: a chart the app draws, or an HTML
+// explorer the app shows in a sandboxed frame.
+export const ChartSchema = z.object({
+	type: z.enum(['line', 'bar']),
+	// The key in each row that holds the x value.
+	x: z.string(),
+	series: z.array(z.object({ key: z.string(), label: z.string() })),
+	rows: z.array(
+		z.record(z.string(), z.union([z.string(), z.number(), z.null()]))
+	),
+})
+export type ChartType = z.infer<typeof ChartSchema>
+
+export const ExhibitSchema = z.discriminatedUnion('kind', [
+	z.object({ kind: z.literal('chart'), title: z.string(), chart: ChartSchema }),
+	z.object({ kind: z.literal('html'), title: z.string(), html: z.string() }),
+])
+export type ExhibitType = z.infer<typeof ExhibitSchema>
+
 export const CrewMessageSchema = z.object({
 	id: z.string(),
 	at: z.string(),
@@ -169,6 +237,7 @@ export const CrewMessageSchema = z.object({
 	place: z.enum(['room', 'dm']),
 	// Where the admin said, after sending, this message should have gone.
 	corrected: RoutingSchema.nullable(),
+	exhibit: ExhibitSchema.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -178,15 +247,30 @@ export const AgentStatusSchema = z.object({
 })
 export type AgentStatusType = z.infer<typeof AgentStatusSchema>
 
+// The weekly cycle: Riker writes a brief early on Sunday, and the meeting
+// with the admin is due until it happens.
+export const WeeklySchema = z.object({
+	briefAt: z.string().nullable(),
+	meetingAt: z.string().nullable(),
+	// The IANA time zone the brief's "Sunday 04:00" is in.
+	timezone: z.string(),
+})
+export type WeeklyType = z.infer<typeof WeeklySchema>
+
+export const meetingDue = (weekly: WeeklyType) =>
+	!!weekly.briefAt && (!weekly.meetingAt || weekly.meetingAt < weekly.briefAt)
+
 // The crew room's synced state: what every connected browser holds live.
 export const RoomStateSchema = z.object({
 	statuses: z.record(z.string(), AgentStatusSchema),
+	weekly: WeeklySchema,
+	// Open items in the admin's stack, for the sidebar count.
+	stackCount: z.number(),
 })
 export type RoomStateType = z.infer<typeof RoomStateSchema>
 
-export const RoomSnapshotSchema = z.object({
+export const RoomSnapshotSchema = RoomStateSchema.extend({
 	messages: z.array(CrewMessageSchema),
-	statuses: z.record(z.string(), AgentStatusSchema),
 	// When this admin last opened the room, before this visit. The app draws
 	// the "New since" line here.
 	seenAt: z.string().nullable(),
@@ -218,6 +302,53 @@ export const OpenItemSchema = z.object({
 })
 export type OpenItemType = z.infer<typeof OpenItemSchema>
 
+// What the bridge knows about the admin: principles (philosophy, strategy,
+// taste) and lessons (how they decide). An entry counts only once the admin
+// keeps it; until then it is a proposal in their stack.
+export const CharterEntrySchema = z.object({
+	id: z.number(),
+	kind: z.enum(['principle', 'lesson']),
+	text: z.string(),
+	why: z.string().nullable(),
+	status: z.enum(['proposed', 'kept', 'dropped']),
+	at: z.string(),
+	keptAt: z.string().nullable(),
+})
+export type CharterEntryType = z.infer<typeof CharterEntrySchema>
+
+// One thing the bridge brought to the admin.
+// - decide: on hold until the admin answers
+// - confirm: the bridge acted in the admin's stead, and asks if that was right
+// - know: worth knowing, nothing to answer
+// - escalate: needs more than the crew has, such as a Claude Code session
+// - brief: the weekly brief
+// - charter: a proposed principle or lesson
+export const StackItemSchema = z.object({
+	id: z.number(),
+	kind: z.enum(['decide', 'confirm', 'know', 'escalate', 'brief', 'charter']),
+	author: z.enum(crewKeys),
+	title: z.string(),
+	body: z.string(),
+	actions: z.array(ActionSchema),
+	answer: z
+		.object({
+			actionId: z.string(),
+			label: z.string(),
+			note: z.string().nullable(),
+			at: z.string(),
+		})
+		.nullable(),
+	status: z.enum(['open', 'done']),
+	at: z.string(),
+})
+export type StackItemType = z.infer<typeof StackItemSchema>
+
+export const StackSchema = z.object({
+	items: z.array(StackItemSchema),
+	charter: z.array(CharterEntrySchema),
+})
+export type StackType = z.infer<typeof StackSchema>
+
 export const WorkspaceSchema = z.object({
 	agent: z.enum(crewKeys),
 	todos: z.array(TodoSchema),
@@ -232,3 +363,4 @@ export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
 	| { type: 'workspace'; agent: CrewKey }
+	| { type: 'stack' }

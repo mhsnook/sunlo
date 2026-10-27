@@ -22,10 +22,19 @@
 		"bindings": [{ "name": "CREW_ROOM", "class_name": "CrewRoom" }],
 	},
 	"migrations": [
-		{ "tag": "v1", "new_sqlite_classes": ["CrewRoom", "FlueProductAgent"] },
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"CrewRoom",
+				"FlueRikerAgent",
+				"FlueDataAgent",
+				"FlueProductAgent",
+			],
+		},
 	],
-	// Product's daily run at 07:00 UTC (.flue/cloudflare.ts).
-	"triggers": { "crons": ["0 7 * * *"] },
+	// Hourly: Product's daily run at 07:00 UTC, and Riker's brief at Sunday
+	// 04:00 in the admin's time zone (.flue/cloudflare.ts).
+	"triggers": { "crons": ["0 * * * *"] },
 	"routes": [
 		{
 			"pattern": "admin.sunlo.app",
@@ -50,6 +59,8 @@
 		// tools works; @cf/deepseek-ai/deepseek-v4-pro-0813 is the other one
 		// we considered.
 		"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
+		// Data's model: Data takes more steps over more context than the others.
+		"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
 		// Where agents will file issues once Monitor starts and the GitHub App

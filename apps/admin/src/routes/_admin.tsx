@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { getSession, isAdminQuery } from '~/lib/session'
 import { useCrewLive } from '~/lib/crew'
 import { CrewSidebar } from '~/components/crew/crew-sidebar'
+import { MeetingBanner } from '~/components/crew/meeting-banner'
 
 export const Route = createFileRoute('/_admin')({
 	beforeLoad: async ({ context }) => {
@@ -34,6 +35,7 @@ function CrewLayout() {
 				/>
 			</aside>
 			<main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+				<MeetingBanner />
 				<Outlet />
 			</main>
 		</div>

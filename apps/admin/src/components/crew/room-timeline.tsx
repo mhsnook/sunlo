@@ -22,6 +22,7 @@ import {
 	dayLabel,
 	timeLabel,
 } from './crew-parts'
+import { Exhibit } from './exhibit'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { useCorrectRouting } from '~/lib/crew'
 
@@ -174,6 +175,7 @@ function AuthorGroup({
 									<CrewText text={message.body} />
 								</Bubble>
 							)}
+							{message.exhibit && <Exhibit exhibit={message.exhibit} />}
 							{asksYou && <CardActions message={message} />}
 							{mine && message.routing && (
 								<MessageFooter>

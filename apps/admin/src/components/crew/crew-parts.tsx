@@ -1,5 +1,5 @@
 import Markdown from 'react-markdown'
-import { Users } from 'lucide-react'
+import { Inbox, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
@@ -11,11 +11,12 @@ export function AgentAvatar({
 	size = 'md',
 	className,
 }: {
-	agent: CrewKey | 'crew'
+	agent: CrewKey | 'crew' | 'stack'
 	size?: 'sm' | 'md' | 'lg'
 	className?: string
 }) {
-	const Icon = agent === 'crew' ? Users : crewIcons[agent]
+	const Icon =
+		agent === 'crew' ? Users : agent === 'stack' ? Inbox : crewIcons[agent]
 	return (
 		<span
 			aria-hidden

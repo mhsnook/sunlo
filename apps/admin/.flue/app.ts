@@ -1,8 +1,15 @@
 import { createAgentRouter } from '@flue/runtime/routing'
 import { z } from 'zod'
-import { crewKeys, isCrewKey, RoutingSchema } from '../shared/crew'
+import {
+	crewKeys,
+	isCrewKey,
+	RoutingSchema,
+	type StackItemType,
+} from '../shared/crew'
 import { createApi } from '../worker/api'
+import { Data } from './agents/data'
 import { Product } from './agents/product'
+import { Riker } from './agents/riker'
 import { deliver, roomFor, wake } from './crew'
 
 // worker/api.ts checks the admin on every /api route. These routes add the
@@ -95,6 +102,83 @@ api.get('/crew/agents/:agent', async (c) => {
 	return c.json(await (await roomFor(c.env)).workspace(agent))
 })
 
+api.get('/crew/stack', async (c) => {
+	return c.json(await (await roomFor(c.env)).stack())
+})
+
+// Answers to these wake the agent who asked; a "know" item or a brief only
+// leaves the stack.
+const answered = new Set<StackItemType['kind']>([
+	'decide',
+	'confirm',
+	'escalate',
+	'charter',
+])
+
+api.post('/crew/stack/:id/answer', async (c) => {
+	const input = z
+		.object({
+			actionId: z.string().min(1),
+			note: z.string().trim().max(2000).nullable().optional(),
+		})
+		.safeParse(await c.req.json().catch(() => null))
+	const id = z.coerce.number().int().safeParse(c.req.param('id'))
+	if (!input.success || !id.success) {
+		return c.json(
+			{ error: 'Send { actionId, note? } to a numeric item id' },
+			400
+		)
+	}
+	const room = await roomFor(c.env)
+	const item = (await room.stack()).items.find((i) => i.id === id.data)
+	const result = await room.answerStack({
+		id: id.data,
+		actionId: input.data.actionId,
+		note: input.data.note || null,
+		name: c.get('admin').name,
+	})
+	if (!result.ok) return c.json({ error: result.error }, result.status)
+	if (item && answered.has(item.kind)) {
+		await room.markWorking(result.author)
+		await deliver(result.author, 'team', 'crew.answer', result.body)
+	}
+	return c.json({ ok: true })
+})
+
+api.patch('/crew/charter/:id', async (c) => {
+	const input = z
+		.object({
+			text: z.string().trim().min(1).max(300).optional(),
+			status: z.enum(['kept', 'dropped']).optional(),
+		})
+		.safeParse(await c.req.json().catch(() => null))
+	const id = z.coerce.number().int().safeParse(c.req.param('id'))
+	if (!input.success || !id.success) {
+		return c.json(
+			{ error: 'Send { text?, status? } to a numeric entry id' },
+			400
+		)
+	}
+	const ok = await (await roomFor(c.env)).editCharter(id.data, input.data)
+	return ok
+		? c.json({ ok })
+		: c.json({ error: 'No charter entry with that id' }, 404)
+})
+
+api.put('/crew/weekly/timezone', async (c) => {
+	const input = z
+		.object({ timezone: z.string().min(1) })
+		.safeParse(await c.req.json().catch(() => null))
+	if (!input.success || !isTimeZone(input.data.timezone)) {
+		return c.json(
+			{ error: 'Send an IANA time zone, like America/New_York' },
+			400
+		)
+	}
+	await (await roomFor(c.env)).setTimezone(input.data.timezone)
+	return c.json({ ok: true })
+})
+
 // The room's WebSocket, opened by useAgent. worker/api.ts has checked the
 // admin, from the token in the query string.
 api.get('/crew/live', async (c) => (await roomFor(c.env)).fetch(c.req.raw))
@@ -110,6 +194,18 @@ api.use('/agents/*', async (c, next) => {
 	}
 	return next()
 })
+api.route('/agents/riker', createAgentRouter(Riker))
+api.route('/agents/data', createAgentRouter(Data))
 api.route('/agents/product', createAgentRouter(Product))
 
 export default api
+
+function isTimeZone(timezone: string) {
+	try {
+		return !!new Intl.DateTimeFormat('en-US', {
+			timeZone: timezone,
+		}).resolvedOptions().timeZone
+	} catch {
+		return false
+	}
+}

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import { crew, crewKeys } from '../../../shared/crew'
+import { crew, crewKeys, crewList } from '../../../shared/crew'
 import { isWorking, markRoomSeen, roomQuery } from '~/lib/crew'
 import { AgentAvatar } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
@@ -39,7 +39,9 @@ function CrewRoomPage() {
 					<AgentAvatar agent="crew" />
 					<div className="me-auto">
 						<h1 className="leading-tight font-semibold">The crew</h1>
-						<p className="text-muted-foreground text-xs">You and 6 agents</p>
+						<p className="text-muted-foreground text-xs">
+							You and {crewList.length} agents
+						</p>
 					</div>
 					<Button
 						variant="ghost"
@@ -96,9 +98,9 @@ function EmptyRoom() {
 			</div>
 			<h2 className="text-xl font-semibold">The crew</h2>
 			<p className="text-muted-foreground text-sm">
-				Product posts here after its daily run at 07:00 UTC. Ask it something
-				now with @Product, or write a note: a message that ends in “...” waits
-				for your next one.
+				Riker and Data are your bridge: ask them anything with @Riker or @Data,
+				and they bring what needs you to “Brought to you”. Product posts after
+				its daily run. A message that ends in “...” waits for your next one.
 			</p>
 		</div>
 	)

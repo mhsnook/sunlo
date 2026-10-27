@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useAgent } from 'agents/react'
+import { createFlueClient } from '@flue/sdk'
 import {
 	queryOptions,
 	useMutation,
@@ -9,16 +10,19 @@ import {
 import {
 	Activity,
 	Compass,
+	Cpu,
 	Languages,
 	MessageSquareQuote,
 	Shield,
 	Sprout,
+	Star,
 	type LucideIcon,
 } from 'lucide-react'
 import {
 	CrewMessageSchema,
 	RoomSnapshotSchema,
 	RoutingSchema,
+	StackSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
@@ -31,6 +35,8 @@ import { adminFetch } from './api'
 import { getSession } from './session'
 
 export const crewIcons: Record<CrewKey, LucideIcon> = {
+	riker: Star,
+	data: Cpu,
 	monitor: Activity,
 	moderator: Shield,
 	product: Compass,
@@ -54,6 +60,64 @@ export const workspaceQuery = (agent: CrewKey) =>
 		queryFn: async () =>
 			WorkspaceSchema.parse(await adminFetch(`crew/agents/${agent}`)),
 		staleTime: Infinity,
+	})
+
+export const stackQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'stack'],
+		queryFn: async () => StackSchema.parse(await adminFetch('crew/stack')),
+		staleTime: Infinity,
+	})
+
+export function useAnswerStack() {
+	return useMutation({
+		mutationFn: (input: {
+			id: number
+			actionId: string
+			note: string | null
+		}) =>
+			adminFetch(`crew/stack/${input.id}/answer`, {
+				method: 'POST',
+				body: JSON.stringify({ actionId: input.actionId, note: input.note }),
+			}),
+	})
+}
+
+export function useEditCharter() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: (input: {
+			id: number
+			text?: string
+			status?: 'kept' | 'dropped'
+		}) =>
+			adminFetch(`crew/charter/${input.id}`, {
+				method: 'PATCH',
+				body: JSON.stringify({ text: input.text, status: input.status }),
+			}),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: ['crew', 'stack'] }),
+	})
+}
+
+export function useSetTimezone() {
+	return useMutation({
+		mutationFn: (timezone: string) =>
+			adminFetch('crew/weekly/timezone', {
+				method: 'PUT',
+				body: JSON.stringify({ timezone }),
+			}),
+	})
+}
+
+// The client for one admin's 1:1 conversation with an agent.
+export const dmClient = (agent: CrewKey, uid: string) =>
+	createFlueClient({
+		url: `/api/agents/${agent}/dm-${uid}`,
+		// Called per request, so a refreshed Supabase token is picked up.
+		headers: async () => ({
+			authorization: `Bearer ${(await getSession())?.access_token ?? ''}`,
+		}),
 	})
 
 export const clefQuery = (text: string) =>
@@ -158,12 +222,15 @@ export function useCrewLive() {
 		},
 		onStateUpdate: (state) => {
 			queryClient.setQueryData<RoomSnapshotType>(['crew', 'room'], (room) =>
-				room ? { ...room, statuses: state.statuses } : room
+				room ? { ...room, ...state } : room
 			)
 		},
 		onMessage: ({ data }: MessageEvent) => {
 			const event = JSON.parse(String(data)) as RoomEvent
 			if (event.type === 'message') upsertMessage(queryClient, event.message)
+			if (event.type === 'stack') {
+				void queryClient.invalidateQueries({ queryKey: ['crew', 'stack'] })
+			}
 			if (event.type === 'workspace') {
 				void queryClient.invalidateQueries({
 					queryKey: ['crew', 'workspace', event.agent],

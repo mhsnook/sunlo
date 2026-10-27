@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useFlueAgent } from '@flue/react'
-import { createFlueClient, type FlueConversationMessage } from '@flue/sdk'
+import type { FlueConversationMessage } from '@flue/sdk'
 import { ChevronLeft, Minus, MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Bubble } from '@/components/ui/bubble'
@@ -16,8 +16,7 @@ import {
 import { MessageScroller } from '@/components/ui/message-scroller'
 import { toastError } from '@/components/ui/sonner'
 import { crew, type CrewKey } from '../../../shared/crew'
-import { getSession } from '~/lib/session'
-import { workspaceQuery } from '~/lib/crew'
+import { dmClient, workspaceQuery } from '~/lib/crew'
 import { AgentAvatar, ChangeCard, CrewText } from './crew-parts'
 
 // A 1:1 chat with one agent, as the Flue conversation "dm-<admin uid>". It
@@ -25,17 +24,7 @@ import { AgentAvatar, ChangeCard, CrewText } from './crew-parts'
 export function AgentChat({ agent, uid }: { agent: CrewKey; uid: string }) {
 	const [open, setOpen] = useState(true)
 	const [draft, setDraft] = useState('')
-	const client = useMemo(
-		() =>
-			createFlueClient({
-				url: `/api/agents/${agent}/dm-${uid}`,
-				// Called per request, so a refreshed Supabase token is picked up.
-				headers: async () => ({
-					authorization: `Bearer ${(await getSession())?.access_token ?? ''}`,
-				}),
-			}),
-		[agent, uid]
-	)
+	const client = useMemo(() => dmClient(agent, uid), [agent, uid])
 	const chat = useFlueAgent({ client })
 	// A failed run leaves an assistant message with nothing to show.
 	const visible = chat.messages.filter(
