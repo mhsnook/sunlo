@@ -25,7 +25,7 @@ export default {
 				'riker',
 				conversationOf('riker'),
 				'weekly.brief',
-				"Write this week's brief with write_brief. The weekly meeting with the admin is due once it is in their stack.",
+				"Write this week's brief with write_brief. The weekly meeting with the admin is due once the brief is in the Enterprise thread.",
 				attributes
 			)
 		}
