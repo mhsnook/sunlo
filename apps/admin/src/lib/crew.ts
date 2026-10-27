@@ -100,10 +100,43 @@ export function useForgetCrewMemory() {
 	})
 }
 
+export function useEditCrewMemory() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: (input: { id: number; text: string }) =>
+			adminFetch(`crew/memory/${input.id}`, {
+				method: 'PATCH',
+				json: { text: input.text },
+			}),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: crewMemoryQuery().queryKey }),
+	})
+}
+
+export function useEditMemory(agent: CrewKey) {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: (input: { id: number; text: string }) =>
+			adminFetch(`crew/agents/${agent}/memory/${input.id}`, {
+				method: 'PATCH',
+				json: { text: input.text },
+			}),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: workspaceQuery(agent).queryKey,
+			}),
+	})
+}
+
 export function useForgetMemory(agent: CrewKey) {
+	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: (id: number) =>
 			adminFetch(`crew/agents/${agent}/memory/${id}`, { method: 'DELETE' }),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: workspaceQuery(agent).queryKey,
+			}),
 	})
 }
 

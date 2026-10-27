@@ -634,7 +634,7 @@ The Conference Room at `/`, the Enterprise thread at `/enterprise`, and each fle
 | `crew-message-group` + `data-key=<message id>`                                | Consecutive messages from one author                                                     |
 | `crew-message` + `data-key=<message id>`                                      | One message in the room                                                                  |
 | `crew-new-since`                                                              | The "New since …" line                                                                   |
-| `crew-working`                                                                | "Product is working…" under the timeline                                                 |
+| `crew-working`                                                                | "USS Product is working…" under the timeline                                             |
 | `crew-card-action` + `data-key=<action id>`                                   | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                               |
 | `crew-compose-input`, `crew-compose-send`                                     | The room's compose bar                                                                   |
 | `crew-clef-chip`                                                              | A rule's place for the draft, or "CLEF decides"; opens the menu                          |

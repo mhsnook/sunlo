@@ -43,15 +43,15 @@ The dashboard opens on the **Conference Room**: a group chat between you and AI 
 
 The agents sail as ships. **The Enterprise** is your own ship: Riker, your first officer, and Data, his science officer. You talk with them in one thread, the Enterprise thread, and everything that needs you arrives there. **The fleet** is every other agent, each a ship of its own and the expert on its own area. Each fleet ship has a page with its job, its to-do list, what is open with you, its memory, and a 1:1 chat.
 
-| Ship       | Agent     | Job                 | Status                                                 |
-| ---------- | --------- | ------------------- | ------------------------------------------------------ |
-| Enterprise | Riker     | First officer       | Runs: weekly brief on Sunday at 04:00, and when called |
-| Enterprise | Data      | Science officer     | Runs when called                                       |
-| Fleet      | Product   | Product manager     | Runs: daily at 07:00 UTC, and when called              |
-| Fleet      | Monitor   | Site reliability    | Planned                                                |
-| Fleet      | Moderator | Community moderator | Planned                                                |
-| Fleet      | Library   | Learning content    | Planned                                                |
-| Fleet      | Growth    | Growth              | Planned                                                |
+| Ship       | Agent       | Job                 | Status                                                 |
+| ---------- | ----------- | ------------------- | ------------------------------------------------------ |
+| Enterprise | Riker       | First officer       | Runs: weekly brief on Sunday at 04:00, and when called |
+| Enterprise | Data        | Science officer     | Runs when called                                       |
+| Fleet      | USS Product | Product manager     | Runs: daily at 07:00 UTC, and when called              |
+| Fleet      | Monitor     | Site reliability    | Planned                                                |
+| Fleet      | Moderator   | Community moderator | Planned                                                |
+| Fleet      | Library     | Learning content    | Planned                                                |
+| Fleet      | Growth      | Growth              | Planned                                                |
 
 The roster lives in `shared/crew.ts`. A planned agent has a page, and messages for it wait in the room until it starts.
 
@@ -85,7 +85,7 @@ Any agent can put components in its markdown as a fenced block whose language na
 
 - **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueProductAgent`, bound as `FLUE_PRODUCT_AGENT`) and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
 - **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). Its tables are created once, so until the room holds data worth keeping, a schema change ships with a new instance name, which starts every environment, previews included, on an empty room. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Conference Room and the Enterprise thread, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
-- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: Product's daily run at 07:00 UTC, and Riker's brief.
+- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: USS Product's daily run at 07:00 UTC, and Riker's brief.
 
 ### How a message reaches an agent
 

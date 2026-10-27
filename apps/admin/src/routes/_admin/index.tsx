@@ -119,8 +119,8 @@ function EmptyRoom() {
 			<h2 className="text-xl font-semibold">Conference Room</h2>
 			<p className="text-muted-foreground text-sm">
 				The whole crew reads this room. Write @ and a name to ask someone; Riker
-				and Data bring what needs you to the Enterprise. Product posts after its
-				daily run. A message that ends in “...” waits for your next one.
+				and Data bring what needs you to the Enterprise. USS Product posts after
+				its daily run. A message that ends in “...” waits for your next one.
 			</p>
 		</div>
 	)

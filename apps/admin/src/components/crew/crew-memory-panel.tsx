@@ -1,20 +1,23 @@
 import { useState } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Trash2, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
 import {
 	crewMemoryQuery,
 	useAddCrewMemory,
+	useEditCrewMemory,
 	useForgetCrewMemory,
 } from '~/lib/crew'
+import { EditableEntry } from './editable-entry'
 
 // The few things every agent knows about the admin, such as their name and
 // how to refer to them. Only the admin writes here.
 export function CrewMemoryPanel({ onClose }: { onClose: () => void }) {
 	const { data: entries } = useSuspenseQuery(crewMemoryQuery())
 	const add = useAddCrewMemory()
+	const edit = useEditCrewMemory()
 	const forget = useForgetCrewMemory()
 	const [draft, setDraft] = useState('')
 
@@ -44,29 +47,20 @@ export function CrewMemoryPanel({ onClose }: { onClose: () => void }) {
 				{entries.length > 0 && (
 					<ul className="space-y-2">
 						{entries.map((entry) => (
-							<li
+							<EditableEntry
 								key={entry.id}
-								className="bg-card flex items-start gap-2 rounded border p-3 text-sm"
-								data-testid="crew-memory-entry"
-								data-key={entry.id}
+								id={entry.id}
+								text={entry.text}
+								label="Crew memory"
+								busy={edit.isPending || forget.isPending}
+								onSave={(text) => edit.mutateAsync({ id: entry.id, text })}
+								onDelete={() => forget.mutateAsync(entry.id)}
+								deleteLabel="Forget this"
+								className="bg-card rounded border p-3"
+								testId="crew-memory-entry"
 							>
-								<span className="me-auto whitespace-pre-wrap">
-									{entry.text}
-								</span>
-								<Button
-									variant="ghost"
-									size="icon"
-									aria-label="Forget this"
-									disabled={forget.isPending}
-									onClick={() =>
-										forget.mutate(entry.id, {
-											onError: (error) => toastError(error.message),
-										})
-									}
-								>
-									<Trash2 />
-								</Button>
-							</li>
+								{entry.text}
+							</EditableEntry>
 						))}
 					</ul>
 				)}

@@ -128,6 +128,22 @@ api.delete(
 	}
 )
 
+api.patch(
+	'/crew/agents/:agent/memory/:id',
+	numericId('No memory there'),
+	json(z.object({ text: z.string().trim().min(1).max(2000) }), 'Send { text }'),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No memory there' }, 404)
+		const ok = await (
+			await roomFor()
+		).editMemory(agent, c.req.valid('param').id, c.req.valid('json').text)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No memory with that id' }, 404)
+	}
+)
+
 api.get('/crew/enterprise', async (c) => {
 	return c.json(await (await roomFor()).enterprise(c.get('admin').uid))
 })
@@ -178,6 +194,20 @@ api.delete(
 	numericId('No crew memory with that id'),
 	async (c) => {
 		const ok = await (await roomFor()).forgetCrewMemory(c.req.valid('param').id)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No crew memory with that id' }, 404)
+	}
+)
+
+api.patch(
+	'/crew/memory/:id',
+	numericId('No crew memory with that id'),
+	json(z.object({ text: z.string().trim().min(1).max(500) }), 'Send { text }'),
+	async (c) => {
+		const ok = await (
+			await roomFor()
+		).editCrewMemory(c.req.valid('param').id, c.req.valid('json').text)
 		return ok
 			? c.json({ ok })
 			: c.json({ error: 'No crew memory with that id' }, 404)

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import { Check, Pencil, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
@@ -12,6 +11,7 @@ import {
 	useSetTimezone,
 } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
+import { EditableEntry } from './editable-entry'
 
 // What the Enterprise knows about the admin, in the ship's log. The admin
 // edits it directly; Riker and Data can only propose entries.
@@ -48,83 +48,30 @@ export function CharterPanel() {
 
 function CharterEntry({ entry }: { entry: CharterEntryType }) {
 	const edit = useEditCharter()
-	const [draft, setDraft] = useState<string | null>(null)
-	const save = (change: { text?: string; status?: 'dropped' }) =>
-		edit.mutate(
-			{ id: entry.id, ...change },
-			{
-				onSuccess: () => setDraft(null),
-				onError: (error) => toastError(error.message),
-			}
-		)
 	return (
-		<li
-			className="bg-card flex items-start gap-2 rounded border p-3 text-sm"
-			data-testid="charter-entry"
-			data-key={entry.id}
-		>
-			<span className="text-muted-foreground w-16 shrink-0 text-xs capitalize">
-				{entry.kind}
-			</span>
-			{draft === null ? (
-				<span className="flex-1">
-					{entry.text}
-					{entry.keptAt && (
-						<span className="text-muted-foreground ms-2 text-xs">
-							kept {dayLabel(entry.keptAt)}
-						</span>
-					)}
+		<EditableEntry
+			id={entry.id}
+			text={entry.text}
+			label="Charter entry"
+			leading={
+				<span className="text-muted-foreground w-16 shrink-0 text-xs capitalize">
+					{entry.kind}
 				</span>
-			) : (
-				<Input
-					value={draft}
-					onChange={(event) => setDraft(event.target.value)}
-					className="flex-1"
-					aria-label="Charter entry"
-				/>
+			}
+			busy={edit.isPending}
+			onSave={(text) => edit.mutateAsync({ id: entry.id, text })}
+			onDelete={() => edit.mutateAsync({ id: entry.id, status: 'dropped' })}
+			deleteLabel="Drop this entry"
+			className="bg-card rounded border p-3"
+			testId="charter-entry"
+		>
+			{entry.text}
+			{entry.keptAt && (
+				<span className="text-muted-foreground ms-2 text-xs">
+					kept {dayLabel(entry.keptAt)}
+				</span>
 			)}
-			{draft === null ? (
-				<>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Edit this entry"
-						onClick={() => setDraft(entry.text)}
-					>
-						<Pencil />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Drop this entry"
-						disabled={edit.isPending}
-						onClick={() => save({ status: 'dropped' })}
-					>
-						<Trash2 />
-					</Button>
-				</>
-			) : (
-				<>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Save"
-						disabled={edit.isPending || !draft.trim()}
-						onClick={() => save({ text: draft.trim() })}
-					>
-						<Check />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Cancel"
-						onClick={() => setDraft(null)}
-					>
-						<X />
-					</Button>
-				</>
-			)}
-		</li>
+		</EditableEntry>
 	)
 }
 

@@ -15,6 +15,7 @@ export const crewKeys = [
 export type CrewKey = (typeof crewKeys)[number]
 
 export type CrewMember = {
+	// Also the @mention handle, since a name can hold spaces.
 	key: CrewKey
 	name: string
 	title: string
@@ -78,7 +79,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	product: {
 		key: 'product',
-		name: 'Product',
+		name: 'USS Product',
 		title: 'Product manager',
 		looksAfter: [
 			'The product plan for the next six weeks',

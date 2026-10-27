@@ -717,6 +717,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return deleted.length > 0
 	}
 
+	editMemory(agent: CrewKey, id: number, text: string) {
+		const edited = this.sql`
+			update memory set text = ${text}
+			where id = ${id} and agent = ${agent}
+			returning id`
+		if (edited.length) this.push({ type: 'workspace', agent })
+		return edited.length > 0
+	}
+
 	addOpenItem(agent: CrewKey, title: string, tag: string | null) {
 		const { id } = this.sql<{ id: number }>`
 			insert into open_item (agent, title, tag, at)
@@ -898,7 +907,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const posts = [
 			`**Minutes of this week's meeting**\n\n${input.minutes}`,
 			...input.directives.map(
-				(directive) => `@${crew[directive.ship].name} ${directive.text}`
+				(directive) => `@${directive.ship} ${directive.text}`
 			),
 		]
 		return posts.flatMap(
@@ -946,6 +955,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			delete from crew_memory where id = ${id} returning id`
 		if (deleted.length) this.push({ type: 'crew-memory' })
 		return deleted.length > 0
+	}
+
+	editCrewMemory(id: number, text: string) {
+		const edited = this.sql`
+			update crew_memory set text = ${text} where id = ${id} returning id`
+		if (edited.length) this.push({ type: 'crew-memory' })
+		return edited.length > 0
 	}
 
 	private crewMemoryText() {

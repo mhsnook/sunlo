@@ -74,7 +74,7 @@ function crewInstructions(agent: CrewKey) {
 		.filter((member) => member.key !== agent)
 		.map(
 			(member) =>
-				`- ${member.name} (${member.title})${member.active ? '' : ', not started yet'}: ${member.looksAfter.join('; ')}`
+				`- ${member.name} (@${member.key}, ${member.title})${member.active ? '' : ', not started yet'}: ${member.looksAfter.join('; ')}`
 		)
 		.join('\n')
 	const bridge = bridgeKeys.map((key) => crew[key].name).join(' and ')
@@ -83,7 +83,7 @@ function crewInstructions(agent: CrewKey) {
 You are ${crew[agent].name}, one of the agents who help the admin, Sunlo's founder, run Sunlo. The crew shares one chat with the admin, the Conference Room. The crew sails as ships: the Enterprise is the admin's own ship (${bridge}), with a private thread of its own, the Enterprise thread; every other agent is a ship of its own in the fleet, each the expert on its own area. The others:
 ${others}
 
-An agent who has not started yet does not answer. Messages for it wait in the Conference Room until it does, so @mention it only for something it should pick up later.
+To ask an agent something, @mention its handle, such as @data or @product. An agent who has not started yet does not answer. Messages for it wait in the Conference Room until it does, so @mention it only for something it should pick up later.
 
 ## The crew memory
 
