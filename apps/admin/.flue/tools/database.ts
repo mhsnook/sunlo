@@ -1,22 +1,12 @@
 import { defineTool } from '@flue/runtime'
 import { env } from 'cloudflare:workers'
-import type { Sql } from 'postgres'
 import * as v from 'valibot'
-import { connect, withDeadline } from '../../worker/db'
+import { withSql } from '../../worker/db'
 import {
 	activityBetween,
 	QueryRejectedError,
 	runReadOnlyQuery,
 } from '../../worker/crew/queries'
-
-async function withSql<T>(run: (sql: Sql) => Promise<T>) {
-	const sql = connect(env.HYPERDRIVE)
-	try {
-		return await withDeadline(run(sql), 20_000, 'The database')
-	} finally {
-		await sql.end({ timeout: 5 })
-	}
-}
 
 const Timestamp = v.pipe(
 	v.string(),
@@ -31,7 +21,7 @@ export const activityBetweenTool = defineTool({
 	annotations: { readOnlyHint: true },
 	timeoutMs: 30_000,
 	async run({ data }) {
-		const result = await withSql((sql) =>
+		const result = await withSql(env.HYPERDRIVE, 20_000, (sql) =>
 			activityBetween(sql, data.since, data.until)
 		)
 		return JSON.stringify(result)
@@ -47,7 +37,9 @@ export const runSqlTool = defineTool({
 	timeoutMs: 30_000,
 	async run({ data }) {
 		try {
-			return await withSql((sql) => runReadOnlyQuery(sql, data.query))
+			return await withSql(env.HYPERDRIVE, 20_000, (sql) =>
+				runReadOnlyQuery(sql, data.query)
+			)
 		} catch (error) {
 			if (error instanceof QueryRejectedError) throw error
 			// Postgres errors (a typo, a missing column) are for the model to

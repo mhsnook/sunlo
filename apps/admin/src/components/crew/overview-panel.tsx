@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Activity, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
 import {
@@ -32,22 +31,18 @@ export function OverviewPanel({ onClose }: { onClose: () => void }) {
 					className="flex gap-1 rounded-2xl border p-0.5"
 				>
 					{rangeOptions.map((option) => (
-						<button
+						<Button
 							key={option}
-							type="button"
+							size="sm"
+							variant={option === days ? 'default' : 'neutral'}
 							data-testid="crew-overview-range"
 							data-key={option}
 							aria-pressed={option === days}
 							onClick={() => setDays(option)}
-							className={cn(
-								'rounded-xl px-2 py-0.5 text-xs',
-								option === days
-									? 'bg-primary-700 text-paper'
-									: 'hover:bg-neutral-200'
-							)}
+							className="h-6 px-2 text-xs shadow-none"
 						>
 							{option} days
-						</button>
+						</Button>
 					))}
 				</nav>
 				<Button

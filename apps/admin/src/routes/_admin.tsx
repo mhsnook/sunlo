@@ -24,15 +24,11 @@ function AdminLayout() {
 }
 
 function CrewLayout() {
-	const { session } = Route.useRouteContext()
 	useCrewLive()
 	return (
 		<div className="flex h-dvh">
 			<aside className="bg-primary-50 hidden w-72 shrink-0 border-e md:block">
-				<CrewSidebar
-					email={session.user.email ?? ''}
-					myAuthor={`admin:${session.user.id}`}
-				/>
+				<CrewSidebar />
 			</aside>
 			<main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
 				<MeetingBanner />

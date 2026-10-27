@@ -1,10 +1,24 @@
-import type { Sql } from 'postgres'
+import type { Fragment, Sql } from 'postgres'
 
 type Json = Record<string, unknown>
 
 // Both queries build their whole answer as one jsonb value, so the JSON the
 // app receives is the same shape the admin_activity_* RPCs used to return.
 // Days are UTC calendar days, not the app's 4am review-day cutoff.
+
+// Everything a user does that counts as activity, from `since` on, as
+// (kind, uid, created_at) rows. Signups are not activity.
+export const activityEvents = (sql: Sql, since: Fragment) => sql`
+	select 'review' as kind, r.uid, r.created_at from public.user_card_review r where r.created_at >= ${since}
+	-- user_card holds a forward and a reverse card per phrase: count the phrase once
+	union all select 'card_added', c.uid, min(c.created_at) from public.user_card c where c.created_at >= ${since} group by c.uid, c.phrase_id
+	union all select 'deck_created', d.uid, d.created_at from public.user_deck d where d.created_at >= ${since}
+	union all select 'phrase_added', p.added_by, p.created_at from public.phrase p where p.created_at >= ${since}
+	union all select 'translation_added', t.added_by, t.created_at from public.phrase_translation t where t.created_at >= ${since}
+	union all select 'request_added', q.requester_uid, q.created_at from public.phrase_request q where q.created_at >= ${since}
+	union all select 'comment_added', m.uid, m.created_at from public.request_comment m where m.created_at >= ${since}
+	union all select 'playlist_added', l.uid, l.created_at from public.phrase_playlist l where l.created_at >= ${since}
+	union all select 'chat_message', x.sender_uid, x.created_at from public.chat_message x where x.created_at >= ${since}`
 
 export async function activityOverview(sql: Sql, days: number) {
 	const [{ result }] = await sql<[{ result: Json }]>`
@@ -15,16 +29,7 @@ export async function activityOverview(sql: Sql, days: number) {
 			) s
 		),
 		events as (
-			select 'review' as kind, r.uid, r.created_at from public.user_card_review r where r.created_at >= (select prev_since from bounds)
-			-- user_card holds a forward and a reverse card per phrase: count the phrase once
-			union all select 'card_added', c.uid, min(c.created_at) from public.user_card c where c.created_at >= (select prev_since from bounds) group by c.uid, c.phrase_id
-			union all select 'deck_created', d.uid, d.created_at from public.user_deck d where d.created_at >= (select prev_since from bounds)
-			union all select 'phrase_added', p.added_by, p.created_at from public.phrase p where p.created_at >= (select prev_since from bounds)
-			union all select 'translation_added', t.added_by, t.created_at from public.phrase_translation t where t.created_at >= (select prev_since from bounds)
-			union all select 'request_added', q.requester_uid, q.created_at from public.phrase_request q where q.created_at >= (select prev_since from bounds)
-			union all select 'comment_added', m.uid, m.created_at from public.request_comment m where m.created_at >= (select prev_since from bounds)
-			union all select 'playlist_added', l.uid, l.created_at from public.phrase_playlist l where l.created_at >= (select prev_since from bounds)
-			union all select 'chat_message', x.sender_uid, x.created_at from public.chat_message x where x.created_at >= (select prev_since from bounds)
+			${activityEvents(sql, sql`(select prev_since from bounds)`)}
 			union all select 'signup', u.id, u.created_at from admin.user_account u where u.created_at >= (select prev_since from bounds)
 		),
 		days as (
@@ -87,15 +92,7 @@ export async function userActivity(sql: Sql, days: number, limit: number) {
 			select (date_trunc('day', now() at time zone 'utc') - make_interval(days => ${days}::int - 1)) at time zone 'utc' as since
 		),
 		events as (
-			select 'review' as kind, r.uid, r.created_at from public.user_card_review r where r.created_at >= (select since from bounds)
-			union all select 'card_added', c.uid, min(c.created_at) from public.user_card c where c.created_at >= (select since from bounds) group by c.uid, c.phrase_id
-			union all select 'deck_created', d.uid, d.created_at from public.user_deck d where d.created_at >= (select since from bounds)
-			union all select 'phrase_added', p.added_by, p.created_at from public.phrase p where p.created_at >= (select since from bounds)
-			union all select 'translation_added', t.added_by, t.created_at from public.phrase_translation t where t.created_at >= (select since from bounds)
-			union all select 'request_added', q.requester_uid, q.created_at from public.phrase_request q where q.created_at >= (select since from bounds)
-			union all select 'comment_added', m.uid, m.created_at from public.request_comment m where m.created_at >= (select since from bounds)
-			union all select 'playlist_added', l.uid, l.created_at from public.phrase_playlist l where l.created_at >= (select since from bounds)
-			union all select 'chat_message', x.sender_uid, x.created_at from public.chat_message x where x.created_at >= (select since from bounds)
+			${activityEvents(sql, sql`(select since from bounds)`)}
 		),
 		per_user as (
 			select

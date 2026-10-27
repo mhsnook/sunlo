@@ -1,3 +1,5 @@
+import { fromMarkdown } from 'mdast-util-from-markdown'
+import { visit } from 'unist-util-visit'
 import { z } from 'zod'
 
 // Components an agent can put in its markdown, as a fenced block whose
@@ -12,7 +14,7 @@ import { z } from 'zod'
 
 const Cell = z.union([z.string(), z.number(), z.null()])
 
-export const ChartBlockSchema = z.object({
+const ChartBlockSchema = z.object({
 	type: z.enum(['line', 'bar', 'area']),
 	title: z.string().optional(),
 	// The key in each row that holds the x value.
@@ -28,7 +30,7 @@ export const ChartBlockSchema = z.object({
 })
 export type ChartBlockType = z.infer<typeof ChartBlockSchema>
 
-export const StatsBlockSchema = z.object({
+const StatsBlockSchema = z.object({
 	items: z
 		.array(
 			z.object({
@@ -44,7 +46,7 @@ export const StatsBlockSchema = z.object({
 })
 export type StatsBlockType = z.infer<typeof StatsBlockSchema>
 
-export const TableBlockSchema = z.object({
+const TableBlockSchema = z.object({
 	title: z.string().optional(),
 	columns: z
 		.array(
@@ -74,38 +76,52 @@ export type BlockKind = keyof typeof blockSchemas
 export const isBlockKind = (value: string): value is BlockKind =>
 	value in blockSchemas
 
-const fence = /```(\w+)[^\n]*\n([\s\S]*?)```/g
+// The component blocks in a markdown text, found the way the renderer finds
+// them: ~~~ fences and longer ``` fences count too.
+export function codeBlocks(text: string) {
+	const blocks: Array<{ kind: BlockKind; source: string }> = []
+	visit(fromMarkdown(text), 'code', (node) => {
+		if (node.lang && isBlockKind(node.lang)) {
+			blocks.push({ kind: node.lang, source: node.value })
+		}
+	})
+	return blocks
+}
+
+export function parseBlock<K extends BlockKind>(
+	kind: K,
+	source: string
+):
+	| { ok: true; data: z.infer<(typeof blockSchemas)[K]> }
+	| { ok: false; error: string } {
+	let json: unknown
+	try {
+		json = JSON.parse(source)
+	} catch {
+		return { ok: false, error: `The ${kind} block is not valid JSON.` }
+	}
+	const result = blockSchemas[kind].safeParse(json)
+	if (result.success) {
+		return { ok: true, data: result.data as z.infer<(typeof blockSchemas)[K]> }
+	}
+	return {
+		ok: false,
+		error: `The ${kind} block does not match its shape: ${result.error.issues
+			.slice(0, 3)
+			.map((issue) => `${issue.path.join('.') || '(top)'}: ${issue.message}`)
+			.join('; ')}`,
+	}
+}
 
 // Every component block in the text that fails to parse, as messages an
 // agent can act on. Fences in other languages are ordinary code.
-export function blockErrors(text: string): Array<string> {
-	const errors: Array<string> = []
-	for (const [, kind, body] of text.matchAll(fence)) {
-		if (!isBlockKind(kind)) continue
-		let json: unknown
-		try {
-			json = JSON.parse(body)
-		} catch {
-			errors.push(`The ${kind} block is not valid JSON.`)
-			continue
-		}
-		const result = blockSchemas[kind].safeParse(json)
-		if (!result.success) {
-			errors.push(
-				`The ${kind} block does not match its shape: ${result.error.issues
-					.slice(0, 3)
-					.map(
-						(issue) => `${issue.path.join('.') || '(top)'}: ${issue.message}`
-					)
-					.join('; ')}`
-			)
-		}
-	}
-	return errors
-}
+export const blockErrors = (text: string) =>
+	codeBlocks(text).flatMap(({ kind, source }) => {
+		const parsed = parseBlock(kind, source)
+		return parsed.ok ? [] : [parsed.error]
+	})
 
-export const hasBlocks = (text: string) =>
-	[...text.matchAll(fence)].some(([, kind]) => isBlockKind(kind))
+export const hasBlocks = (text: string) => codeBlocks(text).length > 0
 
 export const BLOCKS_GUIDE = `## Components in your messages
 

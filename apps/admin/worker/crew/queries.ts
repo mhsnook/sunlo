@@ -1,4 +1,5 @@
 import type { Sql } from 'postgres'
+import { activityEvents } from '../stats'
 
 export const MAX_ROWS = 200
 const MAX_RESULT_CHARS = 30_000
@@ -10,15 +11,7 @@ export async function activityBetween(sql: Sql, since: string, until: string) {
 	const [{ result }] = await sql<[{ result: Record<string, unknown> }]>`
 		with w as (select ${since}::timestamptz as since, ${until}::timestamptz as until),
 		events as (
-			select r.uid, r.created_at from public.user_card_review r
-			union all select c.uid, c.created_at from public.user_card c
-			union all select d.uid, d.created_at from public.user_deck d
-			union all select p.added_by, p.created_at from public.phrase p
-			union all select t.added_by, t.created_at from public.phrase_translation t
-			union all select q.requester_uid, q.created_at from public.phrase_request q
-			union all select m.uid, m.created_at from public.request_comment m
-			union all select l.uid, l.created_at from public.phrase_playlist l
-			union all select x.sender_uid, x.created_at from public.chat_message x
+			${activityEvents(sql, sql`(select since from w)`)}
 		)
 		select jsonb_build_object(
 			'since', (select since from w),

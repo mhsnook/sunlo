@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import { crew, crewKeys, crewList } from '../../../shared/crew'
+import { adminAuthor, crew, crewKeys, crewList } from '../../../shared/crew'
 import { isWorking, markRoomSeen, roomQuery } from '~/lib/crew'
 import { AgentAvatar } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
@@ -56,7 +56,7 @@ function CrewRoomPage() {
 					{room.messages.length ? (
 						<RoomTimeline
 							messages={room.messages}
-							myAuthor={`admin:${session.user.id}`}
+							myAuthor={adminAuthor(session.user.id)}
 							newSince={newSince}
 						/>
 					) : (

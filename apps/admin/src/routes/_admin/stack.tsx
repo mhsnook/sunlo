@@ -7,12 +7,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
 import { crew, type StackItemType } from '../../../shared/crew'
 import { stackQuery, useAnswerStack } from '~/lib/crew'
-import {
-	AgentAvatar,
-	CrewText,
-	dayLabel,
-	timeLabel,
-} from '~/components/crew/crew-parts'
+import { AgentAvatar, CrewText } from '~/components/crew/crew-parts'
+import { dayLabel, timeLabel } from '~/lib/format'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 
 export const Route = createFileRoute('/_admin/stack')({
@@ -94,6 +90,9 @@ function StackPage() {
 	)
 }
 
+// What a brief or a "know" item offers: it has nothing to answer.
+const done = { id: 'done', label: 'Done' }
+
 function StackCard({ item }: { item: StackItemType }) {
 	const answer = useAnswerStack()
 	const [note, setNote] = useState('')
@@ -125,13 +124,9 @@ function StackCard({ item }: { item: StackItemType }) {
 					<CrewText text={item.body} />
 				</div>
 			) : (
-				<button
-					type="button"
-					className="text-primary-700 text-sm underline"
-					onClick={() => setExpanded(true)}
-				>
+				<Button size="sm" variant="soft" onClick={() => setExpanded(true)}>
 					Read the brief
-				</button>
+				</Button>
 			)}
 			{item.actions.length > 0 && (
 				<Textarea
@@ -143,11 +138,11 @@ function StackCard({ item }: { item: StackItemType }) {
 				/>
 			)}
 			<div className="flex flex-wrap gap-2">
-				{item.actions.map((action, index) => (
+				{(item.actions.length ? item.actions : [done]).map((action, index) => (
 					<Button
 						key={action.id}
 						size="sm"
-						variant={index === 0 ? 'default' : 'neutral'}
+						variant={index === 0 && action !== done ? 'default' : 'neutral'}
 						disabled={answer.isPending}
 						data-testid="stack-item-action"
 						data-key={action.id}
@@ -156,18 +151,6 @@ function StackCard({ item }: { item: StackItemType }) {
 						{action.label}
 					</Button>
 				))}
-				{item.actions.length === 0 && (
-					<Button
-						size="sm"
-						variant="neutral"
-						disabled={answer.isPending}
-						data-testid="stack-item-action"
-						data-key="done"
-						onClick={() => respond('done')}
-					>
-						Done
-					</Button>
-				)}
 			</div>
 		</li>
 	)

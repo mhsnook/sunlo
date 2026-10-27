@@ -15,14 +15,8 @@ import {
 } from '@/components/ui/message'
 import { hasBlocks } from '../../../shared/blocks'
 import { crew, isCrewKey, type CrewMessageType } from '../../../shared/crew'
-import {
-	AgentAvatar,
-	CardActions,
-	ChangeCard,
-	CrewText,
-	dayLabel,
-	timeLabel,
-} from './crew-parts'
+import { AgentAvatar, CardActions, ChangeCard, CrewText } from './crew-parts'
+import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { useCorrectRouting } from '~/lib/crew'
 
@@ -69,10 +63,7 @@ export function RoomTimeline({
 			className="text-primary-700 [&>span:not(:nth-child(2))]:bg-primary-300 font-semibold"
 			data-testid="crew-new-since"
 		>
-			New since{' '}
-			{dayLabel(newSince) === 'Today'
-				? timeLabel(newSince)
-				: dayLabel(newSince)}
+			New since {timeOrDay(newSince)}
 		</MessageMarker>
 	) : null
 

@@ -2,11 +2,8 @@ import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
 import type { CrewKey, StackItemType } from '../../shared/crew'
 import { TEAM } from '../../worker/crew/room'
-import { roomFor } from '../crew'
-import { assertBlocks } from './check-blocks'
-
-const Text = v.pipe(v.string(), v.trim(), v.minLength(1))
-const Label = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(24))
+import { roomFor, wake } from '../crew'
+import { assertBlocks, Options, Text, toActions } from './posting'
 
 const defaultActions: Record<
 	'decide' | 'confirm' | 'know' | 'escalate',
@@ -42,9 +39,7 @@ Their answer comes back to you.`,
 			kind: v.picklist(['decide', 'confirm', 'know', 'escalate']),
 			title: v.pipe(Text, v.maxLength(140)),
 			body: v.pipe(Text, v.maxLength(4000)),
-			options: v.optional(
-				v.pipe(v.array(Label), v.minLength(2), v.maxLength(3))
-			),
+			options: v.optional(Options),
 		}),
 		durable: true,
 		async run({ data, step }) {
@@ -56,10 +51,7 @@ Their answer comes back to you.`,
 					title: data.title,
 					body: data.body,
 					actions: data.options
-						? data.options.map((label, index) => ({
-								id: `option-${index + 1}`,
-								label,
-							}))
+						? toActions(data.options)
 						: defaultActions[data.kind],
 				})
 			)
@@ -116,18 +108,19 @@ export function rikerTools() {
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.minutes)
-			await step.do('close', async () => {
+			const wakes = await step.do('close', async () => {
 				const room = await roomFor()
 				await room.closeMeeting()
-				await room.postFromAgent({
+				const posted = await room.postFromAgent({
 					agent: 'riker',
 					body: `**Minutes of this week's meeting**\n\n${data.minutes}`,
 					card: null,
 					place: 'room',
 					conversation: TEAM,
 				})
-				return true
+				return posted.wake
 			})
+			await step.do('wake', () => wake(wakes, 'Riker').then(() => true))
 			return 'The meeting is closed and the minutes are in the room.'
 		},
 	})

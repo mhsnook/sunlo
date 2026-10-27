@@ -7,6 +7,8 @@ export async function getSession() {
 	return data.session
 }
 
+export const accessToken = async () => (await getSession())?.access_token ?? ''
+
 export const isAdminQuery = (uid: uuid) =>
 	queryOptions({
 		queryKey: ['admin', 'is-admin', uid],

@@ -3,7 +3,7 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { crew, isCrewKey } from '../../../shared/crew'
+import { crew, isCrewKey, meetingDue } from '../../../shared/crew'
 import { isWorking, roomQuery, stackQuery, workspaceQuery } from '~/lib/crew'
 import { CharterPanel } from '~/components/crew/charter-panel'
 import { MemoryList } from '~/components/crew/memory-list'
@@ -13,17 +13,11 @@ import {
 	CardActions,
 	ChangeCard,
 	CrewText,
-	dayLabel,
 } from '~/components/crew/crew-parts'
+import { dayLabel } from '~/lib/format'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 
-type WorkspaceSearch = { meeting?: string }
-
 export const Route = createFileRoute('/_admin/crew/$agent')({
-	// Set when the weekly meeting starts. It keys the chat, so a chat that
-	// mounted before the conversation existed reads it afresh.
-	validateSearch: (search: Record<string, unknown>): WorkspaceSearch =>
-		typeof search.meeting === 'string' ? { meeting: search.meeting } : {},
 	params: {
 		parse: ({ agent }) => {
 			if (!isCrewKey(agent)) throw notFound()
@@ -42,7 +36,6 @@ export const Route = createFileRoute('/_admin/crew/$agent')({
 
 function WorkspacePage() {
 	const { agent } = Route.useParams()
-	const { meeting } = Route.useSearch()
 	const { session } = Route.useRouteContext()
 	const { data: workspace } = useSuspenseQuery(workspaceQuery(agent))
 	const { data: room } = useQuery(roomQuery())
@@ -172,18 +165,22 @@ function WorkspacePage() {
 						)}
 					</Section>
 
-					<MemoryList
-						agent={agent}
-						memory={workspace.memory}
-						agentName={member.name}
-					/>
+					<MemoryList agent={agent} memory={workspace.memory} />
 				</div>
 			</div>
 			{member.active && (
 				<AgentChat
-					key={`${agent}:${meeting ?? ''}`}
+					key={agent}
 					agent={agent}
 					uid={session.user.id}
+					starter={
+						agent === 'riker' && room && meetingDue(room.weekly)
+							? {
+									label: 'Start the weekly meeting',
+									message: "Let's have our weekly meeting.",
+								}
+							: undefined
+					}
 				/>
 			)}
 		</div>

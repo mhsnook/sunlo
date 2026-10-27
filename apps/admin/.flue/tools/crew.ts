@@ -3,9 +3,8 @@ import * as v from 'valibot'
 import { crew, type CrewKey } from '../../shared/crew'
 import { TEAM } from '../../worker/crew/room'
 import { roomFor, wake } from '../crew'
-import { assertBlocks } from './check-blocks'
+import { assertBlocks, Options, Text, toActions } from './posting'
 
-const Text = v.pipe(v.string(), v.trim(), v.minLength(1))
 const Id = v.pipe(v.number(), v.integer())
 
 // The room and workspace tools for one agent. `conversation` is "team" for a
@@ -21,15 +20,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 			'Post a message in the crew room, where the admin and the other agents read it. Write @Name to address a crew member. Add `options` (2 or 3 short button labels, such as "Hide it" and "Show me") only when you need the admin to choose; their answer comes back to you.',
 		input: v.object({
 			body: Text,
-			options: v.optional(
-				v.pipe(
-					v.array(
-						v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(24))
-					),
-					v.minLength(2),
-					v.maxLength(3)
-				)
-			),
+			options: v.optional(Options),
 		}),
 		durable: true,
 		async run({ data, step }) {
@@ -42,10 +33,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 						? {
 								kind: 'question' as const,
 								title: null,
-								actions: data.options.map((label, index) => ({
-									id: `option-${index + 1}`,
-									label,
-								})),
+								actions: toActions(data.options),
 							}
 						: null,
 					place: 'room',
@@ -160,7 +148,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		description: 'Delete a memory that is wrong or no longer true.',
 		input: v.object({ id: Id }),
 		async run({ data }) {
-			if (!(await (await roomFor()).forget(agent, data.id))) {
+			if (!(await (await roomFor()).forget(agent, data.id, 'agent'))) {
 				throw new Error(`You have no memory with id ${data.id}`)
 			}
 			return 'Forgotten.'

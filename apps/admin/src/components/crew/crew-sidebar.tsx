@@ -12,25 +12,22 @@ import {
 	SheetTrigger,
 } from '@/components/ui/sheet'
 import {
+	adminAuthor,
 	crewList,
 	vessels,
 	type CrewKey,
 	type VesselKey,
 } from '../../../shared/crew'
+import { isWorking, roomQuery } from '~/lib/crew'
+import { AdminAvatar, AgentAvatar } from './crew-parts'
+import { shortWhen } from '~/lib/format'
 
 const vesselKeys = Object.keys(vessels) as Array<VesselKey>
-import { isWorking, roomQuery } from '~/lib/crew'
-import { AdminAvatar, AgentAvatar, shortWhen } from './crew-parts'
 
-export function CrewSidebar({
-	email,
-	myAuthor,
-	onNavigate,
-}: {
-	email: string
-	myAuthor: string
-	onNavigate?: () => void
-}) {
+export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
+	const { session } = useRouteContext({ from: '/_admin' })
+	const email = session.user.email ?? ''
+	const myAuthor = adminAuthor(session.user.id)
 	const { data: room } = useQuery(roomQuery())
 	const pathname = useRouterState({
 		select: (state) => state.location.pathname,
@@ -48,7 +45,6 @@ export function CrewSidebar({
 			<div className="px-5 py-4 font-semibold">Sunlo admin</div>
 			<ul className="flex-1 space-y-1 overflow-y-auto px-2">
 				<SidebarItem
-					active={pathname === '/'}
 					avatar={<AgentAvatar agent="crew" />}
 					name="The crew"
 					preview={
@@ -62,7 +58,6 @@ export function CrewSidebar({
 					onNavigate={onNavigate}
 				/>
 				<SidebarItem
-					active={pathname === '/stack'}
 					avatar={<AgentAvatar agent="stack" />}
 					name="Brought to you"
 					preview={
@@ -89,7 +84,6 @@ export function CrewSidebar({
 									return (
 										<SidebarItem
 											key={member.key}
-											active={pathname === `/crew/${member.key}`}
 											avatar={<AgentAvatar agent={member.key} />}
 											name={member.name}
 											preview={
@@ -137,7 +131,6 @@ export function CrewSidebar({
 }
 
 function SidebarItem({
-	active,
 	avatar,
 	name,
 	preview,
@@ -147,7 +140,6 @@ function SidebarItem({
 	target,
 	onNavigate,
 }: {
-	active: boolean
 	avatar: ReactNode
 	name: string
 	preview: string
@@ -168,11 +160,8 @@ function SidebarItem({
 				onClick={onNavigate}
 				data-testid="crew-sidebar-item"
 				data-key={target}
-				aria-current={active ? 'page' : undefined}
-				className={cn(
-					'flex items-center gap-3 rounded-2xl px-3 py-2',
-					active ? 'bg-primary-200' : 'hover:bg-primary-100'
-				)}
+				activeOptions={{ exact: true, includeSearch: false }}
+				className="hover:bg-primary-100 data-[status=active]:bg-primary-200 flex items-center gap-3 rounded-2xl px-3 py-2"
 			>
 				{avatar}
 				<span className="min-w-0 flex-1">
@@ -208,7 +197,6 @@ function SidebarItem({
 // The sidebar folds away below the md breakpoint; page headers show this
 // button instead.
 export function MobileSidebarButton() {
-	const { session } = useRouteContext({ from: '/_admin' })
 	const [open, setOpen] = useState(false)
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
@@ -226,11 +214,7 @@ export function MobileSidebarButton() {
 			</SheetTrigger>
 			<SheetContent side="left" className="bg-primary-50 w-80 p-0">
 				<SheetTitle className="sr-only">The crew</SheetTitle>
-				<CrewSidebar
-					email={session.user.email ?? ''}
-					myAuthor={`admin:${session.user.id}`}
-					onNavigate={() => setOpen(false)}
-				/>
+				<CrewSidebar onNavigate={() => setOpen(false)} />
 			</SheetContent>
 		</Sheet>
 	)

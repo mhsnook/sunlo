@@ -150,6 +150,9 @@ export const bridgeKeys: ReadonlyArray<CrewKey> = crewKeys.filter(
 export const isCrewKey = (value: string): value is CrewKey =>
 	(crewKeys as ReadonlyArray<string>).includes(value)
 
+// A message's author: a crew key, or this for an admin.
+export const adminAuthor = (uid: string) => `admin:${uid}`
+
 // Every @name in the text that names a crew member, in roster order.
 export function mentionedCrew(text: string): Array<CrewKey> {
 	const names = new Set(

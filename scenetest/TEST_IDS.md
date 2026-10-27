@@ -653,7 +653,8 @@ The crew room at `/`, "Brought to you" at `/stack`, and each agent's workspace a
 | `agent-chat-message` + `data-key=<message id>`                  | One message in the 1:1 chat                                           |
 | `crew-block` + `data-key=<chart\|stats\|table>`                 | A component an agent put in its message                               |
 | `crew-block-filter`                                             | The filter box on a filterable table component                        |
-| `crew-meeting-banner`, `crew-start-meeting`                     | The weekly meeting invitation and its start button                    |
+| `crew-meeting-banner`, `crew-go-to-meeting`                     | The weekly meeting invitation and its link to Riker's chat            |
+| `agent-chat-starter`                                            | A one-tap first message in the 1:1 chat, such as starting the meeting |
 | `stack-open`, `stack-item` + `data-key=<id>`                    | The open items on "Brought to you", and one item                      |
 | `stack-item-note`, `stack-item-action` + `data-key=<action id>` | An item's optional note, and its answer buttons                       |
 | `stack-done` + `data-key=<id>`                                  | An item answered in the last two weeks                                |

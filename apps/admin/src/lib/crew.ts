@@ -27,12 +27,11 @@ import {
 	type CrewKey,
 	type CrewMessageType,
 	type RoomEvent,
-	type RoomSnapshotType,
 	type RoomStateType,
 	type RoutingType,
 } from '../../shared/crew'
 import { adminFetch } from './api'
-import { getSession } from './session'
+import { accessToken } from './session'
 
 export const crewIcons: Record<CrewKey, LucideIcon> = {
 	riker: Star,
@@ -78,7 +77,7 @@ export function useAnswerStack() {
 		}) =>
 			adminFetch(`crew/stack/${input.id}/answer`, {
 				method: 'POST',
-				body: JSON.stringify({ actionId: input.actionId, note: input.note }),
+				json: { actionId: input.actionId, note: input.note },
 			}),
 	})
 }
@@ -91,7 +90,6 @@ export function useForgetMemory(agent: CrewKey) {
 }
 
 export function useEditCharter() {
-	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: (input: {
 			id: number
@@ -100,10 +98,8 @@ export function useEditCharter() {
 		}) =>
 			adminFetch(`crew/charter/${input.id}`, {
 				method: 'PATCH',
-				body: JSON.stringify({ text: input.text, status: input.status }),
+				json: { text: input.text, status: input.status },
 			}),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: ['crew', 'stack'] }),
 	})
 }
 
@@ -112,7 +108,7 @@ export function useSetTimezone() {
 		mutationFn: (timezone: string) =>
 			adminFetch('crew/weekly/timezone', {
 				method: 'PUT',
-				body: JSON.stringify({ timezone }),
+				json: { timezone },
 			}),
 	})
 }
@@ -122,9 +118,7 @@ export const dmClient = (agent: CrewKey, uid: string) =>
 	createFlueClient({
 		url: `/api/agents/${agent}/dm-${uid}`,
 		// Called per request, so a refreshed Supabase token is picked up.
-		headers: async () => ({
-			authorization: `Bearer ${(await getSession())?.access_token ?? ''}`,
-		}),
+		headers: async () => ({ authorization: `Bearer ${await accessToken()}` }),
 	})
 
 export const clefQuery = (text: string) =>
@@ -134,7 +128,7 @@ export const clefQuery = (text: string) =>
 			RoutingSchema.parse(
 				await adminFetch('crew/clef', {
 					method: 'POST',
-					body: JSON.stringify({ text }),
+					json: { text },
 				})
 			),
 		staleTime: Infinity,
@@ -142,7 +136,7 @@ export const clefQuery = (text: string) =>
 	})
 
 function upsertMessage(queryClient: QueryClient, message: CrewMessageType) {
-	queryClient.setQueryData<RoomSnapshotType>(['crew', 'room'], (room) => {
+	queryClient.setQueryData(roomQuery().queryKey, (room) => {
 		if (!room) return room
 		const index = room.messages.findIndex((m) => m.id === message.id)
 		const messages =
@@ -164,7 +158,7 @@ export function usePostToRoom() {
 			CrewMessageSchema.parse(
 				await adminFetch('crew/messages', {
 					method: 'POST',
-					body: JSON.stringify(input),
+					json: input,
 				})
 			),
 		onSuccess: (message) => upsertMessage(queryClient, message),
@@ -178,7 +172,7 @@ export function useCorrectRouting() {
 			CrewMessageSchema.parse(
 				await adminFetch(`crew/messages/${input.messageId}/correct`, {
 					method: 'POST',
-					body: JSON.stringify({ routing: input.routing }),
+					json: { routing: input.routing },
 				})
 			),
 		onSuccess: (message) => upsertMessage(queryClient, message),
@@ -190,7 +184,7 @@ export function useAnswerCard() {
 		mutationFn: (input: { messageId: string; actionId: string }) =>
 			adminFetch(`crew/messages/${input.messageId}/answer`, {
 				method: 'POST',
-				body: JSON.stringify({ actionId: input.actionId }),
+				json: { actionId: input.actionId },
 			}),
 	})
 }
@@ -201,7 +195,7 @@ export function useAnswerCard() {
 export function markRoomSeen(queryClient: QueryClient, leaving: boolean) {
 	void adminFetch('crew/seen', { method: 'POST' }).then(() => {
 		if (!leaving) return
-		queryClient.setQueryData<RoomSnapshotType>(['crew', 'room'], (room) =>
+		queryClient.setQueryData(roomQuery().queryKey, (room) =>
 			room ? { ...room, seenAt: new Date().toISOString() } : room
 		)
 	})
@@ -216,19 +210,25 @@ export function useCrewLive() {
 	useAgent<RoomStateType>({
 		agent: 'crew-room',
 		basePath: 'api/crew/live',
-		query: async () => ({ token: (await getSession())?.access_token ?? null }),
+		query: async () => ({ token: await accessToken() }),
 		// Shorter than the Supabase token's hour, so a reconnect gets a live one.
 		cacheTtl: 60_000,
 		onOpen: () => {
 			// Anything posted while the socket was down arrives in a fresh
 			// snapshot.
 			if (opened.current) {
-				void queryClient.invalidateQueries({ queryKey: ['crew'] })
+				for (const queryKey of [
+					roomQuery().queryKey,
+					stackQuery().queryKey,
+					['crew', 'workspace'],
+				]) {
+					void queryClient.invalidateQueries({ queryKey })
+				}
 			}
 			opened.current = true
 		},
 		onStateUpdate: (state) => {
-			queryClient.setQueryData<RoomSnapshotType>(['crew', 'room'], (room) =>
+			queryClient.setQueryData(roomQuery().queryKey, (room) =>
 				room ? { ...room, ...state } : room
 			)
 		},
@@ -236,21 +236,18 @@ export function useCrewLive() {
 			const event = JSON.parse(String(data)) as RoomEvent
 			if (event.type === 'message') upsertMessage(queryClient, event.message)
 			if (event.type === 'stack') {
-				void queryClient.invalidateQueries({ queryKey: ['crew', 'stack'] })
+				void queryClient.invalidateQueries({
+					queryKey: stackQuery().queryKey,
+				})
 			}
 			if (event.type === 'workspace') {
 				void queryClient.invalidateQueries({
-					queryKey: ['crew', 'workspace', event.agent],
+					queryKey: workspaceQuery(event.agent).queryKey,
 				})
 			}
 		},
 	})
 }
 
-// An agent counts as working only for a while: a run that crashed without
-// reporting back should not show "working" forever.
-export const isWorking = (
-	status: { state: string; since: string } | undefined
-) =>
-	status?.state === 'working' &&
-	Date.now() - Date.parse(status.since) < 15 * 60_000
+export const isWorking = (status: { state: string } | undefined) =>
+	status?.state === 'working'

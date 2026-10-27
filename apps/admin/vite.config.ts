@@ -1,7 +1,8 @@
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { cloudflare } from '@cloudflare/vite-plugin'
@@ -22,6 +23,7 @@ export default defineConfig({
 		tailwindcss(),
 		tanstackRouter({ autoCodeSplitting: true }),
 		react(),
+		babel({ presets: [reactCompilerPreset()] }),
 	],
 	// The shared .env at the repo root. Missing VITE_SUPABASE_* vars don't fail
 	// the build; they silently drop the Supabase SDK (see docs/deployment.md).

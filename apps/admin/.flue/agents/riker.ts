@@ -1,12 +1,12 @@
 'use agent'
 import { useInstruction, useTool, type AgentProps } from '@flue/runtime'
 import { TEAM } from '../../worker/crew/room'
-import { bridgeTools, rikerTools } from '../tools/bridge'
-import { useCrewMember } from './use-crew-member'
+import { rikerTools } from '../tools/bridge'
+import { CREW_DURABILITY, useCrewMember } from './use-crew-member'
 
 export function Riker({ id }: AgentProps) {
 	useCrewMember('riker', id, { database: false })
-	for (const tool of [...bridgeTools('riker'), ...rikerTools()]) useTool(tool)
+	for (const tool of rikerTools()) useTool(tool)
 	useInstruction(id === TEAM ? RIKER_IN_THE_ROOM : RIKER_ONE_TO_ONE)
 	return `You are Riker, first officer of the Enterprise: the admin's own bridge on the Sunlo crew. The admin is the captain and the principal. You are their proxy. You extend their judgement and presence into the room, so they can read your stack instead of the whole conversation.
 
@@ -40,7 +40,7 @@ After the brief, the weekly meeting with the admin is due until it happens. It c
 Plain, warm and direct, like a trusted first officer. Short. You may disagree with the admin, once, with your reason; then it is their call.`
 }
 
-Riker.durability = { maxAttempts: 3 }
+Riker.durability = CREW_DURABILITY
 
 const RIKER_IN_THE_ROOM = `## Staff directives
 

@@ -1,6 +1,7 @@
 import Markdown from 'react-markdown'
 import { isBlockKind } from '../../../shared/blocks'
 import { Block } from './blocks'
+import { remarkCrew } from './remark-crew'
 import { Inbox, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -52,6 +53,7 @@ export function AdminAvatar({ name }: { name: string }) {
 export function CrewText({ text }: { text: string }) {
 	return (
 		<Markdown
+			remarkPlugins={[remarkCrew]}
 			components={{
 				p: ({ children }) => <p className="not-first:mt-2">{children}</p>,
 				ul: ({ children }) => (
@@ -68,76 +70,24 @@ export function CrewText({ text }: { text: string }) {
 						{children}
 					</a>
 				),
-				pre: ({ node, children }) => {
-					const code = node?.children[0]
-					const language =
-						code?.type === 'element'
-							? String(
-									(
-										code.properties.className as Array<string> | undefined
-									)?.[0] ?? ''
-								).replace(/^language-/, '')
-							: ''
-					const source =
-						code?.type === 'element' && code.children[0]?.type === 'text'
-							? code.children[0].value
-							: ''
-					if (isBlockKind(language)) {
-						return <Block kind={language} source={source} />
-					}
-					return (
-						<pre className="bg-muted my-2 overflow-x-auto rounded p-2 text-xs">
-							{children}
-						</pre>
-					)
+				pre: ({ children }) => (
+					<pre className="bg-muted my-2 overflow-x-auto rounded p-2 text-xs">
+						{children}
+					</pre>
+				),
+				// remarkCrew turns component blocks into figures.
+				figure: ({ node }) => {
+					const kind = String(node?.properties.dataBlock)
+					return isBlockKind(kind) ? (
+						<Block kind={kind} source={String(node?.properties.dataSource)} />
+					) : null
 				},
 			}}
 		>
-			{boldMentions(text)}
+			{text}
 		</Markdown>
 	)
 }
-
-// Outside code fences only, so JSON in a component block stays intact.
-const boldMentions = (text: string) =>
-	text
-		.split(/(```[\s\S]*?```)/g)
-		.map((part, index) =>
-			index % 2 === 1
-				? part
-				: part.replace(/(^|\s)@([A-Za-z][\w-]*)/g, '$1**@$2**')
-		)
-		.join('')
-
-const timeFormat = new Intl.DateTimeFormat(undefined, {
-	hour: '2-digit',
-	minute: '2-digit',
-})
-const weekdayFormat = new Intl.DateTimeFormat(undefined, { weekday: 'long' })
-const dateFormat = new Intl.DateTimeFormat(undefined, {
-	month: 'short',
-	day: 'numeric',
-})
-
-const startOfDay = (date: Date) =>
-	new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
-
-// "Today", "Yesterday", a weekday within the last week, then a date.
-export function dayLabel(iso: string) {
-	const days = Math.round(
-		(startOfDay(new Date()) - startOfDay(new Date(iso))) / 86_400_000
-	)
-	if (days === 0) return 'Today'
-	if (days === 1) return 'Yesterday'
-	if (days < 7) return weekdayFormat.format(new Date(iso))
-	return dateFormat.format(new Date(iso))
-}
-
-export const timeLabel = (iso: string) => timeFormat.format(new Date(iso))
-
-// Today shows the time; earlier days show the day, like a chat list.
-export const shortWhen = (iso: string) =>
-	dayLabel(iso) === 'Today' ? timeLabel(iso) : dayLabel(iso).slice(0, 3)
 
 export function CardActions({ message }: { message: CrewMessageType }) {
 	const answer = useAnswerCard()

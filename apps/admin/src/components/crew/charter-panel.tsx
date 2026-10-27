@@ -11,7 +11,7 @@ import {
 	useEditCharter,
 	useSetTimezone,
 } from '~/lib/crew'
-import { dayLabel } from './crew-parts'
+import { dayLabel } from '~/lib/format'
 
 // What the bridge knows about the admin, on Riker's workspace page. The
 // admin edits it directly; agents can only propose entries.

@@ -22,7 +22,16 @@ import { AgentAvatar, ChangeCard, CrewText } from './crew-parts'
 
 // A 1:1 chat with one agent, as the Flue conversation "dm-<admin uid>". It
 // floats over the workspace on a wide screen and fills the screen on a phone.
-export function AgentChat({ agent, uid }: { agent: CrewKey; uid: string }) {
+// `starter` is a one-tap first message, such as starting the weekly meeting.
+export function AgentChat({
+	agent,
+	uid,
+	starter,
+}: {
+	agent: CrewKey
+	uid: string
+	starter?: { label: string; message: string }
+}) {
 	const [open, setOpen] = useState(true)
 	const [draft, setDraft] = useState('')
 	const client = useMemo(() => dmClient(agent, uid), [agent, uid])
@@ -40,6 +49,11 @@ export function AgentChat({ agent, uid }: { agent: CrewKey; uid: string }) {
 	)
 	const busy = chat.status === 'submitted' || chat.status === 'streaming'
 	const member = crew[agent]
+	const send = (body: string, onError?: () => void) =>
+		chat.sendMessage(body).catch((error: Error) => {
+			onError?.()
+			toastError(error.message)
+		})
 
 	if (!open) {
 		return (
@@ -102,16 +116,23 @@ export function AgentChat({ agent, uid }: { agent: CrewKey; uid: string }) {
 					)}
 				</div>
 			</MessageScroller>
-			<div className="border-t p-3">
+			<div className="space-y-2 border-t p-3">
+				{starter && !busy && (
+					<Button
+						size="sm"
+						variant="soft"
+						data-testid="agent-chat-starter"
+						onClick={() => void send(starter.message)}
+					>
+						{starter.label}
+					</Button>
+				)}
 				<ComposeBar
 					value={draft}
 					onValueChange={setDraft}
 					onSend={(body) => {
 						setDraft('')
-						chat.sendMessage(body).catch((error: Error) => {
-							setDraft(body)
-							toastError(error.message)
-						})
+						void send(body, () => setDraft(body))
 					}}
 					busy={busy}
 					placeholder={`Message ${member.name}`}

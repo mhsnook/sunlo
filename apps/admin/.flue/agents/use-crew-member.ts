@@ -1,13 +1,14 @@
 import {
 	useAgentFinish,
 	useAgentStart,
+	useDelivery,
 	useInstruction,
 	useModel,
 	useTool,
 } from '@flue/runtime'
 import { env } from 'cloudflare:workers'
 import { BLOCKS_GUIDE } from '../../shared/blocks'
-import { crew, crewList, type CrewKey } from '../../shared/crew'
+import { bridgeKeys, crew, crewList, type CrewKey } from '../../shared/crew'
 import { TEAM } from '../../worker/crew/room'
 import { roomFor } from '../crew'
 import {
@@ -15,7 +16,10 @@ import {
 	DATABASE_NOTES,
 	runSqlTool,
 } from '../tools/database'
+import { bridgeTools } from '../tools/bridge'
 import { crewTools } from '../tools/crew'
+
+export const CREW_DURABILITY = { maxAttempts: 3 }
 
 // Everything a crew agent shares: the model, the room and workspace tools,
 // the context it wakes up with, and, unless it opts out, the database tools.
@@ -27,18 +31,26 @@ export function useCrewMember(
 ) {
 	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
 	for (const tool of crewTools(agent, conversation)) useTool(tool)
+	if (bridgeKeys.includes(agent)) {
+		for (const tool of bridgeTools(agent)) useTool(tool)
+	}
 	const database = options.database ?? true
 	if (database) {
 		useTool(activityBetweenTool)
 		useTool(runSqlTool)
 	}
 
+	const delivery = useDelivery()
+	const messageId =
+		delivery.kind === 'signal' ? delivery.attributes?.messageId : undefined
 	useAgentStart(async ({ append }) => {
 		append({
 			kind: 'signal',
 			type: 'crew.context',
 			tagName: 'crew-context',
-			body: await (await roomFor()).agentContext(agent, conversation),
+			body: await (
+				await roomFor()
+			).agentContext(agent, conversation, messageId ?? null),
 		})
 	})
 	useAgentFinish(async () => {
@@ -59,9 +71,10 @@ function crewInstructions(agent: CrewKey) {
 				`- ${member.name} (${member.title})${member.active ? '' : ', not started yet'}: ${member.looksAfter.join('; ')}`
 		)
 		.join('\n')
+	const bridge = bridgeKeys.map((key) => crew[key].name).join(' and ')
 	return `## The crew
 
-You are ${crew[agent].name}, one of the agents who help the founders run Sunlo. You share one chat, the crew room, with the founders. The crew sails as ships: the Enterprise is the admin's own bridge (Riker and Data), which extends the admin's judgement into the room; the fleet is everyone else, each the expert on its own area. The others:
+You are ${crew[agent].name}, one of the agents who help the founders run Sunlo. You share one chat, the crew room, with the founders. The crew sails as ships: the Enterprise is the admin's own bridge (${bridge}), which extends the admin's judgement into the room; the fleet is everyone else, each the expert on its own area. The others:
 ${others}
 
 An agent who has not started yet does not answer. Messages for it wait in the room until it does, so @mention it only for something it should pick up later.

@@ -2,20 +2,18 @@ import type { ReactNode } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
-import type { CrewKey, MemoryType } from '../../../shared/crew'
+import { crew, type CrewKey, type MemoryType } from '../../../shared/crew'
 import { useForgetMemory } from '~/lib/crew'
-import { dayLabel } from './crew-parts'
+import { dayLabel } from '~/lib/format'
 
 // An agent's memory, which the admin can prune. Data's playbook entries
 // (metrics by domain, chart preferences) get their own headings.
 export function MemoryList({
 	agent,
 	memory,
-	agentName,
 }: {
 	agent: CrewKey
 	memory: Array<MemoryType>
-	agentName: string
 }) {
 	const metrics = memory.filter((entry) => entry.kind === 'metric')
 	const charts = memory.filter((entry) => entry.kind === 'chart')
@@ -50,7 +48,7 @@ export function MemoryList({
 					<Entries agent={agent} entries={facts} />
 				) : (
 					<p className="text-muted-foreground text-sm">
-						{agentName} has not saved anything yet.
+						{crew[agent].name} has not saved anything yet.
 					</p>
 				)}
 			</Group>

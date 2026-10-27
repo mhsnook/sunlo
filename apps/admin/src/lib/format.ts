@@ -26,3 +26,44 @@ export function formatChange(current: number, previous: number) {
 	if (change === 0) return 'no change'
 	return `${change > 0 ? '+' : '−'}${integer.format(Math.abs(change))}`
 }
+
+const timeFormat = new Intl.DateTimeFormat(undefined, {
+	hour: '2-digit',
+	minute: '2-digit',
+})
+const weekdayFormat = new Intl.DateTimeFormat(undefined, { weekday: 'long' })
+const shortWeekdayFormat = new Intl.DateTimeFormat(undefined, {
+	weekday: 'short',
+})
+const dateFormat = new Intl.DateTimeFormat(undefined, {
+	month: 'short',
+	day: 'numeric',
+})
+
+const startOfDay = (date: Date) =>
+	new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+
+const daysAgo = (iso: string) =>
+	Math.round((startOfDay(new Date()) - startOfDay(new Date(iso))) / 86_400_000)
+
+// "Today", "Yesterday", a weekday within the last week, then a date.
+export function dayLabel(iso: string) {
+	const days = daysAgo(iso)
+	if (days === 0) return 'Today'
+	if (days === 1) return 'Yesterday'
+	if (days < 7) return weekdayFormat.format(new Date(iso))
+	return dateFormat.format(new Date(iso))
+}
+
+export const timeLabel = (iso: string) => timeFormat.format(new Date(iso))
+
+export const timeOrDay = (iso: string) =>
+	daysAgo(iso) === 0 ? timeLabel(iso) : dayLabel(iso)
+
+// timeOrDay for a narrow column, like a chat list.
+export function shortWhen(iso: string) {
+	const days = daysAgo(iso)
+	if (days === 0) return timeLabel(iso)
+	if (days < 7) return shortWeekdayFormat.format(new Date(iso))
+	return dateFormat.format(new Date(iso))
+}

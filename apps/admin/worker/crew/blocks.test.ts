@@ -1,5 +1,7 @@
+import { fromMarkdown } from 'mdast-util-from-markdown'
 import { describe, expect, it } from 'vitest'
 import { blockErrors, hasBlocks } from '../../shared/blocks'
+import { remarkCrew } from '../../src/components/crew/remark-crew'
 
 const fence = (kind: string, body: string) => `\`\`\`${kind}\n${body}\n\`\`\``
 
@@ -41,5 +43,50 @@ describe('blockErrors', () => {
 		const sql = fence('sql', 'select * from phrase')
 		expect(blockErrors(sql)).toEqual([])
 		expect(hasBlocks(sql)).toBe(false)
+	})
+
+	it('checks a ~~~ fence, which the renderer draws too', () => {
+		expect(blockErrors('~~~stats\n{items: [}\n~~~')).toEqual([
+			'The stats block is not valid JSON.',
+		])
+	})
+})
+
+const transform = (text: string) => {
+	const tree = fromMarkdown(text)
+	remarkCrew()(tree)
+	return tree
+}
+
+describe('remarkCrew', () => {
+	it('bolds an @mention in prose', () => {
+		const [paragraph] = transform('Over to @Data, then @Riker.').children
+		expect(paragraph).toMatchObject({
+			type: 'paragraph',
+			children: [
+				{ type: 'text', value: 'Over to ' },
+				{ type: 'strong', children: [{ type: 'text', value: '@Data' }] },
+				{ type: 'text', value: ', then ' },
+				{ type: 'strong', children: [{ type: 'text', value: '@Riker' }] },
+				{ type: 'text', value: '.' },
+			],
+		})
+	})
+
+	it('leaves an email address and code alone', () => {
+		const tree = transform('Write to a@b.co about `@Data`.')
+		expect(JSON.stringify(tree)).not.toContain('strong')
+	})
+
+	it('turns a component block into a figure and keeps its JSON intact', () => {
+		const source = '{"items": [{"label": "asked @Data", "value": 1}]}'
+		const [block] = transform(fence('stats', source)).children
+		expect(block).toEqual({
+			type: 'crewBlock',
+			data: {
+				hName: 'figure',
+				hProperties: { dataBlock: 'stats', dataSource: source },
+			},
+		})
 	})
 })

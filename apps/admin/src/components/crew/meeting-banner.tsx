@@ -1,32 +1,17 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useRouteContext } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { toastError } from '@/components/ui/sonner'
 import { meetingDue } from '../../../shared/crew'
-import { dmClient, roomQuery } from '~/lib/crew'
-import { dayLabel } from './crew-parts'
+import { roomQuery } from '~/lib/crew'
+import { dayLabel } from '~/lib/format'
 
 // The weekly meeting's standing invitation. It shows from the moment Riker's
-// brief lands until the meeting closes, wherever the admin is.
+// brief lands until the meeting closes, wherever the admin is. The meeting
+// itself starts in Riker's chat.
 export function MeetingBanner() {
-	const { session } = useRouteContext({ from: '/_admin' })
 	const { data: room } = useQuery(roomQuery())
-	const navigate = useNavigate()
-	const start = useMutation({
-		mutationFn: () =>
-			dmClient('riker', session.user.id).send({
-				message: { kind: 'user', body: "Let's have our weekly meeting." },
-			}),
-		onSuccess: (admission) =>
-			navigate({
-				to: '/crew/$agent',
-				params: { agent: 'riker' },
-				search: { meeting: admission.submissionId },
-			}),
-		onError: (error) => toastError(error.message),
-	})
-	if (!room || !meetingDue(room.weekly)) return null
+	if (!room?.weekly.briefAt || !meetingDue(room.weekly)) return null
 	return (
 		<aside
 			aria-label="Weekly meeting"
@@ -35,20 +20,20 @@ export function MeetingBanner() {
 		>
 			<CalendarClock className="size-4 shrink-0" />
 			<span className="me-auto">
-				Riker’s brief is ready
-				{room.weekly.briefAt ? ` (${dayLabel(room.weekly.briefAt)})` : ''}, and
-				your weekly meeting hasn’t happened yet.
+				Riker’s brief is ready ({dayLabel(room.weekly.briefAt)}), and your
+				weekly meeting hasn’t happened yet.
 			</span>
 			<Link to="/stack" className="underline">
 				Read the brief
 			</Link>
-			<Button
-				size="sm"
-				disabled={start.isPending}
-				data-testid="crew-start-meeting"
-				onClick={() => start.mutate()}
-			>
-				Start the meeting
+			<Button size="sm" asChild>
+				<Link
+					to="/crew/$agent"
+					params={{ agent: 'riker' }}
+					data-testid="crew-go-to-meeting"
+				>
+					Go to the meeting
+				</Link>
 			</Button>
 		</aside>
 	)

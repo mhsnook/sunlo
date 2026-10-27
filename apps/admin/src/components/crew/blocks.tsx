@@ -21,46 +21,27 @@ import {
 	type ChartConfig,
 } from '@/components/ui/chart'
 import { Input } from '@/components/ui/input'
+import { formatCount } from '~/lib/format'
 import {
-	blockSchemas,
-	isBlockKind,
+	parseBlock,
+	type BlockKind,
 	type ChartBlockType,
 	type StatsBlockType,
 	type TableBlockType,
 } from '../../../shared/blocks'
 
-// Renders one fenced block from an agent's markdown, or returns null for a
-// language that is not a component, which the caller shows as code.
-export function Block({ kind, source }: { kind: string; source: string }) {
-	if (!isBlockKind(kind)) return null
-	let parsed: unknown
-	try {
-		parsed = JSON.parse(source)
-	} catch {
-		return <BrokenBlock kind={kind} source={source} />
-	}
+export function Block({ kind, source }: { kind: BlockKind; source: string }) {
+	const broken = <BrokenBlock kind={kind} source={source} />
 	if (kind === 'chart') {
-		const chart = blockSchemas.chart.safeParse(parsed)
-		return chart.success ? (
-			<ChartBlock chart={chart.data} />
-		) : (
-			<BrokenBlock kind={kind} source={source} />
-		)
+		const chart = parseBlock('chart', source)
+		return chart.ok ? <ChartBlock chart={chart.data} /> : broken
 	}
 	if (kind === 'stats') {
-		const stats = blockSchemas.stats.safeParse(parsed)
-		return stats.success ? (
-			<StatsBlock stats={stats.data} />
-		) : (
-			<BrokenBlock kind={kind} source={source} />
-		)
+		const stats = parseBlock('stats', source)
+		return stats.ok ? <StatsBlock stats={stats.data} /> : broken
 	}
-	const table = blockSchemas.table.safeParse(parsed)
-	return table.success ? (
-		<TableBlock table={table.data} />
-	) : (
-		<BrokenBlock kind={kind} source={source} />
-	)
+	const table = parseBlock('table', source)
+	return table.ok ? <TableBlock table={table.data} /> : broken
 }
 
 // The tools refuse broken blocks, so this shows only for text that reached
@@ -178,7 +159,7 @@ function StatsBlock({ stats }: { stats: StatsBlockType }) {
 					<dd className="flex items-baseline gap-2">
 						<span className="text-xl font-semibold tabular-nums">
 							{typeof item.value === 'number'
-								? item.value.toLocaleString()
+								? formatCount(item.value)
 								: item.value}
 						</span>
 						{item.change && (

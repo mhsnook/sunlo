@@ -1,5 +1,6 @@
 import { Agent } from 'agents'
 import {
+	adminAuthor,
 	bridgeKeys,
 	crew,
 	crewKeys,
@@ -16,6 +17,8 @@ import {
 	type StackType,
 	type CharterEntryType,
 	type WeeklyType,
+	type MemoryType,
+	type OpenItemType,
 	type RoomEvent,
 	type RoomSnapshotType,
 	type RoutingType,
@@ -66,21 +69,23 @@ type CharterRow = {
 	kept_at: string | null
 }
 
+type IdRow = { id: number }
+type CountRow = { count: number }
+
+type Playbook = { kind: 'metric' | 'chart'; domain: string | null }
+
 // An agent's mention of another agent wakes it, at most this many times an
 // hour, so two agents cannot keep waking each other.
 const AGENT_WAKES_PER_HOUR = 6
 // Riker and Data may talk back and forth this many turns in a row before
 // the admin says something; a discussion longer than that waits for them.
 const BRIDGE_TURNS = 8
-const DEFAULT_WEEKLY: WeeklyType = {
-	briefAt: null,
-	meetingAt: null,
-	timezone: 'America/New_York',
-}
 const SNAPSHOT_MESSAGES = 200
 const CLEF_EXAMPLES_SHOWN = 20
 
 const now = () => new Date().toISOString()
+// Done to-dos and answered stack items stay in view this long.
+const twoWeeksAgo = () => new Date(Date.now() - 14 * 86_400_000).toISOString()
 
 const toMessage = (row: MessageRow): CrewMessageType => ({
 	id: row.id,
@@ -132,16 +137,17 @@ const stamp = (iso: string) => `${iso.slice(0, 16).replace('T', ' ')} UTC`
 export class CrewRoom extends Agent<Env, RoomStateType> {
 	initialState: RoomStateType = {
 		statuses: {},
-		weekly: DEFAULT_WEEKLY,
+		weekly: {
+			briefAt: null,
+			meetingAt: null,
+			timezone: 'America/New_York',
+		},
 		stackCount: 0,
 	}
-	// Not `sql`: Agent already has a tagged-template method by that name.
-	private db: SqlStorage
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
-		this.db = ctx.storage.sql
-		this.db.exec(`
+		this.sql`
 			create table if not exists message (
 				id text primary key,
 				at text not null,
@@ -152,9 +158,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				card text,
 				answer text,
 				place text not null,
-				conversation text not null
+				conversation text not null,
+				corrected text
 			);
 			create index if not exists message_at on message (at);
+			create index if not exists message_author on message (author, at);
 			create table if not exists todo (
 				id integer primary key autoincrement,
 				agent text not null,
@@ -196,6 +204,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null
 			);
 			create table if not exists agent_wake (at text not null);
+			-- The room messages delivered to an agent's current run.
+			create table if not exists run_message (
+				agent text not null,
+				message_id text not null,
+				primary key (agent, message_id)
+			);
 			-- Every workspace edit, so a run's receipt lists what it changed.
 			create table if not exists edit_log (
 				agent text not null,
@@ -225,68 +239,27 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null,
 				done_at text
 			);
-		`)
-		const columns = this.db
-			.exec<{ name: string }>(
-				'select name from pragma_table_info(?)',
-				'message'
-			)
-			.toArray()
-		if (!columns.some((column) => column.name === 'corrected')) {
-			this.db.exec('alter table message add column corrected text')
-		}
-		const memoryColumns = this.db
-			.exec<{ name: string }>('select name from pragma_table_info(?)', 'memory')
-			.toArray()
-		if (!memoryColumns.some((column) => column.name === 'kind')) {
-			this.db.exec(
-				"alter table memory add column kind text not null default 'fact'"
-			)
-			this.db.exec('alter table memory add column domain text')
-		}
-	}
-
-	// State saved before a field existed lacks it; fill in the defaults.
-	onStart() {
-		if (!this.state.weekly || this.state.stackCount === undefined) {
-			this.setState({
-				...this.initialState,
-				...this.state,
-				weekly: this.state.weekly ?? DEFAULT_WEEKLY,
-				stackCount: this.openStackCount(),
-			})
-		}
+		`
 	}
 
 	// ---- The timeline -------------------------------------------------------
 
 	snapshot(uid: string): RoomSnapshotType {
-		const rows = this.db
-			.exec<MessageRow>(
-				`select * from (
-					select * from message where place = 'room' order by at desc, id desc limit ?
-				) order by at, id`,
-				SNAPSHOT_MESSAGES
-			)
-			.toArray()
-		const seen = this.db
-			.exec<{ at: string }>('select at from seen where uid = ?', uid)
-			.toArray()[0]
+		const seen = this.sql<{
+			at: string
+		}>`select at from seen where uid = ${uid}`[0]
 		return {
-			messages: rows.map(toMessage),
-			statuses: this.state.statuses,
-			weekly: this.weekly(),
-			stackCount: this.openStackCount(),
+			...this.state,
+			messages: this.latestRoomRows(SNAPSHOT_MESSAGES).map(toMessage),
 			seenAt: seen?.at ?? null,
 		}
 	}
 
 	markSeen(uid: string) {
-		this.db.exec(
-			'insert into seen (uid, at) values (?, ?) on conflict (uid) do update set at = excluded.at',
-			uid,
-			now()
-		)
+		this.sql`
+			insert into seen (uid, at)
+			values (${uid}, ${now()})
+			on conflict (uid) do update set at = excluded.at`
 	}
 
 	// CLEF: a trailing "..." always stacks, an @mention always routes, and
@@ -297,14 +270,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		if (fixed) return fixed
 		const active = crewKeys.filter((key) => crew[key].active)
 		// The admin's corrections, before and after sending, are the labels.
-		const examples = this.db
-			.exec<{ text: string; routing: string }>(
-				`select text, coalesce(corrected, final) as routing from clef_decision
+		const examples = this.sql<{
+			text: string
+			routing: string
+		}>`select text, coalesce(corrected, final) as routing from clef_decision
 				where corrected is not null or predicted != final
-				order by at desc limit ?`,
-				CLEF_EXAMPLES_SHOWN
-			)
-			.toArray()
+				order by at desc limit ${CLEF_EXAMPLES_SHOWN}`
 			.toReversed()
 			.map(
 				(row): ClefExample => ({
@@ -346,7 +317,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			fixed ?? input.predicted ?? (await this.classify(input.body))
 		const routing =
 			fixed ?? (input.routing ? sanitize(input.routing) : predicted)
-		const author = `admin:${input.uid}`
+		const author = adminAuthor(input.uid)
 		const stacked = routing.kind === 'route' ? this.stackedBodies(author) : []
 		const message = this.insert({
 			author,
@@ -357,28 +328,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			place: 'room',
 			conversation: TEAM,
 		})
-		this.db.exec(
-			`insert into clef_decision (message_id, text, predicted, final, at)
-			values (?, ?, ?, ?, ?)`,
-			message.id,
-			input.body,
-			labelOf(predicted),
-			labelOf(routing),
-			message.at
-		)
+		this.sql`insert into clef_decision (message_id, text, predicted, final, at)
+			values (${message.id}, ${input.body}, ${labelOf(predicted)}, ${labelOf(routing)}, ${message.at})`
 		const body = [...stacked, input.body].join('\n')
 		const wake = routing.agents.map((agent) => ({
 			agent,
 			body,
 			messageId: message.id,
 		}))
-		for (const { agent } of wake) this.markWorking(agent)
 		return { message, wake }
 	}
 
 	// The admin says, after sending, where a message should have gone. The
 	// correction becomes a CLEF label, and agents it names that the message
-	// did not wake are woken now. A run that already happened stays done.
+	// and earlier corrections did not wake are woken now.
 	correct(input: {
 		messageId: string
 		uid: string
@@ -386,13 +349,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}):
 		| { ok: true; message: CrewMessageType; wake: Array<Wake> }
 		| { ok: false; status: 404; error: string } {
-		const row = this.db
-			.exec<MessageRow>(
-				'select * from message where id = ? and author = ?',
-				input.messageId,
-				`admin:${input.uid}`
-			)
-			.toArray()[0]
+		const row = this.sql<MessageRow>`
+			select * from message
+			where id = ${input.messageId} and author = ${adminAuthor(input.uid)}`[0]
 		if (!row?.routing) {
 			return {
 				ok: false,
@@ -401,24 +360,22 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			}
 		}
 		const original = toMessage(row)
+		const woken = new Set([
+			...(original.routing?.agents ?? []),
+			...(original.corrected?.agents ?? []),
+		])
 		const corrected = sanitize({ ...input.routing, by: 'you' })
-		this.db.exec(
-			'update message set corrected = ? where id = ?',
-			JSON.stringify(corrected),
-			row.id
-		)
-		this.db.exec(
-			'update clef_decision set corrected = ? where message_id = ?',
-			labelOf(corrected),
-			row.id
-		)
+		this.sql`
+			update message set corrected = ${JSON.stringify(corrected)}
+			where id = ${row.id}`
+		this.sql`
+			update clef_decision set corrected = ${labelOf(corrected)}
+			where message_id = ${row.id}`
 		const message = { ...original, corrected }
 		this.push({ type: 'message', message })
-		const woken = original.routing?.agents ?? []
 		const wake = corrected.agents
-			.filter((agent) => !woken.includes(agent))
+			.filter((agent) => !woken.has(agent))
 			.map((agent) => ({ agent, body: row.body, messageId: row.id }))
-		for (const { agent } of wake) this.markWorking(agent)
 		return { ok: true, message, wake }
 	}
 
@@ -449,9 +406,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				if (agent === input.agent || !crew[agent].active) continue
 				const bridgeTalk =
 					bridgeKeys.includes(agent) && bridgeKeys.includes(input.agent)
-				if (bridgeTalk ? !this.bridgeTurnLeft() : !this.takeAgentWake()) break
+				if (bridgeTalk ? !this.bridgeTurnLeft() : !this.takeAgentWake()) {
+					continue
+				}
 				wake.push({ agent, body: input.body, messageId: message.id })
-				this.markWorking(agent)
 			}
 		}
 		return { message, wake }
@@ -464,9 +422,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}):
 		| { ok: true; agent: CrewKey; conversation: string; body: string }
 		| { ok: false; status: 404 | 409; error: string } {
-		const row = this.db
-			.exec<MessageRow>('select * from message where id = ?', input.messageId)
-			.toArray()[0]
+		const row = this.sql<MessageRow>`
+			select * from message
+			where id = ${input.messageId}`[0]
 		const message = row && toMessage(row)
 		if (!message?.card || !isCrewKey(message.author)) {
 			return { ok: false, status: 404, error: 'No question with that id' }
@@ -493,20 +451,21 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			by: input.name,
 			at,
 		}
-		this.db.exec(
-			'update message set answer = ? where id = ?',
-			JSON.stringify(answer),
-			message.id
-		)
+		this.sql`
+			update message set answer = ${JSON.stringify(answer)}
+			where id = ${message.id}`
 		const agent = message.author
 		const subject = message.card.title ?? message.body
 		if (message.card.kind === 'change') {
 			const day = at.slice(0, 10)
 			if (action.id === 'do') {
-				this.remember(agent, `${input.name} agreed on ${day}: ${subject}`)
-				this.addTodo(agent, subject, null)
+				this.saveMemory(agent, `${input.name} agreed on ${day}: ${subject}`)
+				this.saveTodo(agent, subject, null)
 			} else {
-				this.remember(agent, `${input.name} said not yet on ${day}: ${subject}`)
+				this.saveMemory(
+					agent,
+					`${input.name} said not yet on ${day}: ${subject}`
+				)
 			}
 		}
 		this.push({ type: 'message', message: { ...message, answer } })
@@ -522,42 +481,42 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// ---- Agent runs ---------------------------------------------------------
 
-	markWorking(agent: CrewKey) {
-		this.setStatus(agent, { state: 'working', since: now() })
-	}
-
 	// What an agent should wake up knowing: its workspace, and the room. A
 	// room run reads everything since its last finished room run; a 1:1 chat
-	// reads the latest messages and moves no cursor.
-	agentContext(agent: CrewKey, conversation: string): string {
+	// reads the latest messages and moves no cursor. Called once for each
+	// message a run receives: messages that reach a busy agent join its run.
+	agentContext(
+		agent: CrewKey,
+		conversation: string,
+		messageId: string | null
+	): string {
+		if (conversation === TEAM) {
+			if (this.state.statuses[agent]?.state !== 'working') {
+				this.setStatus(agent, { state: 'working', since: now() })
+			}
+			if (messageId) {
+				this.sql`
+					insert or ignore into run_message (agent, message_id)
+					values (${agent}, ${messageId})`
+			}
+		}
 		const sections = [`It is now ${stamp(now())}.`]
 		if (bridgeKeys.includes(agent)) sections.push(this.bridgeText())
 		sections.push(this.workspaceText(agent))
 		if (conversation === TEAM) {
-			const cursor = this.db
-				.exec<{ at: string | null }>(
-					'select at from cursor where agent = ?',
-					agent
-				)
-				.toArray()[0]?.at
+			const cursor = this.sql<{
+				at: string | null
+			}>`select at from cursor where agent = ${agent}`[0]?.at
 			const rows = cursor
-				? this.db
-						.exec<MessageRow>(
-							`select * from (
-								select * from message where place = 'room' and at > ? order by at desc limit 60
-							) order by at, id`,
-							cursor
-						)
-						.toArray()
+				? this.sql<MessageRow>`select * from (
+								select * from message where place = 'room' and at > ${cursor} order by at desc limit 60
+							) order by at, id`
 				: this.latestRoomRows(30)
 			const last = rows.at(-1)?.at
 			if (last) {
-				this.db.exec(
-					`insert into cursor (agent, pending_at) values (?, ?)
-					on conflict (agent) do update set pending_at = excluded.pending_at`,
-					agent,
-					last
-				)
+				this.sql`
+					insert into cursor (agent, pending_at) values (${agent}, ${last})
+					on conflict (agent) do update set pending_at = excluded.pending_at`
 			}
 			sections.push(
 				cursor
@@ -576,15 +535,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	finishRun(agent: CrewKey, conversation: string) {
 		if (conversation !== TEAM) return
-		this.db.exec(
-			'update cursor set at = coalesce(pending_at, at), pending_at = null where agent = ?',
-			agent
-		)
+		this.sql`
+			update cursor set at = coalesce(pending_at, at), pending_at = null
+			where agent = ${agent}`
 		const since = this.state.statuses[agent]?.since
 		if (since) {
 			this.recordOutcomes(agent, since)
 			this.postReceipt(agent, since)
 		}
+		this.setStatus(agent, { state: 'idle', since: now() })
+	}
+
+	// A room run that failed or was aborted never reaches finishRun.
+	failRun(agent: CrewKey) {
+		this.sql`delete from run_message where agent = ${agent}`
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
 
@@ -595,54 +559,35 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// ---- Workspaces ---------------------------------------------------------
 
 	workspace(agent: CrewKey): WorkspaceType {
-		const todos = this.db
-			.exec<{
-				id: number
-				text: string
-				note: string | null
-				done: number
-				at: string
-				done_at: string | null
-			}>(
-				`select * from todo where agent = ? and (done = 0 or done_at > ?)
-				order by done, id`,
-				agent,
-				new Date(Date.now() - 14 * 86_400_000).toISOString()
-			)
-			.toArray()
-			.map((row) => ({
-				id: row.id,
-				text: row.text,
-				note: row.note,
-				done: row.done === 1,
-				at: row.at,
-				doneAt: row.done_at,
-			}))
-		const memory = this.db
-			.exec<{
-				id: number
-				kind: 'fact' | 'metric' | 'chart'
-				domain: string | null
-				text: string
-				at: string
-			}>(
-				'select id, kind, domain, text, at from memory where agent = ? order by kind, domain, id',
-				agent
-			)
-			.toArray()
-		const openItems = this.db
-			.exec<{ id: number; title: string; tag: string | null; at: string }>(
-				'select id, title, tag, at from open_item where agent = ? and closed_at is null order by id',
-				agent
-			)
-			.toArray()
-		const cards = this.db
-			.exec<MessageRow>(
-				'select * from message where author = ? and card is not null order by at desc limit 50',
-				agent
-			)
-			.toArray()
-			.map(toMessage)
+		const todos = this.sql<{
+			id: number
+			text: string
+			note: string | null
+			done: number
+			at: string
+			done_at: string | null
+		}>`select * from todo where agent = ${agent} and (done = 0 or done_at > ${twoWeeksAgo()})
+				order by done, id`.map((row) => ({
+			id: row.id,
+			text: row.text,
+			note: row.note,
+			done: row.done === 1,
+			at: row.at,
+			doneAt: row.done_at,
+		}))
+		const memory = this.sql<MemoryType>`
+			select id, kind, domain, text, at from memory
+			where agent = ${agent}
+			order by kind, domain, id`
+		const openItems = this.sql<OpenItemType>`
+			select id, title, tag, at from open_item
+			where agent = ${agent} and closed_at is null
+			order by id`
+		const cards = this.sql<MessageRow>`
+			select * from message
+			where author = ${agent} and card is not null
+			order by at desc
+			limit 50`.map(toMessage)
 		return {
 			agent,
 			todos,
@@ -653,17 +598,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	addTodo(agent: CrewKey, text: string, note: string | null) {
-		const [{ id }] = this.db
-			.exec<{ id: number }>(
-				'insert into todo (agent, text, note, at) values (?, ?, ?, ?) returning id',
-				agent,
-				text,
-				note,
-				now()
-			)
-			.toArray()
-		this.logEdit(agent, `added to-do "${text}"`)
-		this.push({ type: 'workspace', agent })
+		const id = this.saveTodo(agent, text, note)
+		this.workspaceEdited(agent, `added to-do "${text}"`)
 		return id
 	}
 
@@ -672,22 +608,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		id: number,
 		change: { done?: boolean; note?: string | null }
 	) {
-		const exists = this.db
-			.exec('select id from todo where id = ? and agent = ?', id, agent)
-			.toArray()
+		const exists = this.sql`
+			select id from todo
+			where id = ${id} and agent = ${agent}`
 		if (!exists.length) return false
 		if (change.done !== undefined) {
-			this.db.exec(
-				'update todo set done = ?, done_at = ? where id = ?',
-				Number(change.done),
-				change.done ? now() : null,
-				id
-			)
+			this.sql`
+				update todo set done = ${Number(change.done)}, done_at = ${change.done ? now() : null}
+				where id = ${id}`
 		}
 		if (change.note !== undefined) {
-			this.db.exec('update todo set note = ? where id = ?', change.note, id)
+			this.sql`update todo set note = ${change.note} where id = ${id}`
 		}
-		this.logEdit(
+		this.workspaceEdited(
 			agent,
 			change.done === true
 				? `finished to-do ${id}`
@@ -695,94 +628,57 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					? `reopened to-do ${id}`
 					: `updated to-do ${id}`
 		)
-		this.push({ type: 'workspace', agent })
 		return true
 	}
 
-	remember(
-		agent: CrewKey,
-		text: string,
-		playbook: { kind: 'metric' | 'chart'; domain: string | null } | null = null
-	) {
-		const [{ id }] = this.db
-			.exec<{ id: number }>(
-				'insert into memory (agent, text, at, kind, domain) values (?, ?, ?, ?, ?) returning id',
-				agent,
-				text,
-				now(),
-				playbook?.kind ?? 'fact',
-				playbook?.domain ?? null
-			)
-			.toArray()
-		this.logEdit(agent, `saved memory "${text}"`)
-		this.push({ type: 'workspace', agent })
+	remember(agent: CrewKey, text: string, playbook: Playbook | null = null) {
+		const id = this.saveMemory(agent, text, playbook)
+		this.workspaceEdited(agent, `saved memory "${text}"`)
 		return id
 	}
 
-	forget(agent: CrewKey, id: number) {
-		const deleted = this.db
-			.exec(
-				'delete from memory where id = ? and agent = ? returning id',
-				id,
-				agent
-			)
-			.toArray()
-		if (deleted.length) {
-			this.logEdit(agent, `forgot memory ${id}`)
+	// `by` is who deleted it: only an agent's own edits go in its receipt.
+	forget(agent: CrewKey, id: number, by: 'agent' | 'admin') {
+		const deleted = this.sql`
+			delete from memory
+			where id = ${id} and agent = ${agent}
+			returning id`
+		if (deleted.length && by === 'agent') {
+			this.workspaceEdited(agent, `forgot memory ${id}`)
+		} else if (deleted.length) {
 			this.push({ type: 'workspace', agent })
 		}
 		return deleted.length > 0
 	}
 
 	addOpenItem(agent: CrewKey, title: string, tag: string | null) {
-		const [{ id }] = this.db
-			.exec<{ id: number }>(
-				'insert into open_item (agent, title, tag, at) values (?, ?, ?, ?) returning id',
-				agent,
-				title,
-				tag,
-				now()
-			)
-			.toArray()
-		this.logEdit(agent, `opened item "${title}"`)
-		this.push({ type: 'workspace', agent })
+		const { id } = this.sql<{ id: number }>`
+			insert into open_item (agent, title, tag, at)
+			values (${agent}, ${title}, ${tag}, ${now()})
+			returning id`[0]
+		this.workspaceEdited(agent, `opened item "${title}"`)
 		return id
 	}
 
 	closeOpenItem(agent: CrewKey, id: number) {
-		const closed = this.db
-			.exec(
-				'update open_item set closed_at = ? where id = ? and agent = ? and closed_at is null returning id',
-				now(),
-				id,
-				agent
-			)
-			.toArray()
-		if (closed.length) {
-			this.logEdit(agent, `closed item ${id}`)
-			this.push({ type: 'workspace', agent })
-		}
+		const closed = this.sql`
+			update open_item set closed_at = ${now()}
+			where id = ${id} and agent = ${agent} and closed_at is null
+			returning id`
+		if (closed.length) this.workspaceEdited(agent, `closed item ${id}`)
 		return closed.length > 0
 	}
 
 	// ---- The bridge: the admin's stack, the charter, the weekly cycle -----
 
 	stack(): StackType {
-		const items = this.db
-			.exec<StackRow>(
-				`select * from stack_item
-				where status = 'open' or done_at > ?
-				order by status = 'open' desc, at desc limit 100`,
-				new Date(Date.now() - 14 * 86_400_000).toISOString()
-			)
-			.toArray()
-			.map(toStackItem)
-		const charter = this.db
-			.exec<CharterRow>(
-				"select * from charter where status != 'dropped' order by kind, id"
-			)
-			.toArray()
-			.map(toCharter)
+		const items = this.sql<StackRow>`select * from stack_item
+				where status = 'open' or done_at > ${twoWeeksAgo()}
+				order by status = 'open' desc, at desc limit 100`.map(toStackItem)
+		const charter = this.sql<CharterRow>`
+			select * from charter
+			where status != 'dropped'
+			order by kind, id`.map(toCharter)
 		return { items, charter }
 	}
 
@@ -794,19 +690,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		actions: StackItemType['actions']
 		ref?: number | null
 	}) {
-		const [{ id }] = this.db
-			.exec<{ id: number }>(
-				`insert into stack_item (kind, author, title, body, actions, ref, at)
-				values (?, ?, ?, ?, ?, ?, ?) returning id`,
-				input.kind,
-				input.author,
-				input.title,
-				input.body,
-				JSON.stringify(input.actions),
-				input.ref ?? null,
-				now()
-			)
-			.toArray()
+		const { id } = this.sql<IdRow>`
+			insert into stack_item (kind, author, title, body, actions, ref, at)
+			values (${input.kind}, ${input.author}, ${input.title}, ${input.body}, ${JSON.stringify(input.actions)}, ${input.ref ?? null}, ${now()})
+			returning id`[0]
 		this.stackChanged()
 		return id
 	}
@@ -818,16 +705,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		text: string
 		why: string
 	}) {
-		const [{ id }] = this.db
-			.exec<{ id: number }>(
-				`insert into charter (kind, text, why, status, at)
-				values (?, ?, ?, 'proposed', ?) returning id`,
-				input.kind,
-				input.text,
-				input.why,
-				now()
-			)
-			.toArray()
+		const { id } = this.sql<IdRow>`
+			insert into charter (kind, text, why, status, at)
+			values (${input.kind}, ${input.text}, ${input.why}, 'proposed', ${now()})
+			returning id`[0]
 		return this.bringToAdmin({
 			author: input.author,
 			kind: 'charter',
@@ -846,17 +727,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		id: number,
 		change: { text?: string; status?: 'kept' | 'dropped' }
 	) {
-		const row = this.db
-			.exec<CharterRow>('select * from charter where id = ?', id)
-			.toArray()[0]
+		const row = this.sql<CharterRow>`select * from charter where id = ${id}`[0]
 		if (!row) return false
-		this.db.exec(
-			'update charter set text = ?, status = ?, kept_at = ? where id = ?',
-			change.text ?? row.text,
-			change.status ?? row.status,
-			change.status === 'kept' ? now() : row.kept_at,
-			id
-		)
+		this.sql`
+			update charter set text = ${change.text ?? row.text}, status = ${change.status ?? row.status}, kept_at = ${change.status === 'kept' ? now() : row.kept_at}
+			where id = ${id}`
 		this.stackChanged()
 		return true
 	}
@@ -867,11 +742,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		note: string | null
 		name: string
 	}):
-		| { ok: true; author: CrewKey; body: string }
+		| { ok: true; author: CrewKey; body: string; wake: boolean }
 		| { ok: false; status: 404 | 409; error: string } {
-		const row = this.db
-			.exec<StackRow>('select * from stack_item where id = ?', input.id)
-			.toArray()[0]
+		const row = this.sql<StackRow>`
+			select * from stack_item
+			where id = ${input.id}`[0]
 		if (!row) return { ok: false, status: 404, error: 'No item with that id' }
 		const item = toStackItem(row)
 		if (item.status === 'done') {
@@ -884,24 +759,16 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			return { ok: false, status: 404, error: 'That item has no such answer' }
 		}
 		const at = now()
-		this.db.exec(
-			"update stack_item set answer = ?, status = 'done', done_at = ? where id = ?",
-			JSON.stringify({
-				actionId: action.id,
-				label: action.label,
-				note: input.note,
-				at,
-			}),
+		this.sql`update stack_item set answer = ${JSON.stringify({
+			actionId: action.id,
+			label: action.label,
+			note: input.note,
 			at,
-			item.id
-		)
+		})}, status = 'done', done_at = ${at} where id = ${item.id}`
 		if (item.kind === 'charter' && row.ref !== null) {
-			this.db.exec(
-				'update charter set status = ?, kept_at = ? where id = ?',
-				action.id === 'keep' ? 'kept' : 'dropped',
-				action.id === 'keep' ? at : null,
-				row.ref
-			)
+			this.sql`
+				update charter set status = ${action.id === 'keep' ? 'kept' : 'dropped'}, kept_at = ${action.id === 'keep' ? at : null}
+				where id = ${row.ref}`
 		}
 		this.stackChanged()
 		const note = input.note ? ` They added: "${input.note}"` : ''
@@ -909,15 +776,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			ok: true,
 			author: item.author,
 			body: `${input.name} answered "${action.label}" to "${item.title}" (${item.kind}).${note}`,
+			// An item with choices asked something; a brief or a "know" item
+			// only leaves the stack.
+			wake: item.actions.length > 0,
 		}
 	}
 
 	weekly(): WeeklyType {
-		return this.state.weekly ?? DEFAULT_WEEKLY
+		return this.state.weekly
 	}
 
 	setTimezone(timezone: string) {
-		this.setState({ ...this.state, weekly: { ...this.weekly(), timezone } })
+		this.setWeekly({ timezone })
 	}
 
 	recordBrief(input: { author: CrewKey; title: string; body: string }) {
@@ -928,21 +798,35 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			body: input.body,
 			actions: [],
 		})
-		this.setState({
-			...this.state,
-			weekly: { ...this.weekly(), briefAt: now() },
-		})
+		this.setWeekly({ briefAt: now() })
 		return id
 	}
 
 	closeMeeting() {
-		this.setState({
-			...this.state,
-			weekly: { ...this.weekly(), meetingAt: now() },
-		})
+		this.setWeekly({ meetingAt: now() })
 	}
 
 	// ---- Internals ----------------------------------------------------------
+
+	private saveTodo(agent: CrewKey, text: string, note: string | null) {
+		const { id } = this.sql<{ id: number }>`
+			insert into todo (agent, text, note, at)
+			values (${agent}, ${text}, ${note}, ${now()})
+			returning id`[0]
+		return id
+	}
+
+	private saveMemory(
+		agent: CrewKey,
+		text: string,
+		playbook: Playbook | null = null
+	) {
+		const { id } = this.sql<{ id: number }>`
+			insert into memory (agent, text, at, kind, domain)
+			values (${agent}, ${text}, ${now()}, ${playbook?.kind ?? 'fact'}, ${playbook?.domain ?? null})
+			returning id`[0]
+		return id
+	}
 
 	private insert(input: {
 		author: string
@@ -966,20 +850,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			conversation: input.conversation,
 			corrected: null,
 		}
-		this.db.exec(
-			`insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation)
-			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			row.id,
-			row.at,
-			row.author,
-			row.author_name,
-			row.body,
-			row.routing,
-			row.card,
-			row.answer,
-			row.place,
-			row.conversation
-		)
+		this.sql`
+			insert into message (id, at, author, author_name, body, routing, card, answer, place, conversation)
+			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.conversation})`
 		const message = toMessage(row)
 		if (message.place === 'room') this.push({ type: 'message', message })
 		return message
@@ -987,12 +860,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// The admin's "..." messages since their last message that was not one.
 	private stackedBodies(author: string) {
-		const rows = this.db
-			.exec<{ body: string; routing: string | null }>(
-				'select body, routing from message where author = ? order by at desc, id desc limit 20',
-				author
-			)
-			.toArray()
+		const rows = this.sql<{
+			body: string
+			routing: string | null
+		}>`
+			select body, routing from message
+			where author = ${author}
+			order by at desc, id desc
+			limit 20`
 		const stacked: Array<string> = []
 		for (const row of rows) {
 			const routing = row.routing
@@ -1005,14 +880,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	private latestRoomRows(limit: number) {
-		return this.db
-			.exec<MessageRow>(
-				`select * from (
-					select * from message where place = 'room' order by at desc, id desc limit ?
-				) order by at, id`,
-				limit
-			)
-			.toArray()
+		return this.sql<MessageRow>`select * from (
+					select * from message where place = 'room' order by at desc, id desc limit ${limit}
+				) order by at, id`
 	}
 
 	private workspaceText(agent: CrewKey) {
@@ -1045,6 +915,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		].join('\n\n')
 	}
 
+	private setWeekly(change: Partial<WeeklyType>) {
+		this.setState({
+			...this.state,
+			weekly: { ...this.state.weekly, ...change },
+		})
+	}
+
 	private setStatus(agent: CrewKey, status: AgentStatusType) {
 		this.setState({
 			...this.state,
@@ -1052,78 +929,56 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		})
 	}
 
-	// Labels each CLEF decision that woke this agent since `since` with
+	// Labels the CLEF decision behind each message this run received with
 	// whether the run posted anything. "silent" is a weak sign that the
 	// message did not need the agent.
 	private recordOutcomes(agent: CrewKey, since: string) {
-		const [{ posted }] = this.db
-			.exec<{ posted: number }>(
-				'select count(*) as posted from message where author = ? and at >= ?',
-				agent,
-				since
-			)
-			.toArray()
-		const windowStart = new Date(Date.parse(since) - 60_000).toISOString()
-		const decisions = this.db
-			.exec<{
-				message_id: string
-				final: string
-				corrected: string | null
-				outcomes: string
-			}>(
-				'select message_id, final, corrected, outcomes from clef_decision where at >= ?',
-				windowStart
-			)
-			.toArray()
+		const { posted } = this.sql<{ posted: number }>`
+			select count(*) as posted from message
+			where author = ${agent} and place = 'room' and at >= ${since}`[0]
+		const decisions = this.sql<{
+			message_id: string
+			outcomes: string
+		}>`select message_id, outcomes from run_message
+				join clef_decision using (message_id) where agent = ${agent}`
+		this.sql`delete from run_message where agent = ${agent}`
 		for (const decision of decisions) {
 			const outcomes = JSON.parse(decision.outcomes) as Record<string, string>
-			const woke = [decision.final, decision.corrected].some(
-				(label) =>
-					label !== null &&
-					(JSON.parse(label) as Pick<RoutingType, 'agents'>).agents.includes(
-						agent
-					)
-			)
-			if (!woke || outcomes[agent]) continue
+			if (outcomes[agent]) continue
 			outcomes[agent] = posted > 0 ? 'posted' : 'silent'
-			this.db.exec(
-				'update clef_decision set outcomes = ? where message_id = ?',
-				JSON.stringify(outcomes),
-				decision.message_id
-			)
+			this.sql`
+				update clef_decision set outcomes = ${JSON.stringify(outcomes)}
+				where message_id = ${decision.message_id}`
 		}
 	}
 
 	private takeAgentWake() {
 		const hourAgo = new Date(Date.now() - 3_600_000).toISOString()
-		this.db.exec('delete from agent_wake where at < ?', hourAgo)
-		const [{ count }] = this.db
-			.exec<{ count: number }>('select count(*) as count from agent_wake')
-			.toArray()
+		this.sql`delete from agent_wake where at < ${hourAgo}`
+		const { count } = this.sql<CountRow>`
+			select count(*) as count from agent_wake`[0]
 		if (count >= AGENT_WAKES_PER_HOUR) return false
-		this.db.exec('insert into agent_wake (at) values (?)', now())
+		this.sql`insert into agent_wake (at) values (${now()})`
 		return true
 	}
 
-	private logEdit(agent: CrewKey, what: string) {
-		this.db.exec(
-			'insert into edit_log (agent, what, at) values (?, ?, ?)',
-			agent,
-			what,
-			now()
-		)
+	// An agent's own edit: it goes in the receipt that ends its run.
+	private workspaceEdited(agent: CrewKey, what: string) {
+		this.sql`
+			insert into edit_log (agent, what, at)
+			values (${agent}, ${what}, ${now()})`
+		this.push({ type: 'workspace', agent })
 	}
 
 	// A room run that changed the agent's workspace ends with a receipt in
 	// the room, built from the edits it made rather than from its own account.
 	private postReceipt(agent: CrewKey, since: string) {
-		const edits = this.db
-			.exec<{ what: string }>(
-				'select what from edit_log where agent = ? and at >= ? order by at',
-				agent,
-				since
-			)
-			.toArray()
+		const edits = this.sql<{
+			what: string
+		}>`
+			select what from edit_log
+			where agent = ${agent} and at >= ${since}
+			order by at`
 		if (!edits.length) return
 		this.insert({
 			author: agent,
@@ -1137,11 +992,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	private openStackCount() {
-		const [{ count }] = this.db
-			.exec<{ count: number }>(
-				"select count(*) as count from stack_item where status = 'open'"
-			)
-			.toArray()
+		const { count } = this.sql<CountRow>`
+			select count(*) as count from stack_item
+			where status = 'open'`[0]
 		return count
 	}
 
@@ -1153,12 +1006,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// True while Riker and Data have spoken fewer than BRIDGE_TURNS times in a
 	// row since the last message from an admin.
 	private bridgeTurnLeft() {
-		const recent = this.db
-			.exec<{ author: string }>(
-				"select author from message where place = 'room' order by at desc, id desc limit ?",
-				BRIDGE_TURNS
-			)
-			.toArray()
+		const recent = this.sql<{
+			author: string
+		}>`
+			select author from message
+			where place = 'room'
+			order by at desc, id desc
+			limit ${BRIDGE_TURNS}`
 		return (
 			recent.length < BRIDGE_TURNS ||
 			recent.some((row) => !isCrewKey(row.author))

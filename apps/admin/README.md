@@ -72,7 +72,7 @@ What they need from you lands in **Brought to you** (`/stack`), and you can clea
 
 Every answer can carry a note, and your notes and overrides are how the bridge learns you.
 
-**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set on Riker's page; Cloudflare crons are UTC only) and has Riker write the week's brief. From then on, a banner on every page invites you to the weekly meeting until it happens. "Start the meeting" opens it in your 1:1 with Riker. Riker closes the meeting with minutes in the room, then carries the directives to the fleet: one message per agent, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
+**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set on Riker's page; Cloudflare crons are UTC only) and has Riker write the week's brief. From then on, a banner on every page invites you to the weekly meeting until it happens. "Go to the meeting" opens your 1:1 with Riker, where "Start the weekly meeting" begins it. Riker closes the meeting with minutes in the room, then carries the directives to the fleet: one message per agent, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
 
 ### Where things live
 
@@ -110,7 +110,7 @@ Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k
 
 `worker/crew/github.ts` files issues on `mhsnook/sunlo` (the `GITHUB_REPO` var) as a GitHub App, for Monitor when it starts. No agent has the GitHub tools yet. Without the three secrets below, no agent ever will.
 
-The repository is public, so the tools enforce these limits in code, whatever the prompt says:
+The repository is public, so Monitor's GitHub tools must enforce these limits in code, whatever the prompt says. `github.ts` holds the limits and adds the label; the tools that check the rest come with Monitor:
 
 - **No personal data.** An issue or comment that contains an email address, a user's id or a username is refused, and the agent is told to rewrite it.
 - **No duplicates.** The agent keeps every issue it files in its SQLite. It checks that list first, and it can comment only on its own issues.

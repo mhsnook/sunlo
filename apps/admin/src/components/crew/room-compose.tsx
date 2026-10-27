@@ -5,11 +5,7 @@ import { cn } from '@/lib/utils'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
 import { useDebounce } from '@/hooks/use-debounce'
-import {
-	endsWithEllipsis,
-	fixedRouting,
-	type RoutingType,
-} from '../../../shared/crew'
+import { fixedRouting, type RoutingType } from '../../../shared/crew'
 import { clefQuery, usePostToRoom } from '~/lib/crew'
 import { RoutingMenu, routingNote } from './routing-menu'
 
@@ -28,7 +24,7 @@ export function RoomCompose() {
 	})
 	const predicted = rule ?? (settled === text ? clef.data : undefined) ?? null
 	// "..." always stacks; the chip cannot change that.
-	const locked = !!text && endsWithEllipsis(text)
+	const locked = rule?.kind === 'stack'
 	const routing = locked ? predicted : (override ?? predicted)
 	const deciding = !!text && !routing && (clef.isFetching || settled !== text)
 

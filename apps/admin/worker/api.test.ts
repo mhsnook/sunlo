@@ -179,12 +179,13 @@ describe('GET /api/activity-overview', () => {
 		expect(res.status).toBe(200)
 		const body = await res.json()
 		expect(ActivityOverviewSchema.parse(body)).toEqual(OVERVIEW)
-		expect(queries[1].values).toContain(14)
+		expect(queries.at(-1)?.values).toContain(14)
 		expect(postgres).toHaveBeenCalledWith(
 			HYPERDRIVE_URL,
 			expect.objectContaining({ max: 1, fetch_types: false })
 		)
-		expect(end).toHaveBeenCalledOnce()
+		// The admin check and the overview each open and close a connection.
+		expect(end).toHaveBeenCalledTimes(postgres.mock.calls.length)
 	})
 })
 
@@ -198,7 +199,7 @@ describe('GET /api/user-activity', () => {
 		const res = await get('/api/user-activity?days=30')
 		expect(res.status).toBe(200)
 		expect(UserActivitySchema.parse(await res.json())).toEqual(USER_ACTIVITY)
-		expect(queries[1].values).toEqual(expect.arrayContaining([30, 20]))
+		expect(queries.at(-1)?.values).toEqual(expect.arrayContaining([30, 20]))
 	})
 })
 

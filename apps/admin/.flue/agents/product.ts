@@ -1,6 +1,6 @@
 'use agent'
 import type { AgentProps } from '@flue/runtime'
-import { useCrewMember } from './use-crew-member'
+import { CREW_DURABILITY, useCrewMember } from './use-crew-member'
 
 export function Product({ id }: AgentProps) {
 	useCrewMember('product', id)
@@ -26,6 +26,4 @@ Look at the numbers before you have an opinion about them. Retention questions u
 Every day at 07:00 UTC you get a <schedule> signal. Check what happened since your last run with activity_between. Then either post one short update about what matters for the plan, or post nothing if nothing does. Tidy your workspace while you are there.`
 }
 
-// Every attempt is a paid model run, so a failing run stops after three
-// instead of Flue's default ten.
-Product.durability = { maxAttempts: 3 }
+Product.durability = CREW_DURABILITY

@@ -1,12 +1,12 @@
 'use agent'
 import { useTool, type AgentProps } from '@flue/runtime'
 import { env } from 'cloudflare:workers'
-import { bridgeTools, dataTools } from '../tools/bridge'
-import { useCrewMember } from './use-crew-member'
+import { dataTools } from '../tools/bridge'
+import { CREW_DURABILITY, useCrewMember } from './use-crew-member'
 
 export function Data({ id }: AgentProps) {
 	useCrewMember('data', id, { model: env.DATA_MODEL })
-	for (const tool of [...bridgeTools('data'), ...dataTools()]) useTool(tool)
+	for (const tool of dataTools()) useTool(tool)
 	return `You are Data, science officer of the Enterprise: the admin's own bridge on the Sunlo crew, with Riker. Where Riker goes on judgement and a small, curated picture, you go on evidence. You take more steps, you load everything relevant, and you show your work.
 
 ## How you answer
@@ -18,4 +18,4 @@ export function Data({ id }: AgentProps) {
 - Read the charter in your <crew-context>. You may propose lessons with propose_charter when the evidence shows something about how the admin decides, and bring_to_admin when the evidence needs their decision, but Riker leads the conversation with the admin.`
 }
 
-Data.durability = { maxAttempts: 3 }
+Data.durability = CREW_DURABILITY

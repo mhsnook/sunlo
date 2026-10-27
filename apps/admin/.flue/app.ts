@@ -1,197 +1,200 @@
 import { createAgentRouter } from '@flue/runtime/routing'
+import { validator } from 'hono/validator'
 import { z } from 'zod'
-import {
-	crewKeys,
-	isCrewKey,
-	RoutingSchema,
-	type StackItemType,
-} from '../shared/crew'
+import { crewKeys, isCrewKey, RoutingSchema } from '../shared/crew'
+import { TEAM } from '../worker/crew/room'
 import { createApi } from '../worker/api'
-import { Data } from './agents/data'
-import { Product } from './agents/product'
-import { Riker } from './agents/riker'
-import { deliver, roomFor, wake } from './crew'
+import { crewAgents, deliver, roomFor, wake } from './crew'
 
 // worker/api.ts checks the admin on every /api route. These routes add the
 // crew room and the agents to that app.
 
 const api = createApi()
 
-const PostSchema = z.object({
-	body: z.string().trim().min(1).max(8000),
-	routing: RoutingSchema.nullable().optional(),
-	predicted: RoutingSchema.nullable().optional(),
-})
+// A JSON body that fails its schema answers 400, and an :id that is not a
+// number 404, with `error`.
+const json = <S extends z.ZodType>(schema: S, error: string) =>
+	validator('json', (value, c) => {
+		const parsed = schema.safeParse(value)
+		return parsed.success ? parsed.data : c.json({ error }, 400)
+	})
+const numericId = (error: string) =>
+	validator('param', (value, c) => {
+		const id = z.coerce.number().int().safeParse(value.id)
+		return id.success ? { id: id.data } : c.json({ error }, 404)
+	})
+
+const Text = z.string().trim().min(1).max(8000)
 
 api.get('/crew/room', async (c) => {
-	return c.json(await (await roomFor(c.env)).snapshot(c.get('admin').uid))
+	return c.json(await (await roomFor()).snapshot(c.get('admin').uid))
 })
 
 api.post('/crew/seen', async (c) => {
-	await (await roomFor(c.env)).markSeen(c.get('admin').uid)
+	await (await roomFor()).markSeen(c.get('admin').uid)
 	return c.json({ ok: true })
 })
 
-api.post('/crew/clef', async (c) => {
-	const body = z
-		.object({ text: z.string().trim().min(1).max(8000) })
-		.safeParse(await c.req.json().catch(() => null))
-	if (!body.success) return c.json({ error: 'Send { text }' }, 400)
-	return c.json(await (await roomFor(c.env)).classify(body.data.text))
-})
-
-api.post('/crew/messages', async (c) => {
-	const input = PostSchema.safeParse(await c.req.json().catch(() => null))
-	if (!input.success) {
-		return c.json({ error: 'Send { body, routing?, predicted? }' }, 400)
+api.post(
+	'/crew/clef',
+	json(z.object({ text: Text }), 'Send { text }'),
+	async (c) => {
+		const { text } = c.req.valid('json')
+		return c.json(await (await roomFor()).classify(text))
 	}
-	const admin = c.get('admin')
-	const { message, wake: wakes } = await (
-		await roomFor(c.env)
-	).postFromAdmin({
-		uid: admin.uid,
-		name: admin.name,
-		body: input.data.body,
-		routing: input.data.routing ?? null,
-		predicted: input.data.predicted ?? null,
-	})
-	await wake(wakes, admin.name)
-	return c.json(message)
-})
+)
 
-api.post('/crew/messages/:id/answer', async (c) => {
-	const input = z
-		.object({ actionId: z.string().min(1) })
-		.safeParse(await c.req.json().catch(() => null))
-	if (!input.success) return c.json({ error: 'Send { actionId }' }, 400)
-	const room = await roomFor(c.env)
-	const result = await room.answer({
-		messageId: c.req.param('id'),
-		actionId: input.data.actionId,
-		name: c.get('admin').name,
-	})
-	if (!result.ok) return c.json({ error: result.error }, result.status)
-	if (result.conversation === 'team') await room.markWorking(result.agent)
-	await deliver(result.agent, result.conversation, 'crew.answer', result.body)
-	return c.json({ ok: true })
-})
+api.post(
+	'/crew/messages',
+	json(
+		z.object({
+			body: Text,
+			routing: RoutingSchema.nullable().optional(),
+			predicted: RoutingSchema.nullable().optional(),
+		}),
+		'Send { body, routing?, predicted? }'
+	),
+	async (c) => {
+		const input = c.req.valid('json')
+		const admin = c.get('admin')
+		const { message, wake: wakes } = await (
+			await roomFor()
+		).postFromAdmin({
+			uid: admin.uid,
+			name: admin.name,
+			body: input.body,
+			routing: input.routing ?? null,
+			predicted: input.predicted ?? null,
+		})
+		await wake(wakes, admin.name)
+		return c.json(message)
+	}
+)
 
-api.post('/crew/messages/:id/correct', async (c) => {
-	const input = z
-		.object({ routing: RoutingSchema })
-		.safeParse(await c.req.json().catch(() => null))
-	if (!input.success) return c.json({ error: 'Send { routing }' }, 400)
-	const admin = c.get('admin')
-	const result = await (
-		await roomFor(c.env)
-	).correct({
-		messageId: c.req.param('id'),
-		uid: admin.uid,
-		routing: input.data.routing,
-	})
-	if (!result.ok) return c.json({ error: result.error }, result.status)
-	await wake(result.wake, admin.name)
-	return c.json(result.message)
-})
+api.post(
+	'/crew/messages/:id/answer',
+	json(z.object({ actionId: z.string().min(1) }), 'Send { actionId }'),
+	async (c) => {
+		const result = await (
+			await roomFor()
+		).answer({
+			messageId: c.req.param('id'),
+			actionId: c.req.valid('json').actionId,
+			name: c.get('admin').name,
+		})
+		if (!result.ok) return c.json({ error: result.error }, result.status)
+		await deliver(result.agent, result.conversation, 'crew.answer', result.body)
+		return c.json({ ok: true })
+	}
+)
+
+api.post(
+	'/crew/messages/:id/correct',
+	json(z.object({ routing: RoutingSchema }), 'Send { routing }'),
+	async (c) => {
+		const admin = c.get('admin')
+		const result = await (
+			await roomFor()
+		).correct({
+			messageId: c.req.param('id'),
+			uid: admin.uid,
+			routing: c.req.valid('json').routing,
+		})
+		if (!result.ok) return c.json({ error: result.error }, result.status)
+		await wake(result.wake, admin.name)
+		return c.json(result.message)
+	}
+)
 
 api.get('/crew/agents/:agent', async (c) => {
 	const agent = c.req.param('agent')
 	if (!isCrewKey(agent)) {
 		return c.json({ error: `Crew members are ${crewKeys.join(', ')}` }, 404)
 	}
-	return c.json(await (await roomFor(c.env)).workspace(agent))
+	return c.json(await (await roomFor()).workspace(agent))
 })
 
-api.delete('/crew/agents/:agent/memory/:id', async (c) => {
-	const agent = c.req.param('agent')
-	const id = z.coerce.number().int().safeParse(c.req.param('id'))
-	if (!isCrewKey(agent) || !id.success) {
-		return c.json({ error: 'No memory there' }, 404)
+api.delete(
+	'/crew/agents/:agent/memory/:id',
+	numericId('No memory there'),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No memory there' }, 404)
+		const { id } = c.req.valid('param')
+		const ok = await (await roomFor()).forget(agent, id, 'admin')
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No memory with that id' }, 404)
 	}
-	const ok = await (await roomFor(c.env)).forget(agent, id.data)
-	return ok ? c.json({ ok }) : c.json({ error: 'No memory with that id' }, 404)
-})
+)
 
 api.get('/crew/stack', async (c) => {
-	return c.json(await (await roomFor(c.env)).stack())
+	return c.json(await (await roomFor()).stack())
 })
 
-// Answers to these wake the agent who asked; a "know" item or a brief only
-// leaves the stack.
-const answered = new Set<StackItemType['kind']>([
-	'decide',
-	'confirm',
-	'escalate',
-	'charter',
-])
-
-api.post('/crew/stack/:id/answer', async (c) => {
-	const input = z
-		.object({
+api.post(
+	'/crew/stack/:id/answer',
+	numericId('No item with that id'),
+	json(
+		z.object({
 			actionId: z.string().min(1),
 			note: z.string().trim().max(2000).nullable().optional(),
+		}),
+		'Send { actionId, note? }'
+	),
+	async (c) => {
+		const input = c.req.valid('json')
+		const result = await (
+			await roomFor()
+		).answerStack({
+			id: c.req.valid('param').id,
+			actionId: input.actionId,
+			note: input.note || null,
+			name: c.get('admin').name,
 		})
-		.safeParse(await c.req.json().catch(() => null))
-	const id = z.coerce.number().int().safeParse(c.req.param('id'))
-	if (!input.success || !id.success) {
-		return c.json(
-			{ error: 'Send { actionId, note? } to a numeric item id' },
-			400
-		)
+		if (!result.ok) return c.json({ error: result.error }, result.status)
+		if (result.wake) {
+			await deliver(result.author, TEAM, 'crew.answer', result.body)
+		}
+		return c.json({ ok: true })
 	}
-	const room = await roomFor(c.env)
-	const item = (await room.stack()).items.find((i) => i.id === id.data)
-	const result = await room.answerStack({
-		id: id.data,
-		actionId: input.data.actionId,
-		note: input.data.note || null,
-		name: c.get('admin').name,
-	})
-	if (!result.ok) return c.json({ error: result.error }, result.status)
-	if (item && answered.has(item.kind)) {
-		await room.markWorking(result.author)
-		await deliver(result.author, 'team', 'crew.answer', result.body)
-	}
-	return c.json({ ok: true })
-})
+)
 
-api.patch('/crew/charter/:id', async (c) => {
-	const input = z
-		.object({
+api.patch(
+	'/crew/charter/:id',
+	numericId('No charter entry with that id'),
+	json(
+		z.object({
 			text: z.string().trim().min(1).max(300).optional(),
 			status: z.enum(['kept', 'dropped']).optional(),
-		})
-		.safeParse(await c.req.json().catch(() => null))
-	const id = z.coerce.number().int().safeParse(c.req.param('id'))
-	if (!input.success || !id.success) {
-		return c.json(
-			{ error: 'Send { text?, status? } to a numeric entry id' },
-			400
-		)
+		}),
+		'Send { text?, status? }'
+	),
+	async (c) => {
+		const ok = await (
+			await roomFor()
+		).editCharter(c.req.valid('param').id, c.req.valid('json'))
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No charter entry with that id' }, 404)
 	}
-	const ok = await (await roomFor(c.env)).editCharter(id.data, input.data)
-	return ok
-		? c.json({ ok })
-		: c.json({ error: 'No charter entry with that id' }, 404)
-})
+)
 
-api.put('/crew/weekly/timezone', async (c) => {
-	const input = z
-		.object({ timezone: z.string().min(1) })
-		.safeParse(await c.req.json().catch(() => null))
-	if (!input.success || !isTimeZone(input.data.timezone)) {
-		return c.json(
-			{ error: 'Send an IANA time zone, like America/New_York' },
-			400
-		)
+api.put(
+	'/crew/weekly/timezone',
+	json(
+		z.object({ timezone: z.string().refine(isTimeZone) }),
+		'Send an IANA time zone, like America/New_York'
+	),
+	async (c) => {
+		await (await roomFor()).setTimezone(c.req.valid('json').timezone)
+		return c.json({ ok: true })
 	}
-	await (await roomFor(c.env)).setTimezone(input.data.timezone)
-	return c.json({ ok: true })
-})
+)
 
 // The room's WebSocket, opened by useAgent. worker/api.ts has checked the
 // admin, from the token in the query string.
-api.get('/crew/live', async (c) => (await roomFor(c.env)).fetch(c.req.raw))
+api.get('/crew/live', async (c) => (await roomFor()).fetch(c.req.raw))
 
 // A 1:1 chat with an agent is the conversation "dm-<admin uid>", so an admin
 // can only open their own. Room runs use the conversation "team", which is
@@ -204,9 +207,9 @@ api.use('/agents/*', async (c, next) => {
 	}
 	return next()
 })
-api.route('/agents/riker', createAgentRouter(Riker))
-api.route('/agents/data', createAgentRouter(Data))
-api.route('/agents/product', createAgentRouter(Product))
+for (const [key, agent] of Object.entries(crewAgents())) {
+	api.route(`/agents/${key}`, createAgentRouter(agent))
+}
 
 export default api
 

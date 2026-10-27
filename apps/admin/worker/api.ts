@@ -1,14 +1,13 @@
 import { Hono } from 'hono'
-import type { Sql } from 'postgres'
+import { HTTPException } from 'hono/http-exception'
 import { z } from 'zod'
-import { connect, withDeadline } from './db'
+import { withSql } from './db'
 import { activityOverview, userActivity } from './stats'
 import { supabaseFor } from './supabase'
 
 export type AppEnv = {
 	Bindings: Env
 	Variables: {
-		sql: Sql
 		// `name` is the admin's username, or their email when they have none.
 		admin: { uid: string; email: string; name: string }
 	}
@@ -25,6 +24,7 @@ export function createApi() {
 	const app = new Hono<AppEnv>().basePath('/api')
 
 	app.onError((err, c) => {
+		if (err instanceof HTTPException) return err.getResponse()
 		console.error('admin api failed', err)
 		return c.json({ error: 'The database query failed' }, 500)
 	})
@@ -48,28 +48,22 @@ export function createApi() {
 			return c.json({ error: 'Sign in to use this' }, 401)
 		}
 
-		const sql = connect(c.env.HYPERDRIVE)
-		try {
-			const [{ is_admin, username }] = await withDeadline(
-				sql<[{ is_admin: boolean; username: string | null }]>`
-					select
-						exists (
-							select 1 from public.admin_user where uid = ${claims.sub}
-						) as is_admin,
-						(select username from public.user_profile where uid = ${claims.sub}) as username`,
-				15_000,
-				'The database'
-			)
-			if (!is_admin) {
-				return c.json({ error: 'This account is not an admin' }, 403)
-			}
-			c.set('sql', sql)
-			const email = claims.email ?? claims.sub
-			c.set('admin', { uid: claims.sub, email, name: username ?? email })
-			await next()
-		} finally {
-			await sql.end({ timeout: 5 })
+		const [{ is_admin, username }] = await withSql(
+			c.env.HYPERDRIVE,
+			15_000,
+			(sql) => sql<[{ is_admin: boolean; username: string | null }]>`
+				select
+					exists (
+						select 1 from public.admin_user where uid = ${claims.sub}
+					) as is_admin,
+					(select username from public.user_profile where uid = ${claims.sub}) as username`
+		)
+		if (!is_admin) {
+			return c.json({ error: 'This account is not an admin' }, 403)
 		}
+		const email = claims.email ?? claims.sub
+		c.set('admin', { uid: claims.sub, email, name: username ?? email })
+		await next()
 	})
 
 	app.get('/activity-overview', async (c) => {
@@ -77,7 +71,11 @@ export function createApi() {
 		if (!days.success) {
 			return c.json({ error: 'days must be a whole number from 1 to 90' }, 400)
 		}
-		return c.json(await activityOverview(c.get('sql'), days.data))
+		return c.json(
+			await withSql(c.env.HYPERDRIVE, 30_000, (sql) =>
+				activityOverview(sql, days.data)
+			)
+		)
 	})
 
 	app.get('/user-activity', async (c) => {
@@ -92,7 +90,11 @@ export function createApi() {
 				400
 			)
 		}
-		return c.json(await userActivity(c.get('sql'), days.data, limit.data))
+		return c.json(
+			await withSql(c.env.HYPERDRIVE, 30_000, (sql) =>
+				userActivity(sql, days.data, limit.data)
+			)
+		)
 	})
 
 	return app
