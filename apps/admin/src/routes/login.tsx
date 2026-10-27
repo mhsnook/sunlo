@@ -11,11 +11,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { getSession } from '~/lib/session'
 
 export const Route = createFileRoute('/login')({
 	beforeLoad: async () => {
-		if (await getSession()) throw redirect({ to: '/' })
+		// getUser asks the auth server, and drops a stored session that the
+		// server has ended. getSession would trust it and loop back here.
+		const { data } = await supabase.auth.getUser()
+		if (data.user) throw redirect({ to: '/' })
 	},
 	component: LoginPage,
 })

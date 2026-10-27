@@ -15,6 +15,7 @@ export const crewKeys = [
 export type CrewKey = (typeof crewKeys)[number]
 
 export type CrewMember = {
+	// Also the @mention handle, since a name can hold spaces.
 	key: CrewKey
 	name: string
 	title: string
@@ -78,7 +79,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	product: {
 		key: 'product',
-		name: 'Product',
+		name: 'USS Product',
 		title: 'Product manager',
 		looksAfter: [
 			'The product plan for the next six weeks',
@@ -171,7 +172,8 @@ export type ActionType = z.infer<typeof ActionSchema>
 // - From Riker or Data, in the Enterprise thread: decide (on hold until the
 //   admin answers), confirm (acted in their stead; was that right?), know
 //   (nothing to answer), escalate (needs more than the crew has), charter (a
-//   proposed charter entry, `ref`) and brief (the weekly brief)
+//   proposed charter entry, `ref`), brief (the weekly brief) and report
+//   (Data's pre-meeting report)
 export const CardSchema = z.object({
 	kind: z.enum([
 		'question',
@@ -182,6 +184,7 @@ export const CardSchema = z.object({
 		'escalate',
 		'charter',
 		'brief',
+		'report',
 	]),
 	title: z.string().nullable(),
 	// Empty for a card with nothing to answer.
@@ -274,6 +277,15 @@ export const MemorySchema = z.object({
 })
 export type MemoryType = z.infer<typeof MemorySchema>
 
+// What the whole crew knows about the admin, such as their name and how to
+// refer to them. Only the admin writes it; every agent reads it every run.
+export const CrewMemorySchema = z.object({
+	id: z.number(),
+	text: z.string(),
+	at: z.string(),
+})
+export type CrewMemoryType = z.infer<typeof CrewMemorySchema>
+
 export const OpenItemSchema = z.object({
 	id: z.number(),
 	title: z.string(),
@@ -322,3 +334,4 @@ export type RoomEvent =
 	| { type: 'workspace'; agent: CrewKey }
 	// The Enterprise snapshot changed: the charter, or the meeting.
 	| { type: 'enterprise' }
+	| { type: 'crew-memory' }

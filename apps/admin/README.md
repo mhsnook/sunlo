@@ -37,19 +37,21 @@ Writes, when the admin app gets them, go through the admin's own Supabase sessio
 
 ## The crew
 
-The dashboard opens on the **Conference Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. The sidebar lists the Conference Room, then the ships.
+The dashboard opens on the **Conference Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. A fleet ship that needs more than a question or two from you, such as an interview, takes it to your 1:1 chat with `take_to_one_to_one` and leaves a pointer in the room.
+
+**Crew memory**, a panel in the Conference Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you. The sidebar lists the Conference Room, then the ships.
 
 The agents sail as ships. **The Enterprise** is your own ship: Riker, your first officer, and Data, his science officer. You talk with them in one thread, the Enterprise thread, and everything that needs you arrives there. **The fleet** is every other agent, each a ship of its own and the expert on its own area. Each fleet ship has a page with its job, its to-do list, what is open with you, its memory, and a 1:1 chat.
 
-| Ship       | Agent     | Job                 | Status                                                 |
-| ---------- | --------- | ------------------- | ------------------------------------------------------ |
-| Enterprise | Riker     | First officer       | Runs: weekly brief on Sunday at 04:00, and when called |
-| Enterprise | Data      | Science officer     | Runs when called                                       |
-| Fleet      | Product   | Product manager     | Runs: daily at 07:00 UTC, and when called              |
-| Fleet      | Monitor   | Site reliability    | Planned                                                |
-| Fleet      | Moderator | Community moderator | Planned                                                |
-| Fleet      | Library   | Learning content    | Planned                                                |
-| Fleet      | Growth    | Growth              | Planned                                                |
+| Ship       | Agent       | Job                 | Status                                                 |
+| ---------- | ----------- | ------------------- | ------------------------------------------------------ |
+| Enterprise | Riker       | First officer       | Runs: weekly brief on Sunday at 04:00, and when called |
+| Enterprise | Data        | Science officer     | Runs when called                                       |
+| Fleet      | USS Product | Product manager     | Runs: daily at 07:00 UTC, and when called              |
+| Fleet      | Monitor     | Site reliability    | Planned                                                |
+| Fleet      | Moderator   | Community moderator | Planned                                                |
+| Fleet      | Library     | Learning content    | Planned                                                |
+| Fleet      | Growth      | Growth              | Planned                                                |
 
 The roster lives in `shared/crew.ts`. A planned agent has a page, and messages for it wait in the room until it starts.
 
@@ -69,10 +71,11 @@ What needs you arrives in the thread as a card:
 - **For the charter**: a principle or lesson Riker proposes. It counts only once you keep it.
 - **Worth knowing**: nothing to answer.
 - **Weekly brief**: the week, folded until you open it.
+- **Pre-meeting report**: Data's numbers for the brief's agenda, folded the same way. Data files one whenever a meeting starts without one; if you ask him for a pre-meeting briefing first, that is the report.
 
 The sidebar counts the cards that wait on you. Anything you want to add to an answer, write in the thread: your answers, and the times you overrule Riker, are how the Enterprise learns you.
 
-**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the ship's log; Cloudflare crons are UTC only) and has Riker post the week's brief in the thread. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the thread begins it. Riker closes the meeting with minutes in the Conference Room, then carries the directives to the fleet: one message per agent, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
+**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the ship's log; Cloudflare crons are UTC only) and has Riker post the week's brief in the thread. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the thread begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the thread. Riker holds directives for the fleet until you say the meeting is done: a Conference Room post of his that @mentions a ship is refused while the meeting is in progress. Then he closes the meeting with minutes in the Conference Room, followed by one directive per ship, with priorities and suggested edits, each marked as a command or a suggestion. The agent applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
 
 ### Components in messages
 
@@ -82,7 +85,7 @@ Any agent can put components in its markdown as a fenced block whose language na
 
 - **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueProductAgent`, bound as `FLUE_PRODUCT_AGENT`) and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
 - **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). Its tables are created once, so until the room holds data worth keeping, a schema change ships with a new instance name, which starts every environment, previews included, on an empty room. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Conference Room and the Enterprise thread, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
-- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: Product's daily run at 07:00 UTC, and Riker's brief.
+- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` and `/api/agents/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: USS Product's daily run at 07:00 UTC, and Riker's brief.
 
 ### How a message reaches an agent
 
@@ -90,7 +93,7 @@ CLEF decides where each Conference Room message goes when you send it:
 
 1. A message that ends in "..." **stacks**: it wakes nobody, and it rides along with your next message that does.
 2. An @mention of a started agent **sends** the message to that agent.
-3. Otherwise a small Workers AI model (`CLEF_MODEL`) chooses between **sending** it to an agent and **leaving it in the room**. Agents read the room at their next run either way.
+3. Otherwise a small Workers AI model (`CLEF_MODEL`) chooses between **sending** it to one agent and **leaving it in the room**. When more than one agent could answer, or CLEF cannot tell who, it sends the message to Riker, who passes it on. Agents read the room at their next run either way.
 
 While you type, the chip above the compose bar shows the first two rules as they apply, and otherwise says CLEF decides when you send. The model runs only on send. Click the chip to pick a place yourself before you send. After you send, the note under your message opens the same menu: correct it there, and any agent the message should have woken wakes now.
 
@@ -104,10 +107,10 @@ Every run starts with the time, the agent's workspace, and the room messages sin
 
 - `activity_between`: signups, reviews and each reviewer, new decks, and library and chat counts for a window
 - `run_sql`: one SELECT, run as `admin_reader` with an 8-second timeout and at most 200 rows
-- `post_to_crew`: a message in the room, optionally with 2 or 3 buttons
+- `post_to_conference_room`: a message in the room, optionally with 2 or 3 buttons
 - `propose_change`: a "Change to the plan" card. "Do it" saves the decision to the agent's memory and adds a to-do; "Not yet" saves that to memory.
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
-- Riker and Data also have `post_to_enterprise`, `bring_to_admin` (a card in the thread) and `propose_charter`; Riker has `write_brief` and `close_meeting`, and Data has `note_playbook`.
+- Riker and Data also have `post_to_enterprise`, `bring_to_admin` (a card in the thread) and `propose_charter`; Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the thread) and `close_meeting`, and Data has `note_playbook` and `file_report`.
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today), through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 

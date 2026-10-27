@@ -1,12 +1,10 @@
 import type { ReactNode } from 'react'
-import { Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { toastError } from '@/components/ui/sonner'
 import { crew, type CrewKey, type MemoryType } from '../../../shared/crew'
-import { useForgetMemory } from '~/lib/crew'
+import { useEditMemory, useForgetMemory } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
+import { EditableEntry } from './editable-entry'
 
-// An agent's memory, which the admin can prune. Data's playbook entries
+// An agent's memory, which the admin can edit and prune. Data's playbook entries
 // (metrics by domain, chart preferences) get their own headings.
 export function MemoryList({
 	agent,
@@ -72,37 +70,28 @@ function Entries({
 	agent: CrewKey
 	entries: Array<MemoryType>
 }) {
+	const edit = useEditMemory(agent)
 	const forget = useForgetMemory(agent)
 	return (
 		<ul className="space-y-1" data-testid="agent-memory">
 			{entries.map((entry) => (
-				<li
+				<EditableEntry
 					key={entry.id}
-					className="group flex items-start gap-2 text-sm"
-					data-testid="agent-memory-entry"
-					data-key={entry.id}
+					id={entry.id}
+					text={entry.text}
+					label="Memory"
+					busy={edit.isPending || forget.isPending}
+					onSave={(text) => edit.mutateAsync({ id: entry.id, text })}
+					onDelete={() => forget.mutateAsync(entry.id)}
+					deleteLabel="Delete this memory"
+					quiet
+					testId="agent-memory-entry"
 				>
-					<span className="flex-1">
-						{entry.text}
-						<span className="text-muted-foreground ms-2 text-xs">
-							{dayLabel(entry.at)}
-						</span>
+					{entry.text}
+					<span className="text-muted-foreground ms-2 text-xs">
+						{dayLabel(entry.at)}
 					</span>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Delete this memory"
-						className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-						disabled={forget.isPending}
-						onClick={() =>
-							forget.mutate(entry.id, {
-								onError: (error) => toastError(error.message),
-							})
-						}
-					>
-						<Trash2 />
-					</Button>
-				</li>
+				</EditableEntry>
 			))}
 		</ul>
 	)

@@ -3,7 +3,7 @@ import { validator } from 'hono/validator'
 import { z } from 'zod'
 import { crewKeys, fleetKeys, isCrewKey, RoutingSchema } from '../shared/crew'
 import { createApi } from '../worker/api'
-import { crewAgents, deliver, roomFor, wake } from './crew'
+import { crewAgents, deliver, requestReport, roomFor, wake } from './crew'
 
 // worker/api.ts checks the admin on every /api route. These routes add the
 // crew room and the agents to that app.
@@ -128,6 +128,22 @@ api.delete(
 	}
 )
 
+api.patch(
+	'/crew/agents/:agent/memory/:id',
+	numericId('No memory there'),
+	json(z.object({ text: z.string().trim().min(1).max(2000) }), 'Send { text }'),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No memory there' }, 404)
+		const ok = await (
+			await roomFor()
+		).editMemory(agent, c.req.valid('param').id, c.req.valid('json').text)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No memory with that id' }, 404)
+	}
+)
+
 api.get('/crew/enterprise', async (c) => {
 	return c.json(await (await roomFor()).enterprise(c.get('admin').uid))
 })
@@ -156,8 +172,47 @@ api.post('/crew/enterprise/meeting', async (c) => {
 	).startMeeting({ uid: admin.uid, name: admin.name })
 	if (!started) return c.json({ error: 'No weekly meeting is due' }, 409)
 	await wake(started.wake, admin.name)
+	if (started.needsReport) await requestReport().catch(logFailedDelivery)
 	return c.json(started.message)
 })
+
+api.get('/crew/memory', async (c) => {
+	return c.json(await (await roomFor()).crewMemory())
+})
+
+api.post(
+	'/crew/memory',
+	json(z.object({ text: z.string().trim().min(1).max(500) }), 'Send { text }'),
+	async (c) => {
+		const id = await (await roomFor()).addCrewMemory(c.req.valid('json').text)
+		return c.json({ id })
+	}
+)
+
+api.delete(
+	'/crew/memory/:id',
+	numericId('No crew memory with that id'),
+	async (c) => {
+		const ok = await (await roomFor()).forgetCrewMemory(c.req.valid('param').id)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No crew memory with that id' }, 404)
+	}
+)
+
+api.patch(
+	'/crew/memory/:id',
+	numericId('No crew memory with that id'),
+	json(z.object({ text: z.string().trim().min(1).max(500) }), 'Send { text }'),
+	async (c) => {
+		const ok = await (
+			await roomFor()
+		).editCrewMemory(c.req.valid('param').id, c.req.valid('json').text)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No crew memory with that id' }, 404)
+	}
+)
 
 api.patch(
 	'/crew/charter/:id',

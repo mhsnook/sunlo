@@ -15,6 +15,7 @@ import {
 	type CrewKey,
 	type CrewMessageType,
 	type CardType,
+	type CrewMemoryType,
 	type CharterEntryType,
 	type EnterpriseType,
 	type WeeklyType,
@@ -211,6 +212,16 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			create table if not exists meeting (
 				brief_at text primary key,
 				started_at text not null
+			);
+			create table if not exists crew_memory (
+				id integer primary key autoincrement,
+				text text not null,
+				at text not null
+			);
+			-- Data's pre-meeting report for each week's brief.
+			create table if not exists meeting_report (
+				brief_at text primary key,
+				message_id text not null
 			);
 			-- The room messages delivered to an agent's current run.
 			create table if not exists run_message (
@@ -564,7 +575,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					values (${agent}, ${messageId})`
 			}
 		}
-		const sections = [`It is now ${stamp(now())}.`]
+		const sections = [`It is now ${stamp(now())}.`, this.crewMemoryText()]
 		if (bridgeKeys.includes(agent)) sections.push(this.bridgeText())
 		sections.push(this.workspaceText(agent))
 		if (!shared) {
@@ -706,6 +717,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return deleted.length > 0
 	}
 
+	editMemory(agent: CrewKey, id: number, text: string) {
+		const edited = this.sql`
+			update memory set text = ${text}
+			where id = ${id} and agent = ${agent}
+			returning id`
+		if (edited.length) this.push({ type: 'workspace', agent })
+		return edited.length > 0
+	}
+
 	addOpenItem(agent: CrewKey, title: string, tag: string | null) {
 		const { id } = this.sql<{ id: number }>`
 			insert into open_item (agent, title, tag, at)
@@ -824,21 +844,134 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// The admin starting the weekly meeting: Riker takes it from here, and the
 	// meeting counts as started until he closes it.
 	startMeeting(input: { uid: string; name: string }) {
-		const { briefAt } = this.weekly()
-		if (!briefAt || !meetingDue(this.weekly())) return null
-		this.sql`
-			insert or ignore into meeting (brief_at, started_at)
-			values (${briefAt}, ${now()})`
-		this.push({ type: 'enterprise' })
-		return this.postToEnterprise({
-			...input,
-			body: "Let's have our weekly meeting.",
-		})
+		const start = this.recordMeetingStart()
+		if (!start.started) return null
+		return {
+			...this.postToEnterprise({
+				...input,
+				body: "Let's have our weekly meeting.",
+			}),
+			needsReport: start.needsReport,
+		}
 	}
 
-	closeMeeting() {
+	// Riker calls this too, when the admin asks for the meeting somewhere
+	// other than the start button. `needsReport` is true only for the call
+	// that starts the meeting, and only when Data has not filed a report for
+	// this week's brief, so a second start never asks for a second report.
+	recordMeetingStart(): { started: boolean; needsReport: boolean } {
+		const { briefAt } = this.weekly()
+		if (!briefAt || !meetingDue(this.weekly())) {
+			return { started: false, needsReport: false }
+		}
+		const inserted = this.sql`
+			insert or ignore into meeting (brief_at, started_at)
+			values (${briefAt}, ${now()})
+			returning brief_at`
+		this.push({ type: 'enterprise' })
+		const filed = this.sql`
+			select 1 from meeting_report where brief_at = ${briefAt}`
+		return {
+			started: true,
+			needsReport: inserted.length > 0 && filed.length === 0,
+		}
+	}
+
+	// Data's pre-meeting report: a folded card in the Enterprise thread, and
+	// the one report for this week's meeting.
+	fileReport(input: { title: string; body: string }) {
+		const messageId = this.bringToAdmin({
+			author: 'data',
+			kind: 'report',
+			title: input.title,
+			body: input.body,
+			actions: [],
+		})
+		const { briefAt } = this.weekly()
+		if (briefAt) {
+			this.sql`
+				insert or replace into meeting_report (brief_at, message_id)
+				values (${briefAt}, ${messageId})`
+		}
+		return messageId
+	}
+
+	// Closes the meeting, then posts the minutes and each ship's directive in
+	// the Conference Room, in that order.
+	closeMeeting(input: {
+		minutes: string
+		directives: Array<{ ship: CrewKey; text: string }>
+	}): Array<Wake> {
 		this.setWeekly({ meetingAt: now() })
 		this.push({ type: 'enterprise' })
+		const posts = [
+			`**Minutes of this week's meeting**\n\n${input.minutes}`,
+			...input.directives.map(
+				(directive) => `@${directive.ship} ${directive.text}`
+			),
+		]
+		return posts.flatMap(
+			(body) =>
+				this.postFromAgent({
+					agent: 'riker',
+					body,
+					card: null,
+					place: 'room',
+					conversation: BRIDGE,
+				}).wake
+		)
+	}
+
+	meetingInProgress() {
+		return this.meetingStartedAt() !== null
+	}
+
+	// The admin a fleet agent opens a 1:1 chat with: whoever wrote last.
+	latestAdminUid() {
+		const author = this.sql<{ author: string }>`
+			select author from message
+			where author like 'admin:%'
+			order by at desc
+			limit 1`[0]?.author
+		return author ? author.slice('admin:'.length) : null
+	}
+
+	crewMemory(): Array<CrewMemoryType> {
+		return this.sql<CrewMemoryType>`
+			select id, text, at from crew_memory order by id`
+	}
+
+	addCrewMemory(text: string) {
+		const { id } = this.sql<IdRow>`
+			insert into crew_memory (text, at)
+			values (${text}, ${now()})
+			returning id`[0]
+		this.push({ type: 'crew-memory' })
+		return id
+	}
+
+	forgetCrewMemory(id: number) {
+		const deleted = this.sql`
+			delete from crew_memory where id = ${id} returning id`
+		if (deleted.length) this.push({ type: 'crew-memory' })
+		return deleted.length > 0
+	}
+
+	editCrewMemory(id: number, text: string) {
+		const edited = this.sql`
+			update crew_memory set text = ${text} where id = ${id} returning id`
+		if (edited.length) this.push({ type: 'crew-memory' })
+		return edited.length > 0
+	}
+
+	private crewMemoryText() {
+		const entries = this.crewMemory()
+			.map((entry) => `- ${entry.text}`)
+			.join('\n')
+		return [
+			'## The crew memory: what the admin wants every agent to know',
+			entries || '(empty)',
+		].join('\n\n')
 	}
 
 	private meetingStartedAt() {

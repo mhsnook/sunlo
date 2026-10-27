@@ -1,8 +1,8 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
-import type { ActionType, CrewKey } from '../../shared/crew'
+import { fleetKeys, type ActionType, type CrewKey } from '../../shared/crew'
 import { BRIDGE } from '../../worker/crew/room'
-import { roomFor, wake } from '../crew'
+import { requestReport, roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
 const defaultActions: Record<
@@ -124,32 +124,51 @@ export function rikerTools() {
 		},
 	})
 
-	const closeMeeting = defineTool({
-		name: 'close_meeting',
+	const startMeeting = defineTool({
+		name: 'start_meeting',
 		description:
-			'End the weekly meeting with the admin. Posts the minutes in the Conference Room: decisions, charter changes, and the directives each agent will get from you next.',
-		input: v.object({ minutes: v.pipe(Text, v.maxLength(6000)) }),
-		durable: true,
-		async run({ data, step }) {
-			assertBlocks(data.minutes)
-			const wakes = await step.do('close', async () => {
-				const room = await roomFor()
-				await room.closeMeeting()
-				const posted = await room.postFromAgent({
-					agent: 'riker',
-					body: `**Minutes of this week's meeting**\n\n${data.minutes}`,
-					card: null,
-					place: 'room',
-					conversation: BRIDGE,
-				})
-				return posted.wake
-			})
-			await step.do('wake', () => wake(wakes, 'Riker').then(() => true))
-			return 'The meeting is closed and the minutes are in the Conference Room.'
+			'Mark the weekly meeting as started, when the admin asks for it anywhere but the "Start the weekly meeting" button. Then open the meeting in the Enterprise thread with post_to_enterprise.',
+		input: v.object({}),
+		async run() {
+			const start = await (await roomFor()).recordMeetingStart()
+			if (!start.started) {
+				return 'No weekly meeting is due: there is no brief since the last meeting.'
+			}
+			if (start.needsReport) await requestReport()
+			return start.needsReport
+				? 'The meeting is marked as started, and Data is writing the pre-meeting report. Open the meeting in the Enterprise thread.'
+				: 'The meeting is marked as started. Open it in the Enterprise thread.'
 		},
 	})
 
-	return [writeBrief, closeMeeting]
+	const closeMeeting = defineTool({
+		name: 'close_meeting',
+		description:
+			'End the weekly meeting with the admin, once they say it is done. Posts the minutes in the Conference Room, then one message to each fleet ship with its directive: the priority in a sentence, and any suggested edits as a short list, each marked as a command or a suggestion.',
+		input: v.object({
+			minutes: v.pipe(Text, v.maxLength(6000)),
+			directives: v.optional(
+				v.array(
+					v.object({
+						ship: v.picklist(fleetKeys),
+						text: v.pipe(Text, v.maxLength(2000)),
+					})
+				),
+				[]
+			),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.minutes)
+			const wakes = await step.do('close', async () =>
+				(await roomFor()).closeMeeting(data)
+			)
+			await step.do('wake', () => wake(wakes, 'Riker').then(() => true))
+			return 'The meeting is closed, and the minutes and directives are in the Conference Room.'
+		},
+	})
+
+	return [writeBrief, startMeeting, closeMeeting]
 }
 
 // Data's playbook: the metrics the admin likes in each domain, and how they
@@ -174,5 +193,36 @@ export function dataTools() {
 			return { output: { id } }
 		},
 	})
-	return [notePlaybook]
+	const fileReport = defineTool({
+		name: 'file_report',
+		description:
+			"File the pre-meeting report for this week's meeting: the numbers behind each item on the brief's agenda, with charts or tables where they help, and the caveats. It shows in the Enterprise thread folded, with its title and opening lines, so lead with the finding. Use this whenever the admin asks for a pre-meeting briefing too, so the meeting does not ask for a second one.",
+		input: v.object({
+			title: v.pipe(Text, v.maxLength(140)),
+			body: v.pipe(Text, v.maxLength(12000)),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.body)
+			const messageId = await step.do('report', async () =>
+				(await roomFor()).fileReport(data)
+			)
+			// Data's report first, then Riker's read of it.
+			await step.do('riker', () =>
+				wake(
+					[
+						{
+							agent: 'riker',
+							body: `Data filed the pre-meeting report: "${data.title}". Read it in the thread and comment on what it means for the agenda.`,
+							messageId,
+							place: 'bridge',
+						},
+					],
+					'Data'
+				).then(() => true)
+			)
+			return { output: { messageId } }
+		},
+	})
+	return [notePlaybook, fileReport]
 }
