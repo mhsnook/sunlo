@@ -14,6 +14,7 @@ export default [
 			'src/types/supabase.ts',
 			'worker/worker-configuration.d.ts',
 			'apps/admin/worker/worker-configuration.d.ts',
+			'apps/admin/.flue-vite/',
 		],
 	},
 	{
@@ -80,7 +81,19 @@ export default [
 			...tseslint.plugin.configs['recommended'].rules,
 			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
 			...reactHooks.configs.recommended.rules,
-			'@typescript-eslint/only-throw-error': ['error', { allow: ['Redirect'] }],
+			'@typescript-eslint/only-throw-error': [
+				'error',
+				{
+					allow: [
+						'Redirect',
+						{
+							from: 'package',
+							package: '@tanstack/router',
+							name: 'NotFoundError',
+						},
+					],
+				},
+			],
 		},
 	},
 	{
@@ -103,7 +116,11 @@ export default [
 		},
 	},
 	{
-		files: ['apps/admin/worker/**/*.ts'],
+		files: [
+			'apps/admin/worker/**/*.ts',
+			'apps/admin/.flue/**/*.ts',
+			'apps/admin/shared/**/*.ts',
+		],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: 'module',

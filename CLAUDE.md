@@ -68,8 +68,7 @@ pnpm check              # typecheck with tsrs; `pnpm check:tsc` if tsrs has no b
 pnpm lint               # oxlint then eslint
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
-pnpm admin:dev          # admin app (apps/admin) at http://localhost:5174; Vite proxies /api to :8788
-pnpm admin:worker:dev   # admin Worker (apps/admin/worker) at http://localhost:8788
+pnpm admin:dev          # admin app and its Worker (apps/admin), one Vite server at http://localhost:5174
 pnpm worker:dev         # Cloudflare worker (worker/) at http://localhost:8787; Vite proxies /api to it
 
 pnpm run migrate        # create migration from local changes
@@ -126,7 +125,7 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 
 ## Admin app (`apps/admin/`)
 
-The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare by Workers Builds on every merge to `main` as the `sunlo-admin` Worker, which serves the static files and `apps/admin/worker/` for `/api/*`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin reads are SQL in the Worker, run as `admin_reader`, a read-only Postgres role with `bypassrls` and column grants that hide message bodies; never add an RPC for an admin read. The Worker verifies the admin's Supabase token and checks `admin_user` itself. Writes (none yet) go through the admin's own session and RLS. Details: `apps/admin/README.md`.
+The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare by Workers Builds on every merge to `main` as the `sunlo-admin` Worker, which serves the static files and the API for `/api/*`. Its front page is the Conference Room, where the admin works with AI agents built with [Flue](https://flueframework.com) in `apps/admin/.flue/`, which `@flue/vite` builds into the same Worker as one Durable Object per agent; the Enterprise (Riker and Data) has its own thread at `/enterprise`. The room, the thread and each agent's workspace live in the `CrewRoom` Durable Object in `apps/admin/worker/crew/`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin reads are SQL in the Worker, run as `admin_reader`, a read-only Postgres role with `bypassrls` and column grants that hide message bodies; never add an RPC for an admin read. The Worker verifies the admin's Supabase token and checks `admin_user` itself. Writes (none yet) go through the admin's own session and RLS. Details: `apps/admin/README.md`.
 
 ## Cloudflare worker (`worker/`)
 

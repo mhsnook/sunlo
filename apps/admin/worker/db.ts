@@ -1,4 +1,4 @@
-import postgres from 'postgres'
+import postgres, { type Sql } from 'postgres'
 
 // One connection per request. Hyperdrive holds the pool and the TLS session
 // to Supabase: the pooler's certificate comes from Supabase's private CA,
@@ -33,4 +33,18 @@ export function withDeadline<T>(
 	return Promise.race([promise, deadline]).finally(() => {
 		if (timer !== null) clearTimeout(timer)
 	})
+}
+
+// One connection for the length of `run`, with a deadline on the whole run.
+export async function withSql<T>(
+	hyperdrive: Hyperdrive,
+	ms: number,
+	run: (sql: Sql) => Promise<T>
+): Promise<T> {
+	const sql = connect(hyperdrive)
+	try {
+		return await withDeadline(run(sql), ms, 'The database')
+	} finally {
+		await sql.end({ timeout: 5 })
+	}
 }

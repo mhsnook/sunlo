@@ -1,18 +1,40 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "sunlo-admin",
-	"main": "worker/index.ts",
+	// No "main": @flue/vite sets it to the generated Worker entry, which serves
+	// .flue/app.ts and exports the agent and crew Durable Objects.
 	"compatibility_date": "2026-10-01",
-	// postgres.js needs node:net and node:tls.
+	// postgres.js needs node:net and node:tls; Flue needs it too.
 	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
-		"directory": "./dist",
+		"directory": "./dist/client",
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application",
 		// Every other path is a static file and never runs the worker.
 		"run_worker_first": ["/api/*"],
 	},
 	"preview_urls": true,
+	"ai": { "binding": "AI" },
+	// The crew room (worker/crew/room.ts). Flue adds a binding for each agent,
+	// such as FLUE_PRODUCT_AGENT; never write those here. The migrations are
+	// ours, and append-only once deployed: a new agent is a new entry.
+	"durable_objects": {
+		"bindings": [{ "name": "CREW_ROOM", "class_name": "CrewRoom" }],
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"CrewRoom",
+				"FlueRikerAgent",
+				"FlueDataAgent",
+				"FlueProductAgent",
+			],
+		},
+	],
+	// Hourly: Product's daily run at 07:00 UTC, and Riker's brief at Sunday
+	// 04:00 in the admin's time zone (.flue/cloudflare.ts).
+	"triggers": { "crons": ["0 * * * *"] },
 	"routes": [
 		{
 			"pattern": "admin.sunlo.app",
@@ -29,9 +51,45 @@
 			"localConnectionString": "postgresql://admin_reader:admin_reader@127.0.0.1:54322/postgres",
 		},
 	],
-	// Production values, both public, the same as the root wrangler.jsonc.
+	// Public values. The Supabase pair matches the root wrangler.jsonc.
 	"vars": {
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
+		// The Workers AI model every crew agent runs on. Any model that takes
+		// tools works; @cf/deepseek-ai/deepseek-v4-pro-0813 is the other one
+		// we considered.
+		"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
+		// Data's model: Data takes more steps over more context than the others.
+		"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
+		// The small model CLEF uses to decide whether a message wakes an agent.
+		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
+		// Where agents will file issues once Monitor starts and the GitHub App
+		// secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
+		// GITHUB_APP_PRIVATE_KEY (README.md, "Filing GitHub issues").
+		"GITHUB_REPO": "mhsnook/sunlo",
+	},
+	// Worker Previews: Workers Builds makes one per branch off main, at
+	// <branch>-sunlo-admin.<account subdomain>.workers.dev. Nothing in this block
+	// is inherited from the top level, so the vars and bindings are repeated.
+	// A preview gets its own CrewRoom and agents. vite.config.ts copies Flue's
+	// agent bindings in here at build time, so never list them. Crons do not
+	// run in previews.
+	"previews": {
+		"vars": {
+			"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
+			"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
+			"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
+			"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
+			"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
+			"GITHUB_REPO": "mhsnook/sunlo",
+		},
+		"durable_objects": {
+			"bindings": [{ "name": "CREW_ROOM", "class_name": "CrewRoom" }],
+		},
+		// The production database, as the same read-only role.
+		"hyperdrive": [
+			{ "binding": "HYPERDRIVE", "id": "d22b56aafb6c420781c880b4c6777490" },
+		],
+		"ai": { "binding": "AI" },
 	},
 }

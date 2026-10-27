@@ -1,4 +1,4 @@
-# Copy to .dev.vars for `pnpm admin:worker:dev`. Values come from
+# Copy to .dev.vars for `pnpm admin:dev`. Values come from
 # `supabase status`. The database connection is the Hyperdrive binding's
 # localConnectionString in wrangler.jsonc, not a variable here.
 SUPABASE_URL=http://127.0.0.1:54321

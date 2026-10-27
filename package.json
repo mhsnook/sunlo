@@ -9,7 +9,6 @@
 		"admin:dev": "pnpm --filter @sunlo/admin dev",
 		"admin:build": "pnpm --filter @sunlo/admin build",
 		"admin:check": "pnpm --filter @sunlo/admin check",
-		"admin:worker:dev": "pnpm --filter @sunlo/admin worker:dev",
 		"worker:dev": "mkdir -p dist && CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler dev",
 		"worker:preview": "./scripts/cf-preview.sh",
 		"scan": "vite --host & pnpx react-scan@latest localhost:5173",

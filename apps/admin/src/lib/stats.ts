@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { z } from 'zod'
-import { getSession } from './session'
+import { adminFetch } from './api'
 
 export const rangeOptions = [7, 14, 30] as const
 export type RangeDays = (typeof rangeOptions)[number]
@@ -73,23 +73,11 @@ export const UserActivitySchema = z.object({
 	newest: z.array(NewestUserSchema),
 })
 
-// The admin Worker (apps/admin/worker) answers /api on this origin. It checks
-// the token and the admin_user table itself.
-async function fetchStats(path: string, params: Record<string, number>) {
-	const session = await getSession()
+function fetchStats(path: string, params: Record<string, number>) {
 	const query = new URLSearchParams(
 		Object.entries(params).map(([key, value]) => [key, String(value)])
 	)
-	const res = await fetch(`/api/${path}?${query}`, {
-		headers: { authorization: `Bearer ${session?.access_token ?? ''}` },
-	})
-	if (!res.ok) {
-		const body = (await res.json().catch(() => null)) as {
-			error?: string
-		} | null
-		throw new Error(body?.error ?? `The stats request failed (${res.status})`)
-	}
-	return res.json() as Promise<unknown>
+	return adminFetch(`${path}?${query}`)
 }
 
 export const activityOverviewQuery = (days: RangeDays) =>

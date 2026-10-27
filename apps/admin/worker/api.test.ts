@@ -89,7 +89,8 @@ const sql = Object.assign(
 const postgres = vi.fn(() => sql)
 vi.mock('postgres', () => ({ default: postgres }))
 
-const { default: app } = await import('./api')
+const { createApi } = await import('./api')
+const app = createApi()
 
 const HYPERDRIVE_URL = 'postgresql://admin_reader:pw@hyperdrive.local/postgres'
 
@@ -104,11 +105,12 @@ function makeEnv() {
 function get(
 	path: string,
 	env = makeEnv(),
-	token: string | null = 'user-token'
+	token: string | null = 'user-token',
+	method = 'GET'
 ) {
 	return app.request(
 		path,
-		{ headers: token ? { authorization: `Bearer ${token}` } : {} },
+		{ method, headers: token ? { authorization: `Bearer ${token}` } : {} },
 		env
 	)
 }
@@ -152,7 +154,7 @@ describe('auth', () => {
 		const res = await get('/api/activity-overview')
 		expect(res.status).toBe(403)
 		expect(queries).toHaveLength(1)
-		expect(queries[0].values).toEqual(['user-1'])
+		expect(queries[0].values).toEqual(['user-1', 'user-1'])
 		expect(end).toHaveBeenCalledOnce()
 	})
 
@@ -160,7 +162,7 @@ describe('auth', () => {
 		adminCheck = Promise.reject(new Error('password authentication failed'))
 		const res = await get('/api/activity-overview')
 		expect(res.status).toBe(500)
-		expect(await res.json()).toEqual({ error: 'The database query failed' })
+		expect(await res.json()).toEqual({ error: 'The admin API failed' })
 		expect(end).toHaveBeenCalledOnce()
 	})
 })
@@ -177,12 +179,13 @@ describe('GET /api/activity-overview', () => {
 		expect(res.status).toBe(200)
 		const body = await res.json()
 		expect(ActivityOverviewSchema.parse(body)).toEqual(OVERVIEW)
-		expect(queries[1].values).toContain(14)
+		expect(queries.at(-1)?.values).toContain(14)
 		expect(postgres).toHaveBeenCalledWith(
 			HYPERDRIVE_URL,
 			expect.objectContaining({ max: 1, fetch_types: false })
 		)
-		expect(end).toHaveBeenCalledOnce()
+		// The admin check and the overview each open and close a connection.
+		expect(end).toHaveBeenCalledTimes(postgres.mock.calls.length)
 	})
 })
 
@@ -196,6 +199,31 @@ describe('GET /api/user-activity', () => {
 		const res = await get('/api/user-activity?days=30')
 		expect(res.status).toBe(200)
 		expect(UserActivitySchema.parse(await res.json())).toEqual(USER_ACTIVITY)
-		expect(queries[1].values).toEqual(expect.arrayContaining([30, 20]))
+		expect(queries.at(-1)?.values).toEqual(expect.arrayContaining([30, 20]))
+	})
+})
+
+describe('GET /api/crew/live', () => {
+	it('rejects a socket with no token', async () => {
+		const res = await get('/api/crew/live', makeEnv(), null)
+		expect(res.status).toBe(401)
+		expect(postgres).not.toHaveBeenCalled()
+	})
+
+	it('reads the token from the query string, because a socket has no headers', async () => {
+		const res = await get('/api/crew/live?token=socket-token', makeEnv(), null)
+		// 404: worker/api.ts let it through, and only .flue/app.ts mounts it.
+		expect(res.status).toBe(404)
+		expect(getClaims).toHaveBeenCalledWith('socket-token')
+	})
+
+	it('ignores a query token on every other route', async () => {
+		const res = await get(
+			'/api/activity-overview?token=socket-token',
+			makeEnv(),
+			null
+		)
+		expect(res.status).toBe(401)
+		expect(getClaims).not.toHaveBeenCalled()
 	})
 })

@@ -1,241 +1,108 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-	activityOverviewQuery,
-	rangeOptions,
-	userActivityQuery,
-	type DailyActivityType,
-	type DailyMetric,
-	type RangeDays,
-} from '~/lib/stats'
-import { formatCount, formatLongDay } from '~/lib/format'
-import { StatTile } from '~/components/stat-tile'
-import { DailyBarChart } from '~/components/daily-bar-chart'
-import { MetricPanel } from '~/components/metric-panel'
-import { MostActiveTable, NewestUsersTable } from '~/components/user-tables'
-
-type DashboardSearch = { days?: RangeDays }
-
-const defaultDays: RangeDays = 7
+import { Button } from '@/components/ui/button'
+import { MessageMarker } from '@/components/ui/message'
+import { MessageScroller } from '@/components/ui/message-scroller'
+import { adminAuthor, crew, crewKeys, crewList } from '../../../shared/crew'
+import { isWorking, markSeen, roomQuery } from '~/lib/crew'
+import { AgentAvatar } from '~/components/crew/crew-parts'
+import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
+import { OverviewPanel } from '~/components/crew/overview-panel'
+import { RoomCompose } from '~/components/crew/room-compose'
+import { RoomTimeline } from '~/components/crew/room-timeline'
 
 export const Route = createFileRoute('/_admin/')({
-	validateSearch: (search: Record<string, unknown>): DashboardSearch => {
-		const days = Number(search.days)
-		return rangeOptions.includes(days as RangeDays)
-			? { days: days as RangeDays }
-			: {}
-	},
-	loaderDeps: ({ search }) => ({ days: search.days ?? defaultDays }),
-	loader: async ({ context, deps }) => {
-		await Promise.all([
-			context.queryClient.ensureQueryData(activityOverviewQuery(deps.days)),
-			context.queryClient.ensureQueryData(userActivityQuery(deps.days)),
-		])
-	},
-	component: Dashboard,
+	loader: ({ context }) => context.queryClient.ensureQueryData(roomQuery()),
+	// Marks the room read on arrival and again on leaving, so messages that
+	// arrive while the admin is here do not count as unread afterwards.
+	onEnter: ({ context }) => void markSeen(context.queryClient, 'room', false),
+	onLeave: ({ context }) => void markSeen(context.queryClient, 'room', true),
+	component: CrewRoomPage,
 })
 
-const deckMetrics: Array<{ metric: DailyMetric; label: string }> = [
-	{ metric: 'reviews', label: 'Card reviews' },
-	{ metric: 'reviewers', label: 'People reviewing (daily)' },
-	{ metric: 'cards_added', label: 'Phrases added to decks' },
-	{ metric: 'decks_created', label: 'Decks started' },
-]
-
-const libraryMetrics: Array<{ metric: DailyMetric; label: string }> = [
-	{ metric: 'phrases_added', label: 'Phrases added' },
-	{ metric: 'translations_added', label: 'Translations added' },
-	{ metric: 'requests_added', label: 'Phrase requests' },
-	{ metric: 'comments_added', label: 'Request comments' },
-	{ metric: 'playlists_added', label: 'Playlists' },
-	{ metric: 'chat_messages', label: 'Friend chat messages' },
-]
-
-function Dashboard() {
-	const { days = defaultDays } = Route.useSearch()
-	const { data: overview } = useSuspenseQuery(activityOverviewQuery(days))
-	const { data: users } = useSuspenseQuery(userActivityQuery(days))
-	const { totals } = overview
-	const periodLabel = `${days} days`
+function CrewRoomPage() {
+	const { session } = Route.useRouteContext()
+	const { data: room } = useSuspenseQuery(roomQuery())
+	// Captured once, so the "New since" line stays put while the admin reads.
+	const [newSince] = useState(room.seenAt)
+	const [overviewOpen, setOverviewOpen] = useState(false)
+	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
+	const active = crewList.filter((member) => member.active).length
 
 	return (
-		<div className="space-y-8">
-			<div className="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<h1 className="text-2xl font-semibold">Activity</h1>
-					<p className="text-muted-foreground text-sm">
-						Last {periodLabel}, in UTC calendar days
-					</p>
-				</div>
-				<RangePicker days={days} />
-			</div>
-
-			<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-				<StatTile
-					label="Active users"
-					value={totals.active_users}
-					previous={totals.active_users_prev}
-					periodLabel={periodLabel}
-				/>
-				<StatTile
-					label="New users"
-					value={totals.new_users}
-					previous={totals.new_users_prev}
-					periodLabel={periodLabel}
-				/>
-				<StatTile
-					label="Card reviews"
-					value={totals.reviews}
-					previous={totals.reviews_prev}
-					periodLabel={periodLabel}
-				/>
-				<StatTile
-					label="All users"
-					value={totals.total_users}
-					note={`${formatCount(totals.onboarded_users)} picked a username`}
-				/>
-			</div>
-
-			<section className="bg-card rounded border p-4">
-				<h2 className="font-semibold">Active and new users per day</h2>
-				<p className="text-muted-foreground text-sm">
-					Active means the person reviewed, added or wrote something that day.
-				</p>
-				<DailyBarChart
-					days={overview.days}
-					series={[
-						{
-							metric: 'active_users',
-							label: 'Active users',
-							color: 'var(--chart-1)',
-						},
-						{
-							metric: 'new_users',
-							label: 'New users',
-							color: 'var(--color-teal-600)',
-						},
-					]}
-					showYAxis
-					className="mt-4 h-64"
-				/>
+		<div className="flex h-full min-h-0">
+			<section className="flex min-w-0 flex-1 flex-col">
+				<header className="flex items-center gap-3 border-b px-4 py-3">
+					<MobileSidebarButton />
+					<AgentAvatar agent="crew" />
+					<div className="me-auto">
+						<h1 className="leading-tight font-semibold">Conference Room</h1>
+						<p className="text-muted-foreground text-xs">
+							You and {active} agents, {crewList.length - active} more planned
+						</p>
+					</div>
+					<Button
+						variant="ghost"
+						data-testid="crew-overview-button"
+						aria-pressed={overviewOpen}
+						onClick={() => setOverviewOpen((open) => !open)}
+					>
+						<BarChart3 /> <span className="max-sm:sr-only">Overview</span>
+					</Button>
+				</header>
+				<MessageScroller dependency={room.messages.length + working.length}>
+					{room.messages.length ? (
+						<RoomTimeline
+							messages={room.messages}
+							myAuthor={adminAuthor(session.user.id)}
+							newSince={newSince}
+						/>
+					) : (
+						<EmptyRoom />
+					)}
+					{working.length > 0 && (
+						<MessageMarker
+							className="mx-auto max-w-3xl px-4 pb-4"
+							data-testid="crew-working"
+						>
+							{working.map((key) => crew[key].name).join(' and ')}{' '}
+							{working.length === 1 ? 'is' : 'are'} working…
+						</MessageMarker>
+					)}
+				</MessageScroller>
+				<RoomCompose />
 			</section>
-
-			<MetricSection
-				title="Deck activity"
-				metrics={deckMetrics}
-				days={overview.days}
-			/>
-			<MetricSection
-				title="Library and community activity"
-				metrics={libraryMetrics}
-				days={overview.days}
-			/>
-
-			<MostActiveTable users={users.most_active} periodLabel={periodLabel} />
-			<NewestUsersTable users={users.newest} />
-
-			<DailyTable days={overview.days} />
+			{overviewOpen && (
+				<div
+					className={cn(
+						'max-md:bg-background max-md:fixed max-md:inset-0 max-md:z-40',
+						'md:shrink-0'
+					)}
+				>
+					<OverviewPanel onClose={() => setOverviewOpen(false)} />
+				</div>
+			)}
 		</div>
 	)
 }
 
-function RangePicker({ days }: { days: RangeDays }) {
+function EmptyRoom() {
 	return (
-		<nav
-			aria-label="Date range"
-			className="bg-card flex gap-1 rounded-2xl border p-1"
-		>
-			{rangeOptions.map((option) => (
-				<Link
-					key={option}
-					to="/"
-					search={{ days: option }}
-					data-testid="admin-range-option"
-					data-key={option}
-					aria-current={option === days ? 'page' : undefined}
-					className={cn(
-						'rounded-xl px-3 py-1 text-sm',
-						option === days
-							? 'bg-primary-700 text-paper'
-							: 'hover:bg-neutral-200'
-					)}
-				>
-					{option} days
-				</Link>
-			))}
-		</nav>
-	)
-}
-
-function MetricSection({
-	title,
-	metrics,
-	days,
-}: {
-	title: string
-	metrics: Array<{ metric: DailyMetric; label: string }>
-	days: Array<DailyActivityType>
-}) {
-	return (
-		<section className="space-y-3">
-			<h2 className="font-semibold">{title}</h2>
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{metrics.map(({ metric, label }) => (
-					<MetricPanel key={metric} days={days} metric={metric} label={label} />
+		<div className="mx-auto max-w-md space-y-3 px-4 pt-[15dvh] text-center">
+			<div className="flex justify-center gap-1">
+				{crewKeys.map((key) => (
+					<AgentAvatar key={key} agent={key} size="sm" />
 				))}
 			</div>
-		</section>
-	)
-}
-
-const tableColumns: Array<{ metric: DailyMetric; label: string }> = [
-	{ metric: 'active_users', label: 'Active' },
-	{ metric: 'new_users', label: 'New' },
-	...deckMetrics,
-	...libraryMetrics,
-]
-
-function DailyTable({ days }: { days: Array<DailyActivityType> }) {
-	return (
-		<details className="bg-card rounded border">
-			<summary className="cursor-pointer px-4 py-3 font-semibold">
-				Daily numbers
-			</summary>
-			<div className="overflow-x-auto">
-				<table className="w-full text-sm">
-					<thead>
-						<tr className="text-muted-foreground border-y">
-							<th className="px-3 py-2 text-start font-medium">Day</th>
-							{tableColumns.map((column) => (
-								<th
-									key={column.metric}
-									className="px-3 py-2 text-end font-medium"
-								>
-									{column.label}
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{days.toReversed().map((day) => (
-							<tr key={day.day} className="border-b last:border-0">
-								<td className="px-3 py-2 whitespace-nowrap">
-									{formatLongDay(day.day)}
-								</td>
-								{tableColumns.map((column) => (
-									<td
-										key={column.metric}
-										className="px-3 py-2 text-end tabular-nums"
-									>
-										{formatCount(day[column.metric])}
-									</td>
-								))}
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-		</details>
+			<h2 className="text-xl font-semibold">Conference Room</h2>
+			<p className="text-muted-foreground text-sm">
+				The whole crew reads this room. Write @ and a name to ask someone; Riker
+				and Data bring what needs you to the Enterprise. Product posts after its
+				daily run. A message that ends in “...” waits for your next one.
+			</p>
+		</div>
 	)
 }
