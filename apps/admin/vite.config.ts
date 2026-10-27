@@ -5,7 +5,7 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import { cloudflare } from '@cloudflare/vite-plugin'
+import { cloudflare, type WorkerConfig } from '@cloudflare/vite-plugin'
 import { flue, flueWorkerConfig } from '@flue/vite'
 import { unstable_readConfig } from 'wrangler'
 import { z } from 'zod'
@@ -40,11 +40,32 @@ if (process.env.WORKERS_CI) {
 	process.env.VITE_SUPABASE_ANON_KEY = vars.SUPABASE_ANON_KEY
 }
 
+// Flue adds a Durable Object binding per agent (FLUE_RIKER_AGENT, ...) to
+// the top-level config only, and `previews` inherits nothing, so without
+// this a preview's agent routes answer route_not_found.
+function withPreviewBindings(flueConfig: (config: WorkerConfig) => void) {
+	return (config: WorkerConfig) => {
+		flueConfig(config)
+		if (!config.previews) return
+		const own = config.previews.durable_objects?.bindings ?? []
+		const names = new Set(own.map((binding) => binding.name))
+		config.previews.durable_objects = {
+			...config.previews.durable_objects,
+			bindings: [
+				...own,
+				...(config.durable_objects?.bindings ?? []).filter(
+					(binding) => !names.has(binding.name)
+				),
+			],
+		}
+	}
+}
+
 export default defineConfig({
 	plugins: [
 		flue({ providers: ['cloudflare'] }),
 		cloudflare({
-			config: flueWorkerConfig(),
+			config: withPreviewBindings(flueWorkerConfig()),
 			// The AI binding always runs remotely, which needs `wrangler login`.
 			// ADMIN_REMOTE_BINDINGS=false starts without it: the crew room
 			// works, but CLEF and every agent run fail.

@@ -71,9 +71,9 @@
 	// Worker Previews: Workers Builds makes one per branch off main, at
 	// <branch>-sunlo-admin.<account subdomain>.workers.dev. Nothing in this block
 	// is inherited from the top level, so the vars and bindings are repeated.
-	// A preview gets its own CrewRoom; Flue's agents resolve their namespaces
-	// through ctx.exports, which previews isolate too, so their bindings are
-	// not listed here. Crons do not run in previews.
+	// A preview gets its own CrewRoom and agents. vite.config.ts copies Flue's
+	// agent bindings in here at build time, so never list them. Crons do not
+	// run in previews.
 	"previews": {
 		"vars": {
 			"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
