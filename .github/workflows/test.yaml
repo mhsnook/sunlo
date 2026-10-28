@@ -14,6 +14,38 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
+  # A pull request that touches only the admin app skips the jobs that test
+  # the main app. The gate is a job-level `if`, not a workflow-level `paths`
+  # filter: a job skipped by `if` reports success, so a required check never
+  # waits, while a workflow skipped by `paths` leaves the check pending forever.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      app: ${{ steps.files.outputs.app }}
+
+    steps:
+      - id: files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "${{ github.event_name }}" != pull_request ]; then
+            echo app=true >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh api --paginate "repos/${{ github.repository }}/pulls/$PR/files" \
+            --jq '.[].filename' > /tmp/pr-files.txt
+          # scenetest/TEST_IDS.md documents admin test ids too, so it counts
+          # as an admin file.
+          if grep -vE '^(apps/admin/|scenetest/TEST_IDS\.md$)' /tmp/pr-files.txt | grep -q .; then
+            echo app=true >> "$GITHUB_OUTPUT"
+          else
+            echo app=false >> "$GITHUB_OUTPUT"
+          fi
+
   pr-checks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -308,7 +340,8 @@ jobs:
   bundle-size:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event_name == 'pull_request'
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
     permissions:
       pull-requests: write
 
@@ -476,6 +509,8 @@ jobs:
   prod-bundle-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -528,6 +563,8 @@ jobs:
   scenetest:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     permissions:
       pull-requests: write
 
