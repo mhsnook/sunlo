@@ -32,9 +32,9 @@ import { Button } from '@/components/ui/button'
 import { Drawer, DrawerTrigger } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
 import {
+	useCardIndex,
 	useInitialiseReviewStore,
 	useReviewDayString,
-	useReviewStage,
 } from '@/features/review/store'
 import { arrayDifference, arrayUnion, min0 } from '@/lib/utils'
 import { useDeck, useDeckPids } from '@/features/deck/hooks'
@@ -101,7 +101,7 @@ function ReviewPageContent() {
 	const { lang } = Route.useParams()
 	const navigate = useNavigate()
 	const dayString = useReviewDayString()
-	const stage = useReviewStage()
+	const currentCardIndex = useCardIndex()
 	const userId = useUserId()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeck(lang)
@@ -429,7 +429,8 @@ function ReviewPageContent() {
 	if (stats?.count && !sessionJustCreatedRef.current)
 		return stats.complete === stats.count || stats.stage >= 5 ? (
 			<WhenComplete />
-		) : stage !== null ? (
+		) : currentCardIndex !== -1 ? (
+			// cursor already initialised (mid-session in this tab) → resume directly
 			<Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
 		) : (
 			<ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
