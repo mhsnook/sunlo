@@ -15,15 +15,16 @@ import {
 } from '@/components/ui/message'
 import { hasBlocks } from '../../../shared/blocks'
 import {
-	bridgeKeys,
-	crew,
+	displayName,
 	isCrewKey,
+	roomNames,
+	roomOf,
 	speakerOf,
 	type CrewMessageType,
 } from '../../../shared/crew'
 import {
 	AgentAvatar,
-	BridgeCard,
+	RoomCard,
 	CardActions,
 	ChangeCard,
 	CrewText,
@@ -148,15 +149,11 @@ function AuthorGroup({
 					>
 						{!mine && (
 							<MessageAvatar className={cn(!last && 'invisible')}>
-								{agent && bridgeKeys.includes(agent) ? (
-									<Link to="/enterprise" aria-label="The Enterprise">
-										<AgentAvatar agent={agent} size="sm" />
-									</Link>
-								) : agent ? (
+								{agent ? (
 									<Link
-										to="/crew/$agent"
-										params={{ agent }}
-										aria-label={`${crew[agent].name}'s workspace`}
+										to="/room/$lead"
+										params={{ lead: roomOf(agent) }}
+										aria-label={`${displayName(agent)}, in the ${roomNames[roomOf(agent)]}`}
 									>
 										<AgentAvatar agent={agent} size="sm" />
 									</Link>
@@ -177,7 +174,7 @@ function AuthorGroup({
 							{message.card?.kind === 'change' ? (
 								<ChangeCard message={message} />
 							) : message.card && message.card.kind !== 'question' ? (
-								<BridgeCard message={message} />
+								<RoomCard message={message} />
 							) : (
 								<SpeakableBubble
 									id={message.id}
@@ -213,7 +210,7 @@ function AuthorGroup({
 							)}
 							{mine &&
 								message.routing?.kind === 'stack' &&
-								message.place === 'bridge' && (
+								message.place !== 'room' && (
 									<MessageFooter>{routingNote(message.routing)}</MessageFooter>
 								)}
 						</MessageContent>

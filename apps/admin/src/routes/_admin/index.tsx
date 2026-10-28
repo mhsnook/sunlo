@@ -6,7 +6,12 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import { adminAuthor, crew, crewKeys, crewList } from '../../../shared/crew'
+import {
+	adminAuthor,
+	crewKeys,
+	crewList,
+	displayName,
+} from '../../../shared/crew'
 import {
 	commonKnowledgeQuery,
 	isWorking,
@@ -107,7 +112,7 @@ function CrewRoomPage() {
 							className="mx-auto max-w-3xl px-4 pb-4"
 							data-testid="crew-working"
 						>
-							{working.map((key) => crew[key].name).join(' and ')}{' '}
+							{working.map(displayName).join(' and ')}{' '}
 							{working.length === 1 ? 'is' : 'are'} working…
 						</MessageMarker>
 					)}
@@ -144,9 +149,10 @@ function EmptyRoom() {
 			</div>
 			<h2 className="text-xl font-semibold">Common Room</h2>
 			<p className="text-muted-foreground text-sm">
-				The whole crew reads this room. Write @ and a name to ask someone; Riker
-				and Data bring what needs you to the Enterprise. USS Product posts after
-				its daily run. A message that ends in “...” waits for your next one.
+				The whole crew reads this room. Write @ and a name to ask someone. Each
+				lead brings what needs you to its own room, and Lt Product posts here
+				after its daily run. A message that ends in “...” waits for your next
+				one.
 			</p>
 		</div>
 	)

@@ -13,9 +13,9 @@ describe('the fixed CLEF rules', () => {
 	})
 
 	it('finds crew mentions in roster order, ignoring case and strangers', () => {
-		expect(mentionedCrew('@Monitor and @product, ask @em')).toEqual([
+		expect(mentionedCrew('@Library and @product, ask @em')).toEqual([
 			'product',
-			'monitor',
+			'library',
 		])
 	})
 

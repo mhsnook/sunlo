@@ -63,8 +63,8 @@
 		"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
-		// Where agents will file issues once Monitor starts and the GitHub App
-		// secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
+		// Where agents will file issues once one has the GitHub tools and the
+		// GitHub App secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
 		// GITHUB_APP_PRIVATE_KEY (README.md, "Filing GitHub issues").
 		"GITHUB_REPO": "mhsnook/sunlo",
 	},

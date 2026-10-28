@@ -6,12 +6,12 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { crew, crewList, type RoutingType } from '../../../shared/crew'
+import { crewList, displayName, type RoutingType } from '../../../shared/crew'
 
 export function routingNote(routing: RoutingType) {
 	if (routing.kind === 'stack') return 'Stacked with your next message'
 	if (routing.kind === 'room') return 'Left in the room'
-	return `Sent to ${routing.agents.map((key) => crew[key].name).join(' and ')}`
+	return `Sent to ${routing.agents.map(displayName).join(' and ')}`
 }
 
 const routingOptions: Array<{ routing: RoutingType; label: string }> = [
@@ -23,7 +23,7 @@ const routingOptions: Array<{ routing: RoutingType; label: string }> = [
 				agents: [member.key],
 				by: 'you' as const,
 			},
-			label: `Send to ${member.name}`,
+			label: `Send to ${displayName(member.key)}`,
 		})),
 	{
 		routing: { kind: 'room', agents: [], by: 'you' },

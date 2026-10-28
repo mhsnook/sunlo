@@ -10,10 +10,8 @@ const voices: Record<CrewKey, Speaker> = {
 	riker: 'orion',
 	data: 'arcas',
 	product: 'athena',
-	monitor: 'atlas',
-	moderator: 'hera',
 	library: 'minerva',
-	growth: 'phoebe',
+	learnership: 'phoebe',
 }
 
 // Push-to-talk clips are seconds long; this only stops a runaway upload.

@@ -3,13 +3,13 @@ import { isBlockKind } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { remarkCrew } from './remark-crew'
 import { useState } from 'react'
-import { Rocket, Users, X } from 'lucide-react'
+import { Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
 import {
-	crew,
+	displayName,
 	isCrewKey,
 	type CardType,
 	type CrewKey,
@@ -22,16 +22,11 @@ export function AgentAvatar({
 	size = 'md',
 	className,
 }: {
-	agent: CrewKey | 'crew' | 'enterprise'
+	agent: CrewKey | 'crew'
 	size?: 'sm' | 'md' | 'lg'
 	className?: string
 }) {
-	const Icon =
-		agent === 'crew'
-			? Users
-			: agent === 'enterprise'
-				? Rocket
-				: crewIcons[agent]
+	const Icon = agent === 'crew' ? Users : crewIcons[agent]
 	return (
 		<span
 			aria-hidden
@@ -120,7 +115,7 @@ export function CardActions({ message }: { message: CrewMessageType }) {
 			{ messageId: message.id, actionId, feedback: text },
 			{ onError: (error) => toastError(error.message) }
 		)
-	const author = isCrewKey(message.author) ? crew[message.author].name : null
+	const author = isCrewKey(message.author) ? displayName(message.author) : null
 	if (feedback !== null) {
 		return (
 			<form
@@ -205,7 +200,7 @@ export function ChangeCard({ message }: { message: CrewMessageType }) {
 	)
 }
 
-const bridgeLabels: Partial<Record<CardType['kind'], string>> = {
+const cardLabels: Partial<Record<CardType['kind'], string>> = {
 	decide: 'Your call · on hold',
 	confirm: 'Done in your stead · confirm',
 	escalate: 'Needs more than the crew has',
@@ -235,10 +230,10 @@ function openingLines(body: string) {
 	return text.length > 220 ? `${text.slice(0, 219)}…` : text
 }
 
-// A card Riker or Data brings the admin in the Enterprise thread. A brief
-// or a report arrives folded, like a link preview: its title and opening
-// lines, and the whole of it a click away.
-export function BridgeCard({ message }: { message: CrewMessageType }) {
+// A card an agent brings the admin in its room. A brief or a report arrives
+// folded, like a link preview: its title and opening lines, and the whole of
+// it a click away.
+export function RoomCard({ message }: { message: CrewMessageType }) {
 	const [unfolded, setUnfolded] = useState(false)
 	const card = message.card
 	if (!card) return null
@@ -250,7 +245,7 @@ export function BridgeCard({ message }: { message: CrewMessageType }) {
 				<Button
 					variant="neutral"
 					className="bg-card hover:bg-primary-50 border-border h-auto w-full flex-col items-start gap-1 rounded-2xl p-3 text-start whitespace-normal shadow-none"
-					data-testid="bridge-card"
+					data-testid="room-card"
 					data-key={card.kind}
 					aria-expanded={false}
 					onClick={() => setUnfolded(true)}
@@ -271,11 +266,11 @@ export function BridgeCard({ message }: { message: CrewMessageType }) {
 	return (
 		<div
 			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
-			data-testid="bridge-card"
+			data-testid="room-card"
 			data-key={card.kind}
 		>
 			<p className="text-muted-foreground text-xs font-medium">
-				{bridgeLabels[card.kind]}
+				{cardLabels[card.kind]}
 			</p>
 			{card.title && <p className="text-sm font-semibold">{card.title}</p>}
 			<div className="text-sm">

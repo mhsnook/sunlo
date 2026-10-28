@@ -3,39 +3,52 @@ import { z } from 'zod'
 // The crew roster and the shapes the crew API sends. Imported by the Worker
 // (worker/, .flue/) and by the app (src/), so it holds no runtime-specific code.
 
+// Roster order, which is also the order the app lists the crew in.
 export const crewKeys = [
 	'riker',
 	'data',
 	'product',
-	'monitor',
-	'moderator',
 	'library',
-	'growth',
+	'learnership',
 ] as const
 export type CrewKey = (typeof crewKeys)[number]
 
-export type CrewMember = {
+// Each lead has a room of its own. An advisor sits in a lead's room as a
+// second, more thorough voice, and has no room of its own.
+export const leadKeys = ['riker', 'product', 'library', 'learnership'] as const
+export type LeadKey = (typeof leadKeys)[number]
+
+type CrewMemberBase = {
 	// Also the @mention handle, since a name can hold spaces.
 	key: CrewKey
 	name: string
+	// Before the name in the display name, as in "Cmdr Riker". Null for none.
+	rank: string | null
 	title: string
 	// Shown under the title, and read by CLEF to decide who a message is for.
 	looksAfter: Array<string>
 	// null for an agent that does not run on a schedule.
 	schedule: string | null
-	// A planned agent has a workspace page but no agent behind it yet, so
-	// messages for it stay in the room until it starts.
+	// A planned agent has a room but no agent behind it yet, so messages for
+	// it wait until it starts.
 	active: boolean
 	// The lines this member keeps in the Situation Report, one per track.
-	// Empty for a specialist like Data, who serves every vertical.
+	// Empty for an advisor like Data, who serves every vertical.
 	tracks: Array<string>
 }
+
+export type CrewMember =
+	| (CrewMemberBase & { role: 'lead' })
+	// `room` is the lead whose room the advisor sits in.
+	| (CrewMemberBase & { role: 'advisor'; room: LeadKey })
 
 export const crew: Record<CrewKey, CrewMember> = {
 	riker: {
 		key: 'riker',
 		name: 'Riker',
+		rank: 'Cmdr',
 		title: 'First officer',
+		role: 'lead',
 		looksAfter: [
 			"The admin's wishes, priorities and judgement, in the charter they keep together",
 			'Where agents overlap or disagree',
@@ -49,7 +62,10 @@ export const crew: Record<CrewKey, CrewMember> = {
 	data: {
 		key: 'data',
 		name: 'Data',
+		rank: null,
 		title: 'Science officer',
+		role: 'advisor',
+		room: 'riker',
 		looksAfter: [
 			'Questions that need numbers, careful analysis or several thinking steps',
 			'Charts and explorers built from the database',
@@ -59,35 +75,12 @@ export const crew: Record<CrewKey, CrewMember> = {
 		active: true,
 		tracks: [],
 	},
-	monitor: {
-		key: 'monitor',
-		name: 'Monitor',
-		title: 'Site reliability',
-		looksAfter: [
-			'Errors, failed requests and slow pages',
-			'The Model sandbox language',
-			'Filing GitHub issues for anything broken',
-		],
-		schedule: null,
-		active: false,
-		tracks: ['App health'],
-	},
-	moderator: {
-		key: 'moderator',
-		name: 'Moderator',
-		title: 'Community moderator',
-		looksAfter: [
-			'Comments, requests and phrases people write',
-			'Personal data that people post by mistake',
-		],
-		schedule: null,
-		active: false,
-		tracks: ['Community'],
-	},
 	product: {
 		key: 'product',
-		name: 'USS Product',
+		name: 'Product',
+		rank: 'Lt',
 		title: 'Product manager',
+		role: 'lead',
 		looksAfter: [
 			'The product plan for the next six weeks',
 			'Retention, and how new people get started',
@@ -101,21 +94,27 @@ export const crew: Record<CrewKey, CrewMember> = {
 	library: {
 		key: 'library',
 		name: 'Library',
+		rank: 'Lt Cmdr',
 		title: 'Learning content',
+		role: 'lead',
 		looksAfter: [
 			'The phrase library: duplicates, near-duplicates and gaps',
 			'The phrase requests space, playlists and the template language',
 			'How learners and phrases spread across languages',
 			'When to hire a native-speaking translator',
+			'Comments, requests and phrases people write',
+			'Personal data that people post by mistake',
 		],
 		schedule: null,
 		active: false,
 		tracks: ['Library'],
 	},
-	growth: {
-		key: 'growth',
-		name: 'Growth',
-		title: 'Growth',
+	learnership: {
+		key: 'learnership',
+		name: 'Learnership',
+		rank: 'Prof',
+		title: 'Growth and retention',
+		role: 'lead',
 		looksAfter: ['Signups, invites and where new people come from'],
 		schedule: null,
 		active: false,
@@ -125,11 +124,45 @@ export const crew: Record<CrewKey, CrewMember> = {
 
 export const crewList = crewKeys.map((key) => crew[key])
 
-// The Enterprise is the admin's own ship: Riker, their first officer, and
-// Data. They share one thread with the admin, and bring the admin what needs
-// them. Every other agent is a ship of its own in the fleet.
-export const bridgeKeys: ReadonlyArray<CrewKey> = ['riker', 'data']
-export const fleetKeys = crewKeys.filter((key) => !bridgeKeys.includes(key))
+export const displayName = (agent: CrewKey) => {
+	const { rank, name } = crew[agent]
+	return rank ? `${rank} ${name}` : name
+}
+
+export const isLeadKey = (value: string): value is LeadKey =>
+	(leadKeys as ReadonlyArray<string>).includes(value)
+
+// The room an agent talks in besides the Common Room: its own, or, for an
+// advisor, the room it advises.
+export const roomOf = (agent: CrewKey): LeadKey => {
+	const member = crew[agent]
+	return member.role === 'advisor' ? member.room : (member.key as LeadKey)
+}
+
+// The lead first, then its advisors.
+export const roomMembers = (lead: LeadKey): Array<CrewKey> =>
+	crewKeys
+		.filter((key) => roomOf(key) === lead)
+		.toSorted((a, b) => (a === lead ? -1 : b === lead ? 1 : 0))
+
+export const roomNames: Record<LeadKey, string> = {
+	riker: 'Command room',
+	product: 'Product room',
+	library: 'Library room',
+	learnership: 'Learnership room',
+}
+
+// Where a message lives: the Common Room, or one lead's room.
+export const PlaceSchema = z.union([
+	z.literal('room'),
+	z.templateLiteral(['room:', z.enum(leadKeys)]),
+])
+export type PlaceType = z.infer<typeof PlaceSchema>
+
+export const placeOf = (lead: LeadKey): PlaceType => `room:${lead}`
+// The lead whose room a place is, or null for the Common Room.
+export const leadOf = (place: PlaceType): LeadKey | null =>
+	place === 'room' ? null : (place.slice('room:'.length) as LeadKey)
 
 export const isCrewKey = (value: string): value is CrewKey =>
 	(crewKeys as ReadonlyArray<string>).includes(value)
@@ -178,12 +211,13 @@ export const ActionSchema = z.object({ id: z.string(), label: z.string() })
 export type ActionType = z.infer<typeof ActionSchema>
 
 // Something an agent brings the admin, with the buttons they answer with.
-// - question: any agent's question; change: a proposed change to its plan
-// - From Riker or Data, in the Enterprise thread: decide (on hold until the
-//   admin answers), confirm (acted in their stead; was that right?), know
-//   (nothing to answer), escalate (needs more than the crew has), charter (a
-//   proposed charter entry, `ref`), brief (the weekly brief) and report
-//   (Data's pre-meeting report)
+// - question: a question in the Common Room; change: a proposed change to
+//   the agent's plan
+// - In any lead's room: decide (on hold until the admin answers), confirm
+//   (acted in their stead; was that right?), know (nothing to answer) and
+//   escalate (needs more than the crew has)
+// - In the Command room only: charter (a proposed charter entry, `ref`),
+//   brief (the weekly brief) and report (Data's pre-meeting report)
 export const CardSchema = z.object({
 	kind: z.enum([
 		'question',
@@ -222,9 +256,7 @@ export const CrewMessageSchema = z.object({
 			at: z.string(),
 		})
 		.nullable(),
-	// "room" for the Common Room; "bridge" for the Enterprise thread; "dm"
-	// for a card raised in a 1:1 chat, which shows in the agent's workspace.
-	place: z.enum(['room', 'bridge', 'dm']),
+	place: PlaceSchema,
 	// Where the admin said, after sending, this message should have gone.
 	corrected: RoutingSchema.nullable(),
 	// The room's list of the edits an agent's run made, not the agent speaking.
@@ -260,8 +292,8 @@ export const meetingDue = (weekly: WeeklyType) =>
 export const RoomStateSchema = z.object({
 	statuses: z.record(z.string(), AgentStatusSchema),
 	weekly: WeeklySchema,
-	// Cards in the Enterprise thread waiting on the admin, for the sidebar.
-	enterpriseOpen: z.number(),
+	// Cards in each lead's room waiting on the admin, for the sidebar.
+	openCards: z.record(z.enum(leadKeys), z.number()),
 })
 export type RoomStateType = z.infer<typeof RoomStateSchema>
 
@@ -334,9 +366,9 @@ export const OpenItemSchema = z.object({
 })
 export type OpenItemType = z.infer<typeof OpenItemSchema>
 
-// What the bridge knows about the admin: principles (philosophy, strategy,
-// taste) and lessons (how they decide). An entry counts only once the admin
-// keeps it; until then it is a card in the Enterprise thread.
+// What the Command room knows about the admin: principles (philosophy,
+// strategy, taste) and lessons (how they decide). An entry counts only once
+// the admin keeps it; until then it is a card in the Command room.
 export const CharterEntrySchema = z.object({
 	id: z.number(),
 	kind: z.enum(['principle', 'lesson']),
@@ -348,22 +380,27 @@ export const CharterEntrySchema = z.object({
 })
 export type CharterEntryType = z.infer<typeof CharterEntrySchema>
 
-// The Enterprise thread, with the charter beside it.
-export const EnterpriseSchema = z.object({
+// One lead's room: its latest messages, and when this admin last opened it.
+export const RoomThreadSchema = z.object({
 	messages: z.array(CrewMessageSchema),
-	charter: z.array(CharterEntrySchema),
 	seenAt: z.string().nullable(),
+})
+export type RoomThreadType = z.infer<typeof RoomThreadSchema>
+
+// What only the Command room has: the charter, and the weekly meeting.
+export const CommandSchema = z.object({
+	charter: z.array(CharterEntrySchema),
 	// Set while this week's meeting is under way.
 	meetingStartedAt: z.string().nullable(),
 })
-export type EnterpriseType = z.infer<typeof EnterpriseSchema>
+export type CommandType = z.infer<typeof CommandSchema>
 
 export const WorkspaceSchema = z.object({
 	agent: z.enum(crewKeys),
 	todos: z.array(TodoSchema),
 	memory: z.array(MemorySchema),
 	openItems: z.array(OpenItemSchema),
-	// This agent's cards from the room and from 1:1 chats, newest first.
+	// This agent's cards from the Common Room and its own room, newest first.
 	cards: z.array(CrewMessageSchema),
 })
 export type WorkspaceType = z.infer<typeof WorkspaceSchema>
@@ -372,7 +409,7 @@ export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
 	| { type: 'workspace'; agent: CrewKey }
-	// The Enterprise snapshot changed: the charter, or the meeting.
-	| { type: 'enterprise' }
+	// The charter or the weekly meeting changed.
+	| { type: 'command' }
 	| { type: 'common-knowledge' }
 	| { type: 'sitrep' }

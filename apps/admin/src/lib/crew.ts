@@ -1,7 +1,6 @@
 import { useRef } from 'react'
 import { useAgent } from 'agents/react'
 import { z } from 'zod'
-import { createFlueClient } from '@flue/sdk'
 import {
 	queryOptions,
 	useMutation,
@@ -9,24 +8,26 @@ import {
 	type QueryClient,
 } from '@tanstack/react-query'
 import {
-	Activity,
 	Compass,
 	Cpu,
+	GraduationCap,
 	Library,
-	Shield,
-	Sprout,
 	Star,
 	type LucideIcon,
 } from 'lucide-react'
 import {
+	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
-	EnterpriseSchema,
+	leadOf,
 	RoomSnapshotSchema,
+	RoomThreadSchema,
 	SitrepLineSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
+	type LeadKey,
+	type PlaceType,
 	type RoomEvent,
 	type RoomStateType,
 	type RoutingType,
@@ -37,11 +38,9 @@ import { accessToken } from './session'
 export const crewIcons: Record<CrewKey, LucideIcon> = {
 	riker: Star,
 	data: Cpu,
-	monitor: Activity,
-	moderator: Shield,
 	product: Compass,
 	library: Library,
-	growth: Sprout,
+	learnership: GraduationCap,
 }
 
 export const roomQuery = () =>
@@ -61,12 +60,21 @@ export const workspaceQuery = (agent: CrewKey) =>
 		staleTime: Infinity,
 	})
 
-// The Enterprise thread and the charter. The live socket keeps it current.
-export const enterpriseQuery = () =>
+// One lead's room. The live socket keeps it current.
+export const threadQuery = (lead: LeadKey) =>
 	queryOptions({
-		queryKey: ['crew', 'enterprise'],
+		queryKey: ['crew', 'thread', lead],
 		queryFn: async () =>
-			EnterpriseSchema.parse(await adminFetch('crew/enterprise')),
+			RoomThreadSchema.parse(await adminFetch(`crew/rooms/${lead}`)),
+		staleTime: Infinity,
+	})
+
+// The Command room's charter and weekly meeting. The live socket keeps it
+// current.
+export const commandQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'command'],
+		queryFn: async () => CommandSchema.parse(await adminFetch('crew/command')),
 		staleTime: Infinity,
 	})
 
@@ -193,14 +201,6 @@ export function useSetTimezone() {
 	})
 }
 
-// The client for one admin's 1:1 conversation with an agent.
-export const dmClient = (agent: CrewKey, uid: string) =>
-	createFlueClient({
-		url: `/api/agents/${agent}/dm-${uid}`,
-		// Called per request, so a refreshed Supabase token is picked up.
-		headers: async () => ({ authorization: `Bearer ${await accessToken()}` }),
-	})
-
 const upsert = (messages: Array<CrewMessageType>, message: CrewMessageType) => {
 	const index = messages.findIndex((m) => m.id === message.id)
 	return index === -1 ? [...messages, message] : messages.with(index, message)
@@ -208,13 +208,14 @@ const upsert = (messages: Array<CrewMessageType>, message: CrewMessageType) => {
 
 // Into whichever timeline the message belongs to.
 function upsertMessage(queryClient: QueryClient, message: CrewMessageType) {
-	if (message.place === 'bridge') {
-		queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
+	const lead = leadOf(message.place)
+	if (lead) {
+		queryClient.setQueryData(threadQuery(lead).queryKey, (thread) =>
 			thread
 				? { ...thread, messages: upsert(thread.messages, message) }
 				: thread
 		)
-	} else if (message.place === 'room') {
+	} else {
 		queryClient.setQueryData(roomQuery().queryKey, (room) =>
 			room ? { ...room, messages: upsert(room.messages, message) } : room
 		)
@@ -235,12 +236,12 @@ export function usePostToRoom() {
 	})
 }
 
-export function usePostToEnterprise() {
+export function usePostToLeadRoom(lead: LeadKey) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (body: string) =>
 			CrewMessageSchema.parse(
-				await adminFetch('crew/enterprise/messages', {
+				await adminFetch(`crew/rooms/${lead}/messages`, {
 					method: 'POST',
 					json: { body },
 				})
@@ -254,12 +255,12 @@ export function useStartMeeting() {
 	return useMutation({
 		mutationFn: async () =>
 			CrewMessageSchema.parse(
-				await adminFetch('crew/enterprise/meeting', { method: 'POST' })
+				await adminFetch('crew/meeting', { method: 'POST' })
 			),
 		onSuccess: (message) => {
 			upsertMessage(queryClient, message)
-			queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
-				thread ? { ...thread, meetingStartedAt: message.at } : thread
+			queryClient.setQueryData(commandQuery().queryKey, (command) =>
+				command ? { ...command, meetingStartedAt: message.at } : command
 			)
 		},
 	})
@@ -298,7 +299,7 @@ export function useAnswerCard() {
 // "New since" line.
 export async function markSeen(
 	queryClient: QueryClient,
-	place: 'room' | 'bridge',
+	place: PlaceType,
 	leaving: boolean
 ) {
 	try {
@@ -309,13 +310,14 @@ export async function markSeen(
 	}
 	if (!leaving) return
 	const seenAt = new Date().toISOString()
-	if (place === 'room') {
-		queryClient.setQueryData(roomQuery().queryKey, (room) =>
-			room ? { ...room, seenAt } : room
+	const lead = leadOf(place)
+	if (lead) {
+		queryClient.setQueryData(threadQuery(lead).queryKey, (thread) =>
+			thread ? { ...thread, seenAt } : thread
 		)
 	} else {
-		queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
-			thread ? { ...thread, seenAt } : thread
+		queryClient.setQueryData(roomQuery().queryKey, (room) =>
+			room ? { ...room, seenAt } : room
 		)
 	}
 }
@@ -338,7 +340,8 @@ export function useCrewLive() {
 			if (opened.current) {
 				for (const queryKey of [
 					roomQuery().queryKey,
-					enterpriseQuery().queryKey,
+					['crew', 'thread'],
+					commandQuery().queryKey,
 					['crew', 'workspace'],
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
@@ -364,9 +367,9 @@ export function useCrewLive() {
 					queryKey: sitrepQuery().queryKey,
 				})
 			}
-			if (event.type === 'enterprise') {
+			if (event.type === 'command') {
 				void queryClient.invalidateQueries({
-					queryKey: enterpriseQuery().queryKey,
+					queryKey: commandQuery().queryKey,
 				})
 			}
 			if (event.type === 'workspace') {

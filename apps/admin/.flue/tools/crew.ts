@@ -1,31 +1,51 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
 import {
-	bridgeKeys,
 	crew,
 	crewKeys,
-	fleetKeys,
+	displayName,
+	isLeadKey,
 	mentionedCrew,
+	placeOf,
+	roomMembers,
+	roomNames,
+	roomOf,
 	sitrepMax,
+	type ActionType,
 	type CrewKey,
 } from '../../shared/crew'
-import { BRIDGE } from '../../worker/crew/room'
-import { deliver, roomFor, wake } from '../crew'
+import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
 const Id = v.pipe(v.number(), v.integer())
 
-// The room and workspace tools for one agent. `conversation` is "team" for a
-// fleet agent's room runs, "bridge" for Riker and Data, and "dm-<uid>" for a
-// 1:1 chat. A card goes where the conversation lives: the Common Room,
-// the Enterprise thread, or the 1:1 chat.
-export function crewTools(agent: CrewKey, conversation: string) {
-	const name = crew[agent].name
-	const place = conversation.startsWith('dm-')
-		? 'dm'
-		: conversation === BRIDGE
-			? 'bridge'
-			: 'room'
+const defaultActions: Record<
+	'decide' | 'confirm' | 'know' | 'escalate',
+	Array<ActionType>
+> = {
+	decide: [
+		{ id: 'yes', label: 'Yes' },
+		{ id: 'no', label: 'No' },
+	],
+	confirm: [
+		{ id: 'right', label: "That's right" },
+		{ id: 'undo', label: 'Undo it' },
+	],
+	know: [],
+	escalate: [
+		{ id: 'will-look', label: "I'll look into it" },
+		{ id: 'not-now', label: 'Not now' },
+	],
+}
+
+// The tools every crew member has: talking in the Common Room and in its
+// own room, bringing the admin cards, and keeping its workspace.
+export function crewTools(agent: CrewKey) {
+	const name = displayName(agent)
+	const lead = roomOf(agent)
+	const place = placeOf(lead)
+	const room = roomNames[lead]
+	const roommates = roomMembers(lead).filter((key) => key !== agent)
 
 	const postToCrew = defineTool({
 		name: 'post_to_common_room',
@@ -39,11 +59,13 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		async run({ data, step }) {
 			assertBlocks(data.body)
 			const directive =
-				bridgeKeys.includes(agent) &&
-				mentionedCrew(data.body).some((key) => fleetKeys.includes(key))
+				lead === 'riker' &&
+				mentionedCrew(data.body).some(
+					(key) => key !== 'riker' && isLeadKey(key)
+				)
 			if (directive && (await (await roomFor()).meetingInProgress())) {
 				throw new Error(
-					'Nothing was posted. The weekly meeting is in progress, so directives to the fleet wait: pass them to close_meeting, which posts them once the admin is done.'
+					'Nothing was posted. The weekly meeting is in progress, so directives to the other leads wait: pass them to close_meeting, which posts them once the admin is done.'
 				)
 			}
 			const { message, wake: wakes } = await step.do('post', async () =>
@@ -59,23 +81,73 @@ export function crewTools(agent: CrewKey, conversation: string) {
 							}
 						: null,
 					place: 'room',
-					conversation,
 				})
 			)
 			await step.do('wake', () => wake(wakes, name).then(() => true))
 			return {
 				output: {
 					messageId: message.id,
-					woke: wakes.map((w) => crew[w.agent].name),
+					woke: wakes.map((w) => displayName(w.agent)),
 				},
 			}
 		},
 	})
 
+	const postToRoom = defineTool({
+		name: 'post_to_room',
+		description: `Post a message in the ${room}, where the admin talks with you${roommates.length ? ` and ${roommates.map(displayName).join(' and ')}` : ''}. Answer a <room-message> here.${roommates.length ? ` Write ${roommates.map((key) => `@${key}`).join(' or ')} to hand ${roommates.length === 1 ? 'them' : 'one of them'} the floor.` : ''}`,
+		input: v.object({ body: Text }),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.body)
+			const { message, wake: wakes } = await step.do('post', async () =>
+				(await roomFor()).postFromAgent({
+					agent,
+					body: data.body,
+					card: null,
+					place,
+				})
+			)
+			await step.do('wake', () => wake(wakes, name).then(() => true))
+			return { output: { messageId: message.id } }
+		},
+	})
+
+	const bringToAdmin = defineTool({
+		name: 'bring_to_admin',
+		description: `Bring the admin a card in the ${room}: the short list they read instead of the whole Common Room. Kinds:
+- decide: you need their call, and the matter is on hold until they answer. Give 2 or 3 short options, or leave them out for Yes and No.
+- confirm: you already acted in their stead, and ask whether that was right. Only for reversible actions that ${lead === 'riker' ? 'a kept charter entry' : 'an earlier answer of theirs'} clearly covers.
+- know: worth knowing, nothing to answer. One or two sentences.
+- escalate: it needs more than the crew has, such as an engineer or a Claude Code session. Write the body as a brief that a person could act on cold.
+Their answer comes back to you.`,
+		input: v.object({
+			kind: v.picklist(['decide', 'confirm', 'know', 'escalate']),
+			title: v.pipe(Text, v.maxLength(140)),
+			body: v.pipe(Text, v.maxLength(4000)),
+			options: v.optional(Options),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.body)
+			const messageId = await step.do('bring', async () =>
+				(await roomFor()).bringToAdmin({
+					author: agent,
+					kind: data.kind,
+					title: data.title,
+					body: data.body,
+					actions: data.options
+						? toActions(data.options)
+						: defaultActions[data.kind],
+				})
+			)
+			return { output: { messageId } }
+		},
+	})
+
 	const proposeChange = defineTool({
 		name: 'propose_change',
-		description:
-			'Propose a change to your plan. The admin gets a "Change to the plan" card with Do it and Not yet. Do it saves the decision to your memory and adds the title as a to-do; Not yet saves that to your memory. Either way the answer comes back to you. The card shows where you are talking: a 1:1 chat, the Enterprise thread, or the Common Room.',
+		description: `Propose a change to your plan. The admin gets a "Change to the plan" card in the ${room} with Do it and Not yet. Do it saves the decision to your memory and adds the title as a to-do; Not yet saves that to your memory. Either way the answer comes back to you.`,
 		input: v.object({
 			title: v.pipe(Text, v.maxLength(120)),
 			why: v.pipe(Text, v.maxLength(600)),
@@ -97,7 +169,6 @@ export function crewTools(agent: CrewKey, conversation: string) {
 						ref: null,
 					},
 					place,
-					conversation,
 				})
 			)
 			return { output: { messageId: message.id, title: data.title } }
@@ -120,7 +191,7 @@ export function crewTools(agent: CrewKey, conversation: string) {
 	const addTodo = defineTool({
 		name: 'add_todo',
 		description:
-			'Add a to-do to your own list, for work you will do. `note` is a short status line, such as "About half written" or "Waiting on Monitor".',
+			'Add a to-do to your own list, for work you will do. `note` is a short status line, such as "About half written" or "Waiting on Library".',
 		input: v.object({
 			text: v.pipe(Text, v.maxLength(200)),
 			note: v.optional(v.pipe(Text, v.maxLength(80))),
@@ -207,34 +278,6 @@ export function crewTools(agent: CrewKey, conversation: string) {
 		},
 	})
 
-	// A fleet ship's interview or long back-and-forth with the admin belongs
-	// in its 1:1 chat, not the Common Room.
-	const takeToOneToOne = defineTool({
-		name: 'take_to_one_to_one',
-		description:
-			'Move a conversation with the admin that needs more than a question or two, such as an interview, to your 1:1 chat with them. Posts a one-line pointer in the Common Room, then opens the 1:1 chat with your first message.',
-		input: v.object({ topic: v.pipe(Text, v.maxLength(200)) }),
-		async run({ data }) {
-			const room = await roomFor()
-			const uid = await room.latestAdminUid()
-			if (!uid) throw new Error('No admin has written in the room yet.')
-			await room.postFromAgent({
-				agent,
-				body: `Let's take this to our 1:1 chat: ${data.topic}`,
-				card: null,
-				place: 'room',
-				conversation,
-			})
-			await deliver(
-				agent,
-				`dm-${uid}`,
-				'dm.open',
-				`You moved this conversation from the Common Room: ${data.topic}. Open it.`
-			)
-			return 'The pointer is in the room, and the 1:1 chat opens with your next run there.'
-		},
-	})
-
 	// Riker keeps his note and may rewrite any line; every other vertical
 	// keeps its own lines. A line is "<crew key>/<track>".
 	const sitrepLines = (agent === 'riker' ? crewKeys : [agent]).flatMap((key) =>
@@ -268,8 +311,9 @@ export function crewTools(agent: CrewKey, conversation: string) {
 
 	return [
 		postToCrew,
+		postToRoom,
+		bringToAdmin,
 		...(sitrepLines.length ? [updateSitrep] : []),
-		...(bridgeKeys.includes(agent) ? [] : [takeToOneToOne]),
 		proposeChange,
 		readRoom,
 		addTodo,

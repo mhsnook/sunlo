@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react'
-import { crew, type CrewKey, type MemoryType } from '../../../shared/crew'
+import {
+	displayName,
+	type CrewKey,
+	type MemoryType,
+} from '../../../shared/crew'
 import { useEditMemory, useForgetMemory } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 import { EditableEntry } from './editable-entry'
@@ -41,12 +45,12 @@ export function MemoryList({
 					<Entries agent={agent} entries={charts} />
 				</Group>
 			)}
-			<Group title={`What ${crew[agent].name} remembers`}>
+			<Group title={`What ${displayName(agent)} remembers`}>
 				{facts.length ? (
 					<Entries agent={agent} entries={facts} />
 				) : (
 					<p className="text-muted-foreground text-sm">
-						{crew[agent].name} has not saved anything yet.
+						{displayName(agent)} has not saved anything yet.
 					</p>
 				)}
 			</Group>

@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { crewList, type CrewKey } from '../../../shared/crew'
+import { crewList, displayName, type CrewKey } from '../../../shared/crew'
 import { sitrepQuery, useSetSitrep } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 import { AgentAvatar } from './crew-parts'
@@ -43,7 +43,8 @@ export function SitrepPanel({ onClose }: { onClose: () => void }) {
 				{verticals.map((member) => (
 					<section key={member.key} className="space-y-2">
 						<h3 className="flex items-center gap-2 text-sm font-semibold">
-							<AgentAvatar agent={member.key} size="sm" /> {member.name}
+							<AgentAvatar agent={member.key} size="sm" />{' '}
+							{displayName(member.key)}
 							{!member.active && (
 								<span className="text-muted-foreground text-xs font-normal">
 									not started yet
@@ -67,7 +68,7 @@ export function SitrepPanel({ onClose }: { onClose: () => void }) {
 	)
 }
 
-function SitrepLine({
+export function SitrepLine({
 	agent,
 	track,
 	showTrack,

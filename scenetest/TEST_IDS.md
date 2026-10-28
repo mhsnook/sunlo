@@ -626,46 +626,44 @@ The activity dashboard at `/activity`:
 | `admin-metric-panel` + `data-key=<metric>` | Daily chart panel for one metric (e.g. `reviews`)       |
 | `admin-range-option` + `data-key=<days>`   | Date range link: 7, 14 or 30 days                       |
 
-The Common Room at `/`, the Enterprise thread at `/enterprise`, and each fleet ship's workspace at `/crew/<agent>`:
+The Common Room at `/`, and each lead's room at `/room/<lead>`:
 
-| Selector                                                                                     | Purpose                                                                                  |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `crew-sidebar-item` + `data-key=<crew\|enterprise\|agent>`                                   | Sidebar link to the Common Room, the Enterprise, or a fleet ship                         |
-| `crew-message-group` + `data-key=<message id>`                                               | Consecutive messages from one author                                                     |
-| `crew-message` + `data-key=<message id>`                                                     | One message in the room                                                                  |
-| `crew-new-since`                                                                             | The "New since …" line                                                                   |
-| `crew-working`                                                                               | "USS Product is working…" under the timeline                                             |
-| `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                               |
-| `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it         |
-| `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                    |
-| `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                          |
-| `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                                   |
-| `crew-clef-chip`                                                                             | A rule's place for the draft, or "CLEF decides"; opens the menu                          |
-| `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routeproduct`, `room`, `stack`                       |
-| `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                    |
-| `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                        |
-| `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                                |
-| `sitrep-line` + `data-key=<agent>/<track>`                                                   | One line of the Situation Report, such as `product/Engineering` or `riker/Note`          |
-| `common-knowledge-button`, `common-knowledge`                                                | The Common Knowledge toggle and its panel                                                |
-| `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One Common Knowledge entry, and the box and button that add one                          |
-| `crew-overview-range` + `data-key=<days>`                                                    | Date range button in the Overview                                                        |
-| `crew-overview-card` + `data-key=<metrics>`                                                  | One chart card in the Overview                                                           |
-| `agent-looks-after`                                                                          | The "Looks after" list in a fleet ship's profile card                                    |
-| `agent-not-started`                                                                          | The note on a planned agent's workspace                                                  |
-| `agent-todos`, `agent-todo` + `data-key=<id>`                                                | The workspace to-do list and one to-do                                                   |
-| `agent-open-item` + `data-key=<id>`                                                          | One "Open with you" item                                                                 |
-| `agent-memory`                                                                               | The workspace memory list                                                                |
-| `agent-memory-entry` + `data-key=<id>`                                                       | One memory or playbook entry, with its delete button                                     |
-| `agent-chat`, `agent-chat-open`                                                              | The floating 1:1 chat, and the button that reopens it                                    |
-| `agent-chat-input`, `agent-chat-send`                                                        | The 1:1 chat's compose bar                                                               |
-| `agent-chat-message` + `data-key=<message id>`                                               | One message in the 1:1 chat                                                              |
-| `crew-block` + `data-key=<chart\|stats\|table>`                                              | A component an agent put in its message                                                  |
-| `crew-block-filter`                                                                          | The filter box on a filterable table component                                           |
-| `crew-meeting-banner`, `crew-go-to-meeting`                                                  | The weekly meeting invitation and its link to the Enterprise                             |
-| `enterprise-compose-input`, `enterprise-compose-send`                                        | The Enterprise thread's compose bar                                                      |
-| `enterprise-start-meeting`                                                                   | "Start the weekly meeting", while the meeting is due                                     |
-| `bridge-card` + `data-key=<kind>`                                                            | A card in the thread (`decide`, ...); a folded `brief` or `report` is its preview button |
-| `enterprise-log-button`, `enterprise-log`                                                    | The ship's log toggle and its panel                                                      |
-| `enterprise-officer` + `data-key=<riker\|data>`                                              | One officer's to-dos and memory in the ship's log                                        |
-| `charter-panel`, `charter-entry` + `data-key=<id>`                                           | The charter in the ship's log, and one kept entry                                        |
-| `brief-timezone`                                                                             | The time zone of the Sunday brief                                                        |
+| Selector                                                                                     | Purpose                                                                              |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `crew-sidebar-item` + `data-key=<crew\|lead>`                                                | Sidebar link to the Common Room or a lead's room                                     |
+| `crew-sidebar-unread`, `crew-sidebar-cards`                                                  | A sidebar item's unread count, and its count of cards that wait on you               |
+| `crew-message-group` + `data-key=<message id>`                                               | Consecutive messages from one author                                                 |
+| `crew-message` + `data-key=<message id>`                                                     | One message in the room                                                              |
+| `crew-new-since`                                                                             | The "New since …" line                                                               |
+| `crew-working`                                                                               | "Lt Product is working…" under the timeline                                          |
+| `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                           |
+| `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it     |
+| `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                |
+| `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                      |
+| `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                               |
+| `crew-clef-chip`                                                                             | A rule's place for the draft, or "CLEF decides"; opens the menu                      |
+| `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routeproduct`, `room`, `stack`                   |
+| `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                |
+| `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                    |
+| `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                            |
+| `sitrep-line` + `data-key=<agent>/<track>`                                                   | One line of the Situation Report, such as `product/Engineering` or `riker/Note`      |
+| `common-knowledge-button`, `common-knowledge`                                                | The Common Knowledge toggle and its panel                                            |
+| `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One Common Knowledge entry, and the box and button that add one                      |
+| `crew-overview-range` + `data-key=<days>`                                                    | Date range button in the Overview                                                    |
+| `crew-overview-card` + `data-key=<metrics>`                                                  | One chart card in the Overview                                                       |
+| `agent-looks-after`                                                                          | The "Looks after" list in a member's profile card                                    |
+| `agent-not-started`                                                                          | The note on a planned lead's profile card                                            |
+| `agent-todos`, `agent-todo` + `data-key=<id>`                                                | The workspace to-do list and one to-do                                               |
+| `agent-open-item` + `data-key=<id>`                                                          | One "Open with you" item                                                             |
+| `agent-memory`                                                                               | The workspace memory list                                                            |
+| `agent-memory-entry` + `data-key=<id>`                                                       | One memory or playbook entry, with its delete button                                 |
+| `crew-block` + `data-key=<chart\|stats\|table>`                                              | A component an agent put in its message                                              |
+| `crew-block-filter`                                                                          | The filter box on a filterable table component                                       |
+| `crew-meeting-banner`, `crew-go-to-meeting`                                                  | The weekly meeting invitation and its link to the Command room                       |
+| `room-compose-input`, `room-compose-send`                                                    | A lead room's compose bar                                                            |
+| `room-start-meeting`                                                                         | "Start the weekly meeting" in the Command room, while the meeting is due             |
+| `room-card` + `data-key=<kind>`                                                              | A card in a lead's room (`decide`, ...); a folded `brief` or `report` is its preview |
+| `room-panel-button`, `room-panel` + `data-key=<lead>`                                        | The room log toggle and its panel                                                    |
+| `room-member` + `data-key=<agent>`                                                           | One member's profile, report lines, to-dos, open items and memory in the room log    |
+| `charter-panel`, `charter-entry` + `data-key=<id>`                                           | The charter in the Command room's log, and one kept entry                            |
+| `brief-timezone`                                                                             | The time zone of the Sunday brief                                                    |

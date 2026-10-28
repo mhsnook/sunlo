@@ -1,4 +1,9 @@
-import { crewList, type CrewKey, type SitrepLineType } from '../../shared/crew'
+import {
+	crewList,
+	displayName,
+	type CrewKey,
+	type SitrepLineType,
+} from '../../shared/crew'
 
 // The Situation Report as every agent reads it in its <crew-context>: Riker's
 // note, then each vertical's tracks in roster order, with an empty line
@@ -17,7 +22,8 @@ export function sitrepContext(
 		.filter((member) => member.key !== 'riker' && member.tracks.length)
 		.flatMap((member) =>
 			member.tracks.map(
-				(track) => `- ${member.name}, ${track}: ${line(member.key, track)}`
+				(track) =>
+					`- ${displayName(member.key)}, ${track}: ${line(member.key, track)}`
 			)
 		)
 	return [
