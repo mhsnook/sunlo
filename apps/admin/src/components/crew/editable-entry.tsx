@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const fail = (error: Error) => toastError(error.message)
 
 // Text the admin can edit in place or delete: a charter entry, a
-// Common Knowledge entry, the Situation Report, or an agent's memory.
+// Common Knowledge entry, or an agent's memory.
 export function EditableEntry({
 	id,
 	text,
@@ -20,23 +20,20 @@ export function EditableEntry({
 	onDelete,
 	deleteLabel,
 	quiet = false,
-	rows = 2,
 	className,
 	testId,
 }: {
-	id: number | string
+	id: number
 	text: string
 	label: string
 	leading?: ReactNode
 	children: ReactNode
 	busy: boolean
 	onSave: (text: string) => Promise<unknown>
-	// Without it, the entry has no delete button.
-	onDelete?: () => Promise<unknown>
-	deleteLabel?: string
+	onDelete: () => Promise<unknown>
+	deleteLabel: string
 	// Shows the buttons only on hover or keyboard focus.
 	quiet?: boolean
-	rows?: number
 	className?: string
 	testId: string
 }) {
@@ -68,7 +65,7 @@ export function EditableEntry({
 						}
 					}}
 					className="min-h-10 flex-1"
-					rows={rows}
+					rows={2}
 					aria-label={label}
 					ref={(field) => field?.focus()}
 				/>
@@ -84,18 +81,16 @@ export function EditableEntry({
 					>
 						<Pencil />
 					</Button>
-					{onDelete && (
-						<Button
-							variant="ghost"
-							size="icon"
-							aria-label={deleteLabel}
-							className={buttonClass}
-							disabled={busy}
-							onClick={() => void onDelete().catch(fail)}
-						>
-							<Trash2 />
-						</Button>
-					)}
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label={deleteLabel}
+						className={buttonClass}
+						disabled={busy}
+						onClick={() => void onDelete().catch(fail)}
+					>
+						<Trash2 />
+					</Button>
 				</>
 			) : (
 				<>

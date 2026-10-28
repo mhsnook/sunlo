@@ -646,7 +646,17 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                   |
 | `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                       |
 | `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                               |
-| `sitrep-text`                                                                                | The Situation Report document, with its edit and clear buttons                          |
+| `room-document` + `data-key=<name>`                                                          | A document in the room log; opens it                                                    |
+| `document-back`                                                                              | Closes a document, back to the room log                                                 |
+| `document` + `data-key=<name>`                                                               | An open document: the Situation Report, or one from a room log                          |
+| `document-text`                                                                              | A document's current text, drawn                                                        |
+| `document-edit`, `document-editor`                                                           | The Edit button, and the Markdown box it opens                                          |
+| `document-summary`, `document-save`                                                          | The editor's "What changed" line, and its Save button                                   |
+| `document-stale`                                                                             | The editor's note that someone saved a newer revision                                   |
+| `document-history-button`, `document-revisions`                                              | The History toggle, and the revision list                                               |
+| `document-revision` + `data-key=<revision>`                                                  | One revision in the list; shows it                                                      |
+| `document-old-revision`, `document-restore`                                                  | An older revision on view, and its Restore button                                       |
+| `crew-diagram-error`                                                                         | A Mermaid diagram that did not draw, shown as its source                                |
 | `common-knowledge-button`, `common-knowledge`                                                | The Common Knowledge toggle and its panel                                               |
 | `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One Common Knowledge entry, and the box and button that add one                         |
 | `crew-overview-range` + `data-key=<days>`                                                    | Date range button in the Overview                                                       |
@@ -657,7 +667,7 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `agent-open-item` + `data-key=<id>`                                                          | One "Open with you" item                                                                |
 | `agent-memory`                                                                               | The workspace memory list                                                               |
 | `agent-memory-entry` + `data-key=<id>`                                                       | One memory or playbook entry, with its delete button                                    |
-| `crew-block` + `data-key=<chart\|stats\|table>`                                              | A component an agent put in its message                                                 |
+| `crew-block` + `data-key=<chart\|stats\|table\|mermaid>`                                     | A component an agent put in its message                                                 |
 | `crew-block-filter`                                                                          | The filter box on a filterable table component                                          |
 | `crew-meeting-banner`, `crew-go-to-meeting`                                                  | The weekly meeting invitation and its link to the Command room                          |
 | `room-compose-input`, `room-compose-send`                                                    | A subject room's compose bar                                                            |

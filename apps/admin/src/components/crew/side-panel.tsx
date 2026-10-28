@@ -12,6 +12,7 @@ export function SidePanel({
 	testKey,
 	actions,
 	onClose,
+	wide = false,
 	bodyClassName,
 	children,
 }: {
@@ -22,6 +23,8 @@ export function SidePanel({
 	// Controls in the title bar, before the close button.
 	actions?: ReactNode
 	onClose: () => void
+	// For a document, which needs more room than a list.
+	wide?: boolean
 	bodyClassName?: string
 	children: ReactNode
 }) {
@@ -30,7 +33,10 @@ export function SidePanel({
 			aria-label={label}
 			data-testid={testId}
 			data-key={testKey}
-			className="bg-background flex h-full w-full flex-col border-s md:w-96"
+			className={cn(
+				'bg-background flex h-full w-full flex-col border-s',
+				wide ? 'md:w-xl' : 'md:w-96'
+			)}
 		>
 			<div className="flex items-center gap-2 border-b px-4 py-3">
 				<h2 className="me-auto font-semibold">{title}</h2>

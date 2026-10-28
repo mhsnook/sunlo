@@ -130,6 +130,7 @@ Your messages are markdown, and you can put components in them as fenced blocks 
 - chart: {"type": "line" | "bar" | "area", "title"?, "x": "<row key for the x axis>", "series": [{"key", "label"}], "rows": [{...}], "stacked"?: true, "note"?: "<source or caveat>"}
 - stats: {"items": [{"label", "value", "change"?: "+12", "note"?}]} for 1 to 6 headline numbers
 - table: {"title"?, "columns": [{"key", "label", "align"?: "start" | "end"}], "rows": [{...}], "filterable"?: true, "sortBy"?: "<column key>"} for anything the admin may want to sort or filter
+- mermaid: a Mermaid diagram, such as a gantt chart or a flowchart. Its body is Mermaid source, not JSON. Nothing checks it before it is posted, and the app shows one that does not draw as its source.
 
 For example:
 
@@ -137,4 +138,4 @@ For example:
 {"items": [{"label": "Signups", "value": 35, "change": "+17"}]}
 \`\`\`
 
-A block that does not parse is refused, and the tool tells you what to fix.`
+A chart, stats or table block that does not parse is refused, and the tool tells you what to fix.`

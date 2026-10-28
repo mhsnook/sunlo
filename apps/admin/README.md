@@ -41,7 +41,7 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 **Common Knowledge**, a panel in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
 
-**The Situation Report**, beside the Common Room on a wide screen, is one Markdown document on where Sunlo and each room stand now. Riker keeps it with `update_situation_report`, and you edit it in the panel; every agent reads it after Common Knowledge, and an officer whose subject it describes wrong tells Riker. It holds at most 4,000 characters, since every run reads all of it.
+**The Situation Report**, beside the Common Room on a wide screen, is the Command room's document on where Sunlo and each room stand now. Riker keeps it, and you edit it in the panel; every agent reads all of it after Common Knowledge, and an officer whose subject it describes wrong tells Riker. It holds at most 4,000 characters, since every run reads all of it.
 
 **Voice.** Every compose bar has a mic: press it, talk, and press it again, and what you said lands in the draft for you to read before sending. The speaker button beside it turns on voice replies, which reads each new reply aloud in the agent's own voice as it arrives. Any agent message also has its own read-aloud button. The Worker does both with Workers AI: Deepgram Nova 3 for speech to text and Aura 2 for text to speech (`worker/voice.ts`).
 
@@ -112,9 +112,15 @@ The room logs every decision in `clef_decision`: what CLEF suggested, what the m
 
 A message that wakes an agent becomes a signal in its `memory` conversation: a `<common-room-message>` from the Common Room, or a `<room-message>` from its own room, and the agent answers where it was asked. CLEF decides for the Common Room only; in a subject's room, the principal answers unless you name the associate.
 
+### Room documents
+
+Each room keeps named Markdown documents, which its officers and you write: the Command room keeps the Situation Report and the Business plan and status, and the Product room keeps the Roadmap. They can hold checklists, tables, the crew's chart, stats and table blocks, and Mermaid diagrams such as gantt charts. The app draws Mermaid itself, and shows a diagram that does not draw as its source.
+
+The room log lists a room's documents. Open one to read it, edit it, or look through its revisions and restore an older one; a restore saves the old text as a new revision. Every save names the revision it started from, and the room refuses a save from anything but the current revision, so nobody overwrites a change they have not seen. An agent's briefing lists its room's documents with their revisions but not their text; it reads one with `read_document` when it needs it. The revision rules live in `worker/crew/documents.ts`, and the tables (`document`, `document_revision`) in `worker/crew/room.ts`.
+
 ### What an agent can do
 
-Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time, Common Knowledge, the Situation Report, the cards in the agent's room, its workspace, and what is new in the Common Room and in its room since its last run. The Command room's members also get the charter and the weekly cycle. The tools:
+Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time, Common Knowledge, the Situation Report, the list of the room's documents, the cards in the agent's room, its workspace, and what is new in the Common Room and in its room since its last run. The Command room's members also get the charter and the weekly cycle. The tools:
 
 - `activity_between`: signups, reviews and each reviewer, new decks, and library and chat counts for a window
 - `run_sql`: one SELECT, run as `admin_reader` with an 8-second timeout and at most 200 rows
@@ -122,8 +128,10 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `post_to_room`: a message in the agent's own room
 - `bring_to_admin`: a card in the agent's own room
 - `propose_change`: a "Change to the plan" card in the agent's own room
+- `read_document`: any room's document, with its revision
+- `write_document`: a new revision of one of the agent's own room's documents, or a new document, from the revision it read
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
-- Riker and Data also have `propose_charter`. Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room), `close_meeting` and `update_situation_report`, and Data has `note_playbook` and `file_report`.
+- Riker and Data also have `propose_charter`. Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today), through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 

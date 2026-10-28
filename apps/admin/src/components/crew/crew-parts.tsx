@@ -1,6 +1,8 @@
 import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { isBlockKind } from '../../../shared/blocks'
 import { Block } from './blocks'
+import { MermaidBlock } from './mermaid-block'
 import { remarkCrew } from './remark-crew'
 import { useState } from 'react'
 import { Users, X, type LucideIcon } from 'lucide-react'
@@ -99,23 +101,60 @@ export function AdminAvatar({ name }: { name: string }) {
 	)
 }
 
-// Agents write markdown. @mentions render bold, as in the design, and a
-// fenced block in a component's language (```chart, ```stats, ```table)
-// renders as that component.
+// Agents write markdown, with GitHub's checklists and tables. @mentions
+// render bold, as in the design, and a fenced block in a component's
+// language (```chart, ```stats, ```table, ```mermaid) renders as that
+// component.
 export function CrewText({ text }: { text: string }) {
 	return (
 		<Markdown
-			remarkPlugins={[remarkCrew]}
+			remarkPlugins={[remarkGfm, remarkCrew]}
 			components={{
 				p: ({ children }) => <p className="not-first:mt-2">{children}</p>,
-				ul: ({ children }) => (
-					<ul className="list-disc ps-5 not-first:mt-2">{children}</ul>
+				ul: ({ children, className }) => (
+					<ul
+						className={cn(
+							'list-disc ps-5 not-first:mt-2',
+							className === 'contains-task-list' && 'list-none ps-1'
+						)}
+					>
+						{children}
+					</ul>
 				),
 				ol: ({ children }) => (
 					<ol className="list-decimal ps-5 not-first:mt-2">{children}</ol>
 				),
+				input: ({ checked }) => (
+					<input
+						type="checkbox"
+						checked={checked}
+						aria-label={checked ? 'Done' : 'Not done'}
+						disabled
+						className="me-1.5 align-middle"
+					/>
+				),
+				// A document's headings sit under the page's and the panel's own.
+				h1: ({ children }) => (
+					<h2 className="text-lg font-semibold not-first:mt-4">{children}</h2>
+				),
+				h2: ({ children }) => (
+					<h3 className="text-base font-semibold not-first:mt-4">{children}</h3>
+				),
 				h3: ({ children }) => (
-					<h3 className="font-semibold not-first:mt-3">{children}</h3>
+					<h4 className="font-semibold not-first:mt-3">{children}</h4>
+				),
+				table: ({ children }) => (
+					<div className="my-2 overflow-x-auto rounded border">
+						<table className="w-full text-sm">{children}</table>
+					</div>
+				),
+				th: ({ children }) => (
+					<th className="bg-muted px-3 py-1.5 text-start font-medium">
+						{children}
+					</th>
+				),
+				td: ({ children }) => (
+					<td className="border-t px-3 py-1.5">{children}</td>
 				),
 				a: ({ children, href }) => (
 					<a href={href} className="underline" target="_blank" rel="noreferrer">
@@ -130,8 +169,10 @@ export function CrewText({ text }: { text: string }) {
 				// remarkCrew turns component blocks into figures.
 				figure: ({ node }) => {
 					const kind = String(node?.properties.dataBlock)
+					const source = String(node?.properties.dataSource)
+					if (kind === 'mermaid') return <MermaidBlock source={source} />
 					return isBlockKind(kind) ? (
-						<Block kind={kind} source={String(node?.properties.dataSource)} />
+						<Block kind={kind} source={source} />
 					) : null
 				},
 			}}

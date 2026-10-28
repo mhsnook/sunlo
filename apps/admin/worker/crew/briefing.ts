@@ -7,7 +7,7 @@ import {
 	type CommonKnowledgeType,
 	type CrewKey,
 	type CrewMessageType,
-	type SitrepType,
+	type DocumentSummaryType,
 	type WeeklyType,
 	type WorkspaceType,
 } from '../../shared/crew'
@@ -47,7 +47,9 @@ export type BriefingInput = {
 	now: string
 	agent: CrewKey
 	commonKnowledge: Array<CommonKnowledgeType>
-	sitrep: SitrepType
+	sitrep: Sitrep | null
+	// The agent's own room's documents, without their text.
+	documents: Array<DocumentSummaryType>
 	workspace: WorkspaceType
 	// The cards in the agent's own room.
 	cards: {
@@ -63,6 +65,10 @@ export type BriefingInput = {
 	unread: { common: UnreadTimeline; own: UnreadTimeline }
 }
 
+type Sitrep = Pick<DocumentSummaryType, 'revision' | 'byName' | 'at'> & {
+	text: string
+}
+
 // The <crew-context> every run starts with.
 export function briefingText(input: BriefingInput) {
 	const room = roomNames[roomOf(input.agent)]
@@ -73,6 +79,7 @@ export function briefingText(input: BriefingInput) {
 	]
 	if (input.command) sections.push(commandText(input.command, input.now))
 	sections.push(
+		documentsText(room, input.documents),
 		cardsText(room, input.cards),
 		workspaceText(input.workspace),
 		unreadText('The Common Room', input.unread.common),
@@ -90,13 +97,27 @@ function unreadText(name: string, timeline: UnreadTimeline) {
 	].join('\n\n')
 }
 
-export function sitrepText(sitrep: SitrepType) {
+export function sitrepText(sitrep: Sitrep | null) {
 	return [
 		'## The Situation Report: where Sunlo and each room stand now',
-		sitrep
-			? `${sitrep.text}\n\n(Last written by ${sitrep.byName}, ${stamp(sitrep.at)}.)`
+		sitrep?.at
+			? `${sitrep.text}\n\n(Revision ${sitrep.revision}, saved by ${sitrep.byName}, ${stamp(sitrep.at)}.)`
 			: '(Nobody has written it yet.)',
 	].join('\n\n')
+}
+
+export function documentsText(
+	room: string,
+	documents: Array<DocumentSummaryType>
+) {
+	const lines = documents.map((doc) =>
+		doc.at
+			? `- ${doc.name}: revision ${doc.revision}, saved by ${doc.byName}, ${stamp(doc.at)}`
+			: `- ${doc.name}: not written yet`
+	)
+	return [`## The ${room}'s documents`, lines.join('\n') || '(none yet)'].join(
+		'\n\n'
+	)
 }
 
 function commonKnowledgeText(entries: Array<CommonKnowledgeType>) {

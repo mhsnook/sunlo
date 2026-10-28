@@ -17,7 +17,7 @@ import {
 	principalOf,
 	roomMembers,
 	roomOf,
-	SITREP_MAX,
+	SITREP,
 	type ActionType,
 	type AgentStatusType,
 	type CardType,
@@ -26,6 +26,10 @@ import {
 	type CommonKnowledgeType,
 	type CrewKey,
 	type CrewMessageType,
+	type DocumentSummaryType,
+	type DocumentType,
+	type RevisionTextType,
+	type RevisionType,
 	type RoomKey,
 	type MemoryType,
 	type OpenItemType,
@@ -35,12 +39,12 @@ import {
 	type RoomStateType,
 	type RoomThreadType,
 	type RoutingType,
-	type SitrepType,
 	type WeeklyType,
 	type WorkspaceType,
 } from '../../shared/crew'
 import { briefingText, timelineText, type UnreadTimeline } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
+import { checkSave, startingDocuments, type SaveCheck } from './documents'
 
 // The room's one instance. Renaming it starts a fresh room and leaves the
 // production data behind: change the schema with an in-place migration in
@@ -83,8 +87,26 @@ type CharterRow = {
 	kept_at: string | null
 }
 
+// The Situation Report's one row, from before it was a document.
 type SitrepRow = {
 	text: string
+	by: string
+	by_name: string
+	at: string
+}
+
+type DocumentRow = {
+	id: number
+	room: RoomKey
+	name: string
+	revision: number
+	by_name: string | null
+	at: string | null
+}
+
+type RevisionRow = {
+	revision: number
+	summary: string
 	by: string
 	by_name: string
 	at: string
@@ -128,10 +150,6 @@ const RENAMED_AGENTS: Record<string, CrewKey> = {
 	growth: 'guinan',
 }
 
-// Bump when a constructor migration is added; the room runs the migrations
-// once, then records this.
-const SCHEMA_VERSION = 1
-
 const noOpenCards = () =>
 	Object.fromEntries(roomKeys.map((room) => [room, 0])) as Record<
 		RoomKey,
@@ -152,6 +170,23 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 	place: row.place,
 	corrected: row.corrected ? (JSON.parse(row.corrected) as RoutingType) : null,
 	receipt: row.receipt === 1,
+})
+
+const toDocumentSummary = (row: DocumentRow): DocumentSummaryType => ({
+	id: row.id,
+	room: row.room,
+	name: row.name,
+	revision: row.revision,
+	byName: row.by_name,
+	at: row.at,
+})
+
+const toRevision = (row: RevisionRow): RevisionType => ({
+	revision: row.revision,
+	summary: row.summary,
+	by: row.by,
+	byName: row.by_name,
+	at: row.at,
 })
 
 const toCharter = (row: CharterRow): CharterEntryType => ({
@@ -262,14 +297,24 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				text text not null,
 				at text not null
 			);
-			-- One line per crew member and track; Riker's line is his note.
-			-- One row, id 1: the Situation Report, which Riker and the admin write.
-			create table if not exists situation_report (
-				id integer primary key check (id = 1),
+			-- A room's named document. Its revision is the current one: 0 until
+			-- someone writes it.
+			create table if not exists document (
+				id integer primary key autoincrement,
+				room text not null,
+				name text not null collate nocase,
+				revision integer not null default 0,
+				unique (room, name)
+			);
+			create table if not exists document_revision (
+				document integer not null,
+				revision integer not null,
 				text text not null,
+				summary text not null,
 				by text not null,
 				by_name text not null,
-				at text not null
+				at text not null,
+				primary key (document, revision)
 			);
 			-- Data's pre-meeting report for each week's brief.
 			create table if not exists meeting_report (
@@ -303,10 +348,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const version =
 			this.sql<{ version: number }>`select version from schema_version`[0]
 				?.version ?? 0
-		if (version < SCHEMA_VERSION) {
-			this.migrateToRooms()
+		// Append only: a migration's position is the schema version it brings
+		// the room to, and the room runs each one once.
+		const migrations = [
+			() => this.migrateToRooms(),
+			() => this.moveSitrepIntoDocuments(),
+		]
+		if (version < migrations.length) {
+			for (const migrate of migrations.slice(version)) migrate()
 			this.sql`delete from schema_version`
-			this.sql`insert into schema_version (version) values (${SCHEMA_VERSION})`
+			this
+				.sql`insert into schema_version (version) values (${migrations.length})`
 		}
 	}
 
@@ -328,6 +380,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// and Monitor and Moderator, who are gone. Each step finds nothing to
 	// change once it has run, so a second run does no harm.
 	private migrateToRooms() {
+		this.sql`
+			create table if not exists situation_report (
+				id integer primary key check (id = 1),
+				text text not null,
+				by text not null,
+				by_name text not null,
+				at text not null
+			)`
 		const columns = new Set(
 			this.sql<{ name: string }>`
 				select name from pragma_table_info('message')`.map((c) => c.name)
@@ -419,6 +479,24 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			update situation_report set by = ${to}, by_name = ${name}
 			where by = ${from}`
+	}
+
+	// The rooms' starting documents, and the Situation Report's one row as
+	// the first revision of its document.
+	private moveSitrepIntoDocuments() {
+		for (const { room, name } of startingDocuments) {
+			this
+				.sql`insert or ignore into document (room, name) values (${room}, ${name})`
+		}
+		const row = this.sql<SitrepRow>`select * from situation_report`[0]
+		const sitrep = this.findDocument('command', SITREP)
+		if (row && sitrep?.revision === 0) {
+			this.sql`
+				insert into document_revision (document, revision, text, summary, by, by_name, at)
+				values (${sitrep.id}, 1, ${row.text}, '', ${row.by}, ${row.by_name}, ${row.at})`
+			this.sql`update document set revision = 1 where id = ${sitrep.id}`
+		}
+		this.sql`drop table situation_report`
 	}
 
 	private renamePlace(from: string, to: PlaceType) {
@@ -774,6 +852,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			agent,
 			commonKnowledge: this.commonKnowledge(),
 			sitrep: this.sitrep(),
+			documents: this.documents(room),
 			workspace: this.workspace(agent),
 			cards: {
 				waiting: this.openCards(place),
@@ -1147,29 +1226,172 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return edited.length > 0
 	}
 
-	sitrep(): SitrepType {
-		const row = this.sql<SitrepRow>`select * from situation_report`[0]
-		return row
-			? { text: row.text, by: row.by, byName: row.by_name, at: row.at }
-			: null
+	// ---- Room documents -----------------------------------------------------
+
+	documents(room: RoomKey): Array<DocumentSummaryType> {
+		return this.sql<IdRow>`
+			select id from document where room = ${room} order by id`.flatMap(
+			(row) => this.documentSummary(row.id) ?? []
+		)
 	}
 
-	// An empty text clears the report. False for a text over SITREP_MAX.
-	setSitrep(input: { text: string; by: string; byName: string }) {
-		const text = input.text.trim()
-		if (text.length > SITREP_MAX) return false
-		if (text) {
-			this.sql`
-				insert into situation_report (id, text, by, by_name, at)
-				values (1, ${text}, ${input.by}, ${input.byName}, ${now()})
-				on conflict (id) do update set
-					text = excluded.text, by = excluded.by,
-					by_name = excluded.by_name, at = excluded.at`
-		} else {
-			this.sql`delete from situation_report`
+	document(id: number): DocumentType | null {
+		const summary = this.documentSummary(id)
+		if (!summary) return null
+		const revisions = this.sql<RevisionRow>`
+			select revision, summary, by, by_name, at from document_revision
+			where document = ${id}
+			order by revision desc
+			limit 50`.map(toRevision)
+		return {
+			...summary,
+			text: this.revision(id, summary.revision)?.text ?? '',
+			revisions,
 		}
-		this.push({ type: 'sitrep' })
-		return true
+	}
+
+	revision(id: number, revision: number): RevisionTextType | null {
+		const row = this.sql<RevisionRow & { text: string }>`
+			select revision, summary, by, by_name, at, text from document_revision
+			where document = ${id} and revision = ${revision}`[0]
+		return row ? { ...toRevision(row), text: row.text } : null
+	}
+
+	// Read in full by every agent at the top of every run.
+	sitrep(): DocumentType | null {
+		const sitrep = this.findDocument('command', SITREP)
+		return sitrep && this.document(sitrep.id)
+	}
+
+	// Any room's document, by name, for an agent. The refusal names the
+	// documents the room does keep.
+	readDocument(
+		room: RoomKey,
+		name: string
+	): { ok: true; document: DocumentType } | { ok: false; error: string } {
+		const found = this.findDocument(room, name)
+		const document = found && this.document(found.id)
+		if (document) return { ok: true, document }
+		const names = this.documents(room).map((doc) => `"${doc.name}"`)
+		return {
+			ok: false,
+			error: `The ${roomNames[room]} has no document named "${name}". ${names.length ? `It keeps ${names.join(', ')}.` : 'It keeps none yet.'}`,
+		}
+	}
+
+	// An agent saving one of its own room's documents. A name no room uses
+	// starts a new document; a name another room uses is refused, so a room
+	// never ends up with its own copy of another room's document.
+	writeDocument(input: {
+		agent: CrewKey
+		name: string
+		text: string
+		baseRevision: number
+		summary: string
+	}): SaveCheck {
+		const room = roomOf(input.agent)
+		const existing = this.findDocument(room, input.name)
+		const name = existing?.name ?? input.name.trim()
+		if (!existing) {
+			const elsewhere = roomKeys.find(
+				(other) => other !== room && this.findDocument(other, name)
+			)
+			if (elsewhere) {
+				return {
+					ok: false,
+					status: 409,
+					error: `Nothing was saved: "${name}" belongs to the ${roomNames[elsewhere]}, and only its officers write it. Ask @${elsewhere} in the Common Room.`,
+				}
+			}
+		}
+		const saved = this.saveRevision({
+			room,
+			name,
+			document: existing,
+			text: input.text,
+			baseRevision: input.baseRevision,
+			summary: input.summary,
+			by: input.agent,
+			byName: displayName(input.agent),
+		})
+		if (saved.ok) {
+			this.workspaceEdited(
+				input.agent,
+				`saved ${name} revision ${saved.revision}: ${input.summary}`
+			)
+		}
+		return saved
+	}
+
+	// The admin saving a document from the room log, or restoring an older
+	// revision, which saves its text as a new one.
+	editDocument(input: {
+		id: number
+		text: string
+		baseRevision: number
+		summary: string
+		by: string
+		byName: string
+	}): SaveCheck {
+		const document = this.documentSummary(input.id)
+		if (!document) {
+			return { ok: false, status: 404, error: 'No document with that id' }
+		}
+		return this.saveRevision({
+			...input,
+			room: document.room,
+			name: document.name,
+			document,
+		})
+	}
+
+	private findDocument(room: RoomKey, name: string) {
+		const row = this.sql<{ id: number }>`
+			select id from document where room = ${room} and name = ${name.trim()}`[0]
+		return row ? this.documentSummary(row.id) : null
+	}
+
+	private documentSummary(id: number): DocumentSummaryType | null {
+		const row = this.sql<DocumentRow>`
+			select document.id, document.room, document.name, document.revision,
+				document_revision.by_name, document_revision.at
+			from document
+			left join document_revision on document_revision.document = document.id
+				and document_revision.revision = document.revision
+			where document.id = ${id}`[0]
+		return row ? toDocumentSummary(row) : null
+	}
+
+	private saveRevision(input: {
+		room: RoomKey
+		name: string
+		// Null to start a new document.
+		document: DocumentSummaryType | null
+		text: string
+		baseRevision: number
+		summary: string
+		by: string
+		byName: string
+	}): SaveCheck {
+		const text = input.text.trim()
+		const check = checkSave({
+			name: input.name,
+			current: input.document?.revision ?? null,
+			base: input.baseRevision,
+			text,
+		})
+		if (!check.ok) return check
+		const id =
+			input.document?.id ??
+			this.sql<IdRow>`
+				insert into document (room, name) values (${input.room}, ${input.name})
+				returning id`[0].id
+		this.sql`
+			insert into document_revision (document, revision, text, summary, by, by_name, at)
+			values (${id}, ${check.revision}, ${text}, ${input.summary.trim()}, ${input.by}, ${input.byName}, ${now()})`
+		this.sql`update document set revision = ${check.revision} where id = ${id}`
+		this.push({ type: 'document', room: input.room, id })
+		return check
 	}
 
 	private meetingStartedAt() {
