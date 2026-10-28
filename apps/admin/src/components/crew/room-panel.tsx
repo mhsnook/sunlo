@@ -17,9 +17,9 @@ import { MemoryList } from './memory-list'
 import { SitrepLine } from './sitrep-panel'
 import { Empty, Section, TodoList } from './workspace-parts'
 
-// Beside a subject's room: who works there, and each officer's Situation
-// Report lines, to-dos, what is open with the admin, and memory. The Command
-// room also keeps the charter and the weekly settings here.
+// Beside a subject's room: its line in the Situation Report, then who works
+// there, with each officer's to-dos, what is open with the admin, and memory.
+// The Command room also keeps the charter and the weekly settings here.
 export function RoomPanel({
 	room,
 	onClose,
@@ -46,6 +46,11 @@ export function RoomPanel({
 				</Button>
 			</div>
 			<div className="flex-1 space-y-8 overflow-y-auto px-4 py-4">
+				<Section title="Situation Report">
+					<ul>
+						<SitrepLine room={room} />
+					</ul>
+				</Section>
 				{room === 'command' && <CharterPanel />}
 				{roomMembers(room).map((agent) => (
 					<MemberLog key={agent} agent={agent} />
@@ -63,21 +68,6 @@ function MemberLog({ agent }: { agent: CrewKey }) {
 	return (
 		<div className="space-y-5" data-testid="room-member" data-key={agent}>
 			<ProfileCard agent={agent} />
-			{crew[agent].tracks.length > 0 && (
-				<Section title="Situation Report">
-					<ul className="space-y-2">
-						{crew[agent].tracks.map((track) => (
-							<SitrepLine
-								key={track}
-								agent={agent}
-								track={track}
-								showTrack={crew[agent].tracks.length > 1}
-								rows={agent === 'riker' ? 6 : undefined}
-							/>
-						))}
-					</ul>
-				</Section>
-			)}
 			<Section title={`${name}'s to-dos`}>
 				{workspace.todos.length ? (
 					<TodoList todos={workspace.todos} />

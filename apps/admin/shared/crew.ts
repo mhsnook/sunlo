@@ -40,9 +40,6 @@ export type CrewMember = {
 	// A planned agent has a place in its room but no agent behind it yet, so
 	// messages for it wait until it starts.
 	active: boolean
-	// The lines this member keeps in the Situation Report, one per track.
-	// Empty for an associate like Data, who serves every vertical.
-	tracks: Array<string>
 }
 
 export const crew: Record<CrewKey, CrewMember> = {
@@ -61,7 +58,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: 'writes the weekly brief on Sunday at 04:00',
 		active: true,
-		tracks: ['Note'],
 	},
 	data: {
 		key: 'data',
@@ -77,7 +73,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: null,
 		active: true,
-		tracks: [],
 	},
 	geordi: {
 		key: 'geordi',
@@ -94,7 +89,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: 'runs daily at 07:00 UTC',
 		active: true,
-		tracks: ['Product', 'Engineering'],
 	},
 	hoshi: {
 		key: 'hoshi',
@@ -113,7 +107,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 		],
 		schedule: null,
 		active: false,
-		tracks: ['Library'],
 	},
 	guinan: {
 		key: 'guinan',
@@ -125,7 +118,6 @@ export const crew: Record<CrewKey, CrewMember> = {
 		looksAfter: ['Signups, invites and where new people come from'],
 		schedule: null,
 		active: false,
-		tracks: ['Growth', 'Retention'],
 	},
 }
 
@@ -339,18 +331,17 @@ export type CommonKnowledgeType = z.infer<typeof CommonKnowledgeSchema>
 // The longest text the voice model reads in one request.
 export const MAX_SPEECH_CHARS = 2000
 
-// Riker's line is a note of a few paragraphs; every other line is one line.
-export const SITREP_LINE_MAX = 240
+// The Command room's line is Riker's note on the whole, a few paragraphs;
+// every other room's line is a sentence or two.
+export const SITREP_LINE_MAX = 480
 export const SITREP_NOTE_MAX = 1500
-export const sitrepMax = (agent: CrewKey) =>
-	agent === 'riker' ? SITREP_NOTE_MAX : SITREP_LINE_MAX
+export const sitrepMax = (room: RoomKey) =>
+	room === 'command' ? SITREP_NOTE_MAX : SITREP_LINE_MAX
 
-// The Situation Report: where each vertical stands right now, in a line per
-// track, and Riker's note on the whole. Small enough for every agent to read
-// at the top of every run.
+// The Situation Report: where each room's subject stands right now, one line
+// per room. Small enough for every agent to read at the top of every run.
 export const SitrepLineSchema = z.object({
-	agent: z.enum(crewKeys),
-	track: z.string(),
+	room: z.enum(roomKeys),
 	text: z.string(),
 	// A crew key, or "admin:<uid>".
 	by: z.string(),

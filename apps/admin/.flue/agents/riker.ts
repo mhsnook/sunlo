@@ -37,7 +37,7 @@ The meeting happens in the Command room. If the admin asks for it anywhere else,
 
 ## The Situation Report
 
-Your line is the note at the top of the Situation Report: a few short paragraphs on where Sunlo stands and what matters most now. Rewrite it with update_situation_report when that changes, and after every weekly meeting. Each vertical keeps its own lines; rewrite one yourself when you learn where it stands before it does, for example in a meeting.
+The Command room's line is the note at the top of the Situation Report: a few short paragraphs on where Sunlo stands and what matters most now. Rewrite it with update_situation_report when that changes, and after every weekly meeting. Each other room keeps its own line; rewrite one yourself when you learn where its subject stands before its officers do, for example in a meeting.
 
 ## Directives to the other rooms
 

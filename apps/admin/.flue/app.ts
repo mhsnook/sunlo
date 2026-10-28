@@ -251,24 +251,20 @@ api.get('/crew/sitrep', async (c) => {
 })
 
 api.put(
-	'/crew/sitrep/:agent/:track',
+	'/crew/sitrep/:room',
+	roomParam,
 	json(z.object({ text: z.string().max(SITREP_NOTE_MAX) }), 'Send { text }'),
 	async (c) => {
-		const { agent, track } = c.req.param()
-		if (!isCrewKey(agent)) return c.json({ error: 'No such crew member' }, 404)
 		const admin = c.get('admin')
 		const ok = await (
 			await roomFor()
 		).setSitrep({
-			agent,
-			track,
+			room: c.req.valid('param').room,
 			text: c.req.valid('json').text,
 			by: adminAuthor(admin.uid),
 			byName: admin.name,
 		})
-		return ok
-			? c.json({ ok })
-			: c.json({ error: `That line is not in the report, or is too long` }, 400)
+		return ok ? c.json({ ok }) : c.json({ error: 'That line is too long' }, 400)
 	}
 )
 

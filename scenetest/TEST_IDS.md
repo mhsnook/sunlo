@@ -646,7 +646,7 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                   |
 | `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                       |
 | `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                               |
-| `sitrep-line` + `data-key=<agent>/<track>`                                                   | One line of the Situation Report, such as `product/Engineering` or `riker/Note`         |
+| `sitrep-line` + `data-key=<room>`                                                            | One line of the Situation Report, such as `product`, or `command` for Riker's note      |
 | `common-knowledge-button`, `common-knowledge`                                                | The Common Knowledge toggle and its panel                                               |
 | `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One Common Knowledge entry, and the box and button that add one                         |
 | `crew-overview-range` + `data-key=<days>`                                                    | Date range button in the Overview                                                       |

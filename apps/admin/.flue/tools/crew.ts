@@ -1,8 +1,7 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
 import {
-	crew,
-	crewKeys,
+	roomKeys,
 	displayName,
 	placeOf,
 	roomMembers,
@@ -266,32 +265,28 @@ Their answer comes back to you.`,
 		},
 	})
 
-	// Riker keeps his note and may rewrite any line; every other vertical
-	// keeps its own lines. A line is "<crew key>/<track>".
-	const sitrepLines = (agent === 'riker' ? crewKeys : [agent]).flatMap((key) =>
-		crew[key].tracks.map((track) => `${key}/${track}`)
-	)
+	// Every officer keeps its own room's line; Riker may rewrite any room's.
+	const sitrepRooms = agent === 'riker' ? [...roomKeys] : [ownRoom]
 	const updateSitrep = defineTool({
 		name: 'update_situation_report',
-		description:
-			'Rewrite one line of the Situation Report, which every agent reads at the top of every run. Say where things stand now and what comes next, not a history; leave numbers to queries. An empty text clears the line.',
+		description: `Rewrite a room's line in the Situation Report, which every agent reads at the top of every run. Say where the room's subject stands now and what comes next, not a history; leave numbers to queries. An empty text clears the line. The ${roomNames.command}'s line is Riker's note on the whole.`,
 		input: v.object({
-			line: v.picklist(sitrepLines.length ? sitrepLines : ['none']),
+			room: v.optional(v.picklist(sitrepRooms), ownRoom),
 			text: v.pipe(v.string(), v.trim()),
 		}),
 		async run({ data }) {
-			const [key, track] = data.line.split('/') as [CrewKey, string]
 			const ok = await (
 				await roomFor()
 			).setSitrep({
-				agent: key,
-				track,
+				room: data.room,
 				text: data.text,
 				by: agent,
 				byName: name,
 			})
 			if (!ok) {
-				throw new Error(`That line holds at most ${sitrepMax(key)} characters.`)
+				throw new Error(
+					`That line holds at most ${sitrepMax(data.room)} characters.`
+				)
 			}
 			return 'Updated.'
 		},
@@ -301,7 +296,7 @@ Their answer comes back to you.`,
 		postToCrew,
 		postToRoom,
 		bringToAdmin,
-		...(sitrepLines.length ? [updateSitrep] : []),
+		updateSitrep,
 		proposeChange,
 		readRoom,
 		addTodo,

@@ -3,7 +3,6 @@ import {
 	adminAuthor,
 	crew,
 	crewKeys,
-	crewList,
 	displayName,
 	endsWithEllipsis,
 	fixedRouting,
@@ -83,12 +82,36 @@ type CharterRow = {
 }
 
 type SitrepRow = {
-	agent: CrewKey
+	room: RoomKey
+	text: string
+	by: string
+	by_name: string
+	at: string
+}
+
+type SitrepTrackRow = {
+	agent: string
 	track: string
 	text: string
 	by: string
 	by_name: string
 	at: string
+}
+
+// The rooms that agent keys from before subject rooms kept their Situation
+// Report lines for, including keys that have since been renamed.
+const roomOfOldAgent: Record<string, RoomKey> = {
+	riker: 'command',
+	product: 'product',
+	geordi: 'product',
+	library: 'library',
+	hoshi: 'library',
+	growth: 'learnership',
+	guinan: 'learnership',
+}
+const renamedAgents: Record<string, CrewKey> = {
+	product: 'geordi',
+	growth: 'guinan',
 }
 const DISMISS = { id: 'dismiss', label: 'Dismissed' }
 
@@ -162,6 +185,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
+		this.setAsideSitrepTracks()
 		this.sql`
 			create table if not exists message (
 				id text primary key,
@@ -242,14 +266,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null
 			);
 			-- One line per crew member and track; Riker's line is his note.
+			-- One line per room; the Command room's line is Riker's note.
 			create table if not exists sitrep (
-				agent text not null,
-				track text not null,
+				room text primary key,
 				text text not null,
 				by text not null,
 				by_name text not null,
-				at text not null,
-				primary key (agent, track)
+				at text not null
 			);
 			-- Data's pre-meeting report for each week's brief.
 			create table if not exists meeting_report (
@@ -323,7 +346,43 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			update or replace cursor set place = 'room:command' where place = 'bridge'`
 		this.sql`
 			update or replace seen set place = 'room:command' where place = 'bridge'`
-		this.sql`delete from sitrep where agent in ('monitor', 'moderator')`
+		this.mergeSitrepTracks()
+	}
+
+	// The Situation Report kept a line per agent and track before it kept one
+	// per room. Runs before the tables are created, so the old table is out of
+	// the way when the new one is.
+	private setAsideSitrepTracks() {
+		const columns = this.sql<{ name: string }>`
+			select name from pragma_table_info('sitrep')`
+		if (columns.some((c) => c.name === 'track')) {
+			this.sql`alter table sitrep rename to sitrep_by_track`
+		}
+	}
+
+	// Each room's old lines become its one line, a track per line when it
+	// had more than one. Monitor's and Moderator's lines have no room and go.
+	private mergeSitrepTracks() {
+		const old = this.sql<{ name: string }>`
+			select name from sqlite_master
+			where type = 'table' and name = 'sitrep_by_track'`
+		if (!old.length) return
+		const rows = this.sql<SitrepTrackRow>`
+			select * from sitrep_by_track order by at`
+		for (const room of roomKeys) {
+			const own = rows.filter((row) => roomOfOldAgent[row.agent] === room)
+			const latest = own.at(-1)
+			if (!latest) continue
+			const text =
+				own.length === 1
+					? latest.text
+					: own.map((row) => `${row.track}: ${row.text}`).join('\n')
+			const renamed = renamedAgents[latest.by]
+			this.sql`
+				insert or replace into sitrep (room, text, by, by_name, at)
+				values (${room}, ${text}, ${renamed ?? latest.by}, ${renamed ? displayName(renamed) : latest.by_name}, ${latest.at})`
+		}
+		this.sql`drop table sitrep_by_track`
 	}
 
 	// Moves everything an agent owns, wrote or was routed to onto a new key.
@@ -354,8 +413,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this
 			.sql`update or replace run_message set agent = ${to} where agent = ${from}`
 		this.sql`update or replace cursor set agent = ${to} where agent = ${from}`
-		this.sql`update or replace sitrep set agent = ${to} where agent = ${from}`
-		this.sql`update sitrep set by = ${to}, by_name = ${name} where by = ${from}`
 	}
 
 	// ---- The timelines ------------------------------------------------------
@@ -1085,50 +1142,40 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	sitrep(): Array<SitrepLineType> {
 		const rows = this.sql<SitrepRow>`select * from sitrep`
-		return crewList.flatMap((member) =>
-			member.tracks.flatMap((track) => {
-				const row = rows.find(
-					(r) => r.agent === member.key && r.track === track
-				)
-				return row
-					? [
-							{
-								agent: member.key,
-								track,
-								text: row.text,
-								by: row.by,
-								byName: row.by_name,
-								at: row.at,
-							},
-						]
-					: []
-			})
-		)
+		return roomKeys.flatMap((room) => {
+			const row = rows.find((r) => r.room === room)
+			return row
+				? [
+						{
+							room,
+							text: row.text,
+							by: row.by,
+							byName: row.by_name,
+							at: row.at,
+						},
+					]
+				: []
+		})
 	}
 
-	// An empty text clears the line. False for a track the member does not
-	// keep, or a text over its limit.
+	// An empty text clears the line. False for a text over its limit.
 	setSitrep(input: {
-		agent: CrewKey
-		track: string
+		room: RoomKey
 		text: string
 		by: string
 		byName: string
 	}) {
 		const text = input.text.trim()
-		if (!crew[input.agent].tracks.includes(input.track)) return false
-		if (text.length > sitrepMax(input.agent)) return false
+		if (text.length > sitrepMax(input.room)) return false
 		if (text) {
 			this.sql`
-				insert into sitrep (agent, track, text, by, by_name, at)
-				values (${input.agent}, ${input.track}, ${text}, ${input.by}, ${input.byName}, ${now()})
-				on conflict (agent, track) do update set
+				insert into sitrep (room, text, by, by_name, at)
+				values (${input.room}, ${text}, ${input.by}, ${input.byName}, ${now()})
+				on conflict (room) do update set
 					text = excluded.text, by = excluded.by,
 					by_name = excluded.by_name, at = excluded.at`
 		} else {
-			this.sql`
-				delete from sitrep
-				where agent = ${input.agent} and track = ${input.track}`
+			this.sql`delete from sitrep where room = ${input.room}`
 		}
 		this.push({ type: 'sitrep' })
 		return true

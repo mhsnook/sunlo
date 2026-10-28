@@ -41,7 +41,7 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 **Common Knowledge**, a panel in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
 
-**The Situation Report**, beside the Common Room on a wide screen, says where each vertical stands now: one line per track, under Riker's note on the whole. Geordi keeps a Product line and an Engineering line, and Guinan a Growth line and a Retention line, so that a track that stalls shows. Every agent reads it after Common Knowledge. Each officer rewrites its own lines with `update_situation_report`, Riker may rewrite any of them, and you edit all of them in the panel.
+**The Situation Report**, beside the Common Room on a wide screen, says where each room's subject stands now: one line per room. The Command room's line is Riker's note on the whole. A room that covers more than one thing, such as product and engineering, says where each stands in its line, so that one that stalls shows. Every agent reads the report after Common Knowledge. The officers in a room rewrite its line with `update_situation_report`, Riker may rewrite any room's line, and you edit all of them in the panel or in each room log.
 
 **Voice.** Every compose bar has a mic: press it, talk, and press it again, and what you said lands in the draft for you to read before sending. The speaker button beside it turns on voice replies, which reads each new reply aloud in the agent's own voice as it arrives. Any agent message also has its own read-aloud button. The Worker does both with Workers AI: Deepgram Nova 3 for speech to text and Aura 2 for text to speech (`worker/voice.ts`).
 
@@ -60,7 +60,7 @@ The roster lives in `shared/crew.ts`: each room's key, and each officer's key (a
 
 In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
-The **room log** beside the thread holds each member's profile card, Situation Report lines, to-dos, what is open with you, and memory, and you can edit or prune the memory and the report lines there. The Command room's log also holds the charter, the weekly settings and Data's playbook.
+The **room log** beside the thread holds the room's line in the Situation Report, then each member's profile card, to-dos, what is open with you, and memory. You can edit the report line and edit or prune the memory there. The Command room's log also holds the charter, the weekly settings and Data's playbook.
 
 Every agent keeps one Flue conversation, `memory` (`CONVERSATION` in `worker/crew/room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. No agent reads another subject's room.
 

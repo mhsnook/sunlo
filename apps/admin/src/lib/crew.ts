@@ -101,11 +101,11 @@ export const sitrepQuery = () =>
 export function useSetSitrep() {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (input: { agent: CrewKey; track: string; text: string }) =>
-			adminFetch(
-				`crew/sitrep/${input.agent}/${encodeURIComponent(input.track)}`,
-				{ method: 'PUT', json: { text: input.text } }
-			),
+		mutationFn: (input: { room: RoomKey; text: string }) =>
+			adminFetch(`crew/sitrep/${input.room}`, {
+				method: 'PUT',
+				json: { text: input.text },
+			}),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: sitrepQuery().queryKey }),
 	})
