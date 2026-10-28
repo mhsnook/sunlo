@@ -3,7 +3,7 @@ import { isBlockKind } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { remarkCrew } from './remark-crew'
 import { useState } from 'react'
-import { Users, X } from 'lucide-react'
+import { Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -14,8 +14,11 @@ import {
 	type CardType,
 	type CrewKey,
 	type CrewMessageType,
+	type RoomKey,
 } from '../../../shared/crew'
-import { crewIcons, useAnswerCard } from '~/lib/crew'
+import { crewIcons, roomIcons, useAnswerCard } from '~/lib/crew'
+
+type AvatarSize = 'sm' | 'md' | 'lg'
 
 export function AgentAvatar({
 	agent,
@@ -23,10 +26,37 @@ export function AgentAvatar({
 	className,
 }: {
 	agent: CrewKey | 'crew'
-	size?: 'sm' | 'md' | 'lg'
+	size?: AvatarSize
 	className?: string
 }) {
-	const Icon = agent === 'crew' ? Users : crewIcons[agent]
+	return (
+		<IconAvatar
+			icon={agent === 'crew' ? Users : crewIcons[agent]}
+			size={size}
+			className={className}
+		/>
+	)
+}
+
+export function RoomAvatar({
+	room,
+	size = 'md',
+}: {
+	room: RoomKey
+	size?: AvatarSize
+}) {
+	return <IconAvatar icon={roomIcons[room]} size={size} />
+}
+
+function IconAvatar({
+	icon: Icon,
+	size,
+	className,
+}: {
+	icon: LucideIcon
+	size: AvatarSize
+	className?: string
+}) {
 	return (
 		<span
 			aria-hidden

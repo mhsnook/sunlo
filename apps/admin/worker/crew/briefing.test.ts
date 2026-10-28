@@ -38,7 +38,7 @@ const input = (
 describe('briefingText', () => {
 	it('names the Common Room and the agent’s own room', () => {
 		const text = briefingText(
-			input('product', {
+			input('geordi', {
 				unread: [
 					{
 						place: 'common',
@@ -68,14 +68,14 @@ describe('briefingText', () => {
 		)
 	})
 
-	it('briefs an advisor on the room it advises', () => {
+	it('briefs an associate on the room it works in', () => {
 		const text = briefingText(input('data'))
 		expect(text).toContain('## Cards in the Command room')
 		expect(text).toContain('## The Command room, latest messages')
 	})
 
 	it('marks a timeline with nothing new', () => {
-		const text = briefingText(input('product'))
+		const text = briefingText(input('geordi'))
 		expect(text).toContain(
 			'## The Common Room since your last run\n\n(nothing new)'
 		)
@@ -89,14 +89,14 @@ describe('briefingText', () => {
 			ref: null,
 		}
 		const text = briefingText(
-			input('product', {
+			input('geordi', {
 				cards: {
 					waiting: [
 						message({
 							body: 'Details',
 							place: 'room:product',
-							author: 'product',
-							authorName: 'Lt Product',
+							author: 'geordi',
+							authorName: 'Geordi',
 							card,
 						}),
 					],
@@ -112,7 +112,7 @@ describe('briefingText', () => {
 			})
 		)
 		expect(text).toContain(
-			'Waiting on the admin:\n- [decide, from Lt Product] Ship the onboarding fix?'
+			'Waiting on the admin:\n- [decide, from Geordi] Ship the onboarding fix?'
 		)
 		expect(text).toContain('Recently answered:\n- Hide the streak?: "Yes"')
 	})
@@ -138,6 +138,6 @@ describe('briefingText', () => {
 		expect(riker).toContain(
 			"The last weekly meeting was never. The admin's time zone is Europe/Lisbon."
 		)
-		expect(briefingText(input('product'))).not.toContain('## The charter')
+		expect(briefingText(input('geordi'))).not.toContain('## The charter')
 	})
 })

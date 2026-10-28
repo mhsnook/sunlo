@@ -41,28 +41,28 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 **Common Knowledge**, a panel in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
 
-**The Situation Report**, beside the Common Room on a wide screen, says where each vertical stands now: one line per track, under Riker's note on the whole. Product keeps a Product line and an Engineering line, and Learnership a Growth line and a Retention line, so that a track that stalls shows. Every agent reads it after Common Knowledge. Each lead rewrites its own lines with `update_situation_report`, Riker may rewrite any of them, and you edit all of them in the panel.
+**The Situation Report**, beside the Common Room on a wide screen, says where each vertical stands now: one line per track, under Riker's note on the whole. Geordi keeps a Product line and an Engineering line, and Guinan a Growth line and a Retention line, so that a track that stalls shows. Every agent reads it after Common Knowledge. Each officer rewrites its own lines with `update_situation_report`, Riker may rewrite any of them, and you edit all of them in the panel.
 
 **Voice.** Every compose bar has a mic: press it, talk, and press it again, and what you said lands in the draft for you to read before sending. The speaker button beside it turns on voice replies, which reads each new reply aloud in the agent's own voice as it arrives. Any agent message also has its own read-aloud button. The Worker does both with Workers AI: Deepgram Nova 3 for speech to text and Aura 2 for text to speech (`worker/voice.ts`).
 
 ### Rooms
 
-Each **lead** has a room of its own at `/room/<lead>`, where you talk with that lead and anything that needs you arrives as a card. A room can also have an **advisor**, a second, more thorough voice: Data advises Riker in the Command room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
+Each **room** is a subject, at `/room/<room>`, where you talk with the officers who work on it and anything that needs you arrives as a card. Its **principal** runs it and answers it first. A room can also have an **associate**, a second, more thorough voice that the principal can always call on: Data works with Riker in the Command room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
 
-| Room             | Lead             | Advisor | Job                  | Status                                                 |
-| ---------------- | ---------------- | ------- | -------------------- | ------------------------------------------------------ |
-| Command room     | Cmdr Riker       | Data    | First officer        | Runs: weekly brief on Sunday at 04:00, and when called |
-| Product room     | Lt Product       |         | Product manager      | Runs: daily at 07:00 UTC, and when called              |
-| Library room     | Lt Cmdr Library  |         | Learning content     | Planned                                                |
-| Learnership room | Prof Learnership |         | Growth and retention | Planned                                                |
+| Room             | Principal  | Associate | Job                  | Status                                                 |
+| ---------------- | ---------- | --------- | -------------------- | ------------------------------------------------------ |
+| Command room     | Cmdr Riker | Data      | First officer        | Runs: weekly brief on Sunday at 04:00, and when called |
+| Product room     | Geordi     |           | Product manager      | Runs: daily at 07:00 UTC, and when called              |
+| Library room     | Hoshi      |           | Learning content     | Planned                                                |
+| Learnership room | Guinan     |           | Growth and retention | Planned                                                |
 
-The roster lives in `shared/crew.ts`: each member's key (also its @mention handle), rank, role (`lead` or `advisor`) and, for an advisor, the room it sits in. A planned lead has a room, and what you write there waits until it starts.
+The roster lives in `shared/crew.ts`: each room's key, and each officer's key (also its @mention handle), rank, room and role (`principal` or `associate`). A room's key is a handle too: @product reaches whoever runs the Product room. A planned officer has a place in its room, and what you write there waits until it starts.
 
-In a room, what you write goes to the lead unless you @mention its advisor. A crew member from another room is not woken there: the lead takes the request to the Common Room, where everyone can see it. When a lead and its advisor talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
+In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
 The **room log** beside the thread holds each member's profile card, Situation Report lines, to-dos, what is open with you, and memory, and you can edit or prune the memory and the report lines there. The Command room's log also holds the charter, the weekly settings and Data's playbook.
 
-Every agent keeps one Flue conversation, `memory` (`CONVERSATION` in `worker/crew/room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. No agent reads another lead's room.
+Every agent keeps one Flue conversation, `memory` (`CONVERSATION` in `worker/crew/room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. No agent reads another subject's room.
 
 What needs you arrives in the room as a card:
 
@@ -70,13 +70,13 @@ What needs you arrives in the room as a card:
 - **Confirm**: the agent acted in your stead, on a reversible matter that a kept charter entry or an earlier answer of yours covers, and asks whether that was right.
 - **Escalate**: it needs more than the crew has, with a brief you could hand to a Claude Code session.
 - **Worth knowing**: nothing to answer.
-- **Change to the plan**: a change the lead proposes. "Do it" saves the decision to its memory and adds a to-do; "Not yet" saves that to memory.
+- **Change to the plan**: a change an officer proposes. "Do it" saves the decision to its memory and adds a to-do; "Not yet" saves that to memory.
 
 Every card can also be dismissed, with or without a line of feedback. The agent hears why, and feedback becomes one of its memories, so it learns what you do not want.
 
 ### The Command room: Riker and Data
 
-Riker is your proxy. He knows three things well: the **charter** (your principles and lessons, which you curate together), where the agents overlap or disagree, and the directives he has given each lead. Everything else he asks the expert for. Data argues from the evidence: he runs the database queries and takes more steps on a bigger model (`DATA_MODEL`). He also keeps a **playbook**: the metrics you like in each domain and how you like charts drawn, which he learns from your reactions.
+Riker is your proxy. He knows three things well: the **charter** (your principles and lessons, which you curate together), where the agents overlap or disagree, and the directives he has given the other rooms. Everything else he asks the expert for. Data argues from the evidence: he runs the database queries and takes more steps on a bigger model (`DATA_MODEL`). He also keeps a **playbook**: the metrics you like in each domain and how you like charts drawn, which he learns from your reactions.
 
 The Command room has three more kinds of card:
 
@@ -86,17 +86,17 @@ The Command room has three more kinds of card:
 
 Anything you want to add to an answer, write in the room: your answers, and the times you overrule Riker, are how the Command room learns you.
 
-**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the room log; Cloudflare crons are UTC only) and has Riker post the week's brief in the Command room. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the Command room begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the room. Riker holds directives for the other leads until you say the meeting is done: a Common Room post of his that @mentions another lead is refused while the meeting is in progress. Then he closes the meeting with minutes in the Common Room, followed by one directive per lead, with priorities and suggested edits, each marked as a command or a suggestion. The lead applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
+**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the room log; Cloudflare crons are UTC only) and has Riker post the week's brief in the Command room. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the Command room begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the room. Riker keeps a ledger of directives for the other rooms until you say the meeting is done; his prompt asks for this, and nothing in the code enforces it. Then he closes the meeting with minutes in the Common Room, followed by one directive to each room's principal, with priorities and suggested edits, each marked as a command or a suggestion. The officer applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
 
 ### Components in messages
 
-Any agent can put components in its markdown as a fenced block whose language names the component and whose body is JSON: `chart` (line, bar or area), `stats` (a row of headline numbers) and `table` (sortable, optionally filterable). The catalog and its schemas are in `shared/blocks.ts`, and `src/components/crew/blocks.tsx` draws them with the app's own components, in the Common Room and in every lead's room. It is the generative-UI pattern without MDX: an agent describes a component and the app decides how it looks, and no agent-written markup or code ever runs. Every tool that posts text refuses a block that does not parse and tells the agent what to fix, so a broken block never reaches you.
+Any agent can put components in its markdown as a fenced block whose language names the component and whose body is JSON: `chart` (line, bar or area), `stats` (a row of headline numbers) and `table` (sortable, optionally filterable). The catalog and its schemas are in `shared/blocks.ts`, and `src/components/crew/blocks.tsx` draws them with the app's own components, in the Common Room and in every subject's room. It is the generative-UI pattern without MDX: an agent describes a component and the app decides how it looks, and no agent-written markup or code ever runs. Every tool that posts text refuses a block that does not parse and tells the agent what to fix, so a broken block never reaches you.
 
 ### Where things live
 
-- **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueProductAgent`, bound as `FLUE_PRODUCT_AGENT`) and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
-- **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). The production room holds real data, so a schema change is an in-place migration in its constructor that is safe to run twice, never a new instance name. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Common Room and every lead's room, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, the weekly cycle and each room's count of open cards, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
-- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: Lt Product's daily run at 07:00 UTC, and Riker's brief.
+- **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueGeordiAgent`, bound as `FLUE_GEORDI_AGENT`), named after the agent's function, so renaming an agent is a `renamed_classes` migration in `wrangler.jsonc` and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
+- **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). The production room holds real data, so a schema change is an in-place migration in its constructor that is safe to run twice, never a new instance name. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Common Room and every subject's room, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, the weekly cycle and each room's count of open cards, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
+- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: Geordi's daily run at 07:00 UTC, and Riker's brief.
 
 ### How a message reaches an agent
 
@@ -110,7 +110,7 @@ While you type, the chip above the compose bar shows the first two rules as they
 
 The room logs every decision in `clef_decision`: what CLEF suggested, what the message did, your correction if you made one, and, for each agent the message woke, whether its run posted anything ("posted") or nothing ("silent"). The rows where you picked a place or corrected CLEF are its labels, and CLEF reads the latest 20 the next time it decides.
 
-A message that wakes an agent becomes a signal in its `memory` conversation: a `<common-room-message>` from the Common Room, or a `<room-message>` from its own room, and the agent answers where it was asked. CLEF decides for the Common Room only; in a lead's room, the lead answers unless you name its advisor.
+A message that wakes an agent becomes a signal in its `memory` conversation: a `<common-room-message>` from the Common Room, or a `<room-message>` from its own room, and the agent answers where it was asked. CLEF decides for the Common Room only; in a subject's room, the principal answers unless you name the associate.
 
 ### What an agent can do
 

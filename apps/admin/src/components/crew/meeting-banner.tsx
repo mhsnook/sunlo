@@ -13,7 +13,7 @@ export function MeetingBanner() {
 	const { data: room } = useQuery(roomQuery())
 	const { data: command } = useQuery(commandQuery())
 	const inCommand = useRouterState({
-		select: (state) => state.location.pathname === '/room/riker',
+		select: (state) => state.location.pathname === '/room/command',
 	})
 	if (inCommand || !room?.weekly.briefAt || !meetingDue(room.weekly)) {
 		return null
@@ -32,8 +32,8 @@ export function MeetingBanner() {
 			</span>
 			<Button size="sm" asChild>
 				<Link
-					to="/room/$lead"
-					params={{ lead: 'riker' }}
+					to="/room/$room"
+					params={{ room: 'command' }}
 					data-testid="crew-go-to-meeting"
 				>
 					{command?.meetingStartedAt

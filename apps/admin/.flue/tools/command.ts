@@ -1,10 +1,13 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
-import { leadKeys, type CrewKey } from '../../shared/crew'
+import { principalOf, roomKeys, type CrewKey } from '../../shared/crew'
 import { requestReport, roomFor, wake } from '../crew'
 import { assertBlocks, Text } from './posting'
 
-const otherLeads = leadKeys.filter((key) => key !== 'riker')
+// The officers who run the other rooms, as directive recipients.
+const otherPrincipals = roomKeys
+	.filter((room) => room !== 'command')
+	.map(principalOf)
 
 // The Command room's memory of the admin, which Riker and Data propose
 // entries for.
@@ -70,13 +73,13 @@ export function rikerTools() {
 	const closeMeeting = defineTool({
 		name: 'close_meeting',
 		description:
-			'End the weekly meeting with the admin, once they say it is done. Posts the minutes in the Common Room, then one message to each of the other leads with its directive: the priority in a sentence, and any suggested edits as a short list, each marked as a command or a suggestion.',
+			'End the weekly meeting with the admin, once they say it is done. Posts the minutes in the Common Room, then one message to the officer who runs each other room, with its directive: the priority in a sentence, and any suggested edits as a short list, each marked as a command or a suggestion.',
 		input: v.object({
 			minutes: v.pipe(Text, v.maxLength(6000)),
 			directives: v.optional(
 				v.array(
 					v.object({
-						lead: v.picklist(otherLeads),
+						to: v.picklist(otherPrincipals),
 						text: v.pipe(Text, v.maxLength(2000)),
 					})
 				),
@@ -141,7 +144,7 @@ export function dataTools() {
 							agent: 'riker',
 							body: `Data filed the pre-meeting report: "${data.title}". Read it in the thread and comment on what it means for the agenda.`,
 							messageId,
-							place: 'room:riker',
+							place: 'room:command',
 						},
 					],
 					'Data'

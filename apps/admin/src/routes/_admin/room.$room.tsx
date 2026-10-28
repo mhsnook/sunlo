@@ -10,11 +10,12 @@ import {
 	adminAuthor,
 	crew,
 	displayName,
-	isLeadKey,
+	isRoomKey,
 	placeOf,
+	principalOf,
 	roomMembers,
 	roomNames,
-	type LeadKey,
+	type RoomKey,
 } from '../../../shared/crew'
 import {
 	commandQuery,
@@ -24,69 +25,70 @@ import {
 	threadQuery,
 	workspaceQuery,
 } from '~/lib/crew'
-import { AgentAvatar } from '~/components/crew/crew-parts'
+import { RoomAvatar } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
-import { LeadRoomCompose } from '~/components/crew/lead-room-compose'
+import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
 import { RoomPanel } from '~/components/crew/room-panel'
 import { RoomTimeline } from '~/components/crew/room-timeline'
 
-export const Route = createFileRoute('/_admin/room/$lead')({
+export const Route = createFileRoute('/_admin/room/$room')({
 	params: {
-		parse: ({ lead }) => {
-			if (!isLeadKey(lead)) throw notFound()
-			return { lead }
+		parse: ({ room }) => {
+			if (!isRoomKey(room)) throw notFound()
+			return { room }
 		},
 	},
 	loader: ({ context, params }) =>
 		Promise.all([
-			context.queryClient.ensureQueryData(threadQuery(params.lead)),
+			context.queryClient.ensureQueryData(threadQuery(params.room)),
 			context.queryClient.ensureQueryData(roomQuery()),
-			...(params.lead === 'riker'
+			...(params.room === 'command'
 				? [context.queryClient.ensureQueryData(commandQuery())]
 				: []),
-			...roomMembers(params.lead).map((agent) =>
+			...roomMembers(params.room).map((agent) =>
 				context.queryClient.ensureQueryData(workspaceQuery(agent))
 			),
 		]),
 	onEnter: ({ context, params }) =>
-		void markSeen(context.queryClient, placeOf(params.lead), false),
+		void markSeen(context.queryClient, placeOf(params.room), false),
 	onLeave: ({ context, params }) =>
-		void markSeen(context.queryClient, placeOf(params.lead), true),
-	component: LeadRoomPage,
+		void markSeen(context.queryClient, placeOf(params.room), true),
+	component: SubjectRoomPage,
 })
 
-function LeadRoomPage() {
-	const { lead } = Route.useParams()
+function SubjectRoomPage() {
+	const { room } = Route.useParams()
 	// A new room is a new page: the "New since" line and the panel start over.
-	return <LeadRoom key={lead} lead={lead} />
+	return <SubjectRoom key={room} room={room} />
 }
 
-// A lead's room: one thread with the lead and its advisor, where everything
-// that needs the admin arrives as a card.
-function LeadRoom({ lead }: { lead: LeadKey }) {
+// One subject's room: a thread with the officer who runs it, and anyone who
+// works there with them, where everything that needs the admin arrives as a
+// card.
+function SubjectRoom({ room }: { room: RoomKey }) {
 	const { session } = Route.useRouteContext()
-	const { data: thread } = useSuspenseQuery(threadQuery(lead))
-	const { data: room } = useSuspenseQuery(roomQuery())
+	const { data: thread } = useSuspenseQuery(threadQuery(room))
+	const { data: crewRoom } = useSuspenseQuery(roomQuery())
 	const [newSince] = useState(thread.seenAt)
 	// The panel sits beside the thread on a wide screen and covers it on a phone.
 	const [panelOpen, setPanelOpen] = useState(
 		() => window.matchMedia('(min-width: 64rem)').matches
 	)
-	const members = roomMembers(lead)
-	const working = members.filter((key) => isWorking(room.statuses[key]))
+	const members = roomMembers(room)
+	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
 
 	return (
 		<div className="flex h-full min-h-0">
 			<section className="flex min-w-0 flex-1 flex-col">
 				<header className="flex items-center gap-3 border-b px-4 py-3">
 					<MobileSidebarButton />
-					<AgentAvatar agent={lead} />
+					<RoomAvatar room={room} />
 					<div className="me-auto min-w-0">
 						<h1 className="truncate leading-tight font-semibold">
-							{roomNames[lead]}
+							{roomNames[room]}
 						</h1>
 						<p className="text-muted-foreground truncate text-xs">
-							{members.map(displayName).join(', with ')}
+							{members.map(displayName).join(' and ')}
 						</p>
 					</div>
 					<Button
@@ -106,7 +108,7 @@ function LeadRoom({ lead }: { lead: LeadKey }) {
 							newSince={newSince}
 						/>
 					) : (
-						<EmptyThread lead={lead} />
+						<EmptyThread room={room} />
 					)}
 					{working.length > 0 && (
 						<MessageMarker
@@ -118,7 +120,7 @@ function LeadRoom({ lead }: { lead: LeadKey }) {
 						</MessageMarker>
 					)}
 				</MessageScroller>
-				<LeadRoomCompose lead={lead} weekly={room.weekly} />
+				<RoomThreadCompose room={room} weekly={crewRoom.weekly} />
 			</section>
 			{panelOpen && (
 				<div
@@ -127,28 +129,27 @@ function LeadRoom({ lead }: { lead: LeadKey }) {
 						'md:shrink-0'
 					)}
 				>
-					<RoomPanel lead={lead} onClose={() => setPanelOpen(false)} />
+					<RoomPanel room={room} onClose={() => setPanelOpen(false)} />
 				</div>
 			)}
 		</div>
 	)
 }
 
-function EmptyThread({ lead }: { lead: LeadKey }) {
-	const members = roomMembers(lead)
-	const advisors = members.filter((key) => key !== lead)
+function EmptyThread({ room }: { room: RoomKey }) {
+	const members = roomMembers(room)
+	const principal = principalOf(room)
+	const associates = members.filter((key) => key !== principal)
 	return (
 		<div className="mx-auto max-w-md space-y-3 px-4 pt-[15dvh] text-center">
-			<div className="flex justify-center gap-1">
-				{members.map((key) => (
-					<AgentAvatar key={key} agent={key} size="sm" />
-				))}
+			<div className="flex justify-center">
+				<RoomAvatar room={room} size="lg" />
 			</div>
-			<h2 className="text-xl font-semibold">The {roomNames[lead]}</h2>
+			<h2 className="text-xl font-semibold">The {roomNames[room]}</h2>
 			<p className="text-muted-foreground text-sm">
-				{crew[lead].active
-					? `${displayName(lead)} answers what you write here${advisors.length ? `; write ${advisors.map((key) => `@${key}`).join(' or ')} to ask ${advisors.map(displayName).join(' or ')}` : ''}. Anything that needs you arrives here as a card.`
-					: `${displayName(lead)} has not started yet. What you write here waits until it does.`}
+				{crew[principal].active
+					? `${displayName(principal)} answers what you write here${associates.length ? `; write ${associates.map((key) => `@${key}`).join(' or ')} to ask ${associates.map(displayName).join(' or ')}` : ''}. Anything that needs you arrives here as a card.`
+					: `${displayName(principal)} has not started yet. What you write here waits until they do.`}
 			</p>
 		</div>
 	)

@@ -15,14 +15,15 @@ import {
 	adminAuthor,
 	crew,
 	displayName,
-	leadKeys,
+	principalOf,
+	roomKeys,
 	roomMembers,
 	roomNames,
 	type CrewMessageType,
-	type LeadKey,
+	type RoomKey,
 } from '../../../shared/crew'
 import { isWorking, roomQuery, threadQuery } from '~/lib/crew'
-import { AdminAvatar, AgentAvatar } from './crew-parts'
+import { AdminAvatar, AgentAvatar, RoomAvatar } from './crew-parts'
 import { shortWhen } from '~/lib/format'
 
 // Zero until the admin first opens the timeline: a room they have never
@@ -68,11 +69,11 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 					target="crew"
 					onNavigate={onNavigate}
 				/>
-				{leadKeys.map((lead) => (
-					<LeadRoomItem
-						key={lead}
-						lead={lead}
-						here={pathname === `/room/${lead}`}
+				{roomKeys.map((room) => (
+					<SubjectRoomItem
+						key={room}
+						room={room}
+						here={pathname === `/room/${room}`}
 						myAuthor={myAuthor}
 						onNavigate={onNavigate}
 					/>
@@ -103,36 +104,36 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 	)
 }
 
-function LeadRoomItem({
-	lead,
+function SubjectRoomItem({
+	room,
 	here,
 	myAuthor,
 	onNavigate,
 }: {
-	lead: LeadKey
+	room: RoomKey
 	here: boolean
 	myAuthor: string
 	onNavigate?: () => void
 }) {
-	const { data: room } = useQuery(roomQuery())
-	const { data: thread } = useQuery(threadQuery(lead))
+	const { data: crewRoom } = useQuery(roomQuery())
+	const { data: thread } = useQuery(threadQuery(room))
 	const last = thread?.messages.at(-1)
-	const working = roomMembers(lead).filter((key) =>
-		isWorking(room?.statuses[key])
-	)
-	const active = crew[lead].active
+	const members = roomMembers(room)
+	const principal = principalOf(room)
+	const working = members.filter((key) => isWorking(crewRoom?.statuses[key]))
+	const active = crew[principal].active
 	return (
 		<SidebarItem
-			avatar={<AgentAvatar agent={lead} />}
-			name={roomNames[lead]}
+			avatar={<RoomAvatar room={room} />}
+			name={roomNames[room]}
 			preview={
 				working.length
 					? `${working.map(displayName).join(' and ')} working…`
 					: last
 						? previewOf(last, myAuthor)
 						: active
-							? roomMembers(lead).map(displayName).join(' and ')
-							: `${displayName(lead)} has not started yet`
+							? members.map(displayName).join(' and ')
+							: `${displayName(principal)} has not started yet`
 			}
 			when={last?.at}
 			unread={
@@ -140,9 +141,9 @@ function LeadRoomItem({
 					? 0
 					: unreadCount(thread.messages, thread.seenAt, myAuthor)
 			}
-			cards={room?.openCards?.[lead] ?? 0}
+			cards={crewRoom?.openCards?.[room] ?? 0}
 			dim={!active}
-			target={lead}
+			target={room}
 			onNavigate={onNavigate}
 		/>
 	)
@@ -167,7 +168,7 @@ function SidebarItem({
 	// Cards that wait on the admin.
 	cards: number
 	dim?: boolean
-	target: LeadKey | 'crew'
+	target: RoomKey | 'crew'
 	onNavigate?: () => void
 }) {
 	return (
@@ -175,7 +176,7 @@ function SidebarItem({
 			<Link
 				{...(target === 'crew'
 					? { to: '/' as const }
-					: { to: '/room/$lead' as const, params: { lead: target } })}
+					: { to: '/room/$room' as const, params: { room: target } })}
 				onClick={onNavigate}
 				data-testid="crew-sidebar-item"
 				data-key={target}

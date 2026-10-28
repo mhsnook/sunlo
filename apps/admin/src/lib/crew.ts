@@ -11,22 +11,26 @@ import {
 	Compass,
 	Cpu,
 	GraduationCap,
+	Languages,
 	Library,
+	Martini,
+	Rocket,
 	Star,
+	Wrench,
 	type LucideIcon,
 } from 'lucide-react'
 import {
 	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
-	leadOf,
+	roomOfPlace,
 	RoomSnapshotSchema,
 	RoomThreadSchema,
 	SitrepLineSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
-	type LeadKey,
+	type RoomKey,
 	type PlaceType,
 	type RoomEvent,
 	type RoomStateType,
@@ -38,6 +42,13 @@ import { accessToken } from './session'
 export const crewIcons: Record<CrewKey, LucideIcon> = {
 	riker: Star,
 	data: Cpu,
+	geordi: Wrench,
+	hoshi: Languages,
+	guinan: Martini,
+}
+
+export const roomIcons: Record<RoomKey, LucideIcon> = {
+	command: Rocket,
 	product: Compass,
 	library: Library,
 	learnership: GraduationCap,
@@ -60,12 +71,12 @@ export const workspaceQuery = (agent: CrewKey) =>
 		staleTime: Infinity,
 	})
 
-// One lead's room. The live socket keeps it current.
-export const threadQuery = (lead: LeadKey) =>
+// One subject's room. The live socket keeps it current.
+export const threadQuery = (room: RoomKey) =>
 	queryOptions({
-		queryKey: ['crew', 'thread', lead],
+		queryKey: ['crew', 'thread', room],
 		queryFn: async () =>
-			RoomThreadSchema.parse(await adminFetch(`crew/rooms/${lead}`)),
+			RoomThreadSchema.parse(await adminFetch(`crew/rooms/${room}`)),
 		staleTime: Infinity,
 	})
 
@@ -208,9 +219,9 @@ const upsert = (messages: Array<CrewMessageType>, message: CrewMessageType) => {
 
 // Into whichever timeline the message belongs to.
 function upsertMessage(queryClient: QueryClient, message: CrewMessageType) {
-	const lead = leadOf(message.place)
-	if (lead) {
-		queryClient.setQueryData(threadQuery(lead).queryKey, (thread) =>
+	const room = roomOfPlace(message.place)
+	if (room) {
+		queryClient.setQueryData(threadQuery(room).queryKey, (thread) =>
 			thread
 				? { ...thread, messages: upsert(thread.messages, message) }
 				: thread
@@ -236,12 +247,12 @@ export function usePostToRoom() {
 	})
 }
 
-export function usePostToLeadRoom(lead: LeadKey) {
+export function usePostToThread(room: RoomKey) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (body: string) =>
 			CrewMessageSchema.parse(
-				await adminFetch(`crew/rooms/${lead}/messages`, {
+				await adminFetch(`crew/rooms/${room}/messages`, {
 					method: 'POST',
 					json: { body },
 				})
@@ -310,9 +321,9 @@ export async function markSeen(
 	}
 	if (!leaving) return
 	const seenAt = new Date().toISOString()
-	const lead = leadOf(place)
-	if (lead) {
-		queryClient.setQueryData(threadQuery(lead).queryKey, (thread) =>
+	const room = roomOfPlace(place)
+	if (room) {
+		queryClient.setQueryData(threadQuery(room).queryKey, (thread) =>
 			thread ? { ...thread, seenAt } : thread
 		)
 	} else {

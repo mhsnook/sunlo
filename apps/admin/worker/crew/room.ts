@@ -8,11 +8,12 @@ import {
 	endsWithEllipsis,
 	fixedRouting,
 	isCrewKey,
-	leadKeys,
-	leadOf,
+	roomKeys,
+	roomOfPlace,
 	meetingDue,
 	mentionedCrew,
 	placeOf,
+	principalOf,
 	roomMembers,
 	roomOf,
 	sitrepMax,
@@ -24,7 +25,7 @@ import {
 	type CommonKnowledgeType,
 	type CrewKey,
 	type CrewMessageType,
-	type LeadKey,
+	type RoomKey,
 	type MemoryType,
 	type OpenItemType,
 	type PlaceType,
@@ -99,7 +100,7 @@ type Playbook = { kind: 'metric' | 'chart'; domain: string | null }
 // An agent's mention of an agent from another room wakes it, at most this
 // many times an hour, so two agents cannot keep waking each other.
 const AGENT_WAKES_PER_HOUR = 6
-// A lead and its advisor may talk back and forth this many turns in a row
+// A room's principal and associate may talk back and forth this many turns in a row
 // before the admin says something; a discussion longer than that waits.
 const ROOM_TURNS = 8
 const SNAPSHOT_MESSAGES = 200
@@ -109,8 +110,8 @@ const now = () => new Date().toISOString()
 // Done to-dos stay in view this long.
 const twoWeeksAgo = () => new Date(Date.now() - 14 * 86_400_000).toISOString()
 
-const noOpenCards = (): Record<LeadKey, number> => ({
-	riker: 0,
+const noOpenCards = (): Record<RoomKey, number> => ({
+	command: 0,
 	product: 0,
 	library: 0,
 	learnership: 0,
@@ -142,7 +143,7 @@ const toCharter = (row: CharterRow): CharterEntryType => ({
 	keptAt: row.kept_at,
 })
 
-// One instance, named ROOM, holds the Common Room and each lead's room,
+// One instance, named ROOM, holds the Common Room and each subject's room,
 // each agent's workspace (to-dos, memory, open items), the charter, CLEF's
 // decision log, and the admin's WebSockets. It is an Agents SDK Agent with
 // no model: browsers connect with useAgent, and its state (each agent's
@@ -171,7 +172,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				routing text,
 				card text,
 				answer text,
-				-- "room" for the Common Room, "room:<lead>" for a lead's room.
+				-- "room" for the Common Room, "room:<room key>" for a subject's room.
 				place text not null,
 				-- The message this one replies to in a side-thread. Unused so far.
 				parent text,
@@ -291,10 +292,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return Promise.resolve()
 	}
 
-	// The room before there was one room per lead: the Enterprise thread
-	// ("bridge"), cards from 1:1 chats ("dm"), and the agents Growth (now
-	// Learnership), Monitor and Moderator. Safe to run on every start: each
-	// step finds nothing to change once it has run.
+	// The room before there were subject rooms: the Enterprise thread
+	// ("bridge"), cards from 1:1 chats ("dm"), the agents Product (now
+	// Geordi) and Growth (now Guinan), and Monitor and Moderator, who are
+	// gone. Safe to run on every start: each step finds nothing to change
+	// once it has run.
 	private migrateToRooms() {
 		const columns = new Set(
 			this.sql<{ name: string }>`
@@ -306,7 +308,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		if (columns.has('conversation')) {
 			this.sql`alter table message drop column conversation`
 		}
-		this.sql`update message set place = 'room:riker' where place = 'bridge'`
+		this.renameAgent('product', 'geordi')
+		this.renameAgent('growth', 'guinan')
+		this.sql`update message set place = 'room:command' where place = 'bridge'`
 		const dmAuthors = this.sql<{ author: string }>`
 			select distinct author from message where place = 'dm'`
 		for (const { author } of dmAuthors) {
@@ -315,16 +319,43 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				update message set place = ${place}
 				where place = 'dm' and author = ${author}`
 		}
-		this
-			.sql`update or replace cursor set place = 'room:riker' where place = 'bridge'`
-		this
-			.sql`update or replace seen set place = 'room:riker' where place = 'bridge'`
-		this
-			.sql`update or replace sitrep set agent = 'learnership' where agent = 'growth'`
-		this.sql`update memory set agent = 'learnership' where agent = 'growth'`
-		this.sql`update todo set agent = 'learnership' where agent = 'growth'`
-		this.sql`update open_item set agent = 'learnership' where agent = 'growth'`
+		this.sql`
+			update or replace cursor set place = 'room:command' where place = 'bridge'`
+		this.sql`
+			update or replace seen set place = 'room:command' where place = 'bridge'`
 		this.sql`delete from sitrep where agent in ('monitor', 'moderator')`
+	}
+
+	// Moves everything an agent owns, wrote or was routed to onto a new key.
+	private renameAgent(from: string, to: CrewKey) {
+		const name = displayName(to)
+		const [oldKey, newKey] = [JSON.stringify(from), JSON.stringify(to)]
+		const quoted = `%${oldKey}%`
+		this.sql`
+			update message set author = ${to}, author_name = ${name}
+			where author = ${from}`
+		this.sql`
+			update message set
+				routing = replace(routing, ${oldKey}, ${newKey}),
+				corrected = replace(corrected, ${oldKey}, ${newKey})
+			where routing like ${quoted} or corrected like ${quoted}`
+		this.sql`
+			update clef_decision set
+				predicted = replace(predicted, ${oldKey}, ${newKey}),
+				final = replace(final, ${oldKey}, ${newKey}),
+				corrected = replace(corrected, ${oldKey}, ${newKey}),
+				outcomes = replace(outcomes, ${oldKey}, ${newKey})
+			where predicted like ${quoted} or final like ${quoted}
+				or corrected like ${quoted} or outcomes like ${quoted}`
+		this.sql`update todo set agent = ${to} where agent = ${from}`
+		this.sql`update memory set agent = ${to} where agent = ${from}`
+		this.sql`update open_item set agent = ${to} where agent = ${from}`
+		this.sql`update edit_log set agent = ${to} where agent = ${from}`
+		this
+			.sql`update or replace run_message set agent = ${to} where agent = ${from}`
+		this.sql`update or replace cursor set agent = ${to} where agent = ${from}`
+		this.sql`update or replace sitrep set agent = ${to} where agent = ${from}`
+		this.sql`update sitrep set by = ${to}, by_name = ${name} where by = ${from}`
 	}
 
 	// ---- The timelines ------------------------------------------------------
@@ -340,8 +371,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
-	thread(uid: string, lead: LeadKey): RoomThreadType {
-		const place = placeOf(lead)
+	thread(uid: string, room: RoomKey): RoomThreadType {
+		const place = placeOf(room)
 		return {
 			messages: this.latestRows(place, SNAPSHOT_MESSAGES).map(toMessage),
 			seenAt: this.seenAt(uid, place),
@@ -434,23 +465,23 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return { message, wake }
 	}
 
-	// The admin writing in a lead's room. It goes to the lead unless it names
-	// the room's advisor; a crew member from another room is not woken here,
-	// so the lead hears it and takes it to the Common Room. A trailing "..."
-	// waits for the next message, as in the Common Room.
+	// The admin writing in a subject's room. It goes to the principal unless
+	// it names the room's associate; a crew member from another room is not
+	// woken here, so the principal hears it and takes it to the Common Room.
+	// A trailing "..." waits for the next message, as in the Common Room.
 	postToRoom(input: {
 		uid: string
 		name: string
-		lead: LeadKey
+		room: RoomKey
 		body: string
 	}): { message: CrewMessageType; wake: Array<Wake> } {
-		const place = placeOf(input.lead)
+		const place = placeOf(input.room)
 		const author = adminAuthor(input.uid)
-		const members = roomMembers(input.lead)
+		const members = roomMembers(input.room)
 		const named = mentionedCrew(input.body).filter((key) =>
 			members.includes(key)
 		)
-		const awake = (named.length ? named : [input.lead]).filter(
+		const awake = (named.length ? named : [principalOf(input.room)]).filter(
 			(key) => crew[key].active
 		)
 		const routing: RoutingType = endsWithEllipsis(input.body)
@@ -524,8 +555,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// An agent posts in the Common Room or in its own room. Its @mentions wake
-	// agents there: in a lead's room only that room's members answer, and the
-	// lead carries anything for another room to the Common Room itself.
+	// agents there: in a subject's room only that room's members answer, and
+	// the principal carries anything for another room to the Common Room.
 	postFromAgent(input: {
 		agent: CrewKey
 		body: string
@@ -544,12 +575,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			this.push({ type: 'workspace', agent: input.agent })
 			this.openCardsChanged()
 		}
-		const lead = leadOf(input.place)
+		const placeRoom = roomOfPlace(input.place)
 		const reachable = mentionedCrew(input.body).filter(
 			(agent) =>
 				agent !== input.agent &&
 				crew[agent].active &&
-				(lead === null || roomOf(agent) === lead)
+				(placeRoom === null || roomOf(agent) === placeRoom)
 		)
 		const wake: Array<Wake> = []
 		for (const agent of reachable) {
@@ -673,8 +704,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				insert or ignore into run_message (agent, message_id)
 				values (${agent}, ${messageId})`
 		}
-		const lead = roomOf(agent)
-		const place = placeOf(lead)
+		const room = roomOf(agent)
+		const place = placeOf(room)
 		return briefingText({
 			now: now(),
 			agent,
@@ -686,7 +717,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				answered: this.answeredCards(place),
 			},
 			command:
-				lead === 'riker'
+				room === 'command'
 					? {
 							charter: this.charter(),
 							weekly: this.weekly(),
@@ -951,7 +982,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return {
 			...this.postToRoom({
 				...input,
-				lead: 'riker',
+				room: 'command',
 				body: "Let's have our weekly meeting.",
 			}),
 			needsReport: start.needsReport,
@@ -999,18 +1030,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return messageId
 	}
 
-	// Closes the meeting, then posts the minutes and each lead's directive in
+	// Closes the meeting, then posts the minutes and each principal's directive in
 	// the Common Room, in that order.
 	closeMeeting(input: {
 		minutes: string
-		directives: Array<{ lead: CrewKey; text: string }>
+		directives: Array<{ to: CrewKey; text: string }>
 	}): Array<Wake> {
 		this.setWeekly({ meetingAt: now() })
 		this.push({ type: 'command' })
 		const posts = [
 			`**Minutes of this week's meeting**\n\n${input.minutes}`,
 			...input.directives.map(
-				(directive) => `@${directive.lead} ${directive.text}`
+				(directive) => `@${directive.to} ${directive.text}`
 			),
 		]
 		return posts.flatMap(
@@ -1022,10 +1053,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					place: 'room',
 				}).wake
 		)
-	}
-
-	meetingInProgress() {
-		return this.meetingStartedAt() !== null
 	}
 
 	commonKnowledge(): Array<CommonKnowledgeType> {
@@ -1319,7 +1346,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		})
 	}
 
-	// Cards in one lead's room that wait on the admin's answer.
+	// Cards in one subject's room that wait on the admin's answer.
 	private openCards(place: PlaceType) {
 		return this.sql<MessageRow>`
 			select * from message
@@ -1336,7 +1363,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			limit 10`.map(toMessage)
 	}
 
-	private countOpenCards(): Record<LeadKey, number> {
+	private countOpenCards(): Record<RoomKey, number> {
 		const counts = noOpenCards()
 		const rows = this.sql<{ place: PlaceType; count: number }>`
 			select place, count(*) as count from message
@@ -1344,8 +1371,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				and json_array_length(card, '$.actions') > 0
 			group by place`
 		for (const row of rows) {
-			const lead = leadOf(row.place)
-			if (lead && leadKeys.includes(lead)) counts[lead] = row.count
+			const room = roomOfPlace(row.place)
+			if (room && roomKeys.includes(room)) counts[room] = row.count
 		}
 		return counts
 	}
@@ -1354,7 +1381,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.setState({ ...this.state, openCards: this.countOpenCards() })
 	}
 
-	// True while a lead and its advisor have spoken fewer than ROOM_TURNS
+	// True while a room's principal and associate have spoken fewer than ROOM_TURNS
 	// times in a row in this timeline since the admin last wrote there.
 	// Receipts are not turns.
 	private roomTurnLeft(place: PlaceType) {

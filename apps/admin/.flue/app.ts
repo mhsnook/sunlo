@@ -4,8 +4,8 @@ import {
 	adminAuthor,
 	crewKeys,
 	isCrewKey,
-	isLeadKey,
-	leadKeys,
+	isRoomKey,
+	roomKeys,
 	PlaceSchema,
 	RoutingSchema,
 	SITREP_NOTE_MAX,
@@ -156,23 +156,23 @@ api.patch(
 	}
 )
 
-const leadParam = validator('param', (value, c) =>
-	isLeadKey(value.lead)
-		? { lead: value.lead }
-		: c.json({ error: `Rooms are ${leadKeys.join(', ')}` }, 404)
+const roomParam = validator('param', (value, c) =>
+	isRoomKey(value.room)
+		? { room: value.room }
+		: c.json({ error: `Rooms are ${roomKeys.join(', ')}` }, 404)
 )
 
-api.get('/crew/rooms/:lead', leadParam, async (c) => {
+api.get('/crew/rooms/:room', roomParam, async (c) => {
 	return c.json(
 		await (
 			await roomFor()
-		).thread(c.get('admin').uid, c.req.valid('param').lead)
+		).thread(c.get('admin').uid, c.req.valid('param').room)
 	)
 })
 
 api.post(
-	'/crew/rooms/:lead/messages',
-	leadParam,
+	'/crew/rooms/:room/messages',
+	roomParam,
 	json(z.object({ body: Text }), 'Send { body }'),
 	async (c) => {
 		const admin = c.get('admin')
@@ -181,7 +181,7 @@ api.post(
 		).postToRoom({
 			uid: admin.uid,
 			name: admin.name,
-			lead: c.req.valid('param').lead,
+			room: c.req.valid('param').room,
 			body: c.req.valid('json').body,
 		})
 		await wake(wakes, admin.name)

@@ -151,8 +151,8 @@ function AuthorGroup({
 							<MessageAvatar className={cn(!last && 'invisible')}>
 								{agent ? (
 									<Link
-										to="/room/$lead"
-										params={{ lead: roomOf(agent) }}
+										to="/room/$room"
+										params={{ room: roomOf(agent) }}
 										aria-label={`${displayName(agent)}, in the ${roomNames[roomOf(agent)]}`}
 									>
 										<AgentAvatar agent={agent} size="sm" />

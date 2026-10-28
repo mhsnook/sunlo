@@ -9,9 +9,9 @@ type Speaker = NonNullable<Ai_Cf_Deepgram_Aura_2_En_Input['speaker']>
 const voices: Record<CrewKey, Speaker> = {
 	riker: 'orion',
 	data: 'arcas',
-	product: 'athena',
-	library: 'minerva',
-	learnership: 'phoebe',
+	geordi: 'apollo',
+	hoshi: 'minerva',
+	guinan: 'phoebe',
 }
 
 // Push-to-talk clips are seconds long; this only stops a runaway upload.

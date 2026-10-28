@@ -4,8 +4,6 @@ import {
 	crew,
 	crewKeys,
 	displayName,
-	isLeadKey,
-	mentionedCrew,
 	placeOf,
 	roomMembers,
 	roomNames,
@@ -42,10 +40,10 @@ const defaultActions: Record<
 // own room, bringing the admin cards, and keeping its workspace.
 export function crewTools(agent: CrewKey) {
 	const name = displayName(agent)
-	const lead = roomOf(agent)
-	const place = placeOf(lead)
-	const room = roomNames[lead]
-	const roommates = roomMembers(lead).filter((key) => key !== agent)
+	const ownRoom = roomOf(agent)
+	const place = placeOf(ownRoom)
+	const room = roomNames[ownRoom]
+	const roommates = roomMembers(ownRoom).filter((key) => key !== agent)
 
 	const postToCrew = defineTool({
 		name: 'post_to_common_room',
@@ -58,16 +56,6 @@ export function crewTools(agent: CrewKey) {
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.body)
-			const directive =
-				lead === 'riker' &&
-				mentionedCrew(data.body).some(
-					(key) => key !== 'riker' && isLeadKey(key)
-				)
-			if (directive && (await (await roomFor()).meetingInProgress())) {
-				throw new Error(
-					'Nothing was posted. The weekly meeting is in progress, so directives to the other leads wait: pass them to close_meeting, which posts them once the admin is done.'
-				)
-			}
 			const { message, wake: wakes } = await step.do('post', async () =>
 				(await roomFor()).postFromAgent({
 					agent,
@@ -117,7 +105,7 @@ export function crewTools(agent: CrewKey) {
 		name: 'bring_to_admin',
 		description: `Bring the admin a card in the ${room}: the short list they read instead of the whole Common Room. Kinds:
 - decide: you need their call, and the matter is on hold until they answer. Give 2 or 3 short options, or leave them out for Yes and No.
-- confirm: you already acted in their stead, and ask whether that was right. Only for reversible actions that ${lead === 'riker' ? 'a kept charter entry' : 'an earlier answer of theirs'} clearly covers.
+- confirm: you already acted in their stead, and ask whether that was right. Only for reversible actions that ${ownRoom === 'command' ? 'a kept charter entry' : 'an earlier answer of theirs'} clearly covers.
 - know: worth knowing, nothing to answer. One or two sentences.
 - escalate: it needs more than the crew has, such as an engineer or a Claude Code session. Write the body as a brief that a person could act on cold.
 Their answer comes back to you.`,

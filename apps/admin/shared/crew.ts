@@ -3,44 +3,47 @@ import { z } from 'zod'
 // The crew roster and the shapes the crew API sends. Imported by the Worker
 // (worker/, .flue/) and by the app (src/), so it holds no runtime-specific code.
 
-// Roster order, which is also the order the app lists the crew in.
-export const crewKeys = [
-	'riker',
-	'data',
+// Each room is a subject. Its principal answers it first, and may call on
+// an associate, a second, more thorough voice that works in the same room.
+export const roomKeys = [
+	'command',
 	'product',
 	'library',
 	'learnership',
 ] as const
+export type RoomKey = (typeof roomKeys)[number]
+
+export const roomNames: Record<RoomKey, string> = {
+	command: 'Command room',
+	product: 'Product room',
+	library: 'Library room',
+	learnership: 'Learnership room',
+}
+
+// Roster order, which is also the order the app lists the crew in.
+export const crewKeys = ['riker', 'data', 'geordi', 'hoshi', 'guinan'] as const
 export type CrewKey = (typeof crewKeys)[number]
 
-// Each lead has a room of its own. An advisor sits in a lead's room as a
-// second, more thorough voice, and has no room of its own.
-export const leadKeys = ['riker', 'product', 'library', 'learnership'] as const
-export type LeadKey = (typeof leadKeys)[number]
-
-type CrewMemberBase = {
+export type CrewMember = {
 	// Also the @mention handle, since a name can hold spaces.
 	key: CrewKey
 	name: string
 	// Before the name in the display name, as in "Cmdr Riker". Null for none.
 	rank: string | null
 	title: string
+	room: RoomKey
+	role: 'principal' | 'associate'
 	// Shown under the title, and read by CLEF to decide who a message is for.
 	looksAfter: Array<string>
 	// null for an agent that does not run on a schedule.
 	schedule: string | null
-	// A planned agent has a room but no agent behind it yet, so messages for
-	// it wait until it starts.
+	// A planned agent has a place in its room but no agent behind it yet, so
+	// messages for it wait until it starts.
 	active: boolean
 	// The lines this member keeps in the Situation Report, one per track.
-	// Empty for an advisor like Data, who serves every vertical.
+	// Empty for an associate like Data, who serves every vertical.
 	tracks: Array<string>
 }
-
-export type CrewMember =
-	| (CrewMemberBase & { role: 'lead' })
-	// `room` is the lead whose room the advisor sits in.
-	| (CrewMemberBase & { role: 'advisor'; room: LeadKey })
 
 export const crew: Record<CrewKey, CrewMember> = {
 	riker: {
@@ -48,7 +51,8 @@ export const crew: Record<CrewKey, CrewMember> = {
 		name: 'Riker',
 		rank: 'Cmdr',
 		title: 'First officer',
-		role: 'lead',
+		room: 'command',
+		role: 'principal',
 		looksAfter: [
 			"The admin's wishes, priorities and judgement, in the charter they keep together",
 			'Where agents overlap or disagree',
@@ -64,8 +68,8 @@ export const crew: Record<CrewKey, CrewMember> = {
 		name: 'Data',
 		rank: null,
 		title: 'Science officer',
-		role: 'advisor',
-		room: 'riker',
+		room: 'command',
+		role: 'associate',
 		looksAfter: [
 			'Questions that need numbers, careful analysis or several thinking steps',
 			'Charts and explorers built from the database',
@@ -75,12 +79,13 @@ export const crew: Record<CrewKey, CrewMember> = {
 		active: true,
 		tracks: [],
 	},
-	product: {
-		key: 'product',
-		name: 'Product',
-		rank: 'Lt',
+	geordi: {
+		key: 'geordi',
+		name: 'Geordi',
+		rank: null,
 		title: 'Product manager',
-		role: 'lead',
+		room: 'product',
+		role: 'principal',
 		looksAfter: [
 			'The product plan for the next six weeks',
 			'Retention, and how new people get started',
@@ -91,12 +96,13 @@ export const crew: Record<CrewKey, CrewMember> = {
 		active: true,
 		tracks: ['Product', 'Engineering'],
 	},
-	library: {
-		key: 'library',
-		name: 'Library',
-		rank: 'Lt Cmdr',
+	hoshi: {
+		key: 'hoshi',
+		name: 'Hoshi',
+		rank: null,
 		title: 'Learning content',
-		role: 'lead',
+		room: 'library',
+		role: 'principal',
 		looksAfter: [
 			'The phrase library: duplicates, near-duplicates and gaps',
 			'The phrase requests space, playlists and the template language',
@@ -109,12 +115,13 @@ export const crew: Record<CrewKey, CrewMember> = {
 		active: false,
 		tracks: ['Library'],
 	},
-	learnership: {
-		key: 'learnership',
-		name: 'Learnership',
-		rank: 'Prof',
+	guinan: {
+		key: 'guinan',
+		name: 'Guinan',
+		rank: null,
 		title: 'Growth and retention',
-		role: 'lead',
+		room: 'learnership',
+		role: 'principal',
 		looksAfter: ['Signups, invites and where new people come from'],
 		schedule: null,
 		active: false,
@@ -129,40 +136,32 @@ export const displayName = (agent: CrewKey) => {
 	return rank ? `${rank} ${name}` : name
 }
 
-export const isLeadKey = (value: string): value is LeadKey =>
-	(leadKeys as ReadonlyArray<string>).includes(value)
+export const isRoomKey = (value: string): value is RoomKey =>
+	(roomKeys as ReadonlyArray<string>).includes(value)
 
-// The room an agent talks in besides the Common Room: its own, or, for an
-// advisor, the room it advises.
-export const roomOf = (agent: CrewKey): LeadKey => {
-	const member = crew[agent]
-	return member.role === 'advisor' ? member.room : (member.key as LeadKey)
-}
+export const roomOf = (agent: CrewKey): RoomKey => crew[agent].room
 
-// The lead first, then its advisors.
-export const roomMembers = (lead: LeadKey): Array<CrewKey> =>
+// The principal first, then its associates.
+export const roomMembers = (room: RoomKey): Array<CrewKey> =>
 	crewKeys
-		.filter((key) => roomOf(key) === lead)
-		.toSorted((a, b) => (a === lead ? -1 : b === lead ? 1 : 0))
+		.filter((key) => crew[key].room === room)
+		.toSorted((a, b) =>
+			crew[a].role === crew[b].role ? 0 : crew[a].role === 'principal' ? -1 : 1
+		)
 
-export const roomNames: Record<LeadKey, string> = {
-	riker: 'Command room',
-	product: 'Product room',
-	library: 'Library room',
-	learnership: 'Learnership room',
-}
+export const principalOf = (room: RoomKey): CrewKey => roomMembers(room)[0]
 
-// Where a message lives: the Common Room, or one lead's room.
+// Where a message lives: the Common Room, or one subject's room.
 export const PlaceSchema = z.union([
 	z.literal('room'),
-	z.templateLiteral(['room:', z.enum(leadKeys)]),
+	z.templateLiteral(['room:', z.enum(roomKeys)]),
 ])
 export type PlaceType = z.infer<typeof PlaceSchema>
 
-export const placeOf = (lead: LeadKey): PlaceType => `room:${lead}`
-// The lead whose room a place is, or null for the Common Room.
-export const leadOf = (place: PlaceType): LeadKey | null =>
-	place === 'room' ? null : (place.slice('room:'.length) as LeadKey)
+export const placeOf = (room: RoomKey): PlaceType => `room:${room}`
+// The room a place is, or null for the Common Room.
+export const roomOfPlace = (place: PlaceType): RoomKey | null =>
+	place === 'room' ? null : (place.slice('room:'.length) as RoomKey)
 
 export const isCrewKey = (value: string): value is CrewKey =>
 	(crewKeys as ReadonlyArray<string>).includes(value)
@@ -170,13 +169,15 @@ export const isCrewKey = (value: string): value is CrewKey =>
 // A message's author: a crew key, or this for an admin.
 export const adminAuthor = (uid: string) => `admin:${uid}`
 
-// Every @name in the text that names a crew member, in roster order. The @
-// must start a word, so the domain of an email address is not a mention.
+// Every crew member the text @mentions, in roster order. A room's name is a
+// handle for its principal, so @product reaches Geordi. The @ must start a
+// word, so the domain of an email address is not a mention.
 export function mentionedCrew(text: string): Array<CrewKey> {
 	const names = new Set(
-		[...text.matchAll(/(?<![\w.])@([a-z]+)/gi)].map((match) =>
-			match[1].toLowerCase()
-		)
+		[...text.matchAll(/(?<![\w.])@([a-z]+)/gi)].map((match) => {
+			const name = match[1].toLowerCase()
+			return isRoomKey(name) ? principalOf(name) : name
+		})
 	)
 	return crewKeys.filter((key) => names.has(key))
 }
@@ -213,7 +214,7 @@ export type ActionType = z.infer<typeof ActionSchema>
 // Something an agent brings the admin, with the buttons they answer with.
 // - question: a question in the Common Room; change: a proposed change to
 //   the agent's plan
-// - In any lead's room: decide (on hold until the admin answers), confirm
+// - In any subject's room: decide (on hold until the admin answers), confirm
 //   (acted in their stead; was that right?), know (nothing to answer) and
 //   escalate (needs more than the crew has)
 // - In the Command room only: charter (a proposed charter entry, `ref`),
@@ -292,8 +293,8 @@ export const meetingDue = (weekly: WeeklyType) =>
 export const RoomStateSchema = z.object({
 	statuses: z.record(z.string(), AgentStatusSchema),
 	weekly: WeeklySchema,
-	// Cards in each lead's room waiting on the admin, for the sidebar.
-	openCards: z.record(z.enum(leadKeys), z.number()),
+	// Cards in each subject's room waiting on the admin, for the sidebar.
+	openCards: z.record(z.enum(roomKeys), z.number()),
 })
 export type RoomStateType = z.infer<typeof RoomStateSchema>
 
@@ -380,7 +381,7 @@ export const CharterEntrySchema = z.object({
 })
 export type CharterEntryType = z.infer<typeof CharterEntrySchema>
 
-// One lead's room: its latest messages, and when this admin last opened it.
+// One subject's room: its latest messages, and when this admin last opened it.
 export const RoomThreadSchema = z.object({
 	messages: z.array(CrewMessageSchema),
 	seenAt: z.string().nullable(),

@@ -31,6 +31,12 @@
 				"FlueProductAgent",
 			],
 		},
+		{
+			"tag": "v2",
+			"renamed_classes": [
+				{ "from": "FlueProductAgent", "to": "FlueGeordiAgent" },
+			],
+		},
 	],
 	// Hourly: Product's daily run at 07:00 UTC, and Riker's brief at Sunday
 	// 04:00 in the admin's time zone (.flue/cloudflare.ts).

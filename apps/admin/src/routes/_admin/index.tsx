@@ -149,10 +149,10 @@ function EmptyRoom() {
 			</div>
 			<h2 className="text-xl font-semibold">Common Room</h2>
 			<p className="text-muted-foreground text-sm">
-				The whole crew reads this room. Write @ and a name to ask someone. Each
-				lead brings what needs you to its own room, and Lt Product posts here
-				after its daily run. A message that ends in “...” waits for your next
-				one.
+				The whole crew reads this room. Write @ and a name to ask someone, or a
+				room's name to ask whoever runs it. Each subject has a room of its own,
+				where what needs you arrives. Geordi posts here after his daily run. A
+				message that ends in “...” waits for your next one.
 			</p>
 		</div>
 	)

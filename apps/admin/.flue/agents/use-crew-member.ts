@@ -12,6 +12,7 @@ import {
 	crew,
 	crewList,
 	displayName,
+	principalOf,
 	roomMembers,
 	roomNames,
 	roomOf,
@@ -38,7 +39,7 @@ export function useCrewMember(
 ) {
 	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
 	for (const tool of crewTools(agent)) useTool(tool)
-	if (roomOf(agent) === 'riker') {
+	if (roomOf(agent) === 'command') {
 		for (const tool of commandTools(agent)) useTool(tool)
 	}
 	const database = options.database ?? true
@@ -69,8 +70,15 @@ export function useCrewMember(
 }
 
 const rosterLine = (member: CrewMember) => {
-	const seat = `${member.role === 'advisor' ? 'advisor in' : 'lead of'} the ${roomNames[roomOf(member.key)]}`
-	return `- ${displayName(member.key)} (@${member.key}, ${member.title}, ${seat})${member.active ? '' : ', not started yet'}: ${member.looksAfter.join('; ')}`
+	const handles =
+		member.role === 'principal'
+			? `@${member.key} or @${member.room}`
+			: `@${member.key}`
+	const seat =
+		member.role === 'principal'
+			? `runs the ${roomNames[member.room]}`
+			: `works with ${displayName(principalOf(member.room))} in the ${roomNames[member.room]}`
+	return `- ${displayName(member.key)} (${handles}, ${member.title}, ${seat})${member.active ? '' : ', not started yet'}: ${member.looksAfter.join('; ')}`
 }
 
 const roommatesOf = (agent: CrewKey) =>
@@ -86,17 +94,17 @@ function crewInstructions(agent: CrewKey) {
 	const room = roomNames[roomOf(agent)]
 	const roommates = roommatesOf(agent)
 	const seat =
-		crew[agent].role === 'advisor'
-			? `You advise in the ${room}, beside ${roommates.join(' and ')}.`
+		crew[agent].role === 'associate'
+			? `You work with ${roommates.join(' and ')} in the ${room}: the room is answered first by ${roommates.join(' and ')}, who calls on you.`
 			: roommates.length
-				? `You lead the ${room}, with ${roommates.join(' and ')} as your advisor.`
-				: `You lead the ${room}.`
+				? `You run the ${room}, and you can call on ${roommates.join(' and ')}, who work${roommates.length === 1 ? 's' : ''} there with you.`
+				: `You run the ${room}.`
 	return `## The crew
 
-You are ${displayName(agent)}, one of the agents who help the admin, Sunlo's founder, run Sunlo. The whole crew shares one chat with the admin, the Common Room. Each lead also has a room of its own, where the admin talks with that lead and its advisor. ${seat} The others:
+You are ${displayName(agent)}, one of the agents who help the admin, Sunlo's founder, run Sunlo. The whole crew shares one chat with the admin, the Common Room. Each subject also has a room of its own, where the admin talks with the officer who runs it, and sometimes a second officer who works there too. ${seat} The others:
 ${others}
 
-To ask an agent something, @mention its handle, such as @data or @product. In a lead's room only that room's members answer, so ask anyone else in the Common Room, where everyone can see the request. An agent who has not started yet does not answer. Messages for it wait until it does, so @mention it only for something it should pick up later.
+To ask an agent something, @mention its handle, such as @data. A room's name reaches the officer who runs it, so @product reaches whoever runs the Product room. In a subject's room only that room's officers answer, so ask anyone else in the Common Room, where everyone can see the request. An agent who has not started yet does not answer. Messages for it wait until it does, so @mention it only for something it should pick up later.
 
 ## Common Knowledge and the Situation Report
 

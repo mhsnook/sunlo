@@ -4,7 +4,7 @@ import { deliver, roomFor } from './crew'
 export { CrewRoom } from '../worker/crew/room'
 
 export default {
-	// wrangler.jsonc `triggers.crons`: "0 * * * *". Product's daily run is at
+	// wrangler.jsonc `triggers.crons`: "0 * * * *". Geordi's daily run is at
 	// 07:00 UTC; Riker's brief is at Sunday 04:00 in the admin's time zone.
 	async scheduled(controller) {
 		const now = new Date(controller.scheduledTime)
@@ -12,7 +12,7 @@ export default {
 		const attributes = { scheduledAt: now.toISOString() }
 		if (now.getUTCHours() === 7) {
 			await deliver(
-				'product',
+				'geordi',
 				'schedule',
 				'Your daily run. Check what happened since your last run, and post if something matters for the plan.',
 				attributes

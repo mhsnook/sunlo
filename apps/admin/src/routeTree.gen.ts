@@ -13,7 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin/index'
 import { Route as AdminActivityRouteImport } from './routes/_admin/activity'
-import { Route as AdminRoomLeadRouteImport } from './routes/_admin/room.$lead'
+import { Route as AdminRoomRoomRouteImport } from './routes/_admin/room.$room'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -34,9 +34,9 @@ const AdminActivityRoute = AdminActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminRoomLeadRoute = AdminRoomLeadRouteImport.update({
-  id: '/room/$lead',
-  path: '/room/$lead',
+const AdminRoomRoomRoute = AdminRoomRoomRouteImport.update({
+  id: '/room/$room',
+  path: '/room/$room',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -44,13 +44,13 @@ export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
-  '/room/$lead': typeof AdminRoomLeadRoute
+  '/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
   '/': typeof AdminIndexRoute
-  '/room/$lead': typeof AdminRoomLeadRoute
+  '/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -58,20 +58,20 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_admin/activity': typeof AdminActivityRoute
   '/_admin/': typeof AdminIndexRoute
-  '/_admin/room/$lead': typeof AdminRoomLeadRoute
+  '/_admin/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/activity' | '/room/$lead'
+  fullPaths: '/' | '/login' | '/activity' | '/room/$room'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/activity' | '/' | '/room/$lead'
+  to: '/login' | '/activity' | '/' | '/room/$room'
   id:
     | '__root__'
     | '/_admin'
     | '/login'
     | '/_admin/activity'
     | '/_admin/'
-    | '/_admin/room/$lead'
+    | '/_admin/room/$room'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -109,11 +109,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminActivityRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/room/$lead': {
-      id: '/_admin/room/$lead'
-      path: '/room/$lead'
-      fullPath: '/room/$lead'
-      preLoaderRoute: typeof AdminRoomLeadRouteImport
+    '/_admin/room/$room': {
+      id: '/_admin/room/$room'
+      path: '/room/$room'
+      fullPath: '/room/$room'
+      preLoaderRoute: typeof AdminRoomRoomRouteImport
       parentRoute: typeof AdminRoute
     }
   }
@@ -122,13 +122,13 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  AdminRoomLeadRoute: typeof AdminRoomLeadRoute
+  AdminRoomRoomRoute: typeof AdminRoomRoomRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminActivityRoute: AdminActivityRoute,
   AdminIndexRoute: AdminIndexRoute,
-  AdminRoomLeadRoute: AdminRoomLeadRoute,
+  AdminRoomRoomRoute: AdminRoomRoomRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

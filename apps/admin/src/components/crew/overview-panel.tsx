@@ -60,8 +60,8 @@ export function OverviewPanel({ onClose }: { onClose: () => void }) {
 						<Activity className="size-4" /> No health checks yet
 					</p>
 					<p className="text-muted-foreground mt-1 text-xs">
-						Lt Product will report on the app, auth, the database and search
-						after each deploy, once it runs health checks.
+						Geordi will report on the app, auth, the database and search after
+						each deploy, once it runs health checks.
 					</p>
 				</section>
 				{overview.data ? (

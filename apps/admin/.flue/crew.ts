@@ -1,7 +1,7 @@
 import { dispatch, observe, type Agent } from '@flue/runtime'
 import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
-import { crewKeys, leadOf, type CrewKey } from '../shared/crew'
+import { crewKeys, roomOfPlace, type CrewKey } from '../shared/crew'
 import {
 	CONVERSATION,
 	ROOM,
@@ -9,7 +9,7 @@ import {
 	type Wake,
 } from '../worker/crew/room'
 import { Data } from './agents/data'
-import { Product } from './agents/product'
+import { Geordi } from './agents/geordi'
 import { Riker } from './agents/riker'
 
 export const roomFor = () =>
@@ -21,7 +21,7 @@ export const roomFor = () =>
 export const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 	riker: Riker,
 	data: Data,
-	product: Product,
+	geordi: Geordi,
 })
 
 // A run that fails or is aborted settles without useAgentFinish, so the room
@@ -50,7 +50,7 @@ export async function wake(wakes: Array<Wake>, from: string) {
 		wakes.map(({ agent, body, messageId, place }) =>
 			deliver(
 				agent,
-				leadOf(place) ? 'room.message' : 'common-room.message',
+				roomOfPlace(place) ? 'room.message' : 'common-room.message',
 				body,
 				{ from, messageId }
 			).catch((error: unknown) =>

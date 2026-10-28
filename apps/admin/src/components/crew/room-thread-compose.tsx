@@ -6,42 +6,44 @@ import { toastError } from '@/components/ui/sonner'
 import {
 	displayName,
 	meetingDue,
+	principalOf,
 	roomMembers,
-	type LeadKey,
+	type RoomKey,
 	type WeeklyType,
 } from '../../../shared/crew'
-import { commandQuery, usePostToLeadRoom, useStartMeeting } from '~/lib/crew'
+import { commandQuery, usePostToThread, useStartMeeting } from '~/lib/crew'
 import { VoiceControls } from './voice-controls'
 
-// The lead answers unless the message names the room's advisor. In the
-// Command room, while the weekly meeting is due and not yet started, one tap
-// starts it.
-export function LeadRoomCompose({
-	lead,
+// The officer who runs the room answers unless the message names someone
+// who works there with them. In the Command room, while the weekly meeting
+// is due and not yet started, one tap starts it.
+export function RoomThreadCompose({
+	room,
 	weekly,
 }: {
-	lead: LeadKey
+	room: RoomKey
 	weekly: WeeklyType
 }) {
 	const [draft, setDraft] = useState('')
-	const post = usePostToLeadRoom(lead)
+	const post = usePostToThread(room)
 	const send = (body: string) =>
 		post.mutate(body, {
 			onSuccess: () => setDraft(''),
 			onError: (error) => toastError(error.message),
 		})
-	const advisors = roomMembers(lead).filter((key) => key !== lead)
+	const principal = principalOf(room)
+	const associates = roomMembers(room).filter((key) => key !== principal)
 
 	return (
 		<div className="mx-auto w-full max-w-3xl space-y-2 px-4 pt-2 pb-3">
-			{lead === 'riker' && !draft && <StartMeeting weekly={weekly} />}
+			{room === 'command' && !draft && <StartMeeting weekly={weekly} />}
 			<ComposeBar
 				value={draft}
 				onValueChange={setDraft}
 				onSend={send}
 				busy={post.isPending}
 				startSlot={<VoiceControls setDraft={setDraft} />}
-				placeholder={`Message ${displayName(lead)}${advisors.map((key) => `, or @${key}`).join('')}`}
+				placeholder={`Message ${displayName(principal)}${associates.map((key) => `, or @${key}`).join('')}`}
 				inputTestId="room-compose-input"
 				sendTestId="room-compose-send"
 			/>

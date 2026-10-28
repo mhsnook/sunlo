@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button'
 import {
 	crew,
 	displayName,
+	principalOf,
 	roomMembers,
 	roomNames,
 	type CrewKey,
-	type LeadKey,
+	type RoomKey,
 } from '../../../shared/crew'
 import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
 import { CharterPanel } from './charter-panel'
@@ -16,21 +17,21 @@ import { MemoryList } from './memory-list'
 import { SitrepLine } from './sitrep-panel'
 import { Empty, Section, TodoList } from './workspace-parts'
 
-// Beside a lead's room: who sits in it, and each member's Situation Report
-// lines, to-dos, what is open with the admin, and memory. The Command room
-// also keeps the charter and the weekly settings here.
+// Beside a subject's room: who works there, and each officer's Situation
+// Report lines, to-dos, what is open with the admin, and memory. The Command
+// room also keeps the charter and the weekly settings here.
 export function RoomPanel({
-	lead,
+	room,
 	onClose,
 }: {
-	lead: LeadKey
+	room: RoomKey
 	onClose: () => void
 }) {
 	return (
 		<aside
-			aria-label={`About the ${roomNames[lead]}`}
+			aria-label={`About the ${roomNames[room]}`}
 			data-testid="room-panel"
-			data-key={lead}
+			data-key={room}
 			className="bg-background flex h-full w-full flex-col border-s md:w-96"
 		>
 			<div className="flex items-center gap-2 border-b px-4 py-3">
@@ -45,8 +46,8 @@ export function RoomPanel({
 				</Button>
 			</div>
 			<div className="flex-1 space-y-8 overflow-y-auto px-4 py-4">
-				{lead === 'riker' && <CharterPanel />}
-				{roomMembers(lead).map((agent) => (
+				{room === 'command' && <CharterPanel />}
+				{roomMembers(room).map((agent) => (
 					<MemberLog key={agent} agent={agent} />
 				))}
 			</div>
@@ -143,9 +144,9 @@ function ProfileCard({ agent }: { agent: CrewKey }) {
 				<div className="min-w-0">
 					<h3 className="font-semibold">
 						{name}
-						{member.role === 'advisor' && (
+						{member.role === 'associate' && (
 							<span className="text-muted-foreground ms-2 text-xs font-normal">
-								advisor
+								works with {displayName(principalOf(member.room))}
 							</span>
 						)}
 					</h3>
