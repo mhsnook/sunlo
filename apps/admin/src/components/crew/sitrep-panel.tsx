@@ -1,43 +1,27 @@
+import { Suspense } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { sitrepQuery, useSetSitrep } from '~/lib/crew'
-import { dayLabel } from '~/lib/format'
-import { CrewText } from './crew-parts'
-import { EditableEntry } from './editable-entry'
+import { Loader } from '@/components/ui/loader'
+import { SITREP } from '../../../shared/crew'
+import { documentsQuery } from '~/lib/crew'
+import { DocumentView } from './document-view'
+import { Empty } from './workspace-parts'
 import { SidePanel } from './side-panel'
 
-// Where Sunlo and each room stand now, in one document. Every agent reads it
-// at the top of every run; Riker and the admin write it.
+// Where Sunlo and each room stand now: the Command room's Situation Report,
+// which every agent reads at the top of every run. Riker and the admin write
+// it.
 export function SitrepPanel({ onClose }: { onClose: () => void }) {
-	const { data: sitrep } = useSuspenseQuery(sitrepQuery())
-	const save = useSetSitrep()
+	const { data: documents } = useSuspenseQuery(documentsQuery('command'))
+	const sitrep = documents.find((doc) => doc.name === SITREP)
 	return (
-		<SidePanel title="Situation Report" testId="sitrep" onClose={onClose}>
-			<EditableEntry
-				id="sitrep"
-				text={sitrep?.text ?? ''}
-				label="Situation Report"
-				busy={save.isPending}
-				onSave={(text) => save.mutateAsync(text)}
-				onDelete={sitrep ? () => save.mutateAsync('') : undefined}
-				deleteLabel="Clear the report"
-				rows={16}
-				className="bg-card rounded border p-3 text-sm"
-				testId="sitrep-text"
-			>
-				{sitrep ? (
-					<>
-						<CrewText text={sitrep.text} />
-						<span className="text-muted-foreground mt-2 block text-xs">
-							{sitrep.byName}, {dayLabel(sitrep.at)}
-						</span>
-					</>
-				) : (
-					<span className="text-muted-foreground">
-						Nobody has written it yet. Riker keeps it, and you can write it
-						here.
-					</span>
-				)}
-			</EditableEntry>
+		<SidePanel title={SITREP} testId="sitrep" onClose={onClose}>
+			{sitrep ? (
+				<Suspense fallback={<Loader className="mx-auto mt-10 opacity-50" />}>
+					<DocumentView id={sitrep.id} showName={false} />
+				</Suspense>
+			) : (
+				<Empty>The Command room has no Situation Report.</Empty>
+			)}
 		</SidePanel>
 	)
 }

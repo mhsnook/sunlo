@@ -6,7 +6,7 @@ interface CrewBlock {
 	type: 'crewBlock'
 	data: {
 		hName: 'figure'
-		hProperties: { dataBlock: BlockKind; dataSource: string }
+		hProperties: { dataBlock: BlockKind | 'mermaid'; dataSource: string }
 	}
 }
 
@@ -18,19 +18,20 @@ declare module 'mdast' {
 
 const mention = /(^|\s)(@[A-Za-z][\w-]*)/g
 
-// A fenced block in a component's language becomes a <figure> that CrewText
-// draws as that component, and an @mention in prose renders bold. Code is
-// never touched, so JSON in a block keeps its "@Data".
+// A fenced block in a component's language, or in mermaid, becomes a
+// <figure> that CrewText draws as that component, and an @mention in prose
+// renders bold. Code is never touched, so JSON in a block keeps its "@Data".
 export function remarkCrew() {
 	return (tree: Root) => {
 		visit(tree, 'code', (node, index, parent) => {
 			if (!parent || index === undefined) return
-			if (!node.lang || !isBlockKind(node.lang)) return
+			const lang = node.lang
+			if (!lang || (lang !== 'mermaid' && !isBlockKind(lang))) return
 			parent.children[index] = {
 				type: 'crewBlock',
 				data: {
 					hName: 'figure',
-					hProperties: { dataBlock: node.lang, dataSource: node.value },
+					hProperties: { dataBlock: lang, dataSource: node.value },
 				},
 			}
 		})

@@ -4,6 +4,7 @@ import {
 	displayName,
 	placeOf,
 	COMMON_ROOM,
+	roomKeys,
 	roommatesOf,
 	roomNames,
 	roomOf,
@@ -176,6 +177,59 @@ Their answer comes back to you.`,
 		},
 	})
 
+	const readDocument = defineTool({
+		name: 'read_document',
+		description: `Read a room's document: its current Markdown and its revision. Leave out \`room\` for the ${room}'s own documents, which your <crew-context> lists.`,
+		input: v.object({
+			name: v.pipe(Text, v.maxLength(80)),
+			room: v.optional(v.picklist(roomKeys)),
+		}),
+		annotations: { readOnlyHint: true },
+		async run({ data }) {
+			const read = await (
+				await roomFor()
+			).readDocument(data.room ?? ownRoom, data.name)
+			if (!read.ok) throw new Error(read.error)
+			const { document } = read
+			return {
+				output: {
+					name: document.name,
+					room: document.room,
+					revision: document.revision,
+					savedBy: document.byName,
+					savedAt: document.at,
+					markdown: document.text,
+				},
+			}
+		},
+	})
+
+	const writeDocument = defineTool({
+		name: 'write_document',
+		description: `Save a new revision of one of the ${room}'s documents, or start a new one. \`markdown\` is the whole document, not a change to it. \`baseRevision\` is the revision you read and changed, or 0 for a document nobody has written. If someone saved a newer revision since you read it, nothing is saved: read it again, put your change into the current text, and save from the new revision. \`summary\` is one line on what changed, shown in the document's history.`,
+		input: v.object({
+			name: v.pipe(Text, v.maxLength(80)),
+			markdown: Text,
+			baseRevision: v.pipe(Id, v.minValue(0)),
+			summary: v.pipe(Text, v.maxLength(140)),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.markdown, 'saved')
+			const saved = await step.do('save', async () =>
+				(await roomFor()).writeDocument({
+					agent,
+					name: data.name,
+					text: data.markdown,
+					baseRevision: data.baseRevision,
+					summary: data.summary,
+				})
+			)
+			if (!saved.ok) throw new Error(saved.error)
+			return { output: { revision: saved.revision } }
+		},
+	})
+
 	const addTodo = defineTool({
 		name: 'add_todo',
 		description:
@@ -272,6 +326,8 @@ Their answer comes back to you.`,
 		bringToAdmin,
 		proposeChange,
 		readRoom,
+		readDocument,
+		writeDocument,
 		addTodo,
 		updateTodo,
 		remember,

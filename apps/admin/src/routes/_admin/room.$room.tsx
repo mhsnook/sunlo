@@ -18,6 +18,7 @@ import {
 } from '../../../shared/crew'
 import {
 	commandQuery,
+	documentsQuery,
 	isWorking,
 	markSeen,
 	roomQuery,
@@ -42,6 +43,7 @@ export const Route = createFileRoute('/_admin/room/$room')({
 		Promise.all([
 			context.queryClient.ensureQueryData(threadQuery(params.room)),
 			context.queryClient.ensureQueryData(roomQuery()),
+			context.queryClient.ensureQueryData(documentsQuery(params.room)),
 			...(params.room === 'command'
 				? [context.queryClient.ensureQueryData(commandQuery())]
 				: []),

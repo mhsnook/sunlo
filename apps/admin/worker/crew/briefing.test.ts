@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { CrewKey, CrewMessageType } from '../../shared/crew'
-import { briefingText, sitrepText, type BriefingInput } from './briefing'
+import {
+	briefingText,
+	documentsText,
+	sitrepText,
+	type BriefingInput,
+} from './briefing'
 
 const message = (
 	over: Partial<CrewMessageType> & Pick<CrewMessageType, 'body' | 'place'>
@@ -25,6 +30,7 @@ const input = (
 	agent,
 	commonKnowledge: [{ id: 1, text: 'Call the admin Sam.', at: '' }],
 	sitrep: null,
+	documents: [],
 	workspace: { agent, todos: [], memory: [], openItems: [], cards: [] },
 	cards: { waiting: [], answered: [] },
 	command: null,
@@ -62,7 +68,7 @@ describe('briefingText', () => {
 			'## The Product room, latest messages\n\n[2026-10-28 09:15 UTC] sam: How is onboarding?'
 		)
 		expect(text.indexOf('## The Common Room')).toBeLessThan(
-			text.indexOf('## The Product room')
+			text.indexOf('## The Product room, latest')
 		)
 	})
 
@@ -141,19 +147,56 @@ describe('briefingText', () => {
 })
 
 describe('sitrepText', () => {
-	it('gives the whole report, then who last wrote it', () => {
+	it('gives the whole report, then its revision and who saved it', () => {
 		const text = sitrepText({
 			text: 'Retention first this month.\n\n**Product room**: onboarding.',
-			by: 'riker',
+			revision: 4,
 			byName: 'Cmdr Riker',
 			at: '2026-10-27T14:02:00Z',
 		})
 		expect(text).toBe(
-			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Last written by Cmdr Riker, 2026-10-27 14:02 UTC.)'
+			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Revision 4, saved by Cmdr Riker, 2026-10-27 14:02 UTC.)'
 		)
 	})
 
 	it('says so when nobody has written it', () => {
 		expect(sitrepText(null)).toContain('(Nobody has written it yet.)')
+		expect(
+			sitrepText({ text: '', revision: 0, byName: null, at: null })
+		).toContain('(Nobody has written it yet.)')
+	})
+})
+
+describe('documentsText', () => {
+	it('lists each document without its text', () => {
+		const text = documentsText('Product room', [
+			{
+				id: 3,
+				room: 'product',
+				name: 'Roadmap',
+				revision: 2,
+				byName: 'Geordi',
+				at: '2026-10-28T07:01:00Z',
+			},
+			{
+				id: 4,
+				room: 'product',
+				name: 'Launch checklist',
+				revision: 0,
+				byName: null,
+				at: null,
+			},
+		])
+		expect(text).toBe(
+			"## The Product room's documents\n\n- Roadmap: revision 2, saved by Geordi, 2026-10-28 07:01 UTC\n- Launch checklist: not written yet"
+		)
+	})
+
+	it('comes before the room’s cards in the briefing', () => {
+		const text = briefingText(input('geordi'))
+		expect(text).toContain("## The Product room's documents\n\n(none yet)")
+		expect(text.indexOf("## The Product room's documents")).toBeLessThan(
+			text.indexOf('## Cards in the Product room')
+		)
 	})
 })

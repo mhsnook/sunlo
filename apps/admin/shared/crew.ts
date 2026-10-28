@@ -362,21 +362,48 @@ export type CommonKnowledgeType = z.infer<typeof CommonKnowledgeSchema>
 // The longest text the voice model reads in one request.
 export const MAX_SPEECH_CHARS = 2000
 
-// Every agent reads the whole report at the top of every run.
+// The Situation Report is the Command room's document on where Sunlo and each
+// room stand now. Riker and the admin write it, and every agent reads the
+// whole of it at the top of every run, so it has a cap of its own.
+export const SITREP = 'Situation Report'
 export const SITREP_MAX = 4000
+export const DOCUMENT_MAX = 40_000
+export const documentMax = (name: string) =>
+	name === SITREP ? SITREP_MAX : DOCUMENT_MAX
 
-// The Situation Report: one Markdown document on where Sunlo and each room
-// stand now. Riker and the admin write it; every agent reads it.
-export const SitrepSchema = z
-	.object({
-		text: z.string(),
-		// A crew key, or "admin:<uid>".
-		by: z.string(),
-		byName: z.string(),
-		at: z.string(),
-	})
-	.nullable()
-export type SitrepType = z.infer<typeof SitrepSchema>
+// A room's documents, as its room log lists them. Revision 0 is a document
+// nobody has written yet.
+export const DocumentSummarySchema = z.object({
+	id: z.number(),
+	room: z.enum(roomKeys),
+	name: z.string(),
+	revision: z.number(),
+	// Null at revision 0.
+	byName: z.string().nullable(),
+	at: z.string().nullable(),
+})
+export type DocumentSummaryType = z.infer<typeof DocumentSummarySchema>
+
+export const RevisionSchema = z.object({
+	revision: z.number(),
+	// One line on what changed. Empty when the admin left it out.
+	summary: z.string(),
+	// A crew key, or "admin:<uid>".
+	by: z.string(),
+	byName: z.string(),
+	at: z.string(),
+})
+export type RevisionType = z.infer<typeof RevisionSchema>
+
+export const RevisionTextSchema = RevisionSchema.extend({ text: z.string() })
+export type RevisionTextType = z.infer<typeof RevisionTextSchema>
+
+// A document's current text, and its revisions, newest first.
+export const DocumentSchema = DocumentSummarySchema.extend({
+	text: z.string(),
+	revisions: z.array(RevisionSchema),
+})
+export type DocumentType = z.infer<typeof DocumentSchema>
 
 export const OpenItemSchema = z.object({
 	id: z.number(),
@@ -432,4 +459,4 @@ export type RoomEvent =
 	// The charter or the weekly meeting changed.
 	| { type: 'command' }
 	| { type: 'common-knowledge' }
-	| { type: 'sitrep' }
+	| { type: 'document'; room: RoomKey; id: number }

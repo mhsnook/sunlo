@@ -4,13 +4,14 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { BarChart3, Brain, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import { adminAuthor, crewKeys, crewList } from '../../../shared/crew'
+import { adminAuthor, crewKeys, crewList, SITREP } from '../../../shared/crew'
 import {
 	commonKnowledgeQuery,
+	documentQuery,
+	documentsQuery,
 	isWorking,
 	markSeen,
 	roomQuery,
-	sitrepQuery,
 } from '~/lib/crew'
 import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
@@ -26,7 +27,15 @@ export const Route = createFileRoute('/_admin/')({
 		Promise.all([
 			context.queryClient.ensureQueryData(roomQuery()),
 			context.queryClient.ensureQueryData(commonKnowledgeQuery()),
-			context.queryClient.ensureQueryData(sitrepQuery()),
+			context.queryClient
+				.ensureQueryData(documentsQuery('command'))
+				.then((documents) => {
+					const sitrep = documents.find((doc) => doc.name === SITREP)
+					return (
+						sitrep &&
+						context.queryClient.ensureQueryData(documentQuery(sitrep.id))
+					)
+				}),
 		]),
 	// Marks the room read on arrival and again on leaving, so messages that
 	// arrive while the admin is here do not count as unread afterwards.

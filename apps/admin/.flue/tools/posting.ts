@@ -9,10 +9,14 @@ export const toActions = (options: Array<string>) =>
 	options.map((label, index) => ({ id: `option-${index + 1}`, label }))
 
 // Throwing from a tool hands the message to the model, which fixes the
-// block and calls the tool again; nothing is posted with a broken block.
-export function assertBlocks(text: string) {
+// block and calls the tool again; nothing is posted or saved with a broken
+// block.
+export function assertBlocks(
+	text: string,
+	outcome: 'posted' | 'saved' = 'posted'
+) {
 	const errors = blockErrors(text)
 	if (errors.length) {
-		throw new Error(`Nothing was posted. ${errors.join(' ')}`)
+		throw new Error(`Nothing was ${outcome}. ${errors.join(' ')}`)
 	}
 }

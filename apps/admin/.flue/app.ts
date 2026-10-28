@@ -8,8 +8,8 @@ import {
 	roomKeys,
 	PlaceSchema,
 	RoutingSchema,
-	SITREP_MAX,
 } from '../shared/crew'
+import { restoreSummary } from '../worker/crew/documents'
 import { createApi } from '../worker/api'
 import { deliver, requestReport, roomFor, wake } from './crew'
 
@@ -246,25 +246,80 @@ api.patch(
 	}
 )
 
-api.get('/crew/sitrep', async (c) => {
-	return c.json(await (await roomFor()).sitrep())
+api.get('/crew/rooms/:room/documents', roomParam, async (c) => {
+	return c.json(await (await roomFor()).documents(c.req.valid('param').room))
 })
 
+api.get(
+	'/crew/documents/:id',
+	numericId('No document with that id'),
+	async (c) => {
+		const document = await (await roomFor()).document(c.req.valid('param').id)
+		return document
+			? c.json(document)
+			: c.json({ error: 'No document with that id' }, 404)
+	}
+)
+
+api.get(
+	'/crew/documents/:id/revisions/:revision',
+	numericId('No document with that id'),
+	async (c) => {
+		const revision = await (
+			await roomFor()
+		).revision(c.req.valid('param').id, Number(c.req.param('revision')))
+		return revision
+			? c.json(revision)
+			: c.json({ error: 'No revision with that number' }, 404)
+	}
+)
+
+// A save names the revision it started from, and answers 409 if the
+// document has moved on. `restores` saves that older revision's text.
 api.put(
-	'/crew/sitrep',
-	json(z.object({ text: z.string().max(SITREP_MAX) }), 'Send { text }'),
+	'/crew/documents/:id',
+	numericId('No document with that id'),
+	json(
+		z.union([
+			z.object({
+				text: z.string().trim().min(1),
+				summary: z.string().trim().max(140).default(''),
+				baseRevision: z.number().int().min(0),
+			}),
+			z.object({
+				restores: z.number().int().min(1),
+				baseRevision: z.number().int().min(0),
+			}),
+		]),
+		'Send { text, summary?, baseRevision } or { restores, baseRevision }'
+	),
 	async (c) => {
 		const admin = c.get('admin')
-		const ok = await (
-			await roomFor()
-		).setSitrep({
-			text: c.req.valid('json').text,
+		const room = await roomFor()
+		const { id } = c.req.valid('param')
+		const input = c.req.valid('json')
+		let text: string
+		let summary: string
+		if ('restores' in input) {
+			const old = await room.revision(id, input.restores)
+			if (!old) return c.json({ error: 'No revision with that number' }, 404)
+			text = old.text
+			summary = restoreSummary(input.restores)
+		} else {
+			text = input.text
+			summary = input.summary
+		}
+		const saved = await room.editDocument({
+			id,
+			text,
+			summary,
+			baseRevision: input.baseRevision,
 			by: adminAuthor(admin.uid),
 			byName: admin.name,
 		})
-		return ok
-			? c.json({ ok })
-			: c.json({ error: 'The report is too long' }, 400)
+		return saved.ok
+			? c.json({ revision: saved.revision })
+			: c.json({ error: saved.error }, saved.status)
 	}
 )
 

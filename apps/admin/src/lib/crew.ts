@@ -23,13 +23,16 @@ import {
 	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
+	DocumentSchema,
+	DocumentSummarySchema,
+	RevisionTextSchema,
 	roomOfPlace,
 	RoomSnapshotSchema,
 	RoomThreadSchema,
-	SitrepSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
+	type DocumentSummaryType,
 	type RoomKey,
 	type PlaceType,
 	type RoomEvent,
@@ -89,23 +92,67 @@ export const commandQuery = () =>
 		staleTime: Infinity,
 	})
 
-// Where each vertical stands. The live socket keeps it current.
-export const sitrepQuery = () =>
+// A room's documents, without their text. The live socket keeps this and
+// the two document queries below current.
+export const documentsQuery = (room: RoomKey) =>
 	queryOptions({
-		queryKey: ['crew', 'sitrep'],
-		queryFn: async () => SitrepSchema.parse(await adminFetch('crew/sitrep')),
+		queryKey: ['crew', 'documents', room],
+		queryFn: async () =>
+			z
+				.array(DocumentSummarySchema)
+				.parse(await adminFetch(`crew/rooms/${room}/documents`)),
 		staleTime: Infinity,
 	})
 
-export function useSetSitrep() {
+export const documentQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'document', id],
+		queryFn: async () =>
+			DocumentSchema.parse(await adminFetch(`crew/documents/${id}`)),
+		staleTime: Infinity,
+	})
+
+// A saved revision never changes.
+export const revisionQuery = (id: number, revision: number) =>
+	queryOptions({
+		queryKey: ['crew', 'revision', id, revision],
+		queryFn: async () =>
+			RevisionTextSchema.parse(
+				await adminFetch(`crew/documents/${id}/revisions/${revision}`)
+			),
+		staleTime: Infinity,
+	})
+
+// Refused with the server's message when the document has a newer revision
+// than `baseRevision`.
+export function useSaveDocument(document: DocumentSummaryType) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (text: string) =>
-			adminFetch('crew/sitrep', { method: 'PUT', json: { text } }),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: sitrepQuery().queryKey }),
+		mutationFn: (
+			input:
+				| { text: string; summary: string; baseRevision: number }
+				| { restores: number; baseRevision: number }
+		) =>
+			adminFetch(`crew/documents/${document.id}`, {
+				method: 'PUT',
+				json: input,
+			}),
+		onSuccess: () => documentChanged(queryClient, document),
 	})
 }
+
+const documentChanged = (
+	queryClient: QueryClient,
+	document: { room: RoomKey; id: number }
+) =>
+	Promise.all([
+		queryClient.invalidateQueries({
+			queryKey: documentsQuery(document.room).queryKey,
+		}),
+		queryClient.invalidateQueries({
+			queryKey: documentQuery(document.id).queryKey,
+		}),
+	])
 
 // What every agent knows about the admin. The live socket keeps it current.
 export const commonKnowledgeQuery = () =>
@@ -357,6 +404,8 @@ export function useCrewLive() {
 					['crew', 'thread'],
 					commandQuery().queryKey,
 					['crew', 'workspace'],
+					['crew', 'documents'],
+					['crew', 'document'],
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
 				}
@@ -376,11 +425,7 @@ export function useCrewLive() {
 					queryKey: commonKnowledgeQuery().queryKey,
 				})
 			}
-			if (event.type === 'sitrep') {
-				void queryClient.invalidateQueries({
-					queryKey: sitrepQuery().queryKey,
-				})
-			}
+			if (event.type === 'document') void documentChanged(queryClient, event)
 			if (event.type === 'command') {
 				void queryClient.invalidateQueries({
 					queryKey: commandQuery().queryKey,
