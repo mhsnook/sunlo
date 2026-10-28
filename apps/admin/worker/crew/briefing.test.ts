@@ -3,6 +3,7 @@ import type { CrewKey, CrewMessageType } from '../../shared/crew'
 import {
 	briefingText,
 	documentsText,
+	githubText,
 	sitrepText,
 	type BriefingInput,
 } from './briefing'
@@ -31,6 +32,7 @@ const input = (
 	commonKnowledge: [{ id: 1, text: 'Call the admin Sam.', at: '' }],
 	sitrep: null,
 	documents: [],
+	github: null,
 	workspace: { agent, todos: [], memory: [], openItems: [], cards: [] },
 	cards: { waiting: [], answered: [] },
 	command: null,
@@ -198,5 +200,28 @@ describe('documentsText', () => {
 		expect(text.indexOf("## The Product room's documents")).toBeLessThan(
 			text.indexOf('## Cards in the Product room')
 		)
+	})
+})
+
+describe('githubText', () => {
+	it('tells an agent with GitHub tools whether it has them', () => {
+		expect(githubText({ access: 'write', connected: true })).toContain(
+			"you keep mhsnook/sunlo's milestones and epics"
+		)
+		expect(githubText({ access: 'write', connected: false })).toContain(
+			'you have no GitHub tools'
+		)
+		expect(githubText({ access: 'read', connected: true })).toContain(
+			'read-only'
+		)
+	})
+
+	it('leaves the section out for an agent without GitHub tools', () => {
+		expect(briefingText(input('command-2'))).not.toContain('## GitHub')
+		expect(
+			briefingText(
+				input('product-1', { github: { access: 'write', connected: false } })
+			)
+		).toContain('## GitHub')
 	})
 })

@@ -33,6 +33,7 @@ import {
 	type CrewKey,
 	type CrewMessageType,
 	type DocumentSummaryType,
+	type GithubDraftType,
 	type RoomKey,
 	type PlaceType,
 	type RoomEvent,
@@ -347,6 +348,20 @@ export function useCorrectRouting() {
 				})
 			),
 		onSuccess: (message) => upsertMessage(queryClient, message),
+	})
+}
+
+// Files a "github" card's draft, as the admin edited it. The socket brings
+// the answered card back.
+export function useFileDraft() {
+	return useMutation({
+		mutationFn: async (input: { messageId: string; draft: GithubDraftType }) =>
+			z.object({ url: z.string() }).parse(
+				await adminFetch(`crew/messages/${input.messageId}/file`, {
+					method: 'POST',
+					json: { draft: input.draft },
+				})
+			),
 	})
 }
 

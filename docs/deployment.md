@@ -91,7 +91,7 @@ Workers Builds defaults to Node 24, which matches `engines`.
 
 The connection string lives in the Hyperdrive config, so the Worker needs no secret and the Workers Builds dashboard holds no database value. If Hyperdrive cannot reach the direct host, the session pooler (port 5432, user `admin_reader.<project-ref>`) works in its place. Local development uses the binding's `localConnectionString` against local Supabase: `apps/admin/README.md`, "Local development".
 
-The crew agents run on Workers AI through the Worker's `AI` binding and need no secret of their own. Three optional secrets will let an agent file GitHub issues as its own GitHub App once Monitor starts; setup is in `apps/admin/README.md`, "Filing GitHub issues".
+The crew agents run on Workers AI through the Worker's `AI` binding and need no secret of their own. Three optional secrets let the crew keep milestones and epics on GitHub as its own GitHub App; setup, including the previews' copy of the secrets, is in `apps/admin/README.md`, "GitHub: milestones and epics".
 
 **GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
 
