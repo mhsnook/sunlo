@@ -13,6 +13,7 @@ import {
 } from '~/lib/stats'
 import { formatChange, formatCount } from '~/lib/format'
 import { DailyBarChart } from '~/components/daily-bar-chart'
+import { displayName, principalOf } from '../../../shared/crew'
 import { SidePanel } from './side-panel'
 
 export function OverviewPanel({ onClose }: { onClose: () => void }) {
@@ -52,8 +53,8 @@ export function OverviewPanel({ onClose }: { onClose: () => void }) {
 					<Activity className="size-4" /> No health checks yet
 				</p>
 				<p className="text-muted-foreground mt-1 text-xs">
-					Geordi will report on the app, auth, the database and search after
-					each deploy, once it runs health checks.
+					{displayName(principalOf('product'))} will report on the app, auth,
+					the database and search after each deploy, once it runs health checks.
 				</p>
 			</section>
 			{overview.data ? (

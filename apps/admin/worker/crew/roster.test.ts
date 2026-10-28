@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+	crew,
 	crewList,
 	displayName,
 	PlaceSchema,
@@ -21,16 +22,17 @@ describe('the roster', () => {
 		}
 	})
 
-	it('seats Data with Riker in the Command room, Riker first', () => {
-		expect(roomOf('data')).toBe('command')
-		expect(principalOf('command')).toBe('riker')
-		expect(roomMembers('command')).toEqual(['riker', 'data'])
-		expect(roomMembers('product')).toEqual(['geordi'])
+	it('seats command-2 with command-1 in the Command room, the principal first', () => {
+		expect(roomOf('command-2')).toBe('command')
+		expect(principalOf('command')).toBe('command-1')
+		expect(roomMembers('command')).toEqual(['command-1', 'command-2'])
+		expect(roomMembers('product')).toEqual(['product-1'])
 	})
 
 	it('puts the rank before the name', () => {
-		expect(displayName('riker')).toBe('Cmdr Riker')
-		expect(displayName('data')).toBe('Data')
+		const { rank, name } = crew['command-1']
+		expect(displayName('command-1')).toBe(`${rank} ${name}`)
+		expect(displayName('command-2')).toBe('Data')
 	})
 })
 
@@ -43,6 +45,6 @@ describe('places', () => {
 	it('refuses the places from before rooms', () => {
 		expect(PlaceSchema.safeParse('room:product').success).toBe(true)
 		expect(PlaceSchema.safeParse('bridge').success).toBe(false)
-		expect(PlaceSchema.safeParse('room:riker').success).toBe(false)
+		expect(PlaceSchema.safeParse('room:command-1').success).toBe(false)
 	})
 })

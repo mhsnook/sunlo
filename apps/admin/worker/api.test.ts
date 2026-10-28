@@ -260,7 +260,7 @@ describe('/api/voice', () => {
 	it('transcribes a recording with nova-3, without the codecs parameter', async () => {
 		run.mockResolvedValue({
 			results: {
-				channels: [{ alternatives: [{ transcript: 'Hey Riker, sitrep?' }] }],
+				channels: [{ alternatives: [{ transcript: 'Hey, sitrep?' }] }],
 			},
 		})
 		const res = await post(
@@ -269,7 +269,7 @@ describe('/api/voice', () => {
 			'audio/webm;codecs=opus'
 		)
 		expect(res.status).toBe(200)
-		expect(await res.json()).toEqual({ text: 'Hey Riker, sitrep?' })
+		expect(await res.json()).toEqual({ text: 'Hey, sitrep?' })
 		expect(run.mock.calls[0][0]).toBe('@cf/deepgram/nova-3')
 		expect(run.mock.calls[0][1]).toMatchObject({
 			audio: { contentType: 'audio/webm' },
@@ -287,7 +287,7 @@ describe('/api/voice', () => {
 		run.mockResolvedValue(new Response(new Uint8Array([9, 9])))
 		const res = await post(
 			'/api/voice/speak',
-			JSON.stringify({ text: 'Aye, captain.', agent: 'riker' }),
+			JSON.stringify({ text: 'Aye, captain.', agent: 'command-1' }),
 			'application/json'
 		)
 		expect(res.status).toBe(200)

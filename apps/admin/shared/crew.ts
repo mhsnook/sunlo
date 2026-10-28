@@ -20,15 +20,23 @@ export const roomNames: Record<RoomKey, string> = {
 	learnership: 'Learnership room',
 }
 
-// Roster order, which is also the order the app lists the crew in.
-export const crewKeys = ['riker', 'data', 'geordi', 'hoshi', 'guinan'] as const
+// Each agent's key is its seat: its room, then 1 for the principal and 2 on
+// for associates. Roster order, which is also the order the app lists the
+// crew in.
+export const crewKeys = [
+	'command-1',
+	'command-2',
+	'product-1',
+	'library-1',
+	'learnership-1',
+] as const
 export type CrewKey = (typeof crewKeys)[number]
 
 export type CrewMember = {
-	// Also the @mention handle, since a name can hold spaces.
 	key: CrewKey
+	// What the app and the other agents call it. The code never does.
 	name: string
-	// Before the name in the display name, as in "Cmdr Riker". Null for none.
+	// Before the name in the display name, as in "Cmdr". Null for none.
 	rank: string | null
 	title: string
 	room: RoomKey
@@ -43,8 +51,8 @@ export type CrewMember = {
 }
 
 export const crew: Record<CrewKey, CrewMember> = {
-	riker: {
-		key: 'riker',
+	'command-1': {
+		key: 'command-1',
 		name: 'Riker',
 		rank: 'Cmdr',
 		title: 'First officer',
@@ -59,8 +67,8 @@ export const crew: Record<CrewKey, CrewMember> = {
 		schedule: 'writes the weekly brief on Sunday at 04:00',
 		active: true,
 	},
-	data: {
-		key: 'data',
+	'command-2': {
+		key: 'command-2',
 		name: 'Data',
 		rank: null,
 		title: 'Science officer',
@@ -69,13 +77,13 @@ export const crew: Record<CrewKey, CrewMember> = {
 		looksAfter: [
 			'Questions that need numbers, careful analysis or several thinking steps',
 			'Charts and explorers built from the database',
-			'Checking Riker’s instincts against the evidence',
+			'Checking the first officer’s instincts against the evidence',
 		],
 		schedule: null,
 		active: true,
 	},
-	geordi: {
-		key: 'geordi',
+	'product-1': {
+		key: 'product-1',
 		name: 'Geordi',
 		rank: null,
 		title: 'Product manager',
@@ -90,8 +98,8 @@ export const crew: Record<CrewKey, CrewMember> = {
 		schedule: 'runs daily at 07:00 UTC',
 		active: true,
 	},
-	hoshi: {
-		key: 'hoshi',
+	'library-1': {
+		key: 'library-1',
 		name: 'Hoshi',
 		rank: null,
 		title: 'Learning content',
@@ -108,8 +116,8 @@ export const crew: Record<CrewKey, CrewMember> = {
 		schedule: null,
 		active: false,
 	},
-	guinan: {
-		key: 'guinan',
+	'learnership-1': {
+		key: 'learnership-1',
 		name: 'Guinan',
 		rank: null,
 		title: 'Growth and retention',
@@ -177,18 +185,24 @@ export const isCrewKey = (value: string): value is CrewKey =>
 // A message's author: a crew key, or this for an admin.
 export const adminAuthor = (uid: string) => `admin:${uid}`
 
-// A crew member's handle is its key, and a room's name is a handle for its
-// principal, so "product" reaches Geordi.
+// The handle people and agents write for a crew member: its name, lower-cased.
+export const handleOf = (agent: CrewKey) => crew[agent].name.toLowerCase()
+
+// A crew member answers to its handle and to its key, and a room's name is a
+// handle for its principal, so "product" reaches whoever runs the Product
+// room.
 export function resolveHandle(handle: string): CrewKey | null {
 	const name = handle.toLowerCase()
-	return isRoomKey(name) ? principalOf(name) : isCrewKey(name) ? name : null
+	if (isRoomKey(name)) return principalOf(name)
+	if (isCrewKey(name)) return name
+	return crewKeys.find((key) => handleOf(key) === name) ?? null
 }
 
 // Every crew member the text @mentions, in roster order. The @ must start a
 // word, so the domain of an email address is not a mention.
 export function mentionedCrew(text: string): Array<CrewKey> {
 	const named = new Set(
-		[...text.matchAll(/(?<![\w.])@([a-z]+)/gi)].map((match) =>
+		[...text.matchAll(/(?<![\w.])@([a-z][a-z0-9-]*)/gi)].map((match) =>
 			resolveHandle(match[1])
 		)
 	)
@@ -241,7 +255,7 @@ export type ActionType = z.infer<typeof ActionSchema>
 //   (acted in their stead; was that right?), know (nothing to answer) and
 //   escalate (needs more than the crew has)
 // - In the Command room only: charter (a proposed charter entry, `ref`),
-//   brief (the weekly brief) and report (Data's pre-meeting report)
+//   brief (the weekly brief) and report (command-2's pre-meeting report)
 export const CardSchema = z.object({
 	kind: z.enum([
 		'question',
@@ -299,7 +313,7 @@ export const AgentStatusSchema = z.object({
 })
 export type AgentStatusType = z.infer<typeof AgentStatusSchema>
 
-// The weekly cycle: Riker writes a brief early on Sunday, and the meeting
+// The weekly cycle: command-1 writes a brief early on Sunday, and the meeting
 // with the admin is due until it happens.
 export const WeeklySchema = z.object({
 	briefAt: z.string().nullable(),
@@ -341,7 +355,7 @@ export type TodoType = z.infer<typeof TodoSchema>
 
 export const MemorySchema = z.object({
 	id: z.number(),
-	// "metric" and "chart" are Data's playbook: the metrics the admin likes in
+	// "metric" and "chart" are command-2's playbook: the metrics the admin likes in
 	// each domain, and how they like charts drawn.
 	kind: z.enum(['fact', 'metric', 'chart']),
 	domain: z.string().nullable(),
@@ -363,7 +377,7 @@ export type CommonKnowledgeType = z.infer<typeof CommonKnowledgeSchema>
 export const MAX_SPEECH_CHARS = 2000
 
 // The Situation Report is the Command room's document on where Sunlo and each
-// room stand now. Riker and the admin write it, and every agent reads the
+// room stand now. command-1 and the admin write it, and every agent reads the
 // whole of it at the top of every run, so it has a cap of its own.
 export const SITREP = 'Situation Report'
 export const SITREP_MAX = 4000

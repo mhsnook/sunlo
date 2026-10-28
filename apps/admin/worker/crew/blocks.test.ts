@@ -60,26 +60,26 @@ const transform = (text: string) => {
 
 describe('remarkCrew', () => {
 	it('bolds an @mention in prose', () => {
-		const [paragraph] = transform('Over to @Data, then @Riker.').children
+		const [paragraph] = transform('Over to @product, then @command.').children
 		expect(paragraph).toMatchObject({
 			type: 'paragraph',
 			children: [
 				{ type: 'text', value: 'Over to ' },
-				{ type: 'strong', children: [{ type: 'text', value: '@Data' }] },
+				{ type: 'strong', children: [{ type: 'text', value: '@product' }] },
 				{ type: 'text', value: ', then ' },
-				{ type: 'strong', children: [{ type: 'text', value: '@Riker' }] },
+				{ type: 'strong', children: [{ type: 'text', value: '@command' }] },
 				{ type: 'text', value: '.' },
 			],
 		})
 	})
 
 	it('leaves an email address and code alone', () => {
-		const tree = transform('Write to a@b.co about `@Data`.')
+		const tree = transform('Write to a@b.co about `@product`.')
 		expect(JSON.stringify(tree)).not.toContain('strong')
 	})
 
 	it('turns a component block into a figure and keeps its JSON intact', () => {
-		const source = '{"items": [{"label": "asked @Data", "value": 1}]}'
+		const source = '{"items": [{"label": "asked @product", "value": 1}]}'
 		const [block] = transform(fence('stats', source)).children
 		expect(block).toEqual({
 			type: 'crewBlock',

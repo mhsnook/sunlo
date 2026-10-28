@@ -3,7 +3,11 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import type { CharterEntryType } from '../../../shared/crew'
+import {
+	displayName,
+	principalOf,
+	type CharterEntryType,
+} from '../../../shared/crew'
 import {
 	commandQuery,
 	roomQuery,
@@ -14,7 +18,7 @@ import { dayLabel } from '~/lib/format'
 import { EditableEntry } from './editable-entry'
 
 // What the Command room knows about the admin, in its room log. The admin
-// edits it directly; Riker and Data can only propose entries.
+// edits it directly; the room's officers can only propose entries.
 export function CharterPanel() {
 	const { data: command } = useSuspenseQuery(commandQuery())
 	const kept = command.charter.filter((entry) => entry.status === 'kept')
@@ -34,8 +38,9 @@ export function CharterPanel() {
 				</ul>
 			) : (
 				<p className="text-muted-foreground text-sm">
-					Nothing yet. Riker proposes principles and lessons as he learns how
-					you decide, and they land here when you keep them.
+					Nothing yet. {displayName(principalOf('command'))} proposes principles
+					and lessons as it learns how you decide, and they land here when you
+					keep them.
 				</p>
 			)}
 			{proposed.length > 0 && (

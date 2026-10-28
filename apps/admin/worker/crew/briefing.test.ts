@@ -44,7 +44,7 @@ const input = (
 describe('briefingText', () => {
 	it('names the Common Room and the agent’s own room', () => {
 		const text = briefingText(
-			input('geordi', {
+			input('product-1', {
 				unread: {
 					common: {
 						since: true,
@@ -73,13 +73,13 @@ describe('briefingText', () => {
 	})
 
 	it('briefs an associate on the room it works in', () => {
-		const text = briefingText(input('data'))
+		const text = briefingText(input('command-2'))
 		expect(text).toContain('## Cards in the Command room')
 		expect(text).toContain('## The Command room, latest messages')
 	})
 
 	it('marks a timeline with nothing new', () => {
-		const text = briefingText(input('geordi'))
+		const text = briefingText(input('product-1'))
 		expect(text).toContain(
 			'## The Common Room since your last run\n\n(nothing new)'
 		)
@@ -93,14 +93,14 @@ describe('briefingText', () => {
 			ref: null,
 		}
 		const text = briefingText(
-			input('geordi', {
+			input('product-1', {
 				cards: {
 					waiting: [
 						message({
 							body: 'Details',
 							place: 'room:product',
-							author: 'geordi',
-							authorName: 'Geordi',
+							author: 'product-1',
+							authorName: 'Product officer',
 							card,
 						}),
 					],
@@ -116,7 +116,7 @@ describe('briefingText', () => {
 			})
 		)
 		expect(text).toContain(
-			'Waiting on the admin:\n- [decide, from Geordi] Ship the onboarding fix?'
+			'Waiting on the admin:\n- [decide, from Product officer] Ship the onboarding fix?'
 		)
 		expect(text).toContain('Recently answered:\n- Hide the streak?: "Yes"')
 	})
@@ -137,12 +137,12 @@ describe('briefingText', () => {
 			weekly: { briefAt: null, meetingAt: null, timezone: 'Europe/Lisbon' },
 			meetingStartedAt: null,
 		}
-		const riker = briefingText(input('riker', { command }))
-		expect(riker).toContain('- [principle 3] Retention before growth.')
-		expect(riker).toContain(
+		const firstOfficer = briefingText(input('command-1', { command }))
+		expect(firstOfficer).toContain('- [principle 3] Retention before growth.')
+		expect(firstOfficer).toContain(
 			"The last weekly meeting was never. The admin's time zone is Europe/Lisbon."
 		)
-		expect(briefingText(input('geordi'))).not.toContain('## The charter')
+		expect(briefingText(input('product-1'))).not.toContain('## The charter')
 	})
 })
 
@@ -151,11 +151,11 @@ describe('sitrepText', () => {
 		const text = sitrepText({
 			text: 'Retention first this month.\n\n**Product room**: onboarding.',
 			revision: 4,
-			byName: 'Cmdr Riker',
+			byName: 'First officer',
 			at: '2026-10-27T14:02:00Z',
 		})
 		expect(text).toBe(
-			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Revision 4, saved by Cmdr Riker, 2026-10-27 14:02 UTC.)'
+			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Revision 4, saved by First officer, 2026-10-27 14:02 UTC.)'
 		)
 	})
 
@@ -175,7 +175,7 @@ describe('documentsText', () => {
 				room: 'product',
 				name: 'Roadmap',
 				revision: 2,
-				byName: 'Geordi',
+				byName: 'Product officer',
 				at: '2026-10-28T07:01:00Z',
 			},
 			{
@@ -188,12 +188,12 @@ describe('documentsText', () => {
 			},
 		])
 		expect(text).toBe(
-			"## The Product room's documents\n\n- Roadmap: revision 2, saved by Geordi, 2026-10-28 07:01 UTC\n- Launch checklist: not written yet"
+			"## The Product room's documents\n\n- Roadmap: revision 2, saved by Product officer, 2026-10-28 07:01 UTC\n- Launch checklist: not written yet"
 		)
 	})
 
 	it('comes before the room’s cards in the briefing', () => {
-		const text = briefingText(input('geordi'))
+		const text = briefingText(input('product-1'))
 		expect(text).toContain("## The Product room's documents\n\n(none yet)")
 		expect(text.indexOf("## The Product room's documents")).toBeLessThan(
 			text.indexOf('## Cards in the Product room')

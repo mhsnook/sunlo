@@ -9,6 +9,7 @@ import {
 	associatesOf,
 	crew,
 	displayName,
+	handleOf,
 	isRoomKey,
 	placeOf,
 	principalOf,
@@ -136,7 +137,7 @@ function EmptyThread({ room }: { room: RoomKey }) {
 			<h2 className="text-xl font-semibold">The {roomNames[room]}</h2>
 			<p className="text-muted-foreground text-sm">
 				{crew[principal].active
-					? `${displayName(principal)} answers what you write here${associates.length ? `; write ${associates.map((key) => `@${key}`).join(' or ')} to ask ${associates.map(displayName).join(' or ')}` : ''}. Anything that needs you arrives here as a card.`
+					? `${displayName(principal)} answers what you write here${associates.length ? `; write ${associates.map((key) => `@${handleOf(key)}`).join(' or ')} to ask ${associates.map(displayName).join(' or ')}` : ''}. Anything that needs you arrives here as a card.`
 					: `${displayName(principal)} has not started yet. What you write here waits until they do.`}
 			</p>
 		</div>

@@ -1,5 +1,6 @@
 import {
 	crew,
+	displayName,
 	principalOf,
 	resolveHandle,
 	type CrewKey,
@@ -25,7 +26,7 @@ export function clefPrompt(
 	const roster = active
 		.map(
 			(key) =>
-				`- "${key}" (${crew[key].title}) looks after: ${crew[key].looksAfter.join('; ')}`
+				`- "${key}" (${displayName(key)}, ${crew[key].title}) looks after: ${crew[key].looksAfter.join('; ')}`
 		)
 		.join('\n')
 	const system = `You route messages in a team chat between the founder of Sunlo, a language-learning app, and AI agents.

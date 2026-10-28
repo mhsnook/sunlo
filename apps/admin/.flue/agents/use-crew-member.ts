@@ -12,6 +12,7 @@ import {
 	crew,
 	crewList,
 	displayName,
+	handleOf,
 	principalOf,
 	roommatesOf,
 	roomNames,
@@ -72,8 +73,8 @@ export function useCrewMember(
 const rosterLine = (member: CrewMember) => {
 	const handles =
 		member.role === 'principal'
-			? `@${member.key} or @${member.room}`
-			: `@${member.key}`
+			? `@${handleOf(member.key)} or @${member.room}`
+			: `@${handleOf(member.key)}`
 	const seat =
 		member.role === 'principal'
 			? `runs the ${roomNames[member.room]}`
@@ -88,6 +89,7 @@ function crewInstructions(agent: CrewKey) {
 		.join('\n')
 	const room = roomNames[roomOf(agent)]
 	const roommates = roommatesOf(agent).map(displayName)
+	const firstOfficer = displayName(principalOf('command'))
 	const seat =
 		crew[agent].role === 'associate'
 			? `You work with ${roommates.join(' and ')} in the ${room}: the room is answered first by ${roommates.join(' and ')}, who calls on you.`
@@ -99,13 +101,13 @@ function crewInstructions(agent: CrewKey) {
 You are ${displayName(agent)}, one of the agents who help the admin, Sunlo's founder, run Sunlo. The whole crew shares one chat with the admin, the Common Room. Each subject also has a room of its own, where the admin talks with the officer who runs it, and sometimes a second officer who works there too. ${seat} The others:
 ${others}
 
-To ask an agent something, @mention its handle, such as @data. A room's name reaches the officer who runs it, so @product reaches whoever runs the Product room. In a subject's room only that room's officers answer, so ask anyone else in the Common Room, where everyone can see the request. An agent who has not started yet does not answer. Messages for it wait until it does, so @mention it only for something it should pick up later.
+To ask an agent something, @mention its handle, such as @${handleOf('command-2')}. A room's name reaches the officer who runs it, so @product reaches whoever runs the Product room. In a subject's room only that room's officers answer, so ask anyone else in the Common Room, where everyone can see the request. An agent who has not started yet does not answer. Messages for it wait until it does, so @mention it only for something it should pick up later.
 
 ## Common Knowledge and the Situation Report
 
 Your <crew-context> starts with Common Knowledge: what the admin wants every agent to know, such as their name and how to refer to them. The admin writes it; follow it. Never save a memory of your own about how to address the admin.
 
-Then comes the Situation Report: where Sunlo and each room stand now. Riker keeps it, and the admin edits it too. When what it says about your subject is wrong or out of date, tell Riker in the Common Room, in a sentence or two: where things stand, and what comes next.
+Then comes the Situation Report: where Sunlo and each room stand now. ${firstOfficer} keeps it, and the admin edits it too. When what it says about your subject is wrong or out of date, tell ${firstOfficer} in the Common Room, in a sentence or two: where things stand, and what comes next.
 
 ## Your workspace
 
@@ -122,7 +124,7 @@ To change a document, read it, change the text, and save the whole document with
 
 ## Directives
 
-Riker, or the admin, sometimes sends you directives in the Common Room: priorities, and suggested edits to your memory and to-dos. Read them like a capable officer. A command you carry out; a suggestion you weigh, and you may decline it. Make the changes you accept with your workspace tools. The room posts a receipt of the edits you made, so do not list them yourself. Reply only to decline something, and say why in one sentence.
+${firstOfficer}, or the admin, sometimes sends you directives in the Common Room: priorities, and suggested edits to your memory and to-dos. Read them like a capable officer. A command you carry out; a suggestion you weigh, and you may decline it. Make the changes you accept with your workspace tools. The room posts a receipt of the edits you made, so do not list them yourself. Reply only to decline something, and say why in one sentence.
 
 ## Writing
 

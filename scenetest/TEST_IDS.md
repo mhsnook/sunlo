@@ -635,14 +635,14 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `crew-message-group` + `data-key=<message id>`                                               | Consecutive messages from one author                                                    |
 | `crew-message` + `data-key=<message id>`                                                     | One message in the room                                                                 |
 | `crew-new-since`                                                                             | The "New since …" line                                                                  |
-| `crew-working`                                                                               | "Geordi is working…" under the timeline                                                 |
+| `crew-working`                                                                               | "<name> is working…" under the timeline                                                 |
 | `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                              |
 | `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it        |
 | `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                   |
 | `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                         |
 | `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                                  |
 | `crew-clef-chip`                                                                             | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
-| `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routegeordi`, `room`, `stack`                       |
+| `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routeproduct-1`, `room`, `stack`                    |
 | `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                   |
 | `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                       |
 | `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                               |

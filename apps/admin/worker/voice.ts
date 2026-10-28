@@ -7,11 +7,11 @@ type Speaker = NonNullable<Ai_Cf_Deepgram_Aura_2_En_Input['speaker']>
 
 // Each agent speaks in its own Deepgram Aura 2 voice.
 const voices: Record<CrewKey, Speaker> = {
-	riker: 'orion',
-	data: 'arcas',
-	geordi: 'apollo',
-	hoshi: 'minerva',
-	guinan: 'phoebe',
+	'command-1': 'orion',
+	'command-2': 'arcas',
+	'product-1': 'apollo',
+	'library-1': 'minerva',
+	'learnership-1': 'phoebe',
 }
 
 // Push-to-talk clips are seconds long; this only stops a runaway upload.

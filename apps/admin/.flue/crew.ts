@@ -1,16 +1,16 @@
 import { dispatch, observe, type Agent } from '@flue/runtime'
 import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
-import { crewKeys, roomOfPlace, type CrewKey } from '../shared/crew'
+import { isCrewKey, roomOfPlace, type CrewKey } from '../shared/crew'
 import {
 	CONVERSATION,
 	ROOM,
 	type CrewRoom,
 	type Wake,
 } from '../worker/crew/room'
-import { Data } from './agents/data'
-import { Geordi } from './agents/geordi'
-import { Riker } from './agents/riker'
+import { Command1 } from './agents/command-1'
+import { Command2 } from './agents/command-2'
+import { Product1 } from './agents/product-1'
 
 export const roomFor = () =>
 	getAgentByName(env.CREW_ROOM as DurableObjectNamespace<CrewRoom>, ROOM)
@@ -19,9 +19,9 @@ export const roomFor = () =>
 // import this file, and the agent they export is not initialised yet while
 // this module evaluates.
 const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
-	riker: Riker,
-	data: Data,
-	geordi: Geordi,
+	'command-1': Command1,
+	'command-2': Command2,
+	'product-1': Product1,
 })
 
 // A run that fails or is aborted settles without useAgentFinish, so the room
@@ -32,12 +32,11 @@ observe((event) => {
 		event.outcome !== 'completed' &&
 		event.instanceId === CONVERSATION
 	) {
-		// Flue names an agent by its identity ("Riker"), not its crew key.
-		const key = crewKeys.find((candidate) => {
-			const agent = crewAgents()[candidate]
-			return agent && (agent.agentName ?? agent.name) === event.agentName
-		})
-		if (key) void roomFor().then((room) => room.failRun(key))
+		// Each agent's Flue identity is its crew key.
+		const key = event.agentName
+		if (key && isCrewKey(key)) {
+			void roomFor().then((room) => room.failRun(key))
+		}
 	}
 })
 
@@ -60,10 +59,11 @@ export async function wake(wakes: Array<Wake>, from: string) {
 	)
 }
 
-// Asks Data for the pre-meeting report, when a meeting starts without one.
+// Asks command-2 for the pre-meeting report, when a meeting starts without
+// one.
 export const requestReport = () =>
 	deliver(
-		'data',
+		'command-2',
 		'meeting.report',
 		'The weekly meeting just started, and there is no pre-meeting report for it yet. Write one now with file_report.'
 	)
