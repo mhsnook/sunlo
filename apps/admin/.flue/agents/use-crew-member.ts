@@ -12,6 +12,7 @@ import {
 	crew,
 	crewList,
 	displayName,
+	githubAccess,
 	handleOf,
 	principalOf,
 	roommatesOf,
@@ -28,6 +29,7 @@ import {
 } from '../tools/database'
 import { commandTools } from '../tools/command'
 import { crewTools } from '../tools/crew'
+import { githubTools } from '../tools/github'
 
 export const CREW_DURABILITY = { maxAttempts: 3 }
 
@@ -43,6 +45,8 @@ export function useCrewMember(
 	if (roomOf(agent) === 'command') {
 		for (const tool of commandTools(agent)) useTool(tool)
 	}
+	const github = githubAccess[agent]
+	if (github) for (const tool of githubTools(agent, github)) useTool(tool)
 	const database = options.database ?? true
 	if (database) {
 		useTool(activityBetweenTool)
@@ -67,6 +71,7 @@ export function useCrewMember(
 	useInstruction(crewInstructions(agent))
 	useInstruction(BLOCKS_GUIDE)
 	useInstruction(runInstructions(agent))
+	if (github) useInstruction(githubInstructions(github))
 	if (database) useInstruction(DATABASE_NOTES)
 }
 
@@ -148,4 +153,24 @@ When a Common Room conversation belongs in the ${room} instead, such as anything
 A <crew-answer> is the admin answering one of your cards; act on it, and post only if there is something to add.${crew[agent].schedule ? ' A <schedule> is your scheduled run.' : ''}
 
 Nobody reads your final reply. Post at most twice a run, and only what is worth the admin's attention. If nothing new needs you, post nothing.`
+}
+
+function githubInstructions(access: 'read' | 'write') {
+	if (access === 'read') {
+		return `## GitHub
+
+You can read mhsnook/sunlo's milestones, epics, issues and pull requests (read_issue, list_milestones, list_epics, github_changes_since), so you can say where the work stands without asking. ${displayName(principalOf('product'))}, who runs the Product room, keeps them; ask @product to change anything there. Your <crew-context> says whether GitHub is connected.`
+	}
+	return `## GitHub: milestones and epics
+
+The Roadmap is the plan, and it stays in the app. GitHub holds the part of it that is ready to build, as milestones and epics, and keeping those current is the most important part of your job. Claude Code sessions take PR-sized work from an epic's checklist and comments, so put the work in epics, not in one issue per task. Your <crew-context> says whether GitHub is connected.
+
+- An epic is an ordinary issue labelled "epic", with a checklist of PR-sized steps, inside a milestone. Don't use GitHub's sub-issues.
+- Link the Roadmap to GitHub by convention: an item's issue number, as in "- [ ] Onboarding (#812)", and a Roadmap section named after its milestone.
+- Anything new goes to the admin as a card first: draft_issue, draft_milestone and draft_comment. They may edit your draft, then file it, and you hear back with its number. Write that number into the Roadmap.
+- After that, keep things current yourself, with edit_issue and edit_milestone, on any issue or milestone: tick checklist items, add steps, rewrite an epic's body as decisions land, move issues between milestones, and close what is done. Read an issue before you edit it. The room lists each change in your run receipt.
+- Write every issue as a brief that someone can act on cold: the problem, the decision and why, what done looks like, and the files involved if you know them. When the admin edits a draft before filing it, you hear both versions; save what the changes teach you with note_writing_style, and follow those memories when you draft.
+- Every write is checked for people's personal data, and refused if it has any: mhsnook/sunlo is public.
+- On your daily run, read what changed since your last one with github_changes_since, and bring the epics, the milestones and the Roadmap into step.
+- The first time you have these tools, before you edit anything, read the open milestones and epics (list_milestones, list_epics), then bring_to_admin one "decide" card that proposes how they map onto the Roadmap: which epic goes in which milestone, and what you would merge, rename or close. Edit only once the admin agrees, and remember that they did.`
 }
