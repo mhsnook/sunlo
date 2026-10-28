@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
 import {
+	associatesOf,
 	displayName,
 	meetingDue,
 	principalOf,
-	roomMembers,
 	type RoomKey,
 	type WeeklyType,
 } from '../../../shared/crew'
@@ -32,7 +32,7 @@ export function RoomThreadCompose({
 			onError: (error) => toastError(error.message),
 		})
 	const principal = principalOf(room)
-	const associates = roomMembers(room).filter((key) => key !== principal)
+	const associates = associatesOf(room)
 
 	return (
 		<div className="mx-auto w-full max-w-3xl space-y-2 px-4 pt-2 pb-3">

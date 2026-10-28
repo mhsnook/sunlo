@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/message'
 import { hasBlocks } from '../../../shared/blocks'
 import {
+	COMMON_ROOM,
 	displayName,
 	isCrewKey,
 	roomNames,
@@ -33,7 +34,7 @@ import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
 import { useReadOnArrival } from '~/lib/voice'
-import { useCorrectRouting } from '~/lib/crew'
+import { isNewFor, useCorrectRouting } from '~/lib/crew'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
 
@@ -75,9 +76,7 @@ export function RoomTimeline({
 			return agent ? [{ id: message.id, text: message.body, agent }] : []
 		})
 	)
-	const firstNew = newSince
-		? messages.find((m) => m.at > newSince && m.author !== myAuthor)?.id
-		: undefined
+	const firstNew = messages.find((m) => isNewFor(m, newSince, myAuthor))?.id
 	const groups = groupMessages(messages)
 	const newSinceMarker = newSince ? (
 		<MessageMarker
@@ -210,7 +209,7 @@ function AuthorGroup({
 							)}
 							{mine &&
 								message.routing?.kind === 'stack' &&
-								message.place !== 'room' && (
+								message.place !== COMMON_ROOM && (
 									<MessageFooter>{routingNote(message.routing)}</MessageFooter>
 								)}
 						</MessageContent>

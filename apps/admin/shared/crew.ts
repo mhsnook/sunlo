@@ -133,27 +133,43 @@ export const isRoomKey = (value: string): value is RoomKey =>
 
 export const roomOf = (agent: CrewKey): RoomKey => crew[agent].room
 
-// The principal first, then its associates.
-export const roomMembers = (room: RoomKey): Array<CrewKey> =>
-	crewKeys
-		.filter((key) => crew[key].room === room)
-		.toSorted((a, b) =>
-			crew[a].role === crew[b].role ? 0 : crew[a].role === 'principal' ? -1 : 1
-		)
+export const principalOf = (room: RoomKey): CrewKey =>
+	crewKeys.find(
+		(key) => crew[key].room === room && crew[key].role === 'principal'
+	)!
 
-export const principalOf = (room: RoomKey): CrewKey => roomMembers(room)[0]
+export const associatesOf = (room: RoomKey): Array<CrewKey> =>
+	crewKeys.filter(
+		(key) => crew[key].room === room && crew[key].role === 'associate'
+	)
+
+// The principal first, then its associates.
+export const roomMembers = (room: RoomKey): Array<CrewKey> => [
+	principalOf(room),
+	...associatesOf(room),
+]
+
+// Everyone else who works in the agent's room.
+export const roommatesOf = (agent: CrewKey): Array<CrewKey> =>
+	roomMembers(roomOf(agent)).filter((key) => key !== agent)
+
+// The Common Room's place. Not to be confused with the routing kind "room",
+// which means a message was left in the Common Room without waking anyone.
+export const COMMON_ROOM = 'room'
 
 // Where a message lives: the Common Room, or one subject's room.
 export const PlaceSchema = z.union([
-	z.literal('room'),
+	z.literal(COMMON_ROOM),
 	z.templateLiteral(['room:', z.enum(roomKeys)]),
 ])
 export type PlaceType = z.infer<typeof PlaceSchema>
 
 export const placeOf = (room: RoomKey): PlaceType => `room:${room}`
 // The room a place is, or null for the Common Room.
-export const roomOfPlace = (place: PlaceType): RoomKey | null =>
-	place === 'room' ? null : (place.slice('room:'.length) as RoomKey)
+export const roomOfPlace = (place: string): RoomKey | null => {
+	const room = place.slice('room:'.length)
+	return place.startsWith('room:') && isRoomKey(room) ? room : null
+}
 
 export const isCrewKey = (value: string): value is CrewKey =>
 	(crewKeys as ReadonlyArray<string>).includes(value)
@@ -161,17 +177,22 @@ export const isCrewKey = (value: string): value is CrewKey =>
 // A message's author: a crew key, or this for an admin.
 export const adminAuthor = (uid: string) => `admin:${uid}`
 
-// Every crew member the text @mentions, in roster order. A room's name is a
-// handle for its principal, so @product reaches Geordi. The @ must start a
+// A crew member's handle is its key, and a room's name is a handle for its
+// principal, so "product" reaches Geordi.
+export function resolveHandle(handle: string): CrewKey | null {
+	const name = handle.toLowerCase()
+	return isRoomKey(name) ? principalOf(name) : isCrewKey(name) ? name : null
+}
+
+// Every crew member the text @mentions, in roster order. The @ must start a
 // word, so the domain of an email address is not a mention.
 export function mentionedCrew(text: string): Array<CrewKey> {
-	const names = new Set(
-		[...text.matchAll(/(?<![\w.])@([a-z]+)/gi)].map((match) => {
-			const name = match[1].toLowerCase()
-			return isRoomKey(name) ? principalOf(name) : name
-		})
+	const named = new Set(
+		[...text.matchAll(/(?<![\w.])@([a-z]+)/gi)].map((match) =>
+			resolveHandle(match[1])
+		)
 	)
-	return crewKeys.filter((key) => names.has(key))
+	return crewKeys.filter((key) => named.has(key))
 }
 
 // A trailing "..." or "…" means "more is coming": CLEF never wakes anyone
@@ -187,17 +208,27 @@ export const RoutingSchema = z.object({
 })
 export type RoutingType = z.infer<typeof RoutingSchema>
 
-// CLEF's two fixed rules, checked before the model: a trailing "..." stacks,
-// and an @mention routes. Null when neither applies.
-export function fixedRouting(text: string): RoutingType | null {
-	if (endsWithEllipsis(text)) return { kind: 'stack', agents: [], by: 'rule' }
-	const mentioned = mentionedCrew(text)
-	if (!mentioned.length) return null
-	const active = mentioned.filter((key) => crew[key].active)
-	// A planned agent cannot wake yet, so its messages wait in the room.
+// Sends a message to the agents that have started. A planned agent cannot
+// wake yet, so a message only for it waits in the room.
+export function routeTo(
+	agents: Array<CrewKey>,
+	by: RoutingType['by']
+): RoutingType {
+	const active = agents.filter((key) => crew[key].active)
 	return active.length
-		? { kind: 'route', agents: active, by: 'rule' }
-		: { kind: 'room', agents: [], by: 'rule' }
+		? { kind: 'route', agents: active, by }
+		: { kind: 'room', agents: [], by }
+}
+
+// The two fixed rules, checked before CLEF's model: a trailing "..." stacks,
+// and an @mention of someone in `among` routes. Null when neither applies.
+export function fixedRouting(
+	text: string,
+	among: ReadonlyArray<CrewKey> = crewKeys
+): RoutingType | null {
+	if (endsWithEllipsis(text)) return { kind: 'stack', agents: [], by: 'rule' }
+	const mentioned = mentionedCrew(text).filter((key) => among.includes(key))
+	return mentioned.length ? routeTo(mentioned, 'rule') : null
 }
 
 export const ActionSchema = z.object({ id: z.string(), label: z.string() })

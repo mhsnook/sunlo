@@ -1,6 +1,4 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import { X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import {
 	crew,
 	displayName,
@@ -12,9 +10,10 @@ import {
 } from '../../../shared/crew'
 import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
 import { CharterPanel } from './charter-panel'
-import { AgentAvatar, CardActions, ChangeCard, CrewText } from './crew-parts'
+import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
 import { MemoryList } from './memory-list'
 import { Empty, Section, TodoList } from './workspace-parts'
+import { SidePanel } from './side-panel'
 
 // Beside a subject's room: who works there, with each officer's to-dos, what
 // is open with the admin, and memory. The Command room also keeps the charter
@@ -27,30 +26,19 @@ export function RoomPanel({
 	onClose: () => void
 }) {
 	return (
-		<aside
-			aria-label={`About the ${roomNames[room]}`}
-			data-testid="room-panel"
-			data-key={room}
-			className="bg-background flex h-full w-full flex-col border-s md:w-96"
+		<SidePanel
+			title="Room log"
+			label={`About the ${roomNames[room]}`}
+			testId="room-panel"
+			testKey={room}
+			onClose={onClose}
+			bodyClassName="space-y-8"
 		>
-			<div className="flex items-center gap-2 border-b px-4 py-3">
-				<h2 className="me-auto font-semibold">Room log</h2>
-				<Button
-					variant="ghost"
-					size="icon"
-					aria-label="Close the room log"
-					onClick={onClose}
-				>
-					<X />
-				</Button>
-			</div>
-			<div className="flex-1 space-y-8 overflow-y-auto px-4 py-4">
-				{room === 'command' && <CharterPanel />}
-				{roomMembers(room).map((agent) => (
-					<MemberLog key={agent} agent={agent} />
-				))}
-			</div>
-		</aside>
+			{room === 'command' && <CharterPanel />}
+			{roomMembers(room).map((agent) => (
+				<MemberLog key={agent} agent={agent} />
+			))}
+		</SidePanel>
 	)
 }
 
@@ -76,16 +64,7 @@ function MemberLog({ agent }: { agent: CrewKey }) {
 							card.card?.kind === 'change' ? (
 								<ChangeCard key={card.id} message={card} />
 							) : (
-								<div
-									key={card.id}
-									className="bg-card space-y-2 rounded border p-3 text-sm"
-								>
-									{card.card?.title && (
-										<p className="font-semibold">{card.card.title}</p>
-									)}
-									<CrewText text={card.body} />
-									<CardActions message={card} />
-								</div>
+								<RoomCard key={card.id} message={card} />
 							)
 						)}
 						{workspace.openItems.length > 0 && (

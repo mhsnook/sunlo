@@ -1,5 +1,6 @@
 import {
 	meetingDue,
+	placeOf,
 	roomNames,
 	roomOf,
 	type CharterEntryType,
@@ -10,7 +11,6 @@ import {
 	type WeeklyType,
 	type WorkspaceType,
 } from '../../shared/crew'
-import { sitrepContext } from './sitrep'
 
 // Room times for the model: minutes are enough, and UTC is explicit.
 export const stamp = (iso: string) =>
@@ -39,7 +39,6 @@ export function timelineText(messages: Array<CrewMessageType>) {
 // The messages in one timeline that a run has not read. `since` is false the
 // first time the agent reads the timeline, when these are the latest ones.
 export type UnreadTimeline = {
-	place: 'common' | 'own'
 	since: boolean
 	messages: Array<CrewMessageType>
 }
@@ -61,7 +60,7 @@ export type BriefingInput = {
 		weekly: WeeklyType
 		meetingStartedAt: string | null
 	} | null
-	unread: Array<UnreadTimeline>
+	unread: { common: UnreadTimeline; own: UnreadTimeline }
 }
 
 // The <crew-context> every run starts with.
@@ -70,20 +69,34 @@ export function briefingText(input: BriefingInput) {
 	const sections = [
 		`It is now ${stamp(input.now)}.`,
 		commonKnowledgeText(input.commonKnowledge),
-		sitrepContext(input.sitrep, stamp),
+		sitrepText(input.sitrep),
 	]
 	if (input.command) sections.push(commandText(input.command, input.now))
-	sections.push(cardsText(room, input.cards), workspaceText(input.workspace))
-	for (const timeline of input.unread) {
-		const name = timeline.place === 'common' ? 'The Common Room' : `The ${room}`
-		sections.push(
-			timeline.since
-				? `## ${name} since your last run`
-				: `## ${name}, latest messages`,
-			timelineText(timeline.messages) || '(nothing new)'
-		)
-	}
+	sections.push(
+		cardsText(room, input.cards),
+		workspaceText(input.workspace),
+		unreadText('The Common Room', input.unread.common),
+		unreadText(`The ${room}`, input.unread.own)
+	)
 	return sections.join('\n\n')
+}
+
+function unreadText(name: string, timeline: UnreadTimeline) {
+	return [
+		timeline.since
+			? `## ${name} since your last run`
+			: `## ${name}, latest messages`,
+		timelineText(timeline.messages) || '(nothing new)',
+	].join('\n\n')
+}
+
+export function sitrepText(sitrep: SitrepType) {
+	return [
+		'## The Situation Report: where Sunlo and each room stand now',
+		sitrep
+			? `${sitrep.text}\n\n(Last written by ${sitrep.byName}, ${stamp(sitrep.at)}.)`
+			: '(Nobody has written it yet.)',
+	].join('\n\n')
 }
 
 function commonKnowledgeText(entries: Array<CommonKnowledgeType>) {
@@ -155,8 +168,10 @@ function workspaceText(workspace: WorkspaceType) {
 	const open = workspace.openItems
 		.map((o) => `- [${o.id}] ${o.title}${o.tag ? ` (${o.tag})` : ''}`)
 		.join('\n')
+	// Cards in the agent's own room are listed with the room's cards already.
+	const ownRoom = placeOf(roomOf(workspace.agent))
 	const waiting = workspace.cards
-		.filter((c) => !c.answer)
+		.filter((c) => !c.answer && c.place !== ownRoom)
 		.map((c) => `- ${stamp(c.at)}: ${c.card?.title ?? c.body}`)
 		.join('\n')
 	return [
@@ -164,6 +179,6 @@ function workspaceText(workspace: WorkspaceType) {
 		`To-do:\n${todos || '(none)'}`,
 		`Memory:\n${memory || '(none)'}`,
 		`Open with the admin:\n${open || '(none)'}`,
-		`Your questions still waiting for an answer:\n${waiting || '(none)'}`,
+		`Your Common Room questions still waiting for an answer:\n${waiting || '(none)'}`,
 	].join('\n\n')
 }

@@ -30,6 +30,15 @@ describe('the fixed CLEF rules', () => {
 })
 
 describe('parseClefReply', () => {
+	it('reads a room’s name as the officer who runs it', () => {
+		expect(
+			parseClefReply('{"kind":"route","agents":["product"]}', [
+				'riker',
+				'geordi',
+			])
+		).toEqual({ kind: 'route', agents: ['geordi'], by: 'model' })
+	})
+
 	it('routes to the named active agents', () => {
 		expect(
 			parseClefReply('{"kind":"route","agents":["geordi"]}', ['geordi'])

@@ -642,7 +642,7 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                         |
 | `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                                  |
 | `crew-clef-chip`                                                                             | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
-| `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routeproduct`, `room`, `stack`                      |
+| `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routegeordi`, `room`, `stack`                       |
 | `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                   |
 | `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                       |
 | `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                               |
@@ -664,6 +664,6 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `room-start-meeting`                                                                         | "Start the weekly meeting" in the Command room, while the meeting is due                |
 | `room-card` + `data-key=<kind>`                                                              | A card in a subject's room (`decide`, ...); a folded `brief` or `report` is its preview |
 | `room-panel-button`, `room-panel` + `data-key=<room>`                                        | The room log toggle and its panel                                                       |
-| `room-member` + `data-key=<agent>`                                                           | One member's profile, report lines, to-dos, open items and memory in the room log       |
+| `room-member` + `data-key=<agent>`                                                           | One member's profile, to-dos, open items and memory in the room log log                 |
 | `charter-panel`, `charter-entry` + `data-key=<id>`                                           | The charter in the Command room's log, and one kept entry                               |
 | `brief-timezone`                                                                             | The time zone of the Sunday brief                                                       |

@@ -22,7 +22,7 @@ import {
 	type CrewMessageType,
 	type RoomKey,
 } from '../../../shared/crew'
-import { isWorking, roomQuery, threadQuery } from '~/lib/crew'
+import { isNewFor, isWorking, roomQuery, threadQuery } from '~/lib/crew'
 import { AdminAvatar, AgentAvatar, RoomAvatar } from './crew-parts'
 import { shortWhen } from '~/lib/format'
 
@@ -30,12 +30,9 @@ import { shortWhen } from '~/lib/format'
 // read shows no count, however much is in it.
 const unreadCount = (
 	messages: Array<CrewMessageType>,
-	seenAt: string | null | undefined,
+	seenAt: string | null,
 	myAuthor: string
-) =>
-	seenAt
-		? messages.filter((m) => m.at > seenAt && m.author !== myAuthor).length
-		: 0
+) => messages.filter((m) => isNewFor(m, seenAt, myAuthor)).length
 
 const previewOf = (message: CrewMessageType, myAuthor: string) =>
 	`${message.author === myAuthor ? 'You' : message.authorName}: ${message.card?.title ?? message.body}`
@@ -63,9 +60,10 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 					}
 					when={last?.at}
 					unread={
-						pathname === '/' ? 0 : unreadCount(messages, room?.seenAt, myAuthor)
+						pathname === '/'
+							? 0
+							: unreadCount(messages, room?.seenAt ?? null, myAuthor)
 					}
-					cards={0}
 					target="crew"
 					onNavigate={onNavigate}
 				/>
@@ -155,7 +153,7 @@ function SidebarItem({
 	preview,
 	when,
 	unread,
-	cards,
+	cards = 0,
 	dim = false,
 	target,
 	onNavigate,
@@ -166,7 +164,7 @@ function SidebarItem({
 	when?: string
 	unread: number
 	// Cards that wait on the admin.
-	cards: number
+	cards?: number
 	dim?: boolean
 	target: RoomKey | 'crew'
 	onNavigate?: () => void

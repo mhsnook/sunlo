@@ -13,7 +13,7 @@ import {
 	crewList,
 	displayName,
 	principalOf,
-	roomMembers,
+	roommatesOf,
 	roomNames,
 	roomOf,
 	type CrewKey,
@@ -81,18 +81,13 @@ const rosterLine = (member: CrewMember) => {
 	return `- ${displayName(member.key)} (${handles}, ${member.title}, ${seat})${member.active ? '' : ', not started yet'}: ${member.looksAfter.join('; ')}`
 }
 
-const roommatesOf = (agent: CrewKey) =>
-	roomMembers(roomOf(agent))
-		.filter((key) => key !== agent)
-		.map(displayName)
-
 function crewInstructions(agent: CrewKey) {
 	const others = crewList
 		.filter((member) => member.key !== agent)
 		.map(rosterLine)
 		.join('\n')
 	const room = roomNames[roomOf(agent)]
-	const roommates = roommatesOf(agent)
+	const roommates = roommatesOf(agent).map(displayName)
 	const seat =
 		crew[agent].role === 'associate'
 			? `You work with ${roommates.join(' and ')} in the ${room}: the room is answered first by ${roommates.join(' and ')}, who calls on you.`
@@ -133,7 +128,7 @@ Riker, or the admin, sometimes sends you directives in the Common Room: prioriti
 
 function runInstructions(agent: CrewKey) {
 	const room = roomNames[roomOf(agent)]
-	const roommates = roommatesOf(agent)
+	const roommates = roommatesOf(agent).map(displayName)
 	return `## Your runs
 
 Everything reaches you in this one conversation, from two places:

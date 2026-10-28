@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useRouterState } from '@tanstack/react-router'
+import { Link, useMatchRoute } from '@tanstack/react-router'
 import { CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { meetingDue } from '../../../shared/crew'
@@ -12,8 +12,10 @@ import { dayLabel } from '~/lib/format'
 export function MeetingBanner() {
 	const { data: room } = useQuery(roomQuery())
 	const { data: command } = useQuery(commandQuery())
-	const inCommand = useRouterState({
-		select: (state) => state.location.pathname === '/room/command',
+	const matchRoute = useMatchRoute()
+	const inCommand = !!matchRoute({
+		to: '/room/$room',
+		params: { room: 'command' },
 	})
 	if (inCommand || !room?.weekly.briefAt || !meetingDue(room.weekly)) {
 		return null

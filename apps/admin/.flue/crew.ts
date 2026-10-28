@@ -18,7 +18,7 @@ export const roomFor = () =>
 // The crew members that run. A function, not a constant: agent modules
 // import this file, and the agent they export is not initialised yet while
 // this module evaluates.
-export const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
+const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 	riker: Riker,
 	data: Data,
 	geordi: Geordi,

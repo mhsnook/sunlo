@@ -7,6 +7,7 @@ import { Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { MessageMarker } from '@/components/ui/message'
 import { toastError } from '@/components/ui/sonner'
 import {
 	displayName,
@@ -70,6 +71,20 @@ function IconAvatar({
 		>
 			<Icon />
 		</span>
+	)
+}
+
+// "Geordi is working…" under a timeline, while any of `agents` runs.
+export function WorkingMarker({ agents }: { agents: Array<CrewKey> }) {
+	if (!agents.length) return null
+	return (
+		<MessageMarker
+			className="mx-auto max-w-3xl px-4 pb-4"
+			data-testid="crew-working"
+		>
+			{agents.map(displayName).join(' and ')}{' '}
+			{agents.length === 1 ? 'is' : 'are'} working…
+		</MessageMarker>
 	)
 }
 
@@ -231,6 +246,7 @@ export function ChangeCard({ message }: { message: CrewMessageType }) {
 }
 
 const cardLabels: Partial<Record<CardType['kind'], string>> = {
+	question: 'A question for you',
 	decide: 'Your call · on hold',
 	confirm: 'Done in your stead · confirm',
 	escalate: 'Needs more than the crew has',

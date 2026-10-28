@@ -2,16 +2,9 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { BarChart3, Brain, ClipboardList } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import {
-	adminAuthor,
-	crewKeys,
-	crewList,
-	displayName,
-} from '../../../shared/crew'
+import { adminAuthor, crewKeys, crewList } from '../../../shared/crew'
 import {
 	commonKnowledgeQuery,
 	isWorking,
@@ -19,8 +12,9 @@ import {
 	roomQuery,
 	sitrepQuery,
 } from '~/lib/crew'
-import { AgentAvatar } from '~/components/crew/crew-parts'
+import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
+import { SidePanelSlot } from '~/components/crew/side-panel'
 import { CommonKnowledgePanel } from '~/components/crew/common-knowledge-panel'
 import { OverviewPanel } from '~/components/crew/overview-panel'
 import { SitrepPanel } from '~/components/crew/sitrep-panel'
@@ -107,25 +101,12 @@ function CrewRoomPage() {
 					) : (
 						<EmptyRoom />
 					)}
-					{working.length > 0 && (
-						<MessageMarker
-							className="mx-auto max-w-3xl px-4 pb-4"
-							data-testid="crew-working"
-						>
-							{working.map(displayName).join(' and ')}{' '}
-							{working.length === 1 ? 'is' : 'are'} working…
-						</MessageMarker>
-					)}
+					<WorkingMarker agents={working} />
 				</MessageScroller>
 				<RoomCompose />
 			</section>
 			{panel && (
-				<div
-					className={cn(
-						'max-md:bg-background max-md:fixed max-md:inset-0 max-md:z-40',
-						'md:shrink-0'
-					)}
-				>
+				<SidePanelSlot>
 					{panel === 'sitrep' && <SitrepPanel onClose={() => setPanel(null)} />}
 					{panel === 'knowledge' && (
 						<CommonKnowledgePanel onClose={() => setPanel(null)} />
@@ -133,7 +114,7 @@ function CrewRoomPage() {
 					{panel === 'overview' && (
 						<OverviewPanel onClose={() => setPanel(null)} />
 					)}
-				</div>
+				</SidePanelSlot>
 			)}
 		</div>
 	)

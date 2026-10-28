@@ -38,7 +38,7 @@
 			],
 		},
 	],
-	// Hourly: Product's daily run at 07:00 UTC, and Riker's brief at Sunday
+	// Hourly: Geordi's daily run at 07:00 UTC, and Riker's brief at Sunday
 	// 04:00 in the admin's time zone (.flue/cloudflare.ts).
 	"triggers": { "crons": ["0 * * * *"] },
 	"routes": [

@@ -2,12 +2,11 @@ import { useState } from 'react'
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { NotebookText } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import {
 	adminAuthor,
+	associatesOf,
 	crew,
 	displayName,
 	isRoomKey,
@@ -25,8 +24,9 @@ import {
 	threadQuery,
 	workspaceQuery,
 } from '~/lib/crew'
-import { RoomAvatar } from '~/components/crew/crew-parts'
+import { RoomAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
+import { SidePanelSlot } from '~/components/crew/side-panel'
 import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
 import { RoomPanel } from '~/components/crew/room-panel'
 import { RoomTimeline } from '~/components/crew/room-timeline'
@@ -110,36 +110,22 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					) : (
 						<EmptyThread room={room} />
 					)}
-					{working.length > 0 && (
-						<MessageMarker
-							className="mx-auto max-w-3xl px-4 pb-4"
-							data-testid="crew-working"
-						>
-							{working.map(displayName).join(' and ')}{' '}
-							{working.length === 1 ? 'is' : 'are'} working…
-						</MessageMarker>
-					)}
+					<WorkingMarker agents={working} />
 				</MessageScroller>
 				<RoomThreadCompose room={room} weekly={crewRoom.weekly} />
 			</section>
 			{panelOpen && (
-				<div
-					className={cn(
-						'max-md:bg-background max-md:fixed max-md:inset-0 max-md:z-40',
-						'md:shrink-0'
-					)}
-				>
+				<SidePanelSlot>
 					<RoomPanel room={room} onClose={() => setPanelOpen(false)} />
-				</div>
+				</SidePanelSlot>
 			)}
 		</div>
 	)
 }
 
 function EmptyThread({ room }: { room: RoomKey }) {
-	const members = roomMembers(room)
 	const principal = principalOf(room)
-	const associates = members.filter((key) => key !== principal)
+	const associates = associatesOf(room)
 	return (
 		<div className="mx-auto max-w-md space-y-3 px-4 pt-[15dvh] text-center">
 			<div className="flex justify-center">

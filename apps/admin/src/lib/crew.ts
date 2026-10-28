@@ -213,21 +213,37 @@ const upsert = (messages: Array<CrewMessageType>, message: CrewMessageType) => {
 	return index === -1 ? [...messages, message] : messages.with(index, message)
 }
 
-// Into whichever timeline the message belongs to.
-function upsertMessage(queryClient: QueryClient, message: CrewMessageType) {
-	const room = roomOfPlace(message.place)
+type Timeline = { messages: Array<CrewMessageType>; seenAt: string | null }
+
+// Changes the cached timeline a place belongs to, if it is cached.
+function updateTimeline(
+	queryClient: QueryClient,
+	place: PlaceType,
+	change: (timeline: Timeline) => Partial<Timeline>
+) {
+	const room = roomOfPlace(place)
 	if (room) {
 		queryClient.setQueryData(threadQuery(room).queryKey, (thread) =>
-			thread
-				? { ...thread, messages: upsert(thread.messages, message) }
-				: thread
+			thread ? { ...thread, ...change(thread) } : thread
 		)
 	} else {
-		queryClient.setQueryData(roomQuery().queryKey, (room) =>
-			room ? { ...room, messages: upsert(room.messages, message) } : room
+		queryClient.setQueryData(roomQuery().queryKey, (common) =>
+			common ? { ...common, ...change(common) } : common
 		)
 	}
 }
+
+const upsertMessage = (queryClient: QueryClient, message: CrewMessageType) =>
+	updateTimeline(queryClient, message.place, (timeline) => ({
+		messages: upsert(timeline.messages, message),
+	}))
+
+// A message someone else wrote after the admin last opened its timeline.
+export const isNewFor = (
+	message: CrewMessageType,
+	seenAt: string | null,
+	myAuthor: string
+) => !!seenAt && message.at > seenAt && message.author !== myAuthor
 
 export function usePostToRoom() {
 	const queryClient = useQueryClient()
@@ -317,16 +333,7 @@ export async function markSeen(
 	}
 	if (!leaving) return
 	const seenAt = new Date().toISOString()
-	const room = roomOfPlace(place)
-	if (room) {
-		queryClient.setQueryData(threadQuery(room).queryKey, (thread) =>
-			thread ? { ...thread, seenAt } : thread
-		)
-	} else {
-		queryClient.setQueryData(roomQuery().queryKey, (room) =>
-			room ? { ...room, seenAt } : room
-		)
-	}
+	updateTimeline(queryClient, place, () => ({ seenAt }))
 }
 
 // Follows the crew room for as long as the admin layout is mounted.

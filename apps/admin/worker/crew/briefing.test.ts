@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CrewKey, CrewMessageType } from '../../shared/crew'
-import { briefingText, type BriefingInput } from './briefing'
+import { briefingText, sitrepText, type BriefingInput } from './briefing'
 
 const message = (
 	over: Partial<CrewMessageType> & Pick<CrewMessageType, 'body' | 'place'>
@@ -28,10 +28,10 @@ const input = (
 	workspace: { agent, todos: [], memory: [], openItems: [], cards: [] },
 	cards: { waiting: [], answered: [] },
 	command: null,
-	unread: [
-		{ place: 'common', since: true, messages: [] },
-		{ place: 'own', since: false, messages: [] },
-	],
+	unread: {
+		common: { since: true, messages: [] },
+		own: { since: false, messages: [] },
+	},
 	...over,
 })
 
@@ -39,20 +39,18 @@ describe('briefingText', () => {
 	it('names the Common Room and the agent’s own room', () => {
 		const text = briefingText(
 			input('geordi', {
-				unread: [
-					{
-						place: 'common',
+				unread: {
+					common: {
 						since: true,
 						messages: [message({ body: 'Morning, all', place: 'room' })],
 					},
-					{
-						place: 'own',
+					own: {
 						since: false,
 						messages: [
 							message({ body: 'How is onboarding?', place: 'room:product' }),
 						],
 					},
-				],
+				},
 			})
 		)
 		expect(text).toContain('It is now 2026-10-28 10:00 UTC.')
@@ -139,5 +137,23 @@ describe('briefingText', () => {
 			"The last weekly meeting was never. The admin's time zone is Europe/Lisbon."
 		)
 		expect(briefingText(input('geordi'))).not.toContain('## The charter')
+	})
+})
+
+describe('sitrepText', () => {
+	it('gives the whole report, then who last wrote it', () => {
+		const text = sitrepText({
+			text: 'Retention first this month.\n\n**Product room**: onboarding.',
+			by: 'riker',
+			byName: 'Cmdr Riker',
+			at: '2026-10-27T14:02:00Z',
+		})
+		expect(text).toBe(
+			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Last written by Cmdr Riker, 2026-10-27 14:02 UTC.)'
+		)
+	})
+
+	it('says so when nobody has written it', () => {
+		expect(sitrepText(null)).toContain('(Nobody has written it yet.)')
 	})
 })

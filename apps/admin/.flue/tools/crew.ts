@@ -1,13 +1,16 @@
-import { defineTool } from '@flue/runtime'
+import { defineTool, type ToolStep } from '@flue/runtime'
 import * as v from 'valibot'
 import {
 	displayName,
 	placeOf,
-	roomMembers,
+	COMMON_ROOM,
+	roommatesOf,
 	roomNames,
 	roomOf,
 	type ActionType,
+	type CardType,
 	type CrewKey,
+	type PlaceType,
 } from '../../shared/crew'
 import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
@@ -40,7 +43,23 @@ export function crewTools(agent: CrewKey) {
 	const ownRoom = roomOf(agent)
 	const place = placeOf(ownRoom)
 	const room = roomNames[ownRoom]
-	const roommates = roomMembers(ownRoom).filter((key) => key !== agent)
+	const roommates = roommatesOf(agent)
+
+	// Durable steps, so a retried run neither posts twice nor wakes twice.
+	async function postAndWake(
+		step: ToolStep,
+		input: { body: string; card: CardType | null; place: PlaceType }
+	) {
+		assertBlocks(input.body)
+		const { message, wake: wakes } = await step.do('post', async () =>
+			(await roomFor()).postFromAgent({ agent, ...input })
+		)
+		await step.do('wake', () => wake(wakes, name).then(() => true))
+		return {
+			messageId: message.id,
+			woke: wakes.map((w) => displayName(w.agent)),
+		}
+	}
 
 	const postToCrew = defineTool({
 		name: 'post_to_common_room',
@@ -52,28 +71,20 @@ export function crewTools(agent: CrewKey) {
 		}),
 		durable: true,
 		async run({ data, step }) {
-			assertBlocks(data.body)
-			const { message, wake: wakes } = await step.do('post', async () =>
-				(await roomFor()).postFromAgent({
-					agent,
-					body: data.body,
-					card: data.options
-						? {
-								kind: 'question' as const,
-								title: null,
-								actions: toActions(data.options),
-								ref: null,
-							}
-						: null,
-					place: 'room',
-				})
-			)
-			await step.do('wake', () => wake(wakes, name).then(() => true))
+			const card = data.options
+				? {
+						kind: 'question' as const,
+						title: null,
+						actions: toActions(data.options),
+						ref: null,
+					}
+				: null
 			return {
-				output: {
-					messageId: message.id,
-					woke: wakes.map((w) => displayName(w.agent)),
-				},
+				output: await postAndWake(step, {
+					body: data.body,
+					card,
+					place: COMMON_ROOM,
+				}),
 			}
 		},
 	})
@@ -84,17 +95,9 @@ export function crewTools(agent: CrewKey) {
 		input: v.object({ body: Text }),
 		durable: true,
 		async run({ data, step }) {
-			assertBlocks(data.body)
-			const { message, wake: wakes } = await step.do('post', async () =>
-				(await roomFor()).postFromAgent({
-					agent,
-					body: data.body,
-					card: null,
-					place,
-				})
-			)
-			await step.do('wake', () => wake(wakes, name).then(() => true))
-			return { output: { messageId: message.id } }
+			return {
+				output: await postAndWake(step, { body: data.body, card: null, place }),
+			}
 		},
 	})
 
@@ -102,7 +105,7 @@ export function crewTools(agent: CrewKey) {
 		name: 'bring_to_admin',
 		description: `Bring the admin a card in the ${room}: the short list they read instead of the whole Common Room. Kinds:
 - decide: you need their call, and the matter is on hold until they answer. Give 2 or 3 short options, or leave them out for Yes and No.
-- confirm: you already acted in their stead, and ask whether that was right. Only for reversible actions that ${ownRoom === 'command' ? 'a kept charter entry' : 'an earlier answer of theirs'} clearly covers.
+- confirm: you already acted in their stead, and ask whether that was right. Only for reversible actions that a kept charter entry or an earlier answer of theirs clearly covers.
 - know: worth knowing, nothing to answer. One or two sentences.
 - escalate: it needs more than the crew has, such as an engineer or a Claude Code session. Write the body as a brief that a person could act on cold.
 Their answer comes back to you.`,
