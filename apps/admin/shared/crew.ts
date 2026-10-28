@@ -331,24 +331,21 @@ export type CommonKnowledgeType = z.infer<typeof CommonKnowledgeSchema>
 // The longest text the voice model reads in one request.
 export const MAX_SPEECH_CHARS = 2000
 
-// The Command room's line is Riker's note on the whole, a few paragraphs;
-// every other room's line is a sentence or two.
-export const SITREP_LINE_MAX = 480
-export const SITREP_NOTE_MAX = 1500
-export const sitrepMax = (room: RoomKey) =>
-	room === 'command' ? SITREP_NOTE_MAX : SITREP_LINE_MAX
+// Every agent reads the whole report at the top of every run.
+export const SITREP_MAX = 4000
 
-// The Situation Report: where each room's subject stands right now, one line
-// per room. Small enough for every agent to read at the top of every run.
-export const SitrepLineSchema = z.object({
-	room: z.enum(roomKeys),
-	text: z.string(),
-	// A crew key, or "admin:<uid>".
-	by: z.string(),
-	byName: z.string(),
-	at: z.string(),
-})
-export type SitrepLineType = z.infer<typeof SitrepLineSchema>
+// The Situation Report: one Markdown document on where Sunlo and each room
+// stand now. Riker and the admin write it; every agent reads it.
+export const SitrepSchema = z
+	.object({
+		text: z.string(),
+		// A crew key, or "admin:<uid>".
+		by: z.string(),
+		byName: z.string(),
+		at: z.string(),
+	})
+	.nullable()
+export type SitrepType = z.infer<typeof SitrepSchema>
 
 export const OpenItemSchema = z.object({
 	id: z.number(),

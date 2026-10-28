@@ -14,12 +14,11 @@ import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
 import { CharterPanel } from './charter-panel'
 import { AgentAvatar, CardActions, ChangeCard, CrewText } from './crew-parts'
 import { MemoryList } from './memory-list'
-import { SitrepLine } from './sitrep-panel'
 import { Empty, Section, TodoList } from './workspace-parts'
 
-// Beside a subject's room: its line in the Situation Report, then who works
-// there, with each officer's to-dos, what is open with the admin, and memory.
-// The Command room also keeps the charter and the weekly settings here.
+// Beside a subject's room: who works there, with each officer's to-dos, what
+// is open with the admin, and memory. The Command room also keeps the charter
+// and the weekly settings here.
 export function RoomPanel({
 	room,
 	onClose,
@@ -46,11 +45,6 @@ export function RoomPanel({
 				</Button>
 			</div>
 			<div className="flex-1 space-y-8 overflow-y-auto px-4 py-4">
-				<Section title="Situation Report">
-					<ul>
-						<SitrepLine room={room} />
-					</ul>
-				</Section>
 				{room === 'command' && <CharterPanel />}
 				{roomMembers(room).map((agent) => (
 					<MemberLog key={agent} agent={agent} />

@@ -1,30 +1,14 @@
-import {
-	roomKeys,
-	roomNames,
-	type RoomKey,
-	type SitrepLineType,
-} from '../../shared/crew'
+import type { SitrepType } from '../../shared/crew'
 
-// The Situation Report as every agent reads it in its <crew-context>: the
-// Command room's line, which is Riker's note on the whole, then each other
-// room in order, with an empty line marked rather than left out, so a stalled
-// room shows.
+// The Situation Report as every agent reads it in its <crew-context>.
 export function sitrepContext(
-	lines: Array<SitrepLineType>,
+	sitrep: SitrepType,
 	stamp: (iso: string) => string
 ) {
-	const line = (room: RoomKey) => {
-		const entry = lines.find((l) => l.room === room)
-		return entry
-			? `${entry.text} (${entry.byName}, ${stamp(entry.at)})`
-			: '(no report yet)'
-	}
-	const rooms = roomKeys
-		.filter((room) => room !== 'command')
-		.map((room) => `- ${roomNames[room]}: ${line(room)}`)
 	return [
-		'## The Situation Report: where each room stands now',
-		`Riker's note, for the Command room: ${line('command')}`,
-		rooms.join('\n'),
+		'## The Situation Report: where Sunlo and each room stand now',
+		sitrep
+			? `${sitrep.text}\n\n(Last written by ${sitrep.byName}, ${stamp(sitrep.at)}.)`
+			: '(Nobody has written it yet.)',
 	].join('\n\n')
 }

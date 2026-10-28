@@ -8,6 +8,7 @@ import {
 	fixedRouting,
 	isCrewKey,
 	roomKeys,
+	roomNames,
 	roomOfPlace,
 	meetingDue,
 	mentionedCrew,
@@ -15,7 +16,7 @@ import {
 	principalOf,
 	roomMembers,
 	roomOf,
-	sitrepMax,
+	SITREP_MAX,
 	type ActionType,
 	type AgentStatusType,
 	type CardType,
@@ -33,7 +34,7 @@ import {
 	type RoomStateType,
 	type RoomThreadType,
 	type RoutingType,
-	type SitrepLineType,
+	type SitrepType,
 	type WeeklyType,
 	type WorkspaceType,
 } from '../../shared/crew'
@@ -82,13 +83,13 @@ type CharterRow = {
 }
 
 type SitrepRow = {
-	room: RoomKey
 	text: string
 	by: string
 	by_name: string
 	at: string
 }
 
+// A Situation Report line from before the report was one document.
 type SitrepTrackRow = {
 	agent: string
 	track: string
@@ -98,21 +99,6 @@ type SitrepTrackRow = {
 	at: string
 }
 
-// The rooms that agent keys from before subject rooms kept their Situation
-// Report lines for, including keys that have since been renamed.
-const roomOfOldAgent: Record<string, RoomKey> = {
-	riker: 'command',
-	product: 'product',
-	geordi: 'product',
-	library: 'library',
-	hoshi: 'library',
-	growth: 'learnership',
-	guinan: 'learnership',
-}
-const renamedAgents: Record<string, CrewKey> = {
-	product: 'geordi',
-	growth: 'guinan',
-}
 const DISMISS = { id: 'dismiss', label: 'Dismissed' }
 
 type IdRow = { id: number }
@@ -185,7 +171,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
-		this.setAsideSitrepTracks()
 		this.sql`
 			create table if not exists message (
 				id text primary key,
@@ -266,9 +251,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null
 			);
 			-- One line per crew member and track; Riker's line is his note.
-			-- One line per room; the Command room's line is Riker's note.
-			create table if not exists sitrep (
-				room text primary key,
+			-- One row, id 1: the Situation Report, which Riker and the admin write.
+			create table if not exists situation_report (
+				id integer primary key check (id = 1),
 				text text not null,
 				by text not null,
 				by_name text not null,
@@ -346,43 +331,43 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			update or replace cursor set place = 'room:command' where place = 'bridge'`
 		this.sql`
 			update or replace seen set place = 'room:command' where place = 'bridge'`
-		this.mergeSitrepTracks()
+		this.mergeSitrepIntoOneReport()
 	}
 
-	// The Situation Report kept a line per agent and track before it kept one
-	// per room. Runs before the tables are created, so the old table is out of
-	// the way when the new one is.
-	private setAsideSitrepTracks() {
-		const columns = this.sql<{ name: string }>`
-			select name from pragma_table_info('sitrep')`
-		if (columns.some((c) => c.name === 'track')) {
-			this.sql`alter table sitrep rename to sitrep_by_track`
-		}
-	}
-
-	// Each room's old lines become its one line, a track per line when it
-	// had more than one. Monitor's and Moderator's lines have no room and go.
-	private mergeSitrepTracks() {
+	// The Situation Report kept a line per agent and track; now it is one
+	// document. Riker's note opens it, then each room's lines follow under
+	// the room's name. Monitor's and Moderator's lines have no room and go.
+	private mergeSitrepIntoOneReport() {
 		const old = this.sql<{ name: string }>`
-			select name from sqlite_master
-			where type = 'table' and name = 'sitrep_by_track'`
+			select name from sqlite_master where type = 'table' and name = 'sitrep'`
 		if (!old.length) return
-		const rows = this.sql<SitrepTrackRow>`
-			select * from sitrep_by_track order by at`
-		for (const room of roomKeys) {
-			const own = rows.filter((row) => roomOfOldAgent[row.agent] === room)
-			const latest = own.at(-1)
-			if (!latest) continue
-			const text =
-				own.length === 1
-					? latest.text
-					: own.map((row) => `${row.track}: ${row.text}`).join('\n')
-			const renamed = renamedAgents[latest.by]
-			this.sql`
-				insert or replace into sitrep (room, text, by, by_name, at)
-				values (${room}, ${text}, ${renamed ?? latest.by}, ${renamed ? displayName(renamed) : latest.by_name}, ${latest.at})`
+		const rows = this.sql<SitrepTrackRow>`select * from sitrep order by at`
+		const roomOfOldAgent: Record<string, RoomKey> = {
+			product: 'product',
+			library: 'library',
+			growth: 'learnership',
 		}
-		this.sql`drop table sitrep_by_track`
+		const note = rows.find((row) => row.agent === 'riker')?.text
+		const sections = roomKeys.flatMap((room) => {
+			const lines = rows.filter((row) => roomOfOldAgent[row.agent] === room)
+			return lines.length
+				? [
+						`**${roomNames[room]}**\n${lines.map((row) => `- ${row.track}: ${row.text}`).join('\n')}`,
+					]
+				: []
+		})
+		const text = [note, ...sections].filter(Boolean).join('\n\n')
+		const latest = rows.at(-1)
+		const exists = this.sql`select 1 from situation_report`
+		if (text && latest && !exists.length) {
+			const renamed = (
+				{ product: 'geordi', growth: 'guinan' } as Record<string, CrewKey>
+			)[latest.by]
+			this.sql`
+				insert into situation_report (id, text, by, by_name, at)
+				values (1, ${text}, ${renamed ?? latest.by}, ${renamed ? displayName(renamed) : latest.by_name}, ${latest.at})`
+		}
+		this.sql`drop table sitrep`
 	}
 
 	// Moves everything an agent owns, wrote or was routed to onto a new key.
@@ -1140,42 +1125,26 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return edited.length > 0
 	}
 
-	sitrep(): Array<SitrepLineType> {
-		const rows = this.sql<SitrepRow>`select * from sitrep`
-		return roomKeys.flatMap((room) => {
-			const row = rows.find((r) => r.room === room)
-			return row
-				? [
-						{
-							room,
-							text: row.text,
-							by: row.by,
-							byName: row.by_name,
-							at: row.at,
-						},
-					]
-				: []
-		})
+	sitrep(): SitrepType {
+		const row = this.sql<SitrepRow>`select * from situation_report`[0]
+		return row
+			? { text: row.text, by: row.by, byName: row.by_name, at: row.at }
+			: null
 	}
 
-	// An empty text clears the line. False for a text over its limit.
-	setSitrep(input: {
-		room: RoomKey
-		text: string
-		by: string
-		byName: string
-	}) {
+	// An empty text clears the report. False for a text over SITREP_MAX.
+	setSitrep(input: { text: string; by: string; byName: string }) {
 		const text = input.text.trim()
-		if (text.length > sitrepMax(input.room)) return false
+		if (text.length > SITREP_MAX) return false
 		if (text) {
 			this.sql`
-				insert into sitrep (room, text, by, by_name, at)
-				values (${input.room}, ${text}, ${input.by}, ${input.byName}, ${now()})
-				on conflict (room) do update set
+				insert into situation_report (id, text, by, by_name, at)
+				values (1, ${text}, ${input.by}, ${input.byName}, ${now()})
+				on conflict (id) do update set
 					text = excluded.text, by = excluded.by,
 					by_name = excluded.by_name, at = excluded.at`
 		} else {
-			this.sql`delete from sitrep where room = ${input.room}`
+			this.sql`delete from situation_report`
 		}
 		this.push({ type: 'sitrep' })
 		return true

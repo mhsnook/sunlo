@@ -41,7 +41,7 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 **Common Knowledge**, a panel in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
 
-**The Situation Report**, beside the Common Room on a wide screen, says where each room's subject stands now: one line per room. The Command room's line is Riker's note on the whole. A room that covers more than one thing, such as product and engineering, says where each stands in its line, so that one that stalls shows. Every agent reads the report after Common Knowledge. The officers in a room rewrite its line with `update_situation_report`, Riker may rewrite any room's line, and you edit all of them in the panel or in each room log.
+**The Situation Report**, beside the Common Room on a wide screen, is one Markdown document on where Sunlo and each room stand now. Riker keeps it with `update_situation_report`, and you edit it in the panel; every agent reads it after Common Knowledge, and an officer whose subject it describes wrong tells Riker. It holds at most 4,000 characters, since every run reads all of it.
 
 **Voice.** Every compose bar has a mic: press it, talk, and press it again, and what you said lands in the draft for you to read before sending. The speaker button beside it turns on voice replies, which reads each new reply aloud in the agent's own voice as it arrives. Any agent message also has its own read-aloud button. The Worker does both with Workers AI: Deepgram Nova 3 for speech to text and Aura 2 for text to speech (`worker/voice.ts`).
 
@@ -60,7 +60,7 @@ The roster lives in `shared/crew.ts`: each room's key, and each officer's key (a
 
 In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
-The **room log** beside the thread holds the room's line in the Situation Report, then each member's profile card, to-dos, what is open with you, and memory. You can edit the report line and edit or prune the memory there. The Command room's log also holds the charter, the weekly settings and Data's playbook.
+The **room log** beside the thread holds each member's profile card, to-dos, what is open with you, and memory, and you can edit or prune the memory there. The Command room's log also holds the charter, the weekly settings and Data's playbook.
 
 Every agent keeps one Flue conversation, `memory` (`CONVERSATION` in `worker/crew/room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. No agent reads another subject's room.
 
@@ -123,7 +123,7 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `bring_to_admin`: a card in the agent's own room
 - `propose_change`: a "Change to the plan" card in the agent's own room
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
-- Riker and Data also have `propose_charter`. Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
+- Riker and Data also have `propose_charter`. Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room), `close_meeting` and `update_situation_report`, and Data has `note_playbook` and `file_report`.
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today), through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 

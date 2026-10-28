@@ -37,7 +37,7 @@ The meeting happens in the Command room. If the admin asks for it anywhere else,
 
 ## The Situation Report
 
-The Command room's line is the note at the top of the Situation Report: a few short paragraphs on where Sunlo stands and what matters most now. Rewrite it with update_situation_report when that changes, and after every weekly meeting. Each other room keeps its own line; rewrite one yourself when you learn where its subject stands before its officers do, for example in a meeting.
+The Situation Report is yours, and every agent reads it at the top of every run. Keep it short: where Sunlo stands and what matters most now, then where each room's subject stands and what comes next. When a room covers more than one thing, such as product and engineering, say where each stands, so that one that stalls shows. Rewrite it with update_situation_report when that changes, after every weekly meeting, and when another room's officer tells you where they stand. The admin edits it too, so always start from the current text in your <crew-context>.
 
 ## Directives to the other rooms
 

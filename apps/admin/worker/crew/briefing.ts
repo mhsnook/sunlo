@@ -6,7 +6,7 @@ import {
 	type CommonKnowledgeType,
 	type CrewKey,
 	type CrewMessageType,
-	type SitrepLineType,
+	type SitrepType,
 	type WeeklyType,
 	type WorkspaceType,
 } from '../../shared/crew'
@@ -48,7 +48,7 @@ export type BriefingInput = {
 	now: string
 	agent: CrewKey
 	commonKnowledge: Array<CommonKnowledgeType>
-	sitrep: Array<SitrepLineType>
+	sitrep: SitrepType
 	workspace: WorkspaceType
 	// The cards in the agent's own room.
 	cards: {

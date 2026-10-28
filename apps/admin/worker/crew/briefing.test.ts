@@ -24,7 +24,7 @@ const input = (
 	now: '2026-10-28T10:00:00Z',
 	agent,
 	commonKnowledge: [{ id: 1, text: 'Call the admin Sam.', at: '' }],
-	sitrep: [],
+	sitrep: null,
 	workspace: { agent, todos: [], memory: [], openItems: [], cards: [] },
 	cards: { waiting: [], answered: [] },
 	command: null,

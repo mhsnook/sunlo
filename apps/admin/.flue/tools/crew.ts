@@ -1,13 +1,11 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
 import {
-	roomKeys,
 	displayName,
 	placeOf,
 	roomMembers,
 	roomNames,
 	roomOf,
-	sitrepMax,
 	type ActionType,
 	type CrewKey,
 } from '../../shared/crew'
@@ -265,38 +263,10 @@ Their answer comes back to you.`,
 		},
 	})
 
-	// Every officer keeps its own room's line; Riker may rewrite any room's.
-	const sitrepRooms = agent === 'riker' ? [...roomKeys] : [ownRoom]
-	const updateSitrep = defineTool({
-		name: 'update_situation_report',
-		description: `Rewrite a room's line in the Situation Report, which every agent reads at the top of every run. Say where the room's subject stands now and what comes next, not a history; leave numbers to queries. An empty text clears the line. The ${roomNames.command}'s line is Riker's note on the whole.`,
-		input: v.object({
-			room: v.optional(v.picklist(sitrepRooms), ownRoom),
-			text: v.pipe(v.string(), v.trim()),
-		}),
-		async run({ data }) {
-			const ok = await (
-				await roomFor()
-			).setSitrep({
-				room: data.room,
-				text: data.text,
-				by: agent,
-				byName: name,
-			})
-			if (!ok) {
-				throw new Error(
-					`That line holds at most ${sitrepMax(data.room)} characters.`
-				)
-			}
-			return 'Updated.'
-		},
-	})
-
 	return [
 		postToCrew,
 		postToRoom,
 		bringToAdmin,
-		updateSitrep,
 		proposeChange,
 		readRoom,
 		addTodo,

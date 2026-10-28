@@ -1,6 +1,12 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
-import { principalOf, roomKeys, type CrewKey } from '../../shared/crew'
+import {
+	displayName,
+	principalOf,
+	roomKeys,
+	SITREP_MAX,
+	type CrewKey,
+} from '../../shared/crew'
 import { requestReport, roomFor, wake } from '../crew'
 import { assertBlocks, Text } from './posting'
 
@@ -97,7 +103,23 @@ export function rikerTools() {
 		},
 	})
 
-	return [writeBrief, startMeeting, closeMeeting]
+	const updateSitrep = defineTool({
+		name: 'update_situation_report',
+		description: `Replace the Situation Report, which every agent reads at the top of every run, with a new version. Markdown, at most ${SITREP_MAX} characters: where Sunlo stands and what matters most now, then where each room's subject stands and what comes next. Not a history; leave numbers to queries. Start from the current text in your <crew-context>, since the admin edits it too.`,
+		input: v.object({ text: v.pipe(Text, v.maxLength(SITREP_MAX)) }),
+		async run({ data }) {
+			await (
+				await roomFor()
+			).setSitrep({
+				text: data.text,
+				by: 'riker',
+				byName: displayName('riker'),
+			})
+			return 'Updated.'
+		},
+	})
+
+	return [writeBrief, startMeeting, closeMeeting, updateSitrep]
 }
 
 // Data's playbook: the metrics the admin likes in each domain, and how they

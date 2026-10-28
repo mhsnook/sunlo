@@ -26,7 +26,7 @@ import {
 	roomOfPlace,
 	RoomSnapshotSchema,
 	RoomThreadSchema,
-	SitrepLineSchema,
+	SitrepSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
@@ -93,19 +93,15 @@ export const commandQuery = () =>
 export const sitrepQuery = () =>
 	queryOptions({
 		queryKey: ['crew', 'sitrep'],
-		queryFn: async () =>
-			z.array(SitrepLineSchema).parse(await adminFetch('crew/sitrep')),
+		queryFn: async () => SitrepSchema.parse(await adminFetch('crew/sitrep')),
 		staleTime: Infinity,
 	})
 
 export function useSetSitrep() {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (input: { room: RoomKey; text: string }) =>
-			adminFetch(`crew/sitrep/${input.room}`, {
-				method: 'PUT',
-				json: { text: input.text },
-			}),
+		mutationFn: (text: string) =>
+			adminFetch('crew/sitrep', { method: 'PUT', json: { text } }),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: sitrepQuery().queryKey }),
 	})

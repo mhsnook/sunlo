@@ -8,7 +8,7 @@ import {
 	roomKeys,
 	PlaceSchema,
 	RoutingSchema,
-	SITREP_NOTE_MAX,
+	SITREP_MAX,
 } from '../shared/crew'
 import { createApi } from '../worker/api'
 import { deliver, requestReport, roomFor, wake } from './crew'
@@ -251,20 +251,20 @@ api.get('/crew/sitrep', async (c) => {
 })
 
 api.put(
-	'/crew/sitrep/:room',
-	roomParam,
-	json(z.object({ text: z.string().max(SITREP_NOTE_MAX) }), 'Send { text }'),
+	'/crew/sitrep',
+	json(z.object({ text: z.string().max(SITREP_MAX) }), 'Send { text }'),
 	async (c) => {
 		const admin = c.get('admin')
 		const ok = await (
 			await roomFor()
 		).setSitrep({
-			room: c.req.valid('param').room,
 			text: c.req.valid('json').text,
 			by: adminAuthor(admin.uid),
 			byName: admin.name,
 		})
-		return ok ? c.json({ ok }) : c.json({ error: 'That line is too long' }, 400)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'The report is too long' }, 400)
 	}
 )
 

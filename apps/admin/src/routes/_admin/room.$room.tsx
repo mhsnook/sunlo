@@ -22,7 +22,6 @@ import {
 	isWorking,
 	markSeen,
 	roomQuery,
-	sitrepQuery,
 	threadQuery,
 	workspaceQuery,
 } from '~/lib/crew'
@@ -43,7 +42,6 @@ export const Route = createFileRoute('/_admin/room/$room')({
 		Promise.all([
 			context.queryClient.ensureQueryData(threadQuery(params.room)),
 			context.queryClient.ensureQueryData(roomQuery()),
-			context.queryClient.ensureQueryData(sitrepQuery()),
 			...(params.room === 'command'
 				? [context.queryClient.ensureQueryData(commandQuery())]
 				: []),
