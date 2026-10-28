@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'
 
 const fail = (error: Error) => toastError(error.message)
 
-// One line of text the admin can edit in place or delete: a charter entry, a
-// Common Knowledge entry, a Situation Report line, or an agent's memory.
+// Text the admin can edit in place or delete: a charter entry, a
+// Common Knowledge entry, the Situation Report, or an agent's memory.
 export function EditableEntry({
 	id,
 	text,

@@ -15,15 +15,17 @@ import {
 } from '@/components/ui/message'
 import { hasBlocks } from '../../../shared/blocks'
 import {
-	bridgeKeys,
-	crew,
+	COMMON_ROOM,
+	displayName,
 	isCrewKey,
+	roomNames,
+	roomOf,
 	speakerOf,
 	type CrewMessageType,
 } from '../../../shared/crew'
 import {
 	AgentAvatar,
-	BridgeCard,
+	RoomCard,
 	CardActions,
 	ChangeCard,
 	CrewText,
@@ -32,7 +34,7 @@ import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
 import { useReadOnArrival } from '~/lib/voice'
-import { useCorrectRouting } from '~/lib/crew'
+import { isNewFor, useCorrectRouting } from '~/lib/crew'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
 
@@ -74,9 +76,7 @@ export function RoomTimeline({
 			return agent ? [{ id: message.id, text: message.body, agent }] : []
 		})
 	)
-	const firstNew = newSince
-		? messages.find((m) => m.at > newSince && m.author !== myAuthor)?.id
-		: undefined
+	const firstNew = messages.find((m) => isNewFor(m, newSince, myAuthor))?.id
 	const groups = groupMessages(messages)
 	const newSinceMarker = newSince ? (
 		<MessageMarker
@@ -148,15 +148,11 @@ function AuthorGroup({
 					>
 						{!mine && (
 							<MessageAvatar className={cn(!last && 'invisible')}>
-								{agent && bridgeKeys.includes(agent) ? (
-									<Link to="/enterprise" aria-label="The Enterprise">
-										<AgentAvatar agent={agent} size="sm" />
-									</Link>
-								) : agent ? (
+								{agent ? (
 									<Link
-										to="/crew/$agent"
-										params={{ agent }}
-										aria-label={`${crew[agent].name}'s workspace`}
+										to="/room/$room"
+										params={{ room: roomOf(agent) }}
+										aria-label={`${displayName(agent)}, in the ${roomNames[roomOf(agent)]}`}
 									>
 										<AgentAvatar agent={agent} size="sm" />
 									</Link>
@@ -177,7 +173,7 @@ function AuthorGroup({
 							{message.card?.kind === 'change' ? (
 								<ChangeCard message={message} />
 							) : message.card && message.card.kind !== 'question' ? (
-								<BridgeCard message={message} />
+								<RoomCard message={message} />
 							) : (
 								<SpeakableBubble
 									id={message.id}
@@ -213,7 +209,7 @@ function AuthorGroup({
 							)}
 							{mine &&
 								message.routing?.kind === 'stack' &&
-								message.place === 'bridge' && (
+								message.place !== COMMON_ROOM && (
 									<MessageFooter>{routingNote(message.routing)}</MessageFooter>
 								)}
 						</MessageContent>

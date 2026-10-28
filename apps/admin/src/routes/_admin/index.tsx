@@ -2,11 +2,9 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { BarChart3, Brain, ClipboardList } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { MessageMarker } from '@/components/ui/message'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import { adminAuthor, crew, crewKeys, crewList } from '../../../shared/crew'
+import { adminAuthor, crewKeys, crewList } from '../../../shared/crew'
 import {
 	commonKnowledgeQuery,
 	isWorking,
@@ -14,8 +12,9 @@ import {
 	roomQuery,
 	sitrepQuery,
 } from '~/lib/crew'
-import { AgentAvatar } from '~/components/crew/crew-parts'
+import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
+import { SidePanelSlot } from '~/components/crew/side-panel'
 import { CommonKnowledgePanel } from '~/components/crew/common-knowledge-panel'
 import { OverviewPanel } from '~/components/crew/overview-panel'
 import { SitrepPanel } from '~/components/crew/sitrep-panel'
@@ -102,25 +101,12 @@ function CrewRoomPage() {
 					) : (
 						<EmptyRoom />
 					)}
-					{working.length > 0 && (
-						<MessageMarker
-							className="mx-auto max-w-3xl px-4 pb-4"
-							data-testid="crew-working"
-						>
-							{working.map((key) => crew[key].name).join(' and ')}{' '}
-							{working.length === 1 ? 'is' : 'are'} working…
-						</MessageMarker>
-					)}
+					<WorkingMarker agents={working} />
 				</MessageScroller>
 				<RoomCompose />
 			</section>
 			{panel && (
-				<div
-					className={cn(
-						'max-md:bg-background max-md:fixed max-md:inset-0 max-md:z-40',
-						'md:shrink-0'
-					)}
-				>
+				<SidePanelSlot>
 					{panel === 'sitrep' && <SitrepPanel onClose={() => setPanel(null)} />}
 					{panel === 'knowledge' && (
 						<CommonKnowledgePanel onClose={() => setPanel(null)} />
@@ -128,7 +114,7 @@ function CrewRoomPage() {
 					{panel === 'overview' && (
 						<OverviewPanel onClose={() => setPanel(null)} />
 					)}
-				</div>
+				</SidePanelSlot>
 			)}
 		</div>
 	)
@@ -144,9 +130,10 @@ function EmptyRoom() {
 			</div>
 			<h2 className="text-xl font-semibold">Common Room</h2>
 			<p className="text-muted-foreground text-sm">
-				The whole crew reads this room. Write @ and a name to ask someone; Riker
-				and Data bring what needs you to the Enterprise. USS Product posts after
-				its daily run. A message that ends in “...” waits for your next one.
+				The whole crew reads this room. Write @ and a name to ask someone, or a
+				room's name to ask whoever runs it. Each subject has a room of its own,
+				where what needs you arrives. Geordi posts here after his daily run. A
+				message that ends in “...” waits for your next one.
 			</p>
 		</div>
 	)

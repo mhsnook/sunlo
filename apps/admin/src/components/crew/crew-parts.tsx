@@ -3,35 +3,61 @@ import { isBlockKind } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { remarkCrew } from './remark-crew'
 import { useState } from 'react'
-import { Rocket, Users, X } from 'lucide-react'
+import { Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { MessageMarker } from '@/components/ui/message'
 import { toastError } from '@/components/ui/sonner'
 import {
-	crew,
+	displayName,
 	isCrewKey,
 	type CardType,
 	type CrewKey,
 	type CrewMessageType,
+	type RoomKey,
 } from '../../../shared/crew'
-import { crewIcons, useAnswerCard } from '~/lib/crew'
+import { crewIcons, roomIcons, useAnswerCard } from '~/lib/crew'
+
+type AvatarSize = 'sm' | 'md' | 'lg'
 
 export function AgentAvatar({
 	agent,
 	size = 'md',
 	className,
 }: {
-	agent: CrewKey | 'crew' | 'enterprise'
-	size?: 'sm' | 'md' | 'lg'
+	agent: CrewKey | 'crew'
+	size?: AvatarSize
 	className?: string
 }) {
-	const Icon =
-		agent === 'crew'
-			? Users
-			: agent === 'enterprise'
-				? Rocket
-				: crewIcons[agent]
+	return (
+		<IconAvatar
+			icon={agent === 'crew' ? Users : crewIcons[agent]}
+			size={size}
+			className={className}
+		/>
+	)
+}
+
+export function RoomAvatar({
+	room,
+	size = 'md',
+}: {
+	room: RoomKey
+	size?: AvatarSize
+}) {
+	return <IconAvatar icon={roomIcons[room]} size={size} />
+}
+
+function IconAvatar({
+	icon: Icon,
+	size,
+	className,
+}: {
+	icon: LucideIcon
+	size: AvatarSize
+	className?: string
+}) {
 	return (
 		<span
 			aria-hidden
@@ -45,6 +71,20 @@ export function AgentAvatar({
 		>
 			<Icon />
 		</span>
+	)
+}
+
+// "Geordi is working…" under a timeline, while any of `agents` runs.
+export function WorkingMarker({ agents }: { agents: Array<CrewKey> }) {
+	if (!agents.length) return null
+	return (
+		<MessageMarker
+			className="mx-auto max-w-3xl px-4 pb-4"
+			data-testid="crew-working"
+		>
+			{agents.map(displayName).join(' and ')}{' '}
+			{agents.length === 1 ? 'is' : 'are'} working…
+		</MessageMarker>
 	)
 }
 
@@ -120,7 +160,7 @@ export function CardActions({ message }: { message: CrewMessageType }) {
 			{ messageId: message.id, actionId, feedback: text },
 			{ onError: (error) => toastError(error.message) }
 		)
-	const author = isCrewKey(message.author) ? crew[message.author].name : null
+	const author = isCrewKey(message.author) ? displayName(message.author) : null
 	if (feedback !== null) {
 		return (
 			<form
@@ -205,7 +245,8 @@ export function ChangeCard({ message }: { message: CrewMessageType }) {
 	)
 }
 
-const bridgeLabels: Partial<Record<CardType['kind'], string>> = {
+const cardLabels: Partial<Record<CardType['kind'], string>> = {
+	question: 'A question for you',
 	decide: 'Your call · on hold',
 	confirm: 'Done in your stead · confirm',
 	escalate: 'Needs more than the crew has',
@@ -235,10 +276,10 @@ function openingLines(body: string) {
 	return text.length > 220 ? `${text.slice(0, 219)}…` : text
 }
 
-// A card Riker or Data brings the admin in the Enterprise thread. A brief
-// or a report arrives folded, like a link preview: its title and opening
-// lines, and the whole of it a click away.
-export function BridgeCard({ message }: { message: CrewMessageType }) {
+// A card an agent brings the admin in its room. A brief or a report arrives
+// folded, like a link preview: its title and opening lines, and the whole of
+// it a click away.
+export function RoomCard({ message }: { message: CrewMessageType }) {
 	const [unfolded, setUnfolded] = useState(false)
 	const card = message.card
 	if (!card) return null
@@ -250,7 +291,7 @@ export function BridgeCard({ message }: { message: CrewMessageType }) {
 				<Button
 					variant="neutral"
 					className="bg-card hover:bg-primary-50 border-border h-auto w-full flex-col items-start gap-1 rounded-2xl p-3 text-start whitespace-normal shadow-none"
-					data-testid="bridge-card"
+					data-testid="room-card"
 					data-key={card.kind}
 					aria-expanded={false}
 					onClick={() => setUnfolded(true)}
@@ -271,11 +312,11 @@ export function BridgeCard({ message }: { message: CrewMessageType }) {
 	return (
 		<div
 			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
-			data-testid="bridge-card"
+			data-testid="room-card"
 			data-key={card.kind}
 		>
 			<p className="text-muted-foreground text-xs font-medium">
-				{bridgeLabels[card.kind]}
+				{cardLabels[card.kind]}
 			</p>
 			{card.title && <p className="text-sm font-semibold">{card.title}</p>}
 			<div className="text-sm">

@@ -1,16 +1,17 @@
-import { createAgentRouter } from '@flue/runtime/routing'
 import { validator } from 'hono/validator'
 import { z } from 'zod'
 import {
 	adminAuthor,
 	crewKeys,
-	fleetKeys,
 	isCrewKey,
+	isRoomKey,
+	roomKeys,
+	PlaceSchema,
 	RoutingSchema,
-	SITREP_NOTE_MAX,
+	SITREP_MAX,
 } from '../shared/crew'
 import { createApi } from '../worker/api'
-import { crewAgents, deliver, requestReport, roomFor, wake } from './crew'
+import { deliver, requestReport, roomFor, wake } from './crew'
 
 // worker/api.ts checks the admin on every /api route. These routes add the
 // crew room and the agents to that app.
@@ -38,7 +39,7 @@ api.get('/crew/room', async (c) => {
 
 api.post(
 	'/crew/seen',
-	json(z.object({ place: z.enum(['room', 'bridge']) }), 'Send { place }'),
+	json(z.object({ place: PlaceSchema }), 'Send { place }'),
 	async (c) => {
 		await (
 			await roomFor()
@@ -92,12 +93,9 @@ api.post(
 			name: c.get('admin').name,
 		})
 		if (!result.ok) return c.json({ error: result.error }, result.status)
-		await deliver(
-			result.agent,
-			result.conversation,
-			'crew.answer',
-			result.body
-		).catch(logFailedDelivery)
+		await deliver(result.agent, 'crew.answer', result.body).catch(
+			logFailedDelivery
+		)
 		return c.json({ ok: true })
 	}
 )
@@ -125,7 +123,7 @@ api.get('/crew/agents/:agent', async (c) => {
 	if (!isCrewKey(agent)) {
 		return c.json({ error: `Crew members are ${crewKeys.join(', ')}` }, 404)
 	}
-	return c.json(await (await roomFor()).workspace(agent, c.get('admin').uid))
+	return c.json(await (await roomFor()).workspace(agent))
 })
 
 api.delete(
@@ -158,20 +156,32 @@ api.patch(
 	}
 )
 
-api.get('/crew/enterprise', async (c) => {
-	return c.json(await (await roomFor()).enterprise(c.get('admin').uid))
+const roomParam = validator('param', (value, c) =>
+	isRoomKey(value.room)
+		? { room: value.room }
+		: c.json({ error: `Rooms are ${roomKeys.join(', ')}` }, 404)
+)
+
+api.get('/crew/rooms/:room', roomParam, async (c) => {
+	return c.json(
+		await (
+			await roomFor()
+		).thread(c.get('admin').uid, c.req.valid('param').room)
+	)
 })
 
 api.post(
-	'/crew/enterprise/messages',
+	'/crew/rooms/:room/messages',
+	roomParam,
 	json(z.object({ body: Text }), 'Send { body }'),
 	async (c) => {
 		const admin = c.get('admin')
 		const { message, wake: wakes } = await (
 			await roomFor()
-		).postToEnterprise({
+		).postToRoom({
 			uid: admin.uid,
 			name: admin.name,
+			room: c.req.valid('param').room,
 			body: c.req.valid('json').body,
 		})
 		await wake(wakes, admin.name)
@@ -179,7 +189,11 @@ api.post(
 	}
 )
 
-api.post('/crew/enterprise/meeting', async (c) => {
+api.get('/crew/command', async (c) => {
+	return c.json(await (await roomFor()).command())
+})
+
+api.post('/crew/meeting', async (c) => {
 	const admin = c.get('admin')
 	const started = await (
 		await roomFor()
@@ -237,24 +251,20 @@ api.get('/crew/sitrep', async (c) => {
 })
 
 api.put(
-	'/crew/sitrep/:agent/:track',
-	json(z.object({ text: z.string().max(SITREP_NOTE_MAX) }), 'Send { text }'),
+	'/crew/sitrep',
+	json(z.object({ text: z.string().max(SITREP_MAX) }), 'Send { text }'),
 	async (c) => {
-		const { agent, track } = c.req.param()
-		if (!isCrewKey(agent)) return c.json({ error: 'No such crew member' }, 404)
 		const admin = c.get('admin')
 		const ok = await (
 			await roomFor()
 		).setSitrep({
-			agent,
-			track,
 			text: c.req.valid('json').text,
 			by: adminAuthor(admin.uid),
 			byName: admin.name,
 		})
 		return ok
 			? c.json({ ok })
-			: c.json({ error: `That line is not in the report, or is too long` }, 400)
+			: c.json({ error: 'The report is too long' }, 400)
 	}
 )
 
@@ -293,22 +303,6 @@ api.put(
 // The room's WebSocket, opened by useAgent. worker/api.ts has checked the
 // admin, from the token in the query string.
 api.get('/crew/live', async (c) => (await roomFor()).fetch(c.req.raw))
-
-// A 1:1 chat with a fleet agent is the conversation "dm-<admin uid>", so an
-// admin can only open their own. Room runs ("team") are dispatch-only, and
-// Riker and Data talk to the admin in the Enterprise thread instead.
-api.use('/agents/*', async (c, next) => {
-	// /api/agents/<agent>/<conversation>[/...]
-	const conversation = c.req.path.split('/')[4]
-	if (conversation !== `dm-${c.get('admin').uid}`) {
-		return c.json({ error: 'Open your own chat: dm-<your user id>' }, 403)
-	}
-	return next()
-})
-for (const key of fleetKeys) {
-	const agent = crewAgents()[key]
-	if (agent) api.route(`/agents/${key}`, createAgentRouter(agent))
-}
 
 export default api
 

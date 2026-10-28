@@ -13,35 +13,40 @@ import {
 } from '@/components/ui/sheet'
 import {
 	adminAuthor,
-	bridgeKeys,
 	crew,
-	fleetKeys,
-	type CrewKey,
+	displayName,
+	principalOf,
+	roomKeys,
+	roomMembers,
+	roomNames,
+	type CrewMessageType,
+	type RoomKey,
 } from '../../../shared/crew'
-import { enterpriseQuery, isWorking, roomQuery } from '~/lib/crew'
-import { AdminAvatar, AgentAvatar } from './crew-parts'
+import { isNewFor, isWorking, roomQuery, threadQuery } from '~/lib/crew'
+import { AdminAvatar, AgentAvatar, RoomAvatar } from './crew-parts'
 import { shortWhen } from '~/lib/format'
+
+// Zero until the admin first opens the timeline: a room they have never
+// read shows no count, however much is in it.
+const unreadCount = (
+	messages: Array<CrewMessageType>,
+	seenAt: string | null,
+	myAuthor: string
+) => messages.filter((m) => isNewFor(m, seenAt, myAuthor)).length
+
+const previewOf = (message: CrewMessageType, myAuthor: string) =>
+	`${message.author === myAuthor ? 'You' : message.authorName}: ${message.card?.title ?? message.body}`
 
 export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 	const { session } = useRouteContext({ from: '/_admin' })
 	const email = session.user.email ?? ''
 	const myAuthor = adminAuthor(session.user.id)
 	const { data: room } = useQuery(roomQuery())
-	const { data: thread } = useQuery(enterpriseQuery())
 	const pathname = useRouterState({
 		select: (state) => state.location.pathname,
 	})
 	const messages = room?.messages ?? []
 	const last = messages.at(-1)
-	const unread =
-		pathname === '/' || !room?.seenAt
-			? 0
-			: messages.filter((m) => m.at > room.seenAt! && m.author !== myAuthor)
-					.length
-	const lastOnBridge = thread?.messages.at(-1)
-	const bridgeWorking = bridgeKeys.filter((key) =>
-		isWorking(room?.statuses[key])
-	)
 
 	return (
 		<nav aria-label="The crew" className="flex h-full flex-col">
@@ -51,56 +56,26 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 					avatar={<AgentAvatar agent="crew" />}
 					name="Common Room"
 					preview={
-						last
-							? `${last.author === myAuthor ? 'You' : last.authorName}: ${last.body}`
-							: 'Nobody has said anything yet'
+						last ? previewOf(last, myAuthor) : 'Nobody has said anything yet'
 					}
 					when={last?.at}
-					count={unread}
+					unread={
+						pathname === '/'
+							? 0
+							: unreadCount(messages, room?.seenAt ?? null, myAuthor)
+					}
 					target="crew"
 					onNavigate={onNavigate}
 				/>
-				<SidebarItem
-					avatar={<AgentAvatar agent="enterprise" />}
-					name="Enterprise"
-					preview={
-						bridgeWorking.length
-							? `${bridgeWorking.map((key) => crew[key].name).join(' and ')} working…`
-							: lastOnBridge
-								? `${lastOnBridge.author === myAuthor ? 'You' : lastOnBridge.authorName}: ${lastOnBridge.card?.title ?? lastOnBridge.body}`
-								: 'Riker and Data'
-					}
-					when={lastOnBridge?.at}
-					count={room?.enterpriseOpen ?? 0}
-					target="enterprise"
-					onNavigate={onNavigate}
-				/>
-				{fleetKeys.map((key) => {
-					const member = crew[key]
-					const own = messages.filter((m) => m.author === key)
-					const latest = own.at(-1)
-					const waiting = own.filter((m) => m.card && !m.answer).length
-					const working = isWorking(room?.statuses[key])
-					return (
-						<SidebarItem
-							key={key}
-							avatar={<AgentAvatar agent={key} />}
-							name={member.name}
-							preview={
-								!member.active
-									? 'Not started yet'
-									: working
-										? 'Working…'
-										: (latest?.body ?? member.title)
-							}
-							when={latest?.at}
-							count={waiting}
-							dim={!member.active}
-							target={key}
-							onNavigate={onNavigate}
-						/>
-					)
-				})}
+				{roomKeys.map((room) => (
+					<SubjectRoomItem
+						key={room}
+						room={room}
+						here={pathname === `/room/${room}`}
+						myAuthor={myAuthor}
+						onNavigate={onNavigate}
+					/>
+				))}
 			</ul>
 			<div className="flex items-center gap-2 border-t px-4 py-3 text-sm">
 				<AdminAvatar name={email} />
@@ -127,12 +102,58 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 	)
 }
 
+function SubjectRoomItem({
+	room,
+	here,
+	myAuthor,
+	onNavigate,
+}: {
+	room: RoomKey
+	here: boolean
+	myAuthor: string
+	onNavigate?: () => void
+}) {
+	const { data: crewRoom } = useQuery(roomQuery())
+	const { data: thread } = useQuery(threadQuery(room))
+	const last = thread?.messages.at(-1)
+	const members = roomMembers(room)
+	const principal = principalOf(room)
+	const working = members.filter((key) => isWorking(crewRoom?.statuses[key]))
+	const active = crew[principal].active
+	return (
+		<SidebarItem
+			avatar={<RoomAvatar room={room} />}
+			name={roomNames[room]}
+			preview={
+				working.length
+					? `${working.map(displayName).join(' and ')} working…`
+					: last
+						? previewOf(last, myAuthor)
+						: active
+							? members.map(displayName).join(' and ')
+							: `${displayName(principal)} has not started yet`
+			}
+			when={last?.at}
+			unread={
+				here || !thread
+					? 0
+					: unreadCount(thread.messages, thread.seenAt, myAuthor)
+			}
+			cards={crewRoom?.openCards?.[room] ?? 0}
+			dim={!active}
+			target={room}
+			onNavigate={onNavigate}
+		/>
+	)
+}
+
 function SidebarItem({
 	avatar,
 	name,
 	preview,
 	when,
-	count,
+	unread,
+	cards = 0,
 	dim = false,
 	target,
 	onNavigate,
@@ -141,9 +162,11 @@ function SidebarItem({
 	name: string
 	preview: string
 	when?: string
-	count: number
+	unread: number
+	// Cards that wait on the admin.
+	cards?: number
 	dim?: boolean
-	target: CrewKey | 'crew' | 'enterprise'
+	target: RoomKey | 'crew'
 	onNavigate?: () => void
 }) {
 	return (
@@ -151,9 +174,7 @@ function SidebarItem({
 			<Link
 				{...(target === 'crew'
 					? { to: '/' as const }
-					: target === 'enterprise'
-						? { to: '/enterprise' as const }
-						: { to: '/crew/$agent' as const, params: { agent: target } })}
+					: { to: '/room/$room' as const, params: { room: target } })}
 				onClick={onNavigate}
 				data-testid="crew-sidebar-item"
 				data-key={target}
@@ -179,11 +200,26 @@ function SidebarItem({
 						>
 							{preview.replaceAll('**', '').replace(/\s+/g, ' ')}
 						</span>
-						{count > 0 && (
-							<span className="bg-primary-700 text-paper shrink-0 rounded-full px-1.5 text-xs font-semibold">
-								{count}
-							</span>
-						)}
+						<span className="flex shrink-0 gap-1">
+							{cards > 0 && (
+								<span
+									className="border-primary-700 text-primary-800 rounded-full border px-1.5 text-xs font-semibold"
+									title={`${cards} ${cards === 1 ? 'card waits' : 'cards wait'} on you`}
+									data-testid="crew-sidebar-cards"
+								>
+									{cards}
+								</span>
+							)}
+							{unread > 0 && (
+								<span
+									className="bg-primary-700 text-paper rounded-full px-1.5 text-xs font-semibold"
+									title={`${unread} unread`}
+									data-testid="crew-sidebar-unread"
+								>
+									{unread}
+								</span>
+							)}
+						</span>
 					</span>
 				</span>
 			</Link>

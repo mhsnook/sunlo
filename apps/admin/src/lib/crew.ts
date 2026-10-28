@@ -1,7 +1,6 @@
 import { useRef } from 'react'
 import { useAgent } from 'agents/react'
 import { z } from 'zod'
-import { createFlueClient } from '@flue/sdk'
 import {
 	queryOptions,
 	useMutation,
@@ -9,24 +8,30 @@ import {
 	type QueryClient,
 } from '@tanstack/react-query'
 import {
-	Activity,
 	Compass,
 	Cpu,
+	GraduationCap,
+	Languages,
 	Library,
-	Shield,
-	Sprout,
+	Martini,
+	Rocket,
 	Star,
+	Wrench,
 	type LucideIcon,
 } from 'lucide-react'
 import {
+	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
-	EnterpriseSchema,
+	roomOfPlace,
 	RoomSnapshotSchema,
-	SitrepLineSchema,
+	RoomThreadSchema,
+	SitrepSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
+	type RoomKey,
+	type PlaceType,
 	type RoomEvent,
 	type RoomStateType,
 	type RoutingType,
@@ -37,11 +42,16 @@ import { accessToken } from './session'
 export const crewIcons: Record<CrewKey, LucideIcon> = {
 	riker: Star,
 	data: Cpu,
-	monitor: Activity,
-	moderator: Shield,
+	geordi: Wrench,
+	hoshi: Languages,
+	guinan: Martini,
+}
+
+export const roomIcons: Record<RoomKey, LucideIcon> = {
+	command: Rocket,
 	product: Compass,
 	library: Library,
-	growth: Sprout,
+	learnership: GraduationCap,
 }
 
 export const roomQuery = () =>
@@ -61,12 +71,21 @@ export const workspaceQuery = (agent: CrewKey) =>
 		staleTime: Infinity,
 	})
 
-// The Enterprise thread and the charter. The live socket keeps it current.
-export const enterpriseQuery = () =>
+// One subject's room. The live socket keeps it current.
+export const threadQuery = (room: RoomKey) =>
 	queryOptions({
-		queryKey: ['crew', 'enterprise'],
+		queryKey: ['crew', 'thread', room],
 		queryFn: async () =>
-			EnterpriseSchema.parse(await adminFetch('crew/enterprise')),
+			RoomThreadSchema.parse(await adminFetch(`crew/rooms/${room}`)),
+		staleTime: Infinity,
+	})
+
+// The Command room's charter and weekly meeting. The live socket keeps it
+// current.
+export const commandQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'command'],
+		queryFn: async () => CommandSchema.parse(await adminFetch('crew/command')),
 		staleTime: Infinity,
 	})
 
@@ -74,19 +93,15 @@ export const enterpriseQuery = () =>
 export const sitrepQuery = () =>
 	queryOptions({
 		queryKey: ['crew', 'sitrep'],
-		queryFn: async () =>
-			z.array(SitrepLineSchema).parse(await adminFetch('crew/sitrep')),
+		queryFn: async () => SitrepSchema.parse(await adminFetch('crew/sitrep')),
 		staleTime: Infinity,
 	})
 
 export function useSetSitrep() {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (input: { agent: CrewKey; track: string; text: string }) =>
-			adminFetch(
-				`crew/sitrep/${input.agent}/${encodeURIComponent(input.track)}`,
-				{ method: 'PUT', json: { text: input.text } }
-			),
+		mutationFn: (text: string) =>
+			adminFetch('crew/sitrep', { method: 'PUT', json: { text } }),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: sitrepQuery().queryKey }),
 	})
@@ -193,33 +208,42 @@ export function useSetTimezone() {
 	})
 }
 
-// The client for one admin's 1:1 conversation with an agent.
-export const dmClient = (agent: CrewKey, uid: string) =>
-	createFlueClient({
-		url: `/api/agents/${agent}/dm-${uid}`,
-		// Called per request, so a refreshed Supabase token is picked up.
-		headers: async () => ({ authorization: `Bearer ${await accessToken()}` }),
-	})
-
 const upsert = (messages: Array<CrewMessageType>, message: CrewMessageType) => {
 	const index = messages.findIndex((m) => m.id === message.id)
 	return index === -1 ? [...messages, message] : messages.with(index, message)
 }
 
-// Into whichever timeline the message belongs to.
-function upsertMessage(queryClient: QueryClient, message: CrewMessageType) {
-	if (message.place === 'bridge') {
-		queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
-			thread
-				? { ...thread, messages: upsert(thread.messages, message) }
-				: thread
+type Timeline = { messages: Array<CrewMessageType>; seenAt: string | null }
+
+// Changes the cached timeline a place belongs to, if it is cached.
+function updateTimeline(
+	queryClient: QueryClient,
+	place: PlaceType,
+	change: (timeline: Timeline) => Partial<Timeline>
+) {
+	const room = roomOfPlace(place)
+	if (room) {
+		queryClient.setQueryData(threadQuery(room).queryKey, (thread) =>
+			thread ? { ...thread, ...change(thread) } : thread
 		)
-	} else if (message.place === 'room') {
-		queryClient.setQueryData(roomQuery().queryKey, (room) =>
-			room ? { ...room, messages: upsert(room.messages, message) } : room
+	} else {
+		queryClient.setQueryData(roomQuery().queryKey, (common) =>
+			common ? { ...common, ...change(common) } : common
 		)
 	}
 }
+
+const upsertMessage = (queryClient: QueryClient, message: CrewMessageType) =>
+	updateTimeline(queryClient, message.place, (timeline) => ({
+		messages: upsert(timeline.messages, message),
+	}))
+
+// A message someone else wrote after the admin last opened its timeline.
+export const isNewFor = (
+	message: CrewMessageType,
+	seenAt: string | null,
+	myAuthor: string
+) => !!seenAt && message.at > seenAt && message.author !== myAuthor
 
 export function usePostToRoom() {
 	const queryClient = useQueryClient()
@@ -235,12 +259,12 @@ export function usePostToRoom() {
 	})
 }
 
-export function usePostToEnterprise() {
+export function usePostToThread(room: RoomKey) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (body: string) =>
 			CrewMessageSchema.parse(
-				await adminFetch('crew/enterprise/messages', {
+				await adminFetch(`crew/rooms/${room}/messages`, {
 					method: 'POST',
 					json: { body },
 				})
@@ -254,12 +278,12 @@ export function useStartMeeting() {
 	return useMutation({
 		mutationFn: async () =>
 			CrewMessageSchema.parse(
-				await adminFetch('crew/enterprise/meeting', { method: 'POST' })
+				await adminFetch('crew/meeting', { method: 'POST' })
 			),
 		onSuccess: (message) => {
 			upsertMessage(queryClient, message)
-			queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
-				thread ? { ...thread, meetingStartedAt: message.at } : thread
+			queryClient.setQueryData(commandQuery().queryKey, (command) =>
+				command ? { ...command, meetingStartedAt: message.at } : command
 			)
 		},
 	})
@@ -298,7 +322,7 @@ export function useAnswerCard() {
 // "New since" line.
 export async function markSeen(
 	queryClient: QueryClient,
-	place: 'room' | 'bridge',
+	place: PlaceType,
 	leaving: boolean
 ) {
 	try {
@@ -309,15 +333,7 @@ export async function markSeen(
 	}
 	if (!leaving) return
 	const seenAt = new Date().toISOString()
-	if (place === 'room') {
-		queryClient.setQueryData(roomQuery().queryKey, (room) =>
-			room ? { ...room, seenAt } : room
-		)
-	} else {
-		queryClient.setQueryData(enterpriseQuery().queryKey, (thread) =>
-			thread ? { ...thread, seenAt } : thread
-		)
-	}
+	updateTimeline(queryClient, place, () => ({ seenAt }))
 }
 
 // Follows the crew room for as long as the admin layout is mounted.
@@ -338,7 +354,8 @@ export function useCrewLive() {
 			if (opened.current) {
 				for (const queryKey of [
 					roomQuery().queryKey,
-					enterpriseQuery().queryKey,
+					['crew', 'thread'],
+					commandQuery().queryKey,
 					['crew', 'workspace'],
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
@@ -364,9 +381,9 @@ export function useCrewLive() {
 					queryKey: sitrepQuery().queryKey,
 				})
 			}
-			if (event.type === 'enterprise') {
+			if (event.type === 'command') {
 				void queryClient.invalidateQueries({
-					queryKey: enterpriseQuery().queryKey,
+					queryKey: commandQuery().queryKey,
 				})
 			}
 			if (event.type === 'workspace') {

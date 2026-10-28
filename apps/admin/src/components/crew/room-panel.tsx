@@ -1,0 +1,150 @@
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import {
+	crew,
+	displayName,
+	principalOf,
+	roomMembers,
+	roomNames,
+	type CrewKey,
+	type RoomKey,
+} from '../../../shared/crew'
+import { isWorking, roomQuery, workspaceQuery } from '~/lib/crew'
+import { CharterPanel } from './charter-panel'
+import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
+import { MemoryList } from './memory-list'
+import { Empty, Section, TodoList } from './workspace-parts'
+import { SidePanel } from './side-panel'
+
+// Beside a subject's room: who works there, with each officer's to-dos, what
+// is open with the admin, and memory. The Command room also keeps the charter
+// and the weekly settings here.
+export function RoomPanel({
+	room,
+	onClose,
+}: {
+	room: RoomKey
+	onClose: () => void
+}) {
+	return (
+		<SidePanel
+			title="Room log"
+			label={`About the ${roomNames[room]}`}
+			testId="room-panel"
+			testKey={room}
+			onClose={onClose}
+			bodyClassName="space-y-8"
+		>
+			{room === 'command' && <CharterPanel />}
+			{roomMembers(room).map((agent) => (
+				<MemberLog key={agent} agent={agent} />
+			))}
+		</SidePanel>
+	)
+}
+
+function MemberLog({ agent }: { agent: CrewKey }) {
+	const { data: workspace } = useSuspenseQuery(workspaceQuery(agent))
+	const name = displayName(agent)
+	const waiting = workspace.cards.filter((card) => !card.answer)
+	const openCount = waiting.length + workspace.openItems.length
+	return (
+		<div className="space-y-5" data-testid="room-member" data-key={agent}>
+			<ProfileCard agent={agent} />
+			<Section title={`${name}'s to-dos`}>
+				{workspace.todos.length ? (
+					<TodoList todos={workspace.todos} />
+				) : (
+					<Empty>Nothing on {name}'s list.</Empty>
+				)}
+			</Section>
+			<Section title={`Open with you · ${openCount}`}>
+				{openCount ? (
+					<div className="space-y-3">
+						{waiting.map((card) =>
+							card.card?.kind === 'change' ? (
+								<ChangeCard key={card.id} message={card} />
+							) : (
+								<RoomCard key={card.id} message={card} />
+							)
+						)}
+						{workspace.openItems.length > 0 && (
+							<ul className="bg-card divide-y rounded border">
+								{workspace.openItems.map((item) => (
+									<li
+										key={item.id}
+										className="flex items-baseline justify-between gap-3 px-4 py-2.5 text-sm"
+										data-testid="agent-open-item"
+										data-key={item.id}
+									>
+										<span>{item.title}</span>
+										{item.tag && (
+											<span className="text-muted-foreground text-xs">
+												{item.tag}
+											</span>
+										)}
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
+				) : (
+					<Empty>Nothing is waiting on you.</Empty>
+				)}
+			</Section>
+			<MemoryList agent={agent} memory={workspace.memory} />
+		</div>
+	)
+}
+
+function ProfileCard({ agent }: { agent: CrewKey }) {
+	const { data: room } = useQuery(roomQuery())
+	const member = crew[agent]
+	const name = displayName(agent)
+	return (
+		<header className="bg-card @container rounded border shadow-xs">
+			<div className="flex items-center gap-3 p-4">
+				<AgentAvatar agent={agent} />
+				<div className="min-w-0">
+					<h3 className="font-semibold">
+						{name}
+						{member.role === 'associate' && (
+							<span className="text-muted-foreground ms-2 text-xs font-normal">
+								works with {displayName(principalOf(member.room))}
+							</span>
+						)}
+					</h3>
+					<p className="text-muted-foreground text-xs">
+						{member.title}
+						{member.schedule ? ` · ${member.schedule}` : ''}
+						{isWorking(room?.statuses[agent]) ? ' · working now' : ''}
+					</p>
+				</div>
+			</div>
+			<div className="border-t px-4 py-3">
+				<h4 className="text-muted-foreground mb-2 text-xs font-semibold">
+					Looks after
+				</h4>
+				<ul className="space-y-2 text-sm" data-testid="agent-looks-after">
+					{member.looksAfter.map((line) => (
+						<li key={line} className="flex gap-2.5">
+							<span
+								aria-hidden
+								className="bg-primary-400 mt-2 size-1.5 shrink-0 rounded-full"
+							/>
+							{line}
+						</li>
+					))}
+				</ul>
+			</div>
+			{!member.active && (
+				<p
+					className="text-muted-foreground border-t px-4 py-3 text-sm"
+					data-testid="agent-not-started"
+				>
+					{name} has not started yet. Messages for {name} wait here until it
+					does.
+				</p>
+			)}
+		</header>
+	)
+}

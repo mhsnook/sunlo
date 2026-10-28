@@ -12,9 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin/index'
-import { Route as AdminEnterpriseRouteImport } from './routes/_admin/enterprise'
 import { Route as AdminActivityRouteImport } from './routes/_admin/activity'
-import { Route as AdminCrewAgentRouteImport } from './routes/_admin/crew.$agent'
+import { Route as AdminRoomRoomRouteImport } from './routes/_admin/room.$room'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -30,19 +29,14 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminEnterpriseRoute = AdminEnterpriseRouteImport.update({
-  id: '/enterprise',
-  path: '/enterprise',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminActivityRoute = AdminActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCrewAgentRoute = AdminCrewAgentRouteImport.update({
-  id: '/crew/$agent',
-  path: '/crew/$agent',
+const AdminRoomRoomRoute = AdminRoomRoomRouteImport.update({
+  id: '/room/$room',
+  path: '/room/$room',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -50,38 +44,34 @@ export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
-  '/enterprise': typeof AdminEnterpriseRoute
-  '/crew/$agent': typeof AdminCrewAgentRoute
+  '/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
-  '/enterprise': typeof AdminEnterpriseRoute
   '/': typeof AdminIndexRoute
-  '/crew/$agent': typeof AdminCrewAgentRoute
+  '/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/_admin/activity': typeof AdminActivityRoute
-  '/_admin/enterprise': typeof AdminEnterpriseRoute
   '/_admin/': typeof AdminIndexRoute
-  '/_admin/crew/$agent': typeof AdminCrewAgentRoute
+  '/_admin/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/activity' | '/enterprise' | '/crew/$agent'
+  fullPaths: '/' | '/login' | '/activity' | '/room/$room'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/activity' | '/enterprise' | '/' | '/crew/$agent'
+  to: '/login' | '/activity' | '/' | '/room/$room'
   id:
     | '__root__'
     | '/_admin'
     | '/login'
     | '/_admin/activity'
-    | '/_admin/enterprise'
     | '/_admin/'
-    | '/_admin/crew/$agent'
+    | '/_admin/room/$room'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,13 +102,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/enterprise': {
-      id: '/_admin/enterprise'
-      path: '/enterprise'
-      fullPath: '/enterprise'
-      preLoaderRoute: typeof AdminEnterpriseRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/_admin/activity': {
       id: '/_admin/activity'
       path: '/activity'
@@ -126,11 +109,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminActivityRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_admin/crew/$agent': {
-      id: '/_admin/crew/$agent'
-      path: '/crew/$agent'
-      fullPath: '/crew/$agent'
-      preLoaderRoute: typeof AdminCrewAgentRouteImport
+    '/_admin/room/$room': {
+      id: '/_admin/room/$room'
+      path: '/room/$room'
+      fullPath: '/room/$room'
+      preLoaderRoute: typeof AdminRoomRoomRouteImport
       parentRoute: typeof AdminRoute
     }
   }
@@ -138,16 +121,14 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
-  AdminEnterpriseRoute: typeof AdminEnterpriseRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  AdminCrewAgentRoute: typeof AdminCrewAgentRoute
+  AdminRoomRoomRoute: typeof AdminRoomRoomRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminActivityRoute: AdminActivityRoute,
-  AdminEnterpriseRoute: AdminEnterpriseRoute,
   AdminIndexRoute: AdminIndexRoute,
-  AdminCrewAgentRoute: AdminCrewAgentRoute,
+  AdminRoomRoomRoute: AdminRoomRoomRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

@@ -31,8 +31,14 @@
 				"FlueProductAgent",
 			],
 		},
+		{
+			"tag": "v2",
+			"renamed_classes": [
+				{ "from": "FlueProductAgent", "to": "FlueGeordiAgent" },
+			],
+		},
 	],
-	// Hourly: Product's daily run at 07:00 UTC, and Riker's brief at Sunday
+	// Hourly: Geordi's daily run at 07:00 UTC, and Riker's brief at Sunday
 	// 04:00 in the admin's time zone (.flue/cloudflare.ts).
 	"triggers": { "crons": ["0 * * * *"] },
 	"routes": [
@@ -63,8 +69,8 @@
 		"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
-		// Where agents will file issues once Monitor starts and the GitHub App
-		// secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
+		// Where agents will file issues once one has the GitHub tools and the
+		// GitHub App secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
 		// GITHUB_APP_PRIVATE_KEY (README.md, "Filing GitHub issues").
 		"GITHUB_REPO": "mhsnook/sunlo",
 	},

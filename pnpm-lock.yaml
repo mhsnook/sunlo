@@ -226,15 +226,9 @@ importers:
 
   apps/admin:
     dependencies:
-      '@flue/react':
-        specifier: ^2.3.0
-        version: 2.3.0(@flue/sdk@2.3.0)(react@19.2.3)
       '@flue/runtime':
         specifier: ^2.3.0
         version: 2.3.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(typescript@6.0.3)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)
-      '@flue/sdk':
-        specifier: ^2.3.0
-        version: 2.3.0
       '@octokit/auth-app':
         specifier: ^8.3.1
         version: 8.3.1
@@ -733,11 +727,6 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@durable-streams/client@0.2.7':
-    resolution: {integrity: sha512-oxWbPEo8NO1Ruv9UgUVu3OswdE2z5ERhjccaujlpwe4tWuVd+Y/kdx+HtrkOnwN+bnRHTlxKYUNY8JTyrnhKew==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-
   '@earendil-works/pi-agent-core@1.4.0':
     resolution: {integrity: sha512-PoKY84SKUwnt7S5QBZaGUqfNO1kjP3KHpHUA9QpFTj4cOjaVWMYIcBPJ6FDRCdE8Zen9OSECQUd0uUfVgtSmgA==}
     engines: {node: '>=22.19.0'}
@@ -1134,18 +1123,9 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@flue/react@2.3.0':
-    resolution: {integrity: sha512-+QeOWhoyboc/pxbssxIv1ea/wdYVGLq9+0Ed0oWdVH5abzZEoVwfSuPIPZZCivZtFJVrPBuiHe0lVTcn4YNQ5A==}
-    peerDependencies:
-      '@flue/sdk': 2.3.0
-      react: '>=18'
-
   '@flue/runtime@2.3.0':
     resolution: {integrity: sha512-Sb3Dix9PArIzwr7lmAZCr2csU7OUMHsEhIqYKCiqgldyt33u23k59CNoD947MLXpBaWXAz6CEd/Xv1LLI0cHYg==}
     engines: {node: '>=22.19.0'}
-
-  '@flue/sdk@2.3.0':
-    resolution: {integrity: sha512-6rVUYjGu0ICogo/j5z8edsc8H7ZUJ7EEmEcJl/dVwhE6Ugjlwea+nToOjDHOm6fsWsvltOcd5wi3YUwKY6haVw==}
 
   '@flue/vite@2.3.0':
     resolution: {integrity: sha512-aLq1FVOm16NuFFENpNWBCzU+QmmdUF0y7Mj7dLn8Q+eZdkEZ3miyFoWtVZJ3W42jyGlyKI8NnGGxrFrW5Mvjvg==}
@@ -1374,9 +1354,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
-
-  '@microsoft/fetch-event-source@2.0.1':
-    resolution: {integrity: sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==}
 
   '@modelcontextprotocol/client@2.0.0':
     resolution: {integrity: sha512-8f1OghQ2rjzIOfqgUCP+8GiUWqRs89njoWLNqAe8kWmDePv3s1fZXseej+QXemssEuuOvLLmLO/kqM3IQHtISw==}
@@ -5737,10 +5714,6 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@durable-streams/client@0.2.7':
-    dependencies:
-      '@microsoft/fetch-event-source': 2.0.1
-
   '@earendil-works/pi-agent-core@1.4.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)':
     dependencies:
       '@earendil-works/pi-ai': 1.4.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)
@@ -6036,11 +6009,6 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@flue/react@2.3.0(@flue/sdk@2.3.0)(react@19.2.3)':
-    dependencies:
-      '@flue/sdk': 2.3.0
-      react: 19.2.3
-
   '@flue/runtime@2.3.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(typescript@6.0.3)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)':
     dependencies:
       '@earendil-works/pi-agent-core': 1.4.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)
@@ -6065,10 +6033,6 @@ snapshots:
       - utf-8-validate
       - ws
       - zod
-
-  '@flue/sdk@2.3.0':
-    dependencies:
-      '@durable-streams/client': 0.2.7
 
   '@flue/vite@2.3.0(@aws-sdk/credential-provider-node@3.972.88)(@babel/core@7.29.0)(@babel/runtime@7.28.6)(@cloudflare/workers-types@5.20261026.1)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(ai@7.0.153(zod@4.3.6))(hono@4.13.13)(react@19.2.3)(rolldown@1.0.1)(typescript@6.0.3)(undici@7.30.1)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))(ws@8.22.0)(zod@4.3.6)':
     dependencies:
@@ -6289,8 +6253,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
-
-  '@microsoft/fetch-event-source@2.0.1': {}
 
   '@modelcontextprotocol/client@2.0.0':
     dependencies:

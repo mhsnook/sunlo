@@ -1,17 +1,15 @@
 import { dispatch, observe, type Agent } from '@flue/runtime'
 import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
-import { crewKeys, type CrewKey } from '../shared/crew'
+import { crewKeys, roomOfPlace, type CrewKey } from '../shared/crew'
 import {
-	BRIDGE,
-	conversationOf,
+	CONVERSATION,
 	ROOM,
-	TEAM,
 	type CrewRoom,
 	type Wake,
 } from '../worker/crew/room'
 import { Data } from './agents/data'
-import { Product } from './agents/product'
+import { Geordi } from './agents/geordi'
 import { Riker } from './agents/riker'
 
 export const roomFor = () =>
@@ -20,10 +18,10 @@ export const roomFor = () =>
 // The crew members that run. A function, not a constant: agent modules
 // import this file, and the agent they export is not initialised yet while
 // this module evaluates.
-export const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
+const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 	riker: Riker,
 	data: Data,
-	product: Product,
+	geordi: Geordi,
 })
 
 // A run that fails or is aborted settles without useAgentFinish, so the room
@@ -32,7 +30,7 @@ observe((event) => {
 	if (
 		event.type === 'submission_settled' &&
 		event.outcome !== 'completed' &&
-		(event.instanceId === TEAM || event.instanceId === BRIDGE)
+		event.instanceId === CONVERSATION
 	) {
 		// Flue names an agent by its identity ("Riker"), not its crew key.
 		const key = crewKeys.find((candidate) => {
@@ -43,16 +41,16 @@ observe((event) => {
 	}
 })
 
-// Delivers messages to the agents CLEF or an @mention woke, each in its own
-// conversation (`conversationOf`). The message is already in its timeline,
-// so a dispatch that fails is logged, not thrown.
+// Delivers messages to the agents CLEF or an @mention woke. The message is
+// already in its timeline, so a dispatch that fails is logged, not thrown.
+// A <common-room-message> came from the Common Room, and a <room-message>
+// from the agent's own room.
 export async function wake(wakes: Array<Wake>, from: string) {
 	await Promise.all(
 		wakes.map(({ agent, body, messageId, place }) =>
 			deliver(
 				agent,
-				conversationOf(agent),
-				place === 'bridge' ? 'enterprise.message' : 'common-room.message',
+				roomOfPlace(place) ? 'room.message' : 'common-room.message',
 				body,
 				{ from, messageId }
 			).catch((error: unknown) =>
@@ -66,16 +64,14 @@ export async function wake(wakes: Array<Wake>, from: string) {
 export const requestReport = () =>
 	deliver(
 		'data',
-		BRIDGE,
 		'meeting.report',
 		'The weekly meeting just started, and there is no pre-meeting report for it yet. Write one now with file_report.'
 	)
 
-// One signal to one conversation of an agent. `type` "common-room.message" arrives
-// as a <common-room-message> tag.
+// One signal to an agent's running memory. `type` "common-room.message"
+// arrives as a <common-room-message> tag.
 export async function deliver(
 	agent: CrewKey,
-	conversation: string,
 	type: string,
 	body: string,
 	attributes?: Record<string, string>
@@ -83,7 +79,7 @@ export async function deliver(
 	const target = crewAgents()[agent]
 	if (!target) return
 	await dispatch(target, {
-		id: conversation,
+		id: CONVERSATION,
 		message: {
 			kind: 'signal',
 			type,
