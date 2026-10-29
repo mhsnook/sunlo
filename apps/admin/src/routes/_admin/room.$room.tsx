@@ -83,7 +83,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	return (
 		<div className="flex h-full min-h-0">
 			<section className="flex min-w-0 flex-1 flex-col">
-				<header className="flex items-center gap-3 border-b px-4 py-3">
+				<header className="flex items-center gap-2 border-b px-4 py-3 sm:gap-3">
 					<MobileSidebarButton />
 					<RoomAvatar room={room} />
 					<div className="me-auto min-w-0">
@@ -97,6 +97,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					<Button
 						variant="ghost"
 						data-testid="room-panel-button"
+						className="max-sm:px-2.5"
 						aria-pressed={panelOpen}
 						onClick={() => setPanelOpen((open) => !open)}
 					>

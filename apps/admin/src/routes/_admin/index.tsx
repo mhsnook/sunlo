@@ -71,7 +71,7 @@ function CrewRoomPage() {
 	return (
 		<div className="flex h-full min-h-0">
 			<section className="@container flex min-w-0 flex-1 flex-col">
-				<header className="flex items-center gap-3 border-b px-4 py-3">
+				<header className="flex items-center gap-2 border-b px-4 py-3 @3xl:gap-3">
 					<MobileSidebarButton />
 					<AgentAvatar agent="crew" />
 					<div className="me-auto min-w-0">
@@ -85,6 +85,7 @@ function CrewRoomPage() {
 					<Button
 						variant="ghost"
 						data-testid="sitrep-button"
+						className="@max-3xl:px-2.5"
 						aria-pressed={panel === 'sitrep'}
 						onClick={() => toggle('sitrep')}
 					>
@@ -93,6 +94,7 @@ function CrewRoomPage() {
 					<Button
 						variant="ghost"
 						data-testid="common-knowledge-button"
+						className="@max-3xl:px-2.5"
 						aria-pressed={panel === 'knowledge'}
 						onClick={() => toggle('knowledge')}
 					>
@@ -101,6 +103,7 @@ function CrewRoomPage() {
 					<Button
 						variant="ghost"
 						data-testid="crew-overview-button"
+						className="@max-3xl:px-2.5"
 						aria-pressed={panel === 'overview'}
 						onClick={() => toggle('overview')}
 					>
