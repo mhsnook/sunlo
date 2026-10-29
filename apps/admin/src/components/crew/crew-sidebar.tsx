@@ -179,14 +179,14 @@ function SidebarItem({
 				data-testid="crew-sidebar-item"
 				data-key={target}
 				activeOptions={{ exact: true, includeSearch: false }}
-				className="hover:bg-primary-100 data-[status=active]:bg-primary-200 flex items-center gap-3 rounded-2xl px-3 py-2"
+				className="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-neutral-100 data-[status=active]:bg-neutral-200"
 			>
 				{avatar}
 				<span className="min-w-0 flex-1">
 					<span className="flex items-baseline justify-between gap-2">
 						<span className="truncate font-semibold">{name}</span>
 						{when && (
-							<span className="text-primary-700 shrink-0 text-xs">
+							<span className="shrink-0 text-xs text-neutral-600">
 								{shortWhen(when)}
 							</span>
 						)}
@@ -194,7 +194,7 @@ function SidebarItem({
 					<span className="flex items-center justify-between gap-2">
 						<span
 							className={cn(
-								'text-primary-700 truncate text-sm',
+								'text-neutral-600 truncate text-sm',
 								dim && 'italic'
 							)}
 						>
@@ -245,7 +245,7 @@ export function MobileSidebarButton() {
 			>
 				<Menu />
 			</SheetTrigger>
-			<SheetContent side="left" className="bg-primary-50 w-80 p-0">
+			<SheetContent side="left" className="w-80 bg-neutral-50 p-0">
 				<SheetTitle className="sr-only">The crew</SheetTitle>
 				<CrewSidebar onNavigate={() => setOpen(false)} />
 			</SheetContent>

@@ -32,7 +32,7 @@ function CrewLayout() {
 			<Suspense fallback={null}>
 				<CrewLive />
 			</Suspense>
-			<aside className="bg-primary-50 hidden w-72 shrink-0 border-e md:block">
+			<aside className="hidden w-72 shrink-0 border-e bg-neutral-50 md:block">
 				<CrewSidebar />
 			</aside>
 			<main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
