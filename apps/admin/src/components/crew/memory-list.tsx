@@ -8,7 +8,7 @@ import { useEditMemory, useForgetMemory } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 import { EditableEntry } from './editable-entry'
 
-// An agent's memory, which the admin can edit and prune. Data's playbook entries
+// An agent's memory, which the admin can edit and prune. command-2's playbook entries
 // (metrics by domain, chart preferences) get their own headings.
 export function MemoryList({
 	agent,

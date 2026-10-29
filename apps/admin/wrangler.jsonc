@@ -16,7 +16,7 @@
 	"preview_urls": true,
 	"ai": { "binding": "AI" },
 	// The crew room (worker/crew/room.ts). Flue adds a binding for each agent,
-	// such as FLUE_PRODUCT_AGENT; never write those here. The migrations are
+	// such as FLUE_PRODUCT_1_AGENT; never write those here. The migrations are
 	// ours, and append-only once deployed: a new agent is a new entry.
 	"durable_objects": {
 		"bindings": [{ "name": "CREW_ROOM", "class_name": "CrewRoom" }],
@@ -37,9 +37,19 @@
 				{ "from": "FlueProductAgent", "to": "FlueGeordiAgent" },
 			],
 		},
+		// Each agent keyed by its seat. Flue keys a conversation by the agent's
+		// identity, so each agent starts a new one; memory lives in CrewRoom.
+		{
+			"tag": "v3",
+			"renamed_classes": [
+				{ "from": "FlueRikerAgent", "to": "FlueCommand1Agent" },
+				{ "from": "FlueDataAgent", "to": "FlueCommand2Agent" },
+				{ "from": "FlueGeordiAgent", "to": "FlueProduct1Agent" },
+			],
+		},
 	],
-	// Hourly: Geordi's daily run at 07:00 UTC, and Riker's brief at Sunday
-	// 04:00 in the admin's time zone (.flue/cloudflare.ts).
+	// Hourly: product-1's daily run at 07:00 UTC, and command-1's brief at
+	// Sunday 04:00 in the admin's time zone (.flue/cloudflare.ts).
 	"triggers": { "crons": ["0 * * * *"] },
 	"routes": [
 		{
@@ -65,8 +75,11 @@
 		// tools works; @cf/deepseek-ai/deepseek-v4-pro-0813 is the other one
 		// we considered.
 		"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
-		// Data's model: Data takes more steps over more context than the others.
-		"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
+		// command-2's model: it takes more steps over more context than the
+		// others.
+		"MODEL_COMMAND_2": "@cf/deepseek-ai/deepseek-v4-pro-0813",
+		// product-1's model, which drafts the GitHub issues as well.
+		"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
 		// Where agents will file issues once one has the GitHub tools and the
@@ -85,7 +98,8 @@
 			"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 			"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
 			"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
-			"DATA_MODEL": "@cf/deepseek-ai/deepseek-v4-pro-0813",
+			"MODEL_COMMAND_2": "@cf/deepseek-ai/deepseek-v4-pro-0813",
+			"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
 			"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
 			"GITHUB_REPO": "mhsnook/sunlo",
 		},

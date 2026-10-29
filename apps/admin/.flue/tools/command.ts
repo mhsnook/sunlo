@@ -1,10 +1,16 @@
 import { defineTool } from '@flue/runtime'
 import * as v from 'valibot'
-import { crewKeys, type CrewKey } from '../../shared/crew'
+import {
+	crewKeys,
+	displayName,
+	handleOf,
+	resolveHandle,
+	type CrewKey,
+} from '../../shared/crew'
 import { requestReport, roomFor, wake } from '../crew'
 import { assertBlocks, Text } from './posting'
 
-// The Command room's memory of the admin, which Riker and Data propose
+// The Command room's memory of the admin, which its officers propose
 // entries for.
 export function commandTools(agent: CrewKey) {
 	const proposeCharter = defineTool({
@@ -28,8 +34,8 @@ export function commandTools(agent: CrewKey) {
 	return [proposeCharter]
 }
 
-// Riker's weekly cycle.
-export function rikerTools() {
+// The weekly cycle, which the Command room's principal runs.
+export function firstOfficerTools() {
 	const writeBrief = defineTool({
 		name: 'write_brief',
 		description:
@@ -42,7 +48,7 @@ export function rikerTools() {
 		async run({ data, step }) {
 			assertBlocks(data.body)
 			const messageId = await step.do('brief', async () =>
-				(await roomFor()).recordBrief({ author: 'riker', ...data })
+				(await roomFor()).recordBrief({ author: 'command-1', ...data })
 			)
 			return { output: { messageId } }
 		},
@@ -60,7 +66,7 @@ export function rikerTools() {
 			}
 			if (start.needsReport) await requestReport()
 			return start.needsReport
-				? 'The meeting is marked as started, and Data is writing the pre-meeting report. Open the meeting in the Command room.'
+				? `The meeting is marked as started, and ${displayName('command-2')} is writing the pre-meeting report. Open the meeting in the Command room.`
 				: 'The meeting is marked as started. Open it in the Command room.'
 		},
 	})
@@ -74,7 +80,8 @@ export function rikerTools() {
 			directives: v.optional(
 				v.array(
 					v.object({
-						to: v.picklist(crewKeys),
+						// A handle, such as "data", as the roster in the prompt gives it.
+						to: v.picklist(crewKeys.map(handleOf)),
 						text: v.pipe(Text, v.maxLength(2000)),
 					})
 				),
@@ -85,9 +92,17 @@ export function rikerTools() {
 		async run({ data, step }) {
 			assertBlocks(data.minutes)
 			const wakes = await step.do('close', async () =>
-				(await roomFor()).closeMeeting(data)
+				(await roomFor()).closeMeeting({
+					minutes: data.minutes,
+					directives: data.directives.flatMap((directive) => {
+						const to = resolveHandle(directive.to)
+						return to ? [{ to, text: directive.text }] : []
+					}),
+				})
 			)
-			await step.do('wake', () => wake(wakes, 'Riker').then(() => true))
+			await step.do('wake', () =>
+				wake(wakes, displayName('command-1')).then(() => true)
+			)
 			return 'The meeting is closed, and the minutes and directives are in the Common Room.'
 		},
 	})
@@ -95,9 +110,10 @@ export function rikerTools() {
 	return [writeBrief, startMeeting, closeMeeting]
 }
 
-// Data's playbook: the metrics the admin likes in each domain, and how they
-// like charts drawn. Data keeps it himself; the admin can delete entries.
-export function dataTools() {
+// The science officer's playbook: the metrics the admin likes in each
+// domain, and how they like charts drawn. It keeps the playbook itself; the
+// admin can delete entries.
+export function scienceOfficerTools() {
 	const notePlaybook = defineTool({
 		name: 'note_playbook',
 		description:
@@ -110,7 +126,7 @@ export function dataTools() {
 		async run({ data }) {
 			const id = await (
 				await roomFor()
-			).remember('data', data.text, {
+			).remember('command-2', data.text, {
 				kind: data.kind,
 				domain: data.domain ?? null,
 			})
@@ -131,18 +147,18 @@ export function dataTools() {
 			const messageId = await step.do('report', async () =>
 				(await roomFor()).fileReport(data)
 			)
-			// Data's report first, then Riker's read of it.
-			await step.do('riker', () =>
+			// The report first, then the first officer's read of it.
+			await step.do('first-officer', () =>
 				wake(
 					[
 						{
-							agent: 'riker',
-							body: `Data filed the pre-meeting report: "${data.title}". Read it in the thread and comment on what it means for the agenda.`,
+							agent: 'command-1',
+							body: `${displayName('command-2')} filed the pre-meeting report: "${data.title}". Read it in the thread and comment on what it means for the agenda.`,
 							messageId,
 							place: 'room:command',
 						},
 					],
-					'Data'
+					displayName('command-2')
 				).then(() => true)
 			)
 			return { output: { messageId } }

@@ -6,6 +6,7 @@ import {
 	crewKeys,
 	displayName,
 	fixedRouting,
+	handleOf,
 	routeTo,
 	isCrewKey,
 	roomKeys,
@@ -143,11 +144,17 @@ const now = () => new Date().toISOString()
 // Done to-dos stay in view this long.
 const twoWeeksAgo = () => new Date(Date.now() - 14 * 86_400_000).toISOString()
 
-// Agent keys from before subject rooms, and the agents they became.
-const RENAMED_AGENTS: Record<string, CrewKey> = {
-	product: 'geordi',
-	library: 'hoshi',
-	growth: 'guinan',
+// Every key an agent had before it was keyed by its seat, and the seat it
+// holds now. Stored rows still carry these until the migrations rename them.
+const OLD_AGENT_KEYS: Record<string, CrewKey> = {
+	riker: 'command-1',
+	data: 'command-2',
+	product: 'product-1',
+	geordi: 'product-1',
+	library: 'library-1',
+	hoshi: 'library-1',
+	growth: 'learnership-1',
+	guinan: 'learnership-1',
 }
 
 const noOpenCards = () =>
@@ -316,7 +323,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null,
 				primary key (document, revision)
 			);
-			-- Data's pre-meeting report for each week's brief.
+			-- command-2's pre-meeting report for each week's brief.
 			create table if not exists meeting_report (
 				brief_at text primary key,
 				message_id text not null
@@ -353,6 +360,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const migrations = [
 			() => this.migrateToRooms(),
 			() => this.moveSitrepIntoDocuments(),
+			() => this.renameAgentsToSeats(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -362,12 +370,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
-	// State saved before the open-card counts existed lacks them.
+	// State saved before the open-card counts existed lacks them, and state
+	// saved before the seat keys holds statuses under the old keys.
 	onStart() {
 		const saved: Partial<RoomStateType> = this.state
-		if (!saved.openCards) {
+		const stale = Object.keys(this.state.statuses).some(
+			(key) => !isCrewKey(key)
+		)
+		if (!saved.openCards || stale) {
 			this.setState({
-				statuses: this.state.statuses,
+				statuses: Object.fromEntries(
+					Object.entries(this.state.statuses).filter(([key]) => isCrewKey(key))
+				),
 				weekly: this.state.weekly,
 				openCards: this.countOpenCards(),
 			})
@@ -376,7 +390,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// The room before there were subject rooms: the Enterprise thread
-	// ("bridge"), cards from 1:1 chats ("dm"), the agents in RENAMED_AGENTS,
+	// ("bridge"), cards from 1:1 chats ("dm"), agents under their old keys,
 	// and Monitor and Moderator, who are gone. Each step finds nothing to
 	// change once it has run, so a second run does no harm.
 	private migrateToRooms() {
@@ -399,8 +413,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			this.sql`alter table message drop column conversation`
 		}
 		this.mergeSitrepIntoOneReport()
-		for (const [from, to] of Object.entries(RENAMED_AGENTS)) {
-			this.renameAgent(from, to)
+		this.renameAgentsToSeats()
+		for (const [from, to] of Object.entries(OLD_AGENT_KEYS)) {
+			this.sql`
+				update situation_report set by = ${to}, by_name = ${displayName(to)}
+				where by = ${from}`
 		}
 		this.renamePlace('bridge', 'room:command')
 		const dmAuthors = this.sql<{ author: string }>`
@@ -414,22 +431,25 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// The Situation Report kept a line per agent and track; now it is one
-	// document. Riker's note opens it, then each room's lines follow under
-	// the room's name. Monitor's and Moderator's lines have no room and go.
-	// Runs before the agents are renamed, which fixes the credit after.
+	// document. The first officer's note opens it, then each room's lines
+	// follow under the room's name. Monitor's and Moderator's lines have no
+	// room and go. Runs before the agents are renamed, which fixes the credit
+	// after.
 	private mergeSitrepIntoOneReport() {
 		const old = this.sql<{ name: string }>`
 			select name from sqlite_master where type = 'table' and name = 'sitrep'`
 		if (!old.length) return
 		const rows = this.sql<SitrepTrackRow>`select * from sitrep order by at`
 		const roomOfOldAgent = (agent: string) => {
-			const key = RENAMED_AGENTS[agent] ?? agent
-			return isCrewKey(key) ? roomOf(key) : null
+			const key = OLD_AGENT_KEYS[agent]
+			return key ? roomOf(key) : null
 		}
-		const note = rows.find((row) => row.agent === 'riker')?.text
+		const firstOfficer = (agent: string) =>
+			OLD_AGENT_KEYS[agent] === 'command-1'
+		const note = rows.find((row) => firstOfficer(row.agent))?.text
 		const sections = roomKeys.flatMap((room) => {
 			const lines = rows.filter(
-				(row) => row.agent !== 'riker' && roomOfOldAgent(row.agent) === room
+				(row) => !firstOfficer(row.agent) && roomOfOldAgent(row.agent) === room
 			)
 			return lines.length
 				? [
@@ -446,6 +466,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				values (1, ${text}, ${latest.by}, ${latest.by_name}, ${latest.at})`
 		}
 		this.sql`drop table sitrep`
+	}
+
+	private renameAgentsToSeats() {
+		for (const [from, to] of Object.entries(OLD_AGENT_KEYS)) {
+			this.renameAgent(from, to)
+		}
 	}
 
 	// Moves everything an agent owns, wrote or was routed to onto a new key.
@@ -477,7 +503,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			.sql`update or replace run_message set agent = ${to} where agent = ${from}`
 		this.sql`update or replace cursor set agent = ${to} where agent = ${from}`
 		this.sql`
-			update situation_report set by = ${to}, by_name = ${name}
+			update document_revision set by = ${to}, by_name = ${name}
 			where by = ${from}`
 	}
 
@@ -1117,8 +1143,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return id
 	}
 
-	// The admin starting the weekly meeting: Riker takes it from here, and the
-	// meeting counts as started until he closes it.
+	// The admin starting the weekly meeting: command-1 takes it from here, and
+	// the meeting counts as started until it closes it.
 	startMeeting(input: { uid: string; name: string }) {
 		const start = this.recordMeetingStart()
 		if (!start.started) return null
@@ -1132,9 +1158,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
-	// Riker calls this too, when the admin asks for the meeting somewhere
+	// command-1 calls this too, when the admin asks for the meeting somewhere
 	// other than the start button. `needsReport` is true only for the call
-	// that starts the meeting, and only when Data has not filed a report for
+	// that starts the meeting, and only when command-2 has not filed a report for
 	// this week's brief, so a second start never asks for a second report.
 	recordMeetingStart(): { started: boolean; needsReport: boolean } {
 		const { briefAt } = this.weekly()
@@ -1154,11 +1180,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
-	// Data's pre-meeting report: a folded card in the Command room, and the
+	// command-2's pre-meeting report: a folded card in the Command room, and the
 	// one report for this week's meeting.
 	fileReport(input: { title: string; body: string }) {
 		const messageId = this.bringToAdmin({
-			author: 'data',
+			author: 'command-2',
 			kind: 'report',
 			title: input.title,
 			body: input.body,
@@ -1184,13 +1210,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const posts = [
 			`**Minutes of this week's meeting**\n\n${input.minutes}`,
 			...input.directives.map(
-				(directive) => `@${directive.to} ${directive.text}`
+				(directive) => `@${handleOf(directive.to)} ${directive.text}`
 			),
 		]
 		return posts.flatMap(
 			(body) =>
 				this.postFromAgent({
-					agent: 'riker',
+					agent: 'command-1',
 					body,
 					card: null,
 					place: COMMON_ROOM,

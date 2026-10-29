@@ -4,7 +4,14 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { BarChart3, Brain, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import { adminAuthor, crewKeys, crewList, SITREP } from '../../../shared/crew'
+import {
+	adminAuthor,
+	crewKeys,
+	crewList,
+	displayName,
+	principalOf,
+	SITREP,
+} from '../../../shared/crew'
 import {
 	commonKnowledgeQuery,
 	documentQuery,
@@ -141,8 +148,9 @@ function EmptyRoom() {
 			<p className="text-muted-foreground text-sm">
 				The whole crew reads this room. Write @ and a name to ask someone, or a
 				room's name to ask whoever runs it. Each subject has a room of its own,
-				where what needs you arrives. Geordi posts here after his daily run. A
-				message that ends in “...” waits for your next one.
+				where what needs you arrives. {displayName(principalOf('product'))}{' '}
+				posts here after its daily run. A message that ends in “...” waits for
+				your next one.
 			</p>
 		</div>
 	)

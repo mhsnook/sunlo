@@ -49,14 +49,14 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 Each **room** is a subject, at `/room/<room>`, where you talk with the officers who work on it and anything that needs you arrives as a card. Its **principal** runs it and answers it first. A room can also have an **associate**, a second, more thorough voice that the principal can always call on: Data works with Riker in the Command room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
 
-| Room             | Principal  | Associate | Job                  | Status                                                 |
-| ---------------- | ---------- | --------- | -------------------- | ------------------------------------------------------ |
-| Command room     | Cmdr Riker | Data      | First officer        | Runs: weekly brief on Sunday at 04:00, and when called |
-| Product room     | Geordi     |           | Product manager      | Runs: daily at 07:00 UTC, and when called              |
-| Library room     | Hoshi      |           | Learning content     | Planned                                                |
-| Learnership room | Guinan     |           | Growth and retention | Planned                                                |
+| Room             | Principal                | Associate          | Job                  | Status                                                 |
+| ---------------- | ------------------------ | ------------------ | -------------------- | ------------------------------------------------------ |
+| Command room     | Cmdr Riker (`command-1`) | Data (`command-2`) | First officer        | Runs: weekly brief on Sunday at 04:00, and when called |
+| Product room     | Geordi (`product-1`)     |                    | Product manager      | Runs: daily at 07:00 UTC, and when called              |
+| Library room     | Hoshi (`library-1`)      |                    | Learning content     | Planned                                                |
+| Learnership room | Guinan (`learnership-1`) |                    | Growth and retention | Planned                                                |
 
-The roster lives in `shared/crew.ts`: each room's key, and each officer's key (also its @mention handle), rank, room and role (`principal` or `associate`). A room's key is a handle too: @product reaches whoever runs the Product room. A planned officer has a place in its room, and what you write there waits until it starts.
+The roster lives in `shared/crew.ts`: each room's key, and each officer's key, name, rank, room and role (`principal` or `associate`). An officer's key is its seat: the room, then 1 for the principal and 2 for an associate. The code names agents only by key; the names are display text for the app and the prompts, so a name can change without a migration. An officer answers to its name as a handle (@data) and to its key (@command-2). A room's key is a handle too: @product reaches whoever runs the Product room. A planned officer has a place in its room, and what you write there waits until it starts.
 
 In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
@@ -76,7 +76,7 @@ Every card can also be dismissed, with or without a line of feedback. The agent 
 
 ### The Command room: Riker and Data
 
-Riker is your proxy. He knows three things well: the **charter** (your principles and lessons, which you curate together), where the agents overlap or disagree, and the directives he has given the other rooms. Everything else he asks the expert for. Data argues from the evidence: he runs the database queries and takes more steps on a bigger model (`DATA_MODEL`). He also keeps a **playbook**: the metrics you like in each domain and how you like charts drawn, which he learns from your reactions.
+Riker is your proxy. He knows three things well: the **charter** (your principles and lessons, which you curate together), where the agents overlap or disagree, and the directives he has given the other rooms. Everything else he asks the expert for. Data argues from the evidence: he runs the database queries and takes more steps on a bigger model (`MODEL_COMMAND_2`). He also keeps a **playbook**: the metrics you like in each domain and how you like charts drawn, which he learns from your reactions.
 
 The Command room has three more kinds of card:
 
@@ -94,9 +94,9 @@ Any agent can put components in its markdown as a fenced block whose language na
 
 ### Where things live
 
-- **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. `@flue/vite` builds each one into a Durable Object in this Worker (`FlueGeordiAgent`, bound as `FLUE_GEORDI_AGENT`), named after the agent's function, so renaming an agent is a `renamed_classes` migration in `wrangler.jsonc` and stores its conversations there. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
+- **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. Each agent's Flue identity is its key, set with its `agentName` static, and `@flue/vite` builds each one into a Durable Object in this Worker named after it (`FlueProduct1Agent`, bound as `FLUE_PRODUCT_1_AGENT`). Changing an identity is a `renamed_classes` migration in `wrangler.jsonc`, and it starts the agent's Flue conversation afresh, because Flue keys a conversation by the identity; memory and everything else in `CrewRoom` stays. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
 - **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). The production room holds real data, so a schema change is an in-place migration in its constructor that is safe to run twice, never a new instance name. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Common Room and every subject's room, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, the weekly cycle and each room's count of open cards, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
-- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: Geordi's daily run at 07:00 UTC, and Riker's brief.
+- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: `product-1`'s daily run at 07:00 UTC, and `command-1`'s brief.
 
 ### How a message reaches an agent
 
@@ -133,7 +133,7 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
 - Riker and Data also have `propose_charter`. Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
 
-Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today), through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
+Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2` and `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 
 ### Filing GitHub issues
 

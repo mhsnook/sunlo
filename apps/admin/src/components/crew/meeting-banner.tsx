@@ -2,13 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useMatchRoute } from '@tanstack/react-router'
 import { CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { meetingDue } from '../../../shared/crew'
+import { displayName, meetingDue, principalOf } from '../../../shared/crew'
 import { commandQuery, roomQuery } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 
-// The weekly meeting's standing invitation. It shows from the moment Riker's
-// brief lands until the meeting closes, wherever the admin is. The meeting
-// itself happens in the Command room.
+// The weekly meeting's standing invitation. It shows from the moment the
+// weekly brief lands until the meeting closes, wherever the admin is. The
+// meeting itself happens in the Command room.
 export function MeetingBanner() {
 	const { data: room } = useQuery(roomQuery())
 	const { data: command } = useQuery(commandQuery())
@@ -20,6 +20,7 @@ export function MeetingBanner() {
 	if (inCommand || !room?.weekly.briefAt || !meetingDue(room.weekly)) {
 		return null
 	}
+	const firstOfficer = displayName(principalOf('command'))
 	return (
 		<aside
 			aria-label="Weekly meeting"
@@ -29,8 +30,8 @@ export function MeetingBanner() {
 			<CalendarClock className="size-4 shrink-0" />
 			<span className="me-auto">
 				{command?.meetingStartedAt
-					? 'Your weekly meeting with Riker is under way.'
-					: `Riker’s brief is ready (${dayLabel(room.weekly.briefAt)}), and your weekly meeting hasn’t happened yet.`}
+					? `Your weekly meeting with ${firstOfficer} is under way.`
+					: `${firstOfficer}’s brief is ready (${dayLabel(room.weekly.briefAt)}), and your weekly meeting hasn’t happened yet.`}
 			</span>
 			<Button size="sm" asChild>
 				<Link

@@ -1,5 +1,7 @@
 import {
+	displayName,
 	meetingDue,
+	principalOf,
 	placeOf,
 	roomNames,
 	roomOf,
@@ -158,10 +160,11 @@ function commandText(
 			.map((entry) => `- [${entry.kind} ${entry.id}] ${entry.text}`)
 			.join('\n')
 	const { weekly, meetingStartedAt } = command
+	const firstOfficer = displayName(principalOf('command'))
 	const meeting = meetingStartedAt
 		? `The weekly meeting is in progress in the Command room: the admin started it at ${stamp(meetingStartedAt)}. Go through the agenda one item at a time, and call close_meeting with the minutes when it is done.`
 		: meetingDue(weekly)
-			? `The weekly meeting is due: Riker wrote the brief at ${stamp(weekly.briefAt ?? now)}, and the admin has not met with Riker since. It comes before anything else. Something truly critical becomes item 1 of the meeting; it does not replace the meeting.`
+			? `The weekly meeting is due: ${firstOfficer} wrote the brief at ${stamp(weekly.briefAt ?? now)}, and the admin has not met with ${firstOfficer} since. It comes before anything else. Something truly critical becomes item 1 of the meeting; it does not replace the meeting.`
 			: `The last weekly meeting was ${weekly.meetingAt ? stamp(weekly.meetingAt) : 'never'}.`
 	return [
 		'## The charter: what the admin has told the Command room about themselves',

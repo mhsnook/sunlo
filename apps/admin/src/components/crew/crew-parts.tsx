@@ -76,7 +76,7 @@ function IconAvatar({
 	)
 }
 
-// "Geordi is working…" under a timeline, while any of `agents` runs.
+// "<name> is working…" under a timeline, while any of `agents` runs.
 export function WorkingMarker({ agents }: { agents: Array<CrewKey> }) {
 	if (!agents.length) return null
 	return (
@@ -298,8 +298,8 @@ const cardLabels: Partial<Record<CardType['kind'], string>> = {
 }
 
 const folds: Partial<Record<CardType['kind'], string>> = {
-	brief: 'Riker posts the weekly brief',
-	report: 'Data submits the pre-meeting report',
+	brief: `${displayName('command-1')} posts the weekly brief`,
+	report: `${displayName('command-2')} submits the pre-meeting report`,
 }
 
 // The opening prose of a markdown body, for a folded card's preview.

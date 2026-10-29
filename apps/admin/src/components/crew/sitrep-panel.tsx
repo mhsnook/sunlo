@@ -8,8 +8,8 @@ import { Empty } from './workspace-parts'
 import { SidePanel } from './side-panel'
 
 // Where Sunlo and each room stand now: the Command room's Situation Report,
-// which every agent reads at the top of every run. Riker and the admin write
-// it.
+// which every agent reads at the top of every run. The Command room's
+// principal and the admin write it.
 export function SitrepPanel({ onClose }: { onClose: () => void }) {
 	const { data: documents } = useSuspenseQuery(documentsQuery('command'))
 	const sitrep = documents.find((doc) => doc.name === SITREP)

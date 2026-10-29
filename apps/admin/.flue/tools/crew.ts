@@ -2,6 +2,7 @@ import { defineTool, type ToolStep } from '@flue/runtime'
 import * as v from 'valibot'
 import {
 	displayName,
+	handleOf,
 	placeOf,
 	COMMON_ROOM,
 	roomKeys,
@@ -92,7 +93,7 @@ export function crewTools(agent: CrewKey) {
 
 	const postToRoom = defineTool({
 		name: 'post_to_room',
-		description: `Post a message in the ${room}, where the admin talks with you${roommates.length ? ` and ${roommates.map(displayName).join(' and ')}` : ''}. Answer a <room-message> here.${roommates.length ? ` Write ${roommates.map((key) => `@${key}`).join(' or ')} to hand ${roommates.length === 1 ? 'them' : 'one of them'} the floor.` : ''}`,
+		description: `Post a message in the ${room}, where the admin talks with you${roommates.length ? ` and ${roommates.map(displayName).join(' and ')}` : ''}. Answer a <room-message> here.${roommates.length ? ` Write ${roommates.map((key) => `@${handleOf(key)}`).join(' or ')} to hand ${roommates.length === 1 ? 'them' : 'one of them'} the floor.` : ''}`,
 		input: v.object({ body: Text }),
 		durable: true,
 		async run({ data, step }) {

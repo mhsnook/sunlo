@@ -6,6 +6,7 @@ import { toastError } from '@/components/ui/sonner'
 import {
 	associatesOf,
 	displayName,
+	handleOf,
 	meetingDue,
 	principalOf,
 	type RoomKey,
@@ -43,7 +44,7 @@ export function RoomThreadCompose({
 				onSend={send}
 				busy={post.isPending}
 				startSlot={<VoiceControls setDraft={setDraft} />}
-				placeholder={`Message ${displayName(principal)}${associates.map((key) => `, or @${key}`).join('')}`}
+				placeholder={`Message ${displayName(principal)}${associates.map((key) => `, or @${handleOf(key)}`).join('')}`}
 				inputTestId="room-compose-input"
 				sendTestId="room-compose-send"
 			/>

@@ -43,11 +43,11 @@ import { adminFetch } from './api'
 import { accessToken } from './session'
 
 export const crewIcons: Record<CrewKey, LucideIcon> = {
-	riker: Star,
-	data: Cpu,
-	geordi: Wrench,
-	hoshi: Languages,
-	guinan: Martini,
+	'command-1': Star,
+	'command-2': Cpu,
+	'product-1': Wrench,
+	'library-1': Languages,
+	'learnership-1': Martini,
 }
 
 export const roomIcons: Record<RoomKey, LucideIcon> = {
