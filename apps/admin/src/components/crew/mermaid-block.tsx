@@ -1,38 +1,50 @@
 import { useQuery } from '@tanstack/react-query'
 import { TriangleAlert } from 'lucide-react'
+import { useTheme } from '@/components/theme-provider'
+
+type Mode = 'light' | 'dark'
 
 let mermaidLoad: Promise<typeof import('mermaid').default> | null = null
 
 // Mermaid is large, so it loads with the first diagram on the page.
 const loadMermaid = () =>
-	(mermaidLoad ??= import('mermaid').then(({ default: mermaid }) => {
-		mermaid.initialize({
-			startOnLoad: false,
-			securityLevel: 'strict',
-			theme: 'neutral',
-			// A gantt chart is laid out at this width, then scaled to fit, and
-			// mermaid's own default of 1200 shrinks its text to half size in a
-			// side panel. Full dates on its axis overlap at this width.
-			gantt: { useWidth: 560, axisFormat: '%b %d' },
-		})
-		return mermaid
-	}))
+	(mermaidLoad ??= import('mermaid').then(({ default: mermaid }) => mermaid))
 
 let drawings = 0
 
-async function drawMermaid(source: string) {
+async function drawMermaid(source: string, mode: Mode) {
 	const mermaid = await loadMermaid()
+	// initialize() replaces the whole config, so every option goes in here;
+	// render() reads whatever the last call set.
+	mermaid.initialize({
+		startOnLoad: false,
+		securityLevel: 'strict',
+		theme: mode === 'dark' ? 'dark' : 'neutral',
+		// A gantt chart is laid out at this width, then scaled to fit, and
+		// mermaid's own default of 1200 shrinks its text to half size in a
+		// side panel. Full dates on its axis overlap at this width.
+		gantt: { useWidth: 560, axisFormat: '%b %d' },
+	})
 	await mermaid.parse(source)
 	// mermaid.render needs an element id no other drawing is using.
 	return (await mermaid.render(`mermaid-${++drawings}`, source)).svg
 }
 
+const useMode = (): Mode => {
+	const { theme } = useTheme()
+	if (theme !== 'system') return theme
+	return window.matchMedia('(prefers-color-scheme: dark)').matches
+		? 'dark'
+		: 'light'
+}
+
 // A ```mermaid block, such as a Roadmap's gantt chart. Agents write these
 // as text the Worker cannot check, so one that fails shows its source.
 export function MermaidBlock({ source }: { source: string }) {
+	const mode = useMode()
 	const diagram = useQuery({
-		queryKey: ['mermaid', source],
-		queryFn: () => drawMermaid(source),
+		queryKey: ['mermaid', mode, source],
+		queryFn: () => drawMermaid(source, mode),
 		staleTime: Infinity,
 		retry: false,
 	})
