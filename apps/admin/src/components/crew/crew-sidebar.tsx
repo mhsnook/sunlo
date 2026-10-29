@@ -186,7 +186,7 @@ function SidebarItem({
 					<span className="flex items-baseline justify-between gap-2">
 						<span className="truncate font-semibold">{name}</span>
 						{when && (
-							<span className="text-muted-foreground shrink-0 text-xs">
+							<span className="text-primary-700 shrink-0 text-xs">
 								{shortWhen(when)}
 							</span>
 						)}
@@ -194,7 +194,7 @@ function SidebarItem({
 					<span className="flex items-center justify-between gap-2">
 						<span
 							className={cn(
-								'text-muted-foreground truncate text-sm',
+								'text-primary-700 truncate text-sm',
 								dim && 'italic'
 							)}
 						>
