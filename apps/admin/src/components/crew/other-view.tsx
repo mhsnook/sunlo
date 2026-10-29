@@ -3,9 +3,16 @@ import { ChevronDown } from 'lucide-react'
 import { Bubble } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
-import { isCrewKey, type CrewMessageType } from '../../../shared/crew'
+import { hasBlocks } from '../../../shared/blocks'
+import {
+	isCrewKey,
+	speakerOf,
+	type CrewMessageType,
+	type PickChoice,
+} from '../../../shared/crew'
 import { usePickView } from '~/lib/crew'
 import { AgentAvatar, CrewText } from './crew-parts'
+import { SpeakableBubble } from './voice-controls'
 
 // An associate's answer that differs from the principal's, folded under the
 // principal's message. The admin opens it, then goes with one of the two;
@@ -19,7 +26,8 @@ export function OtherView({
 }) {
 	const [open, setOpen] = useState(false)
 	const pick = usePickView()
-	const choose = (chosen: 'original' | 'other') =>
+	const views = { original, other }
+	const choose = (chosen: PickChoice) =>
 		pick.mutate(
 			{ messageId: other.id, chosen },
 			{ onError: (error) => toastError(error.message) }
@@ -47,13 +55,20 @@ export function OtherView({
 					{isCrewKey(other.author) && (
 						<AgentAvatar agent={other.author} size="sm" />
 					)}
-					<Bubble
-						variant="outline"
-						align="start"
-						className="min-w-0 whitespace-normal"
+					<SpeakableBubble
+						id={other.id}
+						text={other.body}
+						agent={speakerOf(other)}
+						blocks={hasBlocks(other.body)}
 					>
-						<CrewText text={other.body} />
-					</Bubble>
+						<Bubble
+							variant="outline"
+							align="start"
+							className="min-w-0 whitespace-normal"
+						>
+							<CrewText text={other.body} />
+						</Bubble>
+					</SpeakableBubble>
 				</div>
 			)}
 			{picked ? (
@@ -61,9 +76,7 @@ export function OtherView({
 					className="text-muted-foreground px-1 text-xs"
 					data-testid="crew-picked"
 				>
-					{picked.by} went with{' '}
-					{picked.chosen === 'other' ? other.authorName : original.authorName}
-					’s view
+					{picked.by} went with {views[picked.chosen].authorName}’s view
 				</p>
 			) : (
 				open && (
@@ -78,8 +91,7 @@ export function OtherView({
 								data-key={chosen}
 								onClick={() => choose(chosen)}
 							>
-								Go with{' '}
-								{chosen === 'other' ? other.authorName : original.authorName}
+								Go with {views[chosen].authorName}
 							</Button>
 						))}
 					</div>

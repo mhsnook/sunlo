@@ -18,6 +18,7 @@ import {
 	type RoomKey,
 } from '../../../shared/crew'
 import {
+	charterQuery,
 	commandQuery,
 	documentsQuery,
 	isWorking,
@@ -45,6 +46,7 @@ export const Route = createFileRoute('/_admin/room/$room')({
 			context.queryClient.ensureQueryData(threadQuery(params.room)),
 			context.queryClient.ensureQueryData(roomQuery()),
 			context.queryClient.ensureQueryData(documentsQuery(params.room)),
+			context.queryClient.ensureQueryData(charterQuery(params.room)),
 			...(params.room === 'command'
 				? [context.queryClient.ensureQueryData(commandQuery())]
 				: []),

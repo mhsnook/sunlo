@@ -170,9 +170,8 @@ function cardsText(room: string, cards: BriefingInput['cards']) {
 	].join('\n\n')
 }
 
-// The Command room's memory of the admin, and the weekly cycle.
 // What the admin has told the room about themselves. Every room keeps one.
-export function charterText(room: string, charter: Array<CharterEntryType>) {
+function charterText(room: string, charter: Array<CharterEntryType>) {
 	const entries = (status: CharterEntryType['status']) =>
 		charter
 			.filter((entry) => entry.status === status)

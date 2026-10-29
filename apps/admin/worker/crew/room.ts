@@ -483,16 +483,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// Every room keeps a charter now; the entries so far are the Command
 	// room's. Messages gain an associate's other view, and the admin's pick.
 	private addRoomChartersAndOtherViews() {
-		const columns = (table: string) =>
-			new Set(
-				this.sql<{ name: string }>`
-					select name from pragma_table_info(${table})`.map((c) => c.name)
-			)
-		if (!columns('charter').has('room')) {
+		if (!this.tableColumns('charter').has('room')) {
 			this
 				.sql`alter table charter add column room text not null default 'command'`
 		}
-		const message = columns('message')
+		const message = this.tableColumns('message')
 		if (!message.has('other_view_of')) {
 			this.sql`alter table message add column other_view_of text`
 		}
@@ -759,9 +754,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		body: string
 		card: CardType | null
 		place: PlaceType
-		// An associate's answer that differs from the principal's latest
-		// message in the room.
-		otherView?: boolean
+		// The message an associate's answer differs from: the principal's
+		// message that woke its run.
+		otherViewOf?: string | null
 	}): { message: CrewMessageType; wake: Array<Wake> } {
 		const message = this.insert({
 			author: input.agent,
@@ -770,8 +765,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			routing: null,
 			card: input.card,
 			place: input.place,
-			otherViewOf: input.otherView
-				? this.principalsLatest(input.agent, input.place)
+			otherViewOf: input.otherViewOf
+				? this.otherViewTarget(input.agent, input.place, input.otherViewOf)
 				: null,
 		})
 		const placeRoom = roomOfPlace(input.place)
@@ -810,14 +805,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}):
 		| { ok: true; reports: Array<{ agent: CrewKey; body: string }> }
 		| { ok: false; status: 404 | 409; error: string } {
-		const otherRow = this.sql<MessageRow>`
-			select * from message where id = ${input.messageId}`[0]
-		const other = otherRow && toMessage(otherRow)
-		const originalRow =
-			other?.otherViewOf &&
-			this.sql<MessageRow>`
-				select * from message where id = ${other.otherViewOf}`[0]
-		const original = originalRow && toMessage(originalRow)
+		const other = this.messageById(input.messageId)
+		const original = other?.otherViewOf
+			? this.messageById(other.otherViewOf)
+			: null
 		if (
 			!other ||
 			!original ||
@@ -1817,18 +1808,28 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		})
 	}
 
-	// The latest message the agent's principal wrote in this timeline, for an
-	// associate's other view of it. Null for a principal, or when there is none.
-	private principalsLatest(agent: CrewKey, place: PlaceType) {
-		const room = roomOf(agent)
-		const principal = principalOf(room)
-		if (principal === agent) return null
-		return (
-			this.sql<{ id: string }>`
-				select id from message
-				where place = ${place} and author = ${principal} and receipt = 0
-				order by at desc, id desc
-				limit 1`[0]?.id ?? null
+	// An other view answers only its own room's principal, in the same
+	// timeline; anything else posts as an ordinary message.
+	private otherViewTarget(agent: CrewKey, place: PlaceType, id: string) {
+		const target = this.messageById(id)
+		const principal = principalOf(roomOf(agent))
+		return target &&
+			principal !== agent &&
+			target.author === principal &&
+			target.place === place
+			? target.id
+			: null
+	}
+
+	private messageById(id: string): CrewMessageType | null {
+		const row = this.sql<MessageRow>`select * from message where id = ${id}`[0]
+		return row ? toMessage(row) : null
+	}
+
+	private tableColumns(table: string) {
+		return new Set(
+			this.sql<{ name: string }>`
+				select name from pragma_table_info(${table})`.map((c) => c.name)
 		)
 	}
 

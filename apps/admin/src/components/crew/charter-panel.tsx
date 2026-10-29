@@ -48,7 +48,6 @@ export function CharterPanel({ room }: { room: RoomKey }) {
 					{proposed.length} more waiting for you in the room.
 				</p>
 			)}
-			{room === 'command' && <WeeklySettings />}
 		</section>
 	)
 }
@@ -87,7 +86,7 @@ const timezones =
 		? Intl.supportedValuesOf('timeZone')
 		: []
 
-function WeeklySettings() {
+export function WeeklySettings() {
 	const { data: room } = useQuery(roomQuery())
 	const setTimezone = useSetTimezone()
 	const [draft, setDraft] = useState<string | null>(null)

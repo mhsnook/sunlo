@@ -4,6 +4,7 @@ import {
 	adminAuthor,
 	crewKeys,
 	GithubDraftSchema,
+	PickChoiceSchema,
 	isCrewKey,
 	isRoomKey,
 	roomKeys,
@@ -302,7 +303,7 @@ api.get('/crew/rooms/:room/charter', roomParam, async (c) => {
 
 api.post(
 	'/crew/messages/:id/pick',
-	json(z.object({ chosen: z.enum(['original', 'other']) }), 'Send { chosen }'),
+	json(z.object({ chosen: PickChoiceSchema }), 'Send { chosen }'),
 	async (c) => {
 		const result = await (
 			await roomFor()

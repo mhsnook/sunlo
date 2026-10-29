@@ -162,6 +162,7 @@ function AuthorGroup({
 				const last = index === messages.length - 1
 				const asksYou = !!message.card && message.card.kind === 'question'
 				const blocks = hasBlocks(message.body)
+				const other = others.get(message.id)
 				return (
 					<Message
 						key={message.id}
@@ -225,9 +226,7 @@ function AuthorGroup({
 								</SpeakableBubble>
 							)}
 							{asksYou && <CardActions message={message} />}
-							{others.has(message.id) && (
-								<OtherView original={message} other={others.get(message.id)!} />
-							)}
+							{other && <OtherView original={message} other={other} />}
 							{mine && message.routing && message.place === 'room' && (
 								<MessageFooter>
 									<RoutingCorrection message={message} />

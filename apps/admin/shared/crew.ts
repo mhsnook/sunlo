@@ -331,6 +331,11 @@ export const CardSchema = z.object({
 })
 export type CardType = z.infer<typeof CardSchema>
 
+// Which of two views the admin went with: the principal's message, or the
+// associate's other view of it.
+export const PickChoiceSchema = z.enum(['original', 'other'])
+export type PickChoice = z.infer<typeof PickChoiceSchema>
+
 export const CrewMessageSchema = z.object({
 	id: z.string(),
 	at: z.string(),
@@ -362,7 +367,7 @@ export const CrewMessageSchema = z.object({
 	// On an other view: which of the two views the admin went with.
 	pick: z
 		.object({
-			chosen: z.enum(['original', 'other']),
+			chosen: PickChoiceSchema,
 			by: z.string(),
 			at: z.string(),
 		})

@@ -1,6 +1,6 @@
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { isBlockKind } from '../../../shared/blocks'
+import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { CopyBrief, GithubCard } from './github-card'
 import { MermaidBlock } from './mermaid-block'
@@ -328,21 +328,6 @@ const folds: Partial<Record<CardType['kind'], string>> = {
 	report: `${displayName('command-2')} submits the pre-meeting report`,
 }
 
-// The opening prose of a markdown body, for a folded card's preview.
-function openingLines(body: string) {
-	const paragraph =
-		body
-			.split(/\n\s*\n/)
-			.map((part) => part.trim())
-			.find((part) => part && !/^(#|```|~~~|\|)/.test(part)) ?? ''
-	const text = paragraph
-		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-		.replace(/[*_`>#]/g, '')
-		.replace(/\s+/g, ' ')
-		.trim()
-	return text.length > 220 ? `${text.slice(0, 219)}…` : text
-}
-
 // A card an agent brings the admin in its room. A brief or a report arrives
 // folded, like a link preview: its title and opening lines, and the whole of
 // it a click away.
@@ -370,7 +355,7 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 						<span className="block text-sm font-semibold">{card.title}</span>
 					)}
 					<span className="text-muted-foreground line-clamp-3 block text-sm">
-						{openingLines(message.body)}
+						{openingLines(message.body, 220)}
 					</span>
 					<span className="text-primary-700 block text-xs font-medium">
 						Open the {card.kind}

@@ -41,8 +41,10 @@ const defaultActions: Record<
 }
 
 // The tools every crew member has: talking in the Common Room and in its
-// own room, bringing the admin cards, and keeping its workspace.
-export function crewTools(agent: CrewKey) {
+// own room, bringing the admin cards, and keeping its workspace. `wokenBy`
+// is the message that started this run, which an associate's other view
+// answers.
+export function crewTools(agent: CrewKey, wokenBy: string | null) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
 	const place = placeOf(ownRoom)
@@ -56,7 +58,7 @@ export function crewTools(agent: CrewKey) {
 			body: string
 			card: CardType | null
 			place: PlaceType
-			otherView?: boolean
+			otherViewOf?: string | null
 		}
 	) {
 		assertBlocks(input.body)
@@ -102,7 +104,7 @@ export function crewTools(agent: CrewKey) {
 	const principal = displayName(principalOf(ownRoom))
 	const postToRoom = defineTool({
 		name: 'post_to_room',
-		description: `Post a message in the ${room}, where the admin talks with you${roommates.length ? ` and ${roommates.map(displayName).join(' and ')}` : ''}. Answer a <room-message> here.${roommates.length ? ` Write ${roommates.map((key) => `@${handleOf(key)}`).join(' or ')} to hand ${roommates.length === 1 ? 'them' : 'one of them'} the floor.` : ''}${associate ? ` Set otherView when your answer differs from ${principal}'s latest message here: the app shows yours beside it, and the admin goes with one of the two.` : ''}`,
+		description: `Post a message in the ${room}, where the admin talks with you${roommates.length ? ` and ${roommates.map(displayName).join(' and ')}` : ''}. Answer a <room-message> here.${roommates.length ? ` Write ${roommates.map((key) => `@${handleOf(key)}`).join(' or ')} to hand ${roommates.length === 1 ? 'them' : 'one of them'} the floor.` : ''}${associate ? ` Set otherView when ${principal} asked you in, and your answer differs from theirs: the app shows yours beside the message that asked you, and the admin goes with one of the two.` : ''}`,
 		// The room ignores otherView from a principal.
 		input: v.object({ body: Text, otherView: v.optional(v.boolean()) }),
 		durable: true,
@@ -112,7 +114,7 @@ export function crewTools(agent: CrewKey) {
 					body: data.body,
 					card: null,
 					place,
-					otherView: data.otherView,
+					otherViewOf: data.otherView ? wokenBy : null,
 				}),
 			}
 		},

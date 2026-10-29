@@ -36,6 +36,7 @@ import {
 	type CrewMessageType,
 	type DocumentSummaryType,
 	type GithubDraftType,
+	type PickChoice,
 	type RoomKey,
 	type PlaceType,
 	type RoomEvent,
@@ -383,7 +384,7 @@ export function useFileDraft() {
 // other view's.
 export function usePickView() {
 	return useMutation({
-		mutationFn: (input: { messageId: string; chosen: 'original' | 'other' }) =>
+		mutationFn: (input: { messageId: string; chosen: PickChoice }) =>
 			adminFetch(`crew/messages/${input.messageId}/pick`, {
 				method: 'POST',
 				json: { chosen: input.chosen },

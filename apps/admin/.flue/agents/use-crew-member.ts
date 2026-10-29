@@ -40,7 +40,6 @@ export function useCrewMember(
 	options: { model?: string; database?: boolean } = {}
 ) {
 	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
-	for (const tool of crewTools(agent)) useTool(tool)
 	const github = githubAccess[agent]
 	if (github) for (const tool of githubTools(agent, github)) useTool(tool)
 	const database = options.database ?? true
@@ -52,6 +51,7 @@ export function useCrewMember(
 	const delivery = useDelivery()
 	const messageId =
 		delivery.kind === 'signal' ? delivery.attributes?.messageId : undefined
+	for (const tool of crewTools(agent, messageId ?? null)) useTool(tool)
 	useAgentStart(async ({ append }) => {
 		append({
 			kind: 'signal',

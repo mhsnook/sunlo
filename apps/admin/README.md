@@ -78,7 +78,7 @@ Every card can also be dismissed, with or without a line of feedback. The agent 
 
 Each room keeps a **charter**: the admin's principles (philosophy, strategy, taste) and lessons (how they decide), which the room's officers propose with `propose_charter` and which count only once you keep them. It shows in the room log, and every run in the room reads its kept entries.
 
-When a room's associate sees something differently from its principal, it posts with `otherView` set. The app folds that answer under the principal's latest message ("Neelix sees it differently"), and once you open it, you go with one of the two. Both agents hear which, and the principal is asked whether the pick belongs in the charter. Neelix (`product-2`) is the Product room's design associate, on its own model (`MODEL_PRODUCT_2`); the principal brings it in for choices about what someone sees or does, and for a design review before user-facing work becomes an epic.
+When a room's principal asks its associate in, and the associate sees it differently, the associate posts with `otherView` set. The app folds that answer under the principal's message that asked ("Neelix sees it differently"), and once you open it, you go with one of the two. Both agents hear which, and the principal is asked whether the pick belongs in the charter. Neelix (`product-2`) is the Product room's design associate, on its own model (`MODEL_PRODUCT_2`); the principal brings it in for choices about what someone sees or does, and for a design review before user-facing work becomes an epic.
 
 ### The Command room: Riker and Data
 

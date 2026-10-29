@@ -123,6 +123,22 @@ export const blockErrors = (text: string) =>
 
 export const hasBlocks = (text: string) => codeBlocks(text).length > 0
 
+// The opening prose of a markdown text, as plain text of at most `max`
+// characters: for a folded card's preview, or for quoting a message.
+export function openingLines(body: string, max: number) {
+	const paragraph =
+		body
+			.split(/\n\s*\n/)
+			.map((part) => part.trim())
+			.find((part) => part && !/^(#|```|~~~|\|)/.test(part)) ?? ''
+	const text = paragraph
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+		.replace(/[*_`>#]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+	return text.length > max ? `${text.slice(0, max - 1)}…` : text
+}
+
 export const BLOCKS_GUIDE = `## Components in your messages
 
 Your messages are markdown, and you can put components in them as fenced blocks whose language is the component and whose body is JSON. The app draws them in its own style. Use one only when it says more than a sentence would.

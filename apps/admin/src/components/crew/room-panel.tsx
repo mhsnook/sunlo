@@ -25,7 +25,7 @@ import {
 	workspaceQuery,
 } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
-import { CharterPanel } from './charter-panel'
+import { CharterPanel, WeeklySettings } from './charter-panel'
 import { DocumentView } from './document-view'
 import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
 import { MemoryList } from './memory-list'
@@ -85,6 +85,7 @@ export function RoomPanel({
 		>
 			<DocumentList documents={documents} onOpen={setOpenId} />
 			<CharterPanel room={room} />
+			{room === 'command' && <WeeklySettings />}
 			{roomMembers(room).map((agent) => (
 				<MemberLog key={agent} agent={agent} />
 			))}
