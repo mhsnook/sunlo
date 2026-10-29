@@ -583,7 +583,7 @@ jobs:
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: 2.76.14
+          version: 2.122.0
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -607,14 +607,6 @@ jobs:
       - name: Install Playwright dependencies (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
-
-      # Cache Docker layers for Supabase
-      - name: Cache Docker layers
-        uses: jpribyl/action-docker-layer-caching@v0.1.1
-        with:
-          key: docker-layers-${{ runner.os }}-supabase-${{ hashFiles('supabase/config.toml') }}
-          restore-keys: docker-layers-${{ runner.os }}-supabase-
-        continue-on-error: true
 
       - name: Start Supabase
         run: supabase start -x studio,imgproxy,logflare,vector,supavisor,edge-runtime,inbucket
