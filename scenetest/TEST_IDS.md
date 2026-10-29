@@ -633,7 +633,7 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `crew-sidebar-item` + `data-key=<crew\|room>`                                                | Sidebar link to the Common Room or a subject's room                                     |
 | `crew-sidebar-unread`, `crew-sidebar-cards`                                                  | A sidebar item's unread count, and its count of cards that wait on you                  |
 | `crew-message-group` + `data-key=<message id>`                                               | Consecutive messages from one author                                                    |
-| `crew-message` + `data-key=<message id>`                                                     | One message in the room                                                                 |
+| `crew-message` + `data-key=<message id>` (`data-pending` until the server has it)            | One message in the room                                                                 |
 | `crew-new-since`                                                                             | The "New since …" line                                                                  |
 | `crew-working`                                                                               | "<name> is working…" under the timeline                                                 |
 | `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                              |

@@ -20,11 +20,13 @@ import {
 	type LucideIcon,
 } from 'lucide-react'
 import {
+	COMMON_ROOM,
 	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
 	DocumentSchema,
 	DocumentSummarySchema,
+	placeOf,
 	RevisionTextSchema,
 	roomOfPlace,
 	RoomSnapshotSchema,
@@ -285,6 +287,37 @@ const upsertMessage = (queryClient: QueryClient, message: CrewMessageType) =>
 		messages: upsert(timeline.messages, message),
 	}))
 
+const removeMessage = (queryClient: QueryClient, message: CrewMessageType) =>
+	updateTimeline(queryClient, message.place, (timeline) => ({
+		messages: timeline.messages.filter((m) => m.id !== message.id),
+	}))
+
+const PENDING_PREFIX = 'pending:'
+
+// The admin's message as its timeline shows it until the server answers.
+export const isPendingMessage = (message: CrewMessageType) =>
+	message.id.startsWith(PENDING_PREFIX)
+
+// No routing: the timeline offers to correct a routed message, and this one
+// has not been routed yet.
+const pendingMessage = (
+	author: string,
+	place: PlaceType,
+	body: string
+): CrewMessageType => ({
+	id: `${PENDING_PREFIX}${crypto.randomUUID()}`,
+	at: new Date().toISOString(),
+	author,
+	authorName: 'You',
+	body,
+	routing: null,
+	card: null,
+	answer: null,
+	place,
+	corrected: null,
+	receipt: false,
+})
+
 // A message someone else wrote after the admin last opened its timeline.
 export const isNewFor = (
 	message: CrewMessageType,
@@ -292,7 +325,10 @@ export const isNewFor = (
 	myAuthor: string
 ) => !!seenAt && message.at > seenAt && message.author !== myAuthor
 
-export function usePostToRoom() {
+// The message shows in the Common Room at once. CLEF may route it to a
+// subject's room, so the answer replaces the pending one wherever it lands.
+// `author` is the admin's own author key, so the timeline draws it as theirs.
+export function usePostToRoom(author: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (input: { body: string; routing: RoutingType | null }) =>
@@ -302,11 +338,22 @@ export function usePostToRoom() {
 					json: input,
 				})
 			),
-		onSuccess: (message) => upsertMessage(queryClient, message),
+		onMutate: (input) => {
+			const pending = pendingMessage(author, COMMON_ROOM, input.body)
+			upsertMessage(queryClient, pending)
+			return pending
+		},
+		onSuccess: (message, _input, pending) => {
+			removeMessage(queryClient, pending)
+			upsertMessage(queryClient, message)
+		},
+		onError: (_error, _input, pending) => {
+			if (pending) removeMessage(queryClient, pending)
+		},
 	})
 }
 
-export function usePostToThread(room: RoomKey) {
+export function usePostToThread(room: RoomKey, author: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (body: string) =>
@@ -316,7 +363,18 @@ export function usePostToThread(room: RoomKey) {
 					json: { body },
 				})
 			),
-		onSuccess: (message) => upsertMessage(queryClient, message),
+		onMutate: (body) => {
+			const pending = pendingMessage(author, placeOf(room), body)
+			upsertMessage(queryClient, pending)
+			return pending
+		},
+		onSuccess: (message, _body, pending) => {
+			removeMessage(queryClient, pending)
+			upsertMessage(queryClient, message)
+		},
+		onError: (_error, _body, pending) => {
+			if (pending) removeMessage(queryClient, pending)
+		},
 	})
 }
 

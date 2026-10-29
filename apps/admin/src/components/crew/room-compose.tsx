@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useRouteContext } from '@tanstack/react-router'
 import {
 	ChevronDown,
 	Layers,
@@ -9,7 +10,11 @@ import {
 import { cn } from '@/lib/utils'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
-import { fixedRouting, type RoutingType } from '../../../shared/crew'
+import {
+	adminAuthor,
+	fixedRouting,
+	type RoutingType,
+} from '../../../shared/crew'
 import { usePostToRoom } from '~/lib/crew'
 import { VoiceControls } from './voice-controls'
 import { RoutingMenu, routingNote } from './routing-menu'
@@ -18,10 +23,11 @@ import { RoutingMenu, routingNote } from './routing-menu'
 // and an @mention routes. Otherwise CLEF decides when the message is sent,
 // unless the admin picks a place from the chip first.
 export function RoomCompose() {
+	const { session } = useRouteContext({ from: '/_admin' })
 	const [draft, setDraft] = useState('')
 	// The admin's own choice from the chip, which CLEF learns from.
 	const [override, setOverride] = useState<RoutingType | null>(null)
-	const post = usePostToRoom()
+	const post = usePostToRoom(adminAuthor(session.user.id))
 
 	const text = draft.trim()
 	const rule = text ? fixedRouting(text) : null
@@ -29,15 +35,19 @@ export function RoomCompose() {
 	const locked = rule?.kind === 'stack'
 	const routing = locked ? rule : (override ?? rule)
 
+	// The box clears at once; a refused message comes back into it, unless
+	// the admin has started the next one.
 	const send = (body: string) => {
+		const chosen = override && !locked ? override : null
+		setDraft('')
+		setOverride(null)
 		post.mutate(
-			{ body, routing: override && !locked ? override : null },
+			{ body, routing: chosen },
 			{
-				onSuccess: () => {
-					setDraft('')
-					setOverride(null)
+				onError: (error) => {
+					toastError(error.message)
+					setDraft((current) => current || body)
 				},
-				onError: (error) => toastError(error.message),
 			}
 		)
 	}
@@ -81,7 +91,6 @@ export function RoomCompose() {
 					if (!value.trim()) setOverride(null)
 				}}
 				onSend={send}
-				busy={post.isPending}
 				startSlot={<VoiceControls setDraft={setDraft} />}
 				placeholder="Message the crew, or @ someone"
 				inputTestId="crew-compose-input"
