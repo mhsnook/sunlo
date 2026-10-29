@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { endsWithEllipsis, handleOf, mentionedCrew } from '../../shared/crew'
-import { displayName } from '../../shared/crew'
+import { crew, displayName } from '../../shared/crew'
 import { clefPrompt, parseClefReply } from './clef'
 
 describe('the fixed CLEF rules', () => {
@@ -32,6 +32,18 @@ describe('the fixed CLEF rules', () => {
 		expect(
 			mentionedCrew(`@command, and @${handleOf('command-1')} again`)
 		).toEqual(['command-1'])
+	})
+
+	it('reads a name with an apostrophe, its handle, and a possessive', () => {
+		const withApostrophe = crew['product-1'].name
+		expect(withApostrophe).toMatch(/'/)
+		expect(mentionedCrew(`ask @${withApostrophe}`)).toEqual(['product-1'])
+		expect(mentionedCrew(`ask @${handleOf('product-1')}`)).toEqual([
+			'product-1',
+		])
+		expect(
+			mentionedCrew(`@${handleOf('product-2')}'s view, and @library’s`)
+		).toEqual(['product-2', 'library-1'])
 	})
 
 	it('does not read the domain of an email address as a mention', () => {
