@@ -1,0 +1,78 @@
+# Test IDs in the admin app
+
+The admin app puts `data-testid` on what a test would click or read, the
+same way the main app does (`scenetest/TEST_IDS.md` has the selector
+conventions). No test reads these yet: there are no admin scene specs, and
+the Worker's tests call functions. The ids are here so a scene can be
+written without first instrumenting the page, and so a pull request that
+only touches the admin app changes nothing outside `apps/admin/`.
+
+Register a new id here, not in the main app's registry.
+
+## The activity dashboard at `/activity`
+
+| Selector                                   | Purpose                                                 |
+| ------------------------------------------ | ------------------------------------------------------- |
+| `admin-stat-tile`                          | Headline number tile (active users, new users, reviews) |
+| `admin-metric-panel` + `data-key=<metric>` | Daily chart panel for one metric (e.g. `reviews`)       |
+| `admin-range-option` + `data-key=<days>`   | Date range link: 7, 14 or 30 days                       |
+
+## The Common Room at `/`, and each subject's room at `/room/<room>`
+
+| Selector                                                                                     | Purpose                                                                                 |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `crew-sidebar-item` + `data-key=<crew\|room>`                                                | Sidebar link to the Common Room or a subject's room                                     |
+| `crew-sidebar-unread`, `crew-sidebar-cards`                                                  | A sidebar item's unread count, and its count of cards that wait on you                  |
+| `crew-message-group` + `data-key=<message id>`                                               | Consecutive messages from one author                                                    |
+| `crew-message` + `data-key=<message id>`                                                     | One message in the room                                                                 |
+| `crew-new-since`                                                                             | The "New since …" line                                                                  |
+| `crew-working`                                                                               | "<name> is working…" under the timeline                                                 |
+| `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                              |
+| `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it        |
+| `crew-other-view` + `data-key=<message id>`, `crew-other-view-toggle`                        | An associate's second view, folded under the principal's message, and its toggle        |
+| `crew-pick` + `data-key=<original\|other>`, `crew-picked`                                    | The buttons that go with one of the two views, and the note once one is picked          |
+| `crew-card-copy`                                                                             | A card's Copy brief button                                                              |
+| `crew-card-file`, `crew-card-edit`                                                           | A GitHub draft card's File it and Edit buttons                                          |
+| `crew-card-error`                                                                            | Why a GitHub draft was not filed                                                        |
+| `crew-card-filed`                                                                            | The link to what a filed GitHub card became                                             |
+| `github-draft`, `github-draft-editor`                                                        | A GitHub draft card's draft, and its editor                                             |
+| `github-draft-title`, `github-draft-labels`, `github-draft-due`, `github-draft-body`         | The editor's fields                                                                     |
+| `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                   |
+| `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                         |
+| `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                                  |
+| `crew-clef-chip`                                                                             | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
+| `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routeproduct-1`, `room`, `stack`                    |
+| `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                   |
+| `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                       |
+| `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                               |
+| `room-document` + `data-key=<name>`                                                          | A document in the room log; opens it                                                    |
+| `document-back`                                                                              | Closes a document, back to the room log                                                 |
+| `document` + `data-key=<name>`                                                               | An open document: the Situation Report, or one from a room log                          |
+| `document-text`                                                                              | A document's current text, drawn                                                        |
+| `document-edit`, `document-editor`                                                           | The Edit button, and the Markdown box it opens                                          |
+| `document-summary`, `document-save`                                                          | The editor's "What changed" line, and its Save button                                   |
+| `document-stale`                                                                             | The editor's note that someone saved a newer revision                                   |
+| `document-history-button`, `document-revisions`                                              | The History toggle, and the revision list                                               |
+| `document-revision` + `data-key=<revision>`                                                  | One revision in the list; shows it                                                      |
+| `document-old-revision`, `document-restore`                                                  | An older revision on view, and its Restore button                                       |
+| `crew-diagram-error`                                                                         | A Mermaid diagram that did not draw, shown as its source                                |
+| `common-knowledge-button`, `common-knowledge`                                                | The Common Knowledge toggle and its panel                                               |
+| `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One Common Knowledge entry, and the box and button that add one                         |
+| `crew-overview-range` + `data-key=<days>`                                                    | Date range button in the Overview                                                       |
+| `crew-overview-card` + `data-key=<metrics>`                                                  | One chart card in the Overview                                                          |
+| `agent-looks-after`                                                                          | The "Looks after" list in a member's profile card                                       |
+| `agent-not-started`                                                                          | The note on a planned officer's profile card                                            |
+| `agent-todos`, `agent-todo` + `data-key=<id>`                                                | The workspace to-do list and one to-do                                                  |
+| `agent-open-item` + `data-key=<id>`                                                          | One "Open with you" item                                                                |
+| `agent-memory`                                                                               | The workspace memory list                                                               |
+| `agent-memory-entry` + `data-key=<id>`                                                       | One memory or playbook entry, with its delete button                                    |
+| `crew-block` + `data-key=<chart\|stats\|table\|mermaid>`                                     | A component an agent put in its message                                                 |
+| `crew-block-filter`                                                                          | The filter box on a filterable table component                                          |
+| `crew-meeting-banner`, `crew-go-to-meeting`                                                  | The weekly meeting invitation and its link to the Command room                          |
+| `room-compose-input`, `room-compose-send`                                                    | A subject room's compose bar                                                            |
+| `room-start-meeting`                                                                         | "Start the weekly meeting" in the Command room, while the meeting is due                |
+| `room-card` + `data-key=<kind>`                                                              | A card in a subject's room (`decide`, ...); a folded `brief` or `report` is its preview |
+| `room-panel-button`, `room-panel` + `data-key=<room>`                                        | The room log toggle and its panel                                                       |
+| `room-member` + `data-key=<agent>`                                                           | One member's profile, to-dos, open items and memory in the room log                     |
+| `charter-panel` + `data-key=<room>`, `charter-entry` + `data-key=<id>`                       | A room's charter in its log, and one kept entry                                         |
+| `brief-timezone`                                                                             | The time zone of the Sunday brief                                                       |
