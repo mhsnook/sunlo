@@ -114,7 +114,6 @@ describe('githubClient', () => {
 		}))
 		expect(await client.file(epic)).toEqual({
 			number: 900,
-			title: 'Onboarding that keeps people',
 			url: 'https://github.com/mhsnook/sunlo/issues/900',
 		})
 		expect(calls[0].route).toBe('POST /repos/{owner}/{repo}/issues')
@@ -169,7 +168,6 @@ describe('githubClient', () => {
 describe('filingReport', () => {
 	const result = {
 		number: 900,
-		title: 'Onboarding that keeps people',
 		url: 'https://github.com/mhsnook/sunlo/issues/900',
 	}
 
@@ -207,6 +205,19 @@ describe('the receipt lines', () => {
 				state: 'closed',
 			})
 		).toBe('edited milestone "November": due 2026-11-30; closed it')
+	})
+})
+
+describe('the milestone lookup', () => {
+	it('is null for a milestone the repository does not have', async () => {
+		const client = githubClient(
+			(() =>
+				Promise.reject(
+					Object.assign(new Error('Not Found'), { status: 404 })
+				)) as unknown as Parameters<typeof githubClient>[0],
+			'mhsnook/sunlo'
+		)
+		expect(await client.milestone(99)).toBeNull()
 	})
 })
 

@@ -1,6 +1,6 @@
 import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/core'
-import type { GithubDraftType } from '../../shared/crew'
+import { draftTitle, type GithubDraftType } from '../../shared/crew'
 
 // Every issue the crew files carries this label.
 export const ISSUE_LABEL = 'from-crew'
@@ -8,7 +8,7 @@ export const ISSUE_LABEL = 'from-crew'
 export const DRAFTS_PER_RUN = 5
 export const EDITS_PER_RUN = 20
 
-export type Filed = { number: number; title: string; url: string }
+export type Filed = { number: number; url: string }
 
 export type IssueChange = {
 	title?: string
@@ -85,16 +85,21 @@ const toMilestone = (data: MilestoneData) => ({
 // GitHub takes a due date as a timestamp, and keeps its date.
 const dueOn = (date: string) => `${date}T12:00:00Z`
 
+export const githubConfigured = (
+	env: Env
+): env is Env & {
+	GITHUB_APP_ID: string
+	GITHUB_APP_INSTALLATION_ID: string
+	GITHUB_APP_PRIVATE_KEY: string
+} =>
+	!!env.GITHUB_APP_ID &&
+	!!env.GITHUB_APP_INSTALLATION_ID &&
+	!!env.GITHUB_APP_PRIVATE_KEY
+
 // Null when the GitHub App secrets are not set: agents then get no
 // GitHub tools at all.
 export function githubFor(env: Env) {
-	if (
-		!env.GITHUB_APP_ID ||
-		!env.GITHUB_APP_INSTALLATION_ID ||
-		!env.GITHUB_APP_PRIVATE_KEY
-	) {
-		return null
-	}
+	if (!githubConfigured(env)) return null
 	if (env.GITHUB_APP_PRIVATE_KEY.includes('BEGIN RSA PRIVATE KEY')) {
 		throw new Error(
 			'GITHUB_APP_PRIVATE_KEY is in PKCS#1 format; Workers need PKCS#8 (apps/admin/README.md, "GitHub: milestones and epics")'
@@ -128,7 +133,7 @@ export function githubClient(request: Request, repository: string) {
 					labels: [...new Set([...draft.labels, ISSUE_LABEL])],
 					milestone: draft.milestone ?? undefined,
 				})
-				return { number: data.number, title: data.title, url: data.html_url }
+				return { number: data.number, url: data.html_url }
 			}
 			if (draft.type === 'milestone') {
 				const { data } = await request(
@@ -140,17 +145,13 @@ export function githubClient(request: Request, repository: string) {
 						due_on: draft.dueOn ? dueOn(draft.dueOn) : undefined,
 					}
 				)
-				return { number: data.number, title: data.title, url: data.html_url }
+				return { number: data.number, url: data.html_url }
 			}
 			const { data } = await request(
 				'POST /repos/{owner}/{repo}/issues/{issue_number}/comments',
 				{ ...at, issue_number: draft.issue, body: draft.body }
 			)
-			return {
-				number: draft.issue,
-				title: `Comment on #${draft.issue}`,
-				url: data.html_url,
-			}
+			return { number: draft.issue, url: data.html_url }
 		},
 
 		async editIssue(issueNumber: number, change: IssueChange) {
@@ -196,6 +197,20 @@ export function githubClient(request: Request, repository: string) {
 					at: comment.created_at,
 					body: comment.body ?? '',
 				})),
+			}
+		},
+
+		// Null when the repository has no milestone with that number.
+		async milestone(milestoneNumber: number) {
+			try {
+				const { data } = await request(
+					'GET /repos/{owner}/{repo}/milestones/{milestone_number}',
+					{ ...at, milestone_number: milestoneNumber }
+				)
+				return toMilestone(data)
+			} catch (error) {
+				if ((error as { status?: number }).status === 404) return null
+				throw error
 			}
 		},
 
@@ -253,6 +268,11 @@ export function findPersonalData(text: string, people: PeopleIndex) {
 	return null
 }
 
+// The refusal for text that would publish personal data on the public
+// repository; the agent or the admin takes it out and tries again.
+export const personalDataRefusal = (outcome: string, found: string) =>
+	`${outcome}: it contains ${found}, and mhsnook/sunlo is public. Take it out, describing people by counts or patterns instead.`
+
 function escapeRegExp(text: string) {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
@@ -269,13 +289,6 @@ export const draftText = (draft: GithubDraftType) =>
 			? publishedText([draft.title, draft.description])
 			: draft.body
 
-const draftLabel = (draft: GithubDraftType) =>
-	draft.type === 'issue'
-		? 'issue'
-		: draft.type === 'milestone'
-			? 'milestone'
-			: `comment on #${draft.issue}`
-
 // What reaches the agent once the admin files its draft. When the admin
 // changed the draft first, both versions go, so the agent can learn how the
 // admin writes.
@@ -286,17 +299,16 @@ export function filingReport(input: {
 	by: string
 }) {
 	const { drafted, filed, result, by } = input
-	const what = draftLabel(filed)
 	const where =
-		filed.type === 'comment'
-			? `${result.url}`
-			: `#${result.number}, ${result.url}`
-	const opening = `${by} filed your ${what} draft "${drafted.type === 'comment' ? `#${drafted.issue}` : drafted.title}" (${where})`
+		filed.type === 'comment' ? result.url : `#${result.number}, ${result.url}`
+	const opening = `${by} filed your ${filed.type} draft "${draftTitle(drafted)}" (${where})`
+	const roadmap =
+		filed.type === 'comment' ? '' : ' Put its number in the Roadmap.'
 	if (JSON.stringify(drafted) === JSON.stringify(filed)) {
-		return `${opening} as you wrote it.${filed.type === 'comment' ? '' : ' Put its number in the Roadmap.'}`
+		return `${opening} as you wrote it.${roadmap}`
 	}
 	return [
-		`${opening}, after changing it.${filed.type === 'comment' ? '' : ' Put its number in the Roadmap.'}`,
+		`${opening}, after changing it.${roadmap}`,
 		`Your draft:\n${JSON.stringify(drafted, null, 2)}`,
 		`What ${by} filed:\n${JSON.stringify(filed, null, 2)}`,
 		'If the changes show how they like issues written, save that with note_writing_style.',

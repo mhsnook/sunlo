@@ -41,10 +41,8 @@ const defaultActions: Record<
 }
 
 // The tools every crew member has: talking in the Common Room and in its
-// own room, bringing the admin cards, and keeping its workspace. `wokenBy`
-// is the message that started this run, which an associate's other view
-// answers.
-export function crewTools(agent: CrewKey, wokenBy: string | null) {
+// own room, bringing the admin cards, and keeping its workspace.
+export function crewTools(agent: CrewKey) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
 	const place = placeOf(ownRoom)
@@ -58,7 +56,7 @@ export function crewTools(agent: CrewKey, wokenBy: string | null) {
 			body: string
 			card: CardType | null
 			place: PlaceType
-			otherViewOf?: string | null
+			otherView?: boolean
 		}
 	) {
 		assertBlocks(input.body)
@@ -114,7 +112,7 @@ export function crewTools(agent: CrewKey, wokenBy: string | null) {
 					body: data.body,
 					card: null,
 					place,
-					otherViewOf: data.otherView ? wokenBy : null,
+					otherView: data.otherView,
 				}),
 			}
 		},

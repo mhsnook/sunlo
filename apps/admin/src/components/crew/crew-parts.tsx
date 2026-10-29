@@ -2,16 +2,16 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
-import { CopyBrief, GithubCard } from './github-card'
+import { GithubCard } from './github-card'
 import { MermaidBlock } from './mermaid-block'
 import { remarkCrew } from './remark-crew'
 import { useState, type ReactNode } from 'react'
-import { Users, X, type LucideIcon } from 'lucide-react'
+import { Check, Copy, Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageMarker } from '@/components/ui/message'
-import { toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
 	isCrewKey,
@@ -365,26 +365,70 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 		)
 	}
 	return (
-		<div
-			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
-			data-testid="room-card"
-			data-key={card.kind}
+		<CardFrame
+			kind={card.kind}
+			label={cardLabels[card.kind]}
+			brief={[card.title, message.body, message.answer?.url]}
 		>
-			<div className="flex items-center gap-2">
-				<p className="text-muted-foreground me-auto text-xs font-medium">
-					{cardLabels[card.kind]}
-				</p>
-				<CopyBrief
-					text={[card.title, message.body, message.answer?.url]
-						.filter(Boolean)
-						.join('\n\n')}
-				/>
-			</div>
 			{card.title && <p className="text-sm font-semibold">{card.title}</p>}
 			<div className="text-sm">
 				<CrewText text={message.body} />
 			</div>
 			<CardActions message={message} />
+		</CardFrame>
+	)
+}
+
+// Every unfolded card's frame: its label, and the Copy brief button, which
+// copies the parts of `brief` it has.
+export function CardFrame({
+	kind,
+	label,
+	brief,
+	children,
+}: {
+	kind: CardType['kind']
+	label: string | undefined
+	brief: Array<string | null | undefined>
+	children: ReactNode
+}) {
+	return (
+		<div
+			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
+			data-testid="room-card"
+			data-key={kind}
+		>
+			<div className="flex items-center gap-2">
+				<p className="text-muted-foreground me-auto text-xs font-medium">
+					{label}
+				</p>
+				<CopyBrief text={brief.filter(Boolean).join('\n\n')} />
+			</div>
+			{children}
 		</div>
+	)
+}
+
+// Copies a card's text, for pasting into a Claude Code session.
+function CopyBrief({ text }: { text: string }) {
+	const [copied, setCopied] = useState(false)
+	return (
+		<Button
+			variant="ghost"
+			size="sm"
+			className="text-muted-foreground h-7 px-2 shadow-none"
+			data-testid="crew-card-copy"
+			onClick={() =>
+				void navigator.clipboard.writeText(text).then(
+					() => {
+						setCopied(true)
+						toastSuccess('Brief copied')
+					},
+					(error: Error) => toastError(error.message)
+				)
+			}
+		>
+			{copied ? <Check /> : <Copy />} Copy brief
+		</Button>
 	)
 }
