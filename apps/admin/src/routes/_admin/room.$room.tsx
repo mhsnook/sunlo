@@ -79,11 +79,12 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	)
 	const members = roomMembers(room)
 	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
+	const myAuthor = adminAuthor(session.user.id)
 
 	return (
 		<div className="flex h-full min-h-0">
-			<section className="flex min-w-0 flex-1 flex-col">
-				<header className="flex items-center gap-2 border-b px-4 py-3 sm:gap-3">
+			<section className="@container flex min-w-0 flex-1 flex-col">
+				<header className="flex items-center gap-2 border-b px-4 py-3 @sm:gap-3">
 					<MobileSidebarButton />
 					<RoomAvatar room={room} />
 					<div className="me-auto min-w-0">
@@ -97,18 +98,18 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					<Button
 						variant="ghost"
 						data-testid="room-panel-button"
-						className="max-sm:px-2.5"
+						className="@max-sm:px-2.5"
 						aria-pressed={panelOpen}
 						onClick={() => setPanelOpen((open) => !open)}
 					>
-						<NotebookText /> <span className="max-sm:sr-only">Room log</span>
+						<NotebookText /> <span className="@max-sm:sr-only">Room log</span>
 					</Button>
 				</header>
 				<MessageScroller dependency={thread.messages.length + working.length}>
 					{thread.messages.length ? (
 						<RoomTimeline
 							messages={thread.messages}
-							myAuthor={adminAuthor(session.user.id)}
+							myAuthor={myAuthor}
 							newSince={newSince}
 						/>
 					) : (
@@ -116,7 +117,11 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					)}
 					<WorkingMarker agents={working} />
 				</MessageScroller>
-				<RoomThreadCompose room={room} weekly={crewRoom.weekly} />
+				<RoomThreadCompose
+					room={room}
+					weekly={crewRoom.weekly}
+					myAuthor={myAuthor}
+				/>
 			</section>
 			{panelOpen && (
 				<SidePanelSlot>

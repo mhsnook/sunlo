@@ -139,15 +139,14 @@ function AuthorGroup({
 				const last = index === messages.length - 1
 				const asksYou = !!message.card && message.card.kind === 'question'
 				const blocks = hasBlocks(message.body)
-				const pending = isPendingMessage(message)
 				return (
 					<Message
 						key={message.id}
 						align={mine ? 'end' : 'start'}
 						data-testid="crew-message"
 						data-key={message.id}
-						data-pending={pending || undefined}
-						className={cn(pending && 'opacity-60')}
+						data-pending={isPendingMessage(message) || undefined}
+						className="data-pending:opacity-60"
 					>
 						{!mine && (
 							<MessageAvatar className={cn(!last && 'invisible')}>

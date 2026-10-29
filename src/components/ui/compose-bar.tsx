@@ -85,7 +85,7 @@ const ComposeBar = ({
 				send()
 			}}
 			className={cn(
-				'border-primary-300 hover:border-primary bg-card ring-offset-background focus-within:ring-ring flex w-full flex-col rounded-2xl border inset-shadow-sm focus-within:ring-2 focus-within:ring-offset-2',
+				'border-primary-300 hover:border-primary bg-card ring-offset-background ring-ring flex w-full flex-col rounded-2xl border inset-shadow-sm has-[textarea:focus-visible]:ring-2 has-[textarea:focus-visible]:ring-offset-2',
 				disabled && 'opacity-50',
 				className
 			)}

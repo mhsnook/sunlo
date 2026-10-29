@@ -287,11 +287,6 @@ const upsertMessage = (queryClient: QueryClient, message: CrewMessageType) =>
 		messages: upsert(timeline.messages, message),
 	}))
 
-const removeMessage = (queryClient: QueryClient, message: CrewMessageType) =>
-	updateTimeline(queryClient, message.place, (timeline) => ({
-		messages: timeline.messages.filter((m) => m.id !== message.id),
-	}))
-
 const PENDING_PREFIX = 'pending:'
 
 // The admin's message as its timeline shows it until the server answers.
@@ -325,10 +320,35 @@ export const isNewFor = (
 	myAuthor: string
 ) => !!seenAt && message.at > seenAt && message.author !== myAuthor
 
-// The message shows in the Common Room at once. CLEF may route it to a
-// subject's room, so the answer replaces the pending one wherever it lands.
-// `author` is the admin's own author key, so the timeline draws it as theirs.
-export function usePostToRoom(author: string) {
+// The pending message shows at once, and one cache write swaps it for the
+// server's row, or drops it when the send fails. The server stores a message
+// where it was posted, so the row lands in the pending message's timeline.
+const postHandlers = <TInput>(
+	queryClient: QueryClient,
+	toPending: (input: TInput) => CrewMessageType
+) => ({
+	onMutate: (input: TInput) => {
+		const pending = toPending(input)
+		upsertMessage(queryClient, pending)
+		return pending
+	},
+	onSettled: (
+		message: CrewMessageType | undefined,
+		_error: Error | null,
+		_input: TInput,
+		pending: CrewMessageType | undefined
+	) => {
+		if (!pending) return
+		updateTimeline(queryClient, pending.place, (timeline) => {
+			const rest = timeline.messages.filter((m) => m.id !== pending.id)
+			return { messages: message ? upsert(rest, message) : rest }
+		})
+	},
+})
+
+// `myAuthor` is the admin's own author key, so the timeline draws the
+// pending message as theirs.
+export function usePostToRoom(myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (input: { body: string; routing: RoutingType | null }) =>
@@ -338,22 +358,13 @@ export function usePostToRoom(author: string) {
 					json: input,
 				})
 			),
-		onMutate: (input) => {
-			const pending = pendingMessage(author, COMMON_ROOM, input.body)
-			upsertMessage(queryClient, pending)
-			return pending
-		},
-		onSuccess: (message, _input, pending) => {
-			removeMessage(queryClient, pending)
-			upsertMessage(queryClient, message)
-		},
-		onError: (_error, _input, pending) => {
-			if (pending) removeMessage(queryClient, pending)
-		},
+		...postHandlers(queryClient, (input) =>
+			pendingMessage(myAuthor, COMMON_ROOM, input.body)
+		),
 	})
 }
 
-export function usePostToThread(room: RoomKey, author: string) {
+export function usePostToThread(room: RoomKey, myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (body: string) =>
@@ -363,18 +374,9 @@ export function usePostToThread(room: RoomKey, author: string) {
 					json: { body },
 				})
 			),
-		onMutate: (body) => {
-			const pending = pendingMessage(author, placeOf(room), body)
-			upsertMessage(queryClient, pending)
-			return pending
-		},
-		onSuccess: (message, _body, pending) => {
-			removeMessage(queryClient, pending)
-			upsertMessage(queryClient, message)
-		},
-		onError: (_error, _body, pending) => {
-			if (pending) removeMessage(queryClient, pending)
-		},
+		...postHandlers(queryClient, (body: string) =>
+			pendingMessage(myAuthor, placeOf(room), body)
+		),
 	})
 }
 

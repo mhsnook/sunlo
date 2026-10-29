@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useRouteContext } from '@tanstack/react-router'
 import {
 	ChevronDown,
 	Layers,
@@ -10,11 +9,7 @@ import {
 import { cn } from '@/lib/utils'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
-import {
-	adminAuthor,
-	fixedRouting,
-	type RoutingType,
-} from '../../../shared/crew'
+import { fixedRouting, type RoutingType } from '../../../shared/crew'
 import { usePostToRoom } from '~/lib/crew'
 import { VoiceControls } from './voice-controls'
 import { RoutingMenu, routingNote } from './routing-menu'
@@ -22,12 +17,11 @@ import { RoutingMenu, routingNote } from './routing-menu'
 // While the admin types, the chip shows only what is certain: "..." stacks
 // and an @mention routes. Otherwise CLEF decides when the message is sent,
 // unless the admin picks a place from the chip first.
-export function RoomCompose() {
-	const { session } = useRouteContext({ from: '/_admin' })
+export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 	const [draft, setDraft] = useState('')
 	// The admin's own choice from the chip, which CLEF learns from.
 	const [override, setOverride] = useState<RoutingType | null>(null)
-	const post = usePostToRoom(adminAuthor(session.user.id))
+	const post = usePostToRoom(myAuthor)
 
 	const text = draft.trim()
 	const rule = text ? fixedRouting(text) : null

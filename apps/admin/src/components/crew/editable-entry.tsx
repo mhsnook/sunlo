@@ -55,9 +55,9 @@ export function EditableEntry({
 			{draft === null ? (
 				<span className="flex-1 whitespace-pre-wrap">
 					{children}
-					{/* Trails the last line so the text wraps the full width; the
-					    negative margin keeps a 32px button from tallening that line. */}
-					<span className="-my-1.5 ms-1 inline-flex gap-0.5 align-middle">
+					{/* Trails the last line so the text wraps the full width; h-5 is
+					    the line's height, so a 32px button does not tallen it. */}
+					<span className="ms-1 inline-flex h-5 items-center gap-0.5 align-middle">
 						<Button
 							variant="ghost"
 							size="icon"
@@ -80,24 +80,22 @@ export function EditableEntry({
 					</span>
 				</span>
 			) : (
-				<Textarea
-					value={draft}
-					onChange={(event) => setDraft(event.target.value)}
-					onKeyDown={(event) => {
-						if (event.key === 'Escape') setDraft(null)
-						if (event.key === 'Enter' && !event.shiftKey) {
-							event.preventDefault()
-							void save()
-						}
-					}}
-					className="min-h-10 flex-1"
-					rows={2}
-					aria-label={label}
-					ref={(field) => field?.focus()}
-				/>
-			)}
-			{draft !== null && (
 				<>
+					<Textarea
+						value={draft}
+						onChange={(event) => setDraft(event.target.value)}
+						onKeyDown={(event) => {
+							if (event.key === 'Escape') setDraft(null)
+							if (event.key === 'Enter' && !event.shiftKey) {
+								event.preventDefault()
+								void save()
+							}
+						}}
+						className="min-h-10 flex-1"
+						rows={2}
+						aria-label={label}
+						ref={(field) => field?.focus()}
+					/>
 					<Button
 						variant="ghost"
 						size="icon"

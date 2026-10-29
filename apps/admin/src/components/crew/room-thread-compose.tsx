@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useRouteContext } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
 import {
-	adminAuthor,
 	associatesOf,
 	displayName,
 	handleOf,
@@ -23,13 +21,14 @@ import { VoiceControls } from './voice-controls'
 export function RoomThreadCompose({
 	room,
 	weekly,
+	myAuthor,
 }: {
 	room: RoomKey
 	weekly: WeeklyType
+	myAuthor: string
 }) {
-	const { session } = useRouteContext({ from: '/_admin' })
 	const [draft, setDraft] = useState('')
-	const post = usePostToThread(room, adminAuthor(session.user.id))
+	const post = usePostToThread(room, myAuthor)
 	// The box clears at once; a refused message comes back into it, unless
 	// the admin has started the next one.
 	const send = (body: string) => {
