@@ -2,7 +2,9 @@ import { defineTool, type ToolStep } from '@flue/runtime'
 import * as v from 'valibot'
 import {
 	crew,
+	crewKeys,
 	displayName,
+	resolveHandle,
 	principalOf,
 	handleOf,
 	placeOf,
@@ -14,12 +16,16 @@ import {
 	type ActionType,
 	type CardType,
 	type CrewKey,
+	type CrewMessageType,
 	type PlaceType,
 } from '../../shared/crew'
+import type { Wake } from '../../worker/crew/room'
 import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
 const Id = v.pipe(v.number(), v.integer())
+
+type Written = { message: CrewMessageType; wake: Array<Wake> }
 
 const defaultActions: Record<
 	'decide' | 'confirm' | 'know' | 'escalate',
@@ -41,15 +47,31 @@ const defaultActions: Record<
 }
 
 // The tools every crew member has: talking in the Common Room and in its
-// own room, bringing the admin cards, and keeping its workspace.
-export function crewTools(agent: CrewKey) {
+// own room, bringing the admin cards, side-threads, and keeping its
+// workspace. In a side-thread's own run (`thread`), reply_in_thread answers
+// that thread, and pass_note is left out.
+export function crewTools(agent: CrewKey, thread: string | null) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
 	const place = placeOf(ownRoom)
 	const room = roomNames[ownRoom]
 	const roommates = roommatesOf(agent)
 
-	// Durable steps, so a retried run neither posts twice nor wakes twice.
+	// Writes a message, then wakes whoever it reaches, as durable steps, so a
+	// retried run neither posts twice nor wakes twice. A refusal is thrown to
+	// the model.
+	async function writeAndWake<W extends Written>(
+		step: ToolStep,
+		body: string,
+		write: () => Promise<W | { ok: false; error: string }>
+	) {
+		assertBlocks(body)
+		const written = await step.do('post', write)
+		if ('error' in written) throw new Error(written.error)
+		await step.do('wake', () => wake(written.wake, name).then(() => true))
+		return written
+	}
+
 	async function postAndWake(
 		step: ToolStep,
 		input: {
@@ -59,11 +81,11 @@ export function crewTools(agent: CrewKey) {
 			otherView?: boolean
 		}
 	) {
-		assertBlocks(input.body)
-		const { message, wake: wakes } = await step.do('post', async () =>
-			(await roomFor()).postFromAgent({ agent, ...input })
+		const { message, wake: wakes } = await writeAndWake(
+			step,
+			input.body,
+			async () => (await roomFor()).postFromAgent({ agent, ...input })
 		)
-		await step.do('wake', () => wake(wakes, name).then(() => true))
 		return {
 			messageId: message.id,
 			woke: wakes.map((w) => displayName(w.agent)),
@@ -353,6 +375,55 @@ Their answer comes back to you.`,
 		},
 	})
 
+	const passNote = defineTool({
+		name: 'pass_note',
+		description:
+			'Ask another officer, in any room including your own, for a small favour, such as one check or one number, in a side-thread off a note in your room. Write their handle in `to`. They see only the thread, and their reply reaches you as a <thread-reply>.',
+		input: v.object({
+			to: v.picklist(crewKeys.map(handleOf)),
+			body: v.pipe(Text, v.maxLength(2000)),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			const helper = resolveHandle(data.to)
+			if (!helper) throw new Error(`No crew member answers to ${data.to}.`)
+			const note = await writeAndWake(step, data.body, async () =>
+				(await roomFor()).passNote({ asker: agent, helper, body: data.body })
+			)
+			return { output: { thread: note.message.id } }
+		},
+	})
+
+	const replyInThread = defineTool({
+		name: 'reply_in_thread',
+		description: thread
+			? 'Reply in this side-thread. Set close when the favour is done.'
+			: 'Reply in a side-thread you started, by its id (the thread a <thread-reply> names). Set close when you have what you need.',
+		input: v.object({
+			// Ignored in a side-thread's own run, which replies to its thread.
+			thread: v.optional(v.pipe(Text, v.maxLength(40))),
+			body: v.pipe(Text, v.maxLength(4000)),
+			close: v.optional(v.boolean(), false),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			const root = thread ?? data.thread
+			if (!root) throw new Error('Name the side-thread to reply in.')
+			const { closed } = await writeAndWake<Written & { closed: boolean }>(
+				step,
+				data.body,
+				async () =>
+					(await roomFor()).replyInThread({
+						agent,
+						root,
+						body: data.body,
+						close: data.close,
+					})
+			)
+			return closed ? 'Replied, and the thread is closed.' : 'Replied.'
+		},
+	})
+
 	return [
 		postToCrew,
 		postToRoom,
@@ -360,8 +431,12 @@ Their answer comes back to you.`,
 		bringToAdmin,
 		proposeChange,
 		readRoom,
-		readDocument,
 		writeDocument,
+		// A note from a thread run would start a second thread, in this
+		// agent's own room and unlinked from the one it is answering.
+		...(thread ? [] : [passNote]),
+		replyInThread,
+		readDocument,
 		addTodo,
 		updateTodo,
 		remember,

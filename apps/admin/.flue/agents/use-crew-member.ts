@@ -2,6 +2,7 @@ import {
 	useAgentFinish,
 	useAgentStart,
 	useDelivery,
+	useInitialData,
 	useInstruction,
 	useModel,
 	useTool,
@@ -21,7 +22,7 @@ import {
 	type CrewKey,
 	type CrewMember,
 } from '../../shared/crew'
-import { roomFor } from '../crew'
+import { roomFor, type ConversationData } from '../crew'
 import {
 	activityBetweenTool,
 	DATABASE_NOTES,
@@ -40,7 +41,10 @@ export function useCrewMember(
 	options: { model?: string; database?: boolean } = {}
 ) {
 	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
-	for (const tool of crewTools(agent)) useTool(tool)
+	// A side-thread's conversation is created with its thread, and keeps it;
+	// the agent's main conversation has none.
+	const thread = useInitialData<ConversationData | undefined>()?.thread ?? null
+	for (const tool of crewTools(agent, thread)) useTool(tool)
 	const github = githubAccess[agent]
 	if (github) for (const tool of githubTools(agent, github)) useTool(tool)
 	const database = options.database ?? true
@@ -53,20 +57,25 @@ export function useCrewMember(
 	const messageId =
 		delivery.kind === 'signal' ? delivery.attributes?.messageId : undefined
 	useAgentStart(async ({ append }) => {
+		const room = await roomFor()
 		append({
 			kind: 'signal',
 			type: 'crew.context',
 			tagName: 'crew-context',
-			body: await (await roomFor()).agentContext(agent, messageId ?? null),
+			body: thread
+				? await room.threadContext(agent, thread)
+				: await room.agentContext(agent, messageId ?? null),
 		})
 	})
 	useAgentFinish(async () => {
-		await (await roomFor()).finishRun(agent)
+		const room = await roomFor()
+		if (thread) await room.finishThreadRun(agent, thread)
+		else await room.finishRun(agent)
 	})
 
 	useInstruction(crewInstructions(agent))
 	useInstruction(BLOCKS_GUIDE)
-	useInstruction(runInstructions(agent))
+	useInstruction(thread ? threadInstructions : runInstructions(agent))
 	if (github) useInstruction(githubInstructions(github))
 	if (database) useInstruction(DATABASE_NOTES)
 }
@@ -139,6 +148,10 @@ ${firstOfficer}, or the admin, sometimes sends you directives in the Common Room
 - Every number comes from a database tool. Sunlo's numbers are small: report counts, and never claim a cause or a trend from a handful of people.`
 }
 
+const threadInstructions = `## This run: a side-thread
+
+A <thread-message> is a favour another crew member asked of you in a side-thread. This run sees only that thread, as your <crew-context> shows it. Answer with reply_in_thread, as briefly as the favour allows, and set close when it is done. Save anything worth keeping with remember first: this conversation ends with the thread, and your memory is what carries over. Every other tool you have works here too, except pass_note: finish this favour before you ask anyone else for one. This run shows you no room's timeline, so read_room before you post to a room.`
+
 function runInstructions(agent: CrewKey) {
 	const room = roomNames[roomOf(agent)]
 	const roommates = roommatesOf(agent).map(displayName)
@@ -151,6 +164,8 @@ Everything reaches you in this one conversation, from two places:
 When a Common Room conversation belongs in the ${room} instead, such as anything only for the admin, or a back-and-forth that needs more than a question or two, say so in one line in the Common Room ("Taking this to the ${room}"), then continue there. Never move a conversation without saying so.
 
 A <crew-answer> is the admin answering one of your cards; act on it, and post only if there is something to add.${crew[agent].schedule ? ' A <schedule> is your scheduled run.' : ''}
+
+For a small favour from another room's officer, such as one check or one number, pass_note to them instead of asking in the Common Room. It opens a side-thread off a note in the ${room}, and they see only that thread. A <thread-reply> is their answer: reply_in_thread with its thread id if you need more, and close it when you have what you need.
 
 Nobody reads your final reply. Post at most twice a run, and only what is worth the admin's attention. If nothing new needs you, post nothing.`
 }
