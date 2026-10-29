@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import type { CrewKey, CrewMessageType } from '../../shared/crew'
+import {
+	displayName,
+	type CrewKey,
+	type CrewMessageType,
+} from '../../shared/crew'
 import {
 	briefingText,
 	documentsText,
 	githubText,
 	sitrepText,
+	threadBriefingText,
 	type BriefingInput,
 } from './briefing'
 
@@ -22,6 +27,8 @@ const message = (
 	receipt: false,
 	otherViewOf: null,
 	pick: null,
+	parent: null,
+	thread: null,
 	...over,
 })
 
@@ -264,5 +271,82 @@ describe('githubText', () => {
 				input('product-1', { github: { access: 'write', connected: false } })
 			)
 		).toContain('## GitHub')
+	})
+})
+
+describe('threadBriefingText', () => {
+	const root = message({
+		body: 'How far along is the November milestone?',
+		place: 'room:command',
+		author: 'command-1',
+		authorName: 'First officer',
+		thread: { with: 'product-1', closedAt: null },
+	})
+	const text = threadBriefingText({
+		now: '2026-10-29T10:00:00Z',
+		agent: 'product-1',
+		commonKnowledge: [{ id: 1, text: 'Call the admin Sam.', at: '' }],
+		sitrep: null,
+		charter: [],
+		workspace: {
+			agent: 'product-1',
+			todos: [
+				{
+					id: 4,
+					text: 'Finish the start flow',
+					note: null,
+					done: false,
+					at: '',
+					doneAt: null,
+				},
+			],
+			memory: [
+				{
+					id: 7,
+					kind: 'fact',
+					domain: null,
+					text: 'Milestones are named by month.',
+					at: '',
+				},
+			],
+			openItems: [],
+			cards: [],
+		},
+		thread: {
+			asker: 'command-1',
+			root,
+			replies: [
+				message({
+					body: 'About half done.',
+					place: 'room:command',
+					author: 'product-1',
+					authorName: 'Product officer',
+					parent: root.id,
+				}),
+			],
+		},
+	})
+
+	it('brings the agent its memory, to-dos and charter', () => {
+		expect(text).toContain('- [7] Milestones are named by month.')
+		expect(text).toContain('- [4] Finish the start flow')
+		expect(text).toContain(
+			'## The charter: what the admin has told the Product room about themselves'
+		)
+		expect(text).toContain('- Call the admin Sam.')
+	})
+
+	it('shows the thread, and none of a room timeline', () => {
+		expect(text).toContain(
+			'asked you for a favour in a side-thread in the Command room'
+		)
+		expect(text).toContain(
+			`First officer (a side-thread with ${displayName('product-1')}): How far along is the November milestone?`
+		)
+		expect(text).toContain(
+			'Product officer (in a side-thread): About half done.'
+		)
+		expect(text).not.toContain('since your last run')
+		expect(text).not.toContain('latest messages')
 	})
 })

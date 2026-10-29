@@ -32,6 +32,7 @@ import {
 } from './crew-parts'
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { OtherView } from './other-view'
+import { SideThread } from './side-thread'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
 import { useReadOnArrival } from '~/lib/voice'
@@ -87,8 +88,20 @@ export function RoomTimeline({
 				: []
 		)
 	)
+	// A side-thread's replies fold under its first message the same way.
+	const threads = new Map<string, Array<CrewMessageType>>()
+	for (const message of messages) {
+		if (message.parent && ids.has(message.parent)) {
+			threads.set(message.parent, [
+				...(threads.get(message.parent) ?? []),
+				message,
+			])
+		}
+	}
 	const shown = messages.filter(
-		(message) => !message.otherViewOf || !others.has(message.otherViewOf)
+		(message) =>
+			(!message.otherViewOf || !others.has(message.otherViewOf)) &&
+			(!message.parent || !ids.has(message.parent))
 	)
 	const firstNew = shown.find((m) => isNewFor(m, newSince, myAuthor))?.id
 	const groups = groupMessages(shown)
@@ -117,12 +130,14 @@ export function RoomTimeline({
 									messages={group.messages.slice(0, split)}
 									myAuthor={myAuthor}
 									others={others}
+									threads={threads}
 								/>
 								{newSinceMarker}
 								<AuthorGroup
 									messages={group.messages.slice(split)}
 									myAuthor={myAuthor}
 									others={others}
+									threads={threads}
 								/>
 							</>
 						) : (
@@ -132,6 +147,7 @@ export function RoomTimeline({
 									messages={group.messages}
 									myAuthor={myAuthor}
 									others={others}
+									threads={threads}
 								/>
 							</>
 						)}
@@ -146,11 +162,14 @@ function AuthorGroup({
 	messages,
 	myAuthor,
 	others,
+	threads,
 }: {
 	messages: Array<CrewMessageType>
 	myAuthor: string
 	// Second views, by the id of the message each answers.
 	others: Map<string, CrewMessageType>
+	// Side-thread replies, by the id of the thread's first message.
+	threads: Map<string, Array<CrewMessageType>>
 }) {
 	const first = messages[0]
 	const mine = first.author === myAuthor
@@ -227,6 +246,12 @@ function AuthorGroup({
 							)}
 							{asksYou && <CardActions message={message} />}
 							{other && <OtherView original={message} other={other} />}
+							{message.thread && (
+								<SideThread
+									root={message}
+									replies={threads.get(message.id) ?? []}
+								/>
+							)}
 							{mine && message.routing && message.place === 'room' && (
 								<MessageFooter>
 									<RoutingCorrection message={message} />

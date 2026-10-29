@@ -45,12 +45,19 @@ import {
 	type WeeklyType,
 	type WorkspaceType,
 } from '../../shared/crew'
-import { briefingText, timelineText, type UnreadTimeline } from './briefing'
+import {
+	briefingText,
+	threadBriefingText,
+	timelineText,
+	type UnreadTimeline,
+} from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
 import { checkSave, startingDocuments, type SaveCheck } from './documents'
+import { openingLines } from '../../shared/blocks'
 import { filingReport, githubFor, type Filed } from './github'
 import { pickReports } from './picks'
+import { planReply } from './threads'
 
 // The room's one instance. Renaming it starts a fresh room and leaves the
 // production data behind: change the schema with an in-place migration in
@@ -66,6 +73,9 @@ export type Wake = {
 	body: string
 	messageId: string
 	place: PlaceType
+	// A side-thread's first message: the agent wakes in that thread's own
+	// conversation, or, as `reply`, hears a reply in its main one.
+	thread?: { root: string; reply: boolean }
 }
 
 type MessageRow = {
@@ -83,6 +93,9 @@ type MessageRow = {
 	receipt: number
 	other_view_of: string | null
 	pick: string | null
+	thread_with: string | null
+	thread_closed_at: string | null
+	thread_run_at: string | null
 }
 
 type CharterRow = {
@@ -188,6 +201,11 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 	receipt: row.receipt === 1,
 	otherViewOf: row.other_view_of,
 	pick: row.pick ? (JSON.parse(row.pick) as CrewMessageType['pick']) : null,
+	parent: row.parent,
+	thread:
+		row.thread_with && isCrewKey(row.thread_with)
+			? { with: row.thread_with, closedAt: row.thread_closed_at }
+			: null,
 })
 
 const toDocumentSummary = (row: DocumentRow): DocumentSummaryType => ({
@@ -373,6 +391,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.moveSitrepIntoDocuments(),
 			() => this.renameAgentsToSeats(),
 			() => this.addRoomChartersAndOtherViews(),
+			() => this.addSideThreads(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -492,6 +511,21 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			this.sql`alter table message add column other_view_of text`
 		}
 		if (!message.has('pick')) this.sql`alter table message add column pick text`
+	}
+
+	// A side-thread's first message records who was asked, when the thread
+	// closed, and when the helper's current run in it started.
+	private addSideThreads() {
+		const message = this.tableColumns('message')
+		if (!message.has('thread_with')) {
+			this.sql`alter table message add column thread_with text`
+		}
+		if (!message.has('thread_closed_at')) {
+			this.sql`alter table message add column thread_closed_at text`
+		}
+		if (!message.has('thread_run_at')) {
+			this.sql`alter table message add column thread_run_at text`
+		}
 	}
 
 	private renameAgentsToSeats() {
@@ -840,6 +874,163 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
+	// ---- Side-threads ------------------------------------------------------
+
+	// An agent asking another for a small favour, in a side-thread off a note
+	// in its own room. The helper sees only the thread.
+	passNote(input: {
+		asker: CrewKey
+		helper: CrewKey
+		body: string
+	}):
+		| { ok: true; message: CrewMessageType; wake: Array<Wake> }
+		| { ok: false; error: string } {
+		const { asker, helper } = input
+		if (helper === asker) {
+			return { ok: false, error: 'Pass the note to someone else.' }
+		}
+		if (!crew[helper].active) {
+			return {
+				ok: false,
+				error: `${displayName(helper)} has not started yet, so nobody would answer.`,
+			}
+		}
+		if (!this.takeAgentWake()) {
+			return {
+				ok: false,
+				error:
+					'The crew has woken each other too often this hour. Ask in the Common Room instead, or try later.',
+			}
+		}
+		const place = placeOf(roomOf(asker))
+		const message = this.insert({
+			author: asker,
+			authorName: displayName(asker),
+			body: input.body,
+			routing: null,
+			card: null,
+			place,
+			threadWith: helper,
+		})
+		return {
+			ok: true,
+			message,
+			wake: [
+				{
+					agent: helper,
+					body: `${displayName(asker)} asks you, in a side-thread in the ${roomNames[roomOf(asker)]}: ${input.body}`,
+					messageId: message.id,
+					place,
+					thread: { root: message.id, reply: false },
+				},
+			],
+		}
+	}
+
+	// A reply in a side-thread, from the agent who asked or the one asked.
+	// The other one hears it; a closed thread wakes nobody.
+	replyInThread(input: {
+		agent: CrewKey
+		root: string
+		body: string
+		close: boolean
+	}):
+		| { ok: true; message: CrewMessageType; wake: Array<Wake> }
+		| { ok: false; error: string } {
+		const root = this.messageById(input.root)
+		const thread = root?.thread
+		if (!root || !thread || !isCrewKey(root.author)) {
+			return { ok: false, error: 'There is no side-thread with that id.' }
+		}
+		const asker = root.author
+		const helper = thread.with
+		const { count } = this.sql<CountRow>`
+			select count(*) as count from message
+			where parent = ${root.id} and receipt = 0`[0]
+		const plan = planReply({
+			agent: input.agent,
+			asker,
+			helper,
+			closedAt: thread.closedAt,
+			replies: count,
+			close: input.close,
+		})
+		if (!plan.ok) return plan
+		const message = this.insert({
+			author: input.agent,
+			authorName: displayName(input.agent),
+			body: input.body,
+			routing: null,
+			card: null,
+			place: root.place,
+			parent: root.id,
+		})
+		if (plan.closing) this.closeThread(root)
+		const wake: Array<Wake> = []
+		if (plan.wakes === 'asker') {
+			wake.push({
+				agent: asker,
+				body: `${displayName(helper)} replied in your side-thread "${openingLines(root.body, 80)}" (thread ${root.id})${plan.closing ? ', and it is closed now' : ''}: ${input.body}`,
+				messageId: message.id,
+				place: root.place,
+				thread: { root: root.id, reply: true },
+			})
+		} else if (plan.wakes === 'helper') {
+			wake.push({
+				agent: helper,
+				body: input.body,
+				messageId: message.id,
+				place: root.place,
+				thread: { root: root.id, reply: false },
+			})
+		}
+		return { ok: true, message, wake }
+	}
+
+	private closeThread(root: CrewMessageType) {
+		const closedAt = now()
+		this
+			.sql`update message set thread_closed_at = ${closedAt} where id = ${root.id}`
+		if (root.thread) {
+			this.push({
+				type: 'message',
+				message: { ...root, thread: { ...root.thread, closedAt } },
+			})
+		}
+	}
+
+	// What the helper knows in a side-thread: who it is and what it has
+	// learned, but not its room's timeline.
+	private threadContext(agent: CrewKey, rootId: string) {
+		const root = this.messageById(rootId)
+		if (!root || !isCrewKey(root.author)) return '(This side-thread is gone.)'
+		this.sql`
+			update message set thread_run_at = coalesce(thread_run_at, ${now()})
+			where id = ${rootId}`
+		const replies = this.sql<MessageRow>`
+			select * from message where parent = ${rootId} order by at, id`.map(
+			toMessage
+		)
+		return threadBriefingText({
+			now: now(),
+			agent,
+			commonKnowledge: this.commonKnowledge(),
+			sitrep: this.sitrep(),
+			charter: this.charter(roomOf(agent)),
+			workspace: this.workspace(agent),
+			thread: { asker: root.author, root, replies },
+		})
+	}
+
+	// The receipt for a run in a side-thread goes in the thread.
+	private finishThreadRun(agent: CrewKey, rootId: string) {
+		const root = this.messageById(rootId)
+		const since = this.sql<{ thread_run_at: string | null }>`
+			select thread_run_at from message where id = ${rootId}`[0]?.thread_run_at
+		this.sql`update message set thread_run_at = null where id = ${rootId}`
+		if (root && since) this.postReceipt(agent, since, root.place, root.id)
+	}
+
 	// Every card can also be dismissed, with or without feedback, which the
 	// agent keeps as a memory so it learns what the admin does not want.
 	answer(input: {
@@ -946,7 +1137,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// finished run, and, in the Command room, the charter and the weekly
 	// cycle. Called once for each message a run receives: messages that
 	// reach a busy agent join its run.
-	agentContext(agent: CrewKey, messageId: string | null): string {
+	agentContext(
+		agent: CrewKey,
+		messageId: string | null,
+		// A side-thread's first message, for a run in that thread.
+		thread: string | null = null
+	): string {
+		if (thread) return this.threadContext(agent, thread)
 		if (this.state.statuses[agent]?.state !== 'working') {
 			this.setStatus(agent, { state: 'working', since: now() })
 		}
@@ -986,7 +1183,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		})
 	}
 
-	finishRun(agent: CrewKey) {
+	finishRun(agent: CrewKey, thread: string | null = null) {
+		if (thread) return this.finishThreadRun(agent, thread)
 		this.sql`
 			update cursor set at = coalesce(pending_at, at), pending_at = null
 			where agent = ${agent}`
@@ -1000,7 +1198,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// A run that failed or was aborted never reaches finishRun.
-	failRun(agent: CrewKey) {
+	failRun(agent: CrewKey, thread: string | null = null) {
+		if (thread) {
+			this.sql`update message set thread_run_at = null where id = ${thread}`
+			return
+		}
 		this.sql`delete from run_message where agent = ${agent}`
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
@@ -1638,6 +1840,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		place: PlaceType
 		receipt?: boolean
 		otherViewOf?: string | null
+		parent?: string | null
+		threadWith?: CrewKey
 	}): CrewMessageType {
 		const row: MessageRow = {
 			id: `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
@@ -1649,15 +1853,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			card: input.card ? JSON.stringify(input.card) : null,
 			answer: null,
 			place: input.place,
-			parent: null,
+			parent: input.parent ?? null,
 			corrected: null,
 			receipt: input.receipt ? 1 : 0,
 			other_view_of: input.otherViewOf ?? null,
 			pick: null,
+			thread_with: input.threadWith ?? null,
+			thread_closed_at: null,
+			thread_run_at: null,
 		}
 		this.sql`
-			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of)
-			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of})`
+			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with)
+			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with})`
 		const message = toMessage(row)
 		this.push({ type: 'message', message })
 		return message
@@ -1789,7 +1996,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// A run that changed the agent's workspace ends with a receipt where it
 	// was asked, built from the edits it made rather than from its own account.
-	private postReceipt(agent: CrewKey, since: string, place: PlaceType) {
+	private postReceipt(
+		agent: CrewKey,
+		since: string,
+		place: PlaceType,
+		parent: string | null = null
+	) {
 		const edits = this.sql<{
 			what: string
 		}>`
@@ -1805,6 +2017,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			card: null,
 			place,
 			receipt: true,
+			parent,
 		})
 	}
 

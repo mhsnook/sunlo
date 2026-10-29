@@ -28,6 +28,11 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					: message.routing?.kind === 'room'
 						? ' (left in the room)'
 						: ''
+			const side = message.parent
+				? ' (in a side-thread)'
+				: message.thread
+					? ` (a side-thread with ${displayName(message.thread.with)}${message.thread.closedAt ? ', closed' : ''})`
+					: ''
 			const view = message.otherViewOf
 				? message.pick
 					? ` (a second view; ${message.pick.by} went with ${message.pick.chosen === 'other' ? 'this one' : 'the first'})`
@@ -38,7 +43,7 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					? ` [answered: ${message.answer.label}]`
 					: ` [waiting for an answer: ${message.card.actions.map((a) => a.label).join(' / ')}]`
 				: ''
-			return `[${stamp(message.at)}] ${message.authorName}${note}${view}: ${message.body}${card}`
+			return `[${stamp(message.at)}] ${message.authorName}${note}${side}${view}: ${message.body}${card}`
 		})
 		.join('\n')
 }
@@ -98,6 +103,33 @@ export function briefingText(input: BriefingInput) {
 		unreadText(`The ${room}`, input.unread.own)
 	)
 	return sections.join('\n\n')
+}
+
+export type ThreadBriefingInput = Pick<
+	BriefingInput,
+	'now' | 'agent' | 'commonKnowledge' | 'sitrep' | 'charter' | 'workspace'
+> & {
+	thread: {
+		asker: CrewKey
+		root: CrewMessageType
+		replies: Array<CrewMessageType>
+	}
+}
+
+// The <crew-context> for a run in a side-thread: who the agent is and what
+// it has learned, and the thread, but none of its room's timeline.
+export function threadBriefingText(input: ThreadBriefingInput) {
+	const { asker, root, replies } = input.thread
+	const where = roomNames[roomOf(asker)]
+	return [
+		`It is now ${stamp(input.now)}.`,
+		`## You are in a side-thread\n\n${displayName(asker)} asked you for a favour in a side-thread in the ${where}. You see only this thread, not that room or your own room. Answer with reply_in_thread, and close the thread when the favour is done. Before you close it, save anything worth keeping with remember: you will not remember this thread otherwise.`,
+		commonKnowledgeText(input.commonKnowledge),
+		sitrepText(input.sitrep),
+		charterText(roomNames[roomOf(input.agent)], input.charter),
+		workspaceText(input.workspace),
+		`## The side-thread\n\n${timelineText([root, ...replies])}`,
+	].join('\n\n')
 }
 
 function unreadText(name: string, timeline: UnreadTimeline) {

@@ -2,7 +2,9 @@ import { defineTool, type ToolStep } from '@flue/runtime'
 import * as v from 'valibot'
 import {
 	crew,
+	crewKeys,
 	displayName,
+	resolveHandle,
 	principalOf,
 	handleOf,
 	placeOf,
@@ -41,10 +43,15 @@ const defaultActions: Record<
 }
 
 // The tools every crew member has: talking in the Common Room and in its
-// own room, bringing the admin cards, and keeping its workspace. `wokenBy`
-// is the message that started this run, which an associate's other view
-// answers.
-export function crewTools(agent: CrewKey, wokenBy: string | null) {
+// own room, bringing the admin cards, side-threads, and keeping its
+// workspace. `wokenBy` is the message that started this run, which an
+// associate's other view answers. In a side-thread (`thread`), the agent
+// has only the thread and its workspace.
+export function crewTools(
+	agent: CrewKey,
+	wokenBy: string | null,
+	thread: string | null
+) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
 	const place = placeOf(ownRoom)
@@ -355,6 +362,67 @@ Their answer comes back to you.`,
 		},
 	})
 
+	const passNote = defineTool({
+		name: 'pass_note',
+		description:
+			"Ask another room's officer for a small favour, such as one check or one number, in a side-thread off a note in your room. Write their handle in `to`. They see only the thread, and their reply reaches you as a <thread-reply>.",
+		input: v.object({
+			to: v.picklist(crewKeys.map(handleOf)),
+			body: v.pipe(Text, v.maxLength(2000)),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			const helper = resolveHandle(data.to)
+			if (!helper) throw new Error(`No crew member answers to ${data.to}.`)
+			const note = await step.do('note', async () =>
+				(await roomFor()).passNote({ asker: agent, helper, body: data.body })
+			)
+			if (!note.ok) throw new Error(note.error)
+			await step.do('wake', () => wake(note.wake, name).then(() => true))
+			return { output: { thread: note.message.id } }
+		},
+	})
+
+	const replyInThread = defineTool({
+		name: 'reply_in_thread',
+		description: thread
+			? 'Reply in this side-thread. Set close when the favour is done; save anything worth keeping with remember first.'
+			: 'Reply in a side-thread you started, by its id (the thread a <thread-reply> names). Set close when you have what you need.',
+		input: v.object({
+			// Ignored in a side-thread's own run, which replies to its thread.
+			thread: v.optional(v.pipe(Text, v.maxLength(40))),
+			body: v.pipe(Text, v.maxLength(4000)),
+			close: v.optional(v.boolean(), false),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			assertBlocks(data.body)
+			const root = thread ?? data.thread
+			if (!root) throw new Error('Name the side-thread to reply in.')
+			const reply = await step.do('reply', async () =>
+				(await roomFor()).replyInThread({
+					agent,
+					root,
+					body: data.body,
+					close: data.close,
+				})
+			)
+			if (!reply.ok) throw new Error(reply.error)
+			await step.do('wake', () => wake(reply.wake, name).then(() => true))
+			return data.close ? 'Replied, and the thread is closed.' : 'Replied.'
+		},
+	})
+
+	const workspaceTools = [
+		readDocument,
+		addTodo,
+		updateTodo,
+		remember,
+		forget,
+		addOpenItem,
+		closeOpenItem,
+	]
+	if (thread) return [replyInThread, ...workspaceTools]
 	return [
 		postToCrew,
 		postToRoom,
@@ -362,13 +430,9 @@ Their answer comes back to you.`,
 		bringToAdmin,
 		proposeChange,
 		readRoom,
-		readDocument,
 		writeDocument,
-		addTodo,
-		updateTodo,
-		remember,
-		forget,
-		addOpenItem,
-		closeOpenItem,
+		passNote,
+		replyInThread,
+		...workspaceTools,
 	]
 }

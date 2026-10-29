@@ -49,24 +49,27 @@ export function useCrewMember(
 	}
 
 	const delivery = useDelivery()
-	const messageId =
-		delivery.kind === 'signal' ? delivery.attributes?.messageId : undefined
-	for (const tool of crewTools(agent, messageId ?? null)) useTool(tool)
+	const attributes =
+		delivery.kind === 'signal' ? delivery.attributes : undefined
+	const messageId = attributes?.messageId ?? null
+	// The side-thread this run is in, or null for the agent's main conversation.
+	const thread = attributes?.inThread ?? null
+	for (const tool of crewTools(agent, messageId, thread)) useTool(tool)
 	useAgentStart(async ({ append }) => {
 		append({
 			kind: 'signal',
 			type: 'crew.context',
 			tagName: 'crew-context',
-			body: await (await roomFor()).agentContext(agent, messageId ?? null),
+			body: await (await roomFor()).agentContext(agent, messageId, thread),
 		})
 	})
 	useAgentFinish(async () => {
-		await (await roomFor()).finishRun(agent)
+		await (await roomFor()).finishRun(agent, thread)
 	})
 
 	useInstruction(crewInstructions(agent))
 	useInstruction(BLOCKS_GUIDE)
-	useInstruction(runInstructions(agent))
+	useInstruction(thread ? threadInstructions : runInstructions(agent))
 	if (github) useInstruction(githubInstructions(github))
 	if (database) useInstruction(DATABASE_NOTES)
 }
@@ -139,6 +142,10 @@ ${firstOfficer}, or the admin, sometimes sends you directives in the Common Room
 - Every number comes from a database tool. Sunlo's numbers are small: report counts, and never claim a cause or a trend from a handful of people.`
 }
 
+const threadInstructions = `## This run: a side-thread
+
+A <thread-message> is a favour another crew member asked of you in a side-thread. This run sees only that thread, as your <crew-context> shows it. Answer with reply_in_thread, as briefly as the favour allows, and set close when it is done. Save anything worth keeping with remember first: this conversation ends with the thread, and your memory is what carries over. Your other room tools do not work here.`
+
 function runInstructions(agent: CrewKey) {
 	const room = roomNames[roomOf(agent)]
 	const roommates = roommatesOf(agent).map(displayName)
@@ -151,6 +158,8 @@ Everything reaches you in this one conversation, from two places:
 When a Common Room conversation belongs in the ${room} instead, such as anything only for the admin, or a back-and-forth that needs more than a question or two, say so in one line in the Common Room ("Taking this to the ${room}"), then continue there. Never move a conversation without saying so.
 
 A <crew-answer> is the admin answering one of your cards; act on it, and post only if there is something to add.${crew[agent].schedule ? ' A <schedule> is your scheduled run.' : ''}
+
+For a small favour from another room's officer, such as one check or one number, pass_note to them instead of asking in the Common Room. It opens a side-thread off a note in the ${room}, and they see only that thread. A <thread-reply> is their answer: reply_in_thread with its thread id if you need more, and close it when you have what you need.
 
 Nobody reads your final reply. Post at most twice a run, and only what is worth the admin's attention. If nothing new needs you, post nothing.`
 }

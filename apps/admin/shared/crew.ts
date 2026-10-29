@@ -364,6 +364,13 @@ export const CrewMessageSchema = z.object({
 	// An associate's answer that differs from the principal's, which the app
 	// shows beside it: the id of the principal's message.
 	otherViewOf: z.string().nullable(),
+	// A reply in a side-thread: the id of the thread's first message.
+	parent: z.string().nullable(),
+	// On a side-thread's first message: who was asked, and when the thread
+	// closed (null while open).
+	thread: z
+		.object({ with: z.enum(crewKeys), closedAt: z.string().nullable() })
+		.nullable(),
 	// On an other view: which of the two views the admin went with.
 	pick: z
 		.object({

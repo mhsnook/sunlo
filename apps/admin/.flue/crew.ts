@@ -26,19 +26,24 @@ const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 	'product-2': Product2,
 })
 
+// Each side-thread has a conversation of its own, so a favour stays out of
+// the helper's running memory.
+export const threadConversation = (root: string) => `thread:${root}`
+const threadOf = (conversation: string | undefined) =>
+	conversation?.startsWith('thread:') ? conversation.slice(7) : null
+
 // A run that fails or is aborted settles without useAgentFinish, so the room
 // hears about it here instead.
 observe((event) => {
-	if (
-		event.type === 'submission_settled' &&
-		event.outcome !== 'completed' &&
-		event.instanceId === CONVERSATION
-	) {
-		// Each agent's Flue identity is its crew key.
-		const key = event.agentName
-		if (key && isCrewKey(key)) {
-			void roomFor().then((room) => room.failRun(key))
-		}
+	if (event.type !== 'submission_settled' || event.outcome === 'completed') {
+		return
+	}
+	const thread = threadOf(event.instanceId)
+	if (event.instanceId !== CONVERSATION && !thread) return
+	// Each agent's Flue identity is its crew key.
+	const key = event.agentName
+	if (key && isCrewKey(key)) {
+		void roomFor().then((room) => room.failRun(key, thread))
 	}
 })
 
@@ -48,12 +53,26 @@ observe((event) => {
 // from the agent's own room.
 export async function wake(wakes: Array<Wake>, from: string) {
 	await Promise.all(
-		wakes.map(({ agent, body, messageId, place }) =>
-			deliver(
-				agent,
-				roomOfPlace(place) ? 'room.message' : 'common-room.message',
-				body,
-				{ from, messageId }
+		wakes.map(({ agent, body, messageId, place, thread }) =>
+			(thread && !thread.reply
+				? deliver(
+						agent,
+						'thread.message',
+						body,
+						// Marks a run in the thread's own conversation.
+						{ from, messageId, inThread: thread.root },
+						threadConversation(thread.root)
+					)
+				: deliver(
+						agent,
+						thread
+							? 'thread.reply'
+							: roomOfPlace(place)
+								? 'room.message'
+								: 'common-room.message',
+						body,
+						{ from, messageId, ...(thread ? { thread: thread.root } : {}) }
+					)
 			).catch((error: unknown) =>
 				console.error(`Could not wake ${agent}`, error)
 			)
@@ -76,12 +95,13 @@ export async function deliver(
 	agent: CrewKey,
 	type: string,
 	body: string,
-	attributes?: Record<string, string>
+	attributes?: Record<string, string>,
+	conversation = CONVERSATION
 ) {
 	const target = crewAgents()[agent]
 	if (!target) return
 	await dispatch(target, {
-		id: CONVERSATION,
+		id: conversation,
 		message: {
 			kind: 'signal',
 			type,
