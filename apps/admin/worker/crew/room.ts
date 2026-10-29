@@ -47,6 +47,7 @@ import {
 } from '../../shared/crew'
 import { briefingText, timelineText, type UnreadTimeline } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
+import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
 import { checkSave, startingDocuments, type SaveCheck } from './documents'
 import { filingReport, githubFor, type Filed } from './github'
 import { pickReports } from './picks'
@@ -922,9 +923,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 		const ref = message.card.ref
 		if (message.card.kind === 'charter' && ref) {
-			const keep = action.id === 'keep'
+			const decided = answeredEntry(action.id, at)
 			this.sql`
-				update charter set status = ${keep ? 'kept' : 'dropped'}, kept_at = ${keep ? at : null}
+				update charter set status = ${decided.status}, kept_at = ${decided.keptAt}
 				where id = ${ref}`
 			const room = roomOfPlace(message.place)
 			if (room) this.push({ type: 'charter', room })
@@ -1288,10 +1289,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			kind: 'charter',
 			title: input.text,
 			body: input.why,
-			actions: [
-				{ id: 'keep', label: 'Keep it' },
-				{ id: 'not-quite', label: 'Not quite' },
-			],
+			actions: CHARTER_ACTIONS,
 			ref: id,
 		})
 	}
@@ -1303,8 +1301,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	) {
 		const row = this.sql<CharterRow>`select * from charter where id = ${id}`[0]
 		if (!row) return false
+		const edited = editedEntry(toCharter(row), change, now())
 		this.sql`
-			update charter set text = ${change.text ?? row.text}, status = ${change.status ?? row.status}, kept_at = ${change.status === 'kept' ? now() : row.kept_at}
+			update charter set text = ${edited.text}, status = ${edited.status}, kept_at = ${edited.keptAt}
 			where id = ${id}`
 		this.push({ type: 'charter', room: row.room })
 		return true
