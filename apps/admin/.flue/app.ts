@@ -11,9 +11,6 @@ import {
 	RoutingSchema,
 } from '../shared/crew'
 import { restoreSummary } from '../worker/crew/documents'
-import { draftText, findPersonalData, githubFor } from '../worker/crew/github'
-import { peopleIndex } from '../worker/crew/queries'
-import { withSql } from '../worker/db'
 import { createApi } from '../worker/api'
 import { deliver, requestReport, roomFor, wake } from './crew'
 
@@ -104,49 +101,23 @@ api.post(
 	}
 )
 
-// Files a "github" card's draft, as the admin edited it, on GitHub. The
-// personal-data check runs here too: the admin's edits are published as well.
+// Files a "github" card's draft, as the admin edited it, on GitHub.
 api.post(
 	'/crew/messages/:id/file',
 	json(z.object({ draft: GithubDraftSchema }), 'Send { draft }'),
 	async (c) => {
-		const room = await roomFor()
-		const card = await room.githubCard(c.req.param('id'))
-		if (!card.ok) return c.json({ error: card.error }, card.status)
-		const { draft } = c.req.valid('json')
-		if (draft.type !== card.draft.type) {
-			return c.json({ error: `This card files a ${card.draft.type}` }, 400)
-		}
-		const people = await withSql(c.env.HYPERDRIVE, 10_000, peopleIndex)
-		const found = findPersonalData(draftText(draft), people)
-		if (found) {
-			return c.json(
-				{
-					error: `Not filed: it contains ${found}, and the repository is public. Take it out and file again.`,
-				},
-				400
-			)
-		}
-		const github = githubFor(c.env)
-		if (!github) {
-			return c.json(
-				{ error: 'GitHub is not connected: the GitHub App is not set up' },
-				503
-			)
-		}
-		const result = await github.file(draft)
-		const filed = await room.recordFiling({
+		const filed = await (
+			await roomFor()
+		).fileDraft({
 			messageId: c.req.param('id'),
-			filed: draft,
-			result,
+			draft: c.req.valid('json').draft,
 			name: c.get('admin').name,
 		})
-		if (filed) {
-			await deliver(filed.agent, 'crew.answer', filed.body).catch(
-				logFailedDelivery
-			)
-		}
-		return c.json({ url: result.url })
+		if (!filed.ok) return c.json({ error: filed.error }, filed.status)
+		await deliver(filed.agent, 'crew.answer', filed.report).catch(
+			logFailedDelivery
+		)
+		return c.json({ url: filed.url })
 	}
 )
 
