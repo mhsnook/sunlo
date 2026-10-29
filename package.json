@@ -111,7 +111,7 @@
 		"wrangler": "^4.151.3"
 	},
 	"optionalDependencies": {
-		"supabase": "^2.76.14"
+		"supabase": "^2.122.0"
 	},
 	"engines": {
 		"node": "24.x"
