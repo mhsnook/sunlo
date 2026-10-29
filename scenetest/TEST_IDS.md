@@ -638,6 +638,12 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `crew-working`                                                                               | "<name> is working…" under the timeline                                                 |
 | `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                              |
 | `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it        |
+| `crew-card-copy`                                                                             | A card's Copy brief button                                                              |
+| `crew-card-file`, `crew-card-edit`                                                           | A GitHub draft card's File it and Edit buttons                                          |
+| `crew-card-error`                                                                            | Why a GitHub draft was not filed                                                        |
+| `crew-card-filed`                                                                            | The link to what a filed GitHub card became                                             |
+| `github-draft`, `github-draft-editor`                                                        | A GitHub draft card's draft, and its editor                                             |
+| `github-draft-title`, `github-draft-labels`, `github-draft-due`, `github-draft-body`         | The editor's fields                                                                     |
 | `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                   |
 | `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                         |
 | `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                                  |

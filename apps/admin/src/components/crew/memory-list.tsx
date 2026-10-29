@@ -8,8 +8,9 @@ import { useEditMemory, useForgetMemory } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 import { EditableEntry } from './editable-entry'
 
-// An agent's memory, which the admin can edit and prune. command-2's playbook entries
-// (metrics by domain, chart preferences) get their own headings.
+// An agent's memory, which the admin can edit and prune. command-2's playbook
+// entries (metrics by domain, chart preferences) and the GitHub writing style
+// get their own headings.
 export function MemoryList({
 	agent,
 	memory,
@@ -19,6 +20,7 @@ export function MemoryList({
 }) {
 	const metrics = memory.filter((entry) => entry.kind === 'metric')
 	const charts = memory.filter((entry) => entry.kind === 'chart')
+	const style = memory.filter((entry) => entry.kind === 'style')
 	const facts = memory.filter((entry) => entry.kind === 'fact')
 	const domains = [
 		...new Set(metrics.map((entry) => entry.domain ?? 'General')),
@@ -43,6 +45,11 @@ export function MemoryList({
 			{charts.length > 0 && (
 				<Group title="How you like charts">
 					<Entries agent={agent} entries={charts} />
+				</Group>
+			)}
+			{style.length > 0 && (
+				<Group title="How you like issues written">
+					<Entries agent={agent} entries={style} />
 				</Group>
 			)}
 			<Group title={`What ${displayName(agent)} remembers`}>

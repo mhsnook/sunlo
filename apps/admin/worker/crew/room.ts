@@ -5,7 +5,9 @@ import {
 	crew,
 	crewKeys,
 	displayName,
+	draftTitle,
 	fixedRouting,
+	githubAccess,
 	handleOf,
 	routeTo,
 	isCrewKey,
@@ -29,6 +31,7 @@ import {
 	type CrewMessageType,
 	type DocumentSummaryType,
 	type DocumentType,
+	type GithubDraftType,
 	type RevisionTextType,
 	type RevisionType,
 	type RoomKey,
@@ -46,6 +49,16 @@ import {
 import { briefingText, timelineText, type UnreadTimeline } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { checkSave, startingDocuments, type SaveCheck } from './documents'
+import {
+	draftText,
+	filingReport,
+	findPersonalData,
+	githubConfigured,
+	githubFor,
+	personalDataRefusal,
+} from './github'
+import { peopleIndex } from './queries'
+import { withSql } from '../db'
 
 // The room's one instance. Renaming it starts a fresh room and leaves the
 // production data behind: change the schema with an in-place migration in
@@ -124,11 +137,12 @@ type SitrepTrackRow = {
 }
 
 const DISMISS = { id: 'dismiss', label: 'Dismissed' }
+const FILE = { id: 'file', label: 'File it' }
 
 type IdRow = { id: number }
 type CountRow = { count: number }
 
-type Playbook = { kind: 'metric' | 'chart'; domain: string | null }
+type Playbook = { kind: 'metric' | 'chart' | 'style'; domain: string | null }
 
 // An agent's mention of an agent from another room wakes it, at most this
 // many times an hour, so two agents cannot keep waking each other.
@@ -790,6 +804,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			}
 		}
 		const dismissed = input.actionId === DISMISS.id
+		// Filing goes through recordFiling, after GitHub has the draft.
+		if (message.card.kind === 'github' && !dismissed) {
+			return {
+				ok: false,
+				status: 409,
+				error: 'File a GitHub draft from its card',
+			}
+		}
 		const action = dismissed
 			? DISMISS
 			: message.card.actions.find((a) => a.id === input.actionId)
@@ -879,6 +901,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			commonKnowledge: this.commonKnowledge(),
 			sitrep: this.sitrep(),
 			documents: this.documents(room),
+			github: githubAccess[agent]
+				? { access: githubAccess[agent], connected: githubConfigured(this.env) }
+				: null,
 			workspace: this.workspace(agent),
 			cards: {
 				waiting: this.openCards(place),
@@ -1065,6 +1090,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		body: string
 		actions: Array<ActionType>
 		ref?: number
+		draft?: GithubDraftType
 	}) {
 		const message = this.insert({
 			author: input.author,
@@ -1076,12 +1102,111 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				title: input.title,
 				actions: input.actions,
 				ref: input.ref ?? null,
+				...(input.draft ? { draft: input.draft } : {}),
 			},
 			place: placeOf(roomOf(input.author)),
 		})
 		this.push({ type: 'workspace', agent: input.author })
 		this.openCardsChanged()
 		return message.id
+	}
+
+	// A draft for GitHub: a card in the agent's room that the admin can edit,
+	// then file. Nothing reaches GitHub until they do.
+	draftForGithub(input: {
+		author: CrewKey
+		draft: GithubDraftType
+		why: string
+	}) {
+		const { draft } = input
+		return this.bringToAdmin({
+			author: input.author,
+			kind: 'github',
+			title: draftTitle(draft),
+			body: input.why,
+			actions: [FILE],
+			draft,
+		})
+	}
+
+	// The admin files a "github" card's draft, as they edited it: checked for
+	// personal data, published on GitHub, then recorded as the card's answer,
+	// which links to what GitHub made. The card keeps the agent's draft, and
+	// the agent hears both versions when they differ.
+	async fileDraft(input: {
+		messageId: string
+		draft: GithubDraftType
+		name: string
+	}): Promise<
+		| { ok: true; url: string; agent: CrewKey; report: string }
+		| { ok: false; status: 400 | 404 | 409 | 503; error: string }
+	> {
+		const message = this.messageById(input.messageId)
+		const drafted = message?.card?.draft
+		if (!message || !drafted || !isCrewKey(message.author)) {
+			return { ok: false, status: 404, error: 'No GitHub draft with that id' }
+		}
+		if (message.answer) {
+			return {
+				ok: false,
+				status: 409,
+				error: `${message.answer.by} already answered "${message.answer.label}"`,
+			}
+		}
+		if (input.draft.type !== drafted.type) {
+			return {
+				ok: false,
+				status: 400,
+				error: `This card files a ${drafted.type}`,
+			}
+		}
+		const people = await withSql(this.env.HYPERDRIVE, 10_000, peopleIndex)
+		const found = findPersonalData(draftText(input.draft), people)
+		if (found) {
+			return {
+				ok: false,
+				status: 400,
+				error: personalDataRefusal('Not filed', found),
+			}
+		}
+		const github = githubFor(this.env)
+		if (!github) {
+			return {
+				ok: false,
+				status: 503,
+				error: 'GitHub is not connected: the GitHub App is not set up',
+			}
+		}
+		const result = await github.file(input.draft)
+		const answer = {
+			actionId: FILE.id,
+			label:
+				input.draft.type === 'comment'
+					? `Commented on #${input.draft.issue}`
+					: input.draft.type === 'milestone'
+						? 'Created the milestone'
+						: `Filed #${result.number}`,
+			by: input.name,
+			at: now(),
+			url: result.url,
+		}
+		this.sql`
+			update message set answer = ${JSON.stringify(answer)}
+			where id = ${message.id}`
+		this.push({ type: 'message', message: { ...message, answer } })
+		this.push({ type: 'workspace', agent: message.author })
+		this.openCardsChanged()
+		return {
+			ok: true,
+			url: result.url,
+			agent: message.author,
+			report: filingReport({
+				drafted,
+				filed: input.draft,
+				result,
+				by: input.name,
+			}),
+		}
 	}
 
 	// A principle or lesson waits as a card until the admin keeps it.
@@ -1599,8 +1724,24 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return true
 	}
 
-	// An agent's own edit: it goes in the receipt that ends its run.
-	private workspaceEdited(agent: CrewKey, what: string) {
+	// What the agent has written for GitHub in its current run: cards it
+	// drafted, and direct edits. The tools' loop guards read this, since a
+	// tool's own state does not outlive one model call.
+	githubWritesThisRun(agent: CrewKey) {
+		const since = this.state.statuses[agent]?.since ?? now()
+		const { drafts } = this.sql<{ drafts: number }>`
+			select count(*) as drafts from message
+			where author = ${agent} and at >= ${since}
+				and json_extract(card, '$.kind') = 'github'`[0]
+		const { edits } = this.sql<{ edits: number }>`
+			select count(*) as edits from edit_log
+			where agent = ${agent} and at >= ${since} and what like 'edited %'`[0]
+		return { drafts, edits }
+	}
+
+	// An agent's own edit, in the workspace or on GitHub: it goes in the
+	// receipt that ends its run.
+	workspaceEdited(agent: CrewKey, what: string) {
 		this.sql`
 			insert into edit_log (agent, what, at)
 			values (${agent}, ${what}, ${now()})`
@@ -1626,6 +1767,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			place,
 			receipt: true,
 		})
+	}
+
+	private messageById(id: string): CrewMessageType | null {
+		const row = this.sql<MessageRow>`select * from message where id = ${id}`[0]
+		return row ? toMessage(row) : null
 	}
 
 	// Cards in one subject's room that wait on the admin's answer.

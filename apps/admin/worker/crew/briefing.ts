@@ -52,6 +52,8 @@ export type BriefingInput = {
 	sitrep: Sitrep | null
 	// The agent's own room's documents, without their text.
 	documents: Array<DocumentSummaryType>
+	// For agents with GitHub tools only.
+	github: { access: 'read' | 'write'; connected: boolean } | null
 	workspace: WorkspaceType
 	// The cards in the agent's own room.
 	cards: {
@@ -80,6 +82,7 @@ export function briefingText(input: BriefingInput) {
 		sitrepText(input.sitrep),
 	]
 	if (input.command) sections.push(commandText(input.command, input.now))
+	if (input.github) sections.push(githubText(input.github))
 	sections.push(
 		documentsText(room, input.documents),
 		cardsText(room, input.cards),
@@ -105,6 +108,17 @@ export function sitrepText(sitrep: Sitrep | null) {
 		sitrep?.at
 			? `${sitrep.text}\n\n(Revision ${sitrep.revision}, saved by ${sitrep.byName}, ${stamp(sitrep.at)}.)`
 			: '(Nobody has written it yet.)',
+	].join('\n\n')
+}
+
+export function githubText(github: NonNullable<BriefingInput['github']>) {
+	return [
+		'## GitHub',
+		github.connected
+			? github.access === 'write'
+				? "Connected: you keep mhsnook/sunlo's milestones and epics."
+				: "Connected, read-only: you can read mhsnook/sunlo's milestones, epics and issues."
+			: 'Not connected: the GitHub App is not set up, so you have no GitHub tools. If the admin asks for GitHub work, say so.',
 	].join('\n\n')
 }
 

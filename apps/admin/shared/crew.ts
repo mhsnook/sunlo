@@ -246,6 +246,63 @@ export function fixedRouting(
 }
 
 export const ActionSchema = z.object({ id: z.string(), label: z.string() })
+
+// Which crew members have GitHub tools: "write" files through cards and
+// edits directly, "read" only reads. Neither has any tools until the GitHub
+// App's secrets are set.
+export const githubAccess: Partial<Record<CrewKey, 'read' | 'write'>> = {
+	'command-1': 'read',
+	'product-1': 'write',
+}
+
+// Something an agent drafted for GitHub, which the admin can edit on its
+// card before filing it. An epic is an issue with the "epic" label.
+// The longest texts a GitHub draft or edit may hold, for the agents' tools
+// and for the drafts the admin files.
+export const GITHUB_LIMITS = {
+	title: 200,
+	body: 60_000,
+	description: 20_000,
+	label: 50,
+	labels: 10,
+} as const
+
+const Title = z.string().trim().min(1).max(GITHUB_LIMITS.title)
+const Body = z.string().trim().min(1).max(GITHUB_LIMITS.body)
+
+export const GithubDraftSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('issue'),
+		title: Title,
+		body: Body,
+		labels: z
+			.array(z.string().trim().min(1).max(GITHUB_LIMITS.label))
+			.max(GITHUB_LIMITS.labels),
+		milestone: z.number().int().nullable(),
+		// For the card; the number is what GitHub gets.
+		milestoneTitle: z.string().nullable(),
+	}),
+	z.object({
+		type: z.literal('milestone'),
+		title: Title,
+		description: z.string().trim().max(GITHUB_LIMITS.description),
+		// YYYY-MM-DD, or null for none.
+		dueOn: z.iso.date().nullable(),
+	}),
+	z.object({
+		type: z.literal('comment'),
+		issue: z.number().int(),
+		body: Body,
+	}),
+])
+export type GithubDraftType = z.infer<typeof GithubDraftSchema>
+
+// A draft's title on its card; a comment has none of its own.
+export const draftTitle = (draft: GithubDraftType) =>
+	draft.type === 'comment' ? `Comment on #${draft.issue}` : draft.title
+
+export const draftBody = (draft: GithubDraftType) =>
+	draft.type === 'milestone' ? draft.description : draft.body
 export type ActionType = z.infer<typeof ActionSchema>
 
 // Something an agent brings the admin, with the buttons they answer with.
@@ -256,6 +313,7 @@ export type ActionType = z.infer<typeof ActionSchema>
 //   escalate (needs more than the crew has)
 // - In the Command room only: charter (a proposed charter entry, `ref`),
 //   brief (the weekly brief) and report (command-2's pre-meeting report)
+// - github: a draft for GitHub (`draft`), which "File it" publishes
 export const CardSchema = z.object({
 	kind: z.enum([
 		'question',
@@ -267,12 +325,14 @@ export const CardSchema = z.object({
 		'charter',
 		'brief',
 		'report',
+		'github',
 	]),
 	title: z.string().nullable(),
 	// Empty for a card with nothing to answer.
 	actions: z.array(ActionSchema),
 	// The charter entry a "charter" card proposes.
 	ref: z.number().nullable(),
+	draft: GithubDraftSchema.optional(),
 })
 export type CardType = z.infer<typeof CardSchema>
 
@@ -292,6 +352,8 @@ export const CrewMessageSchema = z.object({
 			label: z.string(),
 			by: z.string(),
 			at: z.string(),
+			// What a filed "github" card became.
+			url: z.string().optional(),
 		})
 		.nullable(),
 	place: PlaceSchema,
@@ -357,7 +419,9 @@ export const MemorySchema = z.object({
 	id: z.number(),
 	// "metric" and "chart" are command-2's playbook: the metrics the admin likes in
 	// each domain, and how they like charts drawn.
-	kind: z.enum(['fact', 'metric', 'chart']),
+	// "style" is how the admin likes GitHub issues written, learned from the
+	// drafts they edit before filing.
+	kind: z.enum(['fact', 'metric', 'chart', 'style']),
 	domain: z.string().nullable(),
 	text: z.string(),
 	at: z.string(),

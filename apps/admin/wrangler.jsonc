@@ -82,9 +82,9 @@
 		"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
-		// Where agents will file issues once one has the GitHub tools and the
-		// GitHub App secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
-		// GITHUB_APP_PRIVATE_KEY (README.md, "Filing GitHub issues").
+		// The repository the crew keeps milestones and epics on, once the GitHub
+		// App secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
+		// GITHUB_APP_PRIVATE_KEY (README.md, "GitHub: milestones and epics").
 		"GITHUB_REPO": "mhsnook/sunlo",
 	},
 	// Worker Previews: Workers Builds makes one per branch off main, at

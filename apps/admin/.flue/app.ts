@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
 	adminAuthor,
 	crewKeys,
+	GithubDraftSchema,
 	isCrewKey,
 	isRoomKey,
 	roomKeys,
@@ -97,6 +98,26 @@ api.post(
 			logFailedDelivery
 		)
 		return c.json({ ok: true })
+	}
+)
+
+// Files a "github" card's draft, as the admin edited it, on GitHub.
+api.post(
+	'/crew/messages/:id/file',
+	json(z.object({ draft: GithubDraftSchema }), 'Send { draft }'),
+	async (c) => {
+		const filed = await (
+			await roomFor()
+		).fileDraft({
+			messageId: c.req.param('id'),
+			draft: c.req.valid('json').draft,
+			name: c.get('admin').name,
+		})
+		if (!filed.ok) return c.json({ error: filed.error }, filed.status)
+		await deliver(filed.agent, 'crew.answer', filed.report).catch(
+			logFailedDelivery
+		)
+		return c.json({ url: filed.url })
 	}
 )
 
