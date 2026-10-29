@@ -48,6 +48,7 @@ import {
 } from '../../shared/crew'
 import { briefingText, timelineText, type UnreadTimeline } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
+import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
 import { checkSave, startingDocuments, type SaveCheck } from './documents'
 import {
 	draftText,
@@ -57,6 +58,7 @@ import {
 	githubFor,
 	personalDataRefusal,
 } from './github'
+import { pickReports } from './picks'
 import { peopleIndex } from './queries'
 import { withSql } from '../db'
 
@@ -89,10 +91,13 @@ type MessageRow = {
 	parent: string | null
 	corrected: string | null
 	receipt: number
+	other_view_of: string | null
+	pick: string | null
 }
 
 type CharterRow = {
 	id: number
+	room: RoomKey
 	kind: CharterEntryType['kind']
 	text: string
 	why: string | null
@@ -191,6 +196,8 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 	place: row.place,
 	corrected: row.corrected ? (JSON.parse(row.corrected) as RoutingType) : null,
 	receipt: row.receipt === 1,
+	otherViewOf: row.other_view_of,
+	pick: row.pick ? (JSON.parse(row.pick) as CrewMessageType['pick']) : null,
 })
 
 const toDocumentSummary = (row: DocumentRow): DocumentSummaryType => ({
@@ -375,6 +382,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.migrateToRooms(),
 			() => this.moveSitrepIntoDocuments(),
 			() => this.renameAgentsToSeats(),
+			() => this.addRoomChartersAndOtherViews(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -482,6 +490,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`drop table sitrep`
 	}
 
+	// Every room keeps a charter now; the entries so far are the Command
+	// room's. Messages gain an associate's other view, and the admin's pick.
+	private addRoomChartersAndOtherViews() {
+		if (!this.tableColumns('charter').has('room')) {
+			this
+				.sql`alter table charter add column room text not null default 'command'`
+		}
+		const message = this.tableColumns('message')
+		if (!message.has('other_view_of')) {
+			this.sql`alter table message add column other_view_of text`
+		}
+		if (!message.has('pick')) this.sql`alter table message add column pick text`
+	}
+
 	private renameAgentsToSeats() {
 		for (const [from, to] of Object.entries(OLD_AGENT_KEYS)) {
 			this.renameAgent(from, to)
@@ -566,7 +588,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	command(): CommandType {
 		return {
-			charter: this.charter(),
 			meetingStartedAt: this.meetingStartedAt(),
 		}
 	}
@@ -743,6 +764,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		body: string
 		card: CardType | null
 		place: PlaceType
+		// An associate's answer that differs from its principal's message
+		// that asked it in.
+		otherView?: boolean
 	}): { message: CrewMessageType; wake: Array<Wake> } {
 		const message = this.insert({
 			author: input.agent,
@@ -751,6 +775,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			routing: null,
 			card: input.card,
 			place: input.place,
+			otherViewOf: input.otherView
+				? this.otherViewTarget(input.agent, input.place)
+				: null,
 		})
 		const placeRoom = roomOfPlace(input.place)
 		if (input.card) {
@@ -777,6 +804,50 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			})
 		}
 		return { message, wake }
+	}
+
+	// The admin went with one of two views: the principal's message, or the
+	// associate's other view of it. Both agents hear which.
+	recordPick(input: {
+		messageId: string
+		chosen: 'original' | 'other'
+		name: string
+	}):
+		| { ok: true; reports: Array<{ agent: CrewKey; body: string }> }
+		| { ok: false; status: 404 | 409; error: string } {
+		const other = this.messageById(input.messageId)
+		const original = other?.otherViewOf
+			? this.messageById(other.otherViewOf)
+			: null
+		if (
+			!other ||
+			!original ||
+			!isCrewKey(other.author) ||
+			!isCrewKey(original.author)
+		) {
+			return { ok: false, status: 404, error: 'No pair of views with that id' }
+		}
+		if (other.pick) {
+			return {
+				ok: false,
+				status: 409,
+				error: `${other.pick.by} already went with one`,
+			}
+		}
+		const pick = { chosen: input.chosen, by: input.name, at: now() }
+		this.sql`
+			update message set pick = ${JSON.stringify(pick)}
+			where id = ${other.id}`
+		this.push({ type: 'message', message: { ...other, pick } })
+		return {
+			ok: true,
+			reports: pickReports({
+				original: { agent: original.author, body: original.body },
+				other: { agent: other.author, body: other.body },
+				chosen: input.chosen,
+				by: input.name,
+			}),
+		}
 	}
 
 	// Every card can also be dismissed, with or without feedback, which the
@@ -853,11 +924,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 		const ref = message.card.ref
 		if (message.card.kind === 'charter' && ref) {
-			const keep = action.id === 'keep'
+			const decided = answeredEntry(action.id, at)
 			this.sql`
-				update charter set status = ${keep ? 'kept' : 'dropped'}, kept_at = ${keep ? at : null}
+				update charter set status = ${decided.status}, kept_at = ${decided.keptAt}
 				where id = ${ref}`
-			this.push({ type: 'command' })
+			const room = roomOfPlace(message.place)
+			if (room) this.push({ type: 'charter', room })
 		}
 		this.push({ type: 'message', message: { ...message, answer } })
 		this.push({ type: 'workspace', agent })
@@ -905,6 +977,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				? { access: githubAccess[agent], connected: githubConfigured(this.env) }
 				: null,
 			workspace: this.workspace(agent),
+			charter: this.charter(room),
 			cards: {
 				waiting: this.openCards(place),
 				answered: this.answeredCards(place),
@@ -912,7 +985,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			command:
 				room === 'command'
 					? {
-							charter: this.charter(),
 							weekly: this.weekly(),
 							meetingStartedAt: this.meetingStartedAt(),
 						}
@@ -1074,10 +1146,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// ---- Cards for the admin, the charter, the weekly cycle -----------------
 
-	charter(): Array<CharterEntryType> {
+	charter(room: RoomKey): Array<CharterEntryType> {
 		return this.sql<CharterRow>`
 			select * from charter
-			where status != 'dropped'
+			where room = ${room} and status != 'dropped'
 			order by kind, id`.map(toCharter)
 	}
 
@@ -1216,20 +1288,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		text: string
 		why: string
 	}) {
+		const room = roomOf(input.author)
 		const { id } = this.sql<IdRow>`
-			insert into charter (kind, text, why, status, at)
-			values (${input.kind}, ${input.text}, ${input.why}, 'proposed', ${now()})
+			insert into charter (room, kind, text, why, status, at)
+			values (${room}, ${input.kind}, ${input.text}, ${input.why}, 'proposed', ${now()})
 			returning id`[0]
-		this.push({ type: 'command' })
+		this.push({ type: 'charter', room })
 		return this.bringToAdmin({
 			author: input.author,
 			kind: 'charter',
 			title: input.text,
 			body: input.why,
-			actions: [
-				{ id: 'keep', label: 'Keep it' },
-				{ id: 'not-quite', label: 'Not quite' },
-			],
+			actions: CHARTER_ACTIONS,
 			ref: id,
 		})
 	}
@@ -1241,10 +1311,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	) {
 		const row = this.sql<CharterRow>`select * from charter where id = ${id}`[0]
 		if (!row) return false
+		const edited = editedEntry(toCharter(row), change, now())
 		this.sql`
-			update charter set text = ${change.text ?? row.text}, status = ${change.status ?? row.status}, kept_at = ${change.status === 'kept' ? now() : row.kept_at}
+			update charter set text = ${edited.text}, status = ${edited.status}, kept_at = ${edited.keptAt}
 			where id = ${id}`
-		this.push({ type: 'command' })
+		this.push({ type: 'charter', room: row.room })
 		return true
 	}
 
@@ -1585,6 +1656,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		card: CrewMessageType['card']
 		place: PlaceType
 		receipt?: boolean
+		otherViewOf?: string | null
 	}): CrewMessageType {
 		const row: MessageRow = {
 			id: `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
@@ -1599,10 +1671,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			parent: null,
 			corrected: null,
 			receipt: input.receipt ? 1 : 0,
+			other_view_of: input.otherViewOf ?? null,
+			pick: null,
 		}
 		this.sql`
-			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt)
-			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt})`
+			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of)
+			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of})`
 		const message = toMessage(row)
 		this.push({ type: 'message', message })
 		return message
@@ -1769,9 +1843,33 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		})
 	}
 
+	// The message an associate's other view answers: the latest message this
+	// run received from its principal, in this timeline. Null for a
+	// principal, or when its principal did not ask it in.
+	private otherViewTarget(agent: CrewKey, place: PlaceType) {
+		const principal = principalOf(roomOf(agent))
+		if (principal === agent) return null
+		return (
+			this.sql<{ id: string }>`
+				select message.id from run_message
+				join message on message.id = run_message.message_id
+				where run_message.agent = ${agent}
+					and message.author = ${principal} and message.place = ${place}
+				order by message.at desc
+				limit 1`[0]?.id ?? null
+		)
+	}
+
 	private messageById(id: string): CrewMessageType | null {
 		const row = this.sql<MessageRow>`select * from message where id = ${id}`[0]
 		return row ? toMessage(row) : null
+	}
+
+	private tableColumns(table: string) {
+		return new Set(
+			this.sql<{ name: string }>`
+				select name from pragma_table_info(${table})`.map((c) => c.name)
+		)
 	}
 
 	// Cards in one subject's room that wait on the admin's answer.

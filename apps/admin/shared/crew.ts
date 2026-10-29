@@ -27,6 +27,7 @@ export const crewKeys = [
 	'command-1',
 	'command-2',
 	'product-1',
+	'product-2',
 	'library-1',
 	'learnership-1',
 ] as const
@@ -84,7 +85,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	'product-1': {
 		key: 'product-1',
-		name: 'Geordi',
+		name: "O'Brien",
 		rank: null,
 		title: 'Product manager',
 		room: 'product',
@@ -96,6 +97,21 @@ export const crew: Record<CrewKey, CrewMember> = {
 			"Pushing back on work that doesn't fit the plan",
 		],
 		schedule: 'runs daily at 07:00 UTC',
+		active: true,
+	},
+	'product-2': {
+		key: 'product-2',
+		name: 'Keiko',
+		rank: null,
+		title: 'Design',
+		room: 'product',
+		role: 'associate',
+		looksAfter: [
+			'How Sunlo looks and feels, and how much it asks of people at once',
+			'A second, slower view on the plan, with an eye for the details',
+			'A design review before user-facing work is filed for building',
+		],
+		schedule: null,
 		active: true,
 	},
 	'library-1': {
@@ -185,25 +201,33 @@ export const isCrewKey = (value: string): value is CrewKey =>
 // A message's author: a crew key, or this for an admin.
 export const adminAuthor = (uid: string) => `admin:${uid}`
 
-// The handle people and agents write for a crew member: its name, lower-cased.
-export const handleOf = (agent: CrewKey) => crew[agent].name.toLowerCase()
+// The handle people and agents write for a crew member: its name, lower-cased,
+// with only letters, digits and hyphens kept.
+export const handleOf = (agent: CrewKey) =>
+	crew[agent].name.toLowerCase().replace(/[^a-z0-9-]/g, '')
+
+const APOSTROPHE = /['’]/
 
 // A crew member answers to its handle and to its key, and a room's name is a
 // handle for its principal, so "product" reaches whoever runs the Product
-// room.
+// room. A name with an apostrophe in it and a possessive both resolve, so
+// "o'brien" and "keiko's" each reach someone.
 export function resolveHandle(handle: string): CrewKey | null {
 	const name = handle.toLowerCase()
 	if (isRoomKey(name)) return principalOf(name)
 	if (isCrewKey(name)) return name
-	return crewKeys.find((key) => handleOf(key) === name) ?? null
+	const joined = name.replace(new RegExp(APOSTROPHE, 'g'), '')
+	const named = crewKeys.find((key) => handleOf(key) === joined)
+	if (named) return named
+	return APOSTROPHE.test(name) ? resolveHandle(name.split(APOSTROPHE)[0]) : null
 }
 
 // Every crew member the text @mentions, in roster order. The @ must start a
 // word, so the domain of an email address is not a mention.
 export function mentionedCrew(text: string): Array<CrewKey> {
 	const named = new Set(
-		[...text.matchAll(/(?<![\w.])@([a-z][a-z0-9-]*)/gi)].map((match) =>
-			resolveHandle(match[1])
+		[...text.matchAll(/(?<![\w.])@([a-z][a-z0-9-]*(?:['’][a-z0-9-]+)?)/gi)].map(
+			(match) => resolveHandle(match[1])
 		)
 	)
 	return crewKeys.filter((key) => named.has(key))
@@ -310,9 +334,10 @@ export type ActionType = z.infer<typeof ActionSchema>
 //   the agent's plan
 // - In any subject's room: decide (on hold until the admin answers), confirm
 //   (acted in their stead; was that right?), know (nothing to answer) and
-//   escalate (needs more than the crew has)
-// - In the Command room only: charter (a proposed charter entry, `ref`),
-//   brief (the weekly brief) and report (command-2's pre-meeting report)
+//   escalate (needs more than the crew has), and charter (a proposed entry
+//   for the room's charter, `ref`)
+// - In the Command room only: brief (the weekly brief) and report
+//   (command-2's pre-meeting report)
 // - github: a draft for GitHub (`draft`), which "File it" publishes
 export const CardSchema = z.object({
 	kind: z.enum([
@@ -335,6 +360,11 @@ export const CardSchema = z.object({
 	draft: GithubDraftSchema.optional(),
 })
 export type CardType = z.infer<typeof CardSchema>
+
+// Which of two views the admin went with: the principal's message, or the
+// associate's other view of it.
+export const PickChoiceSchema = z.enum(['original', 'other'])
+export type PickChoice = z.infer<typeof PickChoiceSchema>
 
 export const CrewMessageSchema = z.object({
 	id: z.string(),
@@ -361,6 +391,17 @@ export const CrewMessageSchema = z.object({
 	corrected: RoutingSchema.nullable(),
 	// The room's list of the edits an agent's run made, not the agent speaking.
 	receipt: z.boolean(),
+	// An associate's answer that differs from the principal's, which the app
+	// shows beside it: the id of the principal's message.
+	otherViewOf: z.string().nullable(),
+	// On an other view: which of the two views the admin went with.
+	pick: z
+		.object({
+			chosen: PickChoiceSchema,
+			by: z.string(),
+			at: z.string(),
+		})
+		.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -491,9 +532,9 @@ export const OpenItemSchema = z.object({
 })
 export type OpenItemType = z.infer<typeof OpenItemSchema>
 
-// What the Command room knows about the admin: principles (philosophy,
-// strategy, taste) and lessons (how they decide). An entry counts only once
-// the admin keeps it; until then it is a card in the Command room.
+// What a room knows about the admin: principles (philosophy, strategy,
+// taste) and lessons (how they decide). Each room keeps its own. An entry
+// counts only once the admin keeps it; until then it is a card in the room.
 export const CharterEntrySchema = z.object({
 	id: z.number(),
 	kind: z.enum(['principle', 'lesson']),
@@ -512,9 +553,8 @@ export const RoomThreadSchema = z.object({
 })
 export type RoomThreadType = z.infer<typeof RoomThreadSchema>
 
-// What only the Command room has: the charter, and the weekly meeting.
+// What only the Command room has: the weekly meeting.
 export const CommandSchema = z.object({
-	charter: z.array(CharterEntrySchema),
 	// Set while this week's meeting is under way.
 	meetingStartedAt: z.string().nullable(),
 })
@@ -534,7 +574,8 @@ export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
 	| { type: 'workspace'; agent: CrewKey }
-	// The charter or the weekly meeting changed.
+	// The weekly meeting changed.
 	| { type: 'command' }
+	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
 	| { type: 'document'; room: RoomKey; id: number }

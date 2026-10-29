@@ -47,6 +47,7 @@
 				{ "from": "FlueGeordiAgent", "to": "FlueProduct1Agent" },
 			],
 		},
+		{ "tag": "v4", "new_sqlite_classes": ["FlueProduct2Agent"] },
 	],
 	// Hourly: product-1's daily run at 07:00 UTC, and command-1's brief at
 	// Sunday 04:00 in the admin's time zone (.flue/cloudflare.ts).
@@ -80,6 +81,9 @@
 		"MODEL_COMMAND_2": "@cf/deepseek-ai/deepseek-v4-pro-0813",
 		// product-1's model, which drafts the GitHub issues as well.
 		"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
+		// product-2's model: a different one from product-1's, for a second
+		// view.
+		"MODEL_PRODUCT_2": "@cf/moonshotai/kimi-k2.6",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
 		// The repository the crew keeps milestones and epics on, once the GitHub
@@ -100,6 +104,7 @@
 			"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
 			"MODEL_COMMAND_2": "@cf/deepseek-ai/deepseek-v4-pro-0813",
 			"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
+			"MODEL_PRODUCT_2": "@cf/moonshotai/kimi-k2.6",
 			"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
 			"GITHUB_REPO": "mhsnook/sunlo",
 		},

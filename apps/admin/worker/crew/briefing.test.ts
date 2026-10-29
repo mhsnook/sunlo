@@ -20,6 +20,8 @@ const message = (
 	answer: null,
 	corrected: null,
 	receipt: false,
+	otherViewOf: null,
+	pick: null,
 	...over,
 })
 
@@ -33,6 +35,7 @@ const input = (
 	sitrep: null,
 	documents: [],
 	github: null,
+	charter: [],
 	workspace: { agent, todos: [], memory: [], openItems: [], cards: [] },
 	cards: { waiting: [], answered: [] },
 	command: null,
@@ -123,28 +126,49 @@ describe('briefingText', () => {
 		expect(text).toContain('Recently answered:\n- Hide the streak?: "Yes"')
 	})
 
-	it('gives the charter and the weekly cycle to the Command room only', () => {
+	it("names the agent's own room on its charter, and gives the weekly cycle to the Command room only", () => {
 		const command: BriefingInput['command'] = {
-			charter: [
-				{
-					id: 3,
-					kind: 'principle',
-					text: 'Retention before growth.',
-					why: null,
-					status: 'kept',
-					at: '',
-					keptAt: '',
-				},
-			],
 			weekly: { briefAt: null, meetingAt: null, timezone: 'Europe/Lisbon' },
 			meetingStartedAt: null,
 		}
 		const firstOfficer = briefingText(input('command-1', { command }))
-		expect(firstOfficer).toContain('- [principle 3] Retention before growth.')
-		expect(firstOfficer).toContain(
-			"The last weekly meeting was never. The admin's time zone is Europe/Lisbon."
+		expect(firstOfficer).toMatch(/## The charter: .*Command room/)
+		expect(firstOfficer).toContain('## The weekly cycle')
+		const product = briefingText(input('product-1', {}))
+		expect(product).toMatch(/## The charter: .*Product room/)
+		expect(product).not.toContain('## The weekly cycle')
+	})
+
+	it('marks a second view, and which one the admin went with', () => {
+		const second = message({
+			body: 'Slow down: the start flow asks too much at once.',
+			place: 'room:product',
+			author: 'product-2',
+			authorName: 'Design officer',
+			otherViewOf: 'm1',
+		})
+		const text = briefingText(
+			input('product-1', {
+				unread: {
+					common: { since: true, messages: [] },
+					own: {
+						since: true,
+						messages: [
+							second,
+							{
+								...second,
+								id: 'm3',
+								pick: { chosen: 'other', by: 'sam', at: '' },
+							},
+						],
+					},
+				},
+			})
 		)
-		expect(briefingText(input('product-1'))).not.toContain('## The charter')
+		expect(text).toContain('Design officer (a second view, beside the first):')
+		expect(text).toContain(
+			'Design officer (a second view; sam went with this one):'
+		)
 	})
 })
 

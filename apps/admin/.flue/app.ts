@@ -4,6 +4,7 @@ import {
 	adminAuthor,
 	crewKeys,
 	GithubDraftSchema,
+	PickChoiceSchema,
 	isCrewKey,
 	isRoomKey,
 	roomKeys,
@@ -264,6 +265,33 @@ api.patch(
 		return ok
 			? c.json({ ok })
 			: c.json({ error: 'No Common Knowledge entry with that id' }, 404)
+	}
+)
+
+api.get('/crew/rooms/:room/charter', roomParam, async (c) => {
+	return c.json(await (await roomFor()).charter(c.req.valid('param').room))
+})
+
+api.post(
+	'/crew/messages/:id/pick',
+	json(z.object({ chosen: PickChoiceSchema }), 'Send { chosen }'),
+	async (c) => {
+		const result = await (
+			await roomFor()
+		).recordPick({
+			messageId: c.req.param('id'),
+			chosen: c.req.valid('json').chosen,
+			name: c.get('admin').name,
+		})
+		if (!result.ok) return c.json({ error: result.error }, result.status)
+		await Promise.all(
+			result.reports.map((report) =>
+				deliver(report.agent, 'crew.answer', report.body).catch(
+					logFailedDelivery
+				)
+			)
+		)
+		return c.json({ ok: true })
 	}
 )
 

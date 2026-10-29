@@ -5,34 +5,9 @@ import {
 	displayName,
 	handleOf,
 	resolveHandle,
-	type CrewKey,
 } from '../../shared/crew'
 import { requestReport, roomFor, wake } from '../crew'
 import { assertBlocks, Text } from './posting'
-
-// The Command room's memory of the admin, which its officers propose
-// entries for.
-export function commandTools(agent: CrewKey) {
-	const proposeCharter = defineTool({
-		name: 'propose_charter',
-		description:
-			'Propose an entry for the charter, the Command room\'s memory of the admin. A principle is about their philosophy, strategy or taste; a lesson is how they decide in a kind of situation ("When X, they prefer Y, because Z"). It counts only after they keep it, so never act on a proposal as if it were kept.',
-		input: v.object({
-			kind: v.picklist(['principle', 'lesson']),
-			text: v.pipe(Text, v.maxLength(300)),
-			why: v.pipe(Text, v.maxLength(600)),
-		}),
-		durable: true,
-		async run({ data, step }) {
-			const messageId = await step.do('propose', async () =>
-				(await roomFor()).proposeCharter({ author: agent, ...data })
-			)
-			return { output: { messageId } }
-		},
-	})
-
-	return [proposeCharter]
-}
 
 // The weekly cycle, which the Command room's principal runs.
 export function firstOfficerTools() {

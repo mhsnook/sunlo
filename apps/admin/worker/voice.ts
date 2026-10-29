@@ -10,6 +10,7 @@ const voices: Record<CrewKey, Speaker> = {
 	'command-1': 'orion',
 	'command-2': 'arcas',
 	'product-1': 'apollo',
+	'product-2': 'thalia',
 	'library-1': 'minerva',
 	'learnership-1': 'phoebe',
 }
