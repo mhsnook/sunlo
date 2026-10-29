@@ -27,6 +27,7 @@ export const crewKeys = [
 	'command-1',
 	'command-2',
 	'product-1',
+	'product-2',
 	'library-1',
 	'learnership-1',
 ] as const
@@ -96,6 +97,21 @@ export const crew: Record<CrewKey, CrewMember> = {
 			"Pushing back on work that doesn't fit the plan",
 		],
 		schedule: 'runs daily at 07:00 UTC',
+		active: true,
+	},
+	'product-2': {
+		key: 'product-2',
+		name: 'Neelix',
+		rank: null,
+		title: 'Design',
+		room: 'product',
+		role: 'associate',
+		looksAfter: [
+			'How Sunlo looks and feels, and how much it asks of people at once',
+			'A second, slower view on the plan, with an eye for the details',
+			'A design review before user-facing work is filed for building',
+		],
+		schedule: null,
 		active: true,
 	},
 	'library-1': {
@@ -288,9 +304,10 @@ export type ActionType = z.infer<typeof ActionSchema>
 //   the agent's plan
 // - In any subject's room: decide (on hold until the admin answers), confirm
 //   (acted in their stead; was that right?), know (nothing to answer) and
-//   escalate (needs more than the crew has)
-// - In the Command room only: charter (a proposed charter entry, `ref`),
-//   brief (the weekly brief) and report (command-2's pre-meeting report)
+//   escalate (needs more than the crew has), and charter (a proposed entry
+//   for the room's charter, `ref`)
+// - In the Command room only: brief (the weekly brief) and report
+//   (command-2's pre-meeting report)
 // - github: a draft for GitHub (`draft`), which "File it" publishes
 export const CardSchema = z.object({
 	kind: z.enum([
@@ -339,6 +356,17 @@ export const CrewMessageSchema = z.object({
 	corrected: RoutingSchema.nullable(),
 	// The room's list of the edits an agent's run made, not the agent speaking.
 	receipt: z.boolean(),
+	// An associate's answer that differs from the principal's, which the app
+	// shows beside it: the id of the principal's message.
+	otherViewOf: z.string().nullable(),
+	// On an other view: which of the two views the admin went with.
+	pick: z
+		.object({
+			chosen: z.enum(['original', 'other']),
+			by: z.string(),
+			at: z.string(),
+		})
+		.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -469,9 +497,9 @@ export const OpenItemSchema = z.object({
 })
 export type OpenItemType = z.infer<typeof OpenItemSchema>
 
-// What the Command room knows about the admin: principles (philosophy,
-// strategy, taste) and lessons (how they decide). An entry counts only once
-// the admin keeps it; until then it is a card in the Command room.
+// What a room knows about the admin: principles (philosophy, strategy,
+// taste) and lessons (how they decide). Each room keeps its own. An entry
+// counts only once the admin keeps it; until then it is a card in the room.
 export const CharterEntrySchema = z.object({
 	id: z.number(),
 	kind: z.enum(['principle', 'lesson']),
@@ -490,9 +518,8 @@ export const RoomThreadSchema = z.object({
 })
 export type RoomThreadType = z.infer<typeof RoomThreadSchema>
 
-// What only the Command room has: the charter, and the weekly meeting.
+// What only the Command room has: the weekly meeting.
 export const CommandSchema = z.object({
-	charter: z.array(CharterEntrySchema),
 	// Set while this week's meeting is under way.
 	meetingStartedAt: z.string().nullable(),
 })
@@ -512,7 +539,8 @@ export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
 	| { type: 'workspace'; agent: CrewKey }
-	// The charter or the weekly meeting changed.
+	// The weekly meeting changed.
 	| { type: 'command' }
+	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
 	| { type: 'document'; room: RoomKey; id: number }

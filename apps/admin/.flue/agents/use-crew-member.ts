@@ -27,7 +27,6 @@ import {
 	DATABASE_NOTES,
 	runSqlTool,
 } from '../tools/database'
-import { commandTools } from '../tools/command'
 import { crewTools } from '../tools/crew'
 import { githubTools } from '../tools/github'
 
@@ -42,9 +41,6 @@ export function useCrewMember(
 ) {
 	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
 	for (const tool of crewTools(agent)) useTool(tool)
-	if (roomOf(agent) === 'command') {
-		for (const tool of commandTools(agent)) useTool(tool)
-	}
 	const github = githubAccess[agent]
 	if (github) for (const tool of githubTools(agent, github)) useTool(tool)
 	const database = options.database ?? true
@@ -120,6 +116,10 @@ Every run starts with a <crew-context> block: the time, Common Knowledge, the Si
 - Memory holds durable facts and decisions. Never save numbers a query can recompute. Forget a memory that turns out wrong.
 - To-dos are your own work. Mark them done when they are done, and keep each note to a few words.
 - "Open with you" holds what waits on the admin. Close an item when it stops waiting.
+
+## The charter
+
+Your room keeps a charter: principles (the admin's philosophy, strategy and taste) and lessons (how they decide in a kind of situation), both about the admin. Your <crew-context> has the kept entries. Act only on kept ones. Propose entries with propose_charter as you learn, especially when the admin goes with one view over another; an entry counts only once they keep it.
 
 ## Room documents
 

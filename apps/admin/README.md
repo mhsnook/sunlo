@@ -47,14 +47,14 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 ### Rooms
 
-Each **room** is a subject, at `/room/<room>`, where you talk with the officers who work on it and anything that needs you arrives as a card. Its **principal** runs it and answers it first. A room can also have an **associate**, a second, more thorough voice that the principal can always call on: Data works with Riker in the Command room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
+Each **room** is a subject, at `/room/<room>`, where you talk with the officers who work on it and anything that needs you arrives as a card. Its **principal** runs it and answers it first. A room can also have an **associate**, a second, more thorough voice that the principal can always call on: Data works with Riker in the Command room, and Neelix with Geordi in the Product room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
 
-| Room             | Principal                | Associate          | Job                  | Status                                                 |
-| ---------------- | ------------------------ | ------------------ | -------------------- | ------------------------------------------------------ |
-| Command room     | Cmdr Riker (`command-1`) | Data (`command-2`) | First officer        | Runs: weekly brief on Sunday at 04:00, and when called |
-| Product room     | Geordi (`product-1`)     |                    | Product manager      | Runs: daily at 07:00 UTC, and when called              |
-| Library room     | Hoshi (`library-1`)      |                    | Learning content     | Planned                                                |
-| Learnership room | Guinan (`learnership-1`) |                    | Growth and retention | Planned                                                |
+| Room             | Principal                | Associate            | Job                     | Status                                                 |
+| ---------------- | ------------------------ | -------------------- | ----------------------- | ------------------------------------------------------ |
+| Command room     | Cmdr Riker (`command-1`) | Data (`command-2`)   | First officer           | Runs: weekly brief on Sunday at 04:00, and when called |
+| Product room     | Geordi (`product-1`)     | Neelix (`product-2`) | Product manager; design | Runs: daily at 07:00 UTC, and when called              |
+| Library room     | Hoshi (`library-1`)      |                      | Learning content        | Planned                                                |
+| Learnership room | Guinan (`learnership-1`) |                      | Growth and retention    | Planned                                                |
 
 The roster lives in `shared/crew.ts`: each room's key, and each officer's key, name, rank, room and role (`principal` or `associate`). An officer's key is its seat: the room, then 1 for the principal and 2 for an associate. The code names agents only by key; the names are display text for the app and the prompts, so a name can change without a migration. An officer answers to its name as a handle (@data) and to its key (@command-2). A room's key is a handle too: @product reaches whoever runs the Product room. A planned officer has a place in its room, and what you write there waits until it starts.
 
@@ -73,6 +73,12 @@ What needs you arrives in the room as a card:
 - **Change to the plan**: a change an officer proposes. "Do it" saves the decision to its memory and adds a to-do; "Not yet" saves that to memory.
 
 Every card can also be dismissed, with or without a line of feedback. The agent hears why, and feedback becomes one of its memories, so it learns what you do not want.
+
+### Every room's charter, and second views
+
+Each room keeps a **charter**: the admin's principles (philosophy, strategy, taste) and lessons (how they decide), which the room's officers propose with `propose_charter` and which count only once you keep them. It shows in the room log, and every run in the room reads its kept entries.
+
+When a room's associate sees something differently from its principal, it posts with `otherView` set. The app folds that answer under the principal's latest message ("Neelix sees it differently"), and once you open it, you go with one of the two. Both agents hear which, and the principal is asked whether the pick belongs in the charter. Neelix (`product-2`) is the Product room's design associate, on its own model (`MODEL_PRODUCT_2`); the principal brings it in for choices about what someone sees or does, and for a design review before user-facing work becomes an epic.
 
 ### The Command room: Riker and Data
 
@@ -131,7 +137,8 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `read_document`: any room's document, with its revision
 - `write_document`: a new revision of one of the agent's own room's documents, or a new document, from the revision it read
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
-- Riker and Data also have `propose_charter`. Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
+- `propose_charter`: an entry for the agent's room's charter, as a card
+- Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2` and `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 

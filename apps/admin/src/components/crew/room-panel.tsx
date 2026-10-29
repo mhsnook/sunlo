@@ -84,7 +84,7 @@ export function RoomPanel({
 			bodyClassName="space-y-8"
 		>
 			<DocumentList documents={documents} onOpen={setOpenId} />
-			{room === 'command' && <CharterPanel />}
+			<CharterPanel room={room} />
 			{roomMembers(room).map((agent) => (
 				<MemberLog key={agent} agent={agent} />
 			))}

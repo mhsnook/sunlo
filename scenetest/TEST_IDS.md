@@ -638,6 +638,8 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `crew-working`                                                                               | "<name> is working…" under the timeline                                                 |
 | `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                              |
 | `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it        |
+| `crew-other-view` + `data-key=<message id>`, `crew-other-view-toggle`                        | An associate's second view, folded under the principal's message, and its toggle        |
+| `crew-pick` + `data-key=<original\|other>`, `crew-picked`                                    | The buttons that go with one of the two views, and the note once one is picked          |
 | `crew-card-copy`                                                                             | A card's Copy brief button                                                              |
 | `crew-card-file`, `crew-card-edit`                                                           | A GitHub draft card's File it and Edit buttons                                          |
 | `crew-card-error`                                                                            | Why a GitHub draft was not filed                                                        |
@@ -681,5 +683,5 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `room-card` + `data-key=<kind>`                                                              | A card in a subject's room (`decide`, ...); a folded `brief` or `report` is its preview |
 | `room-panel-button`, `room-panel` + `data-key=<room>`                                        | The room log toggle and its panel                                                       |
 | `room-member` + `data-key=<agent>`                                                           | One member's profile, to-dos, open items and memory in the room log log                 |
-| `charter-panel`, `charter-entry` + `data-key=<id>`                                           | The charter in the Command room's log, and one kept entry                               |
+| `charter-panel` + `data-key=<room>`, `charter-entry` + `data-key=<id>`                       | A room's charter in its log, and one kept entry                                         |
 | `brief-timezone`                                                                             | The time zone of the Sunday brief                                                       |

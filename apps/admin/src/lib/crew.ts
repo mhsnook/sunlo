@@ -14,12 +14,14 @@ import {
 	Languages,
 	Library,
 	Martini,
+	Palette,
 	Rocket,
 	Star,
 	Wrench,
 	type LucideIcon,
 } from 'lucide-react'
 import {
+	CharterEntrySchema,
 	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
@@ -47,6 +49,7 @@ export const crewIcons: Record<CrewKey, LucideIcon> = {
 	'command-1': Star,
 	'command-2': Cpu,
 	'product-1': Wrench,
+	'product-2': Palette,
 	'library-1': Languages,
 	'learnership-1': Martini,
 }
@@ -84,12 +87,22 @@ export const threadQuery = (room: RoomKey) =>
 		staleTime: Infinity,
 	})
 
-// The Command room's charter and weekly meeting. The live socket keeps it
-// current.
+// The Command room's weekly meeting. The live socket keeps it current.
 export const commandQuery = () =>
 	queryOptions({
 		queryKey: ['crew', 'command'],
 		queryFn: async () => CommandSchema.parse(await adminFetch('crew/command')),
+		staleTime: Infinity,
+	})
+
+// What a room knows about the admin. The live socket keeps it current.
+export const charterQuery = (room: RoomKey) =>
+	queryOptions({
+		queryKey: ['crew', 'charter', room],
+		queryFn: async () =>
+			z
+				.array(CharterEntrySchema)
+				.parse(await adminFetch(`crew/rooms/${room}/charter`)),
 		staleTime: Infinity,
 	})
 
@@ -365,6 +378,19 @@ export function useFileDraft() {
 	})
 }
 
+// The admin goes with one of two views: the principal's message
+// ("original") or the associate's other view of it. `messageId` is the
+// other view's.
+export function usePickView() {
+	return useMutation({
+		mutationFn: (input: { messageId: string; chosen: 'original' | 'other' }) =>
+			adminFetch(`crew/messages/${input.messageId}/pick`, {
+				method: 'POST',
+				json: { chosen: input.chosen },
+			}),
+	})
+}
+
 export function useAnswerCard() {
 	return useMutation({
 		mutationFn: (input: {
@@ -418,6 +444,7 @@ export function useCrewLive() {
 					roomQuery().queryKey,
 					['crew', 'thread'],
 					commandQuery().queryKey,
+					['crew', 'charter'],
 					['crew', 'workspace'],
 					['crew', 'documents'],
 					['crew', 'document'],
@@ -441,6 +468,11 @@ export function useCrewLive() {
 				})
 			}
 			if (event.type === 'document') void documentChanged(queryClient, event)
+			if (event.type === 'charter') {
+				void queryClient.invalidateQueries({
+					queryKey: charterQuery(event.room).queryKey,
+				})
+			}
 			if (event.type === 'command') {
 				void queryClient.invalidateQueries({
 					queryKey: commandQuery().queryKey,
