@@ -41,7 +41,8 @@ export function EditableEntry({
 	const save = () =>
 		draft?.trim() && onSave(draft.trim()).then(() => setDraft(null), fail)
 	const buttonClass = cn(
-		quiet && 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+		quiet &&
+			'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100'
 	)
 
 	return (
@@ -52,7 +53,32 @@ export function EditableEntry({
 		>
 			{leading}
 			{draft === null ? (
-				<span className="flex-1 whitespace-pre-wrap">{children}</span>
+				<span className="flex-1 whitespace-pre-wrap">
+					{children}
+					{/* Trails the last line so the text wraps the full width; the
+					    negative margin keeps a 32px button from tallening that line. */}
+					<span className="-my-1.5 ms-1 inline-flex gap-0.5 align-middle">
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label={`Edit this ${label.toLowerCase()}`}
+							className={buttonClass}
+							onClick={() => setDraft(text)}
+						>
+							<Pencil />
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label={deleteLabel}
+							className={buttonClass}
+							disabled={busy}
+							onClick={() => void onDelete().catch(fail)}
+						>
+							<Trash2 />
+						</Button>
+					</span>
+				</span>
 			) : (
 				<Textarea
 					value={draft}
@@ -70,29 +96,7 @@ export function EditableEntry({
 					ref={(field) => field?.focus()}
 				/>
 			)}
-			{draft === null ? (
-				<>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label={`Edit this ${label.toLowerCase()}`}
-						className={buttonClass}
-						onClick={() => setDraft(text)}
-					>
-						<Pencil />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label={deleteLabel}
-						className={buttonClass}
-						disabled={busy}
-						onClick={() => void onDelete().catch(fail)}
-					>
-						<Trash2 />
-					</Button>
-				</>
-			) : (
+			{draft !== null && (
 				<>
 					<Button
 						variant="ghost"
