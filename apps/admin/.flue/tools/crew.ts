@@ -60,10 +60,10 @@ export function crewTools(agent: CrewKey, thread: string | null) {
 	// Writes a message, then wakes whoever it reaches, as durable steps, so a
 	// retried run neither posts twice nor wakes twice. A refusal is thrown to
 	// the model.
-	async function writeAndWake(
+	async function writeAndWake<W extends Written>(
 		step: ToolStep,
 		body: string,
-		write: () => Promise<Written | { ok: false; error: string }>
+		write: () => Promise<W | { ok: false; error: string }>
 	) {
 		assertBlocks(body)
 		const written = await step.do('post', write)
@@ -378,7 +378,7 @@ Their answer comes back to you.`,
 	const passNote = defineTool({
 		name: 'pass_note',
 		description:
-			"Ask another room's officer for a small favour, such as one check or one number, in a side-thread off a note in your room. Write their handle in `to`. They see only the thread, and their reply reaches you as a <thread-reply>.",
+			'Ask another officer, in any room including your own, for a small favour, such as one check or one number, in a side-thread off a note in your room. Write their handle in `to`. They see only the thread, and their reply reaches you as a <thread-reply>.',
 		input: v.object({
 			to: v.picklist(crewKeys.map(handleOf)),
 			body: v.pipe(Text, v.maxLength(2000)),
@@ -409,15 +409,18 @@ Their answer comes back to you.`,
 		async run({ data, step }) {
 			const root = thread ?? data.thread
 			if (!root) throw new Error('Name the side-thread to reply in.')
-			await writeAndWake(step, data.body, async () =>
-				(await roomFor()).replyInThread({
-					agent,
-					root,
-					body: data.body,
-					close: data.close,
-				})
+			const { closed } = await writeAndWake<Written & { closed: boolean }>(
+				step,
+				data.body,
+				async () =>
+					(await roomFor()).replyInThread({
+						agent,
+						root,
+						body: data.body,
+						close: data.close,
+					})
 			)
-			return data.close ? 'Replied, and the thread is closed.' : 'Replied.'
+			return closed ? 'Replied, and the thread is closed.' : 'Replied.'
 		},
 	})
 

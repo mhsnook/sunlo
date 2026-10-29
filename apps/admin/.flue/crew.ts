@@ -46,7 +46,7 @@ observe((event) => {
 	const key = event.agentName
 	if (key && isCrewKey(key)) {
 		void roomFor().then((room) =>
-			thread ? room.failThreadRun(thread) : room.failRun(key)
+			thread ? room.failThreadRun(key, thread) : room.failRun(key)
 		)
 	}
 })
@@ -96,7 +96,8 @@ export async function deliver(
 	type: string,
 	body: string,
 	attributes?: Record<string, string>,
-	// A side-thread's first message, to deliver into that thread's
+	// The id of a side-thread's first message, for a message to the helper
+	// (the note, or the asker's later replies): it goes into that thread's
 	// conversation instead of the agent's main one.
 	thread: string | null = null
 ) {

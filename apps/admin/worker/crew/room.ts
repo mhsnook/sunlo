@@ -17,6 +17,9 @@ import {
 	meetingDue,
 	mentionedCrew,
 	placeOf,
+	threadPlace,
+	isThreadPlace,
+	type MessagePlaceType,
 	principalOf,
 	roomMembers,
 	roomOf,
@@ -98,7 +101,7 @@ type MessageRow = {
 	routing: string | null
 	card: string | null
 	answer: string | null
-	place: PlaceType
+	place: MessagePlaceType
 	parent: string | null
 	corrected: string | null
 	receipt: number
@@ -275,9 +278,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				routing text,
 				card text,
 				answer text,
-				-- "room" for the Common Room, "room:<room key>" for a subject's room.
+				-- "room" for the Common Room, "room:<room key>" for a subject's room,
+				-- "thread:<first message id>" for a side-thread reply.
 				place text not null,
-				-- The message this one replies to in a side-thread. Unused so far.
+				-- On a side-thread reply, the thread's first message.
 				parent text,
 				corrected text,
 				-- 1 for the room's receipt of an agent's edits, not the agent speaking.
@@ -611,19 +615,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	snapshot(uid: string): RoomSnapshotType {
 		return {
 			...this.state,
-			messages: this.withReplies(
-				this.latestRows(COMMON_ROOM, SNAPSHOT_MESSAGES)
-			).map(toMessage),
+			messages: this.latestRows(COMMON_ROOM, SNAPSHOT_MESSAGES).map(toMessage),
 			seenAt: this.seenAt(uid, COMMON_ROOM),
 		}
 	}
 
 	thread(uid: string, room: RoomKey): RoomThreadType {
 		const place = placeOf(room)
+		const rows = this.latestRows(place, SNAPSHOT_MESSAGES)
 		return {
-			messages: this.withReplies(this.latestRows(place, SNAPSHOT_MESSAGES)).map(
-				toMessage
-			),
+			messages: rows.map(toMessage),
+			replies: this.repliesTo(rows),
 			seenAt: this.seenAt(uid, place),
 		}
 	}
@@ -953,11 +955,21 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		body: string
 		close: boolean
 	}):
-		| { ok: true; message: CrewMessageType; wake: Array<Wake> }
+		| {
+				ok: true
+				message: CrewMessageType
+				wake: Array<Wake>
+				closed: boolean
+		  }
 		| { ok: false; error: string } {
 		const root = this.messageById(input.root)
 		const thread = root?.thread
-		if (!root || !thread || !isCrewKey(root.author)) {
+		if (
+			!root ||
+			!thread ||
+			!isCrewKey(root.author) ||
+			isThreadPlace(root.place)
+		) {
 			return { ok: false, error: 'There is no side-thread with that id.' }
 		}
 		const asker = root.author
@@ -977,7 +989,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			body: input.body,
 			routing: null,
 			card: null,
-			place: root.place,
+			place: threadPlace(root.id),
 			parent: root.id,
 		})
 		if (plan.closing) this.closeThread(root)
@@ -999,7 +1011,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				thread: { root: root.id, to: 'helper' },
 			})
 		}
-		return { ok: true, message, wake }
+		return { ok: true, message, wake, closed: plan.closing }
 	}
 
 	private closeThread(root: CrewMessageType) {
@@ -1019,9 +1031,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	threadContext(agent: CrewKey, rootId: string) {
 		const root = this.messageById(rootId)
 		if (!root) return '(This side-thread is gone.)'
-		this.sql`
+		const [{ startedAt }] = this.sql<{ startedAt: string }>`
 			update message set thread_run_at = coalesce(thread_run_at, ${now()})
-			where id = ${rootId}`
+			where id = ${rootId}
+			returning thread_run_at as startedAt`
+		if (this.state.statuses[agent]?.state !== 'working') {
+			this.setStatus(agent, { state: 'working', since: startedAt })
+		}
 		return threadBriefingText({
 			now: now(),
 			agent,
@@ -1035,17 +1051,25 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// The receipt for a run in a side-thread goes in the thread.
 	finishThreadRun(agent: CrewKey, rootId: string) {
-		const root = this.sql<MessageRow>`
-			select * from message where id = ${rootId}`[0]
-		this.failThreadRun(rootId)
-		if (root?.thread_run_at) {
-			this.postReceipt(agent, root.thread_run_at, root.place, root.id)
+		const startedAt = this.sql<{ at: string | null }>`
+			select thread_run_at as at from message where id = ${rootId}`[0]?.at
+		if (startedAt) {
+			this.postReceipt(agent, startedAt, threadPlace(rootId), rootId)
 		}
+		this.failThreadRun(agent, rootId)
 	}
 
-	// A run in a side-thread that failed or was aborted never finishes.
-	failThreadRun(rootId: string) {
+	// A run in a side-thread that failed or was aborted never finishes. The
+	// agent goes idle only if this run is what made it busy: its main run may
+	// have started first.
+	failThreadRun(agent: CrewKey, rootId: string) {
+		const startedAt = this.sql<{ at: string | null }>`
+			select thread_run_at as at from message where id = ${rootId}`[0]?.at
 		this.sql`update message set thread_run_at = null where id = ${rootId}`
+		const status = this.state.statuses[agent]
+		if (status?.state === 'working' && status.since === startedAt) {
+			this.setStatus(agent, { state: 'idle', since: now() })
+		}
 	}
 
 	private threadReplies(rootId: string) {
@@ -1857,7 +1881,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		body: string
 		routing: RoutingType | null
 		card: CrewMessageType['card']
-		place: PlaceType
+		place: MessagePlaceType
 		receipt?: boolean
 		otherViewOf?: string | null
 		parent?: string | null
@@ -1886,7 +1910,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with)
 			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with})`
 		const message = toMessage(row)
-		this.push({ type: 'message', message })
+		const threadIn = row.parent ? this.messageById(row.parent)?.place : null
+		this.push(
+			threadIn && !isThreadPlace(threadIn)
+				? { type: 'reply', place: threadIn, message }
+				: { type: 'message', message }
+		)
 		return message
 	}
 
@@ -1912,24 +1941,23 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return stacked
 	}
 
-	// A timeline's latest messages, without side-thread replies: an agent's
-	// briefing leaves them out, and the app loads them with withReplies.
+	// A timeline's latest messages.
 	private latestRows(place: PlaceType, limit: number) {
 		return this.sql<MessageRow>`select * from (
-					select * from message where place = ${place} and parent is null
+					select * from message where place = ${place}
 					order by at desc, id desc limit ${limit}
 				) order by at, id`
 	}
 
-	// The rows, then the side-thread replies to any of them, for the app.
-	private withReplies(rows: Array<MessageRow>) {
-		const roots = rows.filter((row) => row.thread_with).map((row) => row.id)
-		if (!roots.length) return rows
-		const replies = this.sql<MessageRow>`
-			select * from message
-			where parent in (select value from json_each(${JSON.stringify(roots)}))
-			order by at, id`
-		return [...rows, ...replies]
+	// The side-thread replies to any of these rows, by thread, for the app.
+	private repliesTo(rows: Array<MessageRow>) {
+		const replies: Record<string, Array<CrewMessageType>> = {}
+		for (const row of rows) {
+			if (row.thread_with) {
+				replies[row.id] = this.threadReplies(row.id).map(toMessage)
+			}
+		}
+		return replies
 	}
 
 	// The messages in one timeline since the agent last finished a run there.
@@ -1941,7 +1969,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const rows = cursor
 			? this.sql<MessageRow>`select * from (
 							select * from message
-							where place = ${place} and parent is null and at > ${cursor}
+							where place = ${place} and at > ${cursor}
 							order by at desc limit 60
 						) order by at, id`
 			: this.latestRows(place, 30)
@@ -1977,13 +2005,16 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// Where the run was asked: the place of the latest message it received,
-	// or the agent's own room for a run no message started.
+	// or the agent's own room for a run no message started. A side-thread
+	// reply that reached the asker's run does not count: its receipt belongs
+	// in a room.
 	private runPlace(agent: CrewKey): PlaceType {
 		return (
 			this.sql<{ place: PlaceType }>`
 				select message.place from run_message
 				join message on message.id = run_message.message_id
 				where run_message.agent = ${agent}
+					and message.place not like 'thread:%'
 				order by message.at desc
 				limit 1`[0]?.place ?? placeOf(roomOf(agent))
 		)
@@ -2051,7 +2082,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	private postReceipt(
 		agent: CrewKey,
 		since: string,
-		place: PlaceType,
+		place: MessagePlaceType,
 		parent: string | null = null
 	) {
 		const edits = this.sql<{

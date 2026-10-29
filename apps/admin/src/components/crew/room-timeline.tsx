@@ -63,10 +63,14 @@ function groupMessages(messages: Array<CrewMessageType>) {
 
 export function RoomTimeline({
 	messages,
+	replies = {},
 	myAuthor,
 	newSince,
 }: {
 	messages: Array<CrewMessageType>
+	// Side-thread replies, by the id of each thread's first message. They
+	// fold under that message and are not in `messages`.
+	replies?: Record<string, Array<CrewMessageType>>
 	// "admin:<uid>" for the admin reading the room.
 	myAuthor: string
 	// Draw "New since …" before the first message from someone else after this.
@@ -88,18 +92,9 @@ export function RoomTimeline({
 				: []
 		)
 	)
-	// A side-thread's replies fold under its first message the same way.
-	const threads = new Map<string, Array<CrewMessageType>>()
-	for (const message of messages) {
-		if (!message.parent || !ids.has(message.parent)) continue
-		const replies = threads.get(message.parent)
-		if (replies) replies.push(message)
-		else threads.set(message.parent, [message])
-	}
+	const threads = new Map(Object.entries(replies))
 	const shown = messages.filter(
-		(message) =>
-			(!message.otherViewOf || !others.has(message.otherViewOf)) &&
-			(!message.parent || !ids.has(message.parent))
+		(message) => !message.otherViewOf || !others.has(message.otherViewOf)
 	)
 	const firstNew = shown.find((m) => isNewFor(m, newSince, myAuthor))?.id
 	const groups = groupMessages(shown)

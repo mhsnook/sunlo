@@ -118,7 +118,7 @@ export function threadBriefingText(input: ThreadBriefingInput) {
 	const room = roomOfPlace(root.place)
 	return [
 		`It is now ${stamp(input.now)}.`,
-		`## You are in a side-thread\n\n${root.authorName} asked you for a favour in a side-thread in the ${room ? roomNames[room] : 'Common Room'}. You see only this thread, not that room or your own room.`,
+		`## You are in a side-thread\n\n${root.authorName} asked you for a favour in a side-thread in the ${room ? roomNames[room] : 'Common Room'}. You see only this thread, not the rest of any room's timeline.`,
 		commonKnowledgeText(input.commonKnowledge),
 		sitrepText(input.sitrep),
 		charterText(roomNames[roomOf(input.agent)], input.charter),

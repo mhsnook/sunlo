@@ -109,6 +109,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					{thread.messages.length ? (
 						<RoomTimeline
 							messages={thread.messages}
+							replies={thread.replies}
 							myAuthor={adminAuthor(session.user.id)}
 							newSince={newSince}
 						/>
