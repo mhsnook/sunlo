@@ -88,7 +88,7 @@ export function RoomTimeline({
 	) : null
 
 	return (
-		<div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6">
+		<div className="@container mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6">
 			{groups.map((group, index) => {
 				const day = dayLabel(group.messages[0].at)
 				const previous = groups[index - 1]?.messages.at(-1)
@@ -194,7 +194,7 @@ function AuthorGroup({
 										align={mine ? 'end' : 'start'}
 										className={cn(
 											'min-w-0 whitespace-normal',
-											blocks && 'w-full max-w-2xl'
+											blocks ? 'w-full max-w-2xl' : 'max-w-full @md:max-w-[80%]'
 										)}
 									>
 										<CrewText text={message.body} />
