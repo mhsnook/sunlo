@@ -48,8 +48,8 @@ const defaultActions: Record<
 
 // The tools every crew member has: talking in the Common Room and in its
 // own room, bringing the admin cards, side-threads, and keeping its
-// workspace. In a side-thread (`thread`), the agent has only the thread and
-// its workspace.
+// workspace. In a side-thread's own run (`thread`), reply_in_thread answers
+// that thread.
 export function crewTools(agent: CrewKey, thread: string | null) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
@@ -421,16 +421,6 @@ Their answer comes back to you.`,
 		},
 	})
 
-	const workspaceTools = [
-		readDocument,
-		addTodo,
-		updateTodo,
-		remember,
-		forget,
-		addOpenItem,
-		closeOpenItem,
-	]
-	if (thread) return [replyInThread, ...workspaceTools]
 	return [
 		postToCrew,
 		postToRoom,
@@ -441,6 +431,12 @@ Their answer comes back to you.`,
 		writeDocument,
 		passNote,
 		replyInThread,
-		...workspaceTools,
+		readDocument,
+		addTodo,
+		updateTodo,
+		remember,
+		forget,
+		addOpenItem,
+		closeOpenItem,
 	]
 }
