@@ -85,7 +85,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	'product-1': {
 		key: 'product-1',
-		name: 'Geordi',
+		name: "O'Brien",
 		rank: null,
 		title: 'Product manager',
 		room: 'product',
@@ -101,7 +101,7 @@ export const crew: Record<CrewKey, CrewMember> = {
 	},
 	'product-2': {
 		key: 'product-2',
-		name: 'Neelix',
+		name: 'Keiko',
 		rank: null,
 		title: 'Design',
 		room: 'product',
@@ -201,25 +201,33 @@ export const isCrewKey = (value: string): value is CrewKey =>
 // A message's author: a crew key, or this for an admin.
 export const adminAuthor = (uid: string) => `admin:${uid}`
 
-// The handle people and agents write for a crew member: its name, lower-cased.
-export const handleOf = (agent: CrewKey) => crew[agent].name.toLowerCase()
+// The handle people and agents write for a crew member: its name, lower-cased,
+// with only letters, digits and hyphens kept.
+export const handleOf = (agent: CrewKey) =>
+	crew[agent].name.toLowerCase().replace(/[^a-z0-9-]/g, '')
+
+const APOSTROPHE = /['’]/
 
 // A crew member answers to its handle and to its key, and a room's name is a
 // handle for its principal, so "product" reaches whoever runs the Product
-// room.
+// room. A name with an apostrophe in it and a possessive both resolve, so
+// "o'brien" and "keiko's" each reach someone.
 export function resolveHandle(handle: string): CrewKey | null {
 	const name = handle.toLowerCase()
 	if (isRoomKey(name)) return principalOf(name)
 	if (isCrewKey(name)) return name
-	return crewKeys.find((key) => handleOf(key) === name) ?? null
+	const joined = name.replace(new RegExp(APOSTROPHE, 'g'), '')
+	const named = crewKeys.find((key) => handleOf(key) === joined)
+	if (named) return named
+	return APOSTROPHE.test(name) ? resolveHandle(name.split(APOSTROPHE)[0]) : null
 }
 
 // Every crew member the text @mentions, in roster order. The @ must start a
 // word, so the domain of an email address is not a mention.
 export function mentionedCrew(text: string): Array<CrewKey> {
 	const named = new Set(
-		[...text.matchAll(/(?<![\w.])@([a-z][a-z0-9-]*)/gi)].map((match) =>
-			resolveHandle(match[1])
+		[...text.matchAll(/(?<![\w.])@([a-z][a-z0-9-]*(?:['’][a-z0-9-]+)?)/gi)].map(
+			(match) => resolveHandle(match[1])
 		)
 	)
 	return crewKeys.filter((key) => named.has(key))

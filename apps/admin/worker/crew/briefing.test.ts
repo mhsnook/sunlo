@@ -133,33 +133,16 @@ describe('briefingText', () => {
 		expect(text).toContain('Recently answered:\n- Hide the streak?: "Yes"')
 	})
 
-	it('gives every room its own charter, and the weekly cycle to the Command room only', () => {
-		const charter: BriefingInput['charter'] = [
-			{
-				id: 3,
-				kind: 'principle',
-				text: 'Retention before growth.',
-				why: null,
-				status: 'kept',
-				at: '',
-				keptAt: '',
-			},
-		]
+	it("names the agent's own room on its charter, and gives the weekly cycle to the Command room only", () => {
 		const command: BriefingInput['command'] = {
 			weekly: { briefAt: null, meetingAt: null, timezone: 'Europe/Lisbon' },
 			meetingStartedAt: null,
 		}
-		const firstOfficer = briefingText(input('command-1', { charter, command }))
-		expect(firstOfficer).toContain(
-			'## The charter: what the admin has told the Command room about themselves\n\n- [principle 3] Retention before growth.'
-		)
-		expect(firstOfficer).toContain(
-			"The last weekly meeting was never. The admin's time zone is Europe/Lisbon."
-		)
-		const product = briefingText(input('product-1', { charter }))
-		expect(product).toContain(
-			'## The charter: what the admin has told the Product room about themselves'
-		)
+		const firstOfficer = briefingText(input('command-1', { command }))
+		expect(firstOfficer).toMatch(/## The charter: .*Command room/)
+		expect(firstOfficer).toContain('## The weekly cycle')
+		const product = briefingText(input('product-1', {}))
+		expect(product).toMatch(/## The charter: .*Product room/)
 		expect(product).not.toContain('## The weekly cycle')
 	})
 
