@@ -150,7 +150,7 @@ ${firstOfficer}, or the admin, sometimes sends you directives in the Common Room
 
 const threadInstructions = `## This run: a side-thread
 
-A <thread-message> is a favour another crew member asked of you in a side-thread. This run sees only that thread, as your <crew-context> shows it. Answer with reply_in_thread, as briefly as the favour allows, and set close when it is done. Save anything worth keeping with remember first: this conversation ends with the thread, and your memory is what carries over. Every other tool you have works here too, but this run shows you no room's timeline, so read_room before you post to a room.`
+A <thread-message> is a favour another crew member asked of you in a side-thread. This run sees only that thread, as your <crew-context> shows it. Answer with reply_in_thread, as briefly as the favour allows, and set close when it is done. Save anything worth keeping with remember first: this conversation ends with the thread, and your memory is what carries over. Every other tool you have works here too, except pass_note: finish this favour before you ask anyone else for one. This run shows you no room's timeline, so read_room before you post to a room.`
 
 function runInstructions(agent: CrewKey) {
 	const room = roomNames[roomOf(agent)]

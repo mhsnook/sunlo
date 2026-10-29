@@ -49,7 +49,7 @@ const defaultActions: Record<
 // The tools every crew member has: talking in the Common Room and in its
 // own room, bringing the admin cards, side-threads, and keeping its
 // workspace. In a side-thread's own run (`thread`), reply_in_thread answers
-// that thread.
+// that thread, and pass_note is left out.
 export function crewTools(agent: CrewKey, thread: string | null) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
@@ -429,7 +429,9 @@ Their answer comes back to you.`,
 		proposeChange,
 		readRoom,
 		writeDocument,
-		passNote,
+		// A note from a thread run would start a second thread, in this
+		// agent's own room and unlinked from the one it is answering.
+		...(thread ? [] : [passNote]),
 		replyInThread,
 		readDocument,
 		addTodo,
