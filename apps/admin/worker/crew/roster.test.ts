@@ -26,7 +26,7 @@ describe('the roster', () => {
 		expect(roomOf('command-2')).toBe('command')
 		expect(principalOf('command')).toBe('command-1')
 		expect(roomMembers('command')).toEqual(['command-1', 'command-2'])
-		expect(roomMembers('product')).toEqual(['product-1'])
+		expect(roomMembers('product')).toEqual(['product-1', 'product-2'])
 	})
 
 	it('puts the rank before the name', () => {

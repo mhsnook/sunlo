@@ -6,10 +6,12 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
 	principalOf,
+	roomNames,
 	type CharterEntryType,
+	type RoomKey,
 } from '../../../shared/crew'
 import {
-	commandQuery,
+	charterQuery,
 	roomQuery,
 	useEditCharter,
 	useSetTimezone,
@@ -17,18 +19,16 @@ import {
 import { dayLabel } from '~/lib/format'
 import { EditableEntry } from './editable-entry'
 
-// What the Command room knows about the admin, in its room log. The admin
-// edits it directly; the room's officers can only propose entries.
-export function CharterPanel() {
-	const { data: command } = useSuspenseQuery(commandQuery())
-	const kept = command.charter.filter((entry) => entry.status === 'kept')
-	const proposed = command.charter.filter(
-		(entry) => entry.status === 'proposed'
-	)
+// What a room knows about the admin, in its room log. The admin edits it
+// directly; the room's officers can only propose entries.
+export function CharterPanel({ room }: { room: RoomKey }) {
+	const { data: charter } = useSuspenseQuery(charterQuery(room))
+	const kept = charter.filter((entry) => entry.status === 'kept')
+	const proposed = charter.filter((entry) => entry.status === 'proposed')
 	return (
-		<section className="space-y-3" data-testid="charter-panel">
+		<section className="space-y-3" data-testid="charter-panel" data-key={room}>
 			<h2 className="text-muted-foreground text-sm font-semibold">
-				The charter: what the Command room knows about you · {kept.length}
+				The charter: what the {roomNames[room]} knows about you · {kept.length}
 			</h2>
 			{kept.length ? (
 				<ul className="space-y-2">
@@ -38,9 +38,9 @@ export function CharterPanel() {
 				</ul>
 			) : (
 				<p className="text-muted-foreground text-sm">
-					Nothing yet. {displayName(principalOf('command'))} proposes principles
-					and lessons as it learns how you decide, and they land here when you
-					keep them.
+					Nothing yet. {displayName(principalOf(room))} proposes principles and
+					lessons as it learns how you decide, and they land here when you keep
+					them.
 				</p>
 			)}
 			{proposed.length > 0 && (
@@ -48,7 +48,6 @@ export function CharterPanel() {
 					{proposed.length} more waiting for you in the room.
 				</p>
 			)}
-			<WeeklySettings />
 		</section>
 	)
 }
@@ -87,7 +86,7 @@ const timezones =
 		? Intl.supportedValuesOf('timeZone')
 		: []
 
-function WeeklySettings() {
+export function WeeklySettings() {
 	const { data: room } = useQuery(roomQuery())
 	const setTimezone = useSetTimezone()
 	const [draft, setDraft] = useState<string | null>(null)

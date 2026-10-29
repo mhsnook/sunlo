@@ -31,6 +31,7 @@ import {
 	CrewText,
 } from './crew-parts'
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
+import { OtherView } from './other-view'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
 import { useReadOnArrival } from '~/lib/voice'
@@ -76,8 +77,21 @@ export function RoomTimeline({
 			return agent ? [{ id: message.id, text: message.body, agent }] : []
 		})
 	)
-	const firstNew = messages.find((m) => isNewFor(m, newSince, myAuthor))?.id
-	const groups = groupMessages(messages)
+	// A second view shows folded under the message it answers, when that is
+	// on screen; otherwise it reads as an ordinary message.
+	const ids = new Set(messages.map((message) => message.id))
+	const others = new Map(
+		messages.flatMap((message) =>
+			message.otherViewOf && ids.has(message.otherViewOf)
+				? [[message.otherViewOf, message] as const]
+				: []
+		)
+	)
+	const shown = messages.filter(
+		(message) => !message.otherViewOf || !others.has(message.otherViewOf)
+	)
+	const firstNew = shown.find((m) => isNewFor(m, newSince, myAuthor))?.id
+	const groups = groupMessages(shown)
 	const newSinceMarker = newSince ? (
 		<MessageMarker
 			className="text-primary-700 [&>span:not(:nth-child(2))]:bg-primary-300 font-semibold"
@@ -102,17 +116,23 @@ export function RoomTimeline({
 								<AuthorGroup
 									messages={group.messages.slice(0, split)}
 									myAuthor={myAuthor}
+									others={others}
 								/>
 								{newSinceMarker}
 								<AuthorGroup
 									messages={group.messages.slice(split)}
 									myAuthor={myAuthor}
+									others={others}
 								/>
 							</>
 						) : (
 							<>
 								{split === 0 && newSinceMarker}
-								<AuthorGroup messages={group.messages} myAuthor={myAuthor} />
+								<AuthorGroup
+									messages={group.messages}
+									myAuthor={myAuthor}
+									others={others}
+								/>
 							</>
 						)}
 					</Fragment>
@@ -125,9 +145,12 @@ export function RoomTimeline({
 function AuthorGroup({
 	messages,
 	myAuthor,
+	others,
 }: {
 	messages: Array<CrewMessageType>
 	myAuthor: string
+	// Second views, by the id of the message each answers.
+	others: Map<string, CrewMessageType>
 }) {
 	const first = messages[0]
 	const mine = first.author === myAuthor
@@ -139,6 +162,7 @@ function AuthorGroup({
 				const last = index === messages.length - 1
 				const asksYou = !!message.card && message.card.kind === 'question'
 				const blocks = hasBlocks(message.body)
+				const other = others.get(message.id)
 				return (
 					<Message
 						key={message.id}
@@ -204,6 +228,7 @@ function AuthorGroup({
 								</SpeakableBubble>
 							)}
 							{asksYou && <CardActions message={message} />}
+							{other && <OtherView original={message} other={other} />}
 							{mine && message.routing && message.place === 'room' && (
 								<MessageFooter>
 									<RoutingCorrection message={message} />

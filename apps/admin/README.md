@@ -47,14 +47,14 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 ### Rooms
 
-Each **room** is a subject, at `/room/<room>`, where you talk with the officers who work on it and anything that needs you arrives as a card. Its **principal** runs it and answers it first. A room can also have an **associate**, a second, more thorough voice that the principal can always call on: Data works with Riker in the Command room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
+Each **room** is a subject, at `/room/<room>`, where you talk with the officers who work on it and anything that needs you arrives as a card. Its **principal** runs it and answers it first. A room can also have an **associate**, a second, more thorough voice that the principal can always call on: Data works with Riker in the Command room, and Keiko with O'Brien in the Product room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
 
-| Room             | Principal                | Associate          | Job                  | Status                                                 |
-| ---------------- | ------------------------ | ------------------ | -------------------- | ------------------------------------------------------ |
-| Command room     | Cmdr Riker (`command-1`) | Data (`command-2`) | First officer        | Runs: weekly brief on Sunday at 04:00, and when called |
-| Product room     | Geordi (`product-1`)     |                    | Product manager      | Runs: daily at 07:00 UTC, and when called              |
-| Library room     | Hoshi (`library-1`)      |                    | Learning content     | Planned                                                |
-| Learnership room | Guinan (`learnership-1`) |                    | Growth and retention | Planned                                                |
+| Room             | Principal                | Associate           | Job                     | Status                                                 |
+| ---------------- | ------------------------ | ------------------- | ----------------------- | ------------------------------------------------------ |
+| Command room     | Cmdr Riker (`command-1`) | Data (`command-2`)  | First officer           | Runs: weekly brief on Sunday at 04:00, and when called |
+| Product room     | O'Brien (`product-1`)    | Keiko (`product-2`) | Product manager; design | Runs: daily at 07:00 UTC, and when called              |
+| Library room     | Hoshi (`library-1`)      |                     | Learning content        | Planned                                                |
+| Learnership room | Guinan (`learnership-1`) |                     | Growth and retention    | Planned                                                |
 
 The roster lives in `shared/crew.ts`: each room's key, and each officer's key, name, rank, room and role (`principal` or `associate`). An officer's key is its seat: the room, then 1 for the principal and 2 for an associate. The code names agents only by key; the names are display text for the app and the prompts, so a name can change without a migration. An officer answers to its name as a handle (@data) and to its key (@command-2). A room's key is a handle too: @product reaches whoever runs the Product room. A planned officer has a place in its room, and what you write there waits until it starts.
 
@@ -73,6 +73,12 @@ What needs you arrives in the room as a card:
 - **Change to the plan**: a change an officer proposes. "Do it" saves the decision to its memory and adds a to-do; "Not yet" saves that to memory.
 
 Every card can also be dismissed, with or without a line of feedback. The agent hears why, and feedback becomes one of its memories, so it learns what you do not want.
+
+### Every room's charter, and second views
+
+Each room keeps a **charter**: the admin's principles (philosophy, strategy, taste) and lessons (how they decide), which the room's officers propose with `propose_charter` and which count only once you keep them. It shows in the room log, and every run in the room reads its kept entries.
+
+When a room's principal asks its associate in, and the associate sees it differently, the associate posts with `otherView` set. The app folds that answer under the principal's message that asked ("Keiko sees it differently"), and once you open it, you go with one of the two. Both agents hear which, and the principal is asked whether the pick belongs in the charter. Keiko (`product-2`) is the Product room's design associate, on its own model (`MODEL_PRODUCT_2`); the principal brings it in for choices about what someone sees or does, and for a design review before user-facing work becomes an epic.
 
 ### The Command room: Riker and Data
 
@@ -131,24 +137,27 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `read_document`: any room's document, with its revision
 - `write_document`: a new revision of one of the agent's own room's documents, or a new document, from the revision it read
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
-- Riker and Data also have `propose_charter`. Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
+- `propose_charter`: an entry for the agent's room's charter, as a card
+- Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2` and `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 
-### Filing GitHub issues
+### GitHub: milestones and epics
 
-`worker/crew/github.ts` files issues on `mhsnook/sunlo` (the `GITHUB_REPO` var) as a GitHub App, for the agent that will file them. No agent has the GitHub tools yet. Without the three secrets below, no agent ever will.
+The Roadmap, a Product room document, is the plan. GitHub (`mhsnook/sunlo`, the `GITHUB_REPO` var) holds the part of it that is ready to build, as milestones and epics, and `product-1` keeps them current. An epic is an ordinary issue labelled `epic`, with a checklist of PR-sized steps, inside a milestone; Claude Code sessions take their work from it. The Roadmap links to GitHub by convention, such as `- [ ] Onboarding (#812)`, and no code parses it.
 
-The repository is public, so the GitHub tools must enforce these limits in code, whatever the prompt says. `github.ts` holds the limits and adds the label; the tools that check the rest come with the agent that files issues:
+- **Anything new is a card first.** `draft_issue`, `draft_milestone` and `draft_comment` put a draft on a card in the agent's room. You can edit the draft on the card, then "File it", and the Worker publishes exactly what the card holds (`POST /api/crew/messages/:id/file`). The agent hears back with the number, and with both versions when you edited it; it keeps what it learns as writing-style memories (`note_writing_style`), shown in the room log as "How you like issues written".
+- **After that, the agent edits directly.** `edit_issue` and `edit_milestone` change any issue or milestone: an epic's body and checklist, titles, labels, milestones, due dates and state. Each change appears in the run's receipt, built from what the tool did.
+- **Reading:** `read_issue`, `list_milestones`, `list_epics` and `github_changes_since`. `command-1` has these read tools only (`githubAccess` in `shared/crew.ts`).
+- **What stays in code** (`worker/crew/github.ts`, `.flue/tools/github.ts`): every write, at the tap for a card and in the tool for an edit, is refused if it contains an email address, a user's id or a username, because the repository is public. A run may draft at most 5 cards (`DRAFTS_PER_RUN`) and make at most 20 edits (`EDITS_PER_RUN`). Every filed issue gets the `from-crew` label.
+- Before its first edit, `product-1`'s prompt has it propose, as one card, how the existing milestones and epics map onto the Roadmap. It reads what changed on GitHub on its daily run.
+- "Copy brief" on a card copies its text, with the link once it is filed, for pasting into a Claude Code session.
 
-- **No personal data.** An issue or comment that contains an email address, a user's id or a username is refused, and the agent is told to rewrite it.
-- **No duplicates.** The agent keeps every issue it files in its SQLite. It checks that list first, and it can comment only on its own issues.
-- **Rate limits.** At most 2 issues per run and 5 per 24 hours, and 3 comments per run.
-- **A label.** Every issue gets the `from-crew` label.
+Without the three secrets below, no agent has GitHub tools, and each briefing says so.
 
 To set it up, once:
 
-1. On GitHub, open **Settings › Developer settings › GitHub Apps › New GitHub App**. Name it, for example, "Sunlo Crew". Turn off **Webhook › Active**. Under **Repository permissions**, set **Issues** to **Read and write**. Leave everything else at No access. Create the app and note its **App ID**.
+1. On GitHub, open **Settings › Developer settings › GitHub Apps › New GitHub App**. Name it, for example, "Sunlo Crew". Turn off **Webhook › Active**. Under **Repository permissions**, set **Issues** to **Read and write** (it covers labels and milestones) and **Pull requests** to **Read-only**. Leave everything else at No access. Create the app and note its **App ID**.
 2. On the app's page, **Generate a private key**. GitHub downloads a `.pem` file in PKCS#1 format, and Workers can only read PKCS#8, so convert it:
 
    ```bash
@@ -164,6 +173,16 @@ To set it up, once:
    pnpm exec wrangler secret put GITHUB_APP_INSTALLATION_ID
    pnpm exec wrangler secret put GITHUB_APP_PRIVATE_KEY < sunlo-crew-pkcs8.pem
    ```
+
+6. Previews do not inherit production secrets. Set the same three in the previews' base configuration, which each new preview copies when it is created (a preview that already exists keeps what it had):
+
+   ```bash
+   pnpm exec wrangler preview base-config secret put GITHUB_APP_ID
+   pnpm exec wrangler preview base-config secret put GITHUB_APP_INSTALLATION_ID
+   pnpm exec wrangler preview base-config secret put GITHUB_APP_PRIVATE_KEY < sunlo-crew-pkcs8.pem
+   ```
+
+   A preview files on the same public repository as production.
 
 If the key is still in PKCS#1 format, `githubFor()` throws an error that names the fix.
 
@@ -212,7 +231,7 @@ Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admi
 
 The Worker reaches the database through [Hyperdrive](https://developers.cloudflare.com/hyperdrive/), bound as `HYPERDRIVE` in `wrangler.jsonc`. The Hyperdrive config holds the production connection string for `admin_reader`, so the Worker has no database secret of its own. Hyperdrive is required, not an optimisation: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs rather than failing. Hyperdrive makes the TLS connection on the Worker's behalf. If the database stops answering, every `/api` route returns a 500 after 15 seconds instead of hanging, and the Worker logs the reason.
 
-GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("Filing GitHub issues", above).
+GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above).
 
 A pull request that touches only `apps/admin/` (and `scenetest/TEST_IDS.md`) skips the `scenetest`, `bundle-size` and `prod-bundle-scan` jobs in `.github/workflows/test.yaml`, because those test the main app and take about twelve minutes; the `changes` job in that workflow decides, and `pr-checks` and `unit` still run.
 

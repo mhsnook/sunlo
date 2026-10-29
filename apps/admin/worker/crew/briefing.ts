@@ -28,12 +28,17 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					: message.routing?.kind === 'room'
 						? ' (left in the room)'
 						: ''
+			const view = message.otherViewOf
+				? message.pick
+					? ` (a second view; ${message.pick.by} went with ${message.pick.chosen === 'other' ? 'this one' : 'the first'})`
+					: ' (a second view, beside the first)'
+				: ''
 			const card = message.card
 				? message.answer
 					? ` [answered: ${message.answer.label}]`
 					: ` [waiting for an answer: ${message.card.actions.map((a) => a.label).join(' / ')}]`
 				: ''
-			return `[${stamp(message.at)}] ${message.authorName}${note}: ${message.body}${card}`
+			return `[${stamp(message.at)}] ${message.authorName}${note}${view}: ${message.body}${card}`
 		})
 		.join('\n')
 }
@@ -52,15 +57,18 @@ export type BriefingInput = {
 	sitrep: Sitrep | null
 	// The agent's own room's documents, without their text.
 	documents: Array<DocumentSummaryType>
+	// For agents with GitHub tools only.
+	github: { access: 'read' | 'write'; connected: boolean } | null
 	workspace: WorkspaceType
 	// The cards in the agent's own room.
 	cards: {
 		waiting: Array<CrewMessageType>
 		answered: Array<CrewMessageType>
 	}
+	// The agent's own room's charter.
+	charter: Array<CharterEntryType>
 	// For the Command room's members only.
 	command: {
-		charter: Array<CharterEntryType>
 		weekly: WeeklyType
 		meetingStartedAt: string | null
 	} | null
@@ -78,8 +86,10 @@ export function briefingText(input: BriefingInput) {
 		`It is now ${stamp(input.now)}.`,
 		commonKnowledgeText(input.commonKnowledge),
 		sitrepText(input.sitrep),
+		charterText(room, input.charter),
 	]
 	if (input.command) sections.push(commandText(input.command, input.now))
+	if (input.github) sections.push(githubText(input.github))
 	sections.push(
 		documentsText(room, input.documents),
 		cardsText(room, input.cards),
@@ -105,6 +115,17 @@ export function sitrepText(sitrep: Sitrep | null) {
 		sitrep?.at
 			? `${sitrep.text}\n\n(Revision ${sitrep.revision}, saved by ${sitrep.byName}, ${stamp(sitrep.at)}.)`
 			: '(Nobody has written it yet.)',
+	].join('\n\n')
+}
+
+export function githubText(github: NonNullable<BriefingInput['github']>) {
+	return [
+		'## GitHub',
+		github.connected
+			? github.access === 'write'
+				? "Connected: you keep mhsnook/sunlo's milestones and epics."
+				: "Connected, read-only: you can read mhsnook/sunlo's milestones, epics and issues."
+			: 'Not connected: the GitHub App is not set up, so you have no GitHub tools. If the admin asks for GitHub work, say so.',
 	].join('\n\n')
 }
 
@@ -149,16 +170,26 @@ function cardsText(room: string, cards: BriefingInput['cards']) {
 	].join('\n\n')
 }
 
-// The Command room's memory of the admin, and the weekly cycle.
+// What the admin has told the room about themselves. Every room keeps one.
+function charterText(room: string, charter: Array<CharterEntryType>) {
+	const entries = (status: CharterEntryType['status']) =>
+		charter
+			.filter((entry) => entry.status === status)
+			.map((entry) => `- [${entry.kind} ${entry.id}] ${entry.text}`)
+			.join('\n')
+	return [
+		`## The charter: what the admin has told the ${room} about themselves`,
+		entries('kept') || '(nothing kept yet)',
+		'Proposed, waiting for the admin:',
+		entries('proposed') || '(none)',
+	].join('\n\n')
+}
+
+// The weekly cycle, which the Command room runs.
 function commandText(
 	command: NonNullable<BriefingInput['command']>,
 	now: string
 ) {
-	const entries = (status: CharterEntryType['status']) =>
-		command.charter
-			.filter((entry) => entry.status === status)
-			.map((entry) => `- [${entry.kind} ${entry.id}] ${entry.text}`)
-			.join('\n')
 	const { weekly, meetingStartedAt } = command
 	const firstOfficer = displayName(principalOf('command'))
 	const meeting = meetingStartedAt
@@ -167,10 +198,6 @@ function commandText(
 			? `The weekly meeting is due: ${firstOfficer} wrote the brief at ${stamp(weekly.briefAt ?? now)}, and the admin has not met with ${firstOfficer} since. It comes before anything else. Something truly critical becomes item 1 of the meeting; it does not replace the meeting.`
 			: `The last weekly meeting was ${weekly.meetingAt ? stamp(weekly.meetingAt) : 'never'}.`
 	return [
-		'## The charter: what the admin has told the Command room about themselves',
-		entries('kept') || '(nothing kept yet)',
-		'Proposed, waiting for the admin:',
-		entries('proposed') || '(none)',
 		'## The weekly cycle',
 		`${meeting} The admin's time zone is ${weekly.timezone}.`,
 	].join('\n\n')

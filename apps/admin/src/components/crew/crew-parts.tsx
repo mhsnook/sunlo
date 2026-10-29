@@ -1,16 +1,17 @@
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { isBlockKind } from '../../../shared/blocks'
+import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
+import { GithubCard } from './github-card'
 import { MermaidBlock } from './mermaid-block'
 import { remarkCrew } from './remark-crew'
-import { useState } from 'react'
-import { Users, X, type LucideIcon } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { Check, Copy, Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageMarker } from '@/components/ui/message'
-import { toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
 	isCrewKey,
@@ -182,7 +183,15 @@ export function CrewText({ text }: { text: string }) {
 	)
 }
 
-export function CardActions({ message }: { message: CrewMessageType }) {
+// `primary` replaces the card's own action buttons, for a card that answers
+// some other way; Dismiss stays.
+export function CardActions({
+	message,
+	primary,
+}: {
+	message: CrewMessageType
+	primary?: ReactNode
+}) {
 	const answer = useAnswerCard()
 	// Null until the admin starts dismissing; then the feedback they type.
 	const [feedback, setFeedback] = useState<string | null>(null)
@@ -190,9 +199,24 @@ export function CardActions({ message }: { message: CrewMessageType }) {
 	if (message.answer) {
 		return (
 			<p className="text-muted-foreground px-1 text-xs">
-				{message.answer.actionId === 'dismiss'
-					? `${message.answer.by} dismissed this`
-					: `${message.answer.by} chose “${message.answer.label}”`}
+				{message.answer.actionId === 'dismiss' ? (
+					`${message.answer.by} dismissed this`
+				) : message.answer.url ? (
+					<>
+						{message.answer.by}:{' '}
+						<a
+							href={message.answer.url}
+							target="_blank"
+							rel="noreferrer"
+							className="text-primary-700 underline"
+							data-testid="crew-card-filed"
+						>
+							{message.answer.label}
+						</a>
+					</>
+				) : (
+					`${message.answer.by} chose “${message.answer.label}”`
+				)}
 			</p>
 		)
 	}
@@ -243,19 +267,20 @@ export function CardActions({ message }: { message: CrewMessageType }) {
 	}
 	return (
 		<div className="flex flex-wrap gap-1">
-			{message.card.actions.map((action, index) => (
-				<Button
-					key={action.id}
-					size="sm"
-					variant={index === 0 ? 'default' : 'ghost'}
-					disabled={answer.isPending}
-					data-testid="crew-card-action"
-					data-key={action.id}
-					onClick={() => send(action.id)}
-				>
-					{action.label}
-				</Button>
-			))}
+			{primary ??
+				message.card.actions.map((action, index) => (
+					<Button
+						key={action.id}
+						size="sm"
+						variant={index === 0 ? 'default' : 'ghost'}
+						disabled={answer.isPending}
+						data-testid="crew-card-action"
+						data-key={action.id}
+						onClick={() => send(action.id)}
+					>
+						{action.label}
+					</Button>
+				))}
 			<Button
 				size="sm"
 				variant="ghost"
@@ -295,26 +320,12 @@ const cardLabels: Partial<Record<CardType['kind'], string>> = {
 	know: 'Worth knowing',
 	brief: 'Weekly brief',
 	report: 'Pre-meeting report',
+	github: 'For GitHub',
 }
 
 const folds: Partial<Record<CardType['kind'], string>> = {
 	brief: `${displayName('command-1')} posts the weekly brief`,
 	report: `${displayName('command-2')} submits the pre-meeting report`,
-}
-
-// The opening prose of a markdown body, for a folded card's preview.
-function openingLines(body: string) {
-	const paragraph =
-		body
-			.split(/\n\s*\n/)
-			.map((part) => part.trim())
-			.find((part) => part && !/^(#|```|~~~|\|)/.test(part)) ?? ''
-	const text = paragraph
-		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-		.replace(/[*_`>#]/g, '')
-		.replace(/\s+/g, ' ')
-		.trim()
-	return text.length > 220 ? `${text.slice(0, 219)}…` : text
 }
 
 // A card an agent brings the admin in its room. A brief or a report arrives
@@ -324,6 +335,9 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 	const [unfolded, setUnfolded] = useState(false)
 	const card = message.card
 	if (!card) return null
+	if (card.kind === 'github' && card.draft) {
+		return <GithubCard message={message} draft={card.draft} />
+	}
 	const fold = folds[card.kind]
 	if (fold && !unfolded) {
 		return (
@@ -341,7 +355,7 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 						<span className="block text-sm font-semibold">{card.title}</span>
 					)}
 					<span className="text-muted-foreground line-clamp-3 block text-sm">
-						{openingLines(message.body)}
+						{openingLines(message.body, 220)}
 					</span>
 					<span className="text-primary-700 block text-xs font-medium">
 						Open the {card.kind}
@@ -351,19 +365,70 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 		)
 	}
 	return (
-		<div
-			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
-			data-testid="room-card"
-			data-key={card.kind}
+		<CardFrame
+			kind={card.kind}
+			label={cardLabels[card.kind]}
+			brief={[card.title, message.body, message.answer?.url]}
 		>
-			<p className="text-muted-foreground text-xs font-medium">
-				{cardLabels[card.kind]}
-			</p>
 			{card.title && <p className="text-sm font-semibold">{card.title}</p>}
 			<div className="text-sm">
 				<CrewText text={message.body} />
 			</div>
 			<CardActions message={message} />
+		</CardFrame>
+	)
+}
+
+// Every unfolded card's frame: its label, and the Copy brief button, which
+// copies the parts of `brief` it has.
+export function CardFrame({
+	kind,
+	label,
+	brief,
+	children,
+}: {
+	kind: CardType['kind']
+	label: string | undefined
+	brief: Array<string | null | undefined>
+	children: ReactNode
+}) {
+	return (
+		<div
+			className="bg-card w-full max-w-xl space-y-2 rounded-2xl border p-3"
+			data-testid="room-card"
+			data-key={kind}
+		>
+			<div className="flex items-center gap-2">
+				<p className="text-muted-foreground me-auto text-xs font-medium">
+					{label}
+				</p>
+				<CopyBrief text={brief.filter(Boolean).join('\n\n')} />
+			</div>
+			{children}
 		</div>
+	)
+}
+
+// Copies a card's text, for pasting into a Claude Code session.
+function CopyBrief({ text }: { text: string }) {
+	const [copied, setCopied] = useState(false)
+	return (
+		<Button
+			variant="ghost"
+			size="sm"
+			className="text-muted-foreground h-7 px-2 shadow-none"
+			data-testid="crew-card-copy"
+			onClick={() =>
+				void navigator.clipboard.writeText(text).then(
+					() => {
+						setCopied(true)
+						toastSuccess('Brief copied')
+					},
+					(error: Error) => toastError(error.message)
+				)
+			}
+		>
+			{copied ? <Check /> : <Copy />} Copy brief
+		</Button>
 	)
 }

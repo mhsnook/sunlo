@@ -11,6 +11,7 @@ import {
 import { Command1 } from './agents/command-1'
 import { Command2 } from './agents/command-2'
 import { Product1 } from './agents/product-1'
+import { Product2 } from './agents/product-2'
 
 export const roomFor = () =>
 	getAgentByName(env.CREW_ROOM as DurableObjectNamespace<CrewRoom>, ROOM)
@@ -22,6 +23,7 @@ const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 	'command-1': Command1,
 	'command-2': Command2,
 	'product-1': Product1,
+	'product-2': Product2,
 })
 
 // A run that fails or is aborted settles without useAgentFinish, so the room

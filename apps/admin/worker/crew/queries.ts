@@ -1,5 +1,6 @@
 import type { Sql } from 'postgres'
 import { activityEvents } from '../stats'
+import type { PeopleIndex } from './github'
 
 export const MAX_ROWS = 200
 const MAX_RESULT_CHARS = 30_000
@@ -102,4 +103,14 @@ export async function runReadOnlyQuery(sql: Sql, query: string) {
 	return text.length > MAX_RESULT_CHARS
 		? `${text.slice(0, MAX_RESULT_CHARS)}… (cut at ${MAX_RESULT_CHARS} characters; select fewer columns or aggregate)`
 		: text
+}
+
+// Every username and user id, for keeping them out of public GitHub text.
+export async function peopleIndex(sql: Sql): Promise<PeopleIndex> {
+	const rows = await sql<Array<{ uid: string; username: string | null }>>`
+		select uid::text, lower(username) as username from public.user_profile`
+	return {
+		usernames: new Set(rows.flatMap((row) => row.username ?? [])),
+		uids: new Set(rows.map((row) => row.uid.toLowerCase())),
+	}
 }

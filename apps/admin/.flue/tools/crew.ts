@@ -1,7 +1,9 @@
 import { defineTool, type ToolStep } from '@flue/runtime'
 import * as v from 'valibot'
 import {
+	crew,
 	displayName,
+	principalOf,
 	handleOf,
 	placeOf,
 	COMMON_ROOM,
@@ -50,7 +52,12 @@ export function crewTools(agent: CrewKey) {
 	// Durable steps, so a retried run neither posts twice nor wakes twice.
 	async function postAndWake(
 		step: ToolStep,
-		input: { body: string; card: CardType | null; place: PlaceType }
+		input: {
+			body: string
+			card: CardType | null
+			place: PlaceType
+			otherView?: boolean
+		}
 	) {
 		assertBlocks(input.body)
 		const { message, wake: wakes } = await step.do('post', async () =>
@@ -91,15 +98,40 @@ export function crewTools(agent: CrewKey) {
 		},
 	})
 
+	const associate = crew[agent].role === 'associate'
+	const principal = displayName(principalOf(ownRoom))
 	const postToRoom = defineTool({
 		name: 'post_to_room',
-		description: `Post a message in the ${room}, where the admin talks with you${roommates.length ? ` and ${roommates.map(displayName).join(' and ')}` : ''}. Answer a <room-message> here.${roommates.length ? ` Write ${roommates.map((key) => `@${handleOf(key)}`).join(' or ')} to hand ${roommates.length === 1 ? 'them' : 'one of them'} the floor.` : ''}`,
-		input: v.object({ body: Text }),
+		description: `Post a message in the ${room}, where the admin talks with you${roommates.length ? ` and ${roommates.map(displayName).join(' and ')}` : ''}. Answer a <room-message> here.${roommates.length ? ` Write ${roommates.map((key) => `@${handleOf(key)}`).join(' or ')} to hand ${roommates.length === 1 ? 'them' : 'one of them'} the floor.` : ''}${associate ? ` Set otherView when ${principal} asked you in, and your answer differs from theirs: the app shows yours beside the message that asked you, and the admin goes with one of the two.` : ''}`,
+		// The room ignores otherView from a principal.
+		input: v.object({ body: Text, otherView: v.optional(v.boolean()) }),
 		durable: true,
 		async run({ data, step }) {
 			return {
-				output: await postAndWake(step, { body: data.body, card: null, place }),
+				output: await postAndWake(step, {
+					body: data.body,
+					card: null,
+					place,
+					otherView: data.otherView,
+				}),
 			}
+		},
+	})
+
+	const proposeCharter = defineTool({
+		name: 'propose_charter',
+		description: `Propose an entry for the ${room}'s charter, its memory of the admin. A principle is about their philosophy, strategy or taste; a lesson is how they decide in a kind of situation ("When X, they prefer Y, because Z"). It counts only after they keep it, so never act on a proposal as if it were kept.`,
+		input: v.object({
+			kind: v.picklist(['principle', 'lesson']),
+			text: v.pipe(Text, v.maxLength(300)),
+			why: v.pipe(Text, v.maxLength(600)),
+		}),
+		durable: true,
+		async run({ data, step }) {
+			const messageId = await step.do('propose', async () =>
+				(await roomFor()).proposeCharter({ author: agent, ...data })
+			)
+			return { output: { messageId } }
 		},
 	})
 
@@ -324,6 +356,7 @@ Their answer comes back to you.`,
 	return [
 		postToCrew,
 		postToRoom,
+		proposeCharter,
 		bringToAdmin,
 		proposeChange,
 		readRoom,
