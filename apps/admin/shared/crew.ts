@@ -273,30 +273,52 @@ export const githubAccess: Partial<Record<CrewKey, 'read' | 'write'>> = {
 
 // Something an agent drafted for GitHub, which the admin can edit on its
 // card before filing it. An epic is an issue with the "epic" label.
+// The longest texts a GitHub draft or edit may hold, for the agents' tools
+// and for the drafts the admin files.
+export const GITHUB_LIMITS = {
+	title: 200,
+	body: 60_000,
+	description: 20_000,
+	label: 50,
+	labels: 10,
+} as const
+
+const Title = z.string().trim().min(1).max(GITHUB_LIMITS.title)
+const Body = z.string().trim().min(1).max(GITHUB_LIMITS.body)
+
 export const GithubDraftSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('issue'),
-		title: z.string().trim().min(1).max(200),
-		body: z.string().trim().min(1).max(60_000),
-		labels: z.array(z.string().trim().min(1).max(50)).max(10),
+		title: Title,
+		body: Body,
+		labels: z
+			.array(z.string().trim().min(1).max(GITHUB_LIMITS.label))
+			.max(GITHUB_LIMITS.labels),
 		milestone: z.number().int().nullable(),
 		// For the card; the number is what GitHub gets.
 		milestoneTitle: z.string().nullable(),
 	}),
 	z.object({
 		type: z.literal('milestone'),
-		title: z.string().trim().min(1).max(200),
-		description: z.string().trim().max(20_000),
+		title: Title,
+		description: z.string().trim().max(GITHUB_LIMITS.description),
 		// YYYY-MM-DD, or null for none.
 		dueOn: z.iso.date().nullable(),
 	}),
 	z.object({
 		type: z.literal('comment'),
 		issue: z.number().int(),
-		body: z.string().trim().min(1).max(60_000),
+		body: Body,
 	}),
 ])
 export type GithubDraftType = z.infer<typeof GithubDraftSchema>
+
+// A draft's title on its card; a comment has none of its own.
+export const draftTitle = (draft: GithubDraftType) =>
+	draft.type === 'comment' ? `Comment on #${draft.issue}` : draft.title
+
+export const draftBody = (draft: GithubDraftType) =>
+	draft.type === 'milestone' ? draft.description : draft.body
 export type ActionType = z.infer<typeof ActionSchema>
 
 // Something an agent brings the admin, with the buttons they answer with.

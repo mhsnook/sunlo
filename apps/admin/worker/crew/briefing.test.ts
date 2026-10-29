@@ -313,7 +313,6 @@ describe('threadBriefingText', () => {
 			cards: [],
 		},
 		thread: {
-			asker: 'command-1',
 			root,
 			replies: [
 				message({
@@ -343,9 +342,7 @@ describe('threadBriefingText', () => {
 		expect(text).toContain(
 			`First officer (a side-thread with ${displayName('product-1')}): How far along is the November milestone?`
 		)
-		expect(text).toContain(
-			'Product officer (in a side-thread): About half done.'
-		)
+		expect(text).toContain('Product officer: About half done.')
 		expect(text).not.toContain('since your last run')
 		expect(text).not.toContain('latest messages')
 	})

@@ -2,6 +2,7 @@ import {
 	useAgentFinish,
 	useAgentStart,
 	useDelivery,
+	useInitialData,
 	useInstruction,
 	useModel,
 	useTool,
@@ -21,7 +22,7 @@ import {
 	type CrewKey,
 	type CrewMember,
 } from '../../shared/crew'
-import { roomFor } from '../crew'
+import { roomFor, type ConversationData } from '../crew'
 import {
 	activityBetweenTool,
 	DATABASE_NOTES,
@@ -40,6 +41,10 @@ export function useCrewMember(
 	options: { model?: string; database?: boolean } = {}
 ) {
 	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
+	// A side-thread's conversation is created with its thread, and keeps it;
+	// the agent's main conversation has none.
+	const thread = useInitialData<ConversationData | undefined>()?.thread ?? null
+	for (const tool of crewTools(agent, thread)) useTool(tool)
 	const github = githubAccess[agent]
 	if (github) for (const tool of githubTools(agent, github)) useTool(tool)
 	const database = options.database ?? true
@@ -49,22 +54,23 @@ export function useCrewMember(
 	}
 
 	const delivery = useDelivery()
-	const attributes =
-		delivery.kind === 'signal' ? delivery.attributes : undefined
-	const messageId = attributes?.messageId ?? null
-	// The side-thread this run is in, or null for the agent's main conversation.
-	const thread = attributes?.inThread ?? null
-	for (const tool of crewTools(agent, messageId, thread)) useTool(tool)
+	const messageId =
+		delivery.kind === 'signal' ? delivery.attributes?.messageId : undefined
 	useAgentStart(async ({ append }) => {
+		const room = await roomFor()
 		append({
 			kind: 'signal',
 			type: 'crew.context',
 			tagName: 'crew-context',
-			body: await (await roomFor()).agentContext(agent, messageId, thread),
+			body: thread
+				? await room.threadContext(agent, thread)
+				: await room.agentContext(agent, messageId ?? null),
 		})
 	})
 	useAgentFinish(async () => {
-		await (await roomFor()).finishRun(agent, thread)
+		const room = await roomFor()
+		if (thread) await room.finishThreadRun(agent, thread)
+		else await room.finishRun(agent)
 	})
 
 	useInstruction(crewInstructions(agent))

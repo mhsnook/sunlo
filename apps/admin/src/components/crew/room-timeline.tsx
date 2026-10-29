@@ -91,12 +91,10 @@ export function RoomTimeline({
 	// A side-thread's replies fold under its first message the same way.
 	const threads = new Map<string, Array<CrewMessageType>>()
 	for (const message of messages) {
-		if (message.parent && ids.has(message.parent)) {
-			threads.set(message.parent, [
-				...(threads.get(message.parent) ?? []),
-				message,
-			])
-		}
+		if (!message.parent || !ids.has(message.parent)) continue
+		const replies = threads.get(message.parent)
+		if (replies) replies.push(message)
+		else threads.set(message.parent, [message])
 	}
 	const shown = messages.filter(
 		(message) =>
@@ -249,6 +247,7 @@ function AuthorGroup({
 							{message.thread && (
 								<SideThread
 									root={message}
+									thread={message.thread}
 									replies={threads.get(message.id) ?? []}
 								/>
 							)}

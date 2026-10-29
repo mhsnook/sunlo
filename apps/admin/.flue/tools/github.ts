@@ -1,7 +1,11 @@
 import { defineTool, type ToolStep } from '@flue/runtime'
 import { env } from 'cloudflare:workers'
 import * as v from 'valibot'
-import type { CrewKey, GithubDraftType } from '../../shared/crew'
+import {
+	GITHUB_LIMITS,
+	type CrewKey,
+	type GithubDraftType,
+} from '../../shared/crew'
 import { withSql } from '../../worker/db'
 import {
 	describeIssueEdit,
@@ -11,28 +15,24 @@ import {
 	EDITS_PER_RUN,
 	findPersonalData,
 	githubFor,
+	personalDataRefusal,
 	publishedText,
 	type GithubClient,
+	type PeopleIndex,
 } from '../../worker/crew/github'
 import { peopleIndex } from '../../worker/crew/queries'
 import { roomFor } from '../crew'
 import { assertBlocks, Text } from './posting'
 
 const IssueNumber = v.pipe(v.number(), v.integer(), v.minValue(1))
-const Labels = v.array(v.pipe(Text, v.maxLength(50)))
+const Labels = v.pipe(
+	v.array(v.pipe(Text, v.maxLength(GITHUB_LIMITS.label))),
+	v.maxLength(GITHUB_LIMITS.labels)
+)
 const Day = v.pipe(v.string(), v.isoDate())
-
-// Throwing hands the reason to the model, which rewrites the text and calls
-// the tool again.
-async function assertNoPersonalData(text: string, outcome: string) {
-	const people = await withSql(env.HYPERDRIVE, 10_000, peopleIndex)
-	const found = findPersonalData(text, people)
-	if (found) {
-		throw new Error(
-			`${outcome}: it contains ${found}, and mhsnook/sunlo is public. Describe people by counts or patterns instead.`
-		)
-	}
-}
+const Title = v.pipe(Text, v.maxLength(GITHUB_LIMITS.title))
+const Body = v.pipe(Text, v.maxLength(GITHUB_LIMITS.body))
+const Description = v.pipe(Text, v.maxLength(GITHUB_LIMITS.description))
 
 // The GitHub tools, for the crew members in `githubAccess`. "write" drafts
 // cards for anything new, and edits epics, issues and milestones directly;
@@ -97,15 +97,24 @@ function readTools(github: GithubClient) {
 }
 
 function writeTools(agent: CrewKey, github: GithubClient) {
-	// Loop guards, counted for this run.
-	let drafts = 0
-	let edits = 0
+	// Every username and user id, loaded once and only when needed.
+	let people: Promise<PeopleIndex> | null = null
+
+	// Throwing hands the reason to the model, which rewrites the text and
+	// calls the tool again.
+	async function assertNoPersonalData(text: string, outcome: string) {
+		if (!text) return
+		people ??= withSql(env.HYPERDRIVE, 10_000, peopleIndex)
+		const found = findPersonalData(text, await people)
+		if (found) throw new Error(personalDataRefusal(outcome, found))
+	}
 
 	async function draft(
 		step: ToolStep,
 		input: { draft: GithubDraftType; why: string }
 	) {
-		if (++drafts > DRAFTS_PER_RUN) {
+		const { drafts } = await (await roomFor()).githubWritesThisRun(agent)
+		if (drafts >= DRAFTS_PER_RUN) {
 			throw new Error(
 				`You have drafted ${DRAFTS_PER_RUN} GitHub cards this run, the most one run may. Draft the rest on your next run.`
 			)
@@ -126,12 +135,32 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		}
 	}
 
-	function countEdit() {
-		if (++edits > EDITS_PER_RUN) {
+	// A direct edit: counted, checked for personal data, made, and listed in
+	// the run's receipt.
+	async function applyEdit<T>(
+		step: ToolStep,
+		input: {
+			published: Array<string | Array<string> | undefined>
+			edit: () => Promise<T>
+			receipt: (result: T) => string
+		}
+	) {
+		const { edits } = await (await roomFor()).githubWritesThisRun(agent)
+		if (edits >= EDITS_PER_RUN) {
 			throw new Error(
 				`You have made ${EDITS_PER_RUN} GitHub edits this run, the most one run may. Make the rest on your next run.`
 			)
 		}
+		await assertNoPersonalData(
+			publishedText(input.published),
+			'Nothing was changed'
+		)
+		const result = await step.do('edit', input.edit)
+		await step.do('receipt', async () => {
+			await (await roomFor()).workspaceEdited(agent, input.receipt(result))
+			return true
+		})
+		return { output: result }
 	}
 
 	const Why = v.pipe(Text, v.maxLength(1000))
@@ -141,8 +170,8 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		description:
 			'Draft a new issue on mhsnook/sunlo, usually an epic: label it "epic", give it a checklist of PR-sized steps, and put it in a milestone. The admin gets a card in your room; they can edit the draft, then file it, and you hear back with the issue number. `why` is one or two sentences for the admin, shown on the card.',
 		input: v.object({
-			title: v.pipe(Text, v.maxLength(200)),
-			body: v.pipe(Text, v.maxLength(60_000)),
+			title: Title,
+			body: Body,
 			labels: v.optional(Labels, []),
 			milestone: v.optional(IssueNumber),
 			why: Why,
@@ -150,9 +179,7 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		durable: true,
 		async run({ data, step }) {
 			const milestone = data.milestone
-				? (await github.milestones('all')).find(
-						(candidate) => candidate.number === data.milestone
-					)
+				? await github.milestone(data.milestone)
 				: null
 			if (data.milestone && !milestone) {
 				throw new Error(
@@ -178,8 +205,8 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		description:
 			'Draft a new milestone on mhsnook/sunlo. The admin gets a card in your room, can edit it, and files it; you hear back with its number. `dueOn` is YYYY-MM-DD.',
 		input: v.object({
-			title: v.pipe(Text, v.maxLength(200)),
-			description: v.pipe(Text, v.maxLength(20_000)),
+			title: Title,
+			description: Description,
 			dueOn: v.optional(Day),
 			why: Why,
 		}),
@@ -203,7 +230,7 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 			'Draft a comment on an issue or pull request on mhsnook/sunlo. The admin gets a card in your room, can edit it, and files it.',
 		input: v.object({
 			issue: IssueNumber,
-			body: v.pipe(Text, v.maxLength(60_000)),
+			body: Body,
 			why: Why,
 		}),
 		durable: true,
@@ -221,8 +248,8 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 			'Change an issue on mhsnook/sunlo directly: its title, its whole body (such as an epic with a checklist item ticked), its labels (the full list), its milestone (null takes it out), or its state. Read it first with read_issue, so you edit the current text. The room lists the change in your run receipt.',
 		input: v.object({
 			number: IssueNumber,
-			title: v.optional(v.pipe(Text, v.maxLength(200))),
-			body: v.optional(v.pipe(Text, v.maxLength(60_000))),
+			title: v.optional(Title),
+			body: v.optional(Body),
 			labels: v.optional(Labels),
 			milestone: v.optional(v.nullable(IssueNumber)),
 			state: v.optional(v.picklist(['open', 'closed'])),
@@ -231,24 +258,12 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		async run({ data, step }) {
 			const { number, ...change } = data
 			if (!Object.keys(change).length) throw new Error('Nothing to change.')
-			countEdit()
-			await assertNoPersonalData(
-				publishedText([change.title, change.body, change.labels]),
-				'Nothing was changed'
-			)
-			const issue = await step.do('edit', () =>
-				github.editIssue(number, change)
-			)
-			await step.do('receipt', async () => {
-				await (
-					await roomFor()
-				).githubEdited(
-					agent,
-					describeIssueEdit(number, change, issue.milestone?.title ?? null)
-				)
-				return true
+			return await applyEdit(step, {
+				published: [change.title, change.body, change.labels],
+				edit: () => github.editIssue(number, change),
+				receipt: (issue) =>
+					describeIssueEdit(number, change, issue.milestone?.title ?? null),
 			})
-			return { output: issue }
 		},
 	})
 
@@ -258,8 +273,8 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 			'Change a milestone on mhsnook/sunlo directly: its title, description, due date (YYYY-MM-DD) or state. The room lists the change in your run receipt.',
 		input: v.object({
 			number: IssueNumber,
-			title: v.optional(v.pipe(Text, v.maxLength(200))),
-			description: v.optional(v.pipe(v.string(), v.maxLength(20_000))),
+			title: v.optional(Title),
+			description: v.optional(Description),
 			dueOn: v.optional(Day),
 			state: v.optional(v.picklist(['open', 'closed'])),
 		}),
@@ -267,21 +282,11 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		async run({ data, step }) {
 			const { number, ...change } = data
 			if (!Object.keys(change).length) throw new Error('Nothing to change.')
-			countEdit()
-			await assertNoPersonalData(
-				publishedText([change.title, change.description]),
-				'Nothing was changed'
-			)
-			const milestone = await step.do('edit', () =>
-				github.editMilestone(number, change)
-			)
-			await step.do('receipt', async () => {
-				await (
-					await roomFor()
-				).githubEdited(agent, describeMilestoneEdit(milestone.title, change))
-				return true
+			return await applyEdit(step, {
+				published: [change.title, change.description],
+				edit: () => github.editMilestone(number, change),
+				receipt: (milestone) => describeMilestoneEdit(milestone.title, change),
 			})
-			return { output: milestone }
 		},
 	})
 

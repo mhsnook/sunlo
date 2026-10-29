@@ -2,3 +2,9 @@
 
 /* Tailwind only scans this package by default. */
 @source '../../../src/components/ui';
+
+/* The app tints its dividers with the brand hue; the admin keeps its chrome
+   grey so the brand colour marks only avatars and badges. */
+:root {
+	--border: var(--color-neutral-200);
+}

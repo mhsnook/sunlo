@@ -1,6 +1,7 @@
 import {
 	displayName,
 	meetingDue,
+	roomOfPlace,
 	principalOf,
 	placeOf,
 	roomNames,
@@ -28,11 +29,9 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					: message.routing?.kind === 'room'
 						? ' (left in the room)'
 						: ''
-			const side = message.parent
-				? ' (in a side-thread)'
-				: message.thread
-					? ` (a side-thread with ${displayName(message.thread.with)}${message.thread.closedAt ? ', closed' : ''})`
-					: ''
+			const side = message.thread
+				? ` (a side-thread with ${displayName(message.thread.with)}${message.thread.closedAt ? ', closed' : ''})`
+				: ''
 			const view = message.otherViewOf
 				? message.pick
 					? ` (a second view; ${message.pick.by} went with ${message.pick.chosen === 'other' ? 'this one' : 'the first'})`
@@ -109,21 +108,17 @@ export type ThreadBriefingInput = Pick<
 	BriefingInput,
 	'now' | 'agent' | 'commonKnowledge' | 'sitrep' | 'charter' | 'workspace'
 > & {
-	thread: {
-		asker: CrewKey
-		root: CrewMessageType
-		replies: Array<CrewMessageType>
-	}
+	thread: { root: CrewMessageType; replies: Array<CrewMessageType> }
 }
 
 // The <crew-context> for a run in a side-thread: who the agent is and what
 // it has learned, and the thread, but none of its room's timeline.
 export function threadBriefingText(input: ThreadBriefingInput) {
-	const { asker, root, replies } = input.thread
-	const where = roomNames[roomOf(asker)]
+	const { root, replies } = input.thread
+	const room = roomOfPlace(root.place)
 	return [
 		`It is now ${stamp(input.now)}.`,
-		`## You are in a side-thread\n\n${displayName(asker)} asked you for a favour in a side-thread in the ${where}. You see only this thread, not that room or your own room. Answer with reply_in_thread, and close the thread when the favour is done. Before you close it, save anything worth keeping with remember: you will not remember this thread otherwise.`,
+		`## You are in a side-thread\n\n${root.authorName} asked you for a favour in a side-thread in the ${room ? roomNames[room] : 'Common Room'}. You see only this thread, not that room or your own room.`,
 		commonKnowledgeText(input.commonKnowledge),
 		sitrepText(input.sitrep),
 		charterText(roomNames[roomOf(input.agent)], input.charter),

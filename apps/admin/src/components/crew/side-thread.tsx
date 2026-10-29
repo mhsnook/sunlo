@@ -1,54 +1,80 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { displayName, type CrewMessageType } from '../../../shared/crew'
+import { Bubble } from '@/components/ui/bubble'
+import { Button } from '@/components/ui/button'
+import { hasBlocks } from '../../../shared/blocks'
+import {
+	displayName,
+	isCrewKey,
+	speakerOf,
+	type CrewMessageType,
+} from '../../../shared/crew'
 import { timeLabel } from '~/lib/format'
-import { CrewText } from './crew-parts'
+import { AgentAvatar, CrewText } from './crew-parts'
+import { SpeakableBubble } from './voice-controls'
 
 // A side-thread, folded under the note that opened it: the favour one crew
 // member asked of another, which only the two of them take part in.
 export function SideThread({
 	root,
+	thread,
 	replies,
 }: {
 	root: CrewMessageType
+	thread: NonNullable<CrewMessageType['thread']>
 	replies: Array<CrewMessageType>
 }) {
 	const [open, setOpen] = useState(false)
-	if (!root.thread) return null
 	const count = replies.filter((reply) => !reply.receipt).length
 	return (
 		<div className="space-y-2" data-testid="crew-thread" data-key={root.id}>
-			<button
-				type="button"
-				className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 px-1 text-xs"
+			<Button
+				variant="ghost"
+				size="sm"
+				className="text-muted-foreground h-7 px-2 shadow-none"
 				aria-expanded={open}
 				data-testid="crew-thread-toggle"
 				onClick={() => setOpen((on) => !on)}
 			>
-				<ChevronDown
-					className={open ? 'size-3 rotate-180' : 'size-3'}
-					aria-hidden
-				/>
-				Side-thread with {displayName(root.thread.with)} ·{' '}
+				<ChevronDown className={open ? 'rotate-180' : undefined} />
+				Side-thread with {displayName(thread.with)} ·{' '}
 				{count === 1 ? '1 reply' : `${count} replies`}
-				{root.thread.closedAt ? ' · closed' : ''}
-			</button>
+				{thread.closedAt ? ' · closed' : ''}
+			</Button>
 			{open && (
-				<ol className="space-y-2 border-s-2 ps-3">
+				<ol className="space-y-3 border-s-2 ps-3">
 					{replies.map((reply) => (
 						<li
 							key={reply.id}
-							className="text-sm"
+							className="flex gap-2"
 							data-testid="crew-thread-reply"
 							data-key={reply.id}
 						>
-							<p className="text-muted-foreground text-xs">
-								<span className="text-foreground font-semibold">
-									{reply.authorName}
-								</span>{' '}
-								{timeLabel(reply.at)}
-							</p>
-							<CrewText text={reply.body} />
+							{isCrewKey(reply.author) && (
+								<AgentAvatar agent={reply.author} size="sm" />
+							)}
+							<div className="min-w-0 space-y-1">
+								<p className="text-muted-foreground text-xs">
+									<span className="text-foreground font-semibold">
+										{reply.authorName}
+									</span>{' '}
+									{timeLabel(reply.at)}
+								</p>
+								<SpeakableBubble
+									id={reply.id}
+									text={reply.body}
+									agent={speakerOf(reply)}
+									blocks={hasBlocks(reply.body)}
+								>
+									<Bubble
+										variant="muted"
+										align="start"
+										className="min-w-0 whitespace-normal"
+									>
+										<CrewText text={reply.body} />
+									</Bubble>
+								</SpeakableBubble>
+							</div>
 						</li>
 					))}
 					{!replies.length && (
