@@ -1,8 +1,20 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { BarChart3, Brain, ClipboardList, type LucideIcon } from 'lucide-react'
+import {
+	BarChart3,
+	Brain,
+	ClipboardList,
+	PanelRight,
+	type LucideIcon,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuCheckboxItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import {
 	adminAuthor,
@@ -112,13 +124,43 @@ function CrewRoomPage() {
 							key={key}
 							variant="ghost"
 							data-testid={testId}
-							className="@max-3xl:px-2.5"
+							className="@max-3xl:hidden"
 							aria-pressed={panel === key}
 							onClick={() => toggle(key)}
 						>
-							<Icon /> <span className="@max-3xl:sr-only">{label}</span>
+							<Icon /> {label}
 						</Button>
 					))}
+					{/* Below 3xl the three buttons would leave the title no room, so
+					    one menu holds them, with their labels. */}
+					<DropdownMenu>
+						<DropdownMenuTrigger
+							render={
+								<Button
+									variant="ghost"
+									size="icon"
+									className="@3xl:hidden"
+									aria-label="Panels"
+									data-testid="crew-panels-menu"
+								/>
+							}
+						>
+							<PanelRight />
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							{panels.map(({ key, label, icon: Icon }) => (
+								<DropdownMenuCheckboxItem
+									key={key}
+									checked={panel === key}
+									onCheckedChange={() => toggle(key)}
+									data-testid="crew-panel-option"
+									data-key={key}
+								>
+									<Icon className="me-2 size-4" /> {label}
+								</DropdownMenuCheckboxItem>
+							))}
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</header>
 				<MessageScroller dependency={room.messages.length + working.length}>
 					{room.messages.length ? (
