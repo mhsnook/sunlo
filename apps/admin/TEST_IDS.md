@@ -31,6 +31,8 @@ Register a new id here, not in the main app's registry.
 | `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                          | A card's Dismiss button, its optional feedback box, and the button that sends it        |
 | `crew-other-view` + `data-key=<message id>`, `crew-other-view-toggle`                        | An associate's second view, folded under the principal's message, and its toggle        |
 | `crew-pick` + `data-key=<original\|other>`, `crew-picked`                                    | The buttons that go with one of the two views, and the note once one is picked          |
+| `crew-thread` + `data-key=<message id>`, `crew-thread-toggle`                                | A side-thread folded under its first message, and its toggle                            |
+| `crew-thread-reply` + `data-key=<message id>`                                                | One reply in an open side-thread                                                        |
 | `crew-card-copy`                                                                             | A card's Copy brief button                                                              |
 | `crew-card-file`, `crew-card-edit`                                                           | A GitHub draft card's File it and Edit buttons                                          |
 | `crew-card-error`                                                                            | Why a GitHub draft was not filed                                                        |

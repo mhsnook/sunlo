@@ -26,19 +26,28 @@ const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 	'product-2': Product2,
 })
 
+// Each side-thread has a conversation of its own, so a favour stays out of
+// the helper's running memory. Its first dispatch creates it with this, as
+// initialData, which the agent reads with useInitialData for good.
+export type ConversationData = { thread: string }
+export const threadConversation = (root: string) => `thread:${root}`
+const threadOf = (conversation: string | undefined) =>
+	conversation?.startsWith('thread:') ? conversation.slice(7) : null
+
 // A run that fails or is aborted settles without useAgentFinish, so the room
 // hears about it here instead.
 observe((event) => {
-	if (
-		event.type === 'submission_settled' &&
-		event.outcome !== 'completed' &&
-		event.instanceId === CONVERSATION
-	) {
-		// Each agent's Flue identity is its crew key.
-		const key = event.agentName
-		if (key && isCrewKey(key)) {
-			void roomFor().then((room) => room.failRun(key))
-		}
+	if (event.type !== 'submission_settled' || event.outcome === 'completed') {
+		return
+	}
+	const thread = threadOf(event.instanceId)
+	if (event.instanceId !== CONVERSATION && !thread) return
+	// Each agent's Flue identity is its crew key.
+	const key = event.agentName
+	if (key && isCrewKey(key)) {
+		void roomFor().then((room) =>
+			thread ? room.failThreadRun(key, thread) : room.failRun(key)
+		)
 	}
 })
 
@@ -48,16 +57,26 @@ observe((event) => {
 // from the agent's own room.
 export async function wake(wakes: Array<Wake>, from: string) {
 	await Promise.all(
-		wakes.map(({ agent, body, messageId, place }) =>
-			deliver(
-				agent,
-				roomOfPlace(place) ? 'room.message' : 'common-room.message',
-				body,
-				{ from, messageId }
-			).catch((error: unknown) =>
-				console.error(`Could not wake ${agent}`, error)
+		wakes.map(({ agent, body, messageId, place, thread }) => {
+			// The helper works in the thread's own conversation; the asker hears
+			// a reply in its main one.
+			const inThread = thread?.to === 'helper' ? thread.root : null
+			const type = inThread
+				? 'thread.message'
+				: thread
+					? 'thread.reply'
+					: roomOfPlace(place)
+						? 'room.message'
+						: 'common-room.message'
+			const attributes = {
+				from,
+				messageId,
+				...(thread ? { thread: thread.root } : {}),
+			}
+			return deliver(agent, type, body, attributes, inThread).catch(
+				(error: unknown) => console.error(`Could not wake ${agent}`, error)
 			)
-		)
+		})
 	)
 }
 
@@ -76,12 +95,17 @@ export async function deliver(
 	agent: CrewKey,
 	type: string,
 	body: string,
-	attributes?: Record<string, string>
+	attributes?: Record<string, string>,
+	// The id of a side-thread's first message, for a message to the helper
+	// (the note, or the asker's later replies): it goes into that thread's
+	// conversation instead of the agent's main one.
+	thread: string | null = null
 ) {
 	const target = crewAgents()[agent]
 	if (!target) return
 	await dispatch(target, {
-		id: CONVERSATION,
+		id: thread ? threadConversation(thread) : CONVERSATION,
+		...(thread ? { initialData: { thread } satisfies ConversationData } : {}),
 		message: {
 			kind: 'signal',
 			type,
