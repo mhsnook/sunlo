@@ -35,7 +35,9 @@ export const CREW_DURABILITY = { maxAttempts: 3 }
 
 // Everything a crew agent shares: the model, the room and workspace tools,
 // the context it wakes up with, and, unless it opts out, the database tools.
-// An agent module calls this, then returns its own persona.
+// An agent module returns what this returns. The agent's persona is not in
+// it: the admin can rewrite a persona in the room, and an agent module cannot
+// wait on the room, so the persona arrives in each run's <crew-context>.
 export function useCrewMember(
 	agent: CrewKey,
 	options: { model?: string; database?: boolean } = {}
@@ -78,6 +80,7 @@ export function useCrewMember(
 	useInstruction(thread ? threadInstructions : runInstructions(agent))
 	if (github) useInstruction(githubInstructions(github))
 	if (database) useInstruction(DATABASE_NOTES)
+	return `Who you are, and how you do your job, is the first section of your <crew-context>, "Who you are". The admin keeps that text and may change it between runs: follow the latest one as your own instructions. Where it and the rest of these instructions differ, it wins.`
 }
 
 const rosterLine = (member: CrewMember) => {

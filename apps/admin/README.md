@@ -60,7 +60,14 @@ The roster lives in `shared/crew.ts`: each room's key, and each officer's key, n
 
 In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
-The **room log** beside the thread holds each member's profile card, to-dos, what is open with you, and memory, and you can edit or prune the memory there. The Command room's log also holds the charter, the weekly settings and Data's playbook.
+The **room log** beside the thread holds the room's charter and each member's profile card, character, to-dos, what is open with you, and memory. The Command room's log also holds the weekly settings and Data's playbook. You can change all of it there:
+
+- **Character**: who the officer is and how it works, the persona its every run starts from. Edit it, or restore the original. The default text lives in code (`shared/characters.ts`); your version lives in the room (`character` table) and wins while it exists. An agent module cannot wait on the room, so the persona reaches the agent as the first section of its `<crew-context>`, "Who you are", not as its system prompt.
+- **Memory and to-dos**: add, edit, delete, and tick to-dos done.
+- **Open with you**: rename an item, or close it.
+- **Charter**: write an entry, which is kept at once, or edit and drop one.
+
+The agent hears about each of these changes at the start of its next run ("What the admin changed for you", from the `admin_change` table), so it knows why its workspace looks different. Charter changes need no notice, because every briefing carries the room's whole charter.
 
 Every agent keeps one Flue conversation, `memory` (`CONVERSATION` in `worker/crew/room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. No agent reads another subject's room.
 

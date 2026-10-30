@@ -674,9 +674,15 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `agent-looks-after`                                                                          | The "Looks after" list in a member's profile card                                       |
 | `agent-not-started`                                                                          | The note on a planned officer's profile card                                            |
 | `agent-todos`, `agent-todo` + `data-key=<id>`                                                | The workspace to-do list and one to-do                                                  |
+| `agent-todo-done`                                                                            | The box that ticks a to-do done, or not done                                            |
+| `agent-todo-add`, `agent-todo-add-input`, `agent-todo-add-button`                            | The box and button that add a to-do for an agent                                        |
+| `agent-character` + `data-key=<agent>`, `agent-character-toggle`, `agent-character-text`     | An officer's character in the room log, its fold, and its text                          |
+| `agent-character-edit`, `agent-character-input`, `agent-character-save`                      | Editing an officer's character                                                          |
+| `agent-character-restore`                                                                    | "Restore the original", shown once the admin has written their own version              |
 | `agent-open-item` + `data-key=<id>`                                                          | One "Open with you" item                                                                |
 | `agent-memory`                                                                               | The workspace memory list                                                               |
 | `agent-memory-entry` + `data-key=<id>`                                                       | One memory or playbook entry, with its delete button                                    |
+| `agent-memory-add`, `agent-memory-add-input`, `agent-memory-add-button`                      | The box and button that add a memory for an agent                                       |
 | `crew-block` + `data-key=<chart\|stats\|table\|mermaid>`                                     | A component an agent put in its message                                                 |
 | `crew-block-filter`                                                                          | The filter box on a filterable table component                                          |
 | `crew-meeting-banner`, `crew-go-to-meeting`                                                  | The weekly meeting invitation and its link to the Command room                          |
@@ -686,4 +692,5 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `room-panel-button`, `room-panel` + `data-key=<room>`                                        | The room log toggle and its panel                                                       |
 | `room-member` + `data-key=<agent>`                                                           | One member's profile, to-dos, open items and memory in the room log log                 |
 | `charter-panel` + `data-key=<room>`, `charter-entry` + `data-key=<id>`                       | A room's charter in its log, and one kept entry                                         |
+| `charter-add`, `charter-add-input`, `charter-add-button` + `data-key=<button label>`         | The box that writes a charter entry, and its "Add a principle" and "Add a lesson"       |
 | `brief-timezone`                                                                             | The time zone of the Sunday brief                                                       |

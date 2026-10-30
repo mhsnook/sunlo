@@ -6,6 +6,8 @@ import {
 	placeOf,
 	roomNames,
 	roomOf,
+	type AdminChangeType,
+	type CharacterType,
 	type CharterEntryType,
 	type CommonKnowledgeType,
 	type CrewKey,
@@ -57,6 +59,7 @@ export type UnreadTimeline = {
 export type BriefingInput = {
 	now: string
 	agent: CrewKey
+	adminChanges: Array<AdminChangeType>
 	commonKnowledge: Array<CommonKnowledgeType>
 	sitrep: Sitrep | null
 	// The agent's own room's documents, without their text.
@@ -83,11 +86,25 @@ type Sitrep = Pick<DocumentSummaryType, 'revision' | 'byName' | 'at'> & {
 	text: string
 }
 
+const characterText = (character: CharacterType | null) =>
+	`## Who you are\n\n${character?.text ?? 'You have not started yet.'}`
+
+// What the admin changed directly since the agent's last run, so it knows
+// why its workspace or its character looks different.
+const adminChangesText = (changes: Array<AdminChangeType>) =>
+	changes.length
+		? [
+				`## What the admin changed for you\n\n${changes.map((change) => `- [${stamp(change.at)}] The admin ${change.what}.`).join('\n')}`,
+			]
+		: []
+
 // The <crew-context> every run starts with.
 export function briefingText(input: BriefingInput) {
 	const room = roomNames[roomOf(input.agent)]
 	const sections = [
+		characterText(input.workspace.character),
 		`It is now ${stamp(input.now)}.`,
+		...adminChangesText(input.adminChanges),
 		commonKnowledgeText(input.commonKnowledge),
 		sitrepText(input.sitrep),
 		charterText(room, input.charter),
@@ -106,7 +123,13 @@ export function briefingText(input: BriefingInput) {
 
 export type ThreadBriefingInput = Pick<
 	BriefingInput,
-	'now' | 'agent' | 'commonKnowledge' | 'sitrep' | 'charter' | 'workspace'
+	| 'now'
+	| 'agent'
+	| 'adminChanges'
+	| 'commonKnowledge'
+	| 'sitrep'
+	| 'charter'
+	| 'workspace'
 > & {
 	thread: { root: CrewMessageType; replies: Array<CrewMessageType> }
 }
@@ -117,7 +140,9 @@ export function threadBriefingText(input: ThreadBriefingInput) {
 	const { root, replies } = input.thread
 	const room = roomOfPlace(root.place)
 	return [
+		characterText(input.workspace.character),
 		`It is now ${stamp(input.now)}.`,
+		...adminChangesText(input.adminChanges),
 		`## You are in a side-thread\n\n${root.authorName} asked you for a favour in a side-thread in the ${room ? roomNames[room] : 'Common Room'}. You see only this thread, not the rest of any room's timeline.`,
 		commonKnowledgeText(input.commonKnowledge),
 		sitrepText(input.sitrep),

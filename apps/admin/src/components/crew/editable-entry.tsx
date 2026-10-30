@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'
 
 const fail = (error: Error) => toastError(error.message)
 
-// Text the admin can edit in place or delete: a charter entry, a
-// Common Knowledge entry, or an agent's memory.
+// Text the admin can edit in place or delete: a charter entry, a Common
+// Knowledge entry, or an agent's memory, to-do or open item.
 export function EditableEntry({
 	id,
 	text,
@@ -19,6 +19,7 @@ export function EditableEntry({
 	onSave,
 	onDelete,
 	deleteLabel,
+	deleteIcon = <Trash2 />,
 	quiet = false,
 	className,
 	testId,
@@ -32,6 +33,7 @@ export function EditableEntry({
 	onSave: (text: string) => Promise<unknown>
 	onDelete: () => Promise<unknown>
 	deleteLabel: string
+	deleteIcon?: ReactNode
 	// Shows the buttons only on hover or keyboard focus.
 	quiet?: boolean
 	className?: string
@@ -75,7 +77,7 @@ export function EditableEntry({
 							disabled={busy}
 							onClick={() => void onDelete().catch(fail)}
 						>
-							<Trash2 />
+							{deleteIcon}
 						</Button>
 					</span>
 				</span>

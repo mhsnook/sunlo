@@ -27,6 +27,8 @@ import {
 	type ActionType,
 	type AgentStatusType,
 	type CardType,
+	type AdminChangeType,
+	type CharacterType,
 	type CharterEntryType,
 	type CommandType,
 	type CommonKnowledgeType,
@@ -59,6 +61,7 @@ import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
 import { checkSave, startingDocuments, type SaveCheck } from './documents'
 import { openingLines } from '../../shared/blocks'
+import { defaultCharacter } from '../../shared/characters'
 import {
 	draftText,
 	filingReport,
@@ -392,6 +395,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				status text not null,
 				at text not null,
 				kept_at text
+			);
+			-- The admin's own text for an officer's persona; without a row, the
+			-- persona is the one in code (shared/characters.ts).
+			create table if not exists character (
+				agent text primary key,
+				text text not null,
+				at text not null
+			);
+			-- What the admin changed for an agent, until its next run reads it.
+			create table if not exists admin_change (
+				id integer primary key autoincrement,
+				agent text not null,
+				what text not null,
+				at text not null
 			);
 			create index if not exists message_place on message (place, at);
 			create table if not exists schema_version (version integer not null);
@@ -1041,6 +1058,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return threadBriefingText({
 			now: now(),
 			agent,
+			adminChanges: this.takeAdminChanges(agent),
 			commonKnowledge: this.commonKnowledge(),
 			sitrep: this.sitrep(),
 			charter: this.charter(roomOf(agent)),
@@ -1197,6 +1215,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return briefingText({
 			now: now(),
 			agent,
+			adminChanges: this.takeAdminChanges(agent),
 			commonKnowledge: this.commonKnowledge(),
 			sitrep: this.sitrep(),
 			documents: this.documents(room),
@@ -1283,11 +1302,138 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			limit 50`.map(toMessage)
 		return {
 			agent,
+			character: this.character(agent),
 			todos,
 			memory,
 			openItems,
 			cards,
 		}
+	}
+
+	// ---- What the admin changes directly ------------------------------------
+
+	character(agent: CrewKey): CharacterType | null {
+		const original = defaultCharacter(agent)
+		if (original === null) return null
+		const row = this.sql<{ text: string; at: string }>`
+			select text, at from character where agent = ${agent}`[0]
+		return {
+			text: row?.text ?? original,
+			original,
+			editedAt: row?.at ?? null,
+		}
+	}
+
+	setCharacter(agent: CrewKey, text: string) {
+		if (defaultCharacter(agent) === null) return false
+		this.sql`
+			insert into character (agent, text, at) values (${agent}, ${text}, ${now()})
+			on conflict (agent) do update set text = excluded.text, at = excluded.at`
+		this.adminChanged(agent, 'rewrote your character ("Who you are")')
+		return true
+	}
+
+	restoreCharacter(agent: CrewKey) {
+		const deleted = this.sql`
+			delete from character where agent = ${agent} returning agent`
+		if (deleted.length) {
+			this.adminChanged(agent, 'restored your original character')
+		}
+		return true
+	}
+
+	addMemoryForAgent(agent: CrewKey, text: string) {
+		const id = this.saveMemory(agent, text)
+		this.adminChanged(agent, `added a memory: "${text}"`)
+		return id
+	}
+
+	addTodoForAgent(agent: CrewKey, text: string, note: string | null) {
+		const id = this.saveTodo(agent, text, note)
+		this.adminChanged(agent, `added to-do ${id}: "${text}"`)
+		return id
+	}
+
+	editTodoForAgent(
+		agent: CrewKey,
+		id: number,
+		change: { text?: string; note?: string | null; done?: boolean }
+	) {
+		const row = this.sql<{ text: string }>`
+			select text from todo where id = ${id} and agent = ${agent}`[0]
+		if (!row) return false
+		if (change.text !== undefined) {
+			this.sql`update todo set text = ${change.text} where id = ${id}`
+		}
+		this.applyTodoChange(id, change)
+		const text = change.text ?? row.text
+		this.adminChanged(
+			agent,
+			change.done === true
+				? `marked to-do ${id} done: "${text}"`
+				: change.done === false
+					? `reopened to-do ${id}: "${text}"`
+					: `edited to-do ${id}: "${text}"`
+		)
+		return true
+	}
+
+	deleteTodoForAgent(agent: CrewKey, id: number) {
+		const deleted = this.sql<{ text: string }>`
+			delete from todo where id = ${id} and agent = ${agent}
+			returning text`
+		if (deleted.length) {
+			this.adminChanged(agent, `deleted to-do ${id}: "${deleted[0].text}"`)
+		}
+		return deleted.length > 0
+	}
+
+	editOpenItemForAgent(agent: CrewKey, id: number, title: string) {
+		const edited = this.sql`
+			update open_item set title = ${title}
+			where id = ${id} and agent = ${agent} and closed_at is null
+			returning id`
+		if (edited.length) {
+			this.adminChanged(agent, `renamed open item ${id}: "${title}"`)
+		}
+		return edited.length > 0
+	}
+
+	closeOpenItemForAgent(agent: CrewKey, id: number) {
+		const closed = this.sql<{ title: string }>`
+			update open_item set closed_at = ${now()}
+			where id = ${id} and agent = ${agent} and closed_at is null
+			returning title`
+		if (closed.length) {
+			this.adminChanged(agent, `closed open item ${id}: "${closed[0].title}"`)
+		}
+		return closed.length > 0
+	}
+
+	// An entry the admin writes is kept as it is written.
+	addCharter(room: RoomKey, kind: CharterEntryType['kind'], text: string) {
+		const at = now()
+		const { id } = this.sql<IdRow>`
+			insert into charter (room, kind, text, why, status, at, kept_at)
+			values (${room}, ${kind}, ${text}, null, 'kept', ${at}, ${at})
+			returning id`[0]
+		this.push({ type: 'charter', room })
+		return id
+	}
+
+	private adminChanged(agent: CrewKey, what: string) {
+		this.sql`
+			insert into admin_change (agent, what, at)
+			values (${agent}, ${what}, ${now()})`
+		this.push({ type: 'workspace', agent })
+	}
+
+	// The admin's changes this agent has not heard about, which its next
+	// briefing carries. Read once: a run that fails does not hear them again.
+	private takeAdminChanges(agent: CrewKey): Array<AdminChangeType> {
+		return this.sql<AdminChangeType>`
+			delete from admin_change where agent = ${agent}
+			returning what, at`.toSorted((a, b) => a.at.localeCompare(b.at))
 	}
 
 	addTodo(agent: CrewKey, text: string, note: string | null) {
@@ -1305,14 +1451,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			select id from todo
 			where id = ${id} and agent = ${agent}`
 		if (!exists.length) return false
-		if (change.done !== undefined) {
-			this.sql`
-				update todo set done = ${Number(change.done)}, done_at = ${change.done ? now() : null}
-				where id = ${id}`
-		}
-		if (change.note !== undefined) {
-			this.sql`update todo set note = ${change.note} where id = ${id}`
-		}
+		this.applyTodoChange(id, change)
 		this.workspaceEdited(
 			agent,
 			change.done === true
@@ -1332,24 +1471,27 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// `by` is who deleted it: only an agent's own edits go in its receipt.
 	forget(agent: CrewKey, id: number, by: 'agent' | 'admin') {
-		const deleted = this.sql`
+		const deleted = this.sql<{ text: string }>`
 			delete from memory
 			where id = ${id} and agent = ${agent}
-			returning id`
+			returning text`
 		if (deleted.length && by === 'agent') {
 			this.workspaceEdited(agent, `forgot memory ${id}`)
 		} else if (deleted.length) {
-			this.push({ type: 'workspace', agent })
+			this.adminChanged(agent, `deleted your memory: "${deleted[0].text}"`)
 		}
 		return deleted.length > 0
 	}
 
+	// Only the admin edits a memory in place; an agent forgets and remembers.
 	editMemory(agent: CrewKey, id: number, text: string) {
 		const edited = this.sql`
 			update memory set text = ${text}
 			where id = ${id} and agent = ${agent}
 			returning id`
-		if (edited.length) this.push({ type: 'workspace', agent })
+		if (edited.length) {
+			this.adminChanged(agent, `changed memory ${id} to: "${text}"`)
+		}
 		return edited.length > 0
 	}
 
@@ -1854,6 +1996,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// ---- Internals ----------------------------------------------------------
+
+	private applyTodoChange(
+		id: number,
+		change: { done?: boolean; note?: string | null }
+	) {
+		if (change.done !== undefined) {
+			this.sql`
+				update todo set done = ${Number(change.done)}, done_at = ${change.done ? now() : null}
+				where id = ${id}`
+		}
+		if (change.note !== undefined) {
+			this.sql`update todo set note = ${change.note} where id = ${id}`
+		}
+	}
 
 	private saveTodo(agent: CrewKey, text: string, note: string | null) {
 		const { id } = this.sql<{ id: number }>`

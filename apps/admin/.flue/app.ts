@@ -2,6 +2,7 @@ import { validator } from 'hono/validator'
 import { z } from 'zod'
 import {
 	adminAuthor,
+	CharterEntrySchema,
 	crewKeys,
 	GithubDraftSchema,
 	PickChoiceSchema,
@@ -178,6 +179,142 @@ api.patch(
 	}
 )
 
+api.post(
+	'/crew/agents/:agent/memory',
+	json(z.object({ text: z.string().trim().min(1).max(2000) }), 'Send { text }'),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No crew member there' }, 404)
+		const id = await (
+			await roomFor()
+		).addMemoryForAgent(agent, c.req.valid('json').text)
+		return c.json({ id })
+	}
+)
+
+// An officer's persona. A PUT saves the admin's own text; a DELETE restores
+// the one in code.
+api.put(
+	'/crew/agents/:agent/character',
+	json(
+		z.object({ text: z.string().trim().min(1).max(20_000) }),
+		'Send { text }'
+	),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No crew member there' }, 404)
+		const ok = await (
+			await roomFor()
+		).setCharacter(agent, c.req.valid('json').text)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'That seat has not started yet' }, 404)
+	}
+)
+
+api.delete('/crew/agents/:agent/character', async (c) => {
+	const agent = c.req.param('agent')
+	if (!isCrewKey(agent)) return c.json({ error: 'No crew member there' }, 404)
+	return c.json({ ok: await (await roomFor()).restoreCharacter(agent) })
+})
+
+const TodoText = z.string().trim().min(1).max(200)
+const TodoNote = z.string().trim().max(80)
+
+api.post(
+	'/crew/agents/:agent/todos',
+	json(
+		z.object({ text: TodoText, note: TodoNote.optional() }),
+		'Send { text, note? }'
+	),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No crew member there' }, 404)
+		const { text, note } = c.req.valid('json')
+		const id = await (
+			await roomFor()
+		).addTodoForAgent(agent, text, note || null)
+		return c.json({ id })
+	}
+)
+
+api.patch(
+	'/crew/agents/:agent/todos/:id',
+	numericId('No to-do there'),
+	json(
+		z.object({
+			text: TodoText.optional(),
+			note: TodoNote.nullable().optional(),
+			done: z.boolean().optional(),
+		}),
+		'Send { text?, note?, done? }'
+	),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No to-do there' }, 404)
+		const change = c.req.valid('json')
+		const ok = await (
+			await roomFor()
+		).editTodoForAgent(agent, c.req.valid('param').id, {
+			...change,
+			...(change.note !== undefined ? { note: change.note || null } : {}),
+		})
+		return ok ? c.json({ ok }) : c.json({ error: 'No to-do with that id' }, 404)
+	}
+)
+
+api.delete(
+	'/crew/agents/:agent/todos/:id',
+	numericId('No to-do there'),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No to-do there' }, 404)
+		const ok = await (
+			await roomFor()
+		).deleteTodoForAgent(agent, c.req.valid('param').id)
+		return ok ? c.json({ ok }) : c.json({ error: 'No to-do with that id' }, 404)
+	}
+)
+
+api.patch(
+	'/crew/agents/:agent/open-items/:id',
+	numericId('No open item there'),
+	json(
+		z.object({ title: z.string().trim().min(1).max(120) }),
+		'Send { title }'
+	),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No open item there' }, 404)
+		const ok = await (
+			await roomFor()
+		).editOpenItemForAgent(
+			agent,
+			c.req.valid('param').id,
+			c.req.valid('json').title
+		)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No open item with that id' }, 404)
+	}
+)
+
+// Closes the item: it stops waiting on the admin.
+api.delete(
+	'/crew/agents/:agent/open-items/:id',
+	numericId('No open item there'),
+	async (c) => {
+		const agent = c.req.param('agent')
+		if (!isCrewKey(agent)) return c.json({ error: 'No open item there' }, 404)
+		const ok = await (
+			await roomFor()
+		).closeOpenItemForAgent(agent, c.req.valid('param').id)
+		return ok
+			? c.json({ ok })
+			: c.json({ error: 'No open item with that id' }, 404)
+	}
+)
+
 const roomParam = validator('param', (value, c) =>
 	isRoomKey(value.room)
 		? { room: value.room }
@@ -271,6 +408,26 @@ api.patch(
 api.get('/crew/rooms/:room/charter', roomParam, async (c) => {
 	return c.json(await (await roomFor()).charter(c.req.valid('param').room))
 })
+
+// An entry the admin writes is kept at once.
+api.post(
+	'/crew/rooms/:room/charter',
+	roomParam,
+	json(
+		z.object({
+			kind: CharterEntrySchema.shape.kind,
+			text: z.string().trim().min(1).max(300),
+		}),
+		'Send { kind, text }'
+	),
+	async (c) => {
+		const { kind, text } = c.req.valid('json')
+		const id = await (
+			await roomFor()
+		).addCharter(c.req.valid('param').room, kind, text)
+		return c.json({ id })
+	}
+)
 
 api.post(
 	'/crew/messages/:id/pick',

@@ -13,16 +13,19 @@ import {
 import {
 	charterQuery,
 	roomQuery,
+	useAddCharter,
 	useEditCharter,
 	useSetTimezone,
 } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 import { EditableEntry } from './editable-entry'
+import { AddEntry } from './workspace-parts'
 
-// What a room knows about the admin, in its room log. The admin edits it
-// directly; the room's officers can only propose entries.
+// What a room knows about the admin, in its room log. The admin writes and
+// edits it directly; the room's officers can only propose entries.
 export function CharterPanel({ room }: { room: RoomKey }) {
 	const { data: charter } = useSuspenseQuery(charterQuery(room))
+	const add = useAddCharter(room)
 	const kept = charter.filter((entry) => entry.status === 'kept')
 	const proposed = charter.filter((entry) => entry.status === 'proposed')
 	return (
@@ -48,6 +51,22 @@ export function CharterPanel({ room }: { room: RoomKey }) {
 					{proposed.length} more waiting for you in the room.
 				</p>
 			)}
+			<AddEntry
+				placeholder="Something about how you decide, or what you value"
+				label="Add a charter entry"
+				buttons={[
+					{
+						label: 'Add a principle',
+						onAdd: (text) => add.mutateAsync({ kind: 'principle', text }),
+					},
+					{
+						label: 'Add a lesson',
+						onAdd: (text) => add.mutateAsync({ kind: 'lesson', text }),
+					},
+				]}
+				busy={add.isPending}
+				testId="charter-add"
+			/>
 		</section>
 	)
 }

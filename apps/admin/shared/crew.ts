@@ -582,8 +582,27 @@ export const CommandSchema = z.object({
 })
 export type CommandType = z.infer<typeof CommandSchema>
 
+// An officer's persona: the admin's own text once they have written one,
+// otherwise the one in code. `original` is the code's, for restoring.
+export const CharacterSchema = z.object({
+	text: z.string(),
+	original: z.string(),
+	editedAt: z.string().nullable(),
+})
+export type CharacterType = z.infer<typeof CharacterSchema>
+
+// A change the admin made to an agent's workspace or character, which the
+// agent hears about on its next run.
+export const AdminChangeSchema = z.object({
+	what: z.string(),
+	at: z.string(),
+})
+export type AdminChangeType = z.infer<typeof AdminChangeSchema>
+
 export const WorkspaceSchema = z.object({
 	agent: z.enum(crewKeys),
+	// Null for a seat that has not started.
+	character: CharacterSchema.nullable(),
 	todos: z.array(TodoSchema),
 	memory: z.array(MemorySchema),
 	openItems: z.array(OpenItemSchema),
