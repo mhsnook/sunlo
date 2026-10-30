@@ -659,6 +659,49 @@ export const WorkspaceSchema = z.object({
 })
 export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 
+// One step of an agent's run: a tool it called, or a block of the model's
+// thinking.
+export const RunStepSchema = z.object({
+	// The tool call's id, or "<turn>:<block>" for thinking.
+	id: z.string(),
+	kind: z.enum(['tool', 'thinking']),
+	state: z.enum(['running', 'done', 'failed']),
+	// The step in words for each state: "Running a query", "Ran a query",
+	// "Failed to run a query".
+	title: z.object({
+		running: z.string(),
+		done: z.string(),
+		failed: z.string(),
+	}),
+	// The tool's key input, such as the SQL it ran, or the thinking text.
+	// Truncated.
+	detail: z.string().nullable(),
+	// Why the tool failed. Truncated.
+	error: z.string().nullable(),
+	at: z.string(),
+	ms: z.number().nullable(),
+})
+export type RunStepType = z.infer<typeof RunStepSchema>
+
+// One run of an agent: in its running conversation, or in a side-thread.
+// The room keeps the last few of each agent's runs.
+export const RunSchema = z.object({
+	id: z.number(),
+	agent: z.enum(crewKeys),
+	// The side-thread's first message, for a run in a side-thread.
+	thread: z.string().nullable(),
+	startedAt: z.string(),
+	endedAt: z.string().nullable(),
+	outcome: z.enum(['working', 'done', 'failed']),
+	// What the run produced: the agent's last message, else its receipt,
+	// else the message that woke it. Null while it runs.
+	messageId: z.string().nullable(),
+	steps: z.array(RunStepSchema),
+	// Steps left out to keep the list short: the run took this many more.
+	dropped: z.number(),
+})
+export type RunType = z.infer<typeof RunSchema>
+
 // What the room pushes over its WebSocket.
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
@@ -670,3 +713,5 @@ export type RoomEvent =
 	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
 	| { type: 'document'; room: RoomKey; id: number }
+	// A run started, took a step, or ended.
+	| { type: 'run'; run: RunType }

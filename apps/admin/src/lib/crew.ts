@@ -35,6 +35,7 @@ import {
 	isThreadPlace,
 	RoomSnapshotSchema,
 	RoomThreadSchema,
+	RunSchema,
 	WorkspaceSchema,
 	type CrewKey,
 	type CrewMessageType,
@@ -48,6 +49,7 @@ import {
 	type RoomEvent,
 	type RoomStateType,
 	type RoutingType,
+	type RunType,
 } from '../../shared/crew'
 import { adminFetch, adminRequest } from './api'
 import { uploadOnce } from './images'
@@ -85,6 +87,21 @@ export const workspaceQuery = (agent: CrewKey) =>
 			WorkspaceSchema.parse(await adminFetch(`crew/agents/${agent}`)),
 		staleTime: Infinity,
 	})
+
+// The steps of each agent's last few runs. The live socket keeps them
+// current.
+export const runsQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'runs'],
+		queryFn: async () =>
+			z.array(RunSchema).parse(await adminFetch('crew/runs')),
+		staleTime: Infinity,
+	})
+
+const upsertRun = (runs: Array<RunType>, run: RunType) => {
+	const index = runs.findIndex((r) => r.id === run.id)
+	return index === -1 ? [...runs, run] : runs.with(index, run)
+}
 
 // One subject's room. The live socket keeps it current.
 export const threadQuery = (room: RoomKey) =>
@@ -742,6 +759,7 @@ export function useCrewLive() {
 					['crew', 'workspace'],
 					['crew', 'documents'],
 					['crew', 'document'],
+					runsQuery().queryKey,
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
 				}
@@ -774,6 +792,19 @@ export function useCrewLive() {
 				void queryClient.invalidateQueries({
 					queryKey: commandQuery().queryKey,
 				})
+			}
+			if (event.type === 'run') {
+				// Before the first fetch returns there is nothing to update, and the
+				// fetch may predate this event.
+				if (queryClient.getQueryData(runsQuery().queryKey)) {
+					queryClient.setQueryData(runsQuery().queryKey, (runs) =>
+						runs ? upsertRun(runs, event.run) : runs
+					)
+				} else {
+					void queryClient.invalidateQueries({
+						queryKey: runsQuery().queryKey,
+					})
+				}
 			}
 			if (event.type === 'workspace') {
 				void queryClient.invalidateQueries({
