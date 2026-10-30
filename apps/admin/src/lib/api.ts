@@ -31,5 +31,5 @@ export async function adminRequest(
 
 export const adminFetch = async (
 	path: string,
-	init: { method?: string; json?: unknown } = {}
+	init: { method?: string; json?: unknown; body?: Blob } = {}
 ) => (await adminRequest(path, init)).json() as Promise<unknown>

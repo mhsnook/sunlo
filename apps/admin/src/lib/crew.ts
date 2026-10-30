@@ -28,6 +28,7 @@ import {
 	CrewMessageSchema,
 	DocumentSchema,
 	DocumentSummarySchema,
+	MessageImageSchema,
 	placeOf,
 	RevisionTextSchema,
 	roomOfPlace,
@@ -39,6 +40,7 @@ import {
 	type CrewMessageType,
 	type DocumentSummaryType,
 	type GithubDraftType,
+	type MessageImageType,
 	type PickChoice,
 	type CharterEntryType,
 	type RoomKey,
@@ -151,6 +153,61 @@ export const sketchImageQuery = (id: number) =>
 			return { blob, url: URL.createObjectURL(blob) }
 		},
 		staleTime: Infinity,
+	})
+
+// An image never changes, and comes as a blob for the same reason a
+// sketch's picture does.
+export const imageQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'image', id],
+		queryFn: async () => {
+			const blob = await (await adminRequest(`crew/images/${id}`)).blob()
+			return { blob, url: URL.createObjectURL(blob) }
+		},
+		staleTime: Infinity,
+	})
+
+// An image in the composer, scaled down and ready to upload.
+export type DraftImage = {
+	key: string
+	blob: Blob
+	url: string
+	width: number
+	height: number
+}
+
+// The images go up first; the message then names them by id. Each one's
+// cached picture is the blob already in the browser, so the timeline does
+// not download it again.
+async function uploadImages(
+	queryClient: QueryClient,
+	images: Array<DraftImage>
+): Promise<Array<MessageImageType>> {
+	return Promise.all(
+		images.map(async (image) => {
+			const stored = MessageImageSchema.parse(
+				await adminFetch('crew/images', { method: 'POST', body: image.blob })
+			)
+			queryClient.setQueryData(imageQuery(stored.id).queryKey, {
+				blob: image.blob,
+				url: image.url,
+			})
+			return stored
+		})
+	)
+}
+
+// Negative ids never reach the server: they name a pending message's
+// images in the image cache until the server's message replaces it.
+let nextPendingImage = -1
+const pendingImages = (queryClient: QueryClient, images: Array<DraftImage>) =>
+	images.map((image): MessageImageType => {
+		const id = nextPendingImage--
+		queryClient.setQueryData(imageQuery(id).queryKey, {
+			blob: image.blob,
+			url: image.url,
+		})
+		return { id, width: image.width, height: image.height }
 	})
 
 const SketchSourceSchema = z.object({
@@ -438,13 +495,15 @@ export const isPendingMessage = (message: CrewMessageType) =>
 const pendingMessage = (
 	author: string,
 	place: PlaceType,
-	body: string
+	body: string,
+	images: Array<MessageImageType>
 ): CrewMessageType => ({
 	id: `${PENDING_PREFIX}${crypto.randomUUID()}`,
 	at: new Date().toISOString(),
 	author,
 	authorName: 'You',
 	body,
+	images,
 	routing: null,
 	card: null,
 	answer: null,
@@ -495,15 +554,30 @@ const postHandlers = <TInput>(
 export function usePostToRoom(myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: async (input: { body: string; routing: RoutingType | null }) =>
+		mutationFn: async (input: {
+			body: string
+			images: Array<DraftImage>
+			routing: RoutingType | null
+		}) =>
 			CrewMessageSchema.parse(
 				await adminFetch('crew/messages', {
 					method: 'POST',
-					json: input,
+					json: {
+						body: input.body,
+						images: (await uploadImages(queryClient, input.images)).map(
+							(image) => image.id
+						),
+						routing: input.routing,
+					},
 				})
 			),
 		...postHandlers(queryClient, (input) =>
-			pendingMessage(myAuthor, COMMON_ROOM, input.body)
+			pendingMessage(
+				myAuthor,
+				COMMON_ROOM,
+				input.body,
+				pendingImages(queryClient, input.images)
+			)
 		),
 	})
 }
@@ -511,15 +585,25 @@ export function usePostToRoom(myAuthor: string) {
 export function usePostToThread(room: RoomKey, myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: async (body: string) =>
+		mutationFn: async (input: { body: string; images: Array<DraftImage> }) =>
 			CrewMessageSchema.parse(
 				await adminFetch(`crew/rooms/${room}/messages`, {
 					method: 'POST',
-					json: { body },
+					json: {
+						body: input.body,
+						images: (await uploadImages(queryClient, input.images)).map(
+							(image) => image.id
+						),
+					},
 				})
 			),
-		...postHandlers(queryClient, (body: string) =>
-			pendingMessage(myAuthor, placeOf(room), body)
+		...postHandlers(queryClient, (input) =>
+			pendingMessage(
+				myAuthor,
+				placeOf(room),
+				input.body,
+				pendingImages(queryClient, input.images)
+			)
 		),
 	})
 }

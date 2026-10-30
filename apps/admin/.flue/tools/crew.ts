@@ -20,6 +20,7 @@ import {
 	type PlaceType,
 } from '../../shared/crew'
 import type { Wake } from '../../worker/crew/room'
+import { toBase64 } from '../../worker/images'
 import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
@@ -232,6 +233,38 @@ Their answer comes back to you.`,
 		},
 	})
 
+	// A tool result reaches the model only as text, so the picture goes to
+	// the agent's own model in a harness prompt, and the answer comes back
+	// in words.
+	const lookAtImage = defineTool({
+		name: 'look_at_image',
+		description:
+			'Look at an image the admin attached to a message, shown as "[image 12 attached, 1280×800]", and answer a question about it. Ask a pointed question, such as "What does the error say?"; the answer is what you saw, in words.',
+		input: v.object({
+			id: Id,
+			question: v.pipe(Text, v.maxLength(1000)),
+		}),
+		harness: true,
+		annotations: { readOnlyHint: true },
+		async run({ data, harness }) {
+			const image = await (await roomFor()).image(data.id)
+			if (!image) throw new Error(`No image ${data.id}.`)
+			const seen = await harness.prompt(
+				`This is image ${data.id} (${image.width}×${image.height}), which the admin attached to a message. Answer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
+				{
+					images: [
+						{
+							type: 'image',
+							data: toBase64(new Uint8Array(image.bytes)),
+							mimeType: image.mimeType,
+						},
+					],
+				}
+			)
+			return { output: { looked_at: `image ${data.id}`, seen: seen.text } }
+		},
+	})
+
 	const readDocument = defineTool({
 		name: 'read_document',
 		description: `Read a room's document: its current Markdown and its revision. Leave out \`room\` for the ${room}'s own documents, which your <crew-context> lists.`,
@@ -431,6 +464,7 @@ Their answer comes back to you.`,
 		bringToAdmin,
 		proposeChange,
 		readRoom,
+		lookAtImage,
 		writeDocument,
 		// A note from a thread run would start a second thread, in this
 		// agent's own room and unlinked from the one it is answering.

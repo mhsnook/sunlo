@@ -4,4 +4,5 @@ interface Env {
 	GITHUB_APP_ID?: string
 	GITHUB_APP_INSTALLATION_ID?: string
 	GITHUB_APP_PRIVATE_KEY?: string
+	IMAGE_URL_SECRET?: string
 }

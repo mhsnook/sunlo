@@ -53,6 +53,8 @@ The dashboard opens on the **Common Room**: a group chat between you and AI agen
 
 **Voice.** Every compose bar has a mic: press it, talk, and press it again, and what you said lands in the draft for you to read before sending. The speaker button beside it turns on voice replies, which reads each new reply aloud in the agent's own voice as it arrives. Any agent message also has its own read-aloud button. The Worker does both with Workers AI: Deepgram Nova 3 for speech to text and Aura 2 for text to speech (`worker/voice.ts`).
 
+**Images.** Every compose bar takes images: paste one, drop one on the bar, or pick one with the image button. The app scales each image down in the browser, to at most 2,000 px on its long side and under 1.8 MB (a PNG if that fits, otherwise a JPEG), and shows it as a thumbnail you can remove before you send. A message holds at most 6 images, with or without text. The timeline shows a sent message's images as thumbnails, and a click opens one full size. An agent reads a line for each image after the message's text, such as `[image 12 attached, 1280×800]`, wherever the text reaches it (the message that wakes it, its briefing and `read_room`), and looks at one with `look_at_image` ("Images", below).
+
 ### Rooms
 
 Each **room** is a subject, at `/room/<room>`, where you talk with the officers who work on it and anything that needs you arrives as a card. Its **principal** runs it and answers it first. A room can also have an **associate**, a second, more thorough voice that the principal can always call on: Data works with Riker in the Command room, and Keiko with O'Brien in the Product room. The sidebar lists the Common Room, then the four rooms, each with a count of unread messages and a count of the cards that wait on you.
@@ -99,7 +101,7 @@ When a room's principal asks its associate in, and the associate sees it differe
 
 Keiko's main job is to reimagine screens. Ask in the Product room, such as "@keiko the review screen is a mess", and Keiko looks at the screen, then posts a **sketches** card: usually three mockups that differ on purpose (a faithful cleanup, a bold reimagining and an off-the-wall idea), each with a one-line idea. Each mockup has Copy image, Download and Copy brief (its idea and HTML), for pasting into a GitHub issue or a Claude Code session. "Go with A" picks one, and Keiko and O'Brien both hear which.
 
-- `look_at_screen` screenshots a page of the app (a path on `SUNLO_URL`, or any URL, such as a pull request's preview) or one of Keiko's sketches, in a phone (390×844) or desktop (1440×900) frame, and passes the pictures to Keiko's model in a `harness.prompt`, because a Flue tool result reaches the model only as text. The browser is signed out.
+- `look_at_screen` screenshots a page of the app (a path on `SUNLO_URL`, or any URL, such as a pull request's preview) or one of Keiko's sketches, in a phone (390×844) or desktop (1440×900) frame, and passes the pictures to Keiko's model in a `harness.prompt`, because a Flue tool result reaches the model only as text. The browser is signed out, so for a screen behind sign-in Keiko asks you to paste a screenshot, and looks at it with `look_at_image`.
 - `sketch_screens` takes up to four whole HTML documents that Keiko writes, renders each with [Browser Rendering](https://developers.cloudflare.com/browser-rendering/) (the `BROWSER` binding, through `@cloudflare/puppeteer`), and posts the card. The room keeps each picture and its HTML in its `sketch` table, served at `/api/crew/sketches/:id` and `/api/crew/sketches/:id/image`. Keiko can make 12 sketches an hour (`SKETCHES_PER_HOUR`).
 - `read_sketch` returns a sketch's HTML, to draw the next version from it.
 - Keiko mounts [Impeccable](https://github.com/pbakaus/impeccable)'s design skill with Flue's `useSkill`: its references load only when Keiko activates the skill or reads one. The skill is copied unchanged from upstream v4.8.0 (`plugin/skills/impeccable`, without its `scripts/` command-line tools) into `.flue/skills/impeccable/`, with its Apache-2.0 `LICENSE` and `NOTICE.md`. oxfmt skips it (`.prettierignore`), so it stays as published.
@@ -107,6 +109,24 @@ Keiko's main job is to reimagine screens. Ask in the Product room, such as "@kei
 Keiko runs on Claude Opus 5.5 through Workers AI (`MODEL_PRODUCT_2`), with no Anthropic API key: Flue sends `anthropic/…` ids over the `AI` binding in Anthropic's message format. The id is pi-ai's, `anthropic/claude-opus-5-5`, because Flue only knows a model's image input and context window from pi-ai's catalog; Cloudflare's catalog writes it `anthropic/claude-opus-5.5`. It costs $4 per million input tokens and $20 per million output tokens.
 
 Locally, Browser Rendering starts a Chrome that miniflare downloads. As root, as in a container, Chrome needs `--no-sandbox`, which miniflare adds when `CI` is set: `CI=1 pnpm admin:dev`.
+
+### Images
+
+The room keeps images in its `image` table (`worker/crew/room.ts`): an id, a kind (`upload` for the admin's), the author, the type, the width and height, and the bytes, in one row, so an image is at most 1.8 MB (`MAX_IMAGE_BYTES` in `shared/crew.ts`). The Worker reads the type and size from the image's own bytes (`imageInfo` in `worker/images.ts`) and keeps PNG, JPEG, WebP and GIF only. A sketch keeps its picture in its own `sketch` row.
+
+- `POST /api/crew/images` stores one image; the body is the image, with its content type. It returns `{ id, width, height }`.
+- `POST /api/crew/messages` and `POST /api/crew/rooms/:room/messages` take `images`, a list of those ids, beside `body`. A message carries the ids and sizes in its `images` column.
+- `GET /api/crew/images/:id` serves an image to the admin, who fetches it as a blob, because an `<img src>` cannot send the token.
+- `look_at_image`, a tool every agent has, passes one image to the agent's own model in a `harness.prompt`, with the agent's question, as `look_at_screen` does, because a Flue tool result reaches the model only as text. A model that takes no images gets a placeholder in its place: `command-2`'s DeepSeek model is text only in pi-ai's catalog (`@earendil-works/pi-ai`, `dist/providers/data/cloudflare-workers-ai.json`), so Data cannot see an image, and the tool returns what the model says about the placeholder.
+
+**Signed links.** An image model on Cloudflare, such as `black-forest-labs/flux-3-image-klein`, takes a reference image only as an HTTPS URL that it fetches itself, without the admin's token. `signedImageUrl()` in `worker/images.ts` makes a link to one image that works until it expires (15 minutes by default, at most a day): `/api/public/images/:id?expires=…&sig=…`, where `sig` is an HMAC-SHA256 of the id and the expiry, keyed with the `IMAGE_URL_SECRET` secret. That route serves the image only for a valid signature that has not expired. `worker/api.ts` lets every path under `/api/public/` through without a token, so each route there must check a signature of its own; every other `/api` route still needs the admin. Without the secret, signing throws an error that says so, and no link is valid. Set it once, with any long random string:
+
+```bash
+openssl rand -base64 32 | pnpm exec wrangler secret put IMAGE_URL_SECRET
+openssl rand -base64 32 | pnpm exec wrangler preview base-config secret put IMAGE_URL_SECRET
+```
+
+Locally, put `IMAGE_URL_SECRET=<any string>` in `.dev.vars` (`.dev.vars.example` lists it). Changing the secret breaks every link already signed, which is harmless, since each lasts minutes.
 
 ### Side-threads
 
@@ -169,6 +189,7 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `read_document`: any room's document, with its revision
 - `write_document`: a new revision of one of the agent's own room's documents, or a new document, from the revision it read
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
+- `look_at_image`: one of the images the admin pasted into a message, with a question about it ("Images", above)
 - `propose_charter`: an entry for the agent's room's charter, as a card
 - Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, Data has `note_playbook` and `file_report`, and Keiko has `look_at_screen`, `sketch_screens` and `read_sketch` ("Keiko's sketches", above).
 
@@ -235,7 +256,7 @@ There is no deploy command: Cloudflare deploys on a merge to `main`.
 
 ## Local development
 
-The Worker reads `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`. The database connection is the Hyperdrive binding's `localConnectionString` in `wrangler.jsonc`, which the dev server uses in place of the production Hyperdrive config. It connects to local Supabase as `admin_reader` with the password `admin_reader`, and the migration creates that role with no password, so set one once:
+The Worker reads `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`; `IMAGE_URL_SECRET` is any string. The database connection is the Hyperdrive binding's `localConnectionString` in `wrangler.jsonc`, which the dev server uses in place of the production Hyperdrive config. It connects to local Supabase as `admin_reader` with the password `admin_reader`, and the migration creates that role with no password, so set one once:
 
 ```bash
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "alter role admin_reader password 'admin_reader'"
@@ -263,7 +284,7 @@ Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admi
 
 The Worker reaches the database through [Hyperdrive](https://developers.cloudflare.com/hyperdrive/), bound as `HYPERDRIVE` in `wrangler.jsonc`. The Hyperdrive config holds the production connection string for `admin_reader`, so the Worker has no database secret of its own. Hyperdrive is required, not an optimisation: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs rather than failing. Hyperdrive makes the TLS connection on the Worker's behalf. If the database stops answering, every `/api` route returns a 500 after 15 seconds instead of hanging, and the Worker logs the reason.
 
-GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above).
+GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above). Signed image links need `IMAGE_URL_SECRET` ("Images", above).
 
 A pull request that touches only `apps/admin/` skips the `scenetest`, `bundle-size` and `prod-bundle-scan` jobs in `.github/workflows/test.yaml`, because those test the main app and take about twelve minutes; the `changes` job in that workflow decides, and `pr-checks` and `unit` still run. That is why the admin's test ids are registered in `apps/admin/TEST_IDS.md` rather than the main app's registry.
 
