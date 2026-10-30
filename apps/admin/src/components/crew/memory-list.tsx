@@ -4,11 +4,12 @@ import {
 	type CrewKey,
 	type MemoryType,
 } from '../../../shared/crew'
-import { useEditMemory, useForgetMemory } from '~/lib/crew'
+import { useAddMemory, useEditMemory, useForgetMemory } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
 import { EditableEntry } from './editable-entry'
+import { AddEntry } from './workspace-parts'
 
-// An agent's memory, which the admin can edit and prune. command-2's playbook
+// An agent's memory, which the admin can add to, edit and prune. command-2's playbook
 // entries (metrics by domain, chart preferences) and the GitHub writing style
 // get their own headings.
 export function MemoryList({
@@ -25,6 +26,7 @@ export function MemoryList({
 	const domains = [
 		...new Set(metrics.map((entry) => entry.domain ?? 'General')),
 	]
+	const add = useAddMemory(agent)
 	return (
 		<div className="space-y-5">
 			{metrics.length > 0 && (
@@ -60,6 +62,15 @@ export function MemoryList({
 						{displayName(agent)} has not saved anything yet.
 					</p>
 				)}
+				<AddEntry
+					placeholder={`Something ${displayName(agent)} should remember`}
+					label="Add a memory"
+					buttons={[
+						{ label: 'Remember', onAdd: (text) => add.mutateAsync(text) },
+					]}
+					busy={add.isPending}
+					testId="agent-memory-add"
+				/>
 			</Group>
 		</div>
 	)

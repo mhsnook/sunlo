@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 // A panel beside a timeline: a title bar with a close button, and a body
 // that scrolls on its own.
@@ -59,6 +60,22 @@ export function SidePanel({
 
 // Where a side panel goes: beside the timeline on a wide screen, over it on a
 // phone.
+// Which panel shows beside a timeline, or null for none. A phone and a wider
+// screen each keep their own, as the app sidebar does: the panel covers the
+// timeline on a phone (SidePanelSlot), so one left open on a wide screen must
+// not cover it once the window narrows. `wide` opens on a screen with room
+// for it beside the timeline.
+export function useSidePanel<T>(wide: T | null) {
+	const isMobile = useIsMobile()
+	const [onWide, setOnWide] = useState<T | null>(() =>
+		window.matchMedia('(min-width: 64rem)').matches ? wide : null
+	)
+	const [onPhone, setOnPhone] = useState<T | null>(null)
+	return isMobile
+		? ([onPhone, setOnPhone] as const)
+		: ([onWide, setOnWide] as const)
+}
+
 export function SidePanelSlot({ children }: { children: ReactNode }) {
 	return (
 		<div className="max-md:bg-background max-md:fixed max-md:inset-0 max-md:z-40 md:shrink-0">

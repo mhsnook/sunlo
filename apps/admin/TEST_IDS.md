@@ -24,7 +24,7 @@ Register a new id here, not in the main app's registry.
 | `crew-sidebar-item` + `data-key=<crew\|room>`                                                | Sidebar link to the Common Room or a subject's room                                     |
 | `crew-sidebar-unread`, `crew-sidebar-cards`                                                  | A sidebar item's unread count, and its count of cards that wait on you                  |
 | `crew-message-group` + `data-key=<message id>`                                               | Consecutive messages from one author                                                    |
-| `crew-message` + `data-key=<message id>`                                                     | One message in the room                                                                 |
+| `crew-message` + `data-key=<message id>` (`data-pending` until the server has it)            | One message in the room                                                                 |
 | `crew-new-since`                                                                             | The "New since …" line                                                                  |
 | `crew-working`                                                                               | "<name> is working…" under the timeline                                                 |
 | `crew-card-action` + `data-key=<action id>`                                                  | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                              |
@@ -37,6 +37,8 @@ Register a new id here, not in the main app's registry.
 | `crew-card-file`, `crew-card-edit`                                                           | A GitHub draft card's File it and Edit buttons                                          |
 | `crew-card-error`                                                                            | Why a GitHub draft was not filed                                                        |
 | `crew-card-filed`                                                                            | The link to what a filed GitHub card became                                             |
+| `sketch` + `data-key=<sketch id>`, `sketch-image`                                            | One mockup on a sketches card, and its picture                                          |
+| `sketch-copy-image`, `sketch-download`, `sketch-copy-brief`                                  | A mockup's Copy image, Download and Copy brief buttons                                  |
 | `github-draft`, `github-draft-editor`                                                        | A GitHub draft card's draft, and its editor                                             |
 | `github-draft-title`, `github-draft-labels`, `github-draft-due`, `github-draft-body`         | The editor's fields                                                                     |
 | `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                   |
@@ -47,6 +49,7 @@ Register a new id here, not in the main app's registry.
 | `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                   |
 | `crew-overview-button`, `crew-overview`                                                      | The Overview toggle and its panel                                                       |
 | `sitrep-button`, `sitrep`                                                                    | The Situation Report toggle and its panel                                               |
+| `crew-panels-menu`, `crew-panel-option` + `data-key=<panel>`                                 | On a narrow header, the one button that holds the three panel toggles, and its items    |
 | `room-document` + `data-key=<name>`                                                          | A document in the room log; opens it                                                    |
 | `document-back`                                                                              | Closes a document, back to the room log                                                 |
 | `document` + `data-key=<name>`                                                               | An open document: the Situation Report, or one from a room log                          |
@@ -65,9 +68,15 @@ Register a new id here, not in the main app's registry.
 | `agent-looks-after`                                                                          | The "Looks after" list in a member's profile card                                       |
 | `agent-not-started`                                                                          | The note on a planned officer's profile card                                            |
 | `agent-todos`, `agent-todo` + `data-key=<id>`                                                | The workspace to-do list and one to-do                                                  |
+| `agent-todo-done`                                                                            | The box that ticks a to-do done, or not done                                            |
+| `agent-todo-add`, `agent-todo-add-input`, `agent-todo-add-button`                            | The box and button that add a to-do for an agent                                        |
+| `agent-character` + `data-key=<agent>`, `agent-character-toggle`, `agent-character-text`     | An officer's character in the room log, its fold, and its text                          |
+| `agent-character-edit`, `agent-character-input`, `agent-character-save`                      | Editing an officer's character                                                          |
+| `agent-character-restore`                                                                    | "Restore the original", shown once the admin has written their own version              |
 | `agent-open-item` + `data-key=<id>`                                                          | One "Open with you" item                                                                |
 | `agent-memory`                                                                               | The workspace memory list                                                               |
 | `agent-memory-entry` + `data-key=<id>`                                                       | One memory or playbook entry, with its delete button                                    |
+| `agent-memory-add`, `agent-memory-add-input`, `agent-memory-add-button`                      | The box and button that add a memory for an agent                                       |
 | `crew-block` + `data-key=<chart\|stats\|table\|mermaid>`                                     | A component an agent put in its message                                                 |
 | `crew-block-filter`                                                                          | The filter box on a filterable table component                                          |
 | `crew-meeting-banner`, `crew-go-to-meeting`                                                  | The weekly meeting invitation and its link to the Command room                          |
@@ -77,4 +86,5 @@ Register a new id here, not in the main app's registry.
 | `room-panel-button`, `room-panel` + `data-key=<room>`                                        | The room log toggle and its panel                                                       |
 | `room-member` + `data-key=<agent>`                                                           | One member's profile, to-dos, open items and memory in the room log                     |
 | `charter-panel` + `data-key=<room>`, `charter-entry` + `data-key=<id>`                       | A room's charter in its log, and one kept entry                                         |
+| `charter-add`, `charter-add-input`, `charter-add-button` + `data-key=<button label>`         | The box that writes a charter entry, and its "Add a principle" and "Add a lesson"       |
 | `brief-timezone`                                                                             | The time zone of the Sunday brief                                                       |

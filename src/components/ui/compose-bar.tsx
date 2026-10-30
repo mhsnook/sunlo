@@ -5,8 +5,10 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 /**
- * The text compose bar for a conversation: an auto-growing textarea, a send
- * button, and an optional slot for whatever else the surface attaches.
+ * The text compose bar for a conversation: one bordered box holding an
+ * auto-growing textarea and, under it, a row of tools with the send button at
+ * its end. Modelled on shadcn's Prompt Input
+ * (ui.shadcn.com/docs/ai-elements/base/prompt-input).
  *
  * Enter sends and Shift+Enter starts a new line, which is what people expect
  * from a chat box and what a plain `<Input>` cannot offer. The textarea grows
@@ -22,12 +24,12 @@ type ComposeBarProps = Omit<
 	/** Called with the trimmed draft. The caller clears `value` itself. */
 	onSend: (value: string) => void
 	placeholder?: string
-	/** Blocks sending and dims the textarea — for a read-only conversation. */
+	/** Blocks sending and dims the box — for a read-only conversation. */
 	disabled?: boolean
 	/** Blocks sending while a send is in flight, without dimming the draft. */
 	busy?: boolean
 	maxRows?: number
-	/** Leading slot, before the textarea — attachment and share buttons. */
+	/** Tools at the start of the bottom row — attachment and share buttons. */
 	startSlot?: React.ReactNode
 	sendLabel?: string
 	/** Accessible name for the textarea. Falls back to the placeholder. */
@@ -82,10 +84,13 @@ const ComposeBar = ({
 				e.preventDefault()
 				send()
 			}}
-			className={cn('flex w-full flex-row items-end gap-2', className)}
+			className={cn(
+				'border-primary-300 hover:border-primary bg-card ring-offset-background ring-ring flex w-full flex-col rounded-2xl border inset-shadow-sm has-[textarea:focus-visible]:ring-2 has-[textarea:focus-visible]:ring-offset-2',
+				disabled && 'opacity-50',
+				className
+			)}
 			{...props}
 		>
-			{startSlot}
 			<textarea
 				ref={textareaRef}
 				rows={1}
@@ -102,18 +107,24 @@ const ComposeBar = ({
 					e.preventDefault()
 					send()
 				}}
-				className="border-primary-300 hover:border-primary bg-card/50 ring-offset-background placeholder:text-muted-foreground text-foreground focus-visible:ring-ring max-h-40 min-h-10 w-full resize-none rounded-2xl border px-3 py-2 text-base inset-shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+				className="placeholder:text-muted-foreground text-foreground max-h-40 min-h-10 w-full resize-none bg-transparent px-3 py-2 text-base focus-visible:outline-hidden disabled:cursor-not-allowed md:text-sm"
 			/>
-			<Button
-				type="submit"
-				size="icon"
-				disabled={!canSend}
-				aria-label={sendLabel}
-				data-testid={sendTestId}
-				className="mb-1"
+			<div
+				data-slot="compose-bar-tools"
+				className="flex items-center gap-1 px-2 pb-2"
 			>
-				<Send />
-			</Button>
+				{startSlot}
+				<Button
+					type="submit"
+					size="icon"
+					disabled={!canSend}
+					aria-label={sendLabel}
+					data-testid={sendTestId}
+					className="ms-auto"
+				>
+					<Send />
+				</Button>
+			</div>
 		</form>
 	)
 }

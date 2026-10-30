@@ -21,17 +21,25 @@ import { VoiceControls } from './voice-controls'
 export function RoomThreadCompose({
 	room,
 	weekly,
+	myAuthor,
 }: {
 	room: RoomKey
 	weekly: WeeklyType
+	myAuthor: string
 }) {
 	const [draft, setDraft] = useState('')
-	const post = usePostToThread(room)
-	const send = (body: string) =>
+	const post = usePostToThread(room, myAuthor)
+	// The box clears at once; a refused message comes back into it, unless
+	// the admin has started the next one.
+	const send = (body: string) => {
+		setDraft('')
 		post.mutate(body, {
-			onSuccess: () => setDraft(''),
-			onError: (error) => toastError(error.message),
+			onError: (error) => {
+				toastError(error.message)
+				setDraft((current) => current || body)
+			},
 		})
+	}
 	const principal = principalOf(room)
 	const associates = associatesOf(room)
 
@@ -42,7 +50,6 @@ export function RoomThreadCompose({
 				value={draft}
 				onValueChange={setDraft}
 				onSend={send}
-				busy={post.isPending}
 				startSlot={<VoiceControls setDraft={setDraft} />}
 				placeholder={`Message ${displayName(principal)}${associates.map((key) => `, or @${handleOf(key)}`).join('')}`}
 				inputTestId="room-compose-input"

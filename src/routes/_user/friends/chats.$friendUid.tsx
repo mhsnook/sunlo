@@ -21,7 +21,6 @@ import {
 	useOneRelation,
 } from '@/features/social/hooks'
 import { RelationshipActions } from '@/routes/_user/friends/-relationship-actions'
-import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
@@ -228,10 +227,7 @@ function ChatPage() {
 								from={Route.fullPath}
 								aria-label="Send a phrase, playlist, or request"
 								data-testid="chat-share-trigger"
-								className={cn(
-									buttonVariants({ variant: 'soft', size: 'icon' }),
-									'mb-1'
-								)}
+								className={buttonVariants({ variant: 'soft', size: 'icon' })}
 							>
 								<Plus />
 							</Link>

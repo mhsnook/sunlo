@@ -36,7 +36,7 @@ import { SideThread } from './side-thread'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
 import { useReadOnArrival } from '~/lib/voice'
-import { isNewFor, useCorrectRouting } from '~/lib/crew'
+import { isNewFor, isPendingMessage, useCorrectRouting } from '~/lib/crew'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
 
@@ -108,7 +108,7 @@ export function RoomTimeline({
 	) : null
 
 	return (
-		<div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6">
+		<div className="@container mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-6">
 			{groups.map((group, index) => {
 				const day = dayLabel(group.messages[0].at)
 				const previous = groups[index - 1]?.messages.at(-1)
@@ -181,6 +181,8 @@ function AuthorGroup({
 						align={mine ? 'end' : 'start'}
 						data-testid="crew-message"
 						data-key={message.id}
+						data-pending={isPendingMessage(message) || undefined}
+						className="data-pending:opacity-60"
 					>
 						{!mine && (
 							<MessageAvatar className={cn(!last && 'invisible')}>
@@ -230,7 +232,7 @@ function AuthorGroup({
 										align={mine ? 'end' : 'start'}
 										className={cn(
 											'min-w-0 whitespace-normal',
-											blocks && 'w-full max-w-2xl'
+											blocks ? 'w-full max-w-2xl' : 'max-w-full @md:max-w-[80%]'
 										)}
 									>
 										<CrewText text={message.body} />

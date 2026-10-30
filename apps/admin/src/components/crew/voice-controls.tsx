@@ -92,7 +92,9 @@ export function SpeakableBubble({
 		<div
 			className={cn(
 				'group/speech flex items-end gap-1',
-				blocks ? 'w-full' : 'max-w-[80%] *:data-[slot=bubble]:max-w-full'
+				blocks
+					? 'w-full'
+					: 'max-w-full @md:max-w-[80%] *:data-[slot=bubble]:max-w-full'
 			)}
 		>
 			{children}

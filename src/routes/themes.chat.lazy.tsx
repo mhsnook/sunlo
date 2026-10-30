@@ -17,7 +17,6 @@ import {
 	MessageHeader,
 	MessageMarker,
 } from '@/components/ui/message'
-import { cn } from '@/lib/utils'
 
 export const Route = createLazyFileRoute('/themes/chat')({
 	component: ChatThemePage,
@@ -167,10 +166,7 @@ function ChatThemePage() {
 							placeholder="Message Ana…"
 							startSlot={
 								<span
-									className={cn(
-										buttonVariants({ variant: 'soft', size: 'icon' }),
-										'mb-1'
-									)}
+									className={buttonVariants({ variant: 'soft', size: 'icon' })}
 								>
 									<Plus />
 								</span>

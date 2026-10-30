@@ -29,7 +29,7 @@ import {
 } from '~/lib/crew'
 import { RoomAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
-import { SidePanelSlot } from '~/components/crew/side-panel'
+import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
 import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
 import { RoomPanel } from '~/components/crew/room-panel'
 import { RoomTimeline } from '~/components/crew/room-timeline'
@@ -75,17 +75,16 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	const { data: thread } = useSuspenseQuery(threadQuery(room))
 	const { data: crewRoom } = useSuspenseQuery(roomQuery())
 	const [newSince] = useState(thread.seenAt)
-	// The panel sits beside the thread on a wide screen and covers it on a phone.
-	const [panelOpen, setPanelOpen] = useState(
-		() => window.matchMedia('(min-width: 64rem)').matches
-	)
+	const [panel, setPanel] = useSidePanel('log')
+	const panelOpen = panel !== null
 	const members = roomMembers(room)
 	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
+	const myAuthor = adminAuthor(session.user.id)
 
 	return (
 		<div className="flex h-full min-h-0">
-			<section className="flex min-w-0 flex-1 flex-col">
-				<header className="flex items-center gap-3 border-b px-4 py-3">
+			<section className="@container flex min-w-0 flex-1 flex-col">
+				<header className="flex items-center gap-2 border-b px-4 py-3 @sm:gap-3">
 					<MobileSidebarButton />
 					<RoomAvatar room={room} />
 					<div className="me-auto min-w-0">
@@ -99,10 +98,11 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					<Button
 						variant="ghost"
 						data-testid="room-panel-button"
+						className="@max-sm:px-2.5"
 						aria-pressed={panelOpen}
-						onClick={() => setPanelOpen((open) => !open)}
+						onClick={() => setPanel((open) => (open ? null : 'log'))}
 					>
-						<NotebookText /> <span className="max-sm:sr-only">Room log</span>
+						<NotebookText /> <span className="@max-sm:sr-only">Room log</span>
 					</Button>
 				</header>
 				<MessageScroller dependency={thread.messages.length + working.length}>
@@ -110,7 +110,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 						<RoomTimeline
 							messages={thread.messages}
 							replies={thread.replies}
-							myAuthor={adminAuthor(session.user.id)}
+							myAuthor={myAuthor}
 							newSince={newSince}
 						/>
 					) : (
@@ -118,11 +118,15 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					)}
 					<WorkingMarker agents={working} />
 				</MessageScroller>
-				<RoomThreadCompose room={room} weekly={crewRoom.weekly} />
+				<RoomThreadCompose
+					room={room}
+					weekly={crewRoom.weekly}
+					myAuthor={myAuthor}
+				/>
 			</section>
 			{panelOpen && (
 				<SidePanelSlot>
-					<RoomPanel room={room} onClose={() => setPanelOpen(false)} />
+					<RoomPanel room={room} onClose={() => setPanel(null)} />
 				</SidePanelSlot>
 			)}
 		</div>

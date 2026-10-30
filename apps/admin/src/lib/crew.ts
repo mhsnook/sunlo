@@ -22,11 +22,13 @@ import {
 } from 'lucide-react'
 import {
 	CharterEntrySchema,
+	COMMON_ROOM,
 	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
 	DocumentSchema,
 	DocumentSummarySchema,
+	placeOf,
 	RevisionTextSchema,
 	roomOfPlace,
 	isThreadPlace,
@@ -38,13 +40,14 @@ import {
 	type DocumentSummaryType,
 	type GithubDraftType,
 	type PickChoice,
+	type CharterEntryType,
 	type RoomKey,
 	type PlaceType,
 	type RoomEvent,
 	type RoomStateType,
 	type RoutingType,
 } from '../../shared/crew'
-import { adminFetch } from './api'
+import { adminFetch, adminRequest } from './api'
 import { accessToken } from './session'
 
 export const crewIcons: Record<CrewKey, LucideIcon> = {
@@ -127,6 +130,35 @@ export const documentQuery = (id: number) =>
 			DocumentSchema.parse(await adminFetch(`crew/documents/${id}`)),
 		staleTime: Infinity,
 	})
+
+// A sketch never changes. Its picture comes as a blob, because the request
+// needs the admin's token, which an <img src> cannot send.
+export const sketchQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'sketch', id],
+		queryFn: async () =>
+			SketchSourceSchema.parse(await adminFetch(`crew/sketches/${id}`)),
+		staleTime: Infinity,
+	})
+
+export const sketchImageQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'sketch', id, 'image'],
+		queryFn: async () => {
+			const blob = await (
+				await adminRequest(`crew/sketches/${id}/image`)
+			).blob()
+			return { blob, url: URL.createObjectURL(blob) }
+		},
+		staleTime: Infinity,
+	})
+
+const SketchSourceSchema = z.object({
+	label: z.string(),
+	idea: z.string(),
+	html: z.string(),
+	frame: z.enum(['phone', 'desktop']),
+})
 
 // A saved revision never changes.
 export const revisionQuery = (id: number, revision: number) =>
@@ -220,14 +252,15 @@ export function useEditCommonKnowledge() {
 	})
 }
 
-export function useEditMemory(agent: CrewKey) {
+// A change the admin makes to one agent's workspace or character, which
+// reloads that workspace once the room has it.
+function useWorkspaceChange<TInput>(
+	agent: CrewKey,
+	send: (input: TInput) => Promise<unknown>
+) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (input: { id: number; text: string }) =>
-			adminFetch(`crew/agents/${agent}/memory/${input.id}`, {
-				method: 'PATCH',
-				json: { text: input.text },
-			}),
+		mutationFn: send,
 		onSuccess: () =>
 			queryClient.invalidateQueries({
 				queryKey: workspaceQuery(agent).queryKey,
@@ -235,15 +268,83 @@ export function useEditMemory(agent: CrewKey) {
 	})
 }
 
-export function useForgetMemory(agent: CrewKey) {
+export const useEditMemory = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (input: { id: number; text: string }) =>
+		adminFetch(`crew/agents/${agent}/memory/${input.id}`, {
+			method: 'PATCH',
+			json: { text: input.text },
+		})
+	)
+
+export const useForgetMemory = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (id: number) =>
+		adminFetch(`crew/agents/${agent}/memory/${id}`, { method: 'DELETE' })
+	)
+
+export const useAddMemory = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (text: string) =>
+		adminFetch(`crew/agents/${agent}/memory`, {
+			method: 'POST',
+			json: { text },
+		})
+	)
+
+export const useSetCharacter = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (text: string) =>
+		adminFetch(`crew/agents/${agent}/character`, {
+			method: 'PUT',
+			json: { text },
+		})
+	)
+
+export const useRestoreCharacter = (agent: CrewKey) =>
+	useWorkspaceChange(agent, () =>
+		adminFetch(`crew/agents/${agent}/character`, { method: 'DELETE' })
+	)
+
+export const useAddTodo = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (text: string) =>
+		adminFetch(`crew/agents/${agent}/todos`, {
+			method: 'POST',
+			json: { text },
+		})
+	)
+
+export const useEditTodo = (agent: CrewKey) =>
+	useWorkspaceChange(
+		agent,
+		(input: { id: number; text?: string; done?: boolean }) =>
+			adminFetch(`crew/agents/${agent}/todos/${input.id}`, {
+				method: 'PATCH',
+				json: { text: input.text, done: input.done },
+			})
+	)
+
+export const useDeleteTodo = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (id: number) =>
+		adminFetch(`crew/agents/${agent}/todos/${id}`, { method: 'DELETE' })
+	)
+
+export const useEditOpenItem = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (input: { id: number; title: string }) =>
+		adminFetch(`crew/agents/${agent}/open-items/${input.id}`, {
+			method: 'PATCH',
+			json: { title: input.title },
+		})
+	)
+
+export const useCloseOpenItem = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (id: number) =>
+		adminFetch(`crew/agents/${agent}/open-items/${id}`, { method: 'DELETE' })
+	)
+
+export function useAddCharter(room: RoomKey) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (id: number) =>
-			adminFetch(`crew/agents/${agent}/memory/${id}`, { method: 'DELETE' }),
+		mutationFn: (input: { kind: CharterEntryType['kind']; text: string }) =>
+			adminFetch(`crew/rooms/${room}/charter`, { method: 'POST', json: input }),
 		onSuccess: () =>
-			queryClient.invalidateQueries({
-				queryKey: workspaceQuery(agent).queryKey,
-			}),
+			queryClient.invalidateQueries({ queryKey: charterQuery(room).queryKey }),
 	})
 }
 
@@ -326,6 +427,36 @@ function upsertReply(
 	)
 }
 
+const PENDING_PREFIX = 'pending:'
+
+// The admin's message as its timeline shows it until the server answers.
+export const isPendingMessage = (message: CrewMessageType) =>
+	message.id.startsWith(PENDING_PREFIX)
+
+// No routing: the timeline offers to correct a routed message, and this one
+// has not been routed yet.
+const pendingMessage = (
+	author: string,
+	place: PlaceType,
+	body: string
+): CrewMessageType => ({
+	id: `${PENDING_PREFIX}${crypto.randomUUID()}`,
+	at: new Date().toISOString(),
+	author,
+	authorName: 'You',
+	body,
+	routing: null,
+	card: null,
+	answer: null,
+	place,
+	corrected: null,
+	receipt: false,
+	otherViewOf: null,
+	parent: null,
+	thread: null,
+	pick: null,
+})
+
 // A message someone else wrote after the admin last opened its timeline.
 export const isNewFor = (
 	message: CrewMessageType,
@@ -333,7 +464,35 @@ export const isNewFor = (
 	myAuthor: string
 ) => !!seenAt && message.at > seenAt && message.author !== myAuthor
 
-export function usePostToRoom() {
+// The pending message shows at once, and one cache write swaps it for the
+// server's row, or drops it when the send fails. The server stores a message
+// where it was posted, so the row lands in the pending message's timeline.
+const postHandlers = <TInput>(
+	queryClient: QueryClient,
+	toPending: (input: TInput) => CrewMessageType
+) => ({
+	onMutate: (input: TInput) => {
+		const pending = toPending(input)
+		upsertMessage(queryClient, pending)
+		return pending
+	},
+	onSettled: (
+		message: CrewMessageType | undefined,
+		_error: Error | null,
+		_input: TInput,
+		pending: CrewMessageType | undefined
+	) => {
+		if (!pending || isThreadPlace(pending.place)) return
+		updateTimeline(queryClient, pending.place, (timeline) => {
+			const rest = timeline.messages.filter((m) => m.id !== pending.id)
+			return { messages: message ? upsert(rest, message) : rest }
+		})
+	},
+})
+
+// `myAuthor` is the admin's own author key, so the timeline draws the
+// pending message as theirs.
+export function usePostToRoom(myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (input: { body: string; routing: RoutingType | null }) =>
@@ -343,11 +502,13 @@ export function usePostToRoom() {
 					json: input,
 				})
 			),
-		onSuccess: (message) => upsertMessage(queryClient, message),
+		...postHandlers(queryClient, (input) =>
+			pendingMessage(myAuthor, COMMON_ROOM, input.body)
+		),
 	})
 }
 
-export function usePostToThread(room: RoomKey) {
+export function usePostToThread(room: RoomKey, myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (body: string) =>
@@ -357,7 +518,9 @@ export function usePostToThread(room: RoomKey) {
 					json: { body },
 				})
 			),
-		onSuccess: (message) => upsertMessage(queryClient, message),
+		...postHandlers(queryClient, (body: string) =>
+			pendingMessage(myAuthor, placeOf(room), body)
+		),
 	})
 }
 

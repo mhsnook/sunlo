@@ -107,8 +107,8 @@ export const crew: Record<CrewKey, CrewMember> = {
 		room: 'product',
 		role: 'associate',
 		looksAfter: [
+			'Reimagining screens: several mockups that differ on purpose, for the admin to pick from',
 			'How Sunlo looks and feels, and how much it asks of people at once',
-			'A second, slower view on the plan, with an eye for the details',
 			'A design review before user-facing work is filed for building',
 		],
 		schedule: null,
@@ -341,6 +341,17 @@ export const draftBody = (draft: GithubDraftType) =>
 	draft.type === 'milestone' ? draft.description : draft.body
 export type ActionType = z.infer<typeof ActionSchema>
 
+// One of product-2's mockups: HTML it wrote, which the room keeps with the
+// picture the Worker took of it. `label` is its letter on the card.
+export const SketchSchema = z.object({
+	id: z.number(),
+	label: z.string(),
+	idea: z.string(),
+	frame: z.enum(['phone', 'desktop']),
+})
+export type SketchType = z.infer<typeof SketchSchema>
+export const SKETCHES_PER_HOUR = 12
+
 // Something an agent brings the admin, with the buttons they answer with.
 // - question: a question in the Common Room; change: a proposed change to
 //   the agent's plan
@@ -351,6 +362,8 @@ export type ActionType = z.infer<typeof ActionSchema>
 // - In the Command room only: brief (the weekly brief) and report
 //   (command-2's pre-meeting report)
 // - github: a draft for GitHub (`draft`), which "File it" publishes
+// - sketches: product-2's mockups (`sketches`), one action for each, which
+//   picks it
 export const CardSchema = z.object({
 	kind: z.enum([
 		'question',
@@ -363,6 +376,7 @@ export const CardSchema = z.object({
 		'brief',
 		'report',
 		'github',
+		'sketches',
 	]),
 	title: z.string().nullable(),
 	// Empty for a card with nothing to answer.
@@ -370,6 +384,7 @@ export const CardSchema = z.object({
 	// The charter entry a "charter" card proposes.
 	ref: z.number().nullable(),
 	draft: GithubDraftSchema.optional(),
+	sketches: z.array(SketchSchema).optional(),
 })
 export type CardType = z.infer<typeof CardSchema>
 
@@ -582,8 +597,27 @@ export const CommandSchema = z.object({
 })
 export type CommandType = z.infer<typeof CommandSchema>
 
+// An officer's persona: the admin's own text once they have written one,
+// otherwise the one in code. `original` is the code's, for restoring.
+export const CharacterSchema = z.object({
+	text: z.string(),
+	original: z.string(),
+	editedAt: z.string().nullable(),
+})
+export type CharacterType = z.infer<typeof CharacterSchema>
+
+// A change the admin made to an agent's workspace or character, which the
+// agent hears about on its next run.
+export const AdminChangeSchema = z.object({
+	what: z.string(),
+	at: z.string(),
+})
+export type AdminChangeType = z.infer<typeof AdminChangeSchema>
+
 export const WorkspaceSchema = z.object({
 	agent: z.enum(crewKeys),
+	// Null for a seat that has not started.
+	character: CharacterSchema.nullable(),
 	todos: z.array(TodoSchema),
 	memory: z.array(MemorySchema),
 	openItems: z.array(OpenItemSchema),

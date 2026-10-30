@@ -60,7 +60,14 @@ The roster lives in `shared/crew.ts`: each room's key, and each officer's key, n
 
 In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
-The **room log** beside the thread holds each member's profile card, to-dos, what is open with you, and memory, and you can edit or prune the memory there. The Command room's log also holds the charter, the weekly settings and Data's playbook.
+The **room log** beside the thread holds the room's charter and each member's profile card, character, to-dos, what is open with you, and memory. The Command room's log also holds the weekly settings and Data's playbook. You can change all of it there:
+
+- **Character**: who the officer is and how it works, the persona its every run starts from. Edit it, or restore the original. The default text lives in code (`shared/characters.ts`); your version lives in the room (`character` table) and wins while it exists. An agent module cannot wait on the room, so the persona reaches the agent as the first section of its `<crew-context>`, "Who you are", not as its system prompt.
+- **Memory and to-dos**: add, edit, delete, and tick to-dos done.
+- **Open with you**: rename an item, or close it.
+- **Charter**: write an entry, which is kept at once, or edit and drop one.
+
+The agent hears about each of these changes at the start of its next run ("What the admin changed for you", from the `admin_change` table), so it knows why its workspace looks different. Charter changes need no notice, because every briefing carries the room's whole charter.
 
 Every agent keeps one Flue conversation, `memory` (`CONVERSATION` in `worker/crew/room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. No agent reads another subject's room.
 
@@ -78,7 +85,20 @@ Every card can also be dismissed, with or without a line of feedback. The agent 
 
 Each room keeps a **charter**: the admin's principles (philosophy, strategy, taste) and lessons (how they decide), which the room's officers propose with `propose_charter` and which count only once you keep them. It shows in the room log, and every run in the room reads its kept entries.
 
-When a room's principal asks its associate in, and the associate sees it differently, the associate posts with `otherView` set. The app folds that answer under the principal's message that asked ("Keiko sees it differently"), and once you open it, you go with one of the two. Both agents hear which, and the principal is asked whether the pick belongs in the charter. Keiko (`product-2`) is the Product room's design associate, on its own model (`MODEL_PRODUCT_2`); the principal brings it in for choices about what someone sees or does, and for a design review before user-facing work becomes an epic.
+When a room's principal asks its associate in, and the associate sees it differently, the associate posts with `otherView` set. The app folds that answer under the principal's message that asked ("Keiko sees it differently"), and once you open it, you go with one of the two. Both agents hear which, and the principal is asked whether the pick belongs in the charter. Keiko (`product-2`) is the Product room's design associate; the principal brings it in for choices about what someone sees or does, and for a design review before user-facing work becomes an epic.
+
+### Keiko's sketches
+
+Keiko's main job is to reimagine screens. Ask in the Product room, such as "@keiko the review screen is a mess", and Keiko looks at the screen, then posts a **sketches** card: usually three mockups that differ on purpose (a faithful cleanup, a bold reimagining and an off-the-wall idea), each with a one-line idea. Each mockup has Copy image, Download and Copy brief (its idea and HTML), for pasting into a GitHub issue or a Claude Code session. "Go with A" picks one, and Keiko and O'Brien both hear which.
+
+- `look_at_screen` screenshots a page of the app (a path on `SUNLO_URL`, or any URL, such as a pull request's preview) or one of Keiko's sketches, in a phone (390×844) or desktop (1440×900) frame, and passes the pictures to Keiko's model in a `harness.prompt`, because a Flue tool result reaches the model only as text. The browser is signed out.
+- `sketch_screens` takes up to four whole HTML documents that Keiko writes, renders each with [Browser Rendering](https://developers.cloudflare.com/browser-rendering/) (the `BROWSER` binding, through `@cloudflare/puppeteer`), and posts the card. The room keeps each picture and its HTML in its `sketch` table, served at `/api/crew/sketches/:id` and `/api/crew/sketches/:id/image`. Keiko can make 12 sketches an hour (`SKETCHES_PER_HOUR`).
+- `read_sketch` returns a sketch's HTML, to draw the next version from it.
+- Keiko mounts [Impeccable](https://github.com/pbakaus/impeccable)'s design skill with Flue's `useSkill`: its references load only when Keiko activates the skill or reads one. The skill is copied unchanged from upstream v4.8.0 (`plugin/skills/impeccable`, without its `scripts/` command-line tools) into `.flue/skills/impeccable/`, with its Apache-2.0 `LICENSE` and `NOTICE.md`. oxfmt skips it (`.prettierignore`), so it stays as published.
+
+Keiko runs on Claude Opus 5.5 through Workers AI (`MODEL_PRODUCT_2`), with no Anthropic API key: Flue sends `anthropic/…` ids over the `AI` binding in Anthropic's message format. The id is pi-ai's, `anthropic/claude-opus-5-5`, because Flue only knows a model's image input and context window from pi-ai's catalog; Cloudflare's catalog writes it `anthropic/claude-opus-5.5`. It costs $4 per million input tokens and $20 per million output tokens.
+
+Locally, Browser Rendering starts a Chrome that miniflare downloads. As root, as in a container, Chrome needs `--no-sandbox`, which miniflare adds when `CI` is set: `CI=1 pnpm admin:dev`.
 
 ### Side-threads
 
@@ -142,9 +162,9 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `write_document`: a new revision of one of the agent's own room's documents, or a new document, from the revision it read
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
 - `propose_charter`: an entry for the agent's room's charter, as a card
-- Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, and Data has `note_playbook` and `file_report`.
+- Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, Data has `note_playbook` and `file_report`, and Keiko has `look_at_screen`, `sketch_screens` and `read_sketch` ("Keiko's sketches", above).
 
-Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2` and `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
+Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2`, `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`) and `MODEL_PRODUCT_2` (Claude Opus 5.5). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 
 ### GitHub: milestones and epics
 
