@@ -75,7 +75,7 @@ import {
 } from './github'
 import { pickReports, sketchPickReports } from './picks'
 import { peopleIndex } from './queries'
-import { RunLog, type RunKey } from './runs'
+import { RunLog, type RunLogKey } from './run-log'
 import type { StepChange } from './steps'
 import { planReply } from './threads'
 import { withSql } from '../db'
@@ -1320,17 +1320,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// The calls below come from the agent's isolate in the order of its Flue
 	// events, so a submission settles after its last step reaches the room.
-	startRun(key: RunKey, at: string) {
+	startRun(key: RunLogKey, at: string) {
 		this.runLog.start(key, at)
 	}
 
-	recordStep(key: RunKey, change: StepChange) {
+	recordStep(key: RunLogKey, change: StepChange) {
 		this.runLog.step(key, change)
 	}
 
 	// Every submission settles, a completed one after finishRun or
 	// finishThreadRun.
-	settleRun(key: RunKey, outcome: 'completed' | 'failed' | 'aborted') {
+	settleRun(key: RunLogKey, outcome: 'completed' | 'failed' | 'aborted') {
 		const failed = outcome !== 'completed'
 		const trigger = key.thread ?? (failed ? this.runTrigger(key.agent) : null)
 		this.runLog.settle(key, failed ? 'failed' : 'done', trigger)

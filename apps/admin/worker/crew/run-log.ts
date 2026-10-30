@@ -14,7 +14,7 @@ export type Sql = <T>(
 
 // One Flue submission of one agent: a run in its main conversation, or in
 // the side-thread that starts with `thread`.
-export type RunKey = {
+export type RunLogKey = {
 	agent: CrewKey
 	thread: string | null
 	submission: string
@@ -65,13 +65,13 @@ export class RunLog {
 			select * from run where steps != ${NO_STEPS} order by id`.map(toRun)
 	}
 
-	start(key: RunKey, at: string) {
+	start(key: RunLogKey, at: string) {
 		if (!this.find(key)) this.open(key, at)
 	}
 
 	// A step that arrives after its run closed joins the closed run, so a
 	// late event cannot open a run that never ends.
-	step(key: RunKey, change: StepChange) {
+	step(key: RunLogKey, change: StepChange) {
 		const row = this.find(key) ?? this.open(key, change.at)
 		const next = applyStep(
 			{ steps: toRun(row).steps, dropped: row.dropped },
@@ -86,7 +86,7 @@ export class RunLog {
 
 	// `fallback` is what the run answers when it posted nothing: the message
 	// that woke it.
-	settle(key: RunKey, outcome: 'done' | 'failed', fallback: string | null) {
+	settle(key: RunLogKey, outcome: 'done' | 'failed', fallback: string | null) {
 		const row =
 			this.find(key) ??
 			this.sql<RunRow>`
@@ -106,7 +106,7 @@ export class RunLog {
 			where agent = ${agent} and thread is null and ended_at is null`
 	}
 
-	private find(key: RunKey) {
+	private find(key: RunLogKey) {
 		return this.sql<RunRow>`
 			select * from run
 			where agent = ${key.agent} and submission = ${key.submission}`[0]
@@ -114,7 +114,7 @@ export class RunLog {
 
 	// One conversation runs one submission at a time, so a run still open
 	// when the next one starts lost its close.
-	private open(key: RunKey, at: string) {
+	private open(key: RunLogKey, at: string) {
 		const stale = this.sql<RunRow>`
 			select * from run
 			where agent = ${key.agent} and thread is ${key.thread} and ended_at is null`

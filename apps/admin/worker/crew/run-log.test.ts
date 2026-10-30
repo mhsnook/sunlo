@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { RunType } from '../../shared/crew'
-import { RunLog, type RunKey, type Sql } from './runs'
+import { RunLog, type RunLogKey, type Sql } from './run-log'
 import { RUNS_KEPT, type StepChange } from './steps'
 
 type Database = {
@@ -61,12 +61,12 @@ beforeEach(() => {
 	log = new RunLog(sql, (run) => pushed.push(run), tick)
 })
 
-const main = (submission: string): RunKey => ({
+const main = (submission: string): RunLogKey => ({
 	agent: 'command-2',
 	thread: null,
 	submission,
 })
-const inThread = (submission: string, thread = 'root-1'): RunKey => ({
+const inThread = (submission: string, thread = 'root-1'): RunLogKey => ({
 	agent: 'command-2',
 	thread,
 	submission,
@@ -87,9 +87,9 @@ const post = (id: string, place: string, receipt = 0) =>
 		)
 		.all(id, tick(), 'command-2', place, receipt)
 
-const run = (key: RunKey) =>
+const run = (key: RunLogKey) =>
 	log.list().find((r) => r.steps.length && byKey(r, key))
-const byKey = (r: RunType, key: RunKey) =>
+const byKey = (r: RunType, key: RunLogKey) =>
 	db.prepare('select submission from run where id = ?').all(r.id)[0]
 		?.submission === key.submission
 
