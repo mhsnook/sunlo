@@ -411,8 +411,8 @@ export const ASPECT_RATIOS = [
 	'16:9',
 ] as const
 export const PAINTINGS_PER_HOUR = 12
-// A painting can be bigger than one row holds; the room splits it into
-// parts (worker/crew/room.ts, saveImage).
+// A painting can be bigger than one row holds; the image store splits it
+// into parts (worker/crew/image-store.ts).
 export const MAX_PAINTING_BYTES = 8_000_000
 export const MAX_STYLES_PER_PAINTING = 4
 export const MAX_PAINTER_REFERENCES = 4
@@ -512,8 +512,9 @@ export const CardSchema = z.object({
 })
 export type CardType = z.infer<typeof CardSchema>
 
-// A Durable Object row holds at most 2 MB, bytes and every other column.
-export const MAX_IMAGE_BYTES = 1_800_000
+// The biggest image the admin can upload. The app shrinks a pasted image
+// under it.
+export const MAX_UPLOAD_BYTES = 1_800_000
 // The app scales a pasted image down to this many pixels on its long side.
 export const MAX_IMAGE_SIDE = 2000
 export const MAX_IMAGES_PER_MESSAGE = 6

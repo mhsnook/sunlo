@@ -121,7 +121,8 @@ export function designTools(agent: CrewKey) {
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.body)
-			const left = await (await roomFor()).sketchesLeft(agent)
+			const room = await roomFor()
+			const left = await room.sketchesLeft(agent)
 			if (data.proposals.length > left) {
 				throw new Error(
 					`Nothing was drawn: you can make ${left} more sketch${left === 1 ? '' : 'es'} this hour.`
@@ -135,7 +136,7 @@ export function designTools(agent: CrewKey) {
 						frame: data.frame,
 					}))
 				)
-				return (await roomFor()).postSketches({
+				return room.postSketches({
 					agent,
 					title: data.title,
 					body: data.body,
@@ -218,13 +219,13 @@ export function designTools(agent: CrewKey) {
 		timeoutMs: PAINT_TIMEOUT_MS + 60_000,
 		async run({ data, step, signal }) {
 			assertBlocks(data.body)
+			const room = await roomFor()
 			const references = await step.do('references', async () => {
-				const r = await roomFor()
-				const images = await r.findImages(data.references)
+				const images = await room.findImages(data.references)
 				if (!images) throw new Error('One of those reference images is gone.')
 				const sketches = await Promise.all(
 					data.sketches.map(async (id) => {
-						const image = await r.sketchAsImage(id)
+						const image = await room.sketchAsImage(id)
 						if (!image) throw new Error(`No sketch ${id}.`)
 						return image
 					})
@@ -232,14 +233,16 @@ export function designTools(agent: CrewKey) {
 				return [...images, ...sketches].map((image) => image.id)
 			})
 			const reserved = await step.do('reserve', async () =>
-				(await roomFor()).reservePaintings({
+				room.reservePaintings({
 					agent,
 					styles: data.styles,
-					references: data.references.length + data.sketches.length,
+					references: references.length,
 				})
 			)
 			if (!reserved.ok) throw new Error(reserved.error)
-			const room = await roomFor()
+			// Filled only by paint steps that run in this attempt, not ones a
+			// retry replays: renderSvgs reads the rest back.
+			const svgTexts = new Map<number, string>()
 			const links = references.length
 				? await room.referenceLinks(references)
 				: []
@@ -280,12 +283,15 @@ export function designTools(agent: CrewKey) {
 							if (looksLikeSvg(result.bytes)) {
 								const checked = checkSvg(new TextDecoder().decode(result.bytes))
 								if (!checked.ok) throw new Error(checked.error)
-								const [svg] = await saveSvgs(agent, [
+								const [svg] = await room.saveSvgs(agent, [
 									{
 										title: `${style.name}: ${data.title}`.slice(0, 140),
-										...checked,
+										svg: checked.svg,
+										width: checked.width,
+										height: checked.height,
 									},
 								])
+								svgTexts.set(svg.id, checked.svg)
 								return { ...painting, svg }
 							}
 							const info = imageInfo(result.bytes)
@@ -294,13 +300,11 @@ export function designTools(agent: CrewKey) {
 									`The model sent a picture the room cannot keep (${result.contentType || 'unknown type'}).`
 								)
 							}
-							const image = await (
-								await roomFor()
-							).saveImage({
+							const image = await room.saveImage({
 								kind: 'painting',
 								author: agent,
 								...info,
-								bytes: result.bytes.slice().buffer,
+								bytes: result.bytes,
 							})
 							return { ...painting, image }
 						} catch (error) {
@@ -320,7 +324,14 @@ export function designTools(agent: CrewKey) {
 				painting.svg ? [painting.svg] : []
 			)
 			const rendered = vectors.length
-				? await step.do('render', () => renderSvgs(agent, vectors))
+				? await step.do('render', () =>
+						renderSvgs(
+							room,
+							agent,
+							vectors,
+							vectors.map((svg) => svgTexts.get(svg.id))
+						)
+					)
 				: []
 			const results: typeof painted = []
 			for (const painting of painted) {
@@ -328,8 +339,8 @@ export function designTools(agent: CrewKey) {
 				results.push(svg ? { ...painting, svg } : painting)
 			}
 			signal?.throwIfAborted()
-			const posted = await step.do('post', async () =>
-				(await roomFor()).postPaintings({
+			const posted = await step.do('post', () =>
+				room.postPaintings({
 					agent,
 					title: data.title,
 					body: data.body,
@@ -386,9 +397,8 @@ export function designTools(agent: CrewKey) {
 				}
 				return { title: drawn.title, ...result }
 			})
-			const left = await step.do('limit', async () =>
-				(await roomFor()).svgsLeft(agent)
-			)
+			const room = await roomFor()
+			const left = await step.do('limit', () => room.svgsLeft(agent))
 			if (checked.length > left) {
 				throw new Error(
 					`Nothing was posted: you can draw ${left} more SVG${left === 1 ? '' : 's'} this hour, out of ${SVGS_PER_HOUR}.`
@@ -396,13 +406,25 @@ export function designTools(agent: CrewKey) {
 			}
 			const posted = await step.do('draw', async () => {
 				const svgs = await renderSvgs(
+					room,
 					agent,
-					await saveSvgs(agent, checked),
+					await room.saveSvgs(
+						agent,
+						checked.map(({ title, svg, width, height }) => ({
+							title,
+							svg,
+							width,
+							height,
+						}))
+					),
 					checked.map((item) => item.svg)
 				)
-				const messageId = await (
-					await roomFor()
-				).postSvgs({ agent, title: data.title, body: data.body, svgs })
+				const messageId = await room.postSvgs({
+					agent,
+					title: data.title,
+					body: data.body,
+					svgs,
+				})
 				return { messageId, svgs }
 			})
 			return {
@@ -428,40 +450,22 @@ export function designTools(agent: CrewKey) {
 	]
 }
 
-// Keeps SVGs that passed checkSvg, without their renderings.
-async function saveSvgs(
-	author: CrewKey,
-	checked: Array<{ title: string; svg: string; width: number; height: number }>
-): Promise<Array<SvgRefType>> {
-	const room = await roomFor()
-	return Promise.all(
-		checked.map((item) =>
-			room.saveSvg({
-				author,
-				title: item.title,
-				text: item.svg,
-				width: item.width,
-				height: item.height,
-				png: null,
-			})
-		)
-	)
-}
+type Room = Awaited<ReturnType<typeof roomFor>>
 
 // Renders SVGs to PNGs in one browser session and keeps each PNG with its
-// SVG. An SVG that fails to render keeps no PNG. `texts` saves reading back
-// SVGs the caller still holds.
+// SVG. An SVG that fails to render keeps no PNG. A text missing from
+// `texts` is read back from the room.
 async function renderSvgs(
+	room: Room,
 	author: CrewKey,
 	svgs: Array<SvgRefType>,
-	texts?: Array<string>
+	texts: Array<string | undefined>
 ): Promise<Array<SvgRefType>> {
-	const room = await roomFor()
-	const sources =
-		texts ??
-		(await Promise.all(
-			svgs.map(async (svg) => (await room.svg(svg.id))?.text ?? '')
-		))
+	const sources = await Promise.all(
+		svgs.map(
+			async (svg, index) => texts[index] ?? (await room.svg(svg.id))?.text ?? ''
+		)
+	)
 	const shots = await screenshots(
 		env.BROWSER,
 		svgs.map((svg, index) => ({
@@ -472,19 +476,15 @@ async function renderSvgs(
 		console.error('Could not render an SVG', error)
 		return null
 	})
-	return Promise.all(
-		svgs.map(async (svg, index) => {
-			const shot = shots?.[index]
-			const info = shot ? imageInfo(shot.image) : null
-			if (!shot || !info) return svg
-			const png = await room.saveImage({
-				kind: 'svg',
-				author,
-				...info,
-				bytes: shot.image.slice().buffer,
-			})
-			await room.setSvgPng(svg.id, png.id)
-			return { ...svg, png: png.id }
-		})
-	)
+	const renderings = svgs.flatMap((svg, index) => {
+		const shot = shots?.[index]
+		const info = shot ? imageInfo(shot.image) : null
+		return shot && info ? [{ svg: svg.id, ...info, bytes: shot.image }] : []
+	})
+	if (!renderings.length) return svgs
+	const pngs = await room.saveSvgPngs(author, renderings)
+	return svgs.map((svg) => {
+		const at = renderings.findIndex((rendering) => rendering.svg === svg.id)
+		return at === -1 ? svg : { ...svg, png: pngs[at] }
+	})
 }

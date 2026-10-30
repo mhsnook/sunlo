@@ -8,7 +8,7 @@ import {
 	PickChoiceSchema,
 	isCrewKey,
 	isRoomKey,
-	MAX_IMAGE_BYTES,
+	MAX_UPLOAD_BYTES,
 	MAX_IMAGES_PER_MESSAGE,
 	PainterStyleInputSchema,
 	roomKeys,
@@ -52,11 +52,12 @@ const imageHeaders = (mimeType: string) => ({
 })
 
 api.get('/crew/room', async (c) => {
-	const room = await roomFor()
 	// The app loads this first, so the room learns the origin it is served
 	// on, which the painter's signed links need.
-	await room.setPublicOrigin(new URL(c.req.url).origin)
-	return c.json(await room.snapshot(c.get('admin').uid))
+	const room = await roomFor()
+	return c.json(
+		await room.snapshot(c.get('admin').uid, new URL(c.req.url).origin)
+	)
 })
 
 api.get('/crew/runs', async (c) => {
@@ -505,11 +506,11 @@ api.post('/crew/images', async (c) => {
 	if (!c.req.header('content-type')?.startsWith('image/')) {
 		return c.json({ error: 'Send the image as an image/* body' }, 400)
 	}
-	if (Number(c.req.header('content-length') ?? 0) > MAX_IMAGE_BYTES) {
+	if (Number(c.req.header('content-length') ?? 0) > MAX_UPLOAD_BYTES) {
 		return c.json({ error: 'That image is too big to keep' }, 413)
 	}
 	const bytes = await c.req.arrayBuffer()
-	if (bytes.byteLength > MAX_IMAGE_BYTES) {
+	if (bytes.byteLength > MAX_UPLOAD_BYTES) {
 		return c.json({ error: 'That image is too big to keep' }, 413)
 	}
 	const info = imageInfo(new Uint8Array(bytes))

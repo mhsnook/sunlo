@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { displayName } from '../../shared/crew'
-import { paintingPickReports, pickReports, sketchPickReports } from './picks'
+import {
+	optionLabel,
+	paintingPickReports,
+	pickReports,
+	sketchPickReports,
+} from './picks'
+
+describe('optionLabel', () => {
+	it('labels options A, B, C in order', () => {
+		expect([0, 1, 2, 3].map(optionLabel)).toEqual(['A', 'B', 'C', 'D'])
+	})
+})
 
 describe('paintingPickReports', () => {
 	const painting = {
