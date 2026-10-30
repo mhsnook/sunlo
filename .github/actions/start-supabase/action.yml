@@ -1,0 +1,71 @@
+name: Start local Supabase
+description: >
+  Installs the Supabase CLI and starts the local stack used by the scenes.
+  Loads the stack's Docker images from the Actions cache when it can, so a
+  warm run pulls nothing from a registry. Only the supabase-images workflow
+  saves the cache: it runs on main, where every pull request can read it.
+
+inputs:
+  save-cache:
+    description: Save the stack's images to the Actions cache after a cache miss.
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Install Supabase CLI
+      id: cli
+      uses: supabase/setup-cli@v1
+      with:
+        version: 2.122.0
+
+    # The key changes when the CLI version (which pins each image tag), the
+    # stack config, or the list of excluded services changes.
+    - name: Compute image cache key
+      id: key
+      shell: bash
+      env:
+        CLI_VERSION: ${{ steps.cli.outputs.version }}
+        # Services the scenes don't use. The CLI now names `inbucket` `mailpit`,
+        # so `inbucket` excludes nothing; it stays so the started stack is
+        # unchanged.
+        EXCLUDE: studio,imgproxy,logflare,vector,supavisor,edge-runtime,inbucket
+      run: |
+        config=$(sha256sum supabase/config.toml | cut -c1-16)
+        exclude=$(printf '%s' "$EXCLUDE" | sha256sum | cut -c1-16)
+        echo "key=supabase-images-$RUNNER_OS-$CLI_VERSION-$config-$exclude" >> "$GITHUB_OUTPUT"
+        echo "SUPABASE_EXCLUDE=$EXCLUDE" >> "$GITHUB_ENV"
+        echo "SUPABASE_IMAGES_TAR=$RUNNER_TEMP/supabase-images.tar" >> "$GITHUB_ENV"
+
+    - name: Restore cached images
+      id: restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/supabase-images.tar
+        key: ${{ steps.key.outputs.key }}
+
+    - name: Load cached images
+      if: steps.restore.outputs.cache-hit == 'true'
+      shell: bash
+      run: docker load --input "$SUPABASE_IMAGES_TAR"
+
+    # The CLI checks every registry candidate for a local image before it
+    # pulls, so loaded images are used whichever registry they came from.
+    - name: Start Supabase
+      shell: bash
+      run: supabase start -x "$SUPABASE_EXCLUDE"
+
+    - name: Save images for the cache
+      if: inputs.save-cache == 'true' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mapfile -t images < <(docker ps --all --format '{{.Image}}' | sort -u)
+        echo "Saving ${#images[@]} images: ${images[*]}"
+        docker save --output "$SUPABASE_IMAGES_TAR" "${images[@]}"
+
+    - name: Store images in the cache
+      if: inputs.save-cache == 'true' && steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}/supabase-images.tar
+        key: ${{ steps.key.outputs.key }}

@@ -1,0 +1,38 @@
+name: Supabase images
+
+# Fills the Actions cache with the local Supabase stack's Docker images, so the
+# scenetest job can load them instead of pulling from a registry. A cache saved
+# on main can be read by every pull request; one saved on a PR branch can't.
+# The scheduled run keeps the entry from expiring (7 days without a read) in a
+# week with no pull requests.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - supabase/config.toml
+      - .github/actions/start-supabase/**
+      - .github/workflows/supabase-images.yaml
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  cache-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Supabase and cache its images
+        uses: ./.github/actions/start-supabase
+        with:
+          save-cache: 'true'
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup || true

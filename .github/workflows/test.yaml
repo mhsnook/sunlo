@@ -578,11 +578,6 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      - name: Install Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: 2.122.0
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -606,8 +601,10 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
+      # Installs the CLI and starts the stack from cached images when it can.
+      # The supabase-images workflow fills that cache from main.
       - name: Start Supabase
-        run: supabase start -x studio,imgproxy,logflare,vector,supavisor,edge-runtime,inbucket
+        uses: ./.github/actions/start-supabase
 
       - name: Set up environment variables
         run: |
