@@ -22,7 +22,7 @@ import {
 } from '~/lib/crew'
 import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
-import { SidePanelSlot } from '~/components/crew/side-panel'
+import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
 import { CommonKnowledgePanel } from '~/components/crew/common-knowledge-panel'
 import { OverviewPanel } from '~/components/crew/overview-panel'
 import { SitrepPanel } from '~/components/crew/sitrep-panel'
@@ -86,9 +86,7 @@ function CrewRoomPage() {
 	const [newSince] = useState(room.seenAt)
 	// The Situation Report sits beside the room on a wide screen, since the
 	// room is where the admin comes for the overview.
-	const [panel, setPanel] = useState<Panel | null>(() =>
-		window.matchMedia('(min-width: 64rem)').matches ? 'sitrep' : null
-	)
+	const [panel, setPanel] = useSidePanel<Panel>('sitrep')
 	const toggle = (next: Panel) =>
 		setPanel((open) => (open === next ? null : next))
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
