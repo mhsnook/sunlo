@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { NotebookText } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import {
@@ -31,7 +31,7 @@ import { RoomAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
 import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
-import { RoomPanel } from '~/components/crew/room-panel'
+import { DetailsPanel } from '~/components/crew/details-panel'
 import { RoomTimeline } from '~/components/crew/room-timeline'
 
 export const Route = createFileRoute('/_admin/room/$room')({
@@ -46,6 +46,8 @@ export const Route = createFileRoute('/_admin/room/$room')({
 			context.queryClient.ensureQueryData(threadQuery(params.room)),
 			context.queryClient.ensureQueryData(roomQuery()),
 			context.queryClient.ensureQueryData(documentsQuery(params.room)),
+			// The Situation Report is pinned first in every room's documents.
+			context.queryClient.ensureQueryData(documentsQuery('command')),
 			context.queryClient.ensureQueryData(charterQuery(params.room)),
 			...(params.room === 'command'
 				? [context.queryClient.ensureQueryData(commandQuery())]
@@ -75,7 +77,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	const { data: thread } = useSuspenseQuery(threadQuery(room))
 	const { data: crewRoom } = useSuspenseQuery(roomQuery())
 	const [newSince] = useState(thread.seenAt)
-	const [panel, setPanel] = useSidePanel('log')
+	const [panel, setPanel] = useSidePanel('details')
 	const panelOpen = panel !== null
 	const members = roomMembers(room)
 	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
@@ -97,12 +99,12 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					</div>
 					<Button
 						variant="ghost"
-						data-testid="room-panel-button"
+						data-testid="details-button"
 						className="@max-sm:px-2.5"
 						aria-pressed={panelOpen}
-						onClick={() => setPanel((open) => (open ? null : 'log'))}
+						onClick={() => setPanel((open) => (open ? null : 'details'))}
 					>
-						<NotebookText /> <span className="@max-sm:sr-only">Room log</span>
+						<Info /> <span className="@max-sm:sr-only">Details</span>
 					</Button>
 				</header>
 				<MessageScroller dependency={thread.messages.length + working.length}>
@@ -126,7 +128,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 			</section>
 			{panelOpen && (
 				<SidePanelSlot>
-					<RoomPanel room={room} onClose={() => setPanel(null)} />
+					<DetailsPanel room={room} onClose={() => setPanel(null)} />
 				</SidePanelSlot>
 			)}
 		</div>

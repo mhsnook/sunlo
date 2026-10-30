@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react'
+import { Suspense, useState, type ReactNode } from 'react'
 import {
 	useQuery,
 	useQueryClient,
@@ -8,11 +8,20 @@ import { ArrowLeft, CheckCheck, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
 import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from '@/components/ui/accordion'
+import { useIsMobile } from '@/hooks/use-mobile'
+import {
 	crew,
+	crewKeys,
 	displayName,
 	principalOf,
 	roomMembers,
 	roomNames,
+	SITREP,
 	type CrewKey,
 	type DocumentSummaryType,
 	type OpenItemType,
@@ -30,34 +39,62 @@ import {
 import { dayLabel } from '~/lib/format'
 import { CharacterEditor } from './character-editor'
 import { CharterPanel, WeeklySettings } from './charter-panel'
+import { CrewCharterSection } from './common-knowledge-panel'
 import { DocumentView } from './document-view'
 import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
 import { EditableEntry } from './editable-entry'
 import { MemoryList } from './memory-list'
+import { OverviewSection } from './overview-panel'
 import { Empty, Section, TodoList } from './workspace-parts'
 import { SidePanel } from './side-panel'
 
-// Beside a subject's room: its documents, then who works there, with each
-// officer's to-dos, what is open with the admin, and memory. The Command room
-// also keeps the charter and the weekly settings here. A document opens in
-// the panel itself.
-export function RoomPanel({
+// The Common Room, which is not a room in `roomKeys`.
+export const CREW = 'crew'
+export type DetailsRoom = RoomKey | typeof CREW
+
+const roomTitle = (room: DetailsRoom) =>
+	room === CREW ? 'the crew' : `the ${roomNames[room]}`
+
+// Beside a timeline, the same sections for every room: its documents, with
+// the Situation Report pinned first since every agent reads it; its charter
+// (the crew's, in the Common Room); its members, each with to-dos, what is
+// open with the admin, and memory; then the room's own settings. On a phone
+// the sections fold, with the documents open. A document opens in the panel
+// itself.
+export function DetailsPanel({
 	room,
 	onClose,
 }: {
-	room: RoomKey
+	room: DetailsRoom
 	onClose: () => void
 }) {
-	const { data: documents } = useSuspenseQuery(documentsQuery(room))
+	const { data: command } = useSuspenseQuery(documentsQuery('command'))
+	const { data: own } = useSuspenseQuery(
+		documentsQuery(room === CREW ? 'command' : room)
+	)
+	const sitrep = command.find((doc) => doc.name === SITREP)
+	const documents =
+		room === CREW
+			? sitrep
+				? [sitrep]
+				: []
+			: room === 'command'
+				? own.toSorted((a, b) =>
+						a.name === SITREP ? -1 : b.name === SITREP ? 1 : 0
+					)
+				: sitrep
+					? [sitrep, ...own]
+					: own
 	const [openId, setOpenId] = useState<number | null>(null)
 	const open = documents.find((doc) => doc.id === openId)
+	const members = room === CREW ? crewKeys : roomMembers(room)
 
 	if (open) {
 		return (
 			<SidePanel
 				title={open.name}
-				label={`${open.name}, in the ${roomNames[room]}`}
-				testId="room-panel"
+				label={`${open.name}, in ${roomTitle(room)}'s details`}
+				testId="details-panel"
 				testKey={room}
 				onClose={onClose}
 				wide
@@ -65,7 +102,7 @@ export function RoomPanel({
 					<Button
 						variant="ghost"
 						size="icon"
-						aria-label="Back to the room log"
+						aria-label="Back to the details"
 						data-testid="document-back"
 						onClick={() => setOpenId(null)}
 					>
@@ -79,22 +116,94 @@ export function RoomPanel({
 			</SidePanel>
 		)
 	}
+
+	const sections: Array<{ key: string; title: string; content: ReactNode }> = [
+		{
+			key: 'documents',
+			title: 'Documents',
+			content: <DocumentList documents={documents} onOpen={setOpenId} />,
+		},
+		{
+			key: 'charter',
+			title: 'Charter',
+			content:
+				room === CREW ? <CrewCharterSection /> : <CharterPanel room={room} />,
+		},
+		...(room === 'command'
+			? [
+					{
+						key: 'weekly',
+						title: 'Weekly meeting',
+						content: <WeeklySettings />,
+					},
+				]
+			: []),
+		...members.map((agent) => ({
+			key: agent,
+			title: displayName(agent),
+			content: (
+				<Suspense fallback={<Loader className="mx-auto my-6 opacity-50" />}>
+					<MemberLog agent={agent} />
+				</Suspense>
+			),
+		})),
+		...(room === CREW
+			? [{ key: 'overview', title: 'Overview', content: <OverviewSection /> }]
+			: []),
+	]
+
 	return (
 		<SidePanel
-			title="Room log"
-			label={`About the ${roomNames[room]}`}
-			testId="room-panel"
+			title="Details"
+			label={`About ${roomTitle(room)}`}
+			testId="details-panel"
 			testKey={room}
 			onClose={onClose}
-			bodyClassName="space-y-8"
 		>
-			<DocumentList documents={documents} onOpen={setOpenId} />
-			<CharterPanel room={room} />
-			{room === 'command' && <WeeklySettings />}
-			{roomMembers(room).map((agent) => (
-				<MemberLog key={agent} agent={agent} />
-			))}
+			<DetailsSections sections={sections} />
 		</SidePanel>
+	)
+}
+
+// Plain stacked sections on a wide screen; an accordion on a phone, where
+// the panel covers the room and the sections together run long.
+function DetailsSections({
+	sections,
+}: {
+	sections: Array<{ key: string; title: string; content: ReactNode }>
+}) {
+	const isMobile = useIsMobile()
+	if (!isMobile) {
+		return (
+			<div className="space-y-8">
+				{sections.map((section) => (
+					<div
+						key={section.key}
+						data-testid="details-section"
+						data-key={section.key}
+					>
+						{section.content}
+					</div>
+				))}
+			</div>
+		)
+	}
+	return (
+		<Accordion defaultValue={['documents']} className="-mt-4">
+			{sections.map((section) => (
+				<AccordionItem
+					key={section.key}
+					value={section.key}
+					data-testid="details-section"
+					data-key={section.key}
+				>
+					<AccordionTrigger>{section.title}</AccordionTrigger>
+					<AccordionContent className="text-base">
+						{section.content}
+					</AccordionContent>
+				</AccordionItem>
+			))}
+		</Accordion>
 	)
 }
 
