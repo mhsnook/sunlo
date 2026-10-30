@@ -24,6 +24,7 @@ import {
 	roomMembers,
 	roomOf,
 	SITREP,
+	SKETCHES_PER_HOUR,
 	type ActionType,
 	type AgentStatusType,
 	type CardType,
@@ -48,6 +49,7 @@ import {
 	type RoomStateType,
 	type RoomThreadType,
 	type RoutingType,
+	type SketchType,
 	type WeeklyType,
 	type WorkspaceType,
 } from '../../shared/crew'
@@ -70,7 +72,7 @@ import {
 	githubFor,
 	personalDataRefusal,
 } from './github'
-import { pickReports } from './picks'
+import { pickReports, sketchPickReports } from './picks'
 import { peopleIndex } from './queries'
 import { planReply } from './threads'
 import { withSql } from '../db'
@@ -408,6 +410,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				id integer primary key autoincrement,
 				agent text not null,
 				what text not null,
+				at text not null
+			);
+			-- product-2's mockups: the HTML it wrote, and the picture the Worker
+			-- took of it.
+			create table if not exists sketch (
+				id integer primary key autoincrement,
+				agent text not null,
+				label text not null,
+				idea text not null,
+				html text not null,
+				frame text not null,
+				image blob not null,
+				mime_type text not null,
 				at text not null
 			);
 			create index if not exists message_place on message (place, at);
@@ -1103,7 +1118,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		feedback: string | null
 		name: string
 	}):
-		| { ok: true; agent: CrewKey; body: string }
+		| { ok: true; reports: Array<{ agent: CrewKey; body: string }> }
 		| { ok: false; status: 404 | 409; error: string } {
 		const row = this.sql<MessageRow>`
 			select * from message
@@ -1179,19 +1194,30 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.push({ type: 'message', message: { ...message, answer } })
 		this.push({ type: 'workspace', agent })
 		if (roomOfPlace(message.place)) this.openCardsChanged()
+		const sketch = message.card.sketches?.find(
+			(s) => `sketch-${s.id}` === action.id
+		)
+		if (sketch) {
+			return {
+				ok: true,
+				reports: sketchPickReports({
+					agent,
+					title: subject,
+					sketch,
+					by: input.name,
+				}),
+			}
+		}
 		const what =
 			message.card.kind === 'change'
 				? 'proposed change'
 				: message.card.kind === 'question'
 					? 'question'
 					: `${message.card.kind} card`
-		return {
-			ok: true,
-			agent,
-			body: dismissed
-				? `${input.name} dismissed your ${what}: ${subject}${input.feedback ? `\n\nTheir feedback: ${input.feedback}` : ''}`
-				: `${input.name} answered "${action.label}" to your ${what}: ${subject}`,
-		}
+		const body = dismissed
+			? `${input.name} dismissed your ${what}: ${subject}${input.feedback ? `\n\nTheir feedback: ${input.feedback}` : ''}`
+			: `${input.name} answered "${action.label}" to your ${what}: ${subject}`
+		return { ok: true, reports: [{ agent, body }] }
 	}
 
 	// ---- Agent runs ---------------------------------------------------------
@@ -1532,6 +1558,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		actions: Array<ActionType>
 		ref?: number
 		draft?: GithubDraftType
+		sketches?: Array<SketchType>
 	}) {
 		const message = this.insert({
 			author: input.author,
@@ -1544,12 +1571,102 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				actions: input.actions,
 				ref: input.ref ?? null,
 				...(input.draft ? { draft: input.draft } : {}),
+				...(input.sketches ? { sketches: input.sketches } : {}),
 			},
 			place: placeOf(roomOf(input.author)),
 		})
 		this.push({ type: 'workspace', agent: input.author })
 		this.openCardsChanged()
 		return message.id
+	}
+
+	// ---- Sketches -------------------------------------------------------------
+
+	sketchesLeft(agent: CrewKey) {
+		const hourAgo = new Date(Date.now() - 3_600_000).toISOString()
+		const [{ made }] = this.sql<{ made: number }>`
+			select count(*) as made from sketch
+			where agent = ${agent} and at > ${hourAgo}`
+		return Math.max(0, SKETCHES_PER_HOUR - made)
+	}
+
+	// A card in the agent's room with its mockups, one action for each: the
+	// admin picks one with it.
+	postSketches(input: {
+		agent: CrewKey
+		title: string
+		body: string
+		frame: SketchType['frame']
+		proposals: Array<{
+			idea: string
+			html: string
+			image: Uint8Array
+			mimeType: string
+		}>
+	}):
+		| { ok: true; messageId: string; sketches: Array<SketchType> }
+		| {
+				ok: false
+				error: string
+		  } {
+		const left = this.sketchesLeft(input.agent)
+		if (input.proposals.length > left) {
+			return {
+				ok: false,
+				error: `Nothing was posted: you can make ${left} more sketch${left === 1 ? '' : 'es'} this hour, out of ${SKETCHES_PER_HOUR}.`,
+			}
+		}
+		const at = now()
+		const sketches = input.proposals.map((proposal, index) => {
+			const label = String.fromCharCode(65 + index)
+			const image = proposal.image.slice().buffer
+			// The sql template takes no bytes; storage.sql binds an ArrayBuffer
+			// as a blob.
+			const { id } = this.ctx.storage.sql
+				.exec<{ id: number }>(
+					`insert into sketch (agent, label, idea, html, frame, image, mime_type, at)
+					values (?, ?, ?, ?, ?, ?, ?, ?)
+					returning id`,
+					input.agent,
+					label,
+					proposal.idea,
+					proposal.html,
+					input.frame,
+					image,
+					proposal.mimeType,
+					at
+				)
+				.one()
+			return { id, label, idea: proposal.idea, frame: input.frame }
+		})
+		const messageId = this.bringToAdmin({
+			author: input.agent,
+			kind: 'sketches',
+			title: input.title,
+			body: input.body,
+			actions: sketches.map((sketch) => ({
+				id: `sketch-${sketch.id}`,
+				label: `Go with ${sketch.label}`,
+			})),
+			sketches,
+		})
+		return { ok: true, messageId, sketches }
+	}
+
+	sketch(id: number) {
+		const row = this.sql<{
+			label: string
+			idea: string
+			html: string
+			frame: SketchType['frame']
+		}>`select label, idea, html, frame from sketch where id = ${id}`[0]
+		return row ?? null
+	}
+
+	sketchImage(id: number) {
+		const row = this.sql<{ image: ArrayBuffer; mime_type: string }>`
+			select image, mime_type from sketch where id = ${id}`[0]
+		return row ? { image: row.image, mimeType: row.mime_type } : null
 	}
 
 	// A draft for GitHub: a card in the agent's room that the admin can edit,

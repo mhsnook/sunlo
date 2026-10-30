@@ -646,6 +646,8 @@ The Common Room at `/`, and each subject's room at `/room/<room>`:
 | `crew-card-file`, `crew-card-edit`                                                           | A GitHub draft card's File it and Edit buttons                                          |
 | `crew-card-error`                                                                            | Why a GitHub draft was not filed                                                        |
 | `crew-card-filed`                                                                            | The link to what a filed GitHub card became                                             |
+| `sketch` + `data-key=<sketch id>`, `sketch-image`                                            | One mockup on a sketches card, and its picture                                          |
+| `sketch-copy-image`, `sketch-download`, `sketch-copy-brief`                                  | A mockup's Copy image, Download and Copy brief buttons                                  |
 | `github-draft`, `github-draft-editor`                                                        | A GitHub draft card's draft, and its editor                                             |
 | `github-draft-title`, `github-draft-labels`, `github-draft-due`, `github-draft-body`         | The editor's fields                                                                     |
 | `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                   |

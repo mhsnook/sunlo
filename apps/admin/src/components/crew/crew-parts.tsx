@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm'
 import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { GithubCard } from './github-card'
+import { SketchesCard } from './sketches-card'
 import { MermaidBlock } from './mermaid-block'
 import { remarkCrew } from './remark-crew'
 import { useState, type ReactNode } from 'react'
@@ -337,6 +338,9 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 	if (!card) return null
 	if (card.kind === 'github' && card.draft) {
 		return <GithubCard message={message} draft={card.draft} />
+	}
+	if (card.kind === 'sketches' && card.sketches) {
+		return <SketchesCard message={message} sketches={card.sketches} />
 	}
 	const fold = folds[card.kind]
 	if (fold && !unfolded) {

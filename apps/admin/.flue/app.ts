@@ -96,8 +96,12 @@ api.post(
 			name: c.get('admin').name,
 		})
 		if (!result.ok) return c.json({ error: result.error }, result.status)
-		await deliver(result.agent, 'crew.answer', result.body).catch(
-			logFailedDelivery
+		await Promise.all(
+			result.reports.map((report) =>
+				deliver(report.agent, 'crew.answer', report.body).catch(
+					logFailedDelivery
+				)
+			)
 		)
 		return c.json({ ok: true })
 	}
@@ -451,6 +455,20 @@ api.post(
 		return c.json({ ok: true })
 	}
 )
+
+api.get('/crew/sketches/:id', numericId('No such sketch'), async (c) => {
+	const sketch = await (await roomFor()).sketch(c.req.valid('param').id)
+	return sketch ? c.json(sketch) : c.json({ error: 'No such sketch' }, 404)
+})
+
+api.get('/crew/sketches/:id/image', numericId('No such sketch'), async (c) => {
+	const shot = await (await roomFor()).sketchImage(c.req.valid('param').id)
+	if (!shot) return c.json({ error: 'No such sketch' }, 404)
+	return c.body(shot.image, 200, {
+		'content-type': shot.mimeType,
+		'cache-control': 'private, max-age=31536000, immutable',
+	})
+})
 
 api.get('/crew/rooms/:room/documents', roomParam, async (c) => {
 	return c.json(await (await roomFor()).documents(c.req.valid('param').room))

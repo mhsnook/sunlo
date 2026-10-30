@@ -15,6 +15,8 @@
 	},
 	"preview_urls": true,
 	"ai": { "binding": "AI" },
+	// Browser Rendering, for product-2's screenshots and sketches.
+	"browser": { "binding": "BROWSER" },
 	// The crew room (worker/crew/room.ts). Flue adds a binding for each agent,
 	// such as FLUE_PRODUCT_1_AGENT; never write those here. The migrations are
 	// ours, and append-only once deployed: a new agent is a new entry.
@@ -81,15 +83,18 @@
 		"MODEL_COMMAND_2": "@cf/deepseek-ai/deepseek-v4-pro-0813",
 		// product-1's model, which drafts the GitHub issues as well.
 		"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
-		// product-2's model: a different one from product-1's, for a second
-		// view.
-		"MODEL_PRODUCT_2": "@cf/moonshotai/kimi-k2.6",
+		// product-2's model, through Workers AI with no API key. The id is
+		// pi-ai's, with dashes: Flue knows that one, and with it that the model
+		// takes images. Cloudflare's catalog writes it anthropic/claude-opus-5.5.
+		"MODEL_PRODUCT_2": "anthropic/claude-opus-5-5",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
 		// The repository the crew keeps milestones and epics on, once the GitHub
 		// App secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
 		// GITHUB_APP_PRIVATE_KEY (README.md, "GitHub: milestones and epics").
 		"GITHUB_REPO": "mhsnook/sunlo",
+		// Where product-2 looks at the app when it is given a path, not a URL.
+		"SUNLO_URL": "https://sunlo.app",
 	},
 	// Worker Previews: Workers Builds makes one per branch off main, at
 	// <branch>-sunlo-admin.<account subdomain>.workers.dev. Nothing in this block
@@ -104,9 +109,10 @@
 			"CREW_MODEL": "@cf/moonshotai/kimi-k2.6",
 			"MODEL_COMMAND_2": "@cf/deepseek-ai/deepseek-v4-pro-0813",
 			"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
-			"MODEL_PRODUCT_2": "@cf/moonshotai/kimi-k2.6",
+			"MODEL_PRODUCT_2": "anthropic/claude-opus-5-5",
 			"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
 			"GITHUB_REPO": "mhsnook/sunlo",
+			"SUNLO_URL": "https://sunlo.app",
 		},
 		"durable_objects": {
 			"bindings": [{ "name": "CREW_ROOM", "class_name": "CrewRoom" }],
@@ -116,5 +122,6 @@
 			{ "binding": "HYPERDRIVE", "id": "d22b56aafb6c420781c880b4c6777490" },
 		],
 		"ai": { "binding": "AI" },
+		"browser": { "binding": "BROWSER" },
 	},
 }
