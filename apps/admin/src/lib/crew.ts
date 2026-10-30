@@ -352,6 +352,10 @@ const pendingMessage = (
 	place,
 	corrected: null,
 	receipt: false,
+	otherViewOf: null,
+	parent: null,
+	thread: null,
+	pick: null,
 })
 
 // A message someone else wrote after the admin last opened its timeline.
@@ -379,7 +383,7 @@ const postHandlers = <TInput>(
 		_input: TInput,
 		pending: CrewMessageType | undefined
 	) => {
-		if (!pending) return
+		if (!pending || isThreadPlace(pending.place)) return
 		updateTimeline(queryClient, pending.place, (timeline) => {
 			const rest = timeline.messages.filter((m) => m.id !== pending.id)
 			return { messages: message ? upsert(rest, message) : rest }
