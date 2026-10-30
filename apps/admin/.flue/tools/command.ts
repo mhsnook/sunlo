@@ -6,6 +6,7 @@ import {
 	handleOf,
 	resolveHandle,
 } from '../../shared/crew'
+import type { RunKey } from '../../worker/crew/runs'
 import { requestReport, roomFor, wake } from '../crew'
 import { assertBlocks, Text } from './posting'
 
@@ -88,7 +89,7 @@ export function firstOfficerTools() {
 // The science officer's playbook: the metrics the admin likes in each
 // domain, and how they like charts drawn. It keeps the playbook itself; the
 // admin can delete entries.
-export function scienceOfficerTools() {
+export function scienceOfficerTools(thread: RunKey) {
 	const notePlaybook = defineTool({
 		name: 'note_playbook',
 		description:
@@ -101,10 +102,12 @@ export function scienceOfficerTools() {
 		async run({ data }) {
 			const id = await (
 				await roomFor()
-			).remember('command-2', data.text, {
-				kind: data.kind,
-				domain: data.domain ?? null,
-			})
+			).remember(
+				'command-2',
+				data.text,
+				{ kind: data.kind, domain: data.domain ?? null },
+				thread
+			)
 			return { output: { id } }
 		},
 	})

@@ -180,7 +180,7 @@ api.delete(
 		const agent = c.req.param('agent')
 		if (!isCrewKey(agent)) return c.json({ error: 'No memory there' }, 404)
 		const { id } = c.req.valid('param')
-		const ok = await (await roomFor()).forget(agent, id, 'admin')
+		const ok = await (await roomFor()).forget(agent, id, 'admin', null)
 		return ok
 			? c.json({ ok })
 			: c.json({ error: 'No memory with that id' }, 404)
