@@ -113,9 +113,8 @@ export function TodoList({
 							leading={
 								<button
 									type="button"
-									role="checkbox"
-									aria-checked={todo.done}
-									aria-label={todo.done ? 'Mark not done' : 'Mark done'}
+									aria-pressed={todo.done}
+									aria-label="Done"
 									disabled={busy}
 									onClick={() =>
 										edit.mutate(
