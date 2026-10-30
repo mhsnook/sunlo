@@ -31,6 +31,7 @@ import {
 	placeOf,
 	RevisionTextSchema,
 	roomOfPlace,
+	isThreadPlace,
 	RoomSnapshotSchema,
 	RoomThreadSchema,
 	WorkspaceSchema,
@@ -297,10 +298,35 @@ function updateTimeline(
 	}
 }
 
-const upsertMessage = (queryClient: QueryClient, message: CrewMessageType) =>
+// Side-thread replies arrive as "reply" events instead.
+const upsertMessage = (queryClient: QueryClient, message: CrewMessageType) => {
+	if (isThreadPlace(message.place)) return
 	updateTimeline(queryClient, message.place, (timeline) => ({
 		messages: upsert(timeline.messages, message),
 	}))
+}
+
+// A side-thread reply joins its thread in the cached room it is in.
+function upsertReply(
+	queryClient: QueryClient,
+	place: PlaceType,
+	message: CrewMessageType
+) {
+	const room = roomOfPlace(place)
+	const root = message.parent
+	if (!room || !root) return
+	queryClient.setQueryData(threadQuery(room).queryKey, (thread) =>
+		thread
+			? {
+					...thread,
+					replies: {
+						...thread.replies,
+						[root]: upsert(thread.replies[root] ?? [], message),
+					},
+				}
+			: thread
+	)
+}
 
 const PENDING_PREFIX = 'pending:'
 
@@ -523,6 +549,9 @@ export function useCrewLive() {
 		onMessage: ({ data }: MessageEvent) => {
 			const event = JSON.parse(String(data)) as RoomEvent
 			if (event.type === 'message') upsertMessage(queryClient, event.message)
+			if (event.type === 'reply') {
+				upsertReply(queryClient, event.place, event.message)
+			}
 			if (event.type === 'common-knowledge') {
 				void queryClient.invalidateQueries({
 					queryKey: commonKnowledgeQuery().queryKey,

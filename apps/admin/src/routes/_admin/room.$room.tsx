@@ -111,6 +111,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					{thread.messages.length ? (
 						<RoomTimeline
 							messages={thread.messages}
+							replies={thread.replies}
 							myAuthor={myAuthor}
 							newSince={newSince}
 						/>

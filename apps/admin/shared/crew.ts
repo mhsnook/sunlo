@@ -188,6 +188,18 @@ export const PlaceSchema = z.union([
 ])
 export type PlaceType = z.infer<typeof PlaceSchema>
 
+// A side-thread's replies live in a place of their own, named for the
+// thread's first message, so no query of a room's timeline meets them.
+export const ThreadPlaceSchema = z.templateLiteral(['thread:', z.string()])
+export type ThreadPlaceType = z.infer<typeof ThreadPlaceSchema>
+export const threadPlace = (root: string): ThreadPlaceType => `thread:${root}`
+
+export const MessagePlaceSchema = z.union([PlaceSchema, ThreadPlaceSchema])
+export type MessagePlaceType = z.infer<typeof MessagePlaceSchema>
+export const isThreadPlace = (
+	place: MessagePlaceType
+): place is ThreadPlaceType => place.startsWith('thread:')
+
 export const placeOf = (room: RoomKey): PlaceType => `room:${room}`
 // The room a place is, or null for the Common Room.
 export const roomOfPlace = (place: string): RoomKey | null => {
@@ -386,7 +398,7 @@ export const CrewMessageSchema = z.object({
 			url: z.string().optional(),
 		})
 		.nullable(),
-	place: PlaceSchema,
+	place: MessagePlaceSchema,
 	// Where the admin said, after sending, this message should have gone.
 	corrected: RoutingSchema.nullable(),
 	// The room's list of the edits an agent's run made, not the agent speaking.
@@ -394,6 +406,13 @@ export const CrewMessageSchema = z.object({
 	// An associate's answer that differs from the principal's, which the app
 	// shows beside it: the id of the principal's message.
 	otherViewOf: z.string().nullable(),
+	// A reply in a side-thread: the id of the thread's first message.
+	parent: z.string().nullable(),
+	// On a side-thread's first message: who was asked, and when the thread
+	// closed (null while open).
+	thread: z
+		.object({ with: z.enum(crewKeys), closedAt: z.string().nullable() })
+		.nullable(),
 	// On an other view: which of the two views the admin went with.
 	pick: z
 		.object({
@@ -549,6 +568,9 @@ export type CharterEntryType = z.infer<typeof CharterEntrySchema>
 // One subject's room: its latest messages, and when this admin last opened it.
 export const RoomThreadSchema = z.object({
 	messages: z.array(CrewMessageSchema),
+	// The side-thread replies to these messages, by the id of each thread's
+	// first message.
+	replies: z.record(z.string(), z.array(CrewMessageSchema)),
 	seenAt: z.string().nullable(),
 })
 export type RoomThreadType = z.infer<typeof RoomThreadSchema>
@@ -573,6 +595,8 @@ export type WorkspaceType = z.infer<typeof WorkspaceSchema>
 // What the room pushes over its WebSocket.
 export type RoomEvent =
 	| { type: 'message'; message: CrewMessageType }
+	// A side-thread reply, with the room its thread is in.
+	| { type: 'reply'; place: PlaceType; message: CrewMessageType }
 	| { type: 'workspace'; agent: CrewKey }
 	// The weekly meeting changed.
 	| { type: 'command' }

@@ -1,6 +1,7 @@
 import {
 	displayName,
 	meetingDue,
+	roomOfPlace,
 	principalOf,
 	placeOf,
 	roomNames,
@@ -28,6 +29,9 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					: message.routing?.kind === 'room'
 						? ' (left in the room)'
 						: ''
+			const side = message.thread
+				? ` (a side-thread with ${displayName(message.thread.with)}${message.thread.closedAt ? ', closed' : ''})`
+				: ''
 			const view = message.otherViewOf
 				? message.pick
 					? ` (a second view; ${message.pick.by} went with ${message.pick.chosen === 'other' ? 'this one' : 'the first'})`
@@ -38,7 +42,7 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					? ` [answered: ${message.answer.label}]`
 					: ` [waiting for an answer: ${message.card.actions.map((a) => a.label).join(' / ')}]`
 				: ''
-			return `[${stamp(message.at)}] ${message.authorName}${note}${view}: ${message.body}${card}`
+			return `[${stamp(message.at)}] ${message.authorName}${note}${side}${view}: ${message.body}${card}`
 		})
 		.join('\n')
 }
@@ -98,6 +102,29 @@ export function briefingText(input: BriefingInput) {
 		unreadText(`The ${room}`, input.unread.own)
 	)
 	return sections.join('\n\n')
+}
+
+export type ThreadBriefingInput = Pick<
+	BriefingInput,
+	'now' | 'agent' | 'commonKnowledge' | 'sitrep' | 'charter' | 'workspace'
+> & {
+	thread: { root: CrewMessageType; replies: Array<CrewMessageType> }
+}
+
+// The <crew-context> for a run in a side-thread: who the agent is and what
+// it has learned, and the thread, but none of its room's timeline.
+export function threadBriefingText(input: ThreadBriefingInput) {
+	const { root, replies } = input.thread
+	const room = roomOfPlace(root.place)
+	return [
+		`It is now ${stamp(input.now)}.`,
+		`## You are in a side-thread\n\n${root.authorName} asked you for a favour in a side-thread in the ${room ? roomNames[room] : 'Common Room'}. You see only this thread, not the rest of any room's timeline.`,
+		commonKnowledgeText(input.commonKnowledge),
+		sitrepText(input.sitrep),
+		charterText(roomNames[roomOf(input.agent)], input.charter),
+		workspaceText(input.workspace),
+		`## The side-thread\n\n${timelineText([root, ...replies])}`,
+	].join('\n\n')
 }
 
 function unreadText(name: string, timeline: UnreadTimeline) {
