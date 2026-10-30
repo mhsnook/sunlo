@@ -30,15 +30,12 @@ export type ReviewState = typeof DEFAULT_PROPS & {
 export type ReviewStore = ReturnType<typeof createReviewStore>
 
 /**
- * A throwaway per-session cursor, nothing more. Session *state* — which cards
- * exist (manifest), which have been reviewed (card_review), and what stage the
- * session is at (milestone log) — lives in the collections, synced across
- * devices and mirrored to localStorage. This store holds only the current
- * card index within the manifest — an in-tab navigation position. The go route
- * re-seeds it from `stats.index` on mount and on every stage change, so the
- * actual position is always derived from the shared (stage, reviews); the
- * persisted copy survives only as the "a session was started in this tab"
- * signal the routing guard reads (`countCards`/`currentCardIndex` !== -1).
+ * The review cursor: the current card's index in today's manifest. Session
+ * state (the manifest, card reviews, and the stage) lives in the collections.
+ * The go route re-seeds the cursor from `stats.index` on mount and on every
+ * stage change. The persisted copy (localStorage, per browser) only tells the
+ * routing guards that a session was started here: `currentCardIndex` is -1
+ * until `init` runs.
  */
 export function createReviewStore(lang: string, dayString: string) {
 	return createStore<ReviewState>()(
@@ -75,8 +72,8 @@ export function createReviewStore(lang: string, dayString: string) {
 									throw new Error(
 										'Mismatching language or dayString between params and current store state'
 									)
-								// ensure we only init once (countCards is -1 until initialised)
-								if (state.countCards !== -1) return state
+								// ensure we only init once
+								if (state.currentCardIndex !== -1) return state
 								return {
 									lang,
 									dayString,

@@ -22,8 +22,6 @@ export function WhenComplete() {
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
 	const updateStage = useUpdateReviewStage(lang, dayString)
 
-	// Single source of truth: the milestone-derived stage (optimistic on tap,
-	// realtime across devices, mirrored to localStorage for cold loads).
 	const stage = stats.stage
 
 	const showWhich =
@@ -31,10 +29,10 @@ export function WhenComplete() {
 
 	// When the user naturally finishes (no skip button), persist stage 5
 	useEffect(() => {
-		if (showWhich === 'c' && stats.stage < 5) {
+		if (showWhich === 'c' && stage < 5) {
 			updateStage(5)
 		}
-	}, [showWhich, stats.stage])
+	}, [showWhich, stage])
 
 	return (
 		<Card
@@ -62,6 +60,8 @@ export function WhenComplete() {
 							size="lg"
 							data-testid="review-skipped-cards-button"
 							onClick={() => {
+								// Move the cursor before stage 2 lands. If this screen re-rendered
+								// at stage 2 first, the effect above could mark the session finished.
 								actions.gotoIndex(stats.firstUnreviewedIndex)
 								updateStage(2)
 							}}

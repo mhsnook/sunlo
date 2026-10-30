@@ -29,7 +29,9 @@ import {
 	findLastSighting,
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
+	getIndexOfNextValidCard,
 	isScoringReview,
+	resumeIndexForStage,
 	type ReviewsMap,
 	type ReviewStages,
 } from './review-utils'
@@ -134,20 +136,14 @@ function mapToStats(
 		firstTryTotal,
 	}
 
-	const stage: ReviewStages =
+	const inferredStage: ReviewStages =
 		stats.reviewed < stats.count ? 1 : stats.again === 0 ? 5 : 4
-	const index =
-		stage === 4
-			? stats.firstAgainIndex
-			: stage === 5
-				? manifest.length
-				: stats.firstUnreviewedIndex
 
 	return {
 		...stats,
 		unreviewed: stats.count - stats.reviewed,
 		complete: stats.reviewed - stats.again,
-		inferred: { stage, index },
+		inferredStage,
 	}
 }
 
@@ -155,19 +151,19 @@ export function useNextValid(): number {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
 	const day_session = useReviewDayString()
-	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	const { manifest, reviewsMap, stage } = reviewsData
-	return (stage ?? 0) < 3
-		? getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
-		: getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
+	const { data } = useReviewsTodayStats(lang, day_session)
+	return getIndexOfNextValidCard(
+		data.stage,
+		data.manifest,
+		data.reviewsMap,
+		currentCardIndex
+	)
 }
 
 /**
  * The current stage for a session: the `stage` of the latest
  * user_review_milestone. Progress is an append-only log, so the newest
- * milestone wins. The collection is realtime-synced *and* mirrored to
- * localStorage (see PERSISTED_COLLECTIONS), so this resolves across devices
- * and paints instantly on a cold reload — no separate store copy to go stale.
+ * milestone wins, and realtime keeps it current across devices.
  * Returns undefined when no milestone has landed yet (brand-new session),
  * which lets callers fall back to the client-inferred stage.
  */
@@ -218,22 +214,22 @@ export function useReviewsToday(lang: string, day_session: string) {
 
 export function useReviewsTodayStats(lang: string, day_session: string) {
 	const query = useReviewsToday(lang, day_session)
+	const manifest = query.data.manifest ?? []
 	const computed = mapToStats(
 		query.data.reviewsMap,
-		query.data.manifest ?? [],
+		manifest,
 		query.data.reviews
 	)
-	// Use the milestone-derived stage when present, fall back to inferred
-	const stage = query.data.stage ?? computed.inferred.stage
-	const index =
-		stage >= 5
-			? computed.count
-			: stage >= 3
-				? computed.firstAgainIndex
-				: computed.firstUnreviewedIndex
+	const stage = query.data.stage ?? computed.inferredStage
 	return {
 		...query,
-		data: { ...computed, stage, index, reviewsMap: query.data.reviewsMap },
+		data: {
+			...computed,
+			stage,
+			index: resumeIndexForStage(stage, computed),
+			manifest,
+			reviewsMap: query.data.reviewsMap,
+		},
 	}
 }
 
