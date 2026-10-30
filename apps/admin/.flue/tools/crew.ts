@@ -51,7 +51,11 @@ const defaultActions: Record<
 // own room, bringing the admin cards, side-threads, and keeping its
 // workspace. In a side-thread's own run (`thread`), reply_in_thread answers
 // that thread, and pass_note is left out.
-export function crewTools(agent: CrewKey, thread: string | null) {
+export function crewTools(
+	agent: CrewKey,
+	thread: string | null,
+	options: { seesImages: boolean }
+) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
 	const place = placeOf(ownRoom)
@@ -464,7 +468,7 @@ Their answer comes back to you.`,
 		bringToAdmin,
 		proposeChange,
 		readRoom,
-		lookAtImage,
+		...(options.seesImages ? [lookAtImage] : []),
 		writeDocument,
 		// A note from a thread run would start a second thread, in this
 		// agent's own room and unlinked from the one it is answering.

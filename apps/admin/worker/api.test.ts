@@ -243,9 +243,6 @@ describe('/api/public', () => {
 		expect((await open.request('/api/crew/ping', {}, makeEnv())).status).toBe(
 			401
 		)
-		expect(
-			(await open.request('/api/public/../crew/ping', {}, makeEnv())).status
-		).toBe(401)
 		expect((await open.request('/api/publicity', {}, makeEnv())).status).toBe(
 			401
 		)

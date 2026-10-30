@@ -1660,7 +1660,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			: null
 	}
 
-	// The images with these ids, in this order, or null if one is missing.
 	findImages(ids: Array<number>): Array<MessageImageType> | null {
 		const found = ids.map(
 			(id) =>
