@@ -26,7 +26,6 @@ import {
 	SITREP,
 	SKETCHES_PER_HOUR,
 	MAX_IMAGE_BYTES,
-	PAINTINGS_PER_HOUR,
 	type ActionType,
 	type AgentStatusType,
 	type CardType,
@@ -84,6 +83,12 @@ import {
 import { paintingPickReports, pickReports, sketchPickReports } from './picks'
 import { imageInfo, signedImageUrl } from '../images'
 import { DEFAULT_PAINTER_STYLES } from '../painter'
+import {
+	paintingsLeft,
+	pruneImages,
+	reservePaintings,
+	svgsLeft,
+} from './paintings'
 import { peopleIndex } from './queries'
 import { planReply } from './threads'
 import { withSql } from '../db'
@@ -291,6 +296,7 @@ const toPainterStyle = (row: PainterStyleRow): PainterStyleType => ({
 // Keys in the room's key-value storage.
 const PUBLIC_ORIGIN = 'public-origin'
 const PAINTER_STYLES_SEEDED = 'painter-styles-seeded'
+const IMAGES_PRUNED_AT = 'images-pruned-at'
 
 // One instance, named ROOM, holds the Common Room and each subject's room,
 // each agent's workspace (to-dos, memory, open items), the charter, CLEF's
@@ -1766,7 +1772,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				bytes
 			)
 		)
+		if (input.kind === 'painting' || input.kind === 'svg') this.pruneImages()
 		return { id, width: input.width, height: input.height }
+	}
+
+	// Everything lives in this one Durable Object, which holds 10 GB, and a
+	// full store fails every write in every room. Runs at most once an hour,
+	// when a new painting or rendering is saved.
+	private pruneImages() {
+		const at = Date.now()
+		const last = this.ctx.storage.kv.get<number>(IMAGES_PRUNED_AT) ?? 0
+		if (at - last < 3_600_000) return
+		this.ctx.storage.kv.put(IMAGES_PRUNED_AT, at)
+		pruneImages(this.sql.bind(this), at)
 	}
 
 	image(id: number) {
@@ -1821,7 +1839,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return this.ctx.storage.kv.get<string>(PUBLIC_ORIGIN) ?? null
 	}
 
-	// Signed links an image model can fetch these images by, for an hour.
+	// Signed links an image model can fetch these images by, for 10 minutes.
 	// Null when the room knows no HTTPS origin, as on a local dev server,
 	// since a model cannot reach anything else.
 	async referenceLinks(ids: Array<number>): Promise<Array<string> | null> {
@@ -1829,7 +1847,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		if (!origin?.startsWith('https://')) return null
 		return Promise.all(
 			ids.map((id) =>
-				signedImageUrl(this.env, { origin, id, seconds: 60 * 60 })
+				signedImageUrl(this.env, { origin, id, seconds: 10 * 60 })
 			)
 		)
 	}
@@ -2019,11 +2037,22 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	paintingsLeft(agent: CrewKey) {
-		const hourAgo = new Date(Date.now() - 3_600_000).toISOString()
-		const [{ made }] = this.sql<{ made: number }>`
-			select count(*) as made from painting
-			where agent = ${agent} and at > ${hourAgo}`
-		return Math.max(0, PAINTINGS_PER_HOUR - made)
+		return paintingsLeft(this.sql.bind(this), agent)
+	}
+
+	reservePaintings(input: {
+		agent: CrewKey
+		styles: Array<string>
+		references: number
+	}) {
+		return reservePaintings(this.sql.bind(this), {
+			...input,
+			known: this.painterStyles(),
+		})
+	}
+
+	svgsLeft(agent: CrewKey) {
+		return svgsLeft(this.sql.bind(this), agent)
 	}
 
 	// An SVG, which the caller has checked (worker/svg.ts), with the image id
@@ -2049,6 +2078,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
+	setSvgPng(id: number, png: number) {
+		this.sql`update svg set png = ${png} where id = ${id}`
+	}
+
 	svg(id: number) {
 		return (
 			this.sql<{ title: string; text: string }>`
@@ -2056,14 +2089,16 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		)
 	}
 
-	// A card in the agent's room with one painting for each style, in the
-	// order asked, and a "Go with" for each that worked. A failed painting
-	// counts against the hourly limit too, since its model call was made.
+	// Fills in the paintings reservePaintings held, and posts a card in the
+	// agent's room with one painting for each style, in the order asked, and
+	// a "Go with" for each that worked.
 	postPaintings(input: {
 		agent: CrewKey
 		title: string
 		body: string
 		paintings: Array<{
+			id: number
+			label: string
 			style: string
 			model: PaintingType['model']
 			prompt: string
@@ -2072,16 +2107,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			error: string | null
 		}>
 	}): { messageId: string; paintings: Array<PaintingType> } {
-		const at = now()
-		const paintings = input.paintings.map((painting, index): PaintingType => {
-			const label = String.fromCharCode(65 + index)
-			const { id } = this.sql<{ id: number }>`
-				insert into painting (agent, label, style, model, prompt, image, svg, error, at)
-				values (${input.agent}, ${label}, ${painting.style}, ${painting.model}, ${painting.prompt}, ${painting.image?.id ?? null}, ${painting.svg?.id ?? null}, ${painting.error}, ${at})
-				returning id`[0]
+		const paintings = input.paintings.map((painting): PaintingType => {
+			this.sql`
+				update painting set prompt = ${painting.prompt},
+					image = ${painting.image?.id ?? null}, svg = ${painting.svg?.id ?? null},
+					error = ${painting.error}
+				where id = ${painting.id} and agent = ${input.agent}`
 			return {
-				id,
-				label,
+				id: painting.id,
+				label: painting.label,
 				style: painting.style,
 				model: painting.model,
 				image: painting.image,

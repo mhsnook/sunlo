@@ -123,14 +123,14 @@ describe('readModelResult', () => {
 	it('reads a job that is still running as pending', () => {
 		expect(
 			readModelResult({ job_id: '57b6', status: 'processing', result: null })
-		).toEqual({ state: 'pending', pollUrl: null })
+		).toEqual({ state: 'pending', status: 'processing' })
 		expect(
 			readModelResult({
 				id: '1',
 				status: 'Pending',
 				polling_url: 'https://api/poll?id=1',
 			})
-		).toEqual({ state: 'pending', pollUrl: 'https://api/poll?id=1' })
+		).toEqual({ state: 'pending', status: 'Pending' })
 	})
 
 	it('reads a failed job, with its reason', () => {
@@ -168,14 +168,15 @@ const response = (body: BodyInit | null, init: ResponseInit = {}) =>
 	new Response(body, init)
 
 describe('runPainter', () => {
-	it('downloads the hosted picture', async () => {
-		const run = vi.fn(() =>
-			Promise.resolve({
-				state: 'Completed',
-				result: { image: 'https://cdn/x.png' },
-			})
+	it('downloads the hosted picture, with the signal', async () => {
+		const run = vi.fn(
+			(_model: string, _input: object, _options: { signal: AbortSignal }) =>
+				Promise.resolve({
+					state: 'Completed',
+					result: { image: 'https://cdn/x.png' },
+				})
 		)
-		const fetch = vi.fn((_url: string) =>
+		const fetch = vi.fn((_url: string, _init: { signal: AbortSignal }) =>
 			Promise.resolve(
 				response(png, { headers: { 'content-type': 'image/png' } })
 			)
@@ -184,93 +185,77 @@ describe('runPainter', () => {
 			run,
 			'recraft/recraftv4-1-flash',
 			{},
-			{
-				fetch: fetch,
-				maxBytes: 100,
-			}
+			{ fetch, maxBytes: 100 }
 		)
-		expect(run).toHaveBeenCalledWith('recraft/recraftv4-1-flash', {})
-		expect(fetch).toHaveBeenCalledWith('https://cdn/x.png')
+		expect(run.mock.calls[0][0]).toBe('recraft/recraftv4-1-flash')
+		expect(run.mock.calls[0][2].signal).toBeInstanceOf(AbortSignal)
+		expect(fetch.mock.calls[0][0]).toBe('https://cdn/x.png')
+		expect(fetch.mock.calls[0][1].signal).toBe(run.mock.calls[0][2].signal)
 		expect([...painted.bytes]).toEqual([...png])
 		expect(painted.contentType).toBe('image/png')
 	})
 
-	it('waits on a job at its polling_url until it is done', async () => {
-		const run = vi.fn(() =>
-			Promise.resolve({
-				status: 'Pending',
-				polling_url: 'https://api/poll',
-			})
-		)
-		let polls = 0
-		const fetch = vi.fn((url: string) => {
-			if (url === 'https://api/poll') {
-				polls += 1
-				return Promise.resolve(
-					Response.json(
-						polls < 3
-							? { status: 'Pending', polling_url: 'https://api/poll' }
-							: { status: 'Ready', result: { sample: 'https://cdn/s.jpg' } }
-					)
-				)
-			}
-			return Promise.resolve(response(png))
-		})
-		const sleep = vi.fn((_ms: number) => Promise.resolve())
-		const painted = await runPainter(
-			run,
-			'krea/krea-3',
-			{},
-			{
-				fetch: fetch,
-				sleep,
-				maxBytes: 100,
-			}
-		)
-		expect(polls).toBe(3)
-		expect(sleep).toHaveBeenCalledTimes(3)
-		expect(painted.url).toBe('https://cdn/s.jpg')
-	})
-
-	it('gives up on a job that outlasts the time cap', async () => {
-		let clock = 0
-		const fetch = vi.fn((_url: string) =>
-			Promise.resolve(
-				Response.json({ status: 'Pending', polling_url: 'https://api/poll' })
-			)
-		)
+	it('fails a style whose model answers with an unfinished job', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 		await expect(
 			runPainter(
 				() =>
 					Promise.resolve({
+						id: '1',
 						status: 'Pending',
 						polling_url: 'https://api/poll',
 					}),
 				'krea/krea-3',
 				{},
-				{
-					fetch: fetch,
-					sleep: (ms) => {
-						clock += ms
-						return Promise.resolve()
-					},
-					now: () => clock,
-					timeoutMs: 10_000,
-					maxBytes: 100,
-				}
-			)
-		).rejects.toThrow('Krea 3 did not finish in 10 seconds.')
-	})
-
-	it('fails on a job it has no way to wait for', async () => {
-		await expect(
-			runPainter(
-				() => Promise.resolve({ job_id: '1', status: 'queued' }),
-				'krea/krea-3',
-				{},
 				{ maxBytes: 100 }
 			)
-		).rejects.toThrow('gave no way to wait for it')
+		).rejects.toThrow(
+			'Krea 3 answered with a job that is not finished (status Pending)'
+		)
+		expect(JSON.stringify(warn.mock.calls[0])).toContain('polling_url')
+		warn.mockRestore()
+	})
+
+	it('aborts a model call that outlasts the time cap', async () => {
+		await expect(
+			runPainter(
+				(_model, _input, { signal }) =>
+					new Promise((_, reject) =>
+						signal.addEventListener('abort', () =>
+							reject(signal.reason as Error)
+						)
+					),
+				'krea/krea-3',
+				{},
+				{ timeoutMs: 20, maxBytes: 100 }
+			)
+		).rejects.toThrow('Krea 3 did not finish in 0 seconds.')
+	})
+
+	it('aborts a hung download when the tool call is aborted', async () => {
+		const call = new AbortController()
+		let downloadSignal: AbortSignal | null = null
+		const painting = runPainter(
+			() => Promise.resolve({ image: 'https://cdn/x.png' }),
+			'recraft/recraftv4-1-flash',
+			{},
+			{
+				fetch: (_url, { signal }) => {
+					downloadSignal = signal
+					return new Promise((_, reject) =>
+						signal.addEventListener('abort', () =>
+							reject(signal.reason as Error)
+						)
+					)
+				},
+				signal: call.signal,
+				maxBytes: 100,
+			}
+		)
+		await Promise.resolve()
+		call.abort(new Error('The tool call was aborted.'))
+		await expect(painting).rejects.toThrow('The tool call was aborted.')
+		expect(downloadSignal!.aborted).toBe(true)
 	})
 
 	it('refuses a picture bigger than the room keeps', async () => {
@@ -280,9 +265,52 @@ describe('runPainter', () => {
 				() => Promise.resolve({ image: 'https://cdn/big.png' }),
 				'recraft/recraftv4-1-flash',
 				{},
-				{ fetch: fetch, maxBytes: 100 }
+				{ fetch, maxBytes: 100 }
 			)
 		).rejects.toThrow('over the 0.0001 MB the room keeps')
+	})
+
+	it('stops reading a body with no content-length at the cap', async () => {
+		let pulled = 0
+		const stream = new ReadableStream<Uint8Array>({
+			pull(controller) {
+				pulled += 1
+				controller.enqueue(new Uint8Array(40))
+			},
+		})
+		await expect(
+			runPainter(
+				() => Promise.resolve({ image: 'https://cdn/endless.png' }),
+				'recraft/recraftv4-1-flash',
+				{},
+				{ fetch: () => Promise.resolve(new Response(stream)), maxBytes: 100 }
+			)
+		).rejects.toThrow('over the 0.0001 MB the room keeps')
+		expect(pulled).toBeLessThan(6)
+	})
+
+	it('refuses an inline picture over the cap before decoding it', async () => {
+		await expect(
+			runPainter(
+				() => Promise.resolve({ image: btoa('x'.repeat(300)) }),
+				'recraft/recraftv4-1-vector',
+				{},
+				{ maxBytes: 100 }
+			)
+		).rejects.toThrow('the room keeps')
+	})
+
+	it('refuses an http:// link', async () => {
+		const fetch = vi.fn()
+		await expect(
+			runPainter(
+				() => Promise.resolve({ image: 'http://cdn/x.png' }),
+				'recraft/recraftv4-1-flash',
+				{},
+				{ fetch, maxBytes: 100 }
+			)
+		).rejects.toThrow('HTTPS only')
+		expect(fetch).not.toHaveBeenCalled()
 	})
 
 	it('decodes a picture sent inline', async () => {

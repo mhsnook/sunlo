@@ -10,13 +10,14 @@ import {
 	PAINTER_MODELS,
 	PAINTINGS_PER_HOUR,
 	SKETCHES_PER_HOUR,
+	SVGS_PER_HOUR,
 	type CrewKey,
+	type PaintingType,
 	type SvgRefType,
 } from '../../shared/crew'
 import { frames, screenshots, type Frame } from '../../worker/browser'
 import { imageInfo, toBase64 } from '../../worker/images'
 import {
-	checkPaintRequest,
 	looksLikeSvg,
 	modelInput,
 	PAINT_TIMEOUT_MS,
@@ -215,17 +216,8 @@ export function designTools(agent: CrewKey) {
 		}),
 		durable: true,
 		timeoutMs: PAINT_TIMEOUT_MS + 60_000,
-		async run({ data, step }) {
+		async run({ data, step, signal }) {
 			assertBlocks(data.body)
-			const room = await roomFor()
-			const checked = checkPaintRequest({
-				names: data.styles,
-				known: await room.painterStyles(),
-				left: await room.paintingsLeft(agent),
-				references: data.references.length + data.sketches.length,
-			})
-			if (!checked.ok) throw new Error(checked.error)
-			const { styles } = checked
 			const references = await step.do('references', async () => {
 				const r = await roomFor()
 				const images = await r.findImages(data.references)
@@ -239,13 +231,22 @@ export function designTools(agent: CrewKey) {
 				)
 				return [...images, ...sketches].map((image) => image.id)
 			})
+			const reserved = await step.do('reserve', async () =>
+				(await roomFor()).reservePaintings({
+					agent,
+					styles: data.styles,
+					references: data.references.length + data.sketches.length,
+				})
+			)
+			if (!reserved.ok) throw new Error(reserved.error)
+			const room = await roomFor()
 			const links = references.length
 				? await room.referenceLinks(references)
 				: []
 			const referenceUrls = links ?? []
-			const results = await Promise.all(
-				styles.map((style, index) =>
-					step.do(`paint:${index}:${style.name}`, async () => {
+			const painted = await Promise.all(
+				reserved.paintings.map(({ id, label, style }) =>
+					step.do(`paint:${id}`, async () => {
 						const usable = Math.min(
 							referenceUrls.length,
 							PAINTER_MODELS[style.model].references
@@ -255,7 +256,9 @@ export function designTools(agent: CrewKey) {
 							brief: data.brief,
 							references: usable,
 						})
-						const painting = {
+						const painting: PaintingType & { prompt: string } = {
+							id,
+							label,
 							style: style.name,
 							model: style.model,
 							prompt,
@@ -264,30 +267,31 @@ export function designTools(agent: CrewKey) {
 							error: null,
 						}
 						try {
-							const painted = await runPainter(
-								(model: string, input: Record<string, unknown>) =>
-									env.AI.run(model, input),
+							const result = await runPainter(
+								(model, input, options) => env.AI.run(model, input, options),
 								style.model,
 								modelInput(style.model, {
 									prompt,
 									aspect: data.aspect,
 									referenceUrls,
 								}),
-								{ maxBytes: MAX_PAINTING_BYTES }
+								{ maxBytes: MAX_PAINTING_BYTES, signal }
 							)
-							if (looksLikeSvg(painted.bytes)) {
-								const [svg] = await keepSvgs(agent, [
+							if (looksLikeSvg(result.bytes)) {
+								const checked = checkSvg(new TextDecoder().decode(result.bytes))
+								if (!checked.ok) throw new Error(checked.error)
+								const [svg] = await saveSvgs(agent, [
 									{
 										title: `${style.name}: ${data.title}`.slice(0, 140),
-										svg: new TextDecoder().decode(painted.bytes),
+										...checked,
 									},
 								])
 								return { ...painting, svg }
 							}
-							const info = imageInfo(painted.bytes)
+							const info = imageInfo(result.bytes)
 							if (!info) {
 								throw new Error(
-									`The model sent a picture the room cannot keep (${painted.contentType || 'unknown type'}).`
+									`The model sent a picture the room cannot keep (${result.contentType || 'unknown type'}).`
 								)
 							}
 							const image = await (
@@ -296,10 +300,13 @@ export function designTools(agent: CrewKey) {
 								kind: 'painting',
 								author: agent,
 								...info,
-								bytes: painted.bytes.slice().buffer,
+								bytes: result.bytes.slice().buffer,
 							})
 							return { ...painting, image }
 						} catch (error) {
+							// Flue has given up on an aborted call: recording the abort as the
+							// painting's error would let the run go on to post a card.
+							if (signal?.aborted) throw error
 							return {
 								...painting,
 								error: error instanceof Error ? error.message : String(error),
@@ -308,6 +315,19 @@ export function designTools(agent: CrewKey) {
 					})
 				)
 			)
+			signal?.throwIfAborted()
+			const vectors = painted.flatMap((painting) =>
+				painting.svg ? [painting.svg] : []
+			)
+			const rendered = vectors.length
+				? await step.do('render', () => renderSvgs(agent, vectors))
+				: []
+			const results: typeof painted = []
+			for (const painting of painted) {
+				const svg = rendered.find((r) => r.id === painting.svg?.id)
+				results.push(svg ? { ...painting, svg } : painting)
+			}
+			signal?.throwIfAborted()
 			const posted = await step.do('post', async () =>
 				(await roomFor()).postPaintings({
 					agent,
@@ -339,7 +359,7 @@ export function designTools(agent: CrewKey) {
 
 	const drawSvg = defineTool({
 		name: 'draw_svg',
-		description: `Draw SVGs yourself, such as icons, spot illustrations and diagrams, and post them as one card in your room, where the admin can copy or download each. Each \`svg\` is a whole <svg> document with a viewBox. It may hold shapes, text, gradients, <style> and data:image pictures; it may not hold script, event handlers such as onclick, javascript: links, <foreignObject>, or links to other files, and the room refuses one that does. Each SVG also gets a PNG rendering you can look at with look_at_image. \`body\` is your message on the card.`,
+		description: `Draw SVGs yourself, such as icons, spot illustrations and diagrams, and post them as one card in your room, where the admin can copy or download each. Each \`svg\` is a whole <svg> document with a viewBox. It may hold shapes, text, gradients, <style> and data:image pictures; it may not hold script, event handlers such as onclick, javascript: links, <foreignObject>, URLs in attributes other than href, CSS escapes, or links to other files, and the room refuses one that does. Each SVG also gets a PNG rendering you can look at with look_at_image. \`body\` is your message on the card. You can draw ${SVGS_PER_HOUR} SVGs an hour.`,
 		input: v.object({
 			title: v.pipe(Text, v.maxLength(140)),
 			body: v.pipe(Text, v.maxLength(2000)),
@@ -357,16 +377,29 @@ export function designTools(agent: CrewKey) {
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.body)
-			data.svgs.forEach((drawn, index) => {
-				const checked = checkSvg(drawn.svg)
-				if (!checked.ok) {
+			const checked = data.svgs.map((drawn, index) => {
+				const result = checkSvg(drawn.svg)
+				if (!result.ok) {
 					throw new Error(
-						`Nothing was posted. SVG ${index + 1} (${drawn.title}): ${checked.error}`
+						`Nothing was posted. SVG ${index + 1} (${drawn.title}): ${result.error}`
 					)
 				}
+				return { title: drawn.title, ...result }
 			})
+			const left = await step.do('limit', async () =>
+				(await roomFor()).svgsLeft(agent)
+			)
+			if (checked.length > left) {
+				throw new Error(
+					`Nothing was posted: you can draw ${left} more SVG${left === 1 ? '' : 's'} this hour, out of ${SVGS_PER_HOUR}.`
+				)
+			}
 			const posted = await step.do('draw', async () => {
-				const svgs = await keepSvgs(agent, data.svgs)
+				const svgs = await renderSvgs(
+					agent,
+					await saveSvgs(agent, checked),
+					checked.map((item) => item.svg)
+				)
 				const messageId = await (
 					await roomFor()
 				).postSvgs({ agent, title: data.title, body: data.body, svgs })
@@ -395,51 +428,63 @@ export function designTools(agent: CrewKey) {
 	]
 }
 
-// Checks each SVG, renders it to a PNG in one browser session, and keeps
-// both. An SVG that fails the check throws; one that fails to render is
-// kept without its PNG.
-async function keepSvgs(
+// Keeps SVGs that passed checkSvg, without their renderings.
+async function saveSvgs(
 	author: CrewKey,
-	drawn: Array<{ title: string; svg: string }>
+	checked: Array<{ title: string; svg: string; width: number; height: number }>
 ): Promise<Array<SvgRefType>> {
-	const checked = drawn.map((item) => {
-		const result = checkSvg(item.svg)
-		if (!result.ok) throw new Error(result.error)
-		return { title: item.title, ...result }
-	})
-	const shots = await screenshots(
-		env.BROWSER,
-		checked.map((item) => ({
-			page: { html: svgPage(item.svg) },
-			frame: svgViewport(item),
-		}))
-	).catch((error: unknown) => {
-		console.error('Could not render an SVG', error)
-		return null
-	})
 	const room = await roomFor()
-	const kept = await Promise.all(
-		checked.map(async (item, index) => {
-			const shot = shots?.[index]
-			const info = shot ? imageInfo(shot.image) : null
-			const png =
-				shot && info
-					? await room.saveImage({
-							kind: 'svg',
-							author,
-							...info,
-							bytes: shot.image.slice().buffer,
-						})
-					: null
-			return room.saveSvg({
+	return Promise.all(
+		checked.map((item) =>
+			room.saveSvg({
 				author,
 				title: item.title,
 				text: item.svg,
 				width: item.width,
 				height: item.height,
-				png: png?.id ?? null,
+				png: null,
 			})
+		)
+	)
+}
+
+// Renders SVGs to PNGs in one browser session and keeps each PNG with its
+// SVG. An SVG that fails to render keeps no PNG. `texts` saves reading back
+// SVGs the caller still holds.
+async function renderSvgs(
+	author: CrewKey,
+	svgs: Array<SvgRefType>,
+	texts?: Array<string>
+): Promise<Array<SvgRefType>> {
+	const room = await roomFor()
+	const sources =
+		texts ??
+		(await Promise.all(
+			svgs.map(async (svg) => (await room.svg(svg.id))?.text ?? '')
+		))
+	const shots = await screenshots(
+		env.BROWSER,
+		svgs.map((svg, index) => ({
+			page: { html: svgPage(sources[index]) },
+			frame: svgViewport(svg),
+		}))
+	).catch((error: unknown) => {
+		console.error('Could not render an SVG', error)
+		return null
+	})
+	return Promise.all(
+		svgs.map(async (svg, index) => {
+			const shot = shots?.[index]
+			const info = shot ? imageInfo(shot.image) : null
+			if (!shot || !info) return svg
+			const png = await room.saveImage({
+				kind: 'svg',
+				author,
+				...info,
+				bytes: shot.image.slice().buffer,
+			})
+			await room.setSvgPng(svg.id, png.id)
+			return { ...svg, png: png.id }
 		})
 	)
-	return kept
 }

@@ -128,9 +128,6 @@ export function checkPaintRequest<Style extends { name: string }>(input: {
 	return { ok: true, styles }
 }
 
-// The prompt a model gets: the style first, then product-2's brief, then
-// what to do with the reference images. The style's text sets the look; the
-// brief sets the subject and composition.
 export function paintingPrompt(input: {
 	style: { name: string; prompt: string }
 	brief: string
@@ -192,7 +189,7 @@ export type ModelResult =
 	| { state: 'done'; url: string }
 	// The picture itself, base64, from a model that answers inline.
 	| { state: 'inline'; base64: string; contentType: string }
-	| { state: 'pending'; pollUrl: string | null }
+	| { state: 'pending'; status: string }
 	| { state: 'failed'; error: string }
 
 const record = (value: unknown): Record<string, unknown> | null =>
@@ -228,7 +225,13 @@ export function readModelResult(raw: unknown): ModelResult {
 			error: `The model's job ${status.toLowerCase()}${detail ? `: ${detail}` : ''}.`,
 		}
 	}
-	if (url && /^https?:\/\//i.test(url)) return { state: 'done', url }
+	if (url && /^https:\/\//i.test(url)) return { state: 'done', url }
+	if (url && /^http:\/\//i.test(url)) {
+		return {
+			state: 'failed',
+			error: `The model answered with an http:// link; the painter downloads over HTTPS only: ${url.slice(0, 60)}`,
+		}
+	}
 	if (url) {
 		const dataUri = /^data:([^;,]+);base64,(.*)$/s.exec(url)
 		if (dataUri) {
@@ -243,19 +246,14 @@ export function readModelResult(raw: unknown): ModelResult {
 		}
 	}
 	if (status && !DONE.test(status)) {
-		return {
-			state: 'pending',
-			pollUrl: text(top.polling_url) ?? text(top.pollingUrl),
-		}
+		return { state: 'pending', status }
 	}
 	return { state: 'failed', error: 'The model answered with no image.' }
 }
 
-// How long one painting may take, job and download together. A Durable
-// Object's request has no wall-clock limit while it awaits I/O, but a tool
-// call that hangs holds up the agent's run.
+// How long one style may take, from the model call to the end of the
+// download.
 export const PAINT_TIMEOUT_MS = 150_000
-const POLL_EVERY_MS = 3000
 
 export type Painted = {
 	bytes: Uint8Array
@@ -266,80 +264,117 @@ export type Painted = {
 	url: string | null
 }
 
-const tooBig = (bytes: number, max: number) =>
-	`The painting is ${(bytes / 1e6).toFixed(1)} MB, over the ${max / 1e6} MB the room keeps.`
+const tooBig = (bytes: number | null, max: number) =>
+	bytes === null
+		? `The painting is over the ${max / 1e6} MB the room keeps.`
+		: `The painting is ${(bytes / 1e6).toFixed(1)} MB, over the ${max / 1e6} MB the room keeps.`
 
-// Runs one model and downloads its picture. A job the model has not
-// finished is polled at its polling_url until it is, or until the time
-// runs out. The model's hosted URL expires, so the caller keeps the bytes.
+// Reads a body without trusting content-length, which a server may leave
+// out: it stops as soon as the bytes pass the cap.
+export async function readCapped(response: Response, maxBytes: number) {
+	const length = response.headers.get('content-length')
+	if (length !== null && Number(length) > maxBytes) {
+		await response.body?.cancel()
+		throw new Error(tooBig(Number(length), maxBytes))
+	}
+	if (!response.body) return new Uint8Array(0)
+	const chunks: Array<Uint8Array> = []
+	let total = 0
+	// Throwing out of the loop cancels the stream.
+	for await (const chunk of response.body as ReadableStream<Uint8Array>) {
+		total += chunk.byteLength
+		if (total > maxBytes) throw new Error(tooBig(null, maxBytes))
+		chunks.push(chunk)
+	}
+	const bytes = new Uint8Array(total)
+	let at = 0
+	for (const chunk of chunks) {
+		bytes.set(chunk, at)
+		at += chunk.byteLength
+	}
+	return bytes
+}
+
+// The keys and status of an answer, for the log: never its picture.
+const answerShape = (raw: unknown) => {
+	const top = record(raw)
+	if (!top) return typeof raw
+	const result = record(top.result)
+	return JSON.stringify({
+		keys: Object.keys(top),
+		resultKeys: result ? Object.keys(result) : null,
+		status: text(top.status) ?? text(top.state),
+	})
+}
+
+// Runs one model and downloads its picture. The model's hosted URL expires,
+// so the caller keeps the bytes.
 export async function runPainter(
-	run: (model: string, input: Record<string, unknown>) => Promise<unknown>,
+	run: (
+		model: string,
+		input: Record<string, unknown>,
+		options: { signal: AbortSignal }
+	) => Promise<unknown>,
 	model: PainterModel,
 	input: Record<string, unknown>,
 	options: {
-		fetch?: (url: string) => Promise<Response>
-		sleep?: (ms: number) => Promise<unknown>
-		now?: () => number
+		fetch?: (url: string, init: { signal: AbortSignal }) => Promise<Response>
+		signal?: AbortSignal
 		timeoutMs?: number
 		maxBytes: number
 	}
 ): Promise<Painted> {
 	const get = options.fetch ?? fetch
-	const sleep =
-		options.sleep ??
-		((ms: number) => new Promise((done) => setTimeout(done, ms)))
-	const now = options.now ?? Date.now
-	const deadline = now() + (options.timeoutMs ?? PAINT_TIMEOUT_MS)
-	// One poll at a time: each waits for the one before it.
-	const settle = async (
-		current: ModelResult
-	): Promise<Exclude<ModelResult, { state: 'pending' }>> => {
-		if (current.state !== 'pending') return current
-		if (!current.pollUrl) {
+	const timeoutMs = options.timeoutMs ?? PAINT_TIMEOUT_MS
+	const deadline = AbortSignal.timeout(timeoutMs)
+	const signal = options.signal
+		? AbortSignal.any([options.signal, deadline])
+		: deadline
+	const label = PAINTER_MODELS[model].label
+	try {
+		const raw = await run(model, input, { signal })
+		const result = readModelResult(raw)
+		if (result.state === 'pending') {
+			console.warn('A painter model answered with an unfinished job', {
+				model,
+				shape: answerShape(raw),
+			})
 			throw new Error(
-				`${PAINTER_MODELS[model].label} answered with a job that is not finished, and gave no way to wait for it.`
+				`${label} answered with a job that is not finished (status ${result.status}), and the painter cannot wait on one. Try another style.`
 			)
 		}
-		if (now() + POLL_EVERY_MS > deadline) {
+		if (result.state === 'failed') throw new Error(result.error)
+		if (result.state === 'inline') {
+			const base64 = result.base64.replace(/\s+/g, '')
+			if (Math.floor((base64.length * 3) / 4) > options.maxBytes + 2) {
+				throw new Error(tooBig(null, options.maxBytes))
+			}
+			const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))
+			if (bytes.length > options.maxBytes) {
+				throw new Error(tooBig(bytes.length, options.maxBytes))
+			}
+			return { bytes, contentType: result.contentType, url: null }
+		}
+		const download = await get(result.url, { signal })
+		if (!download.ok) {
+			await download.body?.cancel()
 			throw new Error(
-				`${PAINTER_MODELS[model].label} did not finish in ${Math.round((options.timeoutMs ?? PAINT_TIMEOUT_MS) / 1000)} seconds.`
+				`Downloading the painting failed: HTTP ${download.status}.`
 			)
 		}
-		await sleep(POLL_EVERY_MS)
-		const polled = await get(current.pollUrl)
-		if (!polled.ok) {
-			throw new Error(`Waiting on the job failed: HTTP ${polled.status}.`)
+		return {
+			bytes: await readCapped(download, options.maxBytes),
+			contentType: download.headers.get('content-type') ?? '',
+			url: result.url,
 		}
-		return settle(readModelResult(await polled.json()))
-	}
-	const result = await settle(readModelResult(await run(model, input)))
-	if (result.state === 'failed') throw new Error(result.error)
-	if (result.state === 'inline') {
-		const bytes = Uint8Array.from(
-			atob(result.base64.replace(/\s+/g, '')),
-			(char) => char.charCodeAt(0)
-		)
-		if (bytes.length > options.maxBytes) {
-			throw new Error(tooBig(bytes.length, options.maxBytes))
+	} catch (error) {
+		if (deadline.aborted && !options.signal?.aborted) {
+			throw new Error(
+				`${label} did not finish in ${Math.round(timeoutMs / 1000)} seconds.`,
+				{ cause: error }
+			)
 		}
-		return { bytes, contentType: result.contentType, url: null }
-	}
-	const download = await get(result.url)
-	if (!download.ok) {
-		throw new Error(`Downloading the painting failed: HTTP ${download.status}.`)
-	}
-	const length = Number(download.headers.get('content-length') ?? 0)
-	if (length > options.maxBytes) {
-		throw new Error(tooBig(length, options.maxBytes))
-	}
-	const bytes = new Uint8Array(await download.arrayBuffer())
-	if (bytes.length > options.maxBytes) {
-		throw new Error(tooBig(bytes.length, options.maxBytes))
-	}
-	return {
-		bytes,
-		contentType: download.headers.get('content-type') ?? '',
-		url: result.url,
+		throw error
 	}
 }
 

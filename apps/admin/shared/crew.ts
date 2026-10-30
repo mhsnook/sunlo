@@ -452,8 +452,9 @@ export const SvgRefSchema = z.object({
 	png: z.number().nullable(),
 })
 export type SvgRefType = z.infer<typeof SvgRefSchema>
-// An SVG is text in a row of its own.
-export const MAX_SVG_BYTES = 300_000
+// The SVG table keeps one in a row, and a row holds at most 2 MB.
+export const MAX_SVG_BYTES = 1_800_000
+export const SVGS_PER_HOUR = 24
 
 // One painting on a paintings card: an image, an SVG from a vector model,
 // or the error its model gave. `label` is its letter on the card.
