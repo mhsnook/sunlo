@@ -12,6 +12,7 @@ import { toastError } from '@/components/ui/sonner'
 import { fixedRouting, type RoutingType } from '../../../shared/crew'
 import { usePostToRoom } from '~/lib/crew'
 import { VoiceControls } from './voice-controls'
+import { AttachImageButton, DraftImageStrip, useDraftImages } from './images'
 import { RoutingMenu, routingNote } from './routing-menu'
 
 // While the admin types, the chip shows only what is certain: "..." stacks
@@ -22,6 +23,7 @@ export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 	// The admin's own choice from the chip, which CLEF learns from.
 	const [override, setOverride] = useState<RoutingType | null>(null)
 	const post = usePostToRoom(myAuthor)
+	const draftImages = useDraftImages()
 
 	const text = draft.trim()
 	const rule = text ? fixedRouting(text) : null
@@ -33,14 +35,16 @@ export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 	// the admin has started the next one.
 	const send = (body: string) => {
 		const chosen = override && !locked ? override : null
+		const images = draftImages.take()
 		setDraft('')
 		setOverride(null)
 		post.mutate(
-			{ body, routing: chosen },
+			{ body, images, routing: chosen },
 			{
 				onError: (error) => {
 					toastError(error.message)
 					setDraft((current) => current || body)
+					draftImages.restore(images)
 				},
 			}
 		)
@@ -85,7 +89,22 @@ export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 					if (!value.trim()) setOverride(null)
 				}}
 				onSend={send}
-				startSlot={<VoiceControls setDraft={setDraft} />}
+				{...draftImages.formProps}
+				busy={draftImages.adding > 0}
+				canSendEmpty={draftImages.images.length > 0}
+				topSlot={
+					<DraftImageStrip
+						images={draftImages.images}
+						adding={draftImages.adding}
+						onRemove={draftImages.remove}
+					/>
+				}
+				startSlot={
+					<>
+						<AttachImageButton onFiles={draftImages.add} />
+						<VoiceControls setDraft={setDraft} />
+					</>
+				}
 				placeholder="Message the crew, or @ someone"
 				inputTestId="crew-compose-input"
 				sendTestId="crew-compose-send"

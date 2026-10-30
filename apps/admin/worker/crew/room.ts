@@ -38,6 +38,8 @@ import {
 	type DocumentSummaryType,
 	type DocumentType,
 	type GithubDraftType,
+	type ImageMimeType,
+	type MessageImageType,
 	type RevisionTextType,
 	type RevisionType,
 	type RoomKey,
@@ -52,6 +54,7 @@ import {
 	type SketchType,
 	type WeeklyType,
 	type WorkspaceType,
+	withImageLines,
 } from '../../shared/crew'
 import {
 	briefingText,
@@ -115,6 +118,8 @@ type MessageRow = {
 	thread_with: string | null
 	thread_closed_at: string | null
 	thread_run_at: string | null
+	// JSON: Array<MessageImageType>.
+	images: string | null
 }
 
 type CharterRow = {
@@ -210,6 +215,7 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 	author: row.author,
 	authorName: row.author_name,
 	body: row.body,
+	images: row.images ? (JSON.parse(row.images) as Array<MessageImageType>) : [],
 	routing: row.routing ? (JSON.parse(row.routing) as RoutingType) : null,
 	card: row.card ? (JSON.parse(row.card) as CrewMessageType['card']) : null,
 	answer: row.answer
@@ -425,6 +431,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				mime_type text not null,
 				at text not null
 			);
+			-- Pictures kept by id: the admin's uploads ("upload"). A sketch keeps
+			-- its picture in its own row.
+			create table if not exists image (
+				id integer primary key autoincrement,
+				kind text not null,
+				author text not null,
+				mime_type text not null,
+				width integer not null,
+				height integer not null,
+				bytes blob not null,
+				at text not null
+			);
 			create index if not exists message_place on message (place, at);
 			create table if not exists schema_version (version integer not null);
 		`
@@ -439,6 +457,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.renameAgentsToSeats(),
 			() => this.addRoomChartersAndOtherViews(),
 			() => this.addSideThreads(),
+			() => this.addMessageImages(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -576,6 +595,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			create index if not exists message_parent on message (parent)
 			where parent is not null`
+	}
+
+	private addMessageImages() {
+		if (!this.tableColumns('message').has('images')) {
+			this.sql`alter table message add column images text`
+		}
 	}
 
 	private renameAgentsToSeats() {
@@ -719,12 +744,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		uid: string
 		name: string
 		body: string
+		images: Array<MessageImageType>
 		// The place the admin picked from the chip before sending, if any.
 		routing: RoutingType | null
 	}): Promise<{ message: CrewMessageType; wake: Array<Wake> }> {
 		const fixed = fixedRouting(input.body)
+		const text = withImageLines(input.body, input.images)
 		// Asked even when the admin picked a place, so the pick is a label.
-		const predicted = fixed ?? (await this.classify(input.body))
+		const predicted = fixed ?? (await this.classify(text))
 		const routing =
 			fixed ?? (input.routing ? sanitize(input.routing) : predicted)
 		const author = adminAuthor(input.uid)
@@ -734,13 +761,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			author,
 			authorName: input.name,
 			body: input.body,
+			images: input.images,
 			routing,
 			card: null,
 			place: COMMON_ROOM,
 		})
 		this.sql`insert into clef_decision (message_id, text, predicted, final, at)
-			values (${message.id}, ${input.body}, ${labelOf(predicted)}, ${labelOf(routing)}, ${message.at})`
-		const body = [...stacked, input.body].join('\n')
+			values (${message.id}, ${text}, ${labelOf(predicted)}, ${labelOf(routing)}, ${message.at})`
+		const body = [...stacked, text].join('\n')
 		const wake = routing.agents.map(
 			(agent): Wake => ({
 				agent,
@@ -761,6 +789,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		name: string
 		room: RoomKey
 		body: string
+		images: Array<MessageImageType>
 	}): { message: CrewMessageType; wake: Array<Wake> } {
 		const place = placeOf(input.room)
 		const author = adminAuthor(input.uid)
@@ -773,11 +802,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			author,
 			authorName: input.name,
 			body: input.body,
+			images: input.images,
 			routing,
 			card: null,
 			place,
 		})
-		const body = [...stacked, input.body].join('\n')
+		const body = [...stacked, withImageLines(input.body, input.images)].join(
+			'\n'
+		)
 		const wake = routing.agents.map(
 			(agent): Wake => ({ agent, body, messageId: message.id, place })
 		)
@@ -824,7 +856,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			.map(
 				(agent): Wake => ({
 					agent,
-					body: row.body,
+					body: withImageLines(original.body, original.images),
 					messageId: row.id,
 					place: COMMON_ROOM,
 				})
@@ -1580,6 +1612,63 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return message.id
 	}
 
+	// ---- Images ---------------------------------------------------------------
+
+	// One picture, kept by id. The caller has read its type and size from
+	// its bytes (worker/images.ts).
+	saveImage(input: {
+		kind: 'upload'
+		author: string
+		mimeType: ImageMimeType
+		width: number
+		height: number
+		bytes: ArrayBuffer
+	}): MessageImageType {
+		// The sql template takes no bytes; storage.sql binds an ArrayBuffer as
+		// a blob.
+		const { id } = this.ctx.storage.sql
+			.exec<{ id: number }>(
+				`insert into image (kind, author, mime_type, width, height, bytes, at)
+				values (?, ?, ?, ?, ?, ?, ?)
+				returning id`,
+				input.kind,
+				input.author,
+				input.mimeType,
+				input.width,
+				input.height,
+				input.bytes,
+				now()
+			)
+			.one()
+		return { id, width: input.width, height: input.height }
+	}
+
+	image(id: number) {
+		const row = this.sql<{
+			bytes: ArrayBuffer
+			mime_type: ImageMimeType
+			width: number
+			height: number
+		}>`select bytes, mime_type, width, height from image where id = ${id}`[0]
+		return row
+			? {
+					bytes: row.bytes,
+					mimeType: row.mime_type,
+					width: row.width,
+					height: row.height,
+				}
+			: null
+	}
+
+	findImages(ids: Array<number>): Array<MessageImageType> | null {
+		const found = ids.map(
+			(id) =>
+				this.sql<MessageImageType>`
+					select id, width, height from image where id = ${id}`[0]
+		)
+		return found.every(Boolean) ? found : null
+	}
+
 	// ---- Sketches -------------------------------------------------------------
 
 	sketchesLeft(agent: CrewKey) {
@@ -1835,6 +1924,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				...input,
 				room: 'command',
 				body: "Let's have our weekly meeting.",
+				images: [],
 			}),
 			needsReport: start.needsReport,
 		}
@@ -2152,6 +2242,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		author: string
 		authorName: string
 		body: string
+		images?: Array<MessageImageType>
 		routing: RoutingType | null
 		card: CrewMessageType['card']
 		place: MessagePlaceType
@@ -2178,10 +2269,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			thread_with: input.threadWith ?? null,
 			thread_closed_at: null,
 			thread_run_at: null,
+			images: input.images?.length ? JSON.stringify(input.images) : null,
 		}
 		this.sql`
-			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with)
-			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with})`
+			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with, images)
+			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with}, ${row.images})`
 		const message = toMessage(row)
 		const threadIn = row.parent ? this.messageById(row.parent)?.place : null
 		this.push(
@@ -2197,9 +2289,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	private stackedBodies(author: string, place: PlaceType) {
 		const rows = this.sql<{
 			body: string
+			images: string | null
 			routing: string | null
 		}>`
-			select body, routing from message
+			select body, images, routing from message
 			where author = ${author} and place = ${place}
 			order by at desc, id desc
 			limit 20`
@@ -2209,7 +2302,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				? (JSON.parse(row.routing) as RoutingType)
 				: null
 			if (routing?.kind !== 'stack') break
-			stacked.unshift(row.body)
+			const images = row.images
+				? (JSON.parse(row.images) as Array<MessageImageType>)
+				: []
+			stacked.unshift(withImageLines(row.body, images))
 		}
 		return stacked
 	}

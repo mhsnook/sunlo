@@ -44,6 +44,10 @@ Register a new id here, not in the main app's registry.
 | `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                    | The mic and the voice-replies toggle in a compose bar                                   |
 | `voice-read` + `data-key=<message id>`                                                       | The read-aloud button beside an agent's message                                         |
 | `crew-compose-input`, `crew-compose-send`                                                    | The room's compose bar                                                                  |
+| `compose-add-image`, `compose-image-input`                                                   | A compose bar's Add an image button, and its hidden file input                          |
+| `compose-images`, `compose-image` + `data-key=<draft key>`, `compose-image-remove`           | The images waiting in a compose bar, one of them, and its Remove button                 |
+| `crew-message-images`, `crew-message-image` + `data-key=<image id>`                          | A message's images, and one thumbnail; opens it full size                               |
+| `crew-image-full`                                                                            | The full-size view of a message's image                                                 |
 | `crew-clef-chip`                                                                             | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
 | `crew-routing-option` + `data-key=<kind><agents>`                                            | One choice in a routing menu, e.g. `routeproduct-1`, `room`, `stack`                    |
 | `crew-routing-correct`                                                                       | The routing note under your own message; opens the menu to correct it                   |

@@ -7,6 +7,7 @@ import {
 	useModel,
 	useTool,
 } from '@flue/runtime'
+import { resolveModel } from '@flue/runtime/internal'
 import { env } from 'cloudflare:workers'
 import { BLOCKS_GUIDE } from '../../shared/blocks'
 import {
@@ -42,11 +43,15 @@ export function useCrewMember(
 	agent: CrewKey,
 	options: { model?: string; database?: boolean } = {}
 ) {
-	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
+	const model = `cloudflare/${options.model ?? env.CREW_MODEL}`
+	useModel(model)
+	// The catalog Flue resolves the model from. For a model it lists as text
+	// only, or does not list, pi-ai sends a placeholder in place of an image.
+	const seesImages = resolveModel(model).input.includes('image')
 	// A side-thread's conversation is created with its thread, and keeps it;
 	// the agent's main conversation has none.
 	const thread = useInitialData<ConversationData | undefined>()?.thread ?? null
-	for (const tool of crewTools(agent, thread)) useTool(tool)
+	for (const tool of crewTools(agent, thread, { seesImages })) useTool(tool)
 	const github = githubAccess[agent]
 	if (github) for (const tool of githubTools(agent, github)) useTool(tool)
 	const database = options.database ?? true
@@ -75,7 +80,7 @@ export function useCrewMember(
 		else await room.finishRun(agent)
 	})
 
-	useInstruction(crewInstructions(agent))
+	useInstruction(crewInstructions(agent, seesImages))
 	useInstruction(BLOCKS_GUIDE)
 	useInstruction(thread ? threadInstructions : runInstructions(agent))
 	if (github) useInstruction(githubInstructions(github))
@@ -95,7 +100,7 @@ const rosterLine = (member: CrewMember) => {
 	return `- ${displayName(member.key)} (${handles}, ${member.title}, ${seat})${member.active ? '' : ', not started yet'}: ${member.looksAfter.join('; ')}`
 }
 
-function crewInstructions(agent: CrewKey) {
+function crewInstructions(agent: CrewKey, seesImages: boolean) {
 	const others = crewList
 		.filter((member) => member.key !== agent)
 		.map(rosterLine)
@@ -138,6 +143,10 @@ Your room keeps a charter: principles (the admin's philosophy, strategy and tast
 Each room keeps documents: longer Markdown that lasts, such as a roadmap or a plan, which the admin reads and edits in the room log. Your <crew-context> lists the ${room}'s documents with their revisions, but not their text: read one with read_document when you need it. Any room's documents are yours to read; only the ${room}'s are yours to write.
 
 To change a document, read it, change the text, and save the whole document with write_document, from the revision you read. If someone saved since, nothing is saved: read it again, put your change into the new text, and save again. A document can hold checklists (- [ ] and - [x]), tables, and diagrams in a \`\`\`mermaid block, such as a gantt chart. How you lay out a document is yours to decide: keep your conventions for it in your memory, so each revision follows the last.
+
+## Images
+
+The admin can paste images into a message. Each shows after the message's text as a line such as "[image 12 attached, 1280×800]". ${seesImages ? 'When one matters to what you were asked, look at it with look_at_image and a pointed question.' : 'Your model cannot see images. When one matters to what you were asked, ask the admin, or a crewmate who can look, what it shows.'}
 
 ## Directives
 

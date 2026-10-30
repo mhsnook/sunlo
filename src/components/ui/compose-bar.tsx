@@ -31,6 +31,10 @@ type ComposeBarProps = Omit<
 	maxRows?: number
 	/** Tools at the start of the bottom row — attachment and share buttons. */
 	startSlot?: React.ReactNode
+	/** Above the textarea, inside the box — such as thumbnails of attachments. */
+	topSlot?: React.ReactNode
+	/** Lets an empty draft send, when something else (an attachment) is the message. */
+	canSendEmpty?: boolean
 	sendLabel?: string
 	/** Accessible name for the textarea. Falls back to the placeholder. */
 	inputLabel?: string
@@ -48,6 +52,8 @@ const ComposeBar = ({
 	busy = false,
 	maxRows = 6,
 	startSlot,
+	topSlot,
+	canSendEmpty = false,
 	sendLabel = 'Send',
 	inputLabel,
 	inputTestId = 'compose-bar-input',
@@ -55,7 +61,8 @@ const ComposeBar = ({
 	...props
 }: ComposeBarProps) => {
 	const textareaRef = React.useRef<HTMLTextAreaElement>(null)
-	const canSend = !disabled && !busy && value.trim().length > 0
+	const canSend =
+		!disabled && !busy && (canSendEmpty || value.trim().length > 0)
 
 	// A textarea reports its content height only after its own height is
 	// released, so measuring means resetting to `auto` first. There is no
@@ -91,6 +98,7 @@ const ComposeBar = ({
 			)}
 			{...props}
 		>
+			{topSlot}
 			<textarea
 				ref={textareaRef}
 				rows={1}

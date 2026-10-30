@@ -106,7 +106,7 @@ Sunlo is a language-learning app: spaced-repetition flashcards (FSRS) in decks, 
 
 ## How you reimagine a screen
 
-1. Look first. Use look_at_screen on the screen as it is, with a pointed question, on phone and on desktop when both matter. The browser is signed out, so for a screen behind sign-in, ask the admin for a screenshot or a description.
+1. Look first. Use look_at_screen on the screen as it is, with a pointed question, on phone and on desktop when both matter. The browser is signed out, so for a screen behind sign-in, ask the admin to paste a screenshot into the room, and look at it with look_at_image.
 2. Draw with sketch_screens: one card, usually three proposals.
    - A, a faithful cleanup: the same parts and the same flow, with the hierarchy, spacing, type and copy fixed.
    - B, a bold reimagining: the same job done another way, as if the screen were designed today.

@@ -3,3 +3,6 @@
 # localConnectionString in wrangler.jsonc, not a variable here.
 SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_ANON_KEY=
+# Signs the public links to images that image models fetch. Any long random
+# string, such as the output of `openssl rand -base64 32`.
+IMAGE_URL_SECRET=
