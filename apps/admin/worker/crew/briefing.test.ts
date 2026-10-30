@@ -20,6 +20,7 @@ const message = (
 	at: '2026-10-28T09:15:00Z',
 	author: 'admin:u1',
 	authorName: 'sam',
+	images: [],
 	routing: null,
 	card: null,
 	answer: null,
@@ -89,6 +90,37 @@ describe('briefingText', () => {
 		)
 		expect(text.indexOf('## The Common Room')).toBeLessThan(
 			text.indexOf('## The Product room, latest')
+		)
+	})
+
+	it('adds a line for each image, so the agent knows to look', () => {
+		const text = briefingText(
+			input('product-2', {
+				unread: {
+					common: { since: true, messages: [] },
+					own: {
+						since: true,
+						messages: [
+							message({
+								body: 'This screen is cramped',
+								place: 'room:product',
+								images: [
+									{ id: 12, width: 1280, height: 800 },
+									{ id: 13, width: 390, height: 844 },
+								],
+							}),
+							message({
+								body: '',
+								place: 'room:product',
+								images: [{ id: 14, width: 800, height: 600 }],
+							}),
+						],
+					},
+				},
+			})
+		)
+		expect(text).toContain(
+			'[2026-10-28 09:15 UTC] sam: This screen is cramped\n[image 12 attached, 1280×800]\n[image 13 attached, 390×844]\n[2026-10-28 09:15 UTC] sam: [image 14 attached, 800×600]'
 		)
 	})
 

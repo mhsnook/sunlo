@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { BarChart3, Brain, ClipboardList, type LucideIcon } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import {
@@ -23,9 +23,7 @@ import {
 import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
-import { CommonKnowledgePanel } from '~/components/crew/common-knowledge-panel'
-import { OverviewPanel } from '~/components/crew/overview-panel'
-import { SitrepPanel } from '~/components/crew/sitrep-panel'
+import { CREW, DetailsPanel } from '~/components/crew/details-panel'
 import { RoomCompose } from '~/components/crew/room-compose'
 import { RoomTimeline } from '~/components/crew/room-timeline'
 
@@ -51,44 +49,15 @@ export const Route = createFileRoute('/_admin/')({
 	component: CrewRoomPage,
 })
 
-type Panel = 'sitrep' | 'knowledge' | 'overview'
-
-const panels: Array<{
-	key: Panel
-	label: string
-	icon: LucideIcon
-	testId: string
-}> = [
-	{
-		key: 'sitrep',
-		label: 'Sitrep',
-		icon: ClipboardList,
-		testId: 'sitrep-button',
-	},
-	{
-		key: 'knowledge',
-		label: 'Knowledge',
-		icon: Brain,
-		testId: 'common-knowledge-button',
-	},
-	{
-		key: 'overview',
-		label: 'Overview',
-		icon: BarChart3,
-		testId: 'crew-overview-button',
-	},
-]
-
 function CrewRoomPage() {
 	const { session } = Route.useRouteContext()
 	const { data: room } = useSuspenseQuery(roomQuery())
 	// Captured once, so the "New since" line stays put while the admin reads.
 	const [newSince] = useState(room.seenAt)
-	// The Situation Report sits beside the room on a wide screen, since the
-	// room is where the admin comes for the overview.
-	const [panel, setPanel] = useSidePanel<Panel>('sitrep')
-	const toggle = (next: Panel) =>
-		setPanel((open) => (open === next ? null : next))
+	// The details, with the Situation Report first, sit beside the room on a
+	// wide screen, since the room is where the admin comes for the overview.
+	const [panel, setPanel] = useSidePanel('details')
+	const panelOpen = panel !== null
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
 	const active = crewList.filter((member) => member.active).length
 	const myAuthor = adminAuthor(session.user.id)
@@ -107,18 +76,15 @@ function CrewRoomPage() {
 							You and {active} agents, {crewList.length - active} more planned
 						</p>
 					</div>
-					{panels.map(({ key, label, icon: Icon, testId }) => (
-						<Button
-							key={key}
-							variant="ghost"
-							data-testid={testId}
-							className="@max-3xl:px-2.5"
-							aria-pressed={panel === key}
-							onClick={() => toggle(key)}
-						>
-							<Icon /> <span className="@max-3xl:sr-only">{label}</span>
-						</Button>
-					))}
+					<Button
+						variant="ghost"
+						data-testid="details-button"
+						className="@max-sm:px-2.5"
+						aria-pressed={panelOpen}
+						onClick={() => setPanel((open) => (open ? null : 'details'))}
+					>
+						<Info /> <span className="@max-sm:sr-only">Details</span>
+					</Button>
 				</header>
 				<MessageScroller dependency={room.messages.length + working.length}>
 					{room.messages.length ? (
@@ -134,15 +100,9 @@ function CrewRoomPage() {
 				</MessageScroller>
 				<RoomCompose myAuthor={myAuthor} />
 			</section>
-			{panel && (
+			{panelOpen && (
 				<SidePanelSlot>
-					{panel === 'sitrep' && <SitrepPanel onClose={() => setPanel(null)} />}
-					{panel === 'knowledge' && (
-						<CommonKnowledgePanel onClose={() => setPanel(null)} />
-					)}
-					{panel === 'overview' && (
-						<OverviewPanel onClose={() => setPanel(null)} />
-					)}
+					<DetailsPanel room={CREW} onClose={() => setPanel(null)} />
 				</SidePanelSlot>
 			)}
 		</div>

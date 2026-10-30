@@ -21,6 +21,7 @@ import {
 } from '../../shared/crew'
 import type { Wake } from '../../worker/crew/room'
 import type { RunKey } from '../../worker/crew/runs'
+import { toBase64 } from '../../worker/images'
 import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
 
@@ -51,7 +52,11 @@ const defaultActions: Record<
 // own room, bringing the admin cards, side-threads, and keeping its
 // workspace. In a side-thread's own run (`thread`), reply_in_thread answers
 // that thread, and pass_note is left out.
-export function crewTools(agent: CrewKey, thread: RunKey) {
+export function crewTools(
+	agent: CrewKey,
+	thread: RunKey,
+	options: { seesImages: boolean }
+) {
 	const name = displayName(agent)
 	const ownRoom = roomOf(agent)
 	const place = placeOf(ownRoom)
@@ -230,6 +235,38 @@ Their answer comes back to you.`,
 		annotations: { readOnlyHint: true },
 		async run({ data }) {
 			return await (await roomFor()).recentRoom(data.limit)
+		},
+	})
+
+	// A tool result reaches the model only as text, so the picture goes to
+	// the agent's own model in a harness prompt, and the answer comes back
+	// in words.
+	const lookAtImage = defineTool({
+		name: 'look_at_image',
+		description:
+			'Look at an image the admin attached to a message, shown as "[image 12 attached, 1280×800]", and answer a question about it. Ask a pointed question, such as "What does the error say?"; the answer is what you saw, in words.',
+		input: v.object({
+			id: Id,
+			question: v.pipe(Text, v.maxLength(1000)),
+		}),
+		harness: true,
+		annotations: { readOnlyHint: true },
+		async run({ data, harness }) {
+			const image = await (await roomFor()).image(data.id)
+			if (!image) throw new Error(`No image ${data.id}.`)
+			const seen = await harness.prompt(
+				`This is image ${data.id} (${image.width}×${image.height}), which the admin attached to a message. Answer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
+				{
+					images: [
+						{
+							type: 'image',
+							data: toBase64(new Uint8Array(image.bytes)),
+							mimeType: image.mimeType,
+						},
+					],
+				}
+			)
+			return { output: { looked_at: `image ${data.id}`, seen: seen.text } }
 		},
 	})
 
@@ -440,6 +477,7 @@ Their answer comes back to you.`,
 		bringToAdmin,
 		proposeChange,
 		readRoom,
+		...(options.seesImages ? [lookAtImage] : []),
 		writeDocument,
 		// A note from a thread run would start a second thread, in this
 		// agent's own room and unlinked from the one it is answering.

@@ -35,7 +35,10 @@ const unreadCount = (
 ) => messages.filter((m) => isNewFor(m, seenAt, myAuthor)).length
 
 const previewOf = (message: CrewMessageType, myAuthor: string) =>
-	`${message.author === myAuthor ? 'You' : message.authorName}: ${message.card?.title ?? message.body}`
+	`${message.author === myAuthor ? 'You' : message.authorName}: ${message.card?.title ?? (message.body || imagesNote(message.images.length))}`
+
+const imagesNote = (count: number) =>
+	count === 1 ? 'an image' : `${count} images`
 
 export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 	const { session } = useRouteContext({ from: '/_admin' })

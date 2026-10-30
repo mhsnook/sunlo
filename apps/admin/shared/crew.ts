@@ -388,6 +388,37 @@ export const CardSchema = z.object({
 })
 export type CardType = z.infer<typeof CardSchema>
 
+// An image the room keeps (the `image` table), as a message carries it.
+export const MessageImageSchema = z.object({
+	id: z.number().int(),
+	width: z.number().int(),
+	height: z.number().int(),
+})
+export type MessageImageType = z.infer<typeof MessageImageSchema>
+
+// A Durable Object row holds at most 2 MB, bytes and every other column.
+export const MAX_IMAGE_BYTES = 1_800_000
+// The app scales a pasted image down to this many pixels on its long side.
+export const MAX_IMAGE_SIDE = 2000
+export const MAX_IMAGES_PER_MESSAGE = 6
+// The types the room stores, and serves back with the same content type.
+export const IMAGE_TYPES = [
+	'image/png',
+	'image/jpeg',
+	'image/webp',
+	'image/gif',
+] as const
+export type ImageMimeType = (typeof IMAGE_TYPES)[number]
+
+// What an agent reads for a message's images: a line each.
+export const imageLine = (image: MessageImageType) =>
+	`[image ${image.id} attached, ${image.width}×${image.height}]`
+
+export const withImageLines = (
+	body: string,
+	images: ReadonlyArray<MessageImageType>
+) => [body, ...images.map(imageLine)].filter(Boolean).join('\n')
+
 // Which of two views the admin went with: the principal's message, or the
 // associate's other view of it.
 export const PickChoiceSchema = z.enum(['original', 'other'])
@@ -399,7 +430,9 @@ export const CrewMessageSchema = z.object({
 	// A crew key for an agent, or "admin:<uid>".
 	author: z.string(),
 	authorName: z.string(),
+	// Empty when the message is only images.
 	body: z.string(),
+	images: z.array(MessageImageSchema),
 	// Set on admin messages only.
 	routing: RoutingSchema.nullable(),
 	card: CardSchema.nullable(),
