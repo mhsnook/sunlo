@@ -12,6 +12,14 @@ Any Sunlo account can sign in, but only accounts listed in `public.admin_user` s
 insert into public.admin_user (uid) values ('<the user uuid>');
 ```
 
+## On a phone
+
+The admin app installs to a home screen: Chrome offers "Install app" from the menu, and Safari has "Add to Home Screen". That comes from `public/manifest.webmanifest` and the icons beside it, which `index.html` links; there is no service worker, since every screen is a live socket to the crew room and a cache would only serve stale builds. The icons are the main app's characters in a purple frame, which `scripts/make-icons.py` builds from the root `public/app-icon.png` (it needs Pillow); rerun it if that icon changes:
+
+```bash
+python3 apps/admin/scripts/make-icons.py public/app-icon.png apps/admin/public
+```
+
 ## How data flows
 
 The dashboard's numbers come from `worker/`, a [Hono](https://hono.dev) app that runs SQL against the database as `admin_reader`, a read-only Postgres role (`supabase/migrations/20261023120000_admin_reader_role.sql`). A new chart is a new query in `worker/stats.ts` and a Zod schema in `src/lib/stats.ts`, not a migration.
