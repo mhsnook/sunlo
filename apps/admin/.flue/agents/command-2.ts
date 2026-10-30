@@ -2,13 +2,13 @@
 import { useTool } from '@flue/runtime'
 import { env } from 'cloudflare:workers'
 import { scienceOfficerTools } from '../tools/command'
-import { CREW_DURABILITY, useCrewMember } from './use-crew-member'
+import { CREW_DURABILITY, useCrewMember, useThread } from './use-crew-member'
 
 export function Command2() {
 	const instructions = useCrewMember('command-2', {
 		model: env.MODEL_COMMAND_2,
 	})
-	for (const tool of scienceOfficerTools()) useTool(tool)
+	for (const tool of scienceOfficerTools(useThread())) useTool(tool)
 	return instructions
 }
 

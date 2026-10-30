@@ -74,6 +74,13 @@ import {
 } from './github'
 import { pickReports, sketchPickReports } from './picks'
 import { peopleIndex } from './queries'
+import {
+	mainRunPosted,
+	runEdits,
+	type EditRow,
+	type PostRow,
+	type RunKey,
+} from './runs'
 import { planReply } from './threads'
 import { withSql } from '../db'
 
@@ -439,6 +446,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.renameAgentsToSeats(),
 			() => this.addRoomChartersAndOtherViews(),
 			() => this.addSideThreads(),
+			() => this.addEditRuns(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -576,6 +584,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			create index if not exists message_parent on message (parent)
 			where parent is not null`
+	}
+
+	// An agent's side-thread run can overlap its main run, so each edit
+	// records the run that made it: the thread's first message id, or null
+	// for the main run.
+	private addEditRuns() {
+		if (!this.tableColumns('edit_log').has('run')) {
+			this.sql`alter table edit_log add column run text`
+		}
 	}
 
 	private renameAgentsToSeats() {
@@ -1084,10 +1101,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// The receipt for a run in a side-thread goes in the thread.
 	finishThreadRun(agent: CrewKey, rootId: string) {
-		const startedAt = this.sql<{ at: string | null }>`
-			select thread_run_at as at from message where id = ${rootId}`[0]?.at
+		const startedAt = this.threadRunStart(rootId)
 		if (startedAt) {
-			this.postReceipt(agent, startedAt, threadPlace(rootId), rootId)
+			this.postReceipt(
+				agent,
+				{ thread: rootId, since: startedAt },
+				threadPlace(rootId)
+			)
 		}
 		this.failThreadRun(agent, rootId)
 	}
@@ -1096,13 +1116,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// agent goes idle only if this run is what made it busy: its main run may
 	// have started first.
 	failThreadRun(agent: CrewKey, rootId: string) {
-		const startedAt = this.sql<{ at: string | null }>`
-			select thread_run_at as at from message where id = ${rootId}`[0]?.at
+		const startedAt = this.threadRunStart(rootId)
 		this.sql`update message set thread_run_at = null where id = ${rootId}`
 		const status = this.state.statuses[agent]
 		if (status?.state === 'working' && status.since === startedAt) {
 			this.setStatus(agent, { state: 'idle', since: now() })
 		}
+	}
+
+	private threadRunStart(rootId: string) {
+		return (
+			this.sql<{ at: string | null }>`
+				select thread_run_at as at from message where id = ${rootId}`[0]?.at ??
+			null
+		)
 	}
 
 	private threadReplies(rootId: string) {
@@ -1276,7 +1303,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		if (since) {
 			const place = this.runPlace(agent)
 			this.recordOutcomes(agent, since)
-			this.postReceipt(agent, since, place)
+			this.postReceipt(agent, { thread: null, since }, place)
 		}
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
@@ -1462,16 +1489,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			returning what, at`.toSorted((a, b) => a.at.localeCompare(b.at))
 	}
 
-	addTodo(agent: CrewKey, text: string, note: string | null) {
+	addTodo(agent: CrewKey, text: string, note: string | null, thread: RunKey) {
 		const id = this.saveTodo(agent, text, note)
-		this.workspaceEdited(agent, `added to-do "${text}"`)
+		this.workspaceEdited(agent, `added to-do "${text}"`, thread)
 		return id
 	}
 
 	updateTodo(
 		agent: CrewKey,
 		id: number,
-		change: { done?: boolean; note?: string | null }
+		change: { done?: boolean; note?: string | null },
+		thread: RunKey
 	) {
 		const exists = this.sql`
 			select id from todo
@@ -1484,25 +1512,32 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				? `finished to-do ${id}`
 				: change.done === false
 					? `reopened to-do ${id}`
-					: `updated to-do ${id}`
+					: `updated to-do ${id}`,
+			thread
 		)
 		return true
 	}
 
-	remember(agent: CrewKey, text: string, playbook: Playbook | null = null) {
+	remember(
+		agent: CrewKey,
+		text: string,
+		playbook: Playbook | null,
+		thread: RunKey
+	) {
 		const id = this.saveMemory(agent, text, playbook)
-		this.workspaceEdited(agent, `saved memory "${text}"`)
+		this.workspaceEdited(agent, `saved memory "${text}"`, thread)
 		return id
 	}
 
-	// `by` is who deleted it: only an agent's own edits go in its receipt.
-	forget(agent: CrewKey, id: number, by: 'agent' | 'admin') {
+	// `by` is who deleted it: only an agent's own edits go in its receipt,
+	// the receipt of the run in `thread`.
+	forget(agent: CrewKey, id: number, by: 'agent' | 'admin', thread: RunKey) {
 		const deleted = this.sql<{ text: string }>`
 			delete from memory
 			where id = ${id} and agent = ${agent}
 			returning text`
 		if (deleted.length && by === 'agent') {
-			this.workspaceEdited(agent, `forgot memory ${id}`)
+			this.workspaceEdited(agent, `forgot memory ${id}`, thread)
 		} else if (deleted.length) {
 			this.adminChanged(agent, `deleted your memory: "${deleted[0].text}"`)
 		}
@@ -1521,21 +1556,26 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return edited.length > 0
 	}
 
-	addOpenItem(agent: CrewKey, title: string, tag: string | null) {
+	addOpenItem(
+		agent: CrewKey,
+		title: string,
+		tag: string | null,
+		thread: RunKey
+	) {
 		const { id } = this.sql<{ id: number }>`
 			insert into open_item (agent, title, tag, at)
 			values (${agent}, ${title}, ${tag}, ${now()})
 			returning id`[0]
-		this.workspaceEdited(agent, `opened item "${title}"`)
+		this.workspaceEdited(agent, `opened item "${title}"`, thread)
 		return id
 	}
 
-	closeOpenItem(agent: CrewKey, id: number) {
+	closeOpenItem(agent: CrewKey, id: number, thread: RunKey) {
 		const closed = this.sql`
 			update open_item set closed_at = ${now()}
 			where id = ${id} and agent = ${agent} and closed_at is null
 			returning id`
-		if (closed.length) this.workspaceEdited(agent, `closed item ${id}`)
+		if (closed.length) this.workspaceEdited(agent, `closed item ${id}`, thread)
 		return closed.length > 0
 	}
 
@@ -1996,6 +2036,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		text: string
 		baseRevision: number
 		summary: string
+		thread: RunKey
 	}): SaveCheck {
 		const room = roomOf(input.agent)
 		const existing = this.findDocument(room, input.name)
@@ -2025,7 +2066,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		if (saved.ok) {
 			this.workspaceEdited(
 				input.agent,
-				`saved ${name} revision ${saved.revision}: ${input.summary}`
+				`saved ${name} revision ${saved.revision}: ${input.summary}`,
+				input.thread
 			)
 		}
 		return saved
@@ -2297,9 +2339,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// whether the run posted anything. "silent" is a weak sign that the
 	// message did not need the agent.
 	private recordOutcomes(agent: CrewKey, since: string) {
-		const { posted } = this.sql<{ posted: number }>`
-			select count(*) as posted from message
-			where author = ${agent} and receipt = 0 and at >= ${since}`[0]
+		const posted = mainRunPosted(
+			agent,
+			this.sql<PostRow>`
+				select message.place, root.author as threadAsker from message
+				left join message as root on message.place = 'thread:' || root.id
+				where message.author = ${agent} and message.receipt = 0
+					and message.at >= ${since}`
+		)
 		const decisions = this.sql<{
 			message_id: string
 			outcomes: string
@@ -2309,7 +2356,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		for (const decision of decisions) {
 			const outcomes = JSON.parse(decision.outcomes) as Record<string, string>
 			if (outcomes[agent]) continue
-			outcomes[agent] = posted > 0 ? 'posted' : 'silent'
+			outcomes[agent] = posted ? 'posted' : 'silent'
 			this.sql`
 				update clef_decision set outcomes = ${JSON.stringify(outcomes)}
 				where message_id = ${decision.message_id}`
@@ -2326,54 +2373,63 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return true
 	}
 
-	// What the agent has written for GitHub in its current run: cards it
+	// What the agent has written for GitHub in the run in `thread`: cards it
 	// drafted, and direct edits. The tools' loop guards read this, since a
-	// tool's own state does not outlive one model call.
-	githubWritesThisRun(agent: CrewKey) {
-		const since = this.state.statuses[agent]?.since ?? now()
+	// tool's own state does not outlive one model call. A draft is a message
+	// in the agent's room, which records no run, so the drafts count those of
+	// an overlapping run too.
+	githubWritesThisRun(agent: CrewKey, thread: RunKey) {
+		const since =
+			(thread
+				? this.threadRunStart(thread)
+				: this.state.statuses[agent]?.since) ?? now()
 		const { drafts } = this.sql<{ drafts: number }>`
 			select count(*) as drafts from message
 			where author = ${agent} and at >= ${since}
 				and json_extract(card, '$.kind') = 'github'`[0]
-		const { edits } = this.sql<{ edits: number }>`
-			select count(*) as edits from edit_log
-			where agent = ${agent} and at >= ${since} and what like 'edited %'`[0]
+		const edits = this.editsOfRun(agent, { thread, since }).filter((what) =>
+			what.startsWith('edited ')
+		).length
 		return { drafts, edits }
 	}
 
 	// An agent's own edit, in the workspace or on GitHub: it goes in the
-	// receipt that ends its run.
-	workspaceEdited(agent: CrewKey, what: string) {
+	// receipt that ends the run in `thread`.
+	workspaceEdited(agent: CrewKey, what: string, thread: RunKey) {
 		this.sql`
-			insert into edit_log (agent, what, at)
-			values (${agent}, ${what}, ${now()})`
+			insert into edit_log (agent, what, at, run)
+			values (${agent}, ${what}, ${now()}, ${thread})`
 		this.push({ type: 'workspace', agent })
+	}
+
+	private editsOfRun(agent: CrewKey, run: { thread: RunKey; since: string }) {
+		return runEdits(
+			this.sql<EditRow>`
+				select run, what, at from edit_log
+				where agent = ${agent} and at >= ${run.since}
+				order by rowid`,
+			run
+		)
 	}
 
 	// A run that changed the agent's workspace ends with a receipt where it
 	// was asked, built from the edits it made rather than from its own account.
 	private postReceipt(
 		agent: CrewKey,
-		since: string,
-		place: MessagePlaceType,
-		parent: string | null = null
+		run: { thread: RunKey; since: string },
+		place: MessagePlaceType
 	) {
-		const edits = this.sql<{
-			what: string
-		}>`
-			select what from edit_log
-			where agent = ${agent} and at >= ${since}
-			order by at`
+		const edits = this.editsOfRun(agent, run)
 		if (!edits.length) return
 		this.insert({
 			author: agent,
 			authorName: displayName(agent),
-			body: `👍 ${edits.length === 1 ? 'one edit' : `${edits.length} edits`}: ${edits.map((edit) => edit.what).join('; ')}`,
+			body: `👍 ${edits.length === 1 ? 'one edit' : `${edits.length} edits`}: ${edits.join('; ')}`,
 			routing: null,
 			card: null,
 			place,
 			receipt: true,
-			parent,
+			parent: run.thread,
 		})
 	}
 

@@ -37,11 +37,18 @@ const Description = v.pipe(Text, v.maxLength(GITHUB_LIMITS.description))
 // The GitHub tools, for the crew members in `githubAccess`. "write" drafts
 // cards for anything new, and edits epics, issues and milestones directly;
 // "read" only reads. None exist until the GitHub App's secrets are set.
-export function githubTools(agent: CrewKey, access: 'read' | 'write') {
+// `thread` is the run's side-thread, or null for the agent's main run.
+export function githubTools(
+	agent: CrewKey,
+	access: 'read' | 'write',
+	thread: string | null
+) {
 	const github = githubFor(env)
 	if (!github) return []
 	const read = readTools(github)
-	return access === 'write' ? [...read, ...writeTools(agent, github)] : read
+	return access === 'write'
+		? [...read, ...writeTools(agent, thread, github)]
+		: read
 }
 
 function readTools(github: GithubClient) {
@@ -96,7 +103,11 @@ function readTools(github: GithubClient) {
 	return [readIssue, listMilestones, listEpics, githubChanges]
 }
 
-function writeTools(agent: CrewKey, github: GithubClient) {
+function writeTools(
+	agent: CrewKey,
+	thread: string | null,
+	github: GithubClient
+) {
 	// Every username and user id, loaded once and only when needed.
 	let people: Promise<PeopleIndex> | null = null
 
@@ -113,7 +124,9 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		step: ToolStep,
 		input: { draft: GithubDraftType; why: string }
 	) {
-		const { drafts } = await (await roomFor()).githubWritesThisRun(agent)
+		const { drafts } = await (
+			await roomFor()
+		).githubWritesThisRun(agent, thread)
 		if (drafts >= DRAFTS_PER_RUN) {
 			throw new Error(
 				`You have drafted ${DRAFTS_PER_RUN} GitHub cards this run, the most one run may. Draft the rest on your next run.`
@@ -145,7 +158,7 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 			receipt: (result: T) => string
 		}
 	) {
-		const { edits } = await (await roomFor()).githubWritesThisRun(agent)
+		const { edits } = await (await roomFor()).githubWritesThisRun(agent, thread)
 		if (edits >= EDITS_PER_RUN) {
 			throw new Error(
 				`You have made ${EDITS_PER_RUN} GitHub edits this run, the most one run may. Make the rest on your next run.`
@@ -157,7 +170,9 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		)
 		const result = await step.do('edit', input.edit)
 		await step.do('receipt', async () => {
-			await (await roomFor()).workspaceEdited(agent, input.receipt(result))
+			await (
+				await roomFor()
+			).workspaceEdited(agent, input.receipt(result), thread)
 			return true
 		})
 		return { output: result }
@@ -298,7 +313,7 @@ function writeTools(agent: CrewKey, github: GithubClient) {
 		async run({ data }) {
 			const id = await (
 				await roomFor()
-			).remember(agent, data.text, { kind: 'style', domain: null })
+			).remember(agent, data.text, { kind: 'style', domain: null }, thread)
 			return { output: { id } }
 		},
 	})
