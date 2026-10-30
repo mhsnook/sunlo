@@ -1,0 +1,166 @@
+import type { ReactNode } from 'react'
+import { ClipboardCopy, Download } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
+import type { CardType, CrewMessageType } from '../../../shared/crew'
+import { asPng } from '~/lib/images'
+import { CardActions, CardFrame, CrewText } from './crew-parts'
+
+// A card of pictures side by side: sketches, paintings or SVGs. The tiles
+// are its children.
+export function GalleryCard({
+	message,
+	kind,
+	label,
+	brief,
+	wide = false,
+	children,
+}: {
+	message: CrewMessageType
+	kind: CardType['kind']
+	label: string
+	brief: Array<string | null | undefined>
+	// Three columns on a wide card, not two.
+	wide?: boolean
+	children: ReactNode
+}) {
+	return (
+		<CardFrame kind={kind} label={label} brief={brief}>
+			{message.card?.title && (
+				<p className="text-sm font-semibold">{message.card.title}</p>
+			)}
+			<div className="text-sm">
+				<CrewText text={message.body} />
+			</div>
+			<div className="@container">
+				<div
+					className={cn(
+						'grid gap-3 @md:grid-cols-2',
+						wide && '@2xl:grid-cols-3'
+					)}
+				>
+					{children}
+				</div>
+			</div>
+			<CardActions message={message} />
+		</CardFrame>
+	)
+}
+
+export function GalleryTile({
+	picked = false,
+	testId,
+	dataKey,
+	children,
+}: {
+	picked?: boolean
+	testId: string
+	dataKey: number
+	children: ReactNode
+}) {
+	return (
+		<figure
+			className={cn(
+				'space-y-2 rounded-2xl border p-2',
+				picked && 'border-primary-500 bg-primary-50'
+			)}
+			data-testid={testId}
+			data-key={dataKey}
+		>
+			{children}
+		</figure>
+	)
+}
+
+export function TileCaption({
+	picked = false,
+	children,
+}: {
+	picked?: boolean
+	children: ReactNode
+}) {
+	return (
+		<figcaption className="text-sm">
+			{children}
+			{picked && (
+				<span className="text-primary-700 ms-1 text-xs font-medium">
+					· picked
+				</span>
+			)}
+		</figcaption>
+	)
+}
+
+export const tileButtonClass = 'h-7 px-2 shadow-none'
+
+const extensions: Record<string, string> = {
+	'image/png': 'png',
+	'image/jpeg': 'jpg',
+	'image/webp': 'webp',
+	'image/gif': 'gif',
+	'image/svg+xml': 'svg',
+}
+
+const slug = (text: string) =>
+	text
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '')
+
+// A download's name, such as painting-12-b-luxury.jpg.
+export const fileName = (
+	kind: string,
+	id: number,
+	words: Array<string>,
+	type: string
+) =>
+	`${[kind, String(id), ...words.map(slug)].join('-')}.${extensions[type] ?? 'png'}`
+
+// Copy image and Download for a picture the app holds as a blob.
+export function PictureButtons({
+	picture,
+	label,
+	name,
+}: {
+	picture: { blob: Blob; url: string } | undefined
+	label: string
+	name: string
+}) {
+	const copy = () => {
+		if (!picture) return
+		asPng(picture.blob)
+			.then((png) =>
+				navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+			)
+			.then(
+				() => toastSuccess(`${label} copied`),
+				(error: Error) => toastError(error.message)
+			)
+	}
+	return (
+		<>
+			<Button
+				size="sm"
+				variant="ghost"
+				className={tileButtonClass}
+				disabled={!picture}
+				onClick={copy}
+				data-testid="picture-copy-image"
+			>
+				<ClipboardCopy /> Copy image
+			</Button>
+			<Button
+				size="sm"
+				variant="ghost"
+				className={tileButtonClass}
+				asChild
+				data-testid="picture-download"
+			>
+				<a href={picture?.url} download={name}>
+					<Download /> Download
+				</a>
+			</Button>
+		</>
+	)
+}

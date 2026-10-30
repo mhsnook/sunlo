@@ -199,13 +199,7 @@ const isPictureKey = (key: ReadonlyArray<unknown>) =>
 export const revokePictureUrls = (queryClient: QueryClient) =>
 	queryClient.getQueryCache().subscribe((event) => {
 		if (event.type !== 'removed') return
-		const key = event.query.queryKey as ReadonlyArray<unknown>
-		if (key[0] === 'crew' && key[1] === 'svg') {
-			const svg = event.query.state.data as { downloadUrl: string } | undefined
-			if (svg) URL.revokeObjectURL(svg.downloadUrl)
-			return
-		}
-		if (!isPictureKey(key)) return
+		if (!isPictureKey(event.query.queryKey as ReadonlyArray<unknown>)) return
 		const data = event.query.state.data as { url: string } | undefined
 		if (data) URL.revokeObjectURL(data.url)
 	})
@@ -323,25 +317,33 @@ export function useDeletePainterStyle() {
 
 // An SVG never changes. The app shows it only through <img> from a data:
 // URL, never a blob: URL: a blob: URL has the app's origin, so opening one
-// in a tab would run any script the SVG held there. `downloadUrl` is a
-// blob the browser saves rather than shows.
+// in a tab would run any script the SVG held there. downloadSvg saves it.
 export const svgQuery = (id: number) =>
 	queryOptions({
 		queryKey: ['crew', 'svg', id],
 		queryFn: async () => {
 			const text = await (await adminRequest(`crew/svgs/${id}`)).text()
-			const bytes = new TextEncoder().encode(text)
-			const binary = Array.from(bytes, (byte) => String.fromCharCode(byte))
 			return {
 				text,
-				src: `data:image/svg+xml;base64,${btoa(binary.join(''))}`,
-				downloadUrl: URL.createObjectURL(
-					new Blob([bytes], { type: 'application/octet-stream' })
-				),
+				src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(text)}`,
 			}
 		},
 		staleTime: Infinity,
 	})
+
+// Typed application/octet-stream, so the browser saves the SVG rather than
+// shows it.
+export function downloadSvg(text: string, fileName: string) {
+	const url = URL.createObjectURL(
+		new Blob([text], { type: 'application/octet-stream' })
+	)
+	const link = document.createElement('a')
+	link.href = url
+	link.download = fileName
+	link.click()
+	// Some browsers fail a download whose URL is revoked before it starts.
+	setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
 
 // A saved revision never changes.
 export const revisionQuery = (id: number, revision: number) =>

@@ -1,13 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import {
-	ChevronDown,
-	ChevronRight,
-	Pencil,
-	Plus,
-	Trash2,
-	X,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -48,6 +41,7 @@ import {
 	AttachImageButton,
 	DraftImageStrip,
 	MessageImages,
+	RemovableThumbnail,
 	useDraftImages,
 } from './images'
 import { Empty, Section } from './workspace-parts'
@@ -391,31 +385,14 @@ function KeptExample({
 }) {
 	const { data } = useQuery(imageQuery(image.id))
 	return (
-		<div
-			className="relative"
-			data-testid="painter-style-example"
-			data-key={image.id}
-		>
-			{data ? (
-				<img
-					src={data.url}
-					alt={`Example ${index + 1}`}
-					className="size-16 rounded-xl border object-cover"
-				/>
-			) : (
-				<div className="bg-muted size-16 rounded-xl border" />
-			)}
-			<Button
-				type="button"
-				variant="neutral"
-				size="icon"
-				aria-label={`Remove example ${index + 1}`}
-				className="bg-card absolute -end-2 -top-2 size-6 rounded-full border"
-				onClick={onRemove}
-				data-testid="painter-style-example-remove"
-			>
-				<X />
-			</Button>
-		</div>
+		<RemovableThumbnail
+			src={data?.url}
+			alt={`Example ${index + 1}`}
+			removeLabel={`Remove example ${index + 1}`}
+			onRemove={onRemove}
+			testId="painter-style-example"
+			removeTestId="painter-style-example-remove"
+			dataKey={image.id}
+		/>
 	)
 }

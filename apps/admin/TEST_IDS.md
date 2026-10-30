@@ -41,10 +41,10 @@ Register a new id here, not in the main app's registry.
 | `crew-card-error`                                                                                         | Why a GitHub draft was not filed                                                        |
 | `crew-card-filed`                                                                                         | The link to what a filed GitHub card became                                             |
 | `sketch` + `data-key=<sketch id>`, `sketch-image`                                                         | One mockup on a sketches card, and its picture                                          |
-| `sketch-copy-image`, `sketch-download`, `sketch-copy-brief`                                               | A mockup's Copy image, Download and Copy brief buttons                                  |
+| `sketch-copy-brief`                                                                                       | A mockup's Copy brief button                                                            |
+| `picture-copy-image`, `picture-download`                                                                  | A mockup's or a painting's Copy image and Download buttons                              |
 | `painting` + `data-key=<painting id>`, `painting-failed`                                                  | One painting on a paintings card, and the box a failed style shows instead              |
-| `painting-open`, `painting-image`, `painting-full`                                                        | A painting's or SVG's thumbnail button, its picture, and its full-size view             |
-| `painting-copy-image`, `painting-download`                                                                | A painting's Copy image and Download buttons                                            |
+| `painting-open`, `painting-image`                                                                         | A painting's or SVG's thumbnail button, and its picture                                 |
 | `svg-tile` + `data-key=<svg id>`                                                                          | One SVG on an SVGs card                                                                 |
 | `svg-copy`, `svg-download`                                                                                | An SVG's Copy SVG and Download buttons, on either card                                  |
 | `painter-styles`, `painter-style-add`                                                                     | The painter styles in the Product room's details, and the Add a style button            |
@@ -62,7 +62,7 @@ Register a new id here, not in the main app's registry.
 | `compose-add-image`, `compose-image-input`                                                                | A compose bar's Add an image button, and its hidden file input                          |
 | `compose-images`, `compose-image` + `data-key=<draft key>`, `compose-image-remove`                        | The images waiting in a compose bar, one of them, and its Remove button                 |
 | `crew-message-images`, `crew-message-image` + `data-key=<image id>`                                       | A message's images, and one thumbnail; opens it full size                               |
-| `crew-image-full`                                                                                         | The full-size view of a message's image                                                 |
+| `crew-image-full`                                                                                         | The full-size view of a message's image, a painting or an SVG                           |
 | `crew-clef-chip`                                                                                          | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
 | `crew-routing-option` + `data-key=<kind><agents>`                                                         | One choice in a routing menu, e.g. `routeproduct-1`, `room`, `stack`                    |
 | `crew-routing-correct`                                                                                    | The routing note under your own message; opens the menu to correct it                   |
