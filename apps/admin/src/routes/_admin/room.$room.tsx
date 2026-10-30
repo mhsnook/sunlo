@@ -29,7 +29,7 @@ import {
 } from '~/lib/crew'
 import { RoomAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
-import { SidePanelSlot } from '~/components/crew/side-panel'
+import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
 import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
 import { RoomPanel } from '~/components/crew/room-panel'
 import { RoomTimeline } from '~/components/crew/room-timeline'
@@ -75,10 +75,8 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	const { data: thread } = useSuspenseQuery(threadQuery(room))
 	const { data: crewRoom } = useSuspenseQuery(roomQuery())
 	const [newSince] = useState(thread.seenAt)
-	// The panel sits beside the thread on a wide screen and covers it on a phone.
-	const [panelOpen, setPanelOpen] = useState(
-		() => window.matchMedia('(min-width: 64rem)').matches
-	)
+	const [panel, setPanel] = useSidePanel('log')
+	const panelOpen = panel !== null
 	const members = roomMembers(room)
 	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
 	const myAuthor = adminAuthor(session.user.id)
@@ -102,7 +100,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 						data-testid="room-panel-button"
 						className="@max-sm:px-2.5"
 						aria-pressed={panelOpen}
-						onClick={() => setPanelOpen((open) => !open)}
+						onClick={() => setPanel((open) => (open ? null : 'log'))}
 					>
 						<NotebookText /> <span className="@max-sm:sr-only">Room log</span>
 					</Button>
@@ -128,7 +126,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 			</section>
 			{panelOpen && (
 				<SidePanelSlot>
-					<RoomPanel room={room} onClose={() => setPanelOpen(false)} />
+					<RoomPanel room={room} onClose={() => setPanel(null)} />
 				</SidePanelSlot>
 			)}
 		</div>
