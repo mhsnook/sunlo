@@ -20,6 +20,7 @@ import {
 	type PlaceType,
 } from '../../shared/crew'
 import type { Wake } from '../../worker/crew/room'
+import type { RunKey } from '../../worker/crew/runs'
 import { toBase64 } from '../../worker/images'
 import { roomFor, wake } from '../crew'
 import { assertBlocks, Options, Text, toActions } from './posting'
@@ -53,7 +54,7 @@ const defaultActions: Record<
 // that thread, and pass_note is left out.
 export function crewTools(
 	agent: CrewKey,
-	thread: string | null,
+	thread: RunKey,
 	options: { seesImages: boolean }
 ) {
 	const name = displayName(agent)
@@ -315,6 +316,7 @@ Their answer comes back to you.`,
 					text: data.markdown,
 					baseRevision: data.baseRevision,
 					summary: data.summary,
+					thread,
 				})
 			)
 			if (!saved.ok) throw new Error(saved.error)
@@ -333,7 +335,7 @@ Their answer comes back to you.`,
 		async run({ data }) {
 			const id = await (
 				await roomFor()
-			).addTodo(agent, data.text, data.note ?? null)
+			).addTodo(agent, data.text, data.note ?? null, thread)
 			return { output: { id } }
 		},
 	})
@@ -350,10 +352,15 @@ Their answer comes back to you.`,
 		async run({ data }) {
 			const ok = await (
 				await roomFor()
-			).updateTodo(agent, data.id, {
-				done: data.done,
-				note: data.note === undefined ? undefined : data.note || null,
-			})
+			).updateTodo(
+				agent,
+				data.id,
+				{
+					done: data.done,
+					note: data.note === undefined ? undefined : data.note || null,
+				},
+				thread
+			)
 			if (!ok) throw new Error(`You have no to-do with id ${data.id}`)
 			return 'Updated.'
 		},
@@ -366,7 +373,9 @@ Their answer comes back to you.`,
 		input: v.object({ text: v.pipe(Text, v.maxLength(400)) }),
 		async run({ data }) {
 			return {
-				output: { id: await (await roomFor()).remember(agent, data.text) },
+				output: {
+					id: await (await roomFor()).remember(agent, data.text, null, thread),
+				},
 			}
 		},
 	})
@@ -376,7 +385,7 @@ Their answer comes back to you.`,
 		description: 'Delete a memory that is wrong or no longer true.',
 		input: v.object({ id: Id }),
 		async run({ data }) {
-			if (!(await (await roomFor()).forget(agent, data.id, 'agent'))) {
+			if (!(await (await roomFor()).forget(agent, data.id, 'agent', thread))) {
 				throw new Error(`You have no memory with id ${data.id}`)
 			}
 			return 'Forgotten.'
@@ -394,7 +403,7 @@ Their answer comes back to you.`,
 		async run({ data }) {
 			const id = await (
 				await roomFor()
-			).addOpenItem(agent, data.title, data.tag ?? null)
+			).addOpenItem(agent, data.title, data.tag ?? null, thread)
 			return { output: { id } }
 		},
 	})
@@ -405,7 +414,7 @@ Their answer comes back to you.`,
 			'Close an "Open with you" item that is done or no longer open.',
 		input: v.object({ id: Id }),
 		async run({ data }) {
-			if (!(await (await roomFor()).closeOpenItem(agent, data.id))) {
+			if (!(await (await roomFor()).closeOpenItem(agent, data.id, thread))) {
 				throw new Error(`You have no open item with id ${data.id}`)
 			}
 			return 'Closed.'
