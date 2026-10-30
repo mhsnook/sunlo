@@ -40,6 +40,12 @@ api.get('/crew/room', async (c) => {
 	return c.json(await (await roomFor()).snapshot(c.get('admin').uid))
 })
 
+// The steps of each agent's last few runs. The socket's "run" events keep
+// them current.
+api.get('/crew/runs', async (c) => {
+	return c.json(await (await roomFor()).runs())
+})
+
 api.post(
 	'/crew/seen',
 	json(z.object({ place: PlaceSchema }), 'Send { place }'),

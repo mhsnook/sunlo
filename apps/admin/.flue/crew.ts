@@ -8,6 +8,7 @@ import {
 	type CrewRoom,
 	type Wake,
 } from '../worker/crew/room'
+import { stepChange } from '../worker/crew/steps'
 import { Command1 } from './agents/command-1'
 import { Command2 } from './agents/command-2'
 import { Product1 } from './agents/product-1'
@@ -34,21 +35,38 @@ export const threadConversation = (root: string) => `thread:${root}`
 const threadOf = (conversation: string | undefined) =>
 	conversation?.startsWith('thread:') ? conversation.slice(7) : null
 
-// A run that fails or is aborted settles without useAgentFinish, so the room
-// hears about it here instead.
+// Steps go to the room one at a time, in the order the agent took them.
+let recording = Promise.resolve()
+const record = (send: () => Promise<unknown>) => {
+	recording = recording.then(send).then(
+		() => undefined,
+		(error: unknown) => console.error('Could not record a run step', error)
+	)
+}
+
 observe((event) => {
-	if (event.type !== 'submission_settled' || event.outcome === 'completed') {
-		return
-	}
 	const thread = threadOf(event.instanceId)
 	if (event.instanceId !== CONVERSATION && !thread) return
 	// Each agent's Flue identity is its crew key.
 	const key = event.agentName
-	if (key && isCrewKey(key)) {
-		void roomFor().then((room) =>
-			thread ? room.failThreadRun(key, thread) : room.failRun(key)
-		)
+	if (!key || !isCrewKey(key)) return
+	// A run that fails or is aborted settles without useAgentFinish, so the
+	// room hears about it here instead.
+	if (event.type === 'submission_settled') {
+		if (event.outcome !== 'completed') {
+			record(async () => {
+				const room = await roomFor()
+				await (thread ? room.failThreadRun(key, thread) : room.failRun(key))
+			})
+		}
+		return
 	}
+	const change = stepChange(key, event)
+	const submission = event.submissionId
+	if (!change || !submission) return
+	record(async () =>
+		(await roomFor()).recordStep({ agent: key, thread, submission, change })
+	)
 })
 
 // Delivers messages to the agents CLEF or an @mention woke. The message is

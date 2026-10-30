@@ -49,6 +49,7 @@ import {
 	type RoomStateType,
 	type RoomThreadType,
 	type RoutingType,
+	type RunType,
 	type SketchType,
 	type WeeklyType,
 	type WorkspaceType,
@@ -74,6 +75,7 @@ import {
 } from './github'
 import { pickReports, sketchPickReports } from './picks'
 import { peopleIndex } from './queries'
+import { applyStep, RUNS_KEPT, type StepChange } from './steps'
 import { planReply } from './threads'
 import { withSql } from '../db'
 
@@ -165,6 +167,31 @@ type SitrepTrackRow = {
 
 const DISMISS = { id: 'dismiss', label: 'Dismissed' }
 const FILE = { id: 'file', label: 'File it' }
+
+type RunRow = {
+	id: number
+	agent: CrewKey
+	thread: string | null
+	submission: string
+	started_at: string
+	ended_at: string | null
+	outcome: RunType['outcome']
+	message_id: string | null
+	steps: string
+	dropped: number
+}
+
+const toRun = (row: RunRow): RunType => ({
+	id: row.id,
+	agent: row.agent,
+	thread: row.thread,
+	startedAt: row.started_at,
+	endedAt: row.ended_at,
+	outcome: row.outcome,
+	messageId: row.message_id,
+	steps: JSON.parse(row.steps) as RunType['steps'],
+	dropped: row.dropped,
+})
 
 type IdRow = { id: number }
 type CountRow = { count: number }
@@ -426,6 +453,22 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null
 			);
 			create index if not exists message_place on message (place, at);
+			-- An agent's run and the steps it took, as JSON: the last RUNS_KEPT
+			-- runs of each agent. A side-thread run has its thread's first
+			-- message; a main run has none.
+			create table if not exists run (
+				id integer primary key autoincrement,
+				agent text not null,
+				thread text,
+				submission text not null,
+				started_at text not null,
+				ended_at text,
+				outcome text not null,
+				message_id text,
+				steps text not null default '[]',
+				dropped integer not null default 0
+			);
+			create index if not exists run_by_submission on run (agent, submission);
 			create table if not exists schema_version (version integer not null);
 		`
 		const version =
@@ -1086,9 +1129,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	finishThreadRun(agent: CrewKey, rootId: string) {
 		const startedAt = this.sql<{ at: string | null }>`
 			select thread_run_at as at from message where id = ${rootId}`[0]?.at
-		if (startedAt) {
-			this.postReceipt(agent, startedAt, threadPlace(rootId), rootId)
-		}
+		const place = threadPlace(rootId)
+		const receipt = startedAt
+			? this.postReceipt(agent, startedAt, place, rootId)
+			: null
+		const reply = startedAt ? this.lastPost(agent, startedAt, place) : null
+		this.closeRuns(agent, rootId, 'done', reply ?? receipt?.id ?? rootId)
 		this.failThreadRun(agent, rootId)
 	}
 
@@ -1098,6 +1144,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	failThreadRun(agent: CrewKey, rootId: string) {
 		const startedAt = this.sql<{ at: string | null }>`
 			select thread_run_at as at from message where id = ${rootId}`[0]?.at
+		this.closeRuns(agent, rootId, 'failed', rootId)
 		this.sql`update message set thread_run_at = null where id = ${rootId}`
 		const status = this.state.statuses[agent]
 		if (status?.state === 'working' && status.since === startedAt) {
@@ -1273,18 +1320,118 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			update cursor set at = coalesce(pending_at, at), pending_at = null
 			where agent = ${agent}`
 		const since = this.state.statuses[agent]?.since
+		let produced: string | null = null
 		if (since) {
 			const place = this.runPlace(agent)
+			const trigger = this.runTrigger(agent)
 			this.recordOutcomes(agent, since)
-			this.postReceipt(agent, since, place)
+			const receipt = this.postReceipt(agent, since, place)
+			produced = this.lastPost(agent, since) ?? receipt?.id ?? trigger
 		}
+		this.closeRuns(agent, null, 'done', produced)
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
 
 	// A run that failed or was aborted never reaches finishRun.
 	failRun(agent: CrewKey) {
+		this.closeRuns(agent, null, 'failed', this.runTrigger(agent))
 		this.sql`delete from run_message where agent = ${agent}`
 		this.setStatus(agent, { state: 'idle', since: now() })
+	}
+
+	// ---- Run steps ----------------------------------------------------------
+
+	// The steps of the last few runs of every agent, for the app.
+	runs(): Array<RunType> {
+		return this.sql<RunRow>`select * from run order by id`.map(toRun)
+	}
+
+	// One step of an agent's run, from a Flue event in the agent's isolate.
+	// Steps of one Flue submission make one run. A run is open while the room
+	// counts the agent as working on it; a step that arrives after its run
+	// closed joins the closed run.
+	recordStep(input: {
+		agent: CrewKey
+		thread: string | null
+		submission: string
+		change: StepChange
+	}) {
+		const { agent, thread, submission } = input
+		let row = this.sql<RunRow>`
+			select * from run where agent = ${agent} and submission = ${submission}`[0]
+		if (!row) {
+			const live = thread
+				? !!this.sql<{ at: string | null }>`
+						select thread_run_at as at from message where id = ${thread}`[0]?.at
+				: this.state.statuses[agent]?.state === 'working'
+			const at = now()
+			row = this.sql<RunRow>`
+				insert into run (agent, thread, submission, started_at, ended_at, outcome)
+				values (${agent}, ${thread}, ${submission}, ${at}, ${live ? null : at}, ${live ? 'working' : 'done'})
+				returning *`[0]
+			this.sql`
+				delete from run where agent = ${agent} and id not in (
+					select id from run where agent = ${agent} order by id desc limit ${RUNS_KEPT}
+				)`
+		}
+		const next = applyStep(
+			{ steps: toRun(row).steps, dropped: row.dropped },
+			input.change
+		)
+		const steps = JSON.stringify(next.steps)
+		this.sql`
+			update run set steps = ${steps}, dropped = ${next.dropped}
+			where id = ${row.id}`
+		this.push({
+			type: 'run',
+			run: toRun({ ...row, steps, dropped: next.dropped }),
+		})
+	}
+
+	// Ends an agent's open runs in one conversation, the main one or a
+	// side-thread's, and attaches them to what they produced.
+	private closeRuns(
+		agent: CrewKey,
+		thread: string | null,
+		outcome: 'done' | 'failed',
+		produced: string | null
+	) {
+		const closed = this.sql<RunRow>`
+			update run set ended_at = ${now()}, outcome = ${outcome}, message_id = ${produced}
+			where agent = ${agent} and thread is ${thread} and ended_at is null
+			returning *`
+		for (const row of closed) this.push({ type: 'run', run: toRun(row) })
+	}
+
+	// The agent's latest message since a run started, receipts left out: in
+	// `place`, or anywhere but a side-thread.
+	private lastPost(agent: CrewKey, since: string, place?: MessagePlaceType) {
+		const rows = place
+			? this.sql<{ id: string }>`
+					select id from message
+					where author = ${agent} and receipt = 0 and at >= ${since}
+						and place = ${place}
+					order by at desc, id desc
+					limit 1`
+			: this.sql<{ id: string }>`
+					select id from message
+					where author = ${agent} and receipt = 0 and at >= ${since}
+						and place not like 'thread:%'
+					order by at desc, id desc
+					limit 1`
+		return rows[0]?.id ?? null
+	}
+
+	// The latest message delivered to the agent's current run.
+	private runTrigger(agent: CrewKey) {
+		return (
+			this.sql<{ id: string }>`
+				select message.id from run_message
+				join message on message.id = run_message.message_id
+				where run_message.agent = ${agent}
+				order by message.at desc
+				limit 1`[0]?.id ?? null
+		)
 	}
 
 	recentRoom(limit: number): string {
@@ -2364,8 +2511,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			select what from edit_log
 			where agent = ${agent} and at >= ${since}
 			order by at`
-		if (!edits.length) return
-		this.insert({
+		if (!edits.length) return null
+		return this.insert({
 			author: agent,
 			authorName: displayName(agent),
 			body: `👍 ${edits.length === 1 ? 'one edit' : `${edits.length} edits`}: ${edits.map((edit) => edit.what).join('; ')}`,

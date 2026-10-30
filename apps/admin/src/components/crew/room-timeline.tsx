@@ -32,6 +32,7 @@ import {
 } from './crew-parts'
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { OtherView } from './other-view'
+import { MessageRuns } from './run-steps'
 import { SideThread } from './side-thread'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
@@ -240,6 +241,7 @@ function AuthorGroup({
 								</SpeakableBubble>
 							)}
 							{asksYou && <CardActions message={message} />}
+							<MessageRuns message={message} />
 							{other && <OtherView original={message} other={other} />}
 							{message.thread && (
 								<SideThread

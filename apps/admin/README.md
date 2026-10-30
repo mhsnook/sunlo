@@ -150,6 +150,15 @@ The room logs every decision in `clef_decision`: what CLEF suggested, what the m
 
 A message that wakes an agent becomes a signal in its `memory` conversation: a `<common-room-message>` from the Common Room, or a `<room-message>` from its own room, and the agent answers where it was asked. CLEF decides for the Common Room only; in a subject's room, the principal answers unless you name the associate.
 
+### What a run did, step by step
+
+While an agent runs, the room shows its steps under "<name> is working…": each tool it calls, in words ("Ran a query", "Read the Roadmap"), and each block of its model's thinking ("Thought for 5s"). When the run ends, the list folds under what the run produced, such as "Worked in 4 steps": the agent's last message, else its receipt, else the message that woke it. A step with input to read, such as the SQL of a query, the error of a failed call, or the thinking text, opens under its line.
+
+- **Where the steps come from.** `observe()` in `.flue/crew.ts` reads Flue's runtime events in each agent's isolate: `tool_start` (the tool and its arguments) and `tool` (failed or not, and how long it took) for every tool the model calls, and `thinking_start` and `thinking_end` for each thinking block. `stepChange` in `worker/crew/steps.ts` turns an event into a step, and `describeTool` puts a tool call in words. The steps go to the room's `recordStep` one at a time, in order. A Flue submission is one run. `submission_settled` still tells the room about a run that failed.
+- **Thinking.** The Workers AI models (Kimi, DeepSeek) stream `reasoning_content`, which Flue turns into thinking events. Claude on `product-2` sends thinking blocks when its request turns thinking on, which Flue's default thinking level (`medium`) does for a model its catalog marks as able to reason. A run whose model sends no reasoning shows only its tool calls.
+- **What the room keeps** (`run` table): the last 10 runs of each agent (`RUNS_KEPT`), the latest 40 steps of a run (`MAX_STEPS`) with a count of the ones dropped, 300 characters of a tool's input, 200 of an error and 600 of a thinking block. The app reads them from `GET /api/crew/runs`, and the room's `run` socket event sends each change.
+- **The components** come from shadcn's AI Elements: Chain of Thought, Reasoning and Tool are patterns built on shadcn's `Trace` component, which `src/components/ai-elements/trace.tsx` holds, and `src/components/crew/run-steps.tsx` draws runs with it. The admin app keeps `Trace` to itself, since the main app does not use it.
+
 ### Room documents
 
 Each room keeps named Markdown documents, which its officers and you write: the Command room keeps the Situation Report and the Business plan and status, and the Product room keeps the Roadmap. They can hold checklists, tables, the crew's chart, stats and table blocks, and Mermaid diagrams such as gantt charts. The app draws Mermaid itself, and shows a diagram that does not draw as its source.

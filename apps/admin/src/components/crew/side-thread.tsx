@@ -11,6 +11,7 @@ import {
 } from '../../../shared/crew'
 import { timeLabel } from '~/lib/format'
 import { AgentAvatar, CrewText } from './crew-parts'
+import { MessageRuns } from './run-steps'
 import { SpeakableBubble } from './voice-controls'
 
 // A side-thread, folded under the note that opened it: the favour one crew
@@ -74,6 +75,7 @@ export function SideThread({
 										<CrewText text={reply.body} />
 									</Bubble>
 								</SpeakableBubble>
+								<MessageRuns message={reply} />
 							</div>
 						</li>
 					))}
