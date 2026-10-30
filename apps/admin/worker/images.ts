@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import type { ImageMimeType } from '../shared/crew'
 
 export type ImageInfo = {
@@ -89,13 +90,10 @@ function jpegInfo(bytes: Uint8Array, view: DataView): ImageInfo | null {
 	return null
 }
 
-export const toBase64 = (bytes: Uint8Array) => {
-	let binary = ''
-	for (let i = 0; i < bytes.length; i += 0x8000) {
-		binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
-	}
-	return btoa(binary)
-}
+export const toBase64 = (bytes: Uint8Array) =>
+	Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString(
+		'base64'
+	)
 
 // ---- Signed links ---------------------------------------------------------
 
@@ -118,18 +116,6 @@ const hmacKey = (secret: string) =>
 		false,
 		['sign', 'verify']
 	)
-
-const toBase64Url = (bytes: ArrayBuffer) =>
-	toBase64(new Uint8Array(bytes))
-		.replaceAll('+', '-')
-		.replaceAll('/', '_')
-		.replace(/=+$/, '')
-
-function fromBase64Url(text: string): Uint8Array | null {
-	if (!/^[A-Za-z0-9_-]+$/.test(text)) return null
-	const binary = atob(text.replaceAll('-', '+').replaceAll('_', '/'))
-	return Uint8Array.from(binary, (char) => char.charCodeAt(0))
-}
 
 // A link to one image that works without a token until it expires.
 // `origin` is the admin app's, such as https://admin.sunlo.app.
@@ -157,7 +143,7 @@ export async function signedImageUrl(
 	)
 	const url = new URL(`${PUBLIC_IMAGE_PATH}/${input.id}`, input.origin)
 	url.searchParams.set('expires', String(expires))
-	url.searchParams.set('sig', toBase64Url(signature))
+	url.searchParams.set('sig', Buffer.from(signature).toString('base64url'))
 	return url.href
 }
 
@@ -176,13 +162,14 @@ export async function verifyImageLink(
 	if (!/^\d{1,12}$/.test(input.expires)) return false
 	const expires = Number(input.expires)
 	if (expires * 1000 <= (input.now ?? Date.now())) return false
-	const signature = fromBase64Url(input.sig)
-	if (!signature) return false
-	// subtle.verify compares in constant time.
+	// Buffer skips characters outside the alphabet instead of refusing them.
+	if (!/^[A-Za-z0-9_-]+$/.test(input.sig)) return false
+	// subtle.verify compares in constant time, and answers false for a
+	// signature of the wrong length.
 	return crypto.subtle.verify(
 		'HMAC',
 		await hmacKey(secret),
-		signature,
+		Buffer.from(input.sig, 'base64url'),
 		encoder.encode(signedText(input.id, expires))
 	)
 }

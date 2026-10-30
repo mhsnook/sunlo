@@ -525,8 +525,7 @@ export const IMAGE_TYPES = [
 ] as const
 export type ImageMimeType = (typeof IMAGE_TYPES)[number]
 
-// What an agent reads for a message's images: a line each, which tells it
-// to look with look_at_image.
+// What an agent reads for a message's images: a line each.
 export const imageLine = (image: MessageImageType) =>
 	`[image ${image.id} attached, ${image.width}×${image.height}]`
 
@@ -548,7 +547,6 @@ export const CrewMessageSchema = z.object({
 	authorName: z.string(),
 	// Empty when the message is only images.
 	body: z.string(),
-	// Images the admin pasted into the message, in order.
 	images: z.array(MessageImageSchema),
 	// Set on admin messages only.
 	routing: RoutingSchema.nullable(),

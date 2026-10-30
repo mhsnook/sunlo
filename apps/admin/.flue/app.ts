@@ -39,7 +39,6 @@ const numericId = (error: string) =>
 		return id.success ? { id: id.data } : c.json({ error }, 404)
 	})
 
-// What the admin writes: text, images, or both.
 const AdminMessage = z
 	.object({
 		body: z.string().trim().max(8000),

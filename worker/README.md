@@ -24,7 +24,7 @@ Every `/api` route requires the `Authorization: Bearer <access token>` header fr
 | `PHOTO_EXTRACT_MODEL` | var     | `wrangler.jsonc`                                   | Workers AI model id for `/api/extract-phrase`.           |
 | `EXTRACT_LIMITER`     | binding | `wrangler.jsonc`                                   | 10 requests per user per minute.                         |
 
-`wrangler.jsonc` holds the production Supabase values. `scripts/cf-preview.sh` replaces them on a preview version with the values its Vite build used, so a preview's app and worker use the same Supabase branch. They are vars, not secrets, because a preview version needs different values from production, and both are public.
+`wrangler.jsonc` holds the production Supabase values. `scripts/cf-preview.sh` replaces them on a preview version with the values its Vite build used, so a preview's app and worker use the same Supabase project. They are vars, not secrets, because a preview version can need different values from production, and both are public.
 
 `VITE_PHOTO_EXTRACT_USE_MOCK=true` makes the app return canned results without calling the worker; `pnpm dev:local` and `pnpm build:test` set it.
 
@@ -42,12 +42,12 @@ The Vite dev server proxies `/api` to `:8787`. The `AI` binding always runs remo
 
 ## Deploying
 
-Workers Builds deploys production on every push to `main`. `.github/workflows/cloudflare.yaml` uploads a preview version for each PR that has a Supabase preview branch. Setup and the move of `sunlo.app`: `docs/deployment.md`, "Cloudflare".
+Workers Builds deploys production on every push to `main`. `.github/workflows/cloudflare.yaml` uploads a preview version for each PR. A PR with a Supabase preview branch uses that branch; every other PR uses the production project. Setup and the move of `sunlo.app`: `docs/deployment.md`, "Cloudflare".
 
-To upload a preview by hand, set the branch's Supabase values in the shell first:
+To upload a preview by hand, set the Supabase values in the shell first: the branch's, or the production values from `wrangler.jsonc`.
 
 ```bash
 VITE_SUPABASE_URL=https://<branch-ref>.supabase.co VITE_SUPABASE_ANON_KEY=... pnpm worker:preview <branch>
 ```
 
-The script refuses a local or production Supabase URL, and checks that the bundle contains the Supabase SDK and the target URL before it uploads.
+The script refuses a local Supabase URL, and checks that the bundle contains the Supabase SDK and the target URL before it uploads.

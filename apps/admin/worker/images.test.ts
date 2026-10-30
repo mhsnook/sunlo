@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { imageInfo, signedImageUrl, verifyImageLink } from './images'
+import { imageInfo, signedImageUrl, toBase64, verifyImageLink } from './images'
 
 const bytes = (...parts: Array<Array<number> | string>) =>
 	Uint8Array.from(
@@ -87,6 +87,14 @@ describe('imageInfo', () => {
 	})
 })
 
+describe('toBase64', () => {
+	it('encodes only the view, not the whole buffer under it', () => {
+		const whole = bytes('xxhello, worldxx')
+		expect(toBase64(whole.subarray(2, 14))).toBe(btoa('hello, world'))
+		expect(toBase64(new Uint8Array())).toBe('')
+	})
+})
+
 describe('signed image links', () => {
 	const env = { IMAGE_URL_SECRET: 'a test secret' }
 	const now = Date.parse('2026-10-30T12:00:00Z')
@@ -133,6 +141,29 @@ describe('signed image links', () => {
 		expect(
 			await verifyImageLink(undefined, { id: 12, expires, sig, now })
 		).toBe(false)
+	})
+
+	it('refuses, without throwing, a signature that is not whole base64url', async () => {
+		const { expires, sig = '' } = await sign(12)
+		const malformed = [
+			'A',
+			'AB',
+			'ABCDE',
+			sig.slice(0, -1),
+			`${sig}=`,
+			`${sig}A`,
+		]
+		const verdicts = await Promise.all(
+			malformed.map((bad) =>
+				verifyImageLink(env.IMAGE_URL_SECRET, {
+					id: 12,
+					expires,
+					sig: bad,
+					now,
+				})
+			)
+		)
+		expect(verdicts).toEqual(malformed.map(() => false))
 	})
 
 	it('refuses a link after it expires, or with its expiry changed', async () => {

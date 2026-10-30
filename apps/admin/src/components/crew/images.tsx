@@ -56,22 +56,31 @@ export function useDraftImages() {
 		setImages((current) => current.filter((image) => image.key !== key))
 	}
 
-	// The images leave the composer with the message. Their object URLs stay
-	// alive: the timeline shows the same blobs.
+	// A strip URL lives only as long as its thumbnail: the timeline makes
+	// its own URLs for the same blobs, and `restore` makes new ones.
 	const take = () => {
 		const taken = images
+		for (const image of taken) URL.revokeObjectURL(image.url)
 		setImages([])
 		return taken
 	}
 
-	// A refused message's images come back, unless the admin has added others.
 	const restore = (taken: Array<DraftImage>) =>
-		setImages((current) => (current.length ? current : taken))
+		setImages((current) =>
+			current.length
+				? current
+				: taken.map((image) => ({
+						...image,
+						url: URL.createObjectURL(image.blob),
+					}))
+		)
 
 	// For the compose bar's form: a paste or a drop that holds images adds
-	// them instead of their file names.
+	// them instead of their file names. Copied spreadsheet cells come with a
+	// picture of themselves, so a paste that holds text pastes the text only.
 	const formProps = {
 		onPaste: (event: ClipboardEvent<HTMLFormElement>) => {
+			if (event.clipboardData.getData('text/plain')) return
 			if (add(event.clipboardData.files)) event.preventDefault()
 		},
 		onDragOver: (event: DragEvent<HTMLFormElement>) => {
@@ -201,12 +210,13 @@ function MessageImage({ image }: { image: MessageImageType }) {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<button
+				<Button
 					type="button"
+					variant="neutral"
 					aria-label={`Open ${label.toLowerCase()} full size`}
 					data-testid="crew-message-image"
 					data-key={image.id}
-					className="bg-muted flex h-32 max-w-full items-center justify-center overflow-hidden rounded-2xl border"
+					className="bg-muted border-border h-32 max-w-full overflow-hidden p-0 shadow-none"
 					style={{ aspectRatio: `${image.width} / ${image.height}` }}
 				>
 					{data ? (
@@ -223,15 +233,18 @@ function MessageImage({ image }: { image: MessageImageType }) {
 							)}
 						/>
 					)}
-				</button>
+				</Button>
 			</DialogTrigger>
-			<DialogContent className="max-w-[96vw] p-2" data-testid="crew-image-full">
+			<DialogContent
+				className="flex max-h-11/12 max-w-11/12 flex-col p-2"
+				data-testid="crew-image-full"
+			>
 				<DialogTitle className="sr-only">{label}</DialogTitle>
 				{data && (
 					<img
 						src={data.url}
 						alt={label}
-						className="max-h-[85vh] w-auto justify-self-center object-contain"
+						className="min-h-0 self-center object-contain"
 					/>
 				)}
 			</DialogContent>

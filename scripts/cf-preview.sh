@@ -8,9 +8,10 @@
 # Usage: scripts/cf-preview.sh <branch>
 #
 # VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set in the shell
-# environment to the branch's Supabase preview project. The script passes
-# the same values to the Vite build and to the worker (--var), so the app
-# and /api use one project. It refuses a local or production Supabase URL.
+# environment: to the branch's Supabase preview project, or to the
+# production project for a branch with no Supabase changes. The script
+# passes the same values to the Vite build and to the worker (--var), so
+# the app and /api use one project. It refuses a local Supabase URL.
 
 set -euo pipefail
 
@@ -29,10 +30,6 @@ case "$VITE_SUPABASE_URL" in
 	exit 1
 	;;
 esac
-if grep -qF "\"$VITE_SUPABASE_URL\"" wrangler.jsonc; then
-	echo "error: VITE_SUPABASE_URL is the production project. A preview needs its own branch." >&2
-	exit 1
-fi
 
 pnpm build
 ./scripts/check-prod-bundle.sh dist
