@@ -27,6 +27,9 @@ Register a new id here, not in the main app's registry.
 | `crew-message` + `data-key=<message id>` (`data-pending` until the server has it)                         | One message in the room                                                                 |
 | `crew-new-since`                                                                                          | The "New since …" line                                                                  |
 | `crew-working`                                                                                            | "<name> is working…" under the timeline                                                 |
+| `crew-live-runs`                                                                                          | The steps of each running agent so far, under the working marker                        |
+| `run-steps` + `data-key=<run id>` (`data-outcome=working\|done\|failed`), `run-steps-toggle`              | One run's steps under their summary line ("Worked in 4 steps"), and the line's toggle   |
+| `run-step` + `data-key=<tool call id, or turn:block for thinking>`                                        | One step of a run: a tool call, or the model's thinking                                 |
 | `crew-card-action` + `data-key=<action id>`                                                               | A button on an agent's card (`do`, `not-yet`, `keep`, ...)                              |
 | `crew-card-dismiss`, `crew-card-feedback`, `crew-card-dismiss-send`                                       | A card's Dismiss button, its optional feedback box, and the button that sends it        |
 | `crew-other-view` + `data-key=<message id>`, `crew-other-view-toggle`                                     | An associate's second view, folded under the principal's message, and its toggle        |
