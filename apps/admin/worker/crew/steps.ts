@@ -263,6 +263,16 @@ export function describeTool(
 				detail('question')
 			)
 		}
+		case 'look_at_image':
+			return step(
+				[
+					'Looking',
+					'Looked',
+					'look',
+					`at image ${number(args, 'id') ?? ''}`.trim(),
+				],
+				detail('question')
+			)
 		case 'sketch_screens': {
 			const count = Array.isArray(args.proposals) ? args.proposals.length : 0
 			return step([

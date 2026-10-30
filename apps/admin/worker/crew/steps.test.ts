@@ -47,6 +47,22 @@ describe('describeTool', () => {
 		)
 	})
 
+	it('names the image an agent looked at, and keeps its question', () => {
+		expect(
+			describeTool('product-2', 'look_at_image', {
+				id: 12,
+				question: 'What does a new learner read first?',
+			})
+		).toEqual({
+			title: {
+				running: 'Looking at image 12',
+				done: 'Looked at image 12',
+				failed: 'Failed to look at image 12',
+			},
+			detail: 'What does a new learner read first?',
+		})
+	})
+
 	it('names the document it read', () => {
 		expect(
 			describeTool('product-1', 'read_document', { name: 'Roadmap' }).title.done
