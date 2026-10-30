@@ -21,6 +21,7 @@ import {
 	type PeopleIndex,
 } from '../../worker/crew/github'
 import { peopleIndex } from '../../worker/crew/queries'
+import type { RunKey } from '../../worker/crew/runs'
 import { roomFor } from '../crew'
 import { assertBlocks, Text } from './posting'
 
@@ -37,11 +38,10 @@ const Description = v.pipe(Text, v.maxLength(GITHUB_LIMITS.description))
 // The GitHub tools, for the crew members in `githubAccess`. "write" drafts
 // cards for anything new, and edits epics, issues and milestones directly;
 // "read" only reads. None exist until the GitHub App's secrets are set.
-// `thread` is the run's side-thread, or null for the agent's main run.
 export function githubTools(
 	agent: CrewKey,
 	access: 'read' | 'write',
-	thread: string | null
+	thread: RunKey
 ) {
 	const github = githubFor(env)
 	if (!github) return []
@@ -103,11 +103,7 @@ function readTools(github: GithubClient) {
 	return [readIssue, listMilestones, listEpics, githubChanges]
 }
 
-function writeTools(
-	agent: CrewKey,
-	thread: string | null,
-	github: GithubClient
-) {
+function writeTools(agent: CrewKey, thread: RunKey, github: GithubClient) {
 	// Every username and user id, loaded once and only when needed.
 	let people: Promise<PeopleIndex> | null = null
 

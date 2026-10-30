@@ -74,13 +74,7 @@ import {
 } from './github'
 import { pickReports, sketchPickReports } from './picks'
 import { peopleIndex } from './queries'
-import {
-	mainRunPosted,
-	runEdits,
-	type EditRow,
-	type PostRow,
-	type RunKey,
-} from './runs'
+import { mainRunPosted, settledStatus, type PostRow, type RunKey } from './runs'
 import { planReply } from './threads'
 import { withSql } from '../db'
 
@@ -390,6 +384,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				message_id text not null,
 				primary key (agent, message_id)
 			);
+			-- When each agent's current main run started. A side-thread run's
+			-- start is message.thread_run_at on the thread's first message.
+			create table if not exists main_run (
+				agent text primary key,
+				at text not null
+			);
 			-- Every workspace edit, so a run's receipt lists what it changed.
 			create table if not exists edit_log (
 				agent text not null,
@@ -447,6 +447,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.addRoomChartersAndOtherViews(),
 			() => this.addSideThreads(),
 			() => this.addEditRuns(),
+			() => this.indexThreadRuns(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -593,6 +594,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		if (!this.tableColumns('edit_log').has('run')) {
 			this.sql`alter table edit_log add column run text`
 		}
+	}
+
+	private indexThreadRuns() {
+		this.sql`
+			create index if not exists message_thread_run on message (thread_with)
+			where thread_run_at is not null`
 	}
 
 	private renameAgentsToSeats() {
@@ -1080,13 +1087,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	threadContext(agent: CrewKey, rootId: string) {
 		const root = this.messageById(rootId)
 		if (!root) return '(This side-thread is gone.)'
-		const [{ startedAt }] = this.sql<{ startedAt: string }>`
+		this.sql`
 			update message set thread_run_at = coalesce(thread_run_at, ${now()})
-			where id = ${rootId}
-			returning thread_run_at as startedAt`
-		if (this.state.statuses[agent]?.state !== 'working') {
-			this.setStatus(agent, { state: 'working', since: startedAt })
-		}
+			where id = ${rootId}`
+		this.settleStatus(agent)
 		return threadBriefingText({
 			now: now(),
 			agent,
@@ -1112,16 +1116,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.failThreadRun(agent, rootId)
 	}
 
-	// A run in a side-thread that failed or was aborted never finishes. The
-	// agent goes idle only if this run is what made it busy: its main run may
-	// have started first.
+	// A run in a side-thread that failed or was aborted never finishes.
 	failThreadRun(agent: CrewKey, rootId: string) {
-		const startedAt = this.threadRunStart(rootId)
 		this.sql`update message set thread_run_at = null where id = ${rootId}`
-		const status = this.state.statuses[agent]
-		if (status?.state === 'working' && status.since === startedAt) {
-			this.setStatus(agent, { state: 'idle', since: now() })
-		}
+		this.settleStatus(agent)
 	}
 
 	private threadRunStart(rootId: string) {
@@ -1255,9 +1253,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// cycle. Called once for each message a run receives: messages that
 	// reach a busy agent join its run.
 	agentContext(agent: CrewKey, messageId: string | null): string {
-		if (this.state.statuses[agent]?.state !== 'working') {
-			this.setStatus(agent, { state: 'working', since: now() })
-		}
+		this.sql`
+			insert or ignore into main_run (agent, at) values (${agent}, ${now()})`
+		this.settleStatus(agent)
 		if (messageId) {
 			this.sql`
 				insert or ignore into run_message (agent, message_id)
@@ -1299,19 +1297,43 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			update cursor set at = coalesce(pending_at, at), pending_at = null
 			where agent = ${agent}`
-		const since = this.state.statuses[agent]?.since
+		const since = this.mainRunStart(agent)
 		if (since) {
 			const place = this.runPlace(agent)
 			this.recordOutcomes(agent, since)
 			this.postReceipt(agent, { thread: null, since }, place)
 		}
-		this.setStatus(agent, { state: 'idle', since: now() })
+		this.sql`delete from main_run where agent = ${agent}`
+		this.settleStatus(agent)
 	}
 
 	// A run that failed or was aborted never reaches finishRun.
 	failRun(agent: CrewKey) {
 		this.sql`delete from run_message where agent = ${agent}`
-		this.setStatus(agent, { state: 'idle', since: now() })
+		this.sql`delete from main_run where agent = ${agent}`
+		this.settleStatus(agent)
+	}
+
+	private mainRunStart(agent: CrewKey) {
+		return (
+			this.sql<{ at: string }>`
+				select at from main_run where agent = ${agent}`[0]?.at ?? null
+		)
+	}
+
+	// The agent works while its main run or any side-thread run it helps in
+	// is going, since the first of them started. A main run and a thread run
+	// can start and end in either order.
+	private settleStatus(agent: CrewKey) {
+		const [{ since }] = this.sql<{ since: string | null }>`
+			select min(at) as since from (
+				select at from main_run where agent = ${agent}
+				union all
+				select thread_run_at as at from message
+				where thread_with = ${agent} and thread_run_at is not null
+			)`
+		const status = settledStatus(this.state.statuses[agent], since, now())
+		if (status) this.setStatus(agent, status)
 	}
 
 	recentRoom(limit: number): string {
@@ -2343,7 +2365,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			agent,
 			this.sql<PostRow>`
 				select message.place, root.author as threadAsker from message
-				left join message as root on message.place = 'thread:' || root.id
+				left join message as root on root.id = message.parent
 				where message.author = ${agent} and message.receipt = 0
 					and message.at >= ${since}`
 		)
@@ -2380,16 +2402,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// an overlapping run too.
 	githubWritesThisRun(agent: CrewKey, thread: RunKey) {
 		const since =
-			(thread
-				? this.threadRunStart(thread)
-				: this.state.statuses[agent]?.since) ?? now()
+			(thread ? this.threadRunStart(thread) : this.mainRunStart(agent)) ?? now()
 		const { drafts } = this.sql<{ drafts: number }>`
 			select count(*) as drafts from message
 			where author = ${agent} and at >= ${since}
 				and json_extract(card, '$.kind') = 'github'`[0]
-		const edits = this.editsOfRun(agent, { thread, since }).filter((what) =>
-			what.startsWith('edited ')
-		).length
+		const { edits } = this.sql<{ edits: number }>`
+			select count(*) as edits from edit_log
+			where agent = ${agent} and run is ${thread} and at >= ${since}
+				and what like 'edited %'`[0]
 		return { drafts, edits }
 	}
 
@@ -2403,13 +2424,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	private editsOfRun(agent: CrewKey, run: { thread: RunKey; since: string }) {
-		return runEdits(
-			this.sql<EditRow>`
-				select run, what, at from edit_log
-				where agent = ${agent} and at >= ${run.since}
-				order by rowid`,
-			run
-		)
+		return this.sql<{ what: string }>`
+			select what from edit_log
+			where agent = ${agent} and run is ${run.thread} and at >= ${run.since}
+			order by rowid`.map((edit) => edit.what)
 	}
 
 	// A run that changed the agent's workspace ends with a receipt where it

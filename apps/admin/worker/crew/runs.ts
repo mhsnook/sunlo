@@ -1,5 +1,6 @@
 import {
 	isThreadPlace,
+	type AgentStatusType,
 	type CrewKey,
 	type MessagePlaceType,
 } from '../../shared/crew'
@@ -9,17 +10,20 @@ import {
 // first message id for a side-thread run, and null for the main run.
 export type RunKey = string | null
 
-export type EditRow = { run: RunKey; what: string; at: string }
-
-// The edits one run made since it started, oldest first.
-export function runEdits(
-	edits: Array<EditRow>,
-	run: { thread: RunKey; since: string }
-): Array<string> {
-	return edits
-		.filter((edit) => edit.run === run.thread && edit.at >= run.since)
-		.toSorted((a, b) => a.at.localeCompare(b.at))
-		.map((edit) => edit.what)
+// The status an agent should show, given when the first of its running runs
+// started (null when none is running), or null when its status already
+// shows that.
+export function settledStatus(
+	status: AgentStatusType | undefined,
+	since: string | null,
+	at: string
+): AgentStatusType | null {
+	if (since) {
+		return status?.state === 'working' && status.since === since
+			? null
+			: { state: 'working', since }
+	}
+	return status?.state === 'idle' ? null : { state: 'idle', since: at }
 }
 
 // A message the agent wrote, and for a side-thread reply, who asked in that

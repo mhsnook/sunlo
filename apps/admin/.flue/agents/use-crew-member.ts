@@ -1,4 +1,5 @@
 import {
+	type ToolDefinition,
 	useAgentFinish,
 	useAgentStart,
 	useDelivery,
@@ -30,28 +31,32 @@ import {
 } from '../tools/database'
 import { crewTools } from '../tools/crew'
 import { githubTools } from '../tools/github'
+import type { RunKey } from '../../worker/crew/runs'
 
 export const CREW_DURABILITY = { maxAttempts: 3 }
 
-// The side-thread this run answers, or null for the agent's main run. A
-// side-thread's conversation is created with its thread, and keeps it; the
-// main conversation has none. Every tool that edits the workspace needs it,
-// or the edit lands in the receipt of the agent's other run.
-export const useThread = () =>
-	useInitialData<ConversationData | undefined>()?.thread ?? null
-
 // Everything a crew agent shares: the model, the room and workspace tools,
 // the context it wakes up with, and, unless it opts out, the database tools.
+// `tools` makes the agent's own tools, for the run in `thread`.
 // An agent module returns what this returns. The agent's persona is not in
 // it: the admin can rewrite a persona in the room, and an agent module cannot
 // wait on the room, so the persona arrives in each run's <crew-context>.
 export function useCrewMember(
 	agent: CrewKey,
-	options: { model?: string; database?: boolean } = {}
+	options: {
+		model?: string
+		database?: boolean
+		tools?: (thread: RunKey) => Array<ToolDefinition>
+	} = {}
 ) {
 	useModel(`cloudflare/${options.model ?? env.CREW_MODEL}`)
-	const thread = useThread()
+	// A side-thread's conversation is created with its thread, and keeps it;
+	// the main conversation has none. Every tool that edits the workspace
+	// needs it, or the edit lands in the receipt of the agent's other run.
+	const thread: RunKey =
+		useInitialData<ConversationData | undefined>()?.thread ?? null
 	for (const tool of crewTools(agent, thread)) useTool(tool)
+	for (const tool of options.tools?.(thread) ?? []) useTool(tool)
 	const github = githubAccess[agent]
 	if (github)
 		for (const tool of githubTools(agent, github, thread)) useTool(tool)
