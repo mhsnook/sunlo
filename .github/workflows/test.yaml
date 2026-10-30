@@ -38,9 +38,7 @@ jobs:
           fi
           gh api --paginate "repos/${{ github.repository }}/pulls/$PR/files" \
             --jq '.[].filename' > /tmp/pr-files.txt
-          # scenetest/TEST_IDS.md documents admin test ids too, so it counts
-          # as an admin file.
-          if grep -vE '^(apps/admin/|scenetest/TEST_IDS\.md$)' /tmp/pr-files.txt | grep -q .; then
+          if grep -v '^apps/admin/' /tmp/pr-files.txt|scenetest/TEST_IDS\.md$)' /tmp/pr-files.txt | grep -q .; then
             echo app=true >> "$GITHUB_OUTPUT"
           else
             echo app=false >> "$GITHUB_OUTPUT"
