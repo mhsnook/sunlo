@@ -85,15 +85,25 @@ jobs:
 
       # Typecheck, lint, and formatter-drift all diff the PR against the base
       # branch, so they share one job: the base branch is checked out and
-      # installed once here, not once per check. Each tool's commands are
-      # unchanged from when these were three jobs.
+      # installed once here, not once per check. Both trees run the same
+      # commands:
+      # - The typecheck covers the main app (`pnpm check`) and the admin app,
+      #   whose two tsconfigs `tsc -b` does not reach. The admin app imports
+      #   the main app's code, so a main-app change can break it.
+      # - ESLint 9 has no unix formatter in core, so scripts/eslint-unix.mjs
+      #   turns its JSON report into oxlint's line shape. The base tree may not
+      #   have the script, so both trees run the PR's copy.
       - name: Collect PR branch results
         run: |
           # The typecheck (tsrs) and lint are read-only, so run them
           # concurrently. Lint is the long pole; tsrs takes ≈1.5 s.
-          ( pnpm check 2>&1 | grep ': error TS' | sort > /tmp/pr-errors.txt || true ) &
+          ( { pnpm check
+              pnpm exec tsrs --noEmit -p apps/admin/tsconfig.json
+              pnpm exec tsrs --noEmit -p apps/admin/tsconfig.worker.json
+            } 2>&1 | grep ': error TS' | sort > /tmp/pr-errors.txt || true ) &
           ( pnpm exec oxlint . -f unix > /tmp/pr-oxlint.txt 2>&1 || true
-            pnpm exec eslint . -f unix > /tmp/pr-eslint.txt 2>&1 || true
+            pnpm exec eslint . -f json 2>/dev/null \
+              | node "$GITHUB_WORKSPACE/scripts/eslint-unix.mjs" > /tmp/pr-eslint.txt || true
             cat /tmp/pr-oxlint.txt /tmp/pr-eslint.txt \
               | grep -E '^[^:[:space:]][^:]*:[0-9]+:[0-9]+:' \
               | sort -u > /tmp/pr-lint.txt || true ) &
@@ -110,9 +120,13 @@ jobs:
           git worktree add /tmp/base-branch origin/${{ github.base_ref }}
           cd /tmp/base-branch
           pnpm install --frozen-lockfile --silent
-          ( pnpm check 2>&1 | grep ': error TS' | sort > /tmp/base-errors.txt || true ) &
+          ( { pnpm check
+              pnpm exec tsrs --noEmit -p apps/admin/tsconfig.json
+              pnpm exec tsrs --noEmit -p apps/admin/tsconfig.worker.json
+            } 2>&1 | grep ': error TS' | sort > /tmp/base-errors.txt || true ) &
           ( pnpm exec oxlint . -f unix > /tmp/base-oxlint.txt 2>&1 || true
-            pnpm exec eslint . -f unix > /tmp/base-eslint.txt 2>&1 || true
+            pnpm exec eslint . -f json 2>/dev/null \
+              | node "$GITHUB_WORKSPACE/scripts/eslint-unix.mjs" > /tmp/base-eslint.txt || true
             cat /tmp/base-oxlint.txt /tmp/base-eslint.txt \
               | grep -E '^[^:[:space:]][^:]*:[0-9]+:[0-9]+:' \
               | sort -u > /tmp/base-lint.txt || true ) &
