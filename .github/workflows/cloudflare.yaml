@@ -1,8 +1,11 @@
 name: Cloudflare preview
 
-# Uploads a preview version of the `sunlo` Worker for each PR, against
-# that PR's Supabase preview branch (scripts/cf-preview.sh). A PR with no
-# Supabase preview branch gets no Cloudflare preview.
+# Uploads a preview version of the `sunlo` Worker for each PR
+# (scripts/cf-preview.sh). A PR that changes supabase/ gets a Supabase
+# preview branch, and its preview uses that branch. Supabase skips every
+# other PR, and its preview uses the production project, as the old
+# Vercel previews did. If the Supabase branch fails, the PR gets no
+# preview.
 #
 # Production is not deployed here: Cloudflare Workers Builds deploys main.
 # Every job is off until the repo variable CLOUDFLARE_ACCOUNT_ID is set.
@@ -41,7 +44,9 @@ jobs:
 
   preview:
     needs: wait-for-supabase
-    if: needs.wait-for-supabase.outputs.conclusion == 'success'
+    if: >-
+      needs.wait-for-supabase.outputs.conclusion == 'success' ||
+      needs.wait-for-supabase.outputs.conclusion == 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -74,6 +79,7 @@ jobs:
       # delete the file. Production uses a publishable key, so prefer the
       # branch's publishable key over its legacy anon key.
       - name: Read the Supabase preview branch's credentials
+        if: needs.wait-for-supabase.outputs.conclusion == 'success'
         run: |
           creds="$RUNNER_TEMP/branch.env"
           supabase --experimental branches get "$HEAD_REF" -o env > "$creds"
@@ -89,6 +95,23 @@ jobs:
           rm -f "$creds"
           echo "VITE_SUPABASE_URL=$url" >> "$GITHUB_ENV"
           echo "VITE_SUPABASE_ANON_KEY=$key" >> "$GITHUB_ENV"
+          echo "SUPABASE_DATA=this PR's Supabase preview branch" >> "$GITHUB_ENV"
+
+      # The production URL and publishable key are public, and wrangler.jsonc
+      # holds them for the production worker.
+      - name: Use the production Supabase project
+        if: needs.wait-for-supabase.outputs.conclusion == 'skipped'
+        run: |
+          read_var() { grep -oE "\"$1\": *\"[^\"]+\"" wrangler.jsonc | cut -d'"' -f4; }
+          url=$(read_var SUPABASE_URL)
+          key=$(read_var SUPABASE_ANON_KEY)
+          if [ -z "$url" ] || [ -z "$key" ]; then
+            echo "::error::No SUPABASE_URL or SUPABASE_ANON_KEY in wrangler.jsonc vars."
+            exit 1
+          fi
+          echo "VITE_SUPABASE_URL=$url" >> "$GITHUB_ENV"
+          echo "VITE_SUPABASE_ANON_KEY=$key" >> "$GITHUB_ENV"
+          echo "SUPABASE_DATA=production data" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -112,7 +135,7 @@ jobs:
             const body = [
               marker,
               '',
-              `${process.env.PREVIEW_URL} — app and \`/api\` from ${context.payload.pull_request.head.sha.slice(0, 7)}, on this PR's Supabase preview branch.`,
+              `${process.env.PREVIEW_URL} — app and \`/api\` from ${context.payload.pull_request.head.sha.slice(0, 7)}, on ${process.env.SUPABASE_DATA}.`,
             ].join('\n');
             const { data: comments } = await github.rest.issues.listComments({
               ...context.repo,
