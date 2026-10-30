@@ -14,6 +14,10 @@
 		"run_worker_first": ["/api/*"],
 	},
 	"preview_urls": true,
+	// Workers Logs: keeps each request and its console output in the dashboard
+	// (Observability › Logs), so a failing /api route or agent run can be read
+	// after the fact instead of needing `wrangler tail` open at the time.
+	"observability": { "enabled": true },
 	"ai": { "binding": "AI" },
 	// Browser Rendering, for product-2's screenshots and sketches.
 	"browser": { "binding": "BROWSER" },
