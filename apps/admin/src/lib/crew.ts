@@ -182,7 +182,13 @@ const isPictureKey = (key: ReadonlyArray<unknown>) =>
 export const revokePictureUrls = (queryClient: QueryClient) =>
 	queryClient.getQueryCache().subscribe((event) => {
 		if (event.type !== 'removed') return
-		if (!isPictureKey(event.query.queryKey as ReadonlyArray<unknown>)) return
+		const key = event.query.queryKey as ReadonlyArray<unknown>
+		if (key[0] === 'crew' && key[1] === 'svg') {
+			const svg = event.query.state.data as { downloadUrl: string } | undefined
+			if (svg) URL.revokeObjectURL(svg.downloadUrl)
+			return
+		}
+		if (!isPictureKey(key)) return
 		const data = event.query.state.data as { url: string } | undefined
 		if (data) URL.revokeObjectURL(data.url)
 	})
@@ -266,16 +272,19 @@ export function useSavePainterStyle() {
 			style: Omit<PainterStyleInputType, 'examples'>
 			examples: Array<number>
 			newExamples: Array<DraftImage>
-		}) => {
-			const uploaded = await uploadImages(queryClient, input.newExamples)
-			const json = {
-				...input.style,
-				examples: [...input.examples, ...uploaded.map((image) => image.id)],
-			}
-			return input.id === null
-				? adminFetch('crew/painter-styles', { method: 'POST', json })
-				: adminFetch(`crew/painter-styles/${input.id}`, { method: 'PUT', json })
-		},
+		}) =>
+			sendWithImages(queryClient, input.newExamples, (uploaded) => {
+				const json = {
+					...input.style,
+					examples: [...input.examples, ...uploaded],
+				}
+				return input.id === null
+					? adminFetch('crew/painter-styles', { method: 'POST', json })
+					: adminFetch(`crew/painter-styles/${input.id}`, {
+							method: 'PUT',
+							json,
+						})
+			}),
 		onSuccess: () =>
 			queryClient.invalidateQueries({
 				queryKey: painterStylesQuery().queryKey,
