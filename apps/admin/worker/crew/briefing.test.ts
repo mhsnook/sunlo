@@ -43,7 +43,15 @@ const input = (
 	documents: [],
 	github: null,
 	charter: [],
-	workspace: { agent, todos: [], memory: [], openItems: [], cards: [] },
+	adminChanges: [],
+	workspace: {
+		agent,
+		character: null,
+		todos: [],
+		memory: [],
+		openItems: [],
+		cards: [],
+	},
 	cards: { waiting: [], answered: [] },
 	command: null,
 	unread: {
@@ -271,8 +279,10 @@ describe('threadBriefingText', () => {
 		commonKnowledge: [{ id: 1, text: 'Call the admin Sam.', at: '' }],
 		sitrep: null,
 		charter: [],
+		adminChanges: [{ what: 'deleted your memory: "Old plan"', at: '' }],
 		workspace: {
 			agent: 'product-1',
+			character: { text: 'You plan the product.', original: '', editedAt: '' },
 			todos: [
 				{
 					id: 4,
@@ -309,6 +319,13 @@ describe('threadBriefingText', () => {
 		},
 	})
 
+	it('starts with who the agent is, and tells it what the admin changed', () => {
+		expect(text.startsWith('## Who you are\n\nYou plan the product.')).toBe(
+			true
+		)
+		expect(text).toContain('The admin deleted your memory: "Old plan".')
+	})
+
 	it('brings the agent its memory, to-dos and charter', () => {
 		expect(text).toContain('- [7] Milestones are named by month.')
 		expect(text).toContain('- [4] Finish the start flow')
@@ -328,5 +345,39 @@ describe('threadBriefingText', () => {
 		expect(text).toContain('Product officer: About half done.')
 		expect(text).not.toContain('since your last run')
 		expect(text).not.toContain('latest messages')
+	})
+})
+
+describe("the character and the admin's changes", () => {
+	const character = {
+		text: 'You are careful.',
+		original: 'You are quick.',
+		editedAt: '2026-10-29T09:00:00Z',
+	}
+
+	it('starts the briefing with the text the agent is given', () => {
+		const text = briefingText(
+			input('product-2', {
+				workspace: { ...input('product-2').workspace, character },
+			})
+		)
+		expect(text.startsWith('## Who you are\n\nYou are careful.')).toBe(true)
+		expect(text).not.toContain('You are quick.')
+	})
+
+	it('lists what the admin changed, and leaves the section out when nothing did', () => {
+		const changed = briefingText(
+			input('product-1', {
+				adminChanges: [
+					{ what: 'added to-do 3: "Ship it"', at: '2026-10-29T09:00:00Z' },
+				],
+			})
+		)
+		expect(changed).toContain(
+			'- [2026-10-29 09:00 UTC] The admin added to-do 3: "Ship it".'
+		)
+		expect(briefingText(input('product-1'))).not.toContain(
+			'What the admin changed for you'
+		)
 	})
 })

@@ -40,6 +40,7 @@ import {
 	type DocumentSummaryType,
 	type GithubDraftType,
 	type PickChoice,
+	type CharterEntryType,
 	type RoomKey,
 	type PlaceType,
 	type RoomEvent,
@@ -222,14 +223,15 @@ export function useEditCommonKnowledge() {
 	})
 }
 
-export function useEditMemory(agent: CrewKey) {
+// A change the admin makes to one agent's workspace or character, which
+// reloads that workspace once the room has it.
+function useWorkspaceChange<TInput>(
+	agent: CrewKey,
+	send: (input: TInput) => Promise<unknown>
+) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (input: { id: number; text: string }) =>
-			adminFetch(`crew/agents/${agent}/memory/${input.id}`, {
-				method: 'PATCH',
-				json: { text: input.text },
-			}),
+		mutationFn: send,
 		onSuccess: () =>
 			queryClient.invalidateQueries({
 				queryKey: workspaceQuery(agent).queryKey,
@@ -237,15 +239,83 @@ export function useEditMemory(agent: CrewKey) {
 	})
 }
 
-export function useForgetMemory(agent: CrewKey) {
+export const useEditMemory = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (input: { id: number; text: string }) =>
+		adminFetch(`crew/agents/${agent}/memory/${input.id}`, {
+			method: 'PATCH',
+			json: { text: input.text },
+		})
+	)
+
+export const useForgetMemory = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (id: number) =>
+		adminFetch(`crew/agents/${agent}/memory/${id}`, { method: 'DELETE' })
+	)
+
+export const useAddMemory = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (text: string) =>
+		adminFetch(`crew/agents/${agent}/memory`, {
+			method: 'POST',
+			json: { text },
+		})
+	)
+
+export const useSetCharacter = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (text: string) =>
+		adminFetch(`crew/agents/${agent}/character`, {
+			method: 'PUT',
+			json: { text },
+		})
+	)
+
+export const useRestoreCharacter = (agent: CrewKey) =>
+	useWorkspaceChange(agent, () =>
+		adminFetch(`crew/agents/${agent}/character`, { method: 'DELETE' })
+	)
+
+export const useAddTodo = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (text: string) =>
+		adminFetch(`crew/agents/${agent}/todos`, {
+			method: 'POST',
+			json: { text },
+		})
+	)
+
+export const useEditTodo = (agent: CrewKey) =>
+	useWorkspaceChange(
+		agent,
+		(input: { id: number; text?: string; done?: boolean }) =>
+			adminFetch(`crew/agents/${agent}/todos/${input.id}`, {
+				method: 'PATCH',
+				json: { text: input.text, done: input.done },
+			})
+	)
+
+export const useDeleteTodo = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (id: number) =>
+		adminFetch(`crew/agents/${agent}/todos/${id}`, { method: 'DELETE' })
+	)
+
+export const useEditOpenItem = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (input: { id: number; title: string }) =>
+		adminFetch(`crew/agents/${agent}/open-items/${input.id}`, {
+			method: 'PATCH',
+			json: { title: input.title },
+		})
+	)
+
+export const useCloseOpenItem = (agent: CrewKey) =>
+	useWorkspaceChange(agent, (id: number) =>
+		adminFetch(`crew/agents/${agent}/open-items/${id}`, { method: 'DELETE' })
+	)
+
+export function useAddCharter(room: RoomKey) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: (id: number) =>
-			adminFetch(`crew/agents/${agent}/memory/${id}`, { method: 'DELETE' }),
+		mutationFn: (input: { kind: CharterEntryType['kind']; text: string }) =>
+			adminFetch(`crew/rooms/${room}/charter`, { method: 'POST', json: input }),
 		onSuccess: () =>
-			queryClient.invalidateQueries({
-				queryKey: workspaceQuery(agent).queryKey,
-			}),
+			queryClient.invalidateQueries({ queryKey: charterQuery(room).queryKey }),
 	})
 }
 
@@ -352,6 +422,10 @@ const pendingMessage = (
 	place,
 	corrected: null,
 	receipt: false,
+	otherViewOf: null,
+	parent: null,
+	thread: null,
+	pick: null,
 })
 
 // A message someone else wrote after the admin last opened its timeline.
@@ -379,7 +453,7 @@ const postHandlers = <TInput>(
 		_input: TInput,
 		pending: CrewMessageType | undefined
 	) => {
-		if (!pending) return
+		if (!pending || isThreadPlace(pending.place)) return
 		updateTimeline(queryClient, pending.place, (timeline) => {
 			const rest = timeline.messages.filter((m) => m.id !== pending.id)
 			return { messages: message ? upsert(rest, message) : rest }

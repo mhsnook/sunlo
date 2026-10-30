@@ -4,7 +4,7 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
-import { ArrowLeft, FileText } from 'lucide-react'
+import { ArrowLeft, CheckCheck, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/ui/loader'
 import {
@@ -15,6 +15,7 @@ import {
 	roomNames,
 	type CrewKey,
 	type DocumentSummaryType,
+	type OpenItemType,
 	type RoomKey,
 } from '../../../shared/crew'
 import {
@@ -22,12 +23,16 @@ import {
 	documentsQuery,
 	isWorking,
 	roomQuery,
+	useCloseOpenItem,
+	useEditOpenItem,
 	workspaceQuery,
 } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
+import { CharacterEditor } from './character-editor'
 import { CharterPanel, WeeklySettings } from './charter-panel'
 import { DocumentView } from './document-view'
 import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
+import { EditableEntry } from './editable-entry'
 import { MemoryList } from './memory-list'
 import { Empty, Section, TodoList } from './workspace-parts'
 import { SidePanel } from './side-panel'
@@ -143,12 +148,12 @@ function MemberLog({ agent }: { agent: CrewKey }) {
 	return (
 		<div className="space-y-5" data-testid="room-member" data-key={agent}>
 			<ProfileCard agent={agent} />
+			{workspace.character && (
+				<CharacterEditor agent={agent} character={workspace.character} />
+			)}
 			<Section title={`${name}'s to-dos`}>
-				{workspace.todos.length ? (
-					<TodoList todos={workspace.todos} />
-				) : (
-					<Empty>Nothing on {name}'s list.</Empty>
-				)}
+				{!workspace.todos.length && <Empty>Nothing on {name}'s list.</Empty>}
+				<TodoList agent={agent} todos={workspace.todos} />
 			</Section>
 			<Section title={`Open with you · ${openCount}`}>
 				{openCount ? (
@@ -161,23 +166,7 @@ function MemberLog({ agent }: { agent: CrewKey }) {
 							)
 						)}
 						{workspace.openItems.length > 0 && (
-							<ul className="bg-card divide-y rounded border">
-								{workspace.openItems.map((item) => (
-									<li
-										key={item.id}
-										className="flex items-baseline justify-between gap-3 px-4 py-2.5 text-sm"
-										data-testid="agent-open-item"
-										data-key={item.id}
-									>
-										<span>{item.title}</span>
-										{item.tag && (
-											<span className="text-muted-foreground text-xs">
-												{item.tag}
-											</span>
-										)}
-									</li>
-								))}
-							</ul>
+							<OpenItems agent={agent} items={workspace.openItems} />
 						)}
 					</div>
 				) : (
@@ -186,6 +175,44 @@ function MemberLog({ agent }: { agent: CrewKey }) {
 			</Section>
 			<MemoryList agent={agent} memory={workspace.memory} />
 		</div>
+	)
+}
+
+function OpenItems({
+	agent,
+	items,
+}: {
+	agent: CrewKey
+	items: Array<OpenItemType>
+}) {
+	const edit = useEditOpenItem(agent)
+	const close = useCloseOpenItem(agent)
+	return (
+		<ul className="bg-card divide-y rounded border">
+			{items.map((item) => (
+				<EditableEntry
+					key={item.id}
+					id={item.id}
+					text={item.title}
+					label="Open item"
+					busy={edit.isPending || close.isPending}
+					onSave={(title) => edit.mutateAsync({ id: item.id, title })}
+					onDelete={() => close.mutateAsync(item.id)}
+					deleteLabel="Close this item"
+					deleteIcon={<CheckCheck />}
+					quiet
+					className="px-4 py-2.5"
+					testId="agent-open-item"
+				>
+					{item.title}
+					{item.tag && (
+						<span className="text-muted-foreground ms-2 text-xs">
+							{item.tag}
+						</span>
+					)}
+				</EditableEntry>
+			))}
+		</ul>
 	)
 }
 
