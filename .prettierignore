@@ -15,3 +15,6 @@ scenetest-reports
 
 # agent config
 .claude
+
+# vendored as published upstream
+apps/admin/.flue/skills/impeccable

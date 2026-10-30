@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { displayName } from '../../shared/crew'
-import { pickReports } from './picks'
+import { pickReports, sketchPickReports } from './picks'
 
 const views = {
 	original: {
@@ -47,5 +47,43 @@ describe('pickReports', () => {
 			by: 'sam',
 		})
 		expect(principal.body).toContain(`${'x'.repeat(199)}…`)
+	})
+})
+
+describe('sketchPickReports', () => {
+	const sketch = {
+		id: 7,
+		label: 'B',
+		idea: 'One card at a time, full screen',
+		frame: 'phone' as const,
+	}
+
+	it('tells the agent who drew it and its room’s principal', () => {
+		const [drew, principal] = sketchPickReports({
+			agent: 'product-2',
+			title: 'The review screen',
+			sketch,
+			by: 'sam',
+		})
+		const said =
+			'sam went with sketch B of "The review screen": One card at a time, full screen'
+		expect(drew).toEqual({
+			agent: 'product-2',
+			body: `${said}. Its HTML is sketch 7.`,
+		})
+		expect(principal.agent).toBe('product-1')
+		expect(principal.body).toContain(said)
+		expect(principal.body).toContain('propose_charter')
+	})
+
+	it('tells a principal who drew it only once', () => {
+		expect(
+			sketchPickReports({
+				agent: 'product-1',
+				title: 'The review screen',
+				sketch,
+				by: 'sam',
+			})
+		).toHaveLength(1)
 	})
 })

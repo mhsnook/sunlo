@@ -47,7 +47,7 @@ import {
 	type RoomStateType,
 	type RoutingType,
 } from '../../shared/crew'
-import { adminFetch } from './api'
+import { adminFetch, adminRequest } from './api'
 import { accessToken } from './session'
 
 export const crewIcons: Record<CrewKey, LucideIcon> = {
@@ -130,6 +130,35 @@ export const documentQuery = (id: number) =>
 			DocumentSchema.parse(await adminFetch(`crew/documents/${id}`)),
 		staleTime: Infinity,
 	})
+
+// A sketch never changes. Its picture comes as a blob, because the request
+// needs the admin's token, which an <img src> cannot send.
+export const sketchQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'sketch', id],
+		queryFn: async () =>
+			SketchSourceSchema.parse(await adminFetch(`crew/sketches/${id}`)),
+		staleTime: Infinity,
+	})
+
+export const sketchImageQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'sketch', id, 'image'],
+		queryFn: async () => {
+			const blob = await (
+				await adminRequest(`crew/sketches/${id}/image`)
+			).blob()
+			return { blob, url: URL.createObjectURL(blob) }
+		},
+		staleTime: Infinity,
+	})
+
+const SketchSourceSchema = z.object({
+	label: z.string(),
+	idea: z.string(),
+	html: z.string(),
+	frame: z.enum(['phone', 'desktop']),
+})
 
 // A saved revision never changes.
 export const revisionQuery = (id: number, revision: number) =>

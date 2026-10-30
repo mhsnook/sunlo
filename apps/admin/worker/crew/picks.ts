@@ -2,9 +2,11 @@ import { openingLines } from '../../shared/blocks'
 import {
 	crew,
 	displayName,
+	principalOf,
 	roomNames,
 	type CrewKey,
 	type PickChoice,
+	type SketchType,
 } from '../../shared/crew'
 
 type View = { agent: CrewKey; body: string }
@@ -29,5 +31,30 @@ export function pickReports(input: {
 			body: `${said} If the pick shows how they decide, propose it for the ${room}'s charter with propose_charter.`,
 		},
 		{ agent: other.agent, body: said },
+	]
+}
+
+// The admin went with one of an agent's sketches. The room's principal hears
+// it too, as it hears a pick between two views.
+export function sketchPickReports(input: {
+	agent: CrewKey
+	title: string
+	sketch: SketchType
+	by: string
+}): Array<{ agent: CrewKey; body: string }> {
+	const { agent, title, sketch, by } = input
+	const room = crew[agent].room
+	const principal = principalOf(room)
+	const said = `${by} went with sketch ${sketch.label} of "${title}": ${sketch.idea}`
+	return [
+		{ agent, body: `${said}. Its HTML is sketch ${sketch.id}.` },
+		...(principal === agent
+			? []
+			: [
+					{
+						agent: principal,
+						body: `${said}. ${displayName(agent)} drew it. If the pick shows how they decide, propose it for the ${roomNames[room]}'s charter with propose_charter.`,
+					},
+				]),
 	]
 }
