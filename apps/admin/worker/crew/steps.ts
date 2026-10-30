@@ -9,8 +9,6 @@ import {
 	type RunStepType,
 } from '../../shared/crew'
 
-// What the room keeps of each run, so the steps of a long run, and the
-// runs of a busy week, stay small.
 export const MAX_STEPS = 40
 export const RUNS_KEPT = 10
 const DETAIL_MAX = 300
@@ -420,8 +418,6 @@ export function stepChange(
 	}
 }
 
-// Thinking blocks are told apart by their turn and their place in the
-// model's reply.
 const thinkingId = (event: { turnId?: string; contentIndex?: number }) =>
 	`${event.turnId ?? 'turn'}:${event.contentIndex ?? 0}`
 
@@ -431,8 +427,7 @@ const THINKING: StepTitle = {
 	failed: 'Thought',
 }
 
-// A run's steps after one change. The list keeps the latest MAX_STEPS steps
-// and counts the ones it drops.
+// The list keeps the latest MAX_STEPS steps and counts the ones it drops.
 export function applyStep(run: RunSteps, change: StepChange): RunSteps {
 	const index = run.steps.findIndex((step) => step.id === change.id)
 	const current = index === -1 ? null : run.steps[index]

@@ -59,8 +59,12 @@ function StepLine({
 	const status: Status =
 		state === 'running' ? 'running' : state === 'failed' ? 'error' : undefined
 	const time = seconds(step.ms)
-	const line = (
-		<TraceLine status={status}>
+	const line = (keyed: boolean) => (
+		<TraceLine
+			status={status}
+			data-testid={keyed ? 'run-step' : undefined}
+			data-key={keyed ? step.id : undefined}
+		>
 			<TraceIcon>
 				{step.kind === 'thinking' && status !== 'running' ? (
 					<BrainIcon />
@@ -77,15 +81,11 @@ function StepLine({
 		</TraceLine>
 	)
 	if (!step.detail && !step.error) {
-		return (
-			<span data-testid="run-step" data-key={step.id} className="contents">
-				{line}
-			</span>
-		)
+		return line(true)
 	}
 	return (
 		<TraceCollapsible data-testid="run-step" data-key={step.id}>
-			<TraceCollapsibleTrigger>{line}</TraceCollapsibleTrigger>
+			<TraceCollapsibleTrigger>{line(false)}</TraceCollapsibleTrigger>
 			<TraceCollapsibleContent className="space-y-1 text-xs whitespace-pre-wrap">
 				{step.error && <p className="text-destructive">{step.error}</p>}
 				{step.detail && <p>{step.detail}</p>}
@@ -147,8 +147,10 @@ export function RunTrace({ run, who }: { run: RunType; who: string | null }) {
 	)
 }
 
-// The runs of `agents` that are working now and have taken a step.
-export function useLiveRuns(agents: Array<CrewKey>) {
+// `agents` is who belongs in the room, not who the room counts as working:
+// an agent's side-thread run can end, and set it idle, while its main run
+// goes on.
+export function useLiveRuns(agents: ReadonlyArray<CrewKey>) {
 	const { data: runs = [] } = useQuery(runsQuery())
 	return runs.filter(
 		(run) =>
@@ -158,7 +160,6 @@ export function useLiveRuns(agents: Array<CrewKey>) {
 	)
 }
 
-// Under the working marker: each running agent's steps so far.
 export function LiveRuns({ runs }: { runs: Array<RunType> }) {
 	if (!runs.length) return null
 	return (
@@ -177,7 +178,6 @@ export function LiveRuns({ runs }: { runs: Array<RunType> }) {
 	)
 }
 
-// The finished runs that produced this message, folded under it.
 export function MessageRuns({ message }: { message: CrewMessageType }) {
 	const { data: runs = [] } = useQuery({
 		...runsQuery(),

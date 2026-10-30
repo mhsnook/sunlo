@@ -75,7 +75,8 @@ import {
 } from './github'
 import { pickReports, sketchPickReports } from './picks'
 import { peopleIndex } from './queries'
-import { applyStep, RUNS_KEPT, type StepChange } from './steps'
+import { RunLog, type RunKey } from './runs'
+import type { StepChange } from './steps'
 import { planReply } from './threads'
 import { withSql } from '../db'
 
@@ -167,31 +168,6 @@ type SitrepTrackRow = {
 
 const DISMISS = { id: 'dismiss', label: 'Dismissed' }
 const FILE = { id: 'file', label: 'File it' }
-
-type RunRow = {
-	id: number
-	agent: CrewKey
-	thread: string | null
-	submission: string
-	started_at: string
-	ended_at: string | null
-	outcome: RunType['outcome']
-	message_id: string | null
-	steps: string
-	dropped: number
-}
-
-const toRun = (row: RunRow): RunType => ({
-	id: row.id,
-	agent: row.agent,
-	thread: row.thread,
-	startedAt: row.started_at,
-	endedAt: row.ended_at,
-	outcome: row.outcome,
-	messageId: row.message_id,
-	steps: JSON.parse(row.steps) as RunType['steps'],
-	dropped: row.dropped,
-})
 
 type IdRow = { id: number }
 type CountRow = { count: number }
@@ -297,6 +273,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		},
 		openCards: noOpenCards(),
 	}
+
+	private runLog = new RunLog(
+		(strings, ...values) => this.sql(strings, ...values),
+		(run) => this.push({ type: 'run', run })
+	)
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
@@ -1129,22 +1110,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	finishThreadRun(agent: CrewKey, rootId: string) {
 		const startedAt = this.sql<{ at: string | null }>`
 			select thread_run_at as at from message where id = ${rootId}`[0]?.at
-		const place = threadPlace(rootId)
-		const receipt = startedAt
-			? this.postReceipt(agent, startedAt, place, rootId)
-			: null
-		const reply = startedAt ? this.lastPost(agent, startedAt, place) : null
-		this.closeRuns(agent, rootId, 'done', reply ?? receipt?.id ?? rootId)
+		if (startedAt) {
+			this.postReceipt(agent, startedAt, threadPlace(rootId), rootId)
+		}
 		this.failThreadRun(agent, rootId)
 	}
 
 	// A run in a side-thread that failed or was aborted never finishes. The
 	// agent goes idle only if this run is what made it busy: its main run may
 	// have started first.
-	failThreadRun(agent: CrewKey, rootId: string) {
+	private failThreadRun(agent: CrewKey, rootId: string) {
 		const startedAt = this.sql<{ at: string | null }>`
 			select thread_run_at as at from message where id = ${rootId}`[0]?.at
-		this.closeRuns(agent, rootId, 'failed', rootId)
 		this.sql`update message set thread_run_at = null where id = ${rootId}`
 		const status = this.state.statuses[agent]
 		if (status?.state === 'working' && status.since === startedAt) {
@@ -1319,107 +1296,47 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			update cursor set at = coalesce(pending_at, at), pending_at = null
 			where agent = ${agent}`
+		this.runLog.noteTrigger(agent, this.runTrigger(agent))
 		const since = this.state.statuses[agent]?.since
-		let produced: string | null = null
 		if (since) {
 			const place = this.runPlace(agent)
-			const trigger = this.runTrigger(agent)
 			this.recordOutcomes(agent, since)
-			const receipt = this.postReceipt(agent, since, place)
-			produced = this.lastPost(agent, since) ?? receipt?.id ?? trigger
+			this.postReceipt(agent, since, place)
 		}
-		this.closeRuns(agent, null, 'done', produced)
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
 
 	// A run that failed or was aborted never reaches finishRun.
-	failRun(agent: CrewKey) {
-		this.closeRuns(agent, null, 'failed', this.runTrigger(agent))
+	private failRun(agent: CrewKey) {
 		this.sql`delete from run_message where agent = ${agent}`
 		this.setStatus(agent, { state: 'idle', since: now() })
 	}
 
 	// ---- Run steps ----------------------------------------------------------
 
-	// The steps of the last few runs of every agent, for the app.
 	runs(): Array<RunType> {
-		return this.sql<RunRow>`select * from run order by id`.map(toRun)
+		return this.runLog.list()
 	}
 
-	// One step of an agent's run, from a Flue event in the agent's isolate.
-	// Steps of one Flue submission make one run. A run is open while the room
-	// counts the agent as working on it; a step that arrives after its run
-	// closed joins the closed run.
-	recordStep(input: {
-		agent: CrewKey
-		thread: string | null
-		submission: string
-		change: StepChange
-	}) {
-		const { agent, thread, submission } = input
-		let row = this.sql<RunRow>`
-			select * from run where agent = ${agent} and submission = ${submission}`[0]
-		if (!row) {
-			const live = thread
-				? !!this.sql<{ at: string | null }>`
-						select thread_run_at as at from message where id = ${thread}`[0]?.at
-				: this.state.statuses[agent]?.state === 'working'
-			const at = now()
-			row = this.sql<RunRow>`
-				insert into run (agent, thread, submission, started_at, ended_at, outcome)
-				values (${agent}, ${thread}, ${submission}, ${at}, ${live ? null : at}, ${live ? 'working' : 'done'})
-				returning *`[0]
-			this.sql`
-				delete from run where agent = ${agent} and id not in (
-					select id from run where agent = ${agent} order by id desc limit ${RUNS_KEPT}
-				)`
-		}
-		const next = applyStep(
-			{ steps: toRun(row).steps, dropped: row.dropped },
-			input.change
-		)
-		const steps = JSON.stringify(next.steps)
-		this.sql`
-			update run set steps = ${steps}, dropped = ${next.dropped}
-			where id = ${row.id}`
-		this.push({
-			type: 'run',
-			run: toRun({ ...row, steps, dropped: next.dropped }),
-		})
+	// The calls below come from the agent's isolate in the order of its Flue
+	// events, so a submission settles after its last step reaches the room.
+	startRun(key: RunKey, at: string) {
+		this.runLog.start(key, at)
 	}
 
-	// Ends an agent's open runs in one conversation, the main one or a
-	// side-thread's, and attaches them to what they produced.
-	private closeRuns(
-		agent: CrewKey,
-		thread: string | null,
-		outcome: 'done' | 'failed',
-		produced: string | null
-	) {
-		const closed = this.sql<RunRow>`
-			update run set ended_at = ${now()}, outcome = ${outcome}, message_id = ${produced}
-			where agent = ${agent} and thread is ${thread} and ended_at is null
-			returning *`
-		for (const row of closed) this.push({ type: 'run', run: toRun(row) })
+	recordStep(key: RunKey, change: StepChange) {
+		this.runLog.step(key, change)
 	}
 
-	// The agent's latest message since a run started, receipts left out: in
-	// `place`, or anywhere but a side-thread.
-	private lastPost(agent: CrewKey, since: string, place?: MessagePlaceType) {
-		const rows = place
-			? this.sql<{ id: string }>`
-					select id from message
-					where author = ${agent} and receipt = 0 and at >= ${since}
-						and place = ${place}
-					order by at desc, id desc
-					limit 1`
-			: this.sql<{ id: string }>`
-					select id from message
-					where author = ${agent} and receipt = 0 and at >= ${since}
-						and place not like 'thread:%'
-					order by at desc, id desc
-					limit 1`
-		return rows[0]?.id ?? null
+	// Every submission settles, a completed one after finishRun or
+	// finishThreadRun.
+	settleRun(key: RunKey, outcome: 'completed' | 'failed' | 'aborted') {
+		const failed = outcome !== 'completed'
+		const trigger = key.thread ?? (failed ? this.runTrigger(key.agent) : null)
+		this.runLog.settle(key, failed ? 'failed' : 'done', trigger)
+		if (!failed) return
+		if (key.thread) this.failThreadRun(key.agent, key.thread)
+		else this.failRun(key.agent)
 	}
 
 	// The latest message delivered to the agent's current run.
@@ -2511,8 +2428,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			select what from edit_log
 			where agent = ${agent} and at >= ${since}
 			order by at`
-		if (!edits.length) return null
-		return this.insert({
+		if (!edits.length) return
+		this.insert({
 			author: agent,
 			authorName: displayName(agent),
 			body: `👍 ${edits.length === 1 ? 'one edit' : `${edits.length} edits`}: ${edits.map((edit) => edit.what).join('; ')}`,

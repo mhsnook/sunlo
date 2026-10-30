@@ -91,7 +91,7 @@ function CrewRoomPage() {
 	const toggle = (next: Panel) =>
 		setPanel((open) => (open === next ? null : next))
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
-	const liveRuns = useLiveRuns(working)
+	const liveRuns = useLiveRuns(crewKeys)
 	const liveSteps = liveRuns.reduce((sum, run) => sum + run.steps.length, 0)
 	const active = crewList.filter((member) => member.active).length
 	const myAuthor = adminAuthor(session.user.id)

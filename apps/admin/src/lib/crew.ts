@@ -690,9 +690,17 @@ export function useCrewLive() {
 				})
 			}
 			if (event.type === 'run') {
-				queryClient.setQueryData(runsQuery().queryKey, (runs) =>
-					runs ? upsertRun(runs, event.run) : runs
-				)
+				// Before the first fetch returns there is nothing to update, and the
+				// fetch may predate this event.
+				if (queryClient.getQueryData(runsQuery().queryKey)) {
+					queryClient.setQueryData(runsQuery().queryKey, (runs) =>
+						runs ? upsertRun(runs, event.run) : runs
+					)
+				} else {
+					void queryClient.invalidateQueries({
+						queryKey: runsQuery().queryKey,
+					})
+				}
 			}
 			if (event.type === 'workspace') {
 				void queryClient.invalidateQueries({

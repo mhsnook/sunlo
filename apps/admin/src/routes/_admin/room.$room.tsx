@@ -80,7 +80,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	const panelOpen = panel !== null
 	const members = roomMembers(room)
 	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
-	const liveRuns = useLiveRuns(working)
+	const liveRuns = useLiveRuns(members)
 	const liveSteps = liveRuns.reduce((sum, run) => sum + run.steps.length, 0)
 	const myAuthor = adminAuthor(session.user.id)
 

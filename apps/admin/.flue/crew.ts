@@ -35,38 +35,47 @@ export const threadConversation = (root: string) => `thread:${root}`
 const threadOf = (conversation: string | undefined) =>
 	conversation?.startsWith('thread:') ? conversation.slice(7) : null
 
-// Steps go to the room one at a time, in the order the agent took them.
+// One stub per isolate: getAgentByName initialises the room on every call.
+// A failed call drops it, in case the stub broke.
+let recorder: ReturnType<typeof roomFor> | null = null
+
+// A submission's events go to the room one at a time, in the order Flue
+// emitted them, so its close always lands after its steps.
 let recording = Promise.resolve()
-const record = (send: () => Promise<unknown>) => {
-	recording = recording.then(send).then(
-		() => undefined,
-		(error: unknown) => console.error('Could not record a run step', error)
-	)
+const record = (
+	send: (room: Awaited<ReturnType<typeof roomFor>>) => Promise<unknown>
+) => {
+	recording = recording
+		.then(async () => send(await (recorder ??= roomFor())))
+		.then(
+			() => undefined,
+			(error: unknown) => {
+				recorder = null
+				console.error('Could not record a run event', error)
+			}
+		)
 }
 
 observe((event) => {
 	const thread = threadOf(event.instanceId)
 	if (event.instanceId !== CONVERSATION && !thread) return
 	// Each agent's Flue identity is its crew key.
-	const key = event.agentName
-	if (!key || !isCrewKey(key)) return
-	// A run that fails or is aborted settles without useAgentFinish, so the
-	// room hears about it here instead.
-	if (event.type === 'submission_settled') {
-		if (event.outcome !== 'completed') {
-			record(async () => {
-				const room = await roomFor()
-				await (thread ? room.failThreadRun(key, thread) : room.failRun(key))
-			})
-		}
+	const agent = event.agentName
+	if (!agent || !isCrewKey(agent)) return
+	if (event.type === 'submission_running') {
+		const key = { agent, thread, submission: event.submissionId }
+		record((room) => room.startRun(key, event.timestamp))
 		return
 	}
-	const change = stepChange(key, event)
+	if (event.type === 'submission_settled') {
+		const key = { agent, thread, submission: event.submissionId }
+		record((room) => room.settleRun(key, event.outcome))
+		return
+	}
+	const change = stepChange(agent, event)
 	const submission = event.submissionId
 	if (!change || !submission) return
-	record(async () =>
-		(await roomFor()).recordStep({ agent: key, thread, submission, change })
-	)
+	record((room) => room.recordStep({ agent, thread, submission }, change))
 })
 
 // Delivers messages to the agents CLEF or an @mention woke. The message is
