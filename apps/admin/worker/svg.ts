@@ -434,12 +434,10 @@ function checkAttribute(element: string, name: string, raw: string) {
 	}
 }
 
-type Parsed = { root: Record<string, string> }
-
 // Reads the document as XML, strictly: anything it cannot read, it refuses.
 // That makes the result the same whether a browser parses the SVG as XML
 // (opened on its own) or as HTML (pasted into a page).
-function parse(svg: string): Parsed {
+function parse(svg: string): Record<string, string> {
 	let at = 0
 	const stack: Array<string> = []
 	let root: Record<string, string> | null = null
@@ -513,7 +511,10 @@ function parse(svg: string): Parsed {
 			if (svg[at] !== '>') refuse(`</${name}> has no >.`)
 			at++
 			stack.pop()
-			if (name.toLowerCase() === 'style') styleText = finishStyle(styleText)
+			if (name.toLowerCase() === 'style') {
+				checkCss(styleText?.join('') ?? '')
+				styleText = null
+			}
 			if (!stack.length) rootClosed = true
 			continue
 		}
@@ -581,12 +582,7 @@ function parse(svg: string): Parsed {
 	if (!root || !rootClosed) {
 		refuse('An SVG starts with <svg> and ends with </svg>.')
 	}
-	return { root: root }
-}
-
-function finishStyle(css: Array<string> | null) {
-	checkCss((css ?? []).join(''))
-	return null
+	return root
 }
 
 // An SVG the room can keep and the app can show: one <svg> document of
@@ -617,8 +613,7 @@ export function checkSvg(input: string): CheckedSvg {
 		}
 	}
 	try {
-		const { root } = parse(svg)
-		return { ok: true, svg, ...sizeOf(root) }
+		return { ok: true, svg, ...sizeOf(parse(svg)) }
 	} catch (error) {
 		if (error instanceof Refused) return { ok: false, error: error.message }
 		throw error
@@ -637,17 +632,6 @@ function sizeOf(root: Record<string, string>) {
 	const height = Number.parseFloat(root.height ?? '')
 	if (width > 0 && height > 0) return { width, height }
 	return { width: RENDER_SIDE, height: RENDER_SIDE }
-}
-
-export function svgSize(svg: string): { width: number; height: number } {
-	const tag = /<svg(?:[^>"']|"[^"]*"|'[^']*')*>/i.exec(svg)?.[0] ?? ''
-	const root: Record<string, string> = {}
-	for (const [, name, double, single] of tag.matchAll(
-		/\s([a-z][\w:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi
-	)) {
-		root[name.toLowerCase()] = double ?? single
-	}
-	return sizeOf(root)
 }
 
 // The viewport an SVG renders in: its own shape, RENDER_SIDE on its long

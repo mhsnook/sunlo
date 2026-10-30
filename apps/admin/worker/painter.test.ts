@@ -120,17 +120,21 @@ describe('readModelResult', () => {
 		).toEqual({ state: 'done', url: 'https://x/k.png' })
 	})
 
-	it('reads a job that is still running as pending', () => {
+	it('fails a job that is still running, since the painter cannot wait', () => {
 		expect(
 			readModelResult({ job_id: '57b6', status: 'processing', result: null })
-		).toEqual({ state: 'pending', status: 'processing' })
+		).toEqual({
+			state: 'failed',
+			error:
+				'The model answered with a job that is not finished (status processing), and the painter cannot wait on one. Try another style.',
+		})
 		expect(
 			readModelResult({
 				id: '1',
 				status: 'Pending',
 				polling_url: 'https://api/poll?id=1',
-			})
-		).toEqual({ state: 'pending', status: 'Pending' })
+			}).state
+		).toBe('failed')
 	})
 
 	it('reads a failed job, with its reason', () => {
@@ -209,9 +213,7 @@ describe('runPainter', () => {
 				{},
 				{ maxBytes: 100 }
 			)
-		).rejects.toThrow(
-			'Krea 3 answered with a job that is not finished (status Pending)'
-		)
+		).rejects.toThrow('a job that is not finished (status Pending)')
 		expect(JSON.stringify(warn.mock.calls[0])).toContain('polling_url')
 		warn.mockRestore()
 	})
@@ -313,18 +315,21 @@ describe('runPainter', () => {
 		expect(fetch).not.toHaveBeenCalled()
 	})
 
-	it('decodes a picture sent inline', async () => {
+	it('decodes a picture sent inline, line breaks and all', async () => {
 		const painted = await runPainter(
-			() => Promise.resolve({ image: btoa('<svg></svg>') }),
+			() =>
+				Promise.resolve({
+					image: `${btoa('<svg></svg>').slice(0, 8)}\n${btoa('<svg></svg>').slice(8)}`,
+				}),
 			'recraft/recraftv4-1-vector',
 			{},
 			{ maxBytes: 100 }
 		)
 		expect(new TextDecoder().decode(painted.bytes)).toBe('<svg></svg>')
-		expect(painted.url).toBeNull()
 	})
 
-	it('passes on a failed job', async () => {
+	it('passes on a failed job, and logs the answer’s shape', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
 		await expect(
 			runPainter(
 				() =>
@@ -337,6 +342,8 @@ describe('runPainter', () => {
 				{ maxBytes: 100 }
 			)
 		).rejects.toThrow("The model's job error: bad prompt.")
+		expect(JSON.stringify(warn.mock.calls[0])).toContain('"status\\":\\"Error')
+		warn.mockRestore()
 	})
 })
 

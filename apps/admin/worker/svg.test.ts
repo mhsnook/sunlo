@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_SVG_BYTES } from '../shared/crew'
-import { checkSvg, svgPage, svgSize, svgViewport } from './svg'
+import { checkSvg, svgPage, svgViewport } from './svg'
 
 const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><linearGradient id="g"><stop offset="0" stop-color="#f60"/></linearGradient></defs><style>.a{fill:url(#g)}</style><path class="a" d="M2 2h20v20H2z"/><use href="#g"/><text x="2" y="20">Bonjour &#8212; ok</text></svg>`
 
 const refusal = (svg: string) => {
 	const checked = checkSvg(svg)
 	return checked.ok ? null : checked.error
+}
+
+const size = (svg: string) => {
+	const checked = checkSvg(svg)
+	return checked.ok && { width: checked.width, height: checked.height }
 }
 
 describe('checkSvg', () => {
@@ -17,6 +22,14 @@ describe('checkSvg', () => {
 			width: 24,
 			height: 24,
 		})
+	})
+
+	it('reads the size from the viewBox, then width and height', () => {
+		expect(size('<svg width="64px" height="32"></svg>')).toEqual({
+			width: 64,
+			height: 32,
+		})
+		expect(size('<svg></svg>')).toEqual({ width: 1024, height: 1024 })
 	})
 
 	it('keeps an XML declaration and strips a plain DOCTYPE', () => {
@@ -223,19 +236,6 @@ describe('checkSvg', () => {
 	it('refuses an SVG that is too big', () => {
 		const big = `<svg>${' '.repeat(MAX_SVG_BYTES)}</svg>`
 		expect(refusal(big)).toContain('MB')
-	})
-})
-
-describe('svgSize', () => {
-	it('reads the viewBox first, then width and height', () => {
-		expect(
-			svgSize('<svg viewBox="0 0 300 150" width="10" height="10">')
-		).toEqual({ width: 300, height: 150 })
-		expect(svgSize('<svg width="64px" height="32">')).toEqual({
-			width: 64,
-			height: 32,
-		})
-		expect(svgSize('<svg>')).toEqual({ width: 1024, height: 1024 })
 	})
 })
 

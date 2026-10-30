@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import {
 	ASPECT_RATIOS,
 	MAX_PAINTER_REFERENCES,
@@ -189,7 +190,6 @@ export type ModelResult =
 	| { state: 'done'; url: string }
 	// The picture itself, base64, from a model that answers inline.
 	| { state: 'inline'; base64: string; contentType: string }
-	| { state: 'pending'; status: string }
 	| { state: 'failed'; error: string }
 
 const record = (value: unknown): Record<string, unknown> | null =>
@@ -233,11 +233,17 @@ export function readModelResult(raw: unknown): ModelResult {
 		}
 	}
 	if (url) {
-		const dataUri = /^data:([^;,]+);base64,(.*)$/s.exec(url)
+		// Only the start is read: the picture can be megabytes long.
+		const head = url.slice(0, 100)
+		const dataUri = /^data:([^;,]+);base64,/.exec(head)
 		if (dataUri) {
-			return { state: 'inline', contentType: dataUri[1], base64: dataUri[2] }
+			return {
+				state: 'inline',
+				contentType: dataUri[1],
+				base64: url.slice(dataUri[0].length),
+			}
 		}
-		if (/^[A-Za-z0-9+/=\s]+$/.test(url)) {
+		if (/^[A-Za-z0-9+/=\s]+$/.test(head)) {
 			return { state: 'inline', contentType: '', base64: url }
 		}
 		return {
@@ -246,7 +252,10 @@ export function readModelResult(raw: unknown): ModelResult {
 		}
 	}
 	if (status && !DONE.test(status)) {
-		return { state: 'pending', status }
+		return {
+			state: 'failed',
+			error: `The model answered with a job that is not finished (status ${status}), and the painter cannot wait on one. Try another style.`,
+		}
 	}
 	return { state: 'failed', error: 'The model answered with no image.' }
 }
@@ -260,8 +269,6 @@ export type Painted = {
 	// The type the download said it was; the caller reads the real one from
 	// the bytes.
 	contentType: string
-	// Where the model hosted it, or null for a picture it sent inline.
-	url: string | null
 }
 
 const tooBig = (bytes: number | null, max: number) =>
@@ -286,13 +293,7 @@ export async function readCapped(response: Response, maxBytes: number) {
 		if (total > maxBytes) throw new Error(tooBig(null, maxBytes))
 		chunks.push(chunk)
 	}
-	const bytes = new Uint8Array(total)
-	let at = 0
-	for (const chunk of chunks) {
-		bytes.set(chunk, at)
-		at += chunk.byteLength
-	}
-	return bytes
+	return Buffer.concat(chunks, total)
 }
 
 // The keys and status of an answer, for the log: never its picture.
@@ -334,26 +335,23 @@ export async function runPainter(
 	try {
 		const raw = await run(model, input, { signal })
 		const result = readModelResult(raw)
-		if (result.state === 'pending') {
-			console.warn('A painter model answered with an unfinished job', {
+		if (result.state === 'failed') {
+			console.warn('A painter model answered without a picture', {
 				model,
 				shape: answerShape(raw),
 			})
-			throw new Error(
-				`${label} answered with a job that is not finished (status ${result.status}), and the painter cannot wait on one. Try another style.`
-			)
+			throw new Error(result.error)
 		}
-		if (result.state === 'failed') throw new Error(result.error)
 		if (result.state === 'inline') {
-			const base64 = result.base64.replace(/\s+/g, '')
-			if (Math.floor((base64.length * 3) / 4) > options.maxBytes + 2) {
+			// Whitespace in the base64 can only raise this estimate.
+			if (Math.floor((result.base64.length * 3) / 4) > options.maxBytes + 2) {
 				throw new Error(tooBig(null, options.maxBytes))
 			}
-			const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))
+			const bytes = Buffer.from(result.base64, 'base64')
 			if (bytes.length > options.maxBytes) {
 				throw new Error(tooBig(bytes.length, options.maxBytes))
 			}
-			return { bytes, contentType: result.contentType, url: null }
+			return { bytes, contentType: result.contentType }
 		}
 		const download = await get(result.url, { signal })
 		if (!download.ok) {
@@ -365,7 +363,6 @@ export async function runPainter(
 		return {
 			bytes: await readCapped(download, options.maxBytes),
 			contentType: download.headers.get('content-type') ?? '',
-			url: result.url,
 		}
 	} catch (error) {
 		if (deadline.aborted && !options.signal?.aborted) {
