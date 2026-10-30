@@ -44,7 +44,7 @@ Register a new id here, not in the main app's registry.
 | `painting-copy-image`, `painting-download`                                                                | A painting's Copy image and Download buttons                                            |
 | `svg-tile` + `data-key=<svg id>`                                                                          | One SVG on an SVGs card                                                                 |
 | `svg-copy`, `svg-download`                                                                                | An SVG's Copy SVG and Download buttons, on either card                                  |
-| `painter-styles`, `painter-style-add`                                                                     | The Product room log's painter styles, and its Add a style button                       |
+| `painter-styles`, `painter-style-add`                                                                     | The painter styles in the Product room's details, and the Add a style button            |
 | `painter-style` + `data-key=<name>`, `painter-style-toggle`, `painter-style-prompt`                       | One style, the button that opens it, and its prompt                                     |
 | `painter-style-edit`, `painter-style-delete`                                                              | A style's Edit and Delete buttons                                                       |
 | `painter-style-form`, `painter-style-name`, `painter-style-description`                                   | The form that adds or edits a style, and its fields                                     |
@@ -62,12 +62,12 @@ Register a new id here, not in the main app's registry.
 | `crew-clef-chip`                                                                                          | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
 | `crew-routing-option` + `data-key=<kind><agents>`                                                         | One choice in a routing menu, e.g. `routeproduct-1`, `room`, `stack`                    |
 | `crew-routing-correct`                                                                                    | The routing note under your own message; opens the menu to correct it                   |
-| `crew-overview-button`, `crew-overview`                                                                   | The Overview toggle and its panel                                                       |
-| `sitrep-button`, `sitrep`                                                                                 | The Situation Report toggle and its panel                                               |
-| `crew-panels-menu`, `crew-panel-option` + `data-key=<panel>`                                              | On a narrow header, the one button that holds the three panel toggles, and its items    |
-| `room-document` + `data-key=<name>`                                                                       | A document in the room log; opens it                                                    |
-| `document-back`                                                                                           | Closes a document, back to the room log                                                 |
-| `document` + `data-key=<name>`                                                                            | An open document: the Situation Report, or one from a room log                          |
+| `details-button`, `details-panel` + `data-key=<room\|crew>`                                               | The Details toggle in a room header, and its panel; `crew` is the Common Room           |
+| `details-section` + `data-key=<documents\|charter\|weekly\|overview\|painter-styles\|agent key>`          | One section of the details; on a phone, one fold of the accordion                       |
+| `crew-overview`                                                                                           | The Overview section, in the Common Room's details                                      |
+| `room-document` + `data-key=<name>`                                                                       | A document in the details; opens it                                                     |
+| `document-back`                                                                                           | Closes a document, back to the details                                                  |
+| `document` + `data-key=<name>`                                                                            | An open document: the Situation Report, or one from a room's details                    |
 | `document-text`                                                                                           | A document's current text, drawn                                                        |
 | `document-edit`, `document-editor`                                                                        | The Edit button, and the Markdown box it opens                                          |
 | `document-summary`, `document-save`                                                                       | The editor's "What changed" line, and its Save button                                   |
@@ -76,8 +76,8 @@ Register a new id here, not in the main app's registry.
 | `document-revision` + `data-key=<revision>`                                                               | One revision in the list; shows it                                                      |
 | `document-old-revision`, `document-restore`                                                               | An older revision on view, and its Restore button                                       |
 | `crew-diagram-error`                                                                                      | A Mermaid diagram that did not draw, shown as its source                                |
-| `common-knowledge-button`, `common-knowledge`                                                             | The Common Knowledge toggle and its panel                                               |
-| `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add`              | One Common Knowledge entry, and the box and button that add one                         |
+| `common-knowledge-button`, `common-knowledge`                                                             | The crew's charter (Common Knowledge in the code): its toggle and its panel             |
+| `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add`              | One entry in the crew's charter, and the box and button that add one                    |
 | `crew-overview-range` + `data-key=<days>`                                                                 | Date range button in the Overview                                                       |
 | `crew-overview-card` + `data-key=<metrics>`                                                               | One chart card in the Overview                                                          |
 | `agent-looks-after`                                                                                       | The "Looks after" list in a member's profile card                                       |
@@ -85,7 +85,7 @@ Register a new id here, not in the main app's registry.
 | `agent-todos`, `agent-todo` + `data-key=<id>`                                                             | The workspace to-do list and one to-do                                                  |
 | `agent-todo-done`                                                                                         | The box that ticks a to-do done, or not done                                            |
 | `agent-todo-add`, `agent-todo-add-input`, `agent-todo-add-button`                                         | The box and button that add a to-do for an agent                                        |
-| `agent-character` + `data-key=<agent>`, `agent-character-toggle`, `agent-character-text`                  | An officer's character in the room log, its fold, and its text                          |
+| `agent-character` + `data-key=<agent>`, `agent-character-toggle`, `agent-character-text`                  | An officer's character in the room's details, its fold, and its text                    |
 | `agent-character-edit`, `agent-character-input`, `agent-character-save`                                   | Editing an officer's character                                                          |
 | `agent-character-restore`                                                                                 | "Restore the original", shown once the admin has written their own version              |
 | `agent-open-item` + `data-key=<id>`                                                                       | One "Open with you" item                                                                |
@@ -98,8 +98,7 @@ Register a new id here, not in the main app's registry.
 | `room-compose-input`, `room-compose-send`                                                                 | A subject room's compose bar                                                            |
 | `room-start-meeting`                                                                                      | "Start the weekly meeting" in the Command room, while the meeting is due                |
 | `room-card` + `data-key=<kind>`                                                                           | A card in a subject's room (`decide`, ...); a folded `brief` or `report` is its preview |
-| `room-panel-button`, `room-panel` + `data-key=<room>`                                                     | The room log toggle and its panel                                                       |
-| `room-member` + `data-key=<agent>`                                                                        | One member's profile, to-dos, open items and memory in the room log                     |
+| `room-member` + `data-key=<agent>`                                                                        | One member's profile, to-dos, open items and memory in the room details                 |
 | `charter-panel` + `data-key=<room>`, `charter-entry` + `data-key=<id>`                                    | A room's charter in its log, and one kept entry                                         |
 | `charter-add`, `charter-add-input`, `charter-add-button` + `data-key=<button label>`                      | The box that writes a charter entry, and its "Add a principle" and "Add a lesson"       |
 | `brief-timezone`                                                                                          | The time zone of the Sunday brief                                                       |

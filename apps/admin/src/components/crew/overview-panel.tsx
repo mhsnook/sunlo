@@ -14,19 +14,20 @@ import {
 import { formatChange, formatCount } from '~/lib/format'
 import { DailyBarChart } from '~/components/daily-bar-chart'
 import { displayName, principalOf } from '../../../shared/crew'
-import { SidePanel } from './side-panel'
 
-export function OverviewPanel({ onClose }: { onClose: () => void }) {
+// Sunlo's numbers, in the Common Room's details: the app's activity over the
+// chosen range, read by SQL in the Worker. The only details section built in
+// code rather than written by an agent.
+export function OverviewSection() {
 	const [days, setDays] = useState<RangeDays>(7)
 	const overview = useQuery(activityOverviewQuery(days))
 
 	return (
-		<SidePanel
-			title="Overview"
-			testId="crew-overview"
-			onClose={onClose}
-			bodyClassName="space-y-3"
-			actions={
+		<section className="space-y-3" data-testid="crew-overview">
+			<div className="flex items-center justify-between gap-2">
+				<h2 className="text-muted-foreground text-sm font-semibold">
+					Overview
+				</h2>
 				<nav
 					aria-label="Date range"
 					className="flex gap-1 rounded-2xl border p-0.5"
@@ -46,8 +47,7 @@ export function OverviewPanel({ onClose }: { onClose: () => void }) {
 						</Button>
 					))}
 				</nav>
-			}
-		>
+			</div>
 			<section className="rounded border border-dashed p-3 text-sm">
 				<p className="flex items-center gap-2 font-medium">
 					<Activity className="size-4" /> No health checks yet
@@ -98,7 +98,7 @@ export function OverviewPanel({ onClose }: { onClose: () => void }) {
 			) : (
 				<Loader className="mx-auto mt-10 opacity-50" />
 			)}
-		</SidePanel>
+		</section>
 	)
 }
 

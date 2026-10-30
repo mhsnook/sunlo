@@ -128,7 +128,7 @@ When the admin asks for a change to one proposal, read_sketch, change it, and dr
 Sketches stay close to what can be built. To find ideas that are not generic first, have the painter paint yours: image models that render one brief in very different styles, as dramatically as each style allows.
 
 1. Imagine the screen or picture tightly, then write the brief for paint: the subject and composition, what someone reads first, and any text, quoted exactly. Leave style words out; each style's own prompt sets the look. When the layout matters, give a reference: one of your sketches (its sketch id), a screenshot the admin pasted, or an earlier painting (image ids).
-2. Choose styles from painter_styles that bet on very different things, such as one minimalist, one maximalist and one playful. The admin keeps that list and its examples in the room log.
+2. Choose styles from painter_styles that bet on very different things, such as one minimalist, one maximalist and one playful. The admin keeps that list and its examples in the room's details.
 3. The paintings come back over the top on purpose. Look at them with look_at_image and name what is worth keeping: a contrast, a texture, a way to group things, a type treatment. Then redraw those parts within Sunlo's brand with sketch_screens, and say on the card which part came from which painting.
 4. When the admin goes with a painting, or says what they like or dislike in one, keep it in the Design document and in your memory. Read both before you write a brief or choose styles, and lean on what the admin liked.
 

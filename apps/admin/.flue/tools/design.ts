@@ -173,7 +173,7 @@ export function designTools(agent: CrewKey) {
 	const painterStyles = defineTool({
 		name: 'painter_styles',
 		description:
-			"List the painter's styles: each one's name, what it looks like, the model that paints it, and the image ids of its examples, which you can look at with look_at_image. The admin manages the list in the room log.",
+			"List the painter's styles: each one's name, what it looks like, the model that paints it, and the image ids of its examples, which you can look at with look_at_image. The admin manages the list in the room's details.",
 		input: v.object({}),
 		annotations: { readOnlyHint: true },
 		async run() {
