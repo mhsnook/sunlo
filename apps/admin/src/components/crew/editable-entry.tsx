@@ -41,7 +41,8 @@ export function EditableEntry({
 	const save = () =>
 		draft?.trim() && onSave(draft.trim()).then(() => setDraft(null), fail)
 	const buttonClass = cn(
-		quiet && 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+		quiet &&
+			'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100'
 	)
 
 	return (
@@ -52,48 +53,49 @@ export function EditableEntry({
 		>
 			{leading}
 			{draft === null ? (
-				<span className="flex-1 whitespace-pre-wrap">{children}</span>
-			) : (
-				<Textarea
-					value={draft}
-					onChange={(event) => setDraft(event.target.value)}
-					onKeyDown={(event) => {
-						if (event.key === 'Escape') setDraft(null)
-						if (event.key === 'Enter' && !event.shiftKey) {
-							event.preventDefault()
-							void save()
-						}
-					}}
-					className="min-h-10 flex-1"
-					rows={2}
-					aria-label={label}
-					ref={(field) => field?.focus()}
-				/>
-			)}
-			{draft === null ? (
-				<>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label={`Edit this ${label.toLowerCase()}`}
-						className={buttonClass}
-						onClick={() => setDraft(text)}
-					>
-						<Pencil />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label={deleteLabel}
-						className={buttonClass}
-						disabled={busy}
-						onClick={() => void onDelete().catch(fail)}
-					>
-						<Trash2 />
-					</Button>
-				</>
+				<span className="flex-1 whitespace-pre-wrap">
+					{children}
+					{/* Trails the last line so the text wraps the full width; h-5 is
+					    the line's height, so a 32px button does not tallen it. */}
+					<span className="ms-1 inline-flex h-5 items-center gap-0.5 align-middle">
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label={`Edit this ${label.toLowerCase()}`}
+							className={buttonClass}
+							onClick={() => setDraft(text)}
+						>
+							<Pencil />
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label={deleteLabel}
+							className={buttonClass}
+							disabled={busy}
+							onClick={() => void onDelete().catch(fail)}
+						>
+							<Trash2 />
+						</Button>
+					</span>
+				</span>
 			) : (
 				<>
+					<Textarea
+						value={draft}
+						onChange={(event) => setDraft(event.target.value)}
+						onKeyDown={(event) => {
+							if (event.key === 'Escape') setDraft(null)
+							if (event.key === 'Enter' && !event.shiftKey) {
+								event.preventDefault()
+								void save()
+							}
+						}}
+						className="min-h-10 flex-1"
+						rows={2}
+						aria-label={label}
+						ref={(field) => field?.focus()}
+					/>
 					<Button
 						variant="ghost"
 						size="icon"

@@ -22,11 +22,13 @@ import {
 } from 'lucide-react'
 import {
 	CharterEntrySchema,
+	COMMON_ROOM,
 	CommandSchema,
 	CommonKnowledgeSchema,
 	CrewMessageSchema,
 	DocumentSchema,
 	DocumentSummarySchema,
+	placeOf,
 	RevisionTextSchema,
 	roomOfPlace,
 	isThreadPlace,
@@ -326,6 +328,32 @@ function upsertReply(
 	)
 }
 
+const PENDING_PREFIX = 'pending:'
+
+// The admin's message as its timeline shows it until the server answers.
+export const isPendingMessage = (message: CrewMessageType) =>
+	message.id.startsWith(PENDING_PREFIX)
+
+// No routing: the timeline offers to correct a routed message, and this one
+// has not been routed yet.
+const pendingMessage = (
+	author: string,
+	place: PlaceType,
+	body: string
+): CrewMessageType => ({
+	id: `${PENDING_PREFIX}${crypto.randomUUID()}`,
+	at: new Date().toISOString(),
+	author,
+	authorName: 'You',
+	body,
+	routing: null,
+	card: null,
+	answer: null,
+	place,
+	corrected: null,
+	receipt: false,
+})
+
 // A message someone else wrote after the admin last opened its timeline.
 export const isNewFor = (
 	message: CrewMessageType,
@@ -333,7 +361,35 @@ export const isNewFor = (
 	myAuthor: string
 ) => !!seenAt && message.at > seenAt && message.author !== myAuthor
 
-export function usePostToRoom() {
+// The pending message shows at once, and one cache write swaps it for the
+// server's row, or drops it when the send fails. The server stores a message
+// where it was posted, so the row lands in the pending message's timeline.
+const postHandlers = <TInput>(
+	queryClient: QueryClient,
+	toPending: (input: TInput) => CrewMessageType
+) => ({
+	onMutate: (input: TInput) => {
+		const pending = toPending(input)
+		upsertMessage(queryClient, pending)
+		return pending
+	},
+	onSettled: (
+		message: CrewMessageType | undefined,
+		_error: Error | null,
+		_input: TInput,
+		pending: CrewMessageType | undefined
+	) => {
+		if (!pending) return
+		updateTimeline(queryClient, pending.place, (timeline) => {
+			const rest = timeline.messages.filter((m) => m.id !== pending.id)
+			return { messages: message ? upsert(rest, message) : rest }
+		})
+	},
+})
+
+// `myAuthor` is the admin's own author key, so the timeline draws the
+// pending message as theirs.
+export function usePostToRoom(myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (input: { body: string; routing: RoutingType | null }) =>
@@ -343,11 +399,13 @@ export function usePostToRoom() {
 					json: input,
 				})
 			),
-		onSuccess: (message) => upsertMessage(queryClient, message),
+		...postHandlers(queryClient, (input) =>
+			pendingMessage(myAuthor, COMMON_ROOM, input.body)
+		),
 	})
 }
 
-export function usePostToThread(room: RoomKey) {
+export function usePostToThread(room: RoomKey, myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
 		mutationFn: async (body: string) =>
@@ -357,7 +415,9 @@ export function usePostToThread(room: RoomKey) {
 					json: { body },
 				})
 			),
-		onSuccess: (message) => upsertMessage(queryClient, message),
+		...postHandlers(queryClient, (body: string) =>
+			pendingMessage(myAuthor, placeOf(room), body)
+		),
 	})
 }
 
