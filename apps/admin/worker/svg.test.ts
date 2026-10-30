@@ -101,6 +101,119 @@ describe('checkSvg', () => {
 		)
 	})
 
+	it('reads a quoted > as part of the value', () => {
+		expect(
+			refusal('<svg><rect title="a>b" onclick="alert(1)"/></svg>')
+		).not.toBeNull()
+		expect(
+			refusal('<svg><rect fill="a>b" onclick="alert(1)"/></svg>')
+		).toContain('event-handler')
+		expect(
+			refusal('<svg><use x=">" href="https://evil.example/x.svg#a"/></svg>')
+		).toContain('Links in an SVG')
+	})
+
+	it('refuses processing instructions other than the XML declaration', () => {
+		expect(
+			refusal(
+				'<?xml-stylesheet type="text/xsl" href="https://evil.example/x.xsl"?><svg></svg>'
+			)
+		).toContain('processing instructions')
+		expect(
+			refusal('<svg><?xml-stylesheet href="https://evil.example/x"?></svg>')
+		).toContain('processing instructions')
+		expect(
+			checkSvg('<?xml version="1.0" encoding="UTF-8"?><svg></svg>').ok
+		).toBe(true)
+	})
+
+	it('refuses CSS escapes and image-set, which hide a link', () => {
+		for (const [svg, error] of [
+			[
+				'<svg><style>@\\69mport "https://evil.example/x.css";</style></svg>',
+				'backslash',
+			],
+			[
+				'<svg><style>a{fill:\\75rl(https://evil.example/x)}</style></svg>',
+				'backslash',
+			],
+			[
+				'<svg><rect style="fill:\\75rl(https://evil.example/x)"/></svg>',
+				'backslash',
+			],
+			[
+				'<svg><style>a{background:image-set("https://evil.example/x" 1x)}</style></svg>',
+				'image-set',
+			],
+			[
+				`<svg><rect style="background:-webkit-image-set('x.png' 1x)"/></svg>`,
+				'image-set',
+			],
+		]) {
+			expect(refusal(svg)).toContain(error)
+		}
+	})
+
+	it('reads a quoted url() argument to its closing quote', () => {
+		expect(refusal('<svg><style>a{fill:url("#a)b")}</style></svg>')).toBeNull()
+		expect(refusal('<svg><style>a{fill:url("a)b")}</style></svg>')).toContain(
+			'CSS url()'
+		)
+		expect(
+			refusal('<svg><rect fill="url(//evil.example/x#a)"/></svg>')
+		).toContain('CSS url()')
+		expect(
+			refusal(
+				'<svg><style><![CDATA[a{fill:url(https://evil.example/x)}]]></style></svg>'
+			)
+		).toContain('CSS url()')
+	})
+
+	it('refuses links in attributes other than href', () => {
+		for (const svg of [
+			'<svg><animate attributeName="href" values="https://evil.example/x.svg#a"/></svg>',
+			'<svg><set to="data:application/xhtml+xml,x"/></svg>',
+			'<svg><rect fill="https://evil.example/x"/></svg>',
+		]) {
+			expect(refusal(svg)).toMatch(/URLs in attributes|changes a link/)
+		}
+		expect(
+			refusal('<svg><set to="data:application/xhtml+xml,x"/></svg>')
+		).toContain('URLs in attributes')
+		expect(
+			refusal('<svg><animate attributeName="xlink:href" values="#a;#b"/></svg>')
+		).toContain('changes a link')
+		expect(refusal('<svg><set attributeName="href" to="#b"/></svg>')).toContain(
+			'changes a link'
+		)
+		expect(
+			checkSvg(
+				'<svg><use href="#a"/><animate attributeName="x" values="0;1" dur="1s"/></svg>'
+			).ok
+		).toBe(true)
+	})
+
+	it('refuses what an HTML parser reads differently', () => {
+		expect(refusal('<svg><!-- --!><rect/> --></svg>')).toContain('comment')
+		expect(refusal('<svg><!--><rect/>--></svg>')).toContain('comment')
+		expect(refusal('<svg><rect width=1/></svg>')).toContain('quote every value')
+		expect(refusal('<svg><style><a href="x"/></style></svg>')).toContain(
+			'CSS only'
+		)
+		expect(refusal('<svg><text>a &copy; b</text></svg>')).toContain('&amp;')
+	})
+
+	it('refuses elements and attributes outside the allowlist', () => {
+		expect(refusal('<svg><video/></svg>')).toContain('<video>')
+		expect(refusal('<svg><rect inkscape:label="x"/></svg>')).toContain(
+			'inkscape:label'
+		)
+		expect(
+			refusal('<svg xmlns="http://www.w3.org/1999/xhtml"></svg>')
+		).toContain('xmlns')
+		expect(refusal('<svg><rect id="a" id="b"/></svg>')).toContain('twice')
+	})
+
 	it('refuses entity declarations', () => {
 		expect(
 			refusal('<!DOCTYPE svg [<!ENTITY x "y">]><svg>&x;</svg>')
@@ -109,7 +222,7 @@ describe('checkSvg', () => {
 
 	it('refuses an SVG that is too big', () => {
 		const big = `<svg>${' '.repeat(MAX_SVG_BYTES)}</svg>`
-		expect(refusal(big)).toContain('KB')
+		expect(refusal(big)).toContain('MB')
 	})
 })
 
