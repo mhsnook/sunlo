@@ -255,13 +255,16 @@ function Picture({
 						)}
 					</button>
 				</DialogTrigger>
-				<DialogContent className="max-w-[96vw] p-2" data-testid="painting-full">
+				<DialogContent
+					className="flex max-h-11/12 max-w-11/12 flex-col p-2"
+					data-testid="painting-full"
+				>
 					<DialogTitle className="sr-only">{alt}</DialogTitle>
 					{src && (
 						<img
 							src={src}
 							alt={alt}
-							className="max-h-[85vh] w-auto justify-self-center object-contain"
+							className="min-h-0 self-center object-contain"
 						/>
 					)}
 				</DialogContent>

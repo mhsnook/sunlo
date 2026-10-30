@@ -23,6 +23,7 @@ import {
 	documentsQuery,
 	isWorking,
 	markSeen,
+	painterStylesQuery,
 	roomQuery,
 	threadQuery,
 	workspaceQuery,
@@ -51,6 +52,9 @@ export const Route = createFileRoute('/_admin/room/$room')({
 			context.queryClient.ensureQueryData(charterQuery(params.room)),
 			...(params.room === 'command'
 				? [context.queryClient.ensureQueryData(commandQuery())]
+				: []),
+			...(params.room === crew['product-2'].room
+				? [context.queryClient.ensureQueryData(painterStylesQuery())]
 				: []),
 			...roomMembers(params.room).map((agent) =>
 				context.queryClient.ensureQueryData(workspaceQuery(agent))

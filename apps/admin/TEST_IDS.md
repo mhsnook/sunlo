@@ -47,6 +47,7 @@ Register a new id here, not in the main app's registry.
 | `painter-styles`, `painter-style-add`                                                                     | The painter styles in the Product room's details, and the Add a style button            |
 | `painter-style` + `data-key=<name>`, `painter-style-toggle`, `painter-style-prompt`                       | One style, the button that opens it, and its prompt                                     |
 | `painter-style-edit`, `painter-style-delete`                                                              | A style's Edit and Delete buttons                                                       |
+| `painter-style-delete-dialog`, `painter-style-delete-confirm`                                             | The dialog that asks before a style is deleted, and its Delete button                   |
 | `painter-style-form`, `painter-style-name`, `painter-style-description`                                   | The form that adds or edits a style, and its fields                                     |
 | `painter-style-prompt-input`, `painter-style-model`, `painter-style-model-option` + `data-key=<model id>` | The form's prompt, its model menu, and one model in it                                  |
 | `painter-style-example` + `data-key=<image id>`, `painter-style-example-remove`, `painter-style-save`     | An example the style keeps, its Remove button, and the form's Save button               |

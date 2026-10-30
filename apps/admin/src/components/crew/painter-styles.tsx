@@ -8,7 +8,17 @@ import {
 	Trash2,
 	X,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
 	Select,
@@ -108,6 +118,7 @@ function StyleEntry({
 	onEdit: () => void
 }) {
 	const [open, setOpen] = useState(false)
+	const [confirming, setConfirming] = useState(false)
 	const remove = useDeletePainterStyle()
 	return (
 		<li
@@ -148,21 +159,45 @@ function StyleEntry({
 				>
 					<Pencil />
 				</Button>
-				<Button
-					variant="ghost"
-					size="icon"
-					aria-label={`Delete the ${style.name} style`}
-					disabled={remove.isPending}
-					onClick={() =>
-						remove.mutate(style.id, {
-							onSuccess: () => toastSuccess(`${style.name} deleted`),
-							onError: fail,
-						})
-					}
-					data-testid="painter-style-delete"
-				>
-					<Trash2 />
-				</Button>
+				<AlertDialog open={confirming} onOpenChange={setConfirming}>
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label={`Delete the ${style.name} style`}
+						disabled={remove.isPending}
+						onClick={() => setConfirming(true)}
+						data-testid="painter-style-delete"
+					>
+						<Trash2 />
+					</Button>
+					<AlertDialogContent data-testid="painter-style-delete-dialog">
+						<AlertDialogHeader>
+							<AlertDialogTitle>
+								Delete the {style.name} style?
+							</AlertDialogTitle>
+							<AlertDialogDescription>
+								{displayName('product-2')} can no longer paint in it. A style
+								the room started with does not come back.
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>Cancel</AlertDialogCancel>
+							<AlertDialogAction
+								className={buttonVariants({ variant: 'red' })}
+								onClick={() => {
+									setConfirming(false)
+									remove.mutate(style.id, {
+										onSuccess: () => toastSuccess(`${style.name} deleted`),
+										onError: fail,
+									})
+								}}
+								data-testid="painter-style-delete-confirm"
+							>
+								Delete
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
 			</div>
 			{open && (
 				<div className="space-y-2 ps-6">
