@@ -110,9 +110,45 @@ Keiko runs on Claude Opus 5.5 through Workers AI (`MODEL_PRODUCT_2`), with no An
 
 Locally, Browser Rendering starts a Chrome that miniflare downloads. As root, as in a container, Chrome needs `--no-sandbox`, which miniflare adds when `CI` is set: `CI=1 pnpm admin:dev`.
 
+### Keiko's painter
+
+Sketches stay close to what can be built. To find ideas that are not generic, Keiko first has them painted: she writes a tight brief, and image models paint it in up to four very different styles, each as dramatically as the style allows. The paintings come back over the top on purpose. You and O'Brien take what you like from them; Keiko looks at them with `look_at_image`, takes the parts that work and redraws them within Sunlo's brand with `sketch_screens`. Her persona (`shared/characters.ts`) holds this loop, and asks her to keep what you liked in the Design document and her memory and to use it when she writes briefs and picks styles. The painter is a plain model call per style with a prompt the Worker builds, not an agent.
+
+- `painter_styles` lists the styles. Each has a name, a one-line description, the prompt that sets the style, the model that paints it, and up to four example images. The room seeds ten defaults the first time anyone reads the list (`DEFAULT_PAINTER_STYLES` in `worker/painter.ts`: Minimalist, Maximalist, Swiss editorial, Toy-like, Risograph, Luxury, Brutalist, Hand-drawn, Retro-futurist, Flat illustration), and after that a style you delete stays deleted. You add, edit and delete styles under **Painter styles** in the Product room's log, and paste or pick their example images there. The room keeps them in its `painter_style` table, at `GET/POST /api/crew/painter-styles` and `PUT/DELETE /api/crew/painter-styles/:id`.
+- `paint` takes a title, the card's message, the brief (the subject and composition), one to four style names, an aspect ratio, and up to four reference images: image ids (a pasted screenshot, an earlier painting, an SVG's rendering) or sketch ids (the room copies a sketch's picture into the image table once, `sketch.image_id`). The prompt is the style's prompt, a line asking for drama, then the brief, then what to do with the references (`paintingPrompt`). Each style's model runs in its own durable step (`step.do`), in parallel, so a retry does not repeat a finished painting. The Worker downloads each result, since the model's hosted URL expires, and keeps it in the image table as kind `painting`. Then it posts one **paintings** card: each painting with its style, Copy image, Download and open full size, and a "Go with" for each that worked. A style that failed shows its error on the card instead of failing the call. A pick tells Keiko which image to look at and asks her to keep what it says about your taste; O'Brien hears it too (`paintingPickReports` in `worker/crew/picks.ts`). Keiko can have 12 paintings an hour (`PAINTINGS_PER_HOUR`), failed ones included, since each model call was made.
+- `draw_svg` posts SVGs Keiko writes herself (icons, spot illustrations, diagrams) on an **SVGs** card, with Copy SVG and Download.
+
+The models, all through the Worker's `AI` binding (`env.AI.run`), with no API keys. Their inputs follow each model's input schema on Cloudflare's model page (`modelInput` in `worker/painter.ts`):
+
+| Model                                  | Takes                                                                  | Cost (Cloudflare's list price)                         |
+| -------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------ |
+| `black-forest-labs/flux-3-image-klein` | `prompt`, `aspect_ratio`, `resolution: "1k"`, up to 10 `images` (URLs) | $0.009 for the first output megapixel, so about $0.009 |
+| `krea/krea-3` (beta)                   | `prompt`, `aspect_ratio`, `resolution: "1K"`, up to 8 `image_urls`     | $0.03 an image, plus $0.07 for each reference image    |
+| `recraft/recraftv4-1-flash`            | `prompt`, `size` (the aspect ratio); no reference images               | $0.007 an image                                        |
+| `recraft/recraftv4-1-vector`           | `prompt`, `size`; answers with an SVG; no reference images             | $0.08 an image                                         |
+
+So one paint call costs from about $0.03 (four FLUX or Recraft Flash styles) to about $1.24 (four Krea styles with four reference images each). Two FLUX styles, one Krea and one Recraft Flash, with one reference image, cost about $0.13.
+
+A model fetches a reference image itself, so the Worker passes it a signed link (see Images below) that lasts an hour. The links need the app's public HTTPS origin, which the room learns each time the admin loads the app (`GET /api/crew/room` saves it in the room's key-value storage), so a preview's room signs links to the preview. On a local dev server there is no HTTPS origin: `paint` leaves the references out and says so.
+
+The answers differ by model and by page of Cloudflare's docs, so `readModelResult` reads every documented shape: the output schema's `{ image }`, `{ state, result: { image } }`, BFL's `{ id, status: "Ready", result: { sample } }`, Krea's job `{ job_id, status, result: { urls } }`, and an image sent inline as base64 or a `data:` URI. A job that is not finished is polled at its `polling_url`, if it gives one, every 3 seconds for up to 150 seconds (`PAINT_TIMEOUT_MS`); one with no `polling_url` fails with a message that says so, since Cloudflare documents no way to wait on a job through the binding. Cloudflare Workflows would only be needed if a job took minutes.
+
+A painting can be bigger than one Durable Object row: the room keeps up to 8 MB (`MAX_PAINTING_BYTES`) by splitting the bytes across `image_part` rows, and `image(id)` puts them back together.
+
+**SVGs.** An SVG can carry script, so the room never serves one in a way that can run on the admin origin:
+
+- `checkSvg` (`worker/svg.ts`) refuses, with a message the agent can act on, any SVG that is not one `<svg>` document, or holds `<script>`, `<foreignObject>`, `<iframe>`, `<embed>`, `<object>` and the like, an event-handler attribute (`onload=`, `onclick=`), a `javascript:`, `vbscript:` or `data:text/html` link (also when hidden with entities or whitespace), an `href` or CSS `url()` that points anywhere but inside the SVG or at a `data:image` raster, CSS `@import`, or an ENTITY declaration. It strips a plain DOCTYPE. A vector model's SVG goes through the same check, and fails as that painting's error.
+- The app shows an SVG only through `<img>` with a `data:` URL, never a `blob:` URL: an `<img>` runs no script, and a `blob:` URL has the app's origin, so opening one in a tab would. Open full size shows the same `<img>` in a dialog. Download is a `blob:` link typed `application/octet-stream`, which the browser saves rather than shows.
+- `GET /api/crew/svgs/:id` serves the text with `Content-Security-Policy: sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:`, `Content-Disposition: attachment` and `nosniff`, for anyone who opens the route itself.
+- Each SVG is also rendered to a PNG with Browser Rendering (through an `<img>` too), kept in the image table as kind `svg`, so Keiko can look at it with `look_at_image`. If rendering fails, the SVG is kept without one.
+
+The room keeps SVGs in its `svg` table and each painting in its `painting` table, with the prompt it was painted from.
+
+**Not verified yet.** Image models cannot run locally (the `AI` binding is remote, and the dev server runs without it), so the unit tests cover prompt building, each model's input, every documented answer shape, polling, SVG checks and the hourly limit, and the UI was checked with seeded paintings. On a Cloudflare preview, check: each model's real answer (bare `{ image }` or the wrapped shapes; a URL or inline bytes; whether Krea answers with an unfinished job), that FLUX and Krea fetch the signed links, what format Recraft's vector model really returns (the docs' examples link to JPEGs), whether Recraft takes every aspect ratio the painter offers (its docs show only `4:5` and `1:1`), and the cost of one call in the dashboard.
+
 ### Images
 
-The room keeps images in its `image` table (`worker/crew/room.ts`): an id, a kind (`upload` for the admin's), the author, the type, the width and height, and the bytes, in one row, so an image is at most 1.8 MB (`MAX_IMAGE_BYTES` in `shared/crew.ts`). The Worker reads the type and size from the image's own bytes (`imageInfo` in `worker/images.ts`) and keeps PNG, JPEG, WebP and GIF only. A sketch keeps its picture in its own `sketch` row.
+The room keeps images in its `image` table (`worker/crew/room.ts`): an id, a kind (`upload` for the admin's, `painting`, `svg` for an SVG's rendering, `sketch` for a sketch's picture copied for the painter), the author, the type, the width and height, and the bytes, in one row, so an upload is at most 1.8 MB (`MAX_IMAGE_BYTES` in `shared/crew.ts`). A painting can be bigger; its bytes are then split across `image_part` rows. The Worker reads the type and size from the image's own bytes (`imageInfo` in `worker/images.ts`) and keeps PNG, JPEG, WebP and GIF only. A sketch keeps its picture in its own `sketch` row.
 
 - `POST /api/crew/images` stores one image; the body is the image, with its content type. It returns `{ id, width, height }`.
 - `POST /api/crew/messages` and `POST /api/crew/rooms/:room/messages` take `images`, a list of those ids, beside `body`. A message carries the ids and sizes in its `images` column.
@@ -191,7 +227,7 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
 - `look_at_image`: one of the images the admin pasted into a message, with a question about it ("Images", above)
 - `propose_charter`: an entry for the agent's room's charter, as a card
-- Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, Data has `note_playbook` and `file_report`, and Keiko has `look_at_screen`, `sketch_screens` and `read_sketch` ("Keiko's sketches", above).
+- Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, Data has `note_playbook` and `file_report`, and Keiko has `look_at_screen`, `sketch_screens` and `read_sketch` ("Keiko's sketches", above), and `painter_styles`, `paint` and `draw_svg` ("Keiko's painter").
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2`, `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`) and `MODEL_PRODUCT_2` (Claude Opus 5.5). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 

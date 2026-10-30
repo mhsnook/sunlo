@@ -34,6 +34,7 @@ import { DocumentView } from './document-view'
 import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
 import { EditableEntry } from './editable-entry'
 import { MemoryList } from './memory-list'
+import { PainterStyles } from './painter-styles'
 import { Empty, Section, TodoList } from './workspace-parts'
 import { SidePanel } from './side-panel'
 
@@ -91,6 +92,7 @@ export function RoomPanel({
 			<DocumentList documents={documents} onOpen={setOpenId} />
 			<CharterPanel room={room} />
 			{room === 'command' && <WeeklySettings />}
+			{room === crew['product-2'].room && <PainterStyles />}
 			{roomMembers(room).map((agent) => (
 				<MemberLog key={agent} agent={agent} />
 			))}

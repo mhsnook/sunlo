@@ -5,6 +5,7 @@ import {
 	principalOf,
 	roomNames,
 	type CrewKey,
+	type PaintingType,
 	type PickChoice,
 	type SketchType,
 } from '../../shared/crew'
@@ -54,6 +55,38 @@ export function sketchPickReports(input: {
 					{
 						agent: principal,
 						body: `${said}. ${displayName(agent)} drew it. If the pick shows how they decide, propose it for the ${roomNames[room]}'s charter with propose_charter.`,
+					},
+				]),
+	]
+}
+
+// The admin went with one of the painter's paintings. The agent hears where
+// to look at it and is asked to keep what the pick says about the admin's
+// taste; the room's principal hears it as it hears a sketch pick.
+export function paintingPickReports(input: {
+	agent: CrewKey
+	title: string
+	painting: PaintingType
+	by: string
+}): Array<{ agent: CrewKey; body: string }> {
+	const { agent, title, painting, by } = input
+	const room = crew[agent].room
+	const principal = principalOf(room)
+	const said = `${by} went with painting ${painting.label} of "${title}", in the ${painting.style} style`
+	const where = painting.svg
+		? `It is SVG ${painting.svg.id}${painting.svg.png === null ? '' : `; look at its rendering, image ${painting.svg.png}`}.`
+		: `It is image ${painting.image?.id}.`
+	return [
+		{
+			agent,
+			body: `${said}. ${where} Look at it with look_at_image to see what they liked, keep that in your Design document or your memory, and carry it into your sketches within the brand.`,
+		},
+		...(principal === agent
+			? []
+			: [
+					{
+						agent: principal,
+						body: `${said}. ${displayName(agent)} had it painted. If the pick shows how they decide, propose it for the ${roomNames[room]}'s charter with propose_charter.`,
 					},
 				]),
 	]

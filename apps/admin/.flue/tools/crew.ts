@@ -239,7 +239,7 @@ Their answer comes back to you.`,
 	const lookAtImage = defineTool({
 		name: 'look_at_image',
 		description:
-			'Look at an image the admin attached to a message, shown as "[image 12 attached, 1280×800]", and answer a question about it. Ask a pointed question, such as "What does the error say?"; the answer is what you saw, in words.',
+			'Look at an image the room keeps and answer a question about it: one the admin attached to a message, shown as "[image 12 attached, 1280×800]", a painting, or an SVG\'s rendering. Ask a pointed question, such as "What does the error say?"; the answer is what you saw, in words.',
 		input: v.object({
 			id: Id,
 			question: v.pipe(Text, v.maxLength(1000)),
@@ -250,7 +250,7 @@ Their answer comes back to you.`,
 			const image = await (await roomFor()).image(data.id)
 			if (!image) throw new Error(`No image ${data.id}.`)
 			const seen = await harness.prompt(
-				`This is image ${data.id} (${image.width}×${image.height}), which the admin attached to a message. Answer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
+				`This is image ${data.id} (${image.width}×${image.height}). Answer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
 				{
 					images: [
 						{

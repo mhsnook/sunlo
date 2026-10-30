@@ -1,6 +1,52 @@
 import { describe, expect, it } from 'vitest'
 import { displayName } from '../../shared/crew'
-import { pickReports, sketchPickReports } from './picks'
+import { paintingPickReports, pickReports, sketchPickReports } from './picks'
+
+describe('paintingPickReports', () => {
+	const painting = {
+		id: 3,
+		label: 'B',
+		style: 'Risograph',
+		model: 'black-forest-labs/flux-3-image-klein' as const,
+		image: { id: 41, width: 1024, height: 1280 },
+		svg: null,
+		error: null,
+	}
+
+	it('tells the agent where to look, and its room’s principal', () => {
+		const [painted, principal] = paintingPickReports({
+			agent: 'product-2',
+			title: 'The review screen',
+			painting,
+			by: 'sam',
+		})
+		const said =
+			'sam went with painting B of "The review screen", in the Risograph style'
+		expect(painted.agent).toBe('product-2')
+		expect(painted.body).toContain(`${said}. It is image 41.`)
+		expect(painted.body).toContain('look_at_image')
+		expect(painted.body).toContain('Design document')
+		expect(principal.agent).toBe('product-1')
+		expect(principal.body).toContain(said)
+		expect(principal.body).toContain('propose_charter')
+	})
+
+	it('points at an SVG’s rendering', () => {
+		const [painted] = paintingPickReports({
+			agent: 'product-2',
+			title: 'An icon',
+			painting: {
+				...painting,
+				image: null,
+				svg: { id: 5, title: 't', width: 24, height: 24, png: 42 },
+			},
+			by: 'sam',
+		})
+		expect(painted.body).toContain(
+			'It is SVG 5; look at its rendering, image 42.'
+		)
+	})
+})
 
 const views = {
 	original: {

@@ -8,6 +8,12 @@ export const frames = {
 	desktop: { width: 1440, height: 900, deviceScaleFactor: 1 },
 } as const
 export type Frame = keyof typeof frames
+// A viewport of any size, for a picture that is not a screen, such as an SVG.
+export type Viewport = {
+	width: number
+	height: number
+	deviceScaleFactor: number
+}
 
 export type Shot = { image: Uint8Array; mimeType: 'image/png' | 'image/jpeg' }
 export type Page = { url: string } | { html: string }
@@ -20,7 +26,7 @@ const LOAD_TIMEOUT_MS = 20_000
 // is one viewport of `frame`, not the whole scrolling page.
 export async function screenshots(
 	binding: BrowserWorker,
-	shots: Array<{ page: Page; frame: Frame }>
+	shots: Array<{ page: Page; frame: Frame | Viewport }>
 ): Promise<Array<Shot>> {
 	const browser = await puppeteer.launch(binding)
 	try {
@@ -32,11 +38,11 @@ export async function screenshots(
 
 async function screenshot(
 	browser: Browser,
-	{ page: target, frame }: { page: Page; frame: Frame }
+	{ page: target, frame }: { page: Page; frame: Frame | Viewport }
 ): Promise<Shot> {
 	const page = await browser.newPage()
 	try {
-		await page.setViewport(frames[frame])
+		await page.setViewport(typeof frame === 'string' ? frames[frame] : frame)
 		const options = {
 			waitUntil: 'networkidle0',
 			timeout: LOAD_TIMEOUT_MS,

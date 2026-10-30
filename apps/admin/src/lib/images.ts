@@ -44,6 +44,18 @@ export async function shrinkImage(
 	}
 }
 
+// The clipboard takes images as PNG only, so a JPEG or WebP painting is
+// redrawn as one before it is copied.
+export async function asPng(blob: Blob): Promise<Blob> {
+	if (blob.type === 'image/png') return blob
+	const bitmap = await createImageBitmap(blob)
+	try {
+		return await encode(bitmap, bitmap.width, bitmap.height, 'image/png')
+	} finally {
+		bitmap.close()
+	}
+}
+
 function encode(
 	bitmap: ImageBitmap,
 	width: number,
