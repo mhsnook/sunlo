@@ -53,6 +53,10 @@ api.get('/crew/room', async (c) => {
 	return c.json(await (await roomFor()).snapshot(c.get('admin').uid))
 })
 
+api.get('/crew/runs', async (c) => {
+	return c.json(await (await roomFor()).runs())
+})
+
 api.post(
 	'/crew/seen',
 	json(z.object({ place: PlaceSchema }), 'Send { place }'),

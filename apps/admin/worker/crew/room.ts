@@ -51,6 +51,7 @@ import {
 	type RoomStateType,
 	type RoomThreadType,
 	type RoutingType,
+	type RunType,
 	type SketchType,
 	type WeeklyType,
 	type WorkspaceType,
@@ -77,6 +78,8 @@ import {
 } from './github'
 import { pickReports, sketchPickReports } from './picks'
 import { peopleIndex } from './queries'
+import { RunLog, type RunLogKey } from './run-log'
+import type { StepChange } from './steps'
 import { planReply } from './threads'
 import { withSql } from '../db'
 
@@ -277,6 +280,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		openCards: noOpenCards(),
 	}
 
+	private runLog = new RunLog(
+		(strings, ...values) => this.sql(strings, ...values),
+		(run) => this.push({ type: 'run', run })
+	)
+
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
 		this.sql`
@@ -444,6 +452,22 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null
 			);
 			create index if not exists message_place on message (place, at);
+			-- An agent's run and the steps it took, as JSON: the last RUNS_KEPT
+			-- runs of each agent. A side-thread run has its thread's first
+			-- message; a main run has none.
+			create table if not exists run (
+				id integer primary key autoincrement,
+				agent text not null,
+				thread text,
+				submission text not null,
+				started_at text not null,
+				ended_at text,
+				outcome text not null,
+				message_id text,
+				steps text not null default '[]',
+				dropped integer not null default 0
+			);
+			create index if not exists run_by_submission on run (agent, submission);
 			create table if not exists schema_version (version integer not null);
 		`
 		const version =
@@ -1127,7 +1151,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// A run in a side-thread that failed or was aborted never finishes. The
 	// agent goes idle only if this run is what made it busy: its main run may
 	// have started first.
-	failThreadRun(agent: CrewKey, rootId: string) {
+	private failThreadRun(agent: CrewKey, rootId: string) {
 		const startedAt = this.sql<{ at: string | null }>`
 			select thread_run_at as at from message where id = ${rootId}`[0]?.at
 		this.sql`update message set thread_run_at = null where id = ${rootId}`
@@ -1304,6 +1328,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`
 			update cursor set at = coalesce(pending_at, at), pending_at = null
 			where agent = ${agent}`
+		this.runLog.noteTrigger(agent, this.runTrigger(agent))
 		const since = this.state.statuses[agent]?.since
 		if (since) {
 			const place = this.runPlace(agent)
@@ -1314,9 +1339,48 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// A run that failed or was aborted never reaches finishRun.
-	failRun(agent: CrewKey) {
+	private failRun(agent: CrewKey) {
 		this.sql`delete from run_message where agent = ${agent}`
 		this.setStatus(agent, { state: 'idle', since: now() })
+	}
+
+	// ---- Run steps ----------------------------------------------------------
+
+	runs(): Array<RunType> {
+		return this.runLog.list()
+	}
+
+	// The calls below come from the agent's isolate in the order of its Flue
+	// events, so a submission settles after its last step reaches the room.
+	startRun(key: RunLogKey, at: string) {
+		this.runLog.start(key, at)
+	}
+
+	recordStep(key: RunLogKey, change: StepChange) {
+		this.runLog.step(key, change)
+	}
+
+	// Every submission settles, a completed one after finishRun or
+	// finishThreadRun.
+	settleRun(key: RunLogKey, outcome: 'completed' | 'failed' | 'aborted') {
+		const failed = outcome !== 'completed'
+		const trigger = key.thread ?? (failed ? this.runTrigger(key.agent) : null)
+		this.runLog.settle(key, failed ? 'failed' : 'done', trigger)
+		if (!failed) return
+		if (key.thread) this.failThreadRun(key.agent, key.thread)
+		else this.failRun(key.agent)
+	}
+
+	// The latest message delivered to the agent's current run.
+	private runTrigger(agent: CrewKey) {
+		return (
+			this.sql<{ id: string }>`
+				select message.id from run_message
+				join message on message.id = run_message.message_id
+				where run_message.agent = ${agent}
+				order by message.at desc
+				limit 1`[0]?.id ?? null
+		)
 	}
 
 	recentRoom(limit: number): string {

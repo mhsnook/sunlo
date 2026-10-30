@@ -21,6 +21,7 @@ import {
 	roomQuery,
 } from '~/lib/crew'
 import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
+import { LiveRuns, useLiveRuns } from '~/components/crew/run-steps'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
 import { CREW, DetailsPanel } from '~/components/crew/details-panel'
@@ -59,6 +60,8 @@ function CrewRoomPage() {
 	const [panel, setPanel] = useSidePanel('details')
 	const panelOpen = panel !== null
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
+	const liveRuns = useLiveRuns(crewKeys)
+	const liveSteps = liveRuns.reduce((sum, run) => sum + run.steps.length, 0)
 	const active = crewList.filter((member) => member.active).length
 	const myAuthor = adminAuthor(session.user.id)
 
@@ -86,7 +89,9 @@ function CrewRoomPage() {
 						<Info /> <span className="@max-sm:sr-only">Details</span>
 					</Button>
 				</header>
-				<MessageScroller dependency={room.messages.length + working.length}>
+				<MessageScroller
+					dependency={room.messages.length + working.length + liveSteps}
+				>
 					{room.messages.length ? (
 						<RoomTimeline
 							messages={room.messages}
@@ -97,6 +102,7 @@ function CrewRoomPage() {
 						<EmptyRoom />
 					)}
 					<WorkingMarker agents={working} />
+					<LiveRuns runs={liveRuns} />
 				</MessageScroller>
 				<RoomCompose myAuthor={myAuthor} />
 			</section>
