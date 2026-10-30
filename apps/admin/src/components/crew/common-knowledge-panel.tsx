@@ -12,8 +12,10 @@ import {
 import { EditableEntry } from './editable-entry'
 import { SidePanel } from './side-panel'
 
-// The few things every agent knows about the admin, such as their name and
-// how to refer to them. Only the admin writes here.
+// The crew's charter: the few things every agent knows about the admin, such
+// as their name and how to refer to them, which each room's charter builds
+// on. Only the admin writes here. The code and the API still call it Common
+// Knowledge; only what the admin sees says charter.
 export function CommonKnowledgePanel({ onClose }: { onClose: () => void }) {
 	const { data: entries } = useSuspenseQuery(commonKnowledgeQuery())
 	const add = useAddCommonKnowledge()
@@ -23,15 +25,17 @@ export function CommonKnowledgePanel({ onClose }: { onClose: () => void }) {
 
 	return (
 		<SidePanel
-			title="Common Knowledge"
+			title="Charter"
+			label="The crew's charter"
 			testId="common-knowledge"
 			onClose={onClose}
 			bodyClassName="space-y-4"
 		>
 			<p className="text-muted-foreground text-sm">
-				What every agent knows about you, in every conversation: your name, how
-				to refer to you, and the few things the whole crew should always keep in
-				mind.
+				The crew's charter: what every agent knows about you, in every room and
+				every conversation. Your name, how to refer to you, and the few things
+				the whole crew should always keep in mind. Each room's charter builds on
+				it.
 			</p>
 			{entries.length > 0 && (
 				<ul className="space-y-2">
@@ -40,11 +44,11 @@ export function CommonKnowledgePanel({ onClose }: { onClose: () => void }) {
 							key={entry.id}
 							id={entry.id}
 							text={entry.text}
-							label="Common Knowledge entry"
+							label="Charter entry"
 							busy={edit.isPending || forget.isPending}
 							onSave={(text) => edit.mutateAsync({ id: entry.id, text })}
 							onDelete={() => forget.mutateAsync(entry.id)}
-							deleteLabel="Forget this"
+							deleteLabel="Drop this entry"
 							className="bg-card rounded border p-3"
 							testId="common-knowledge-entry"
 						>

@@ -61,8 +61,8 @@ Register a new id here, not in the main app's registry.
 | `document-revision` + `data-key=<revision>`                                                  | One revision in the list; shows it                                                      |
 | `document-old-revision`, `document-restore`                                                  | An older revision on view, and its Restore button                                       |
 | `crew-diagram-error`                                                                         | A Mermaid diagram that did not draw, shown as its source                                |
-| `common-knowledge-button`, `common-knowledge`                                                | The Common Knowledge toggle and its panel                                               |
-| `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One Common Knowledge entry, and the box and button that add one                         |
+| `common-knowledge-button`, `common-knowledge`                                                | The crew's charter (Common Knowledge in the code): its toggle and its panel             |
+| `common-knowledge-entry` + `data-key=<id>`, `common-knowledge-input`, `common-knowledge-add` | One entry in the crew's charter, and the box and button that add one                    |
 | `crew-overview-range` + `data-key=<days>`                                                    | Date range button in the Overview                                                       |
 | `crew-overview-card` + `data-key=<metrics>`                                                  | One chart card in the Overview                                                          |
 | `agent-looks-after`                                                                          | The "Looks after" list in a member's profile card                                       |

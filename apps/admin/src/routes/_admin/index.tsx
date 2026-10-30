@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { BarChart3, Brain, ClipboardList, type LucideIcon } from 'lucide-react'
+import {
+	BarChart3,
+	ClipboardList,
+	ScrollText,
+	type LucideIcon,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import {
@@ -67,8 +72,8 @@ const panels: Array<{
 	},
 	{
 		key: 'knowledge',
-		label: 'Knowledge',
-		icon: Brain,
+		label: 'Charter',
+		icon: ScrollText,
 		testId: 'common-knowledge-button',
 	},
 	{

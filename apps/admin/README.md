@@ -47,7 +47,7 @@ Writes, when the admin app gets them, go through the admin's own Supabase sessio
 
 The dashboard opens on the **Common Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. The whole crew reads it, so it is the all-hands overview.
 
-**Common Knowledge**, a panel in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
+**Common Knowledge**, the panel labelled "Charter" in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. It is the crew's charter, which each room's charter builds on; the code and the API keep the older name. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
 
 **The Situation Report**, beside the Common Room on a wide screen, is the Command room's document on where Sunlo and each room stand now. Riker keeps it, and you edit it in the panel; every agent reads all of it after Common Knowledge, and an officer whose subject it describes wrong tells Riker. It holds at most 4,000 characters, since every run reads all of it.
 
