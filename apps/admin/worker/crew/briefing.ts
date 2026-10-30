@@ -15,6 +15,7 @@ import {
 	type DocumentSummaryType,
 	type WeeklyType,
 	type WorkspaceType,
+	withImageLines,
 } from '../../shared/crew'
 
 // Room times for the model: minutes are enough, and UTC is explicit.
@@ -44,7 +45,7 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					? ` [answered: ${message.answer.label}]`
 					: ` [waiting for an answer: ${message.card.actions.map((a) => a.label).join(' / ')}]`
 				: ''
-			return `[${stamp(message.at)}] ${message.authorName}${note}${side}${view}: ${message.body}${card}`
+			return `[${stamp(message.at)}] ${message.authorName}${note}${side}${view}: ${withImageLines(message.body, message.images)}${card}`
 		})
 		.join('\n')
 }

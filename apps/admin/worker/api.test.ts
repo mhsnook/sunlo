@@ -228,6 +228,27 @@ describe('GET /api/crew/live', () => {
 	})
 })
 
+describe('/api/public', () => {
+	const open = createApi()
+	open.get('/public/ping', (c) => c.text('pong'))
+	open.get('/crew/ping', (c) => c.text('pong'))
+
+	it('answers a public route without a token', async () => {
+		const res = await open.request('/api/public/ping', {}, makeEnv())
+		expect(res.status).toBe(200)
+		expect(getClaims).not.toHaveBeenCalled()
+	})
+
+	it('still needs the admin everywhere else', async () => {
+		expect((await open.request('/api/crew/ping', {}, makeEnv())).status).toBe(
+			401
+		)
+		expect((await open.request('/api/publicity', {}, makeEnv())).status).toBe(
+			401
+		)
+	})
+})
+
 describe('/api/voice', () => {
 	const run = vi.fn()
 	const voiceEnv = () => ({ ...makeEnv(), AI: { run } }) as unknown as Env

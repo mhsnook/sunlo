@@ -14,6 +14,9 @@ export type AppEnv = {
 	}
 }
 
+// Routes that answer without the admin's token.
+export const PUBLIC_PREFIX = '/api/public/'
+
 const DaysSchema = z.coerce.number().int().min(1).max(90)
 const LimitSchema = z.coerce.number().int().min(1).max(200)
 
@@ -38,9 +41,12 @@ export function createApi() {
 		)
 	})
 
-	// Every route needs a signed-in Sunlo user who is in admin_user. The anon
-	// key is a valid JWT too, so check the role claim, not only the signature.
+	// Every route needs a signed-in Sunlo user who is in admin_user, except
+	// those under /api/public/, which must each check a signature of their
+	// own (worker/images.ts). The anon key is a valid JWT too, so check the
+	// role claim, not only the signature.
 	app.use('*', async (c, next) => {
+		if (c.req.path.startsWith(PUBLIC_PREFIX)) return next()
 		// Browsers cannot set headers on a WebSocket, so the crew room's socket
 		// (/api/crew/live, opened by useAgent) sends the token as ?token=.
 		const token =

@@ -14,6 +14,7 @@ import {
 } from '../../../shared/crew'
 import { commandQuery, usePostToThread, useStartMeeting } from '~/lib/crew'
 import { VoiceControls } from './voice-controls'
+import { AttachImageButton, DraftImageStrip, useDraftImages } from './images'
 
 // The officer who runs the room answers unless the message names someone
 // who works there with them. In the Command room, while the weekly meeting
@@ -29,16 +30,22 @@ export function RoomThreadCompose({
 }) {
 	const [draft, setDraft] = useState('')
 	const post = usePostToThread(room, myAuthor)
+	const draftImages = useDraftImages()
 	// The box clears at once; a refused message comes back into it, unless
 	// the admin has started the next one.
 	const send = (body: string) => {
+		const images = draftImages.take()
 		setDraft('')
-		post.mutate(body, {
-			onError: (error) => {
-				toastError(error.message)
-				setDraft((current) => current || body)
-			},
-		})
+		post.mutate(
+			{ body, images },
+			{
+				onError: (error) => {
+					toastError(error.message)
+					setDraft((current) => current || body)
+					draftImages.restore(images)
+				},
+			}
+		)
 	}
 	const principal = principalOf(room)
 	const associates = associatesOf(room)
@@ -50,7 +57,22 @@ export function RoomThreadCompose({
 				value={draft}
 				onValueChange={setDraft}
 				onSend={send}
-				startSlot={<VoiceControls setDraft={setDraft} />}
+				{...draftImages.formProps}
+				busy={draftImages.adding > 0}
+				canSendEmpty={draftImages.images.length > 0}
+				topSlot={
+					<DraftImageStrip
+						images={draftImages.images}
+						adding={draftImages.adding}
+						onRemove={draftImages.remove}
+					/>
+				}
+				startSlot={
+					<>
+						<AttachImageButton onFiles={draftImages.add} />
+						<VoiceControls setDraft={setDraft} />
+					</>
+				}
 				placeholder={`Message ${displayName(principal)}${associates.map((key) => `, or @${handleOf(key)}`).join('')}`}
 				inputTestId="room-compose-input"
 				sendTestId="room-compose-send"

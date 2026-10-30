@@ -47,11 +47,13 @@ Writes, when the admin app gets them, go through the admin's own Supabase sessio
 
 The dashboard opens on the **Common Room**: a group chat between you and AI agents named for their jobs. Each agent posts when it runs, and @mentions the others. The whole crew reads it, so it is the all-hands overview.
 
-**Common Knowledge**, a panel in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
+**Common Knowledge**, the panel labelled "Charter" in the Common Room, holds the few things every agent should always know about you, such as your name and how to refer to you. It is the crew's charter, which each room's charter builds on; the code and the API keep the older name. You write it; every agent reads it at the top of every run, and is told never to save memories of its own about how to address you.
 
-**The Situation Report**, beside the Common Room on a wide screen, is the Command room's document on where Sunlo and each room stand now. Riker keeps it, and you edit it in the panel; every agent reads all of it after Common Knowledge, and an officer whose subject it describes wrong tells Riker. It holds at most 4,000 characters, since every run reads all of it.
+**The Situation Report**, first among the documents in every room's details, is the Command room's document on where Sunlo and each room stand now. Riker keeps it, and you edit it there; every agent reads all of it after Common Knowledge, and an officer whose subject it describes wrong tells Riker. It holds at most 4,000 characters, since every run reads all of it.
 
 **Voice.** Every compose bar has a mic: press it, talk, and press it again, and what you said lands in the draft for you to read before sending. The speaker button beside it turns on voice replies, which reads each new reply aloud in the agent's own voice as it arrives. Any agent message also has its own read-aloud button. The Worker does both with Workers AI: Deepgram Nova 3 for speech to text and Aura 2 for text to speech (`worker/voice.ts`).
+
+**Images.** Every compose bar takes images: paste one, drop one on the bar, or pick one with the image button. The app scales each image down in the browser, to at most 2,000 px on its long side and under 1.8 MB (a PNG source stays a PNG if it fits at full size; otherwise a JPEG), and shows it as a thumbnail you can remove before you send. A message holds at most 6 images, with or without text. The timeline shows a sent message's images as thumbnails, and a click opens one full size. A paste that holds text as well as an image, such as cells copied from a spreadsheet, pastes the text only. If a send fails, the images that went up stay up, and the next send uses them again. An agent reads a line for each image after the message's text, such as `[image 12 attached, 1280×800]`, wherever the text reaches it (the message that wakes it, its briefing and `read_room`), and an agent whose model takes images looks at one with `look_at_image` ("Images", below).
 
 ### Rooms
 
@@ -68,7 +70,7 @@ The roster lives in `shared/crew.ts`: each room's key, and each officer's key, n
 
 In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
-The **room log** beside the thread holds the room's charter and each member's profile card, character, to-dos, what is open with you, and memory. The Command room's log also holds the weekly settings and Data's playbook. You can change all of it there:
+The **details** beside the thread (the Details button in the header) hold the room's documents, its charter and each member's profile card, character, to-dos, what is open with you, and memory. The Command room's details also hold the weekly settings and Data's playbook. You can change all of it there:
 
 - **Character**: who the officer is and how it works, the persona its every run starts from. Edit it, or restore the original. The default text lives in code (`shared/characters.ts`); your version lives in the room (`character` table) and wins while it exists. An agent module cannot wait on the room, so the persona reaches the agent as the first section of its `<crew-context>`, "Who you are", not as its system prompt.
 - **Memory and to-dos**: add, edit, delete, and tick to-dos done.
@@ -91,7 +93,7 @@ Every card can also be dismissed, with or without a line of feedback. The agent 
 
 ### Every room's charter, and second views
 
-Each room keeps a **charter**: the admin's principles (philosophy, strategy, taste) and lessons (how they decide), which the room's officers propose with `propose_charter` and which count only once you keep them. It shows in the room log, and every run in the room reads its kept entries.
+Each room keeps a **charter**: the admin's principles (philosophy, strategy, taste) and lessons (how they decide), which the room's officers propose with `propose_charter` and which count only once you keep them. It shows in the room's details, and every run in the room reads its kept entries.
 
 When a room's principal asks its associate in, and the associate sees it differently, the associate posts with `otherView` set. The app folds that answer under the principal's message that asked ("Keiko sees it differently"), and once you open it, you go with one of the two. Both agents hear which, and the principal is asked whether the pick belongs in the charter. Keiko (`product-2`) is the Product room's design associate; the principal brings it in for choices about what someone sees or does, and for a design review before user-facing work becomes an epic.
 
@@ -99,7 +101,7 @@ When a room's principal asks its associate in, and the associate sees it differe
 
 Keiko's main job is to reimagine screens. Ask in the Product room, such as "@keiko the review screen is a mess", and Keiko looks at the screen, then posts a **sketches** card: usually three mockups that differ on purpose (a faithful cleanup, a bold reimagining and an off-the-wall idea), each with a one-line idea. Each mockup has Copy image, Download and Copy brief (its idea and HTML), for pasting into a GitHub issue or a Claude Code session. "Go with A" picks one, and Keiko and O'Brien both hear which.
 
-- `look_at_screen` screenshots a page of the app (a path on `SUNLO_URL`, or any URL, such as a pull request's preview) or one of Keiko's sketches, in a phone (390×844) or desktop (1440×900) frame, and passes the pictures to Keiko's model in a `harness.prompt`, because a Flue tool result reaches the model only as text. The browser is signed out.
+- `look_at_screen` screenshots a page of the app (a path on `SUNLO_URL`, or any URL, such as a pull request's preview) or one of Keiko's sketches, in a phone (390×844) or desktop (1440×900) frame, and passes the pictures to Keiko's model in a `harness.prompt`, because a Flue tool result reaches the model only as text. The browser is signed out, so for a screen behind sign-in Keiko asks you to paste a screenshot, and looks at it with `look_at_image`.
 - `sketch_screens` takes up to four whole HTML documents that Keiko writes, renders each with [Browser Rendering](https://developers.cloudflare.com/browser-rendering/) (the `BROWSER` binding, through `@cloudflare/puppeteer`), and posts the card. The room keeps each picture and its HTML in its `sketch` table, served at `/api/crew/sketches/:id` and `/api/crew/sketches/:id/image`. Keiko can make 12 sketches an hour (`SKETCHES_PER_HOUR`).
 - `read_sketch` returns a sketch's HTML, to draw the next version from it.
 - Keiko mounts [Impeccable](https://github.com/pbakaus/impeccable)'s design skill with Flue's `useSkill`: its references load only when Keiko activates the skill or reads one. The skill is copied unchanged from upstream v4.8.0 (`plugin/skills/impeccable`, without its `scripts/` command-line tools) into `.flue/skills/impeccable/`, with its Apache-2.0 `LICENSE` and `NOTICE.md`. oxfmt skips it (`.prettierignore`), so it stays as published.
@@ -107,6 +109,24 @@ Keiko's main job is to reimagine screens. Ask in the Product room, such as "@kei
 Keiko runs on Claude Opus 5.5 through Workers AI (`MODEL_PRODUCT_2`), with no Anthropic API key: Flue sends `anthropic/…` ids over the `AI` binding in Anthropic's message format. The id is pi-ai's, `anthropic/claude-opus-5-5`, because Flue only knows a model's image input and context window from pi-ai's catalog; Cloudflare's catalog writes it `anthropic/claude-opus-5.5`. It costs $4 per million input tokens and $20 per million output tokens.
 
 Locally, Browser Rendering starts a Chrome that miniflare downloads. As root, as in a container, Chrome needs `--no-sandbox`, which miniflare adds when `CI` is set: `CI=1 pnpm admin:dev`.
+
+### Images
+
+The room keeps images in its `image` table (`worker/crew/room.ts`): an id, a kind (`upload` for the admin's), the author, the type, the width and height, and the bytes, in one row, so an image is at most 1.8 MB (`MAX_IMAGE_BYTES` in `shared/crew.ts`). The Worker reads the type and size from the image's own bytes (`imageInfo` in `worker/images.ts`) and keeps PNG, JPEG, WebP and GIF only. A sketch keeps its picture in its own `sketch` row.
+
+- `POST /api/crew/images` stores one image; the body is the image, with its content type. It returns `{ id, width, height }`.
+- `POST /api/crew/messages` and `POST /api/crew/rooms/:room/messages` take `images`, a list of those ids, beside `body`. A message carries the ids and sizes in its `images` column.
+- `GET /api/crew/images/:id` serves an image to the admin, who fetches it as a blob, because an `<img src>` cannot send the token.
+- `look_at_image` passes one image to the agent's own model in a `harness.prompt`, with the agent's question, as `look_at_screen` does, because a Flue tool result reaches the model only as text. An agent has the tool only when its model takes images. `useCrewMember` decides that with Flue's `resolveModel`, from the same pi-ai catalog Flue resolves the model from: a model the catalog lists as text only, or does not list, gets a placeholder in place of an image. `command-2`'s DeepSeek model is text only there, so Data has no `look_at_image`, and its instructions tell it to ask what an image shows instead. Change an agent's model, and its tool and instructions follow.
+
+**Signed links.** An image model on Cloudflare, such as `black-forest-labs/flux-3-image-klein`, takes a reference image only as an HTTPS URL that it fetches itself, without the admin's token. `signedImageUrl()` in `worker/images.ts` makes a link to one image that works until it expires (15 minutes by default, at most a day): `/api/public/images/:id?expires=…&sig=…`, where `sig` is an HMAC-SHA256 of the id and the expiry, keyed with the `IMAGE_URL_SECRET` secret. That route serves the image only for a valid signature that has not expired. `worker/api.ts` lets every path under `/api/public/` through without a token, so each route there must check a signature of its own; every other `/api` route still needs the admin. Without the secret, signing throws an error that says so, and no link is valid. Set it once, with any long random string:
+
+```bash
+openssl rand -base64 32 | pnpm exec wrangler secret put IMAGE_URL_SECRET
+openssl rand -base64 32 | pnpm exec wrangler preview base-config secret put IMAGE_URL_SECRET
+```
+
+Locally, put `IMAGE_URL_SECRET=<any string>` in `.dev.vars` (`.dev.vars.example` lists it). Changing the secret breaks every link already signed, which is harmless, since each lasts minutes.
 
 ### Side-threads
 
@@ -124,7 +144,7 @@ The Command room has three more kinds of card:
 
 Anything you want to add to an answer, write in the room: your answers, and the times you overrule Riker, are how the Command room learns you.
 
-**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the room log; Cloudflare crons are UTC only) and has Riker post the week's brief in the Command room. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the Command room begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the room. Riker keeps a ledger of directives for the other rooms until you say the meeting is done; his prompt asks for this, and nothing in the code enforces it. Then he closes the meeting with minutes in the Common Room, followed by one directive to each room's principal, with priorities and suggested edits, each marked as a command or a suggestion. The officer applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
+**The weekly cycle.** An hourly cron finds Sunday 04:00 in your time zone (set in the Command room's details; Cloudflare crons are UTC only) and has Riker post the week's brief in the Command room. From then on, a banner on every other page invites you to the weekly meeting until it happens, and "Start the weekly meeting" in the Command room begins it. Every meeting starts from Data's pre-meeting report; when Data files it, Riker reads it and comments in the room. Riker keeps a ledger of directives for the other rooms until you say the meeting is done; his prompt asks for this, and nothing in the code enforces it. Then he closes the meeting with minutes in the Common Room, followed by one directive to each room's principal, with priorities and suggested edits, each marked as a command or a suggestion. The officer applies what it accepts, and the room posts a receipt of the edits it actually made ("👍 3 edits: …"), built from its workspace changes rather than from its own account.
 
 ### Components in messages
 
@@ -164,7 +184,7 @@ While an agent runs, the room shows its steps under "<name> is working…": each
 
 Each room keeps named Markdown documents, which its officers and you write: the Command room keeps the Situation Report and the Business plan and status, and the Product room keeps the Roadmap. They can hold checklists, tables, the crew's chart, stats and table blocks, and Mermaid diagrams such as gantt charts. The app draws Mermaid itself, and shows a diagram that does not draw as its source.
 
-The room log lists a room's documents. Open one to read it, edit it, or look through its revisions and restore an older one; a restore saves the old text as a new revision. Every save names the revision it started from, and the room refuses a save from anything but the current revision, so nobody overwrites a change they have not seen. An agent's briefing lists its room's documents with their revisions but not their text; it reads one with `read_document` when it needs it. The revision rules live in `worker/crew/documents.ts`, and the tables (`document`, `document_revision`) in `worker/crew/room.ts`.
+A room's details list its documents, with the Situation Report pinned first. Open one to read it, edit it, or look through its revisions and restore an older one; a restore saves the old text as a new revision. Every save names the revision it started from, and the room refuses a save from anything but the current revision, so nobody overwrites a change they have not seen. An agent's briefing lists its room's documents with their revisions but not their text; it reads one with `read_document` when it needs it. The revision rules live in `worker/crew/documents.ts`, and the tables (`document`, `document_revision`) in `worker/crew/room.ts`.
 
 ### What an agent can do
 
@@ -179,6 +199,7 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - `read_document`: any room's document, with its revision
 - `write_document`: a new revision of one of the agent's own room's documents, or a new document, from the revision it read
 - `add_todo`, `update_todo`, `remember`, `forget`, `add_open_item`, `close_open_item`, `read_room`: the workspace
+- `look_at_image`, for an agent whose model takes images: one of the images the admin pasted into a message, with a question about it ("Images", above)
 - `propose_charter`: an entry for the agent's room's charter, as a card
 - Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, Data has `note_playbook` and `file_report`, and Keiko has `look_at_screen`, `sketch_screens` and `read_sketch` ("Keiko's sketches", above).
 
@@ -188,7 +209,7 @@ Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k
 
 The Roadmap, a Product room document, is the plan. GitHub (`mhsnook/sunlo`, the `GITHUB_REPO` var) holds the part of it that is ready to build, as milestones and epics, and `product-1` keeps them current. An epic is an ordinary issue labelled `epic`, with a checklist of PR-sized steps, inside a milestone; Claude Code sessions take their work from it. The Roadmap links to GitHub by convention, such as `- [ ] Onboarding (#812)`, and no code parses it.
 
-- **Anything new is a card first.** `draft_issue`, `draft_milestone` and `draft_comment` put a draft on a card in the agent's room. You can edit the draft on the card, then "File it", and the Worker publishes exactly what the card holds (`POST /api/crew/messages/:id/file`). The agent hears back with the number, and with both versions when you edited it; it keeps what it learns as writing-style memories (`note_writing_style`), shown in the room log as "How you like issues written".
+- **Anything new is a card first.** `draft_issue`, `draft_milestone` and `draft_comment` put a draft on a card in the agent's room. You can edit the draft on the card, then "File it", and the Worker publishes exactly what the card holds (`POST /api/crew/messages/:id/file`). The agent hears back with the number, and with both versions when you edited it; it keeps what it learns as writing-style memories (`note_writing_style`), shown in the room's details as "How you like issues written".
 - **After that, the agent edits directly.** `edit_issue` and `edit_milestone` change any issue or milestone: an epic's body and checklist, titles, labels, milestones, due dates and state. Each change appears in the run's receipt, built from what the tool did.
 - **Reading:** `read_issue`, `list_milestones`, `list_epics` and `github_changes_since`. `command-1` has these read tools only (`githubAccess` in `shared/crew.ts`).
 - **What stays in code** (`worker/crew/github.ts`, `.flue/tools/github.ts`): every write, at the tap for a card and in the tool for an edit, is refused if it contains an email address, a user's id or a username, because the repository is public. A run may draft at most 5 cards (`DRAFTS_PER_RUN`) and make at most 20 edits (`EDITS_PER_RUN`). Every filed issue gets the `from-crew` label.
@@ -245,7 +266,7 @@ There is no deploy command: Cloudflare deploys on a merge to `main`.
 
 ## Local development
 
-The Worker reads `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`. The database connection is the Hyperdrive binding's `localConnectionString` in `wrangler.jsonc`, which the dev server uses in place of the production Hyperdrive config. It connects to local Supabase as `admin_reader` with the password `admin_reader`, and the migration creates that role with no password, so set one once:
+The Worker reads `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`; `IMAGE_URL_SECRET` is any string. The database connection is the Hyperdrive binding's `localConnectionString` in `wrangler.jsonc`, which the dev server uses in place of the production Hyperdrive config. It connects to local Supabase as `admin_reader` with the password `admin_reader`, and the migration creates that role with no password, so set one once:
 
 ```bash
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "alter role admin_reader password 'admin_reader'"
@@ -273,7 +294,7 @@ Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admi
 
 The Worker reaches the database through [Hyperdrive](https://developers.cloudflare.com/hyperdrive/), bound as `HYPERDRIVE` in `wrangler.jsonc`. The Hyperdrive config holds the production connection string for `admin_reader`, so the Worker has no database secret of its own. Hyperdrive is required, not an optimisation: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs rather than failing. Hyperdrive makes the TLS connection on the Worker's behalf. If the database stops answering, every `/api` route returns a 500 after 15 seconds instead of hanging, and the Worker logs the reason.
 
-GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above).
+GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above). Signed image links need `IMAGE_URL_SECRET` ("Images", above).
 
 A pull request that touches only `apps/admin/` skips the `scenetest`, `bundle-size` and `prod-bundle-scan` jobs in `.github/workflows/test.yaml`, because those test the main app and take about twelve minutes; the `changes` job in that workflow decides, and `pr-checks` and `unit` still run. That is why the admin's test ids are registered in `apps/admin/TEST_IDS.md` rather than the main app's registry.
 

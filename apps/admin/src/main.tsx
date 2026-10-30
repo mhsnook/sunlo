@@ -6,6 +6,7 @@ import supabase from '@/lib/supabase-client'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Loader } from '@/components/ui/loader'
 import { RouteError } from './components/route-error'
+import { revokePictureUrls } from './lib/crew'
 import { routeTree } from './routeTree.gen'
 
 import './styles.css'
@@ -15,6 +16,7 @@ const queryClient = new QueryClient({
 		queries: { staleTime: 60_000, refetchOnWindowFocus: false },
 	},
 })
+revokePictureUrls(queryClient)
 
 const router = createRouter({
 	routeTree,

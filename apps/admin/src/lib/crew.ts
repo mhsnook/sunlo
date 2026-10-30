@@ -28,6 +28,7 @@ import {
 	CrewMessageSchema,
 	DocumentSchema,
 	DocumentSummarySchema,
+	MessageImageSchema,
 	placeOf,
 	RevisionTextSchema,
 	roomOfPlace,
@@ -40,6 +41,7 @@ import {
 	type CrewMessageType,
 	type DocumentSummaryType,
 	type GithubDraftType,
+	type MessageImageType,
 	type PickChoice,
 	type CharterEntryType,
 	type RoomKey,
@@ -50,6 +52,7 @@ import {
 	type RunType,
 } from '../../shared/crew'
 import { adminFetch, adminRequest } from './api'
+import { uploadOnce } from './images'
 import { accessToken } from './session'
 
 export const crewIcons: Record<CrewKey, LucideIcon> = {
@@ -165,9 +168,90 @@ export const sketchImageQuery = (id: number) =>
 			const blob = await (
 				await adminRequest(`crew/sketches/${id}/image`)
 			).blob()
-			return { blob, url: URL.createObjectURL(blob) }
+			return cachedPicture(blob)
 		},
 		staleTime: Infinity,
+	})
+
+// An image never changes, and comes as a blob for the same reason a
+// sketch's picture does.
+export const imageQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'image', id],
+		queryFn: async () => {
+			const blob = await (await adminRequest(`crew/images/${id}`)).blob()
+			return cachedPicture(blob)
+		},
+		staleTime: Infinity,
+	})
+
+// Each cached picture owns its object URL, which `revokePictureUrls`
+// revokes when the cache drops the entry. Two entries never share a URL,
+// even for the same blob.
+const cachedPicture = (blob: Blob) => ({ blob, url: URL.createObjectURL(blob) })
+
+const isPictureKey = (key: ReadonlyArray<unknown>) =>
+	key[0] === 'crew' &&
+	(key[1] === 'image' || (key[1] === 'sketch' && key[3] === 'image'))
+
+export const revokePictureUrls = (queryClient: QueryClient) =>
+	queryClient.getQueryCache().subscribe((event) => {
+		if (event.type !== 'removed') return
+		if (!isPictureKey(event.query.queryKey as ReadonlyArray<unknown>)) return
+		const data = event.query.state.data as { url: string } | undefined
+		if (data) URL.revokeObjectURL(data.url)
+	})
+
+const seedImage = (queryClient: QueryClient, id: number, blob: Blob) => {
+	const { queryKey } = imageQuery(id)
+	if (!queryClient.getQueryData(queryKey)) {
+		queryClient.setQueryData(queryKey, cachedPicture(blob))
+	}
+}
+
+// An image in the composer, scaled down and ready to upload.
+export type DraftImage = {
+	key: string
+	blob: Blob
+	url: string
+	width: number
+	height: number
+}
+
+const imageUploads = uploadOnce(async (blob) =>
+	MessageImageSchema.parse(
+		await adminFetch('crew/images', { method: 'POST', body: blob })
+	)
+)
+
+// The images go up first; the message then names them by id. Each one's
+// cached picture is the blob already in the browser, so the timeline does
+// not download it again.
+async function sendWithImages<T>(
+	queryClient: QueryClient,
+	images: Array<DraftImage>,
+	send: (ids: Array<number>) => Promise<T>
+): Promise<T> {
+	const stored = await Promise.all(
+		images.map(async (image) => {
+			const { id } = await imageUploads.upload(image)
+			seedImage(queryClient, id, image.blob)
+			return id
+		})
+	)
+	const sent = await send(stored)
+	imageUploads.forget(images.map((image) => image.key))
+	return sent
+}
+
+// Negative ids never reach the server: they name a pending message's
+// images in the image cache until the server's message replaces it.
+let nextPendingImage = -1
+const pendingImages = (queryClient: QueryClient, images: Array<DraftImage>) =>
+	images.map((image): MessageImageType => {
+		const id = nextPendingImage--
+		seedImage(queryClient, id, image.blob)
+		return { id, width: image.width, height: image.height }
 	})
 
 const SketchSourceSchema = z.object({
@@ -455,13 +539,15 @@ export const isPendingMessage = (message: CrewMessageType) =>
 const pendingMessage = (
 	author: string,
 	place: PlaceType,
-	body: string
+	body: string,
+	images: Array<MessageImageType>
 ): CrewMessageType => ({
 	id: `${PENDING_PREFIX}${crypto.randomUUID()}`,
 	at: new Date().toISOString(),
 	author,
 	authorName: 'You',
 	body,
+	images,
 	routing: null,
 	card: null,
 	answer: null,
@@ -512,15 +598,26 @@ const postHandlers = <TInput>(
 export function usePostToRoom(myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: async (input: { body: string; routing: RoutingType | null }) =>
-			CrewMessageSchema.parse(
-				await adminFetch('crew/messages', {
-					method: 'POST',
-					json: input,
-				})
+		mutationFn: async (input: {
+			body: string
+			images: Array<DraftImage>
+			routing: RoutingType | null
+		}) =>
+			sendWithImages(queryClient, input.images, async (images) =>
+				CrewMessageSchema.parse(
+					await adminFetch('crew/messages', {
+						method: 'POST',
+						json: { body: input.body, images, routing: input.routing },
+					})
+				)
 			),
 		...postHandlers(queryClient, (input) =>
-			pendingMessage(myAuthor, COMMON_ROOM, input.body)
+			pendingMessage(
+				myAuthor,
+				COMMON_ROOM,
+				input.body,
+				pendingImages(queryClient, input.images)
+			)
 		),
 	})
 }
@@ -528,15 +625,22 @@ export function usePostToRoom(myAuthor: string) {
 export function usePostToThread(room: RoomKey, myAuthor: string) {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: async (body: string) =>
-			CrewMessageSchema.parse(
-				await adminFetch(`crew/rooms/${room}/messages`, {
-					method: 'POST',
-					json: { body },
-				})
+		mutationFn: (input: { body: string; images: Array<DraftImage> }) =>
+			sendWithImages(queryClient, input.images, async (images) =>
+				CrewMessageSchema.parse(
+					await adminFetch(`crew/rooms/${room}/messages`, {
+						method: 'POST',
+						json: { body: input.body, images },
+					})
+				)
 			),
-		...postHandlers(queryClient, (body: string) =>
-			pendingMessage(myAuthor, placeOf(room), body)
+		...postHandlers(queryClient, (input) =>
+			pendingMessage(
+				myAuthor,
+				placeOf(room),
+				input.body,
+				pendingImages(queryClient, input.images)
+			)
 		),
 	})
 }

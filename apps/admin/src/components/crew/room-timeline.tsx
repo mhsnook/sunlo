@@ -36,6 +36,7 @@ import { MessageRuns } from './run-steps'
 import { SideThread } from './side-thread'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
+import { MessageImages } from './images'
 import { useReadOnArrival } from '~/lib/voice'
 import { isNewFor, isPendingMessage, useCorrectRouting } from '~/lib/crew'
 
@@ -209,11 +210,17 @@ function AuthorGroup({
 									<span>{timeLabel(message.at)}</span>
 								</MessageHeader>
 							)}
+							{message.images.length > 0 && (
+								<MessageImages
+									images={message.images}
+									align={mine ? 'end' : 'start'}
+								/>
+							)}
 							{message.card?.kind === 'change' ? (
 								<ChangeCard message={message} />
 							) : message.card && message.card.kind !== 'question' ? (
 								<RoomCard message={message} />
-							) : (
+							) : !message.body ? null : (
 								<SpeakableBubble
 									id={message.id}
 									text={message.body}

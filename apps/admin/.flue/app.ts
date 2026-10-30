@@ -8,12 +8,15 @@ import {
 	PickChoiceSchema,
 	isCrewKey,
 	isRoomKey,
+	MAX_IMAGE_BYTES,
+	MAX_IMAGES_PER_MESSAGE,
 	roomKeys,
 	PlaceSchema,
 	RoutingSchema,
 } from '../shared/crew'
 import { restoreSummary } from '../worker/crew/documents'
 import { createApi } from '../worker/api'
+import { imageInfo, verifyImageLink } from '../worker/images'
 import { deliver, requestReport, roomFor, wake } from './crew'
 
 // worker/api.ts checks the admin on every /api route. These routes add the
@@ -34,7 +37,17 @@ const numericId = (error: string) =>
 		return id.success ? { id: id.data } : c.json({ error }, 404)
 	})
 
-const Text = z.string().trim().min(1).max(8000)
+const AdminMessage = z
+	.object({
+		body: z.string().trim().max(8000),
+		images: z.array(z.number().int()).max(MAX_IMAGES_PER_MESSAGE).default([]),
+	})
+	.refine((message) => !!message.body || message.images.length > 0)
+
+const imageHeaders = (mimeType: string) => ({
+	'content-type': mimeType,
+	'x-content-type-options': 'nosniff',
+})
 
 api.get('/crew/room', async (c) => {
 	return c.json(await (await roomFor()).snapshot(c.get('admin').uid))
@@ -58,22 +71,25 @@ api.post(
 api.post(
 	'/crew/messages',
 	json(
-		z.object({
-			body: Text,
-			// The place the admin picked from the chip, or null for CLEF.
-			routing: RoutingSchema.nullable(),
-		}),
-		'Send { body, routing }'
+		AdminMessage.and(
+			z.object({
+				// The place the admin picked from the chip, or null for CLEF.
+				routing: RoutingSchema.nullable(),
+			})
+		),
+		'Send { body, images?, routing }, with text or images'
 	),
 	async (c) => {
 		const input = c.req.valid('json')
 		const admin = c.get('admin')
-		const { message, wake: wakes } = await (
-			await roomFor()
-		).postFromAdmin({
+		const room = await roomFor()
+		const images = await room.findImages(input.images)
+		if (!images) return c.json({ error: 'One of those images is gone' }, 400)
+		const { message, wake: wakes } = await room.postFromAdmin({
 			uid: admin.uid,
 			name: admin.name,
 			body: input.body,
+			images,
 			routing: input.routing,
 		})
 		await wake(wakes, admin.name)
@@ -340,16 +356,19 @@ api.get('/crew/rooms/:room', roomParam, async (c) => {
 api.post(
 	'/crew/rooms/:room/messages',
 	roomParam,
-	json(z.object({ body: Text }), 'Send { body }'),
+	json(AdminMessage, 'Send { body, images? }, with text or images'),
 	async (c) => {
 		const admin = c.get('admin')
-		const { message, wake: wakes } = await (
-			await roomFor()
-		).postToRoom({
+		const input = c.req.valid('json')
+		const room = await roomFor()
+		const images = await room.findImages(input.images)
+		if (!images) return c.json({ error: 'One of those images is gone' }, 400)
+		const { message, wake: wakes } = await room.postToRoom({
 			uid: admin.uid,
 			name: admin.name,
 			room: c.req.valid('param').room,
-			body: c.req.valid('json').body,
+			body: input.body,
+			images,
 		})
 		await wake(wakes, admin.name)
 		return c.json(message)
@@ -471,6 +490,63 @@ api.get('/crew/sketches/:id/image', numericId('No such sketch'), async (c) => {
 	return c.body(shot.image, 200, {
 		'content-type': shot.mimeType,
 		'cache-control': 'private, max-age=31536000, immutable',
+	})
+})
+
+// The body is the image itself, with its content type. A message then
+// names it by the id this returns.
+api.post('/crew/images', async (c) => {
+	if (!c.req.header('content-type')?.startsWith('image/')) {
+		return c.json({ error: 'Send the image as an image/* body' }, 400)
+	}
+	if (Number(c.req.header('content-length') ?? 0) > MAX_IMAGE_BYTES) {
+		return c.json({ error: 'That image is too big to keep' }, 413)
+	}
+	const bytes = await c.req.arrayBuffer()
+	if (bytes.byteLength > MAX_IMAGE_BYTES) {
+		return c.json({ error: 'That image is too big to keep' }, 413)
+	}
+	const info = imageInfo(new Uint8Array(bytes))
+	if (!info) {
+		return c.json({ error: 'Send a PNG, JPEG, WebP or GIF image' }, 400)
+	}
+	const image = await (
+		await roomFor()
+	).saveImage({
+		kind: 'upload',
+		author: adminAuthor(c.get('admin').uid),
+		...info,
+		bytes,
+	})
+	return c.json(image)
+})
+
+api.get('/crew/images/:id', numericId('No such image'), async (c) => {
+	const image = await (await roomFor()).image(c.req.valid('param').id)
+	if (!image) return c.json({ error: 'No such image' }, 404)
+	return c.body(image.bytes, 200, {
+		...imageHeaders(image.mimeType),
+		'cache-control': 'private, max-age=31536000, immutable',
+	})
+})
+
+// A signed link to one image, for a service that cannot send the admin's
+// token, such as an image model fetching a reference image. worker/api.ts
+// lets /api/public/ through without a token; the signature is the check.
+api.get('/public/images/:id', numericId('No such image'), async (c) => {
+	const { id } = c.req.valid('param')
+	const valid = await verifyImageLink(c.env.IMAGE_URL_SECRET, {
+		id,
+		expires: c.req.query('expires'),
+		sig: c.req.query('sig'),
+	})
+	if (!valid) return c.json({ error: 'This link is not valid' }, 403)
+	const image = await (await roomFor()).image(id)
+	if (!image) return c.json({ error: 'No such image' }, 404)
+	return c.body(image.bytes, 200, {
+		...imageHeaders(image.mimeType),
+		// No shared cache may serve the image after the link expires.
+		'cache-control': 'no-store',
 	})
 })
 
