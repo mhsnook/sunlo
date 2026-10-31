@@ -94,8 +94,7 @@ export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 				canSendEmpty={draftImages.images.length > 0}
 				topSlot={
 					<DraftImageStrip
-						images={draftImages.images}
-						adding={draftImages.adding}
+						slots={draftImages.slots}
 						onRemove={draftImages.remove}
 					/>
 				}

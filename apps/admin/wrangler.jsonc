@@ -99,6 +99,11 @@
 		"GITHUB_REPO": "mhsnook/sunlo",
 		// Where product-2 looks at the app when it is given a path, not a URL.
 		"SUNLO_URL": "https://sunlo.app",
+		// The origin the painter signs its links to reference images with
+		// (README.md, "Images" › "Signed links"). Production only: leave it out
+		// of `previews.vars`, so a preview signs links to its own origin, and
+		// vite.config.ts drops it on a local dev server.
+		"ADMIN_URL": "https://admin.sunlo.app",
 	},
 	// Worker Previews: Workers Builds makes one per branch off main, at
 	// <branch>-sunlo-admin.<account subdomain>.workers.dev. Nothing in this block
