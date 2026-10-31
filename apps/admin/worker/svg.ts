@@ -291,6 +291,8 @@ const ATTRIBUTES = new Set(
 )
 
 const LINK_ATTRIBUTES = new Set(['href', 'xlink:href'])
+// Text for people, which no browser reads as CSS or as a link.
+const TEXT_ATTRIBUTE = /^((data|aria)-[\w.-]+|xlink:title)$/
 // An animation writes these values into the attribute it animates, so they
 // can carry a link even though their own name is not href.
 const ANIMATION_VALUES = new Set(['to', 'from', 'by', 'values'])
@@ -395,7 +397,7 @@ function checkAttribute(element: string, name: string, raw: string) {
 	if (attribute.startsWith('on')) {
 		refuse('Leave out event-handler attributes such as onload and onclick.')
 	}
-	if (!ATTRIBUTES.has(attribute) && !/^(data|aria)-[\w.-]+$/.test(attribute)) {
+	if (!ATTRIBUTES.has(attribute) && !TEXT_ATTRIBUTE.test(attribute)) {
 		refuse(
 			`Leave out the ${name} attribute on <${element}>: an SVG here keeps to drawing attributes, without editor metadata.`
 		)
@@ -432,9 +434,8 @@ function checkAttribute(element: string, name: string, raw: string) {
 	) {
 		refuse(`Leave out <${element}> that changes a link.`)
 	}
-	// Text for people, which no browser reads as CSS or as a link. The
-	// javascript: check in checkSvg still covers it.
-	if (/^(aria-|data-)/.test(attribute) || attribute === 'xlink:title') return
+	// The javascript: check in checkSvg still covers text attributes.
+	if (TEXT_ATTRIBUTE.test(attribute)) return
 	if (value.includes('\\')) {
 		refuse(`Leave out backslashes in the ${name} attribute.`)
 	}

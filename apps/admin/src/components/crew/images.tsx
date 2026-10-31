@@ -165,23 +165,30 @@ export function DraftImageStrip({
 			className="flex flex-wrap gap-2 px-3 pt-3"
 			data-testid="compose-images"
 		>
-			{slots.map((slot, index) => (
-				<RemovableThumbnail
-					key={slot.key}
-					src={isReady(slot) ? slot.url : undefined}
-					pending={!isReady(slot)}
-					alt={
-						isReady(slot)
-							? `Attachment ${index + 1}, ${slot.width}×${slot.height}`
-							: `Attachment ${index + 1}, scaling down`
-					}
-					removeLabel={`Remove image ${index + 1}`}
-					onRemove={() => onRemove(slot.key)}
-					testId={isReady(slot) ? 'compose-image' : 'compose-image-pending'}
-					removeTestId="compose-image-remove"
-					dataKey={slot.key}
-				/>
-			))}
+			{slots.map((slot, index) => {
+				const shown = isReady(slot)
+					? {
+							src: slot.url,
+							alt: `Attachment ${index + 1}, ${slot.width}×${slot.height}`,
+							testId: 'compose-image',
+						}
+					: {
+							src: undefined,
+							alt: `Attachment ${index + 1}, scaling down`,
+							testId: 'compose-image-pending',
+							pending: true,
+						}
+				return (
+					<RemovableThumbnail
+						key={slot.key}
+						{...shown}
+						removeLabel={`Remove image ${index + 1}`}
+						onRemove={() => onRemove(slot.key)}
+						removeTestId="compose-image-remove"
+						dataKey={slot.key}
+					/>
+				)
+			})}
 		</div>
 	)
 }
