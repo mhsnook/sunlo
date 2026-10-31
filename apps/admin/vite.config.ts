@@ -61,25 +61,11 @@ function withPreviewBindings(flueConfig: (config: WorkerConfig) => void) {
 	}
 }
 
-// A dev server's room must not sign links with production's origin.
-// Without ADMIN_URL it learns http://localhost from page loads, and the
-// painter leaves reference images out.
-function withoutAdminUrl(next: (config: WorkerConfig) => void) {
-	return (config: WorkerConfig) => {
-		next(config)
-		delete config.vars?.ADMIN_URL
-	}
-}
-
-export default defineConfig(({ command }) => ({
+export default defineConfig({
 	plugins: [
 		flue({ providers: ['cloudflare'] }),
 		cloudflare({
-			// flueWorkerConfig() throws unless flue() above ran first.
-			config:
-				command === 'serve'
-					? withoutAdminUrl(withPreviewBindings(flueWorkerConfig()))
-					: withPreviewBindings(flueWorkerConfig()),
+			config: withPreviewBindings(flueWorkerConfig()),
 			// The AI binding always runs remotely, which needs `wrangler login`.
 			// ADMIN_REMOTE_BINDINGS=false starts without it: the crew room
 			// works, but CLEF and every agent run fail.
@@ -104,4 +90,4 @@ export default defineConfig(({ command }) => ({
 		strictPort: true,
 		fs: { allow: [repoRoot] },
 	},
-}))
+})
