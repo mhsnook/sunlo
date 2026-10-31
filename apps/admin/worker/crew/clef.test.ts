@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { endsWithEllipsis, handleOf, mentionedCrew } from '../../shared/crew'
+import {
+	endsWithEllipsis,
+	fixedRouting,
+	handleOf,
+	mentionedCrew,
+	mentionsEveryone,
+} from '../../shared/crew'
 import { crew, displayName } from '../../shared/crew'
-import { clefPrompt, parseClefReply } from './clef'
+import { clefPrompt, parseClefReply, toEveryone } from './clef'
 
 describe('the fixed CLEF rules', () => {
 	it.each(['more coming...', 'more coming…', 'more coming...  '])(
@@ -44,6 +50,27 @@ describe('the fixed CLEF rules', () => {
 		expect(
 			mentionedCrew(`@${handleOf('product-2')}'s view, and @library’s`)
 		).toEqual(['product-2', 'library-1'])
+	})
+
+	it.each(['@channel', '@crew', '@everyone', '@all', '@All:', "@everyone's"])(
+		'reads %j as a message to everyone',
+		(handle) => {
+			expect(mentionsEveryone(`${handle} what is next?`)).toBe(true)
+			expect(fixedRouting(`${handle} what is next?`)).toBeNull()
+		}
+	)
+
+	it.each(['hey everyone', 'sam@all.io', '@allison', '@all-hands', 'crew'])(
+		'does not read %j as an @everyone',
+		(text) => expect(mentionsEveryone(text)).toBe(false)
+	)
+
+	it('leaves the agents of an @everyone to CLEF, even beside a name', () => {
+		expect(fixedRouting(`@everyone and @${handleOf('command-2')}`)).toBeNull()
+	})
+
+	it('stacks an @everyone that ends in an ellipsis', () => {
+		expect(fixedRouting('@everyone more coming...')?.kind).toBe('stack')
 	})
 
 	it('does not read the domain of an email address as a mention', () => {
@@ -122,6 +149,59 @@ describe('parseClefReply', () => {
 		).toEqual({ kind: 'route', agents: ['command-2'], by: 'model' })
 	})
 
+	it('wakes every active agent an "everyone" names, in roster order', () => {
+		expect(
+			parseClefReply(
+				'{"kind":"everyone","agents":["product-1","command-2","library-1","product"]}',
+				['command-1', 'command-2', 'product-1']
+			)
+		).toEqual({
+			kind: 'everyone',
+			agents: ['command-2', 'product-1'],
+			by: 'model',
+		})
+	})
+
+	it('keeps one agent of an "everyone" without the fallback', () => {
+		expect(
+			parseClefReply('{"kind":"everyone","agents":["product-2"]}', [
+				'command-1',
+				'product-2',
+			])
+		).toEqual({ kind: 'everyone', agents: ['product-2'], by: 'model' })
+	})
+
+	it('leaves an "everyone" that names nobody active in the room', () => {
+		for (const reply of [
+			'{"kind":"everyone","agents":[]}',
+			'{"kind":"everyone","agents":["library-1"]}',
+			'{"kind":"everyone"}',
+		]) {
+			expect(parseClefReply(reply, ['command-1', 'product-1'])).toEqual({
+				kind: 'room',
+				agents: [],
+				by: 'model',
+			})
+		}
+	})
+
+	it('reads a route for an @everyone as the agents it names, with no fallback', () => {
+		expect(
+			parseClefReply(
+				'{"kind":"route","agents":["command-2","product-1"]}',
+				['command-1', 'command-2', 'product-1'],
+				true
+			)
+		).toEqual({
+			kind: 'everyone',
+			agents: ['command-2', 'product-1'],
+			by: 'model',
+		})
+		expect(
+			parseClefReply('{"kind":"room","agents":[]}', ['command-1'], true)
+		).toEqual({ kind: 'room', agents: [], by: 'model' })
+	})
+
 	it('leaves anything unclear in the room', () => {
 		for (const reply of [undefined, 'no idea', '{"kind":"maybe"}', '{bad']) {
 			expect(parseClefReply(reply, ['product-1'])).toEqual({
@@ -133,7 +213,58 @@ describe('parseClefReply', () => {
 	})
 })
 
+describe('toEveryone', () => {
+	it('wakes the agents CLEF names and the ones the message names', () => {
+		expect(
+			toEveryone(
+				{ kind: 'everyone', agents: ['product-1'], by: 'model' },
+				`@everyone, and @${handleOf('command-2')}?`
+			)
+		).toEqual({
+			kind: 'everyone',
+			agents: ['command-2', 'product-1'],
+			by: 'model',
+		})
+	})
+
+	it('leaves an @everyone CLEF needs nobody for in the room', () => {
+		expect(
+			toEveryone({ kind: 'room', agents: [], by: 'model' }, '@all fyi')
+		).toEqual({ kind: 'room', agents: [], by: 'model' })
+	})
+})
+
 describe('clefPrompt', () => {
+	it('offers the "everyone" kind, and asks for it on an @everyone', () => {
+		const plain = clefPrompt('hi all', ['command-1', 'product-1'], [])[0]
+		expect(plain.content).toContain('- "everyone":')
+		expect(plain.content).toContain(
+			'{"kind":"everyone","agents":["command-1","product-1"]}'
+		)
+		expect(plain.content).toContain('A "route" names exactly one agent.')
+		expect(plain.content).not.toContain('reply "everyone"')
+		const forced = clefPrompt('@all hi', ['product-1'], [], true)[0]
+		expect(forced.content).toContain(
+			'This message is written to the whole team: reply "everyone".'
+		)
+	})
+
+	it('replays an "everyone" correction as its reply', () => {
+		const messages = clefPrompt(
+			'team, thoughts?',
+			['command-1', 'product-1'],
+			[
+				{
+					text: 'hey everyone, numbers?',
+					routing: { kind: 'everyone', agents: ['command-2', 'product-1'] },
+				},
+			]
+		)
+		expect(messages[2].content).toBe(
+			'{"kind":"everyone","agents":["command-2","product-1"]}'
+		)
+	})
+
 	it('puts corrections between the instructions and the message', () => {
 		const messages = clefPrompt(
 			'what next?',

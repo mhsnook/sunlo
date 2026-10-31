@@ -1,7 +1,12 @@
 import { dispatch, observe, type Agent } from '@flue/runtime'
 import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
-import { isCrewKey, roomOfPlace, type CrewKey } from '../shared/crew'
+import {
+	displayName,
+	isCrewKey,
+	roomOfPlace,
+	type CrewKey,
+} from '../shared/crew'
 import {
 	CONVERSATION,
 	ROOM,
@@ -84,7 +89,7 @@ observe((event) => {
 // from the agent's own room.
 export async function wake(wakes: Array<Wake>, from: string) {
 	await Promise.all(
-		wakes.map(({ agent, body, messageId, place, thread }) => {
+		wakes.map(({ agent, body, messageId, place, thread, alsoTo }) => {
 			// The helper works in the thread's own conversation; the asker hears
 			// a reply in its main one.
 			const inThread = thread?.to === 'helper' ? thread.root : null
@@ -99,6 +104,7 @@ export async function wake(wakes: Array<Wake>, from: string) {
 				from,
 				messageId,
 				...(thread ? { thread: thread.root } : {}),
+				...(alsoTo ? { also: alsoTo.map(displayName).join(', ') } : {}),
 			}
 			return deliver(agent, type, body, attributes, inThread).catch(
 				(error: unknown) => console.error(`Could not wake ${agent}`, error)
