@@ -116,11 +116,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # `shell: bash` adds pipefail. Without it, the step takes tee's exit
+      # status, and a failed upload reports success.
       - name: Build and upload the preview
         id: upload
+        shell: bash
         run: |
           ./scripts/cf-preview.sh "$HEAD_REF" | tee "$RUNNER_TEMP/upload.log"
-          url=$(grep -oE 'https://[a-z0-9-]+-sunlo\.[a-z0-9-]+\.workers\.dev' "$RUNNER_TEMP/upload.log" | tail -1)
+          url=$(grep -oE 'https://[a-z0-9-]+-sunlo\.[a-z0-9-]+\.workers\.dev' "$RUNNER_TEMP/upload.log" | tail -1 || true)
+          if [ -z "$url" ]; then
+            echo "::error::wrangler printed no preview URL."
+            exit 1
+          fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview: $url (Supabase: $VITE_SUPABASE_URL)" >> "$GITHUB_STEP_SUMMARY"
 
