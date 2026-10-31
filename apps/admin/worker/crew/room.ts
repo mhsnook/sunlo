@@ -8,6 +8,11 @@ import {
 	draftTitle,
 	fixedRouting,
 	githubAccess,
+	githubEventLine,
+	GITHUB_AUTHOR,
+	GITHUB_CLOSED_DAYS,
+	type GithubEventType,
+	type GithubLogType,
 	handleOf,
 	routeTo,
 	isCrewKey,
@@ -86,6 +91,18 @@ import {
 	pickReports,
 	sketchPickReports,
 } from './picks'
+import {
+	closeGithubItems,
+	githubItemOf,
+	githubItems,
+	pruneGithubItems,
+	reconcileGithub,
+	removeGithubItem,
+	storedOpenItems,
+	takeDelivery,
+	writeGithubItem,
+	type WebhookResult,
+} from './github-log'
 import { leftThisHour } from './hourly'
 import {
 	loadImage,
@@ -144,6 +161,8 @@ type MessageRow = {
 	thread_run_at: string | null
 	// JSON: Array<MessageImageType>.
 	images: string | null
+	// JSON: GithubEventType.
+	github: string | null
 }
 
 type CharterRow = {
@@ -255,6 +274,7 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 		row.thread_with && isCrewKey(row.thread_with)
 			? { with: row.thread_with, closedAt: row.thread_closed_at }
 			: null,
+	github: row.github ? (JSON.parse(row.github) as GithubEventType) : null,
 })
 
 const toDocumentSummary = (row: DocumentRow): DocumentSummaryType => ({
@@ -294,6 +314,10 @@ const toPainterStyle = (row: PainterStyleRow): PainterStyleType => ({
 // Keys in the room's key-value storage.
 const PUBLIC_ORIGIN = 'public-origin'
 const PAINTER_STYLES_SEEDED = 'painter-styles-seeded'
+const GITHUB_CHECKED_AT = 'github-checked-at'
+// Pages of 100 read from GitHub's issue list in one check.
+const GITHUB_OPEN_PAGES = 10
+const GITHUB_RECENT_PAGES = 3
 
 // One instance, named ROOM, holds the Common Room and each subject's room,
 // each agent's workspace (to-dos, memory, open items), the charter, CLEF's
@@ -561,6 +585,27 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				dropped integer not null default 0
 			);
 			create index if not exists run_by_submission on run (agent, submission);
+			-- The room's copy of the repository's open issues and pull requests,
+			-- and of those closed in the last GITHUB_CLOSED_DAYS. GitHub's
+			-- webhook keeps it current, and the hourly cron checks it against
+			-- the API. labels is JSON: Array<string>.
+			create table if not exists github_item (
+				number integer primary key,
+				kind text not null,
+				title text not null,
+				url text not null,
+				labels text not null default '[]',
+				milestone text,
+				state text not null,
+				updated_at text not null,
+				closed_at text
+			);
+			-- Each webhook delivery's X-GitHub-Delivery, so a redelivery posts
+			-- nothing twice.
+			create table if not exists github_delivery (
+				id text primary key,
+				at text not null
+			);
 			create table if not exists schema_version (version integer not null);
 		`
 		const version =
@@ -578,6 +623,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.addEditRuns(),
 			() => this.indexThreadRuns(),
 			() => this.addSketchImageIds(),
+			() => this.addGithubLines(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -743,6 +789,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	private addSketchImageIds() {
 		if (!this.tableColumns('sketch').has('image_id')) {
 			this.sql`alter table sketch add column image_id integer`
+		}
+	}
+
+	private addGithubLines() {
+		if (!this.tableColumns('message').has('github')) {
+			this.sql`alter table message add column github text`
 		}
 	}
 
@@ -1438,7 +1490,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			sitrep: this.sitrep(),
 			documents: this.documents(room),
 			github: githubAccess[agent]
-				? { access: githubAccess[agent], connected: githubConfigured(this.env) }
+				? {
+						access: githubAccess[agent],
+						connected: githubConfigured(this.env),
+						log: this.githubLog(),
+					}
 				: null,
 			workspace: this.workspace(agent),
 			charter: this.charter(room),
@@ -2662,6 +2718,88 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		)
 	}
 
+	// ---- GitHub's log -------------------------------------------------------
+
+	// One verified webhook delivery: it updates the room's copy of what is
+	// open, and an issue or pull request that opened, closed, merged or
+	// reopened gets a line in the Product room, where product-1 keeps the
+	// milestones and epics. The line has no routing and its author is no
+	// agent, so it wakes nobody. A delivery the room has seen changes
+	// nothing. `unchecked` is true while the copy was never checked against
+	// GitHub's API.
+	githubDelivery(
+		delivery: string,
+		result: Extract<WebhookResult, { kind: 'item' | 'remove' }>
+	) {
+		const sql = this.sql.bind(this)
+		if (!takeDelivery(sql, delivery)) {
+			return { duplicate: true, unchecked: false }
+		}
+		if (result.kind === 'remove') {
+			removeGithubItem(sql, result.number)
+		} else {
+			writeGithubItem(sql, result.item)
+			if (result.event) {
+				this.insert({
+					author: GITHUB_AUTHOR,
+					authorName: 'GitHub',
+					body: githubEventLine(result.event),
+					routing: null,
+					card: null,
+					place: placeOf(roomOf('product-1')),
+					github: result.event,
+				})
+			}
+		}
+		pruneGithubItems(sql)
+		this.push({ type: 'github' })
+		return {
+			duplicate: false,
+			unchecked: !this.ctx.storage.kv.get(GITHUB_CHECKED_AT),
+		}
+	}
+
+	// Checks the room's copy against GitHub's API, so it holds even when
+	// deliveries were missed. The hourly cron runs it, and so does the first
+	// delivery to an unchecked copy. False without the GitHub App's secrets.
+	async checkGithub() {
+		const github = githubFor(this.env)
+		if (!github) return false
+		const started = now()
+		const since =
+			this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ??
+			new Date(Date.now() - GITHUB_CLOSED_DAYS * 86_400_000).toISOString()
+		const [open, recent] = await Promise.all([
+			github.issuePages({ state: 'open', pages: GITHUB_OPEN_PAGES }),
+			github.issuePages({ state: 'all', since, pages: GITHUB_RECENT_PAGES }),
+		])
+		const items = (list: Array<unknown>) =>
+			list.flatMap((data) => {
+				const item = githubItemOf(data, this.env.GITHUB_REPO)
+				return item ? [item] : []
+			})
+		const sql = this.sql.bind(this)
+		const plan = reconcileGithub({
+			storedOpen: storedOpenItems(sql),
+			open: items(open.items),
+			openComplete: open.complete,
+			recent: items(recent.items),
+		})
+		for (const item of plan.upserts) writeGithubItem(sql, item)
+		closeGithubItems(sql, plan.closed, started)
+		pruneGithubItems(sql)
+		this.ctx.storage.kv.put(GITHUB_CHECKED_AT, started)
+		this.push({ type: 'github' })
+		return true
+	}
+
+	githubLog(): GithubLogType {
+		return {
+			items: githubItems(this.sql.bind(this)),
+			checkedAt: this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ?? null,
+		}
+	}
+
 	// ---- Internals ----------------------------------------------------------
 
 	private applyTodoChange(
@@ -2710,6 +2848,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		otherViewOf?: string | null
 		parent?: string | null
 		threadWith?: CrewKey
+		github?: GithubEventType
 	}): CrewMessageType {
 		const row: MessageRow = {
 			id: `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
@@ -2730,10 +2869,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			thread_closed_at: null,
 			thread_run_at: null,
 			images: input.images?.length ? JSON.stringify(input.images) : null,
+			github: input.github ? JSON.stringify(input.github) : null,
 		}
 		this.sql`
-			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with, images)
-			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with}, ${row.images})`
+			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with, images, github)
+			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with}, ${row.images}, ${row.github})`
 		const message = toMessage(row)
 		const threadIn = row.parent ? this.messageById(row.parent)?.place : null
 		this.push(
@@ -2790,7 +2930,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// The messages in one timeline since the agent last finished a run there.
-	// The cursor moves when the run finishes.
+	// The cursor moves when the run finishes. GitHub's lines are left out:
+	// a burst of them would push the conversation out of the 60, and the
+	// agents that need them read the GitHub section of their briefing.
 	private unread(agent: CrewKey, place: PlaceType): UnreadTimeline {
 		const cursor = this.sql<{
 			at: string | null
@@ -2798,10 +2940,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const rows = cursor
 			? this.sql<MessageRow>`select * from (
 							select * from message
-							where place = ${place} and at > ${cursor}
+							where place = ${place} and at > ${cursor} and github is null
 							order by at desc limit 60
 						) order by at, id`
-			: this.latestRows(place, 30)
+			: this.sql<MessageRow>`select * from (
+							select * from message
+							where place = ${place} and github is null
+							order by at desc, id desc limit 30
+						) order by at, id`
 		const last = rows.at(-1)?.at
 		if (last) {
 			this.sql`
@@ -3002,13 +3148,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// True while a room's principal and associate have spoken fewer than
 	// ROOM_TURNS times in a row in this timeline since the admin last wrote
 	// there.
-	// Receipts are not turns.
+	// Receipts and GitHub's lines are not turns.
 	private roomTurnLeft(place: PlaceType) {
 		const recent = this.sql<{
 			author: string
 		}>`
 			select author from message
-			where place = ${place} and receipt = 0
+			where place = ${place} and receipt = 0 and github is null
 			order by at desc, id desc
 			limit ${ROOM_TURNS}`
 		return (
