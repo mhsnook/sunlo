@@ -16,6 +16,11 @@ import {
 	RoutingSchema,
 } from '../shared/crew'
 import { restoreSummary } from '../worker/crew/documents'
+import {
+	githubWebhook,
+	MAX_WEBHOOK_BYTES,
+	verifyGithubSignature,
+} from '../worker/crew/github-log'
 import { createApi } from '../worker/api'
 import { imageInfo, verifyImageLink } from '../worker/images'
 import { SVG_POLICY } from '../worker/svg'
@@ -555,6 +560,64 @@ api.get('/public/images/:id', numericId('No such image'), async (c) => {
 		// No shared cache may serve the image after the link expires.
 		'cache-control': 'no-store',
 	})
+})
+
+// GitHub's webhook for mhsnook/sunlo's issues and pull requests (README,
+// "GitHub's running log"). worker/api.ts lets /api/public/ through without a
+// token; the X-Hub-Signature-256 HMAC is the check, so a Worker without
+// GITHUB_WEBHOOK_SECRET refuses every delivery.
+api.post('/public/github/webhook', async (c) => {
+	const secret = c.env.GITHUB_WEBHOOK_SECRET
+	if (!secret) {
+		return c.json({ error: 'GITHUB_WEBHOOK_SECRET is not set' }, 503)
+	}
+	if (Number(c.req.header('content-length') ?? 0) > MAX_WEBHOOK_BYTES) {
+		return c.json({ error: 'Too large' }, 413)
+	}
+	const body = await c.req.arrayBuffer()
+	if (body.byteLength > MAX_WEBHOOK_BYTES) {
+		return c.json({ error: 'Too large' }, 413)
+	}
+	const signed = await verifyGithubSignature(
+		secret,
+		body,
+		c.req.header('x-hub-signature-256')
+	)
+	if (!signed) return c.json({ error: 'Bad signature' }, 401)
+	const delivery = c.req.header('x-github-delivery')
+	if (!delivery || delivery.length > 100) {
+		return c.json({ error: 'No X-GitHub-Delivery' }, 400)
+	}
+	let payload: unknown
+	try {
+		payload = JSON.parse(new TextDecoder().decode(body))
+	} catch {
+		return c.json({ error: 'The body is not JSON' }, 400)
+	}
+	const result = githubWebhook(
+		c.req.header('x-github-event'),
+		payload,
+		c.env.GITHUB_REPO
+	)
+	if (result.kind === 'ping') return c.json({ ok: true })
+	if (result.kind === 'ignore') return c.body(null, 204)
+	const room = await roomFor()
+	const { duplicate, unchecked } = await room.githubDelivery(delivery, result)
+	if (unchecked) {
+		c.executionCtx.waitUntil(
+			room
+				.checkGithub()
+				.catch((error: unknown) =>
+					console.error('Could not check GitHub after a delivery', error)
+				)
+		)
+	}
+	return c.json({ ok: true, duplicate })
+})
+
+// The room's copy of what is open on GitHub, for the Product room's details.
+api.get('/crew/github', async (c) => {
+	return c.json(await (await roomFor()).githubLog())
 })
 
 // An SVG's text. It can only be kept once it passes checkSvg, and the app

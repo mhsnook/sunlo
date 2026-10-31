@@ -341,6 +341,53 @@ export const draftBody = (draft: GithubDraftType) =>
 	draft.type === 'milestone' ? draft.description : draft.body
 export type ActionType = z.infer<typeof ActionSchema>
 
+// The author of the lines the room posts for GitHub's webhook: not a crew
+// member and not an admin, so nothing it posts wakes anyone.
+export const GITHUB_AUTHOR = 'github'
+
+// One line in the Product room for an issue or a pull request that opened,
+// closed, merged or reopened on GitHub. The title is anyone's text on a
+// public repository: the app shows it as plain text only.
+export const GithubEventSchema = z.object({
+	kind: z.enum(['issue', 'pr']),
+	action: z.enum(['opened', 'closed', 'merged', 'reopened']),
+	number: z.number().int(),
+	title: z.string(),
+	url: z.string(),
+})
+export type GithubEventType = z.infer<typeof GithubEventSchema>
+
+// An issue or pull request in the room's copy of what is open on GitHub,
+// and of what closed lately.
+export const GithubItemSchema = z.object({
+	number: z.number().int(),
+	kind: z.enum(['issue', 'pr']),
+	title: z.string(),
+	url: z.string(),
+	labels: z.array(z.string()),
+	milestone: z.string().nullable(),
+	state: z.enum(['open', 'closed', 'merged']),
+	updatedAt: z.string(),
+	closedAt: z.string().nullable(),
+})
+export type GithubItemType = z.infer<typeof GithubItemSchema>
+
+export const GithubLogSchema = z.object({
+	// Open items, then the ones closed in the last GITHUB_CLOSED_DAYS, each
+	// newest first.
+	items: z.array(GithubItemSchema),
+	// When the room last checked its copy against GitHub's API.
+	checkedAt: z.string().nullable(),
+})
+export type GithubLogType = z.infer<typeof GithubLogSchema>
+
+// Closed items stay in the room's copy this long.
+export const GITHUB_CLOSED_DAYS = 14
+
+// "#851 opened: …" or "PR #852 merged: …".
+export const githubEventLine = (event: GithubEventType) =>
+	`${event.kind === 'pr' ? 'PR ' : ''}#${event.number} ${event.action}: ${event.title}`
+
 // An image the room keeps (the `image` table), as a message carries it.
 export const MessageImageSchema = z.object({
 	id: z.number().int(),
@@ -544,7 +591,7 @@ export type PickChoice = z.infer<typeof PickChoiceSchema>
 export const CrewMessageSchema = z.object({
 	id: z.string(),
 	at: z.string(),
-	// A crew key for an agent, or "admin:<uid>".
+	// A crew key for an agent, "admin:<uid>", or GITHUB_AUTHOR.
 	author: z.string(),
 	authorName: z.string(),
 	// Empty when the message is only images.
@@ -586,6 +633,8 @@ export const CrewMessageSchema = z.object({
 			at: z.string(),
 		})
 		.nullable(),
+	// Set on the room's line for a GitHub event, whose author is GITHUB_AUTHOR.
+	github: GithubEventSchema.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -831,5 +880,7 @@ export type RoomEvent =
 	| { type: 'common-knowledge' }
 	| { type: 'document'; room: RoomKey; id: number }
 	| { type: 'painter-styles' }
+	// The room's copy of what is open on GitHub changed.
+	| { type: 'github' }
 	// A run started, took a step, or ended.
 	| { type: 'run'; run: RunType }

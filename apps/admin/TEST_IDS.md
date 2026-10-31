@@ -25,6 +25,7 @@ Register a new id here, not in the main app's registry.
 | `crew-sidebar-unread`, `crew-sidebar-cards`                                                               | A sidebar item's unread count, and its count of cards that wait on you                  |
 | `crew-message-group` + `data-key=<message id>`                                                            | Consecutive messages from one author                                                    |
 | `crew-message` + `data-key=<message id>` (`data-pending` until the server has it)                         | One message in the room                                                                 |
+| `crew-github-lines`, `crew-github-line` + `data-key=<message id>`                                         | GitHub's lines in the Product room, and one line                                        |
 | `crew-new-since`                                                                                          | The "New since …" line                                                                  |
 | `crew-working`                                                                                            | "<name> is working…" under the timeline                                                 |
 | `crew-live-runs`                                                                                          | The steps of each running agent so far, under the working marker                        |
@@ -67,7 +68,8 @@ Register a new id here, not in the main app's registry.
 | `crew-routing-option` + `data-key=<kind><agents>`                                                         | One choice in a routing menu, e.g. `routeproduct-1`, `room`, `stack`                    |
 | `crew-routing-correct`                                                                                    | The routing note under your own message; opens the menu to correct it                   |
 | `details-button`, `details-panel` + `data-key=<room\|crew>`                                               | The Details toggle in a room header, and its panel; `crew` is the Common Room           |
-| `details-section` + `data-key=<documents\|charter\|weekly\|overview\|painter-styles\|agent key>`          | One section of the details; on a phone, one fold of the accordion                       |
+| `details-section` + `data-key=<documents\|charter\|weekly\|overview\|github\|painter-styles\|agent key>`  | One section of the details; on a phone, one fold of the accordion                       |
+| `github-log`, `github-item` + `data-key=<number>`                                                         | What is open on GitHub, in the Product room's details, and one issue or pull request    |
 | `crew-overview`                                                                                           | The Overview section, in the Common Room's details                                      |
 | `room-document` + `data-key=<name>`                                                                       | A document in the details; opens it                                                     |
 | `document-back`                                                                                           | Closes a document, back to the details                                                  |
