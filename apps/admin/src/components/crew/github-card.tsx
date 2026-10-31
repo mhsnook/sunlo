@@ -63,8 +63,9 @@ export function GithubCard({
 				<Textarea
 					value={note}
 					onChange={(event) => setNote(event.target.value)}
-					placeholder={`Note to ${agent}: why you changed it, or what you think. Optional. It goes in this room, not on GitHub.`}
+					placeholder={`Note to ${agent} (optional). It stays in this room, not on GitHub.`}
 					rows={2}
+					maxLength={2000}
 					aria-label={`Note to ${agent}`}
 					data-testid="github-draft-note"
 				/>
