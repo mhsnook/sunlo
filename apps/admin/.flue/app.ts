@@ -1,3 +1,9 @@
+import { setProvider } from '@flue/runtime'
+import {
+	cloudflareBindingProvider,
+	type CloudflareAIBinding,
+} from '@flue/runtime/cloudflare/workers-ai'
+import { env } from 'cloudflare:workers'
 import { validator } from 'hono/validator'
 import { z } from 'zod'
 import {
@@ -19,7 +25,22 @@ import { restoreSummary } from '../worker/crew/documents'
 import { createApi } from '../worker/api'
 import { imageInfo, verifyImageLink } from '../worker/images'
 import { SVG_POLICY } from '../worker/svg'
+import { bindingModelId } from '../worker/models'
 import { deliver, requestReport, roomFor, wake } from './crew'
+
+// Replaces the Workers AI provider that @flue/vite registers. Without the
+// id rewrite, the binding refuses every Claude call. Without
+// `cacheRetention`, a Claude step pays full price for the whole
+// conversation every time.
+const ai = env.AI as unknown as CloudflareAIBinding
+setProvider(
+	cloudflareBindingProvider({
+		binding: {
+			run: (id, inputs, options) => ai.run(bindingModelId(id), inputs, options),
+		},
+		cacheRetention: 'short',
+	})
+)
 
 // worker/api.ts checks the admin on every /api route. These routes add the
 // crew room and the agents to that app.
