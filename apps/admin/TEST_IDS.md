@@ -61,6 +61,7 @@ Register a new id here, not in the main app's registry.
 | `crew-compose-input`, `crew-compose-send`                                                                 | The room's compose bar                                                                  |
 | `compose-add-image`, `compose-image-input`                                                                | A compose bar's Add an image button, and its hidden file input                          |
 | `compose-images`, `compose-image` + `data-key=<draft key>`, `compose-image-remove`                        | The images waiting in a compose bar, one of them, and its Remove button                 |
+| `compose-image-pending` + `data-key=<draft key>`                                                          | The place of an image in a compose bar while it is scaled down                          |
 | `crew-message-images`, `crew-message-image` + `data-key=<image id>`                                       | A message's images, and one thumbnail; opens it full size                               |
 | `crew-image-full`                                                                                         | The full-size view of a message's image, a painting or an SVG                           |
 | `crew-clef-chip`                                                                                          | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
