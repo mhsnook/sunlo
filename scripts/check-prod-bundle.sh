@@ -62,6 +62,8 @@ for entry in "${FORBIDDEN[@]}"; do
 	fi
 done
 
+WRONG_MODE='This usually means the build ran in the wrong Vite mode (`import.meta.env.DEV === true`).'
+
 if [ -n "$FRAGMENTS" ]; then
 	mkdir -p "$FRAGMENTS"
 	{
@@ -72,19 +74,18 @@ if [ -n "$FRAGMENTS" ]; then
 			echo
 			printf '%s\n' "${report[@]}"
 			echo
-			echo "This usually means the build ran in the wrong Vite mode (\`import.meta.env.DEV === true\`)."
+			echo "$WRONG_MODE"
 		else
 			echo "✅ Build output clean — ${#FORBIDDEN[@]} fingerprint(s) checked."
 		fi
 	} >"$FRAGMENTS/60-scan.md"
-	printf '{\n\t"check": "scan",\n\t"found": %d,\n\t"checked": %d\n}\n' \
-		"$found" "${#FORBIDDEN[@]}" >"$FRAGMENTS/60-scan.json"
+	printf '{\n\t"check": "scan",\n\t"new": %d,\n\t"why": "%d dev-only fingerprint(s) in the build output"\n}\n' \
+		"$found" "$found" >"$FRAGMENTS/60-scan.json"
 fi
 
 if [ "$found" -gt 0 ]; then
 	echo
-	echo "Dev-only code leaked into the production bundle. This usually means the"
-	echo "build ran in the wrong Vite mode (import.meta.env.DEV === true)."
+	echo "Dev-only code leaked into the production bundle. $WRONG_MODE"
 	exit 1
 fi
 

@@ -6,6 +6,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const { listFiles } = require('./delta.cjs')
 
 // GitHub rejects an issue comment body over 65536 characters.
 const MAX_BODY = 65000
@@ -27,14 +28,9 @@ const marker = (id) => `<!-- ci-delta:${id} -->`
  * section order, so jobs finishing out of order still render consistently.
  */
 function assemble(dir, { id, title, header = '' }) {
-	const fragments = fs.existsSync(dir)
-		? fs
-				.readdirSync(dir, { recursive: true })
-				.filter((f) => typeof f === 'string' && f.endsWith('.md'))
-				.toSorted()
-				.map((f) => fs.readFileSync(path.join(dir, f), 'utf8').trim())
-				.filter(Boolean)
-		: []
+	const fragments = listFiles(dir, '.md')
+		.map((f) => fs.readFileSync(path.join(dir, f), 'utf8').trim())
+		.filter(Boolean)
 
 	if (!fragments.length) {
 		return [
@@ -55,12 +51,15 @@ function assemble(dir, { id, title, header = '' }) {
 }
 
 /**
- * Create the comment, or edit the one this workflow wrote last time.
+ * Create the comment, or edit the one this workflow wrote last time, then
+ * delete comments that start with any of `retired`.
  *
  * Matching on the hidden marker is what keeps a busy PR to a single comment
- * that updates in place, instead of one comment per push.
+ * that updates in place, instead of one comment per push. `retired` names the
+ * visible headings of comments this workflow replaced, so stale ones do not
+ * linger on open PRs.
  */
-async function upsertComment(github, context, id, body) {
+async function publish(github, context, { id, body, retired = [] }) {
 	const issue_number = context.issue.number
 	if (!issue_number) return { skipped: 'not a pull request' }
 
@@ -75,7 +74,7 @@ async function upsertComment(github, context, id, body) {
 	const existing = comments.find(
 		(c) => c.body.includes(marker(id)) && c.user?.type === 'Bot'
 	)
-
+	let result
 	if (existing) {
 		await github.rest.issues.updateComment({
 			owner,
@@ -83,47 +82,28 @@ async function upsertComment(github, context, id, body) {
 			comment_id: existing.id,
 			body,
 		})
-		return { updated: existing.id }
+		result = { updated: existing.id }
+	} else {
+		const { data } = await github.rest.issues.createComment({
+			owner,
+			repo,
+			issue_number,
+			body,
+		})
+		result = { created: data.id }
 	}
-	const { data } = await github.rest.issues.createComment({
-		owner,
-		repo,
-		issue_number,
-		body,
-	})
-	return { created: data.id }
+
+	// allSettled: a comment someone already deleted is not an error.
+	const stale = comments.filter((c) =>
+		retired.some((m) => c.body.startsWith(m))
+	)
+	const deletions = await Promise.allSettled(
+		stale.map((c) =>
+			github.rest.issues.deleteComment({ owner, repo, comment_id: c.id })
+		)
+	)
+	result.deleted = deletions.filter((d) => d.status === 'fulfilled').length
+	return result
 }
 
-/**
- * Delete comments left by markers this workflow no longer writes.
- *
- * Use it when you merge two checks into one section, or when you adopt this
- * workflow in a repo whose old CI posted its own comments — pass the leading
- * text of each retired comment, so the stale ones do not linger on open PRs.
- */
-async function retireComments(github, context, markers) {
-	const issue_number = context.issue.number
-	if (!issue_number || !markers.length) return { deleted: 0 }
-
-	const { owner, repo } = context.repo
-	const comments = await github.paginate(github.rest.issues.listComments, {
-		owner,
-		repo,
-		issue_number,
-		per_page: 100,
-	})
-
-	let deleted = 0
-	for (const c of comments) {
-		if (!markers.some((m) => c.body.startsWith(m))) continue
-		try {
-			await github.rest.issues.deleteComment({ owner, repo, comment_id: c.id })
-			deleted++
-		} catch {
-			// Best-effort: a comment someone already deleted is not an error.
-		}
-	}
-	return { deleted }
-}
-
-module.exports = { MAX_BODY, marker, assemble, upsertComment, retireComments }
+module.exports = { assemble, publish }

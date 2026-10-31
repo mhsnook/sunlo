@@ -7,7 +7,7 @@
 // the Jest shape. `pnpm test:unit` is that runner.
 
 const fs = require('fs')
-const path = require('path')
+const { listBlock, writeFragment, writeMissing } = require('./delta.cjs')
 
 const CAP = 20
 
@@ -34,55 +34,32 @@ function parse(raw) {
 }
 
 module.exports = function render({ results, out }) {
-	fs.mkdirSync(out, { recursive: true })
-
 	if (!fs.existsSync(results)) {
-		fs.writeFileSync(
-			path.join(out, '50-tests.md'),
-			'#### Tests\n\n⚠️ No results file was produced — the runner probably crashed before writing output. Check the job log.'
-		)
-		// A missing report is a failure, not a pass. Say so to the gate.
-		fs.writeFileSync(
-			path.join(out, '50-tests.json'),
-			JSON.stringify({ check: 'tests', failed: 1, missing: true }, null, 2)
+		writeMissing(
+			out,
+			'50-tests',
+			'Tests',
+			'tests',
+			'No results file was produced — the runner probably crashed before writing output.'
 		)
 		return
 	}
 
 	const s = parse(fs.readFileSync(results, 'utf8'))
-	const icon = s.failed ? '❌' : '✅'
-	const lines = [
-		'#### Tests',
-		'',
-		`${icon} ${s.passed}/${s.total} passed` +
-			(s.failed ? ` · **${s.failed} failed**` : '') +
-			(s.skipped ? ` · ${s.skipped} skipped` : ''),
-	]
+	const summary =
+		`${s.failed ? '❌' : '✅'} ${s.passed}/${s.total} passed` +
+		(s.failed ? ` · **${s.failed} failed**` : '') +
+		(s.skipped ? ` · ${s.skipped} skipped` : '')
+	const failures = s.failures.map((f) =>
+		`✗ ${f.name}\n  ${f.file}\n  ${f.message}`.trimEnd()
+	)
 
-	if (s.failures.length) {
-		const shown = s.failures.slice(0, CAP)
-		const block = shown
-			.map((f) => `✗ ${f.name}\n  ${f.file}\n  ${f.message}`.trimEnd())
-			.join('\n\n')
-		const more =
-			s.failures.length > CAP ? `\n\n… and ${s.failures.length - CAP} more` : ''
-		lines.push(
-			'',
-			`**Failed (${s.failures.length}):**`,
-			'',
-			'```',
-			block + more,
-			'```'
-		)
-	}
-
-	fs.writeFileSync(path.join(out, '50-tests.md'), lines.join('\n'))
-	fs.writeFileSync(
-		path.join(out, '50-tests.json'),
-		JSON.stringify(
-			{ check: 'tests', failed: s.failed, total: s.total },
-			null,
-			2
-		)
+	writeFragment(
+		out,
+		'50-tests',
+		['#### Tests', '', summary, listBlock('Failed', failures, CAP)]
+			.filter((l) => l !== null)
+			.join('\n'),
+		{ check: 'tests', new: s.failed, why: `${s.failed} failing test(s)` }
 	)
 }

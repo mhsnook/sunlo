@@ -3,18 +3,20 @@
 #
 # Runs once on the head tree and once on the base tree, always from that tree's
 # own root. Output is one sorted line per issue, so the diff engine can treat
-# the two runs as comparable sets.
+# the two runs as comparable sets:
 #
-# The commands here are the ones the `pr-checks` job ran inline before this
-# script existed: the typecheck for the main app and the admin app, then oxlint
-# and eslint merged into one list, then both halves of `pnpm format`. Every one
-# calls the TOOL through `pnpm exec` rather than the package script that wraps
-# it: the base tree is the base branch, and a PR that adds or renames a script
-# would otherwise measure two trees with two different commands. Keep them in
-# step with package.json.
+#   typecheck.txt  lint.txt  format.txt   one issue (or unformatted file) per line
+#   did-not-run.txt                       `<check>: <reason>` for a tool that
+#                                         failed without reporting issues
 #
-# Both trees run the head copy of this script and of scripts/eslint-unix.mjs.
-# The `base` job checks both out from the PR before it runs anything.
+# A tool that did not run must NOT become a line in its issue list. The same
+# line would appear in both trees and cancel out of the delta, and the check
+# would pass having measured nothing.
+#
+# Every tool is called through `pnpm exec`, not the package script that wraps
+# it: both trees run the head copy of this script, and on a PR that adds or
+# renames a script the base tree does not have it. Keep the commands in step
+# with `check`, `lint` and `format` in package.json.
 #
 # NOTE: this script ends by restoring the tree with `git checkout -- .`. That is
 # correct in CI, where the checkout is clean. Run it against a working tree with
@@ -26,68 +28,54 @@ set -uo pipefail
 
 OUT="${1:?usage: collect-static.sh <output-dir>}"
 mkdir -p "$OUT"
+: >"$OUT/did-not-run.txt"
 
 # Byte-order sorting, so the two trees produce comparable lists even if the two
 # runners ever differ in locale. `sort` under a UTF-8 locale ignores leading
 # punctuation, which would order `.oxfmtrc.json` after `AGENTS.md`.
 export LC_ALL=C
 
-# Paths kept out of the lint and formatter deltas.
-#
-# `dist/` is gitignored and both linters already skip it, so it never reached
-# these lists anyway. `.github/ci/` is this workflow's own machinery: a PR that
-# edits a check script should not read as a PR that changed the codebase.
-# Nothing else is excluded, so the numbers match what the inline job reported.
-EXCLUDE='^(dist/|\.github/ci/)'
-
 # Read-only checks run concurrently. The typechecker is the long pole and the
 # linters finish underneath it, so this is close to free.
 (
-	# The TOOL, not the `check` script. Both trees run this script, and the base
-	# tree is the base branch — on the PR that adds or renames a script, base
-	# does not have it. `pnpm check` is `tsrs -b`; spell it out.
+	# `pnpm check` is `tsrs -b`, which does not reach the admin app's two
+	# tsconfigs, so they run on their own. The admin app imports the main app's
+	# code, so a main-app change can break it.
 	#
-	# `tsrs -b` does not reach the admin app's two tsconfigs, so they run on
-	# their own. The admin app imports the main app's code, so a main-app change
-	# can break it.
-	#
+	# A run that fails without printing a single `error TS` line (a broken
+	# project reference, a crash) did not typecheck anything.
+	typecheck() {
+		local raw="$OUT/.typecheck-$1.raw"
+		shift
+		"$@" >"$raw" 2>&1
+		local status=$?
+		if [ "$status" -ne 0 ] && ! grep -q ': error TS' "$raw"; then
+			echo "typecheck: \`$*\` exited $status without reporting errors" >>"$OUT/did-not-run.txt"
+		fi
+	}
+	typecheck main pnpm exec tsrs -b
+	typecheck admin pnpm exec tsrs --noEmit -p apps/admin/tsconfig.json
+	typecheck admin-worker pnpm exec tsrs --noEmit -p apps/admin/tsconfig.worker.json
 	# The grep drops the summary lines, which change with the error count and
 	# would diff as noise.
-	failed=0
-	pnpm exec tsrs -b >"$OUT/.typecheck.raw" 2>&1 || failed=$?
-	for project in apps/admin/tsconfig.json apps/admin/tsconfig.worker.json; do
-		pnpm exec tsrs --noEmit -p "$project" >>"$OUT/.typecheck.raw" 2>&1 || failed=$?
-	done
-	grep ': error TS' "$OUT/.typecheck.raw" | sort >"$OUT/typecheck.txt"
-
-	# A typechecker that failed but printed nothing the grep recognises would
-	# leave an empty file, which reads as zero errors and merges clean. A broken
-	# project reference, for one, prints in its own format with no `error TS`
-	# line per file. Record the failure as an issue instead.
-	if [ "$failed" -ne 0 ] && [ ! -s "$OUT/typecheck.txt" ]; then
-		echo "typecheck:0:0: error TS0000: the typechecker exited $failed without recognisable error lines — see the job log" \
-			>"$OUT/typecheck.txt"
-	fi
+	cat "$OUT"/.typecheck-*.raw | grep ': error TS' | sort >"$OUT/typecheck.txt"
 ) &
 (
 	# `pnpm lint` is `oxlint . && eslint .`. Run them separately here: `&&`
-	# would skip eslint whenever oxlint found anything, which is most of the
-	# time. Both lists end up in unix format (`file:line:col: message`) and
-	# merge into one sorted list — a reviewer cares that there is a new issue at
-	# src/foo.ts:12, not which tool found it.
+	# would skip eslint whenever oxlint found anything. Both lists end up as
+	# `file:line:col: message` lines and merge into one sorted list.
 	pnpm exec oxlint . -f unix >"$OUT/.oxlint.raw" 2>&1
 
 	# ESLint 9 has no unix formatter in core, so scripts/eslint-unix.mjs turns
 	# its JSON report into oxlint's line shape, with repo-root-relative paths.
-	#
 	# ESLint over this repo needs more than Node's default heap, which is about
-	# 2 GB on a 16 GB machine. When it runs out on both trees, the converter's
-	# "did not run" line appears on both sides and cancels out of the delta.
-	NODE_OPTIONS=--max-old-space-size=4096 pnpm exec eslint . -f json 2>/dev/null |
-		node scripts/eslint-unix.mjs >"$OUT/.eslint.raw"
+	# 2 GB on a 16 GB machine.
+	NODE_OPTIONS=--max-old-space-size=4096 pnpm exec eslint . -f json >"$OUT/.eslint.json"
+	node scripts/eslint-unix.mjs <"$OUT/.eslint.json" >"$OUT/.eslint.raw" ||
+		echo "lint: ESLint printed no JSON report" >>"$OUT/did-not-run.txt"
+
 	cat "$OUT/.oxlint.raw" "$OUT/.eslint.raw" |
 		grep -E '^[^:[:space:]][^:]*:[0-9]+:[0-9]+:' |
-		grep -Ev "$EXCLUDE" |
 		sort -u >"$OUT/lint.txt"
 ) &
 wait
@@ -98,21 +86,12 @@ wait
 #
 # Both halves of `pnpm format` run: oxfmt for code, prettier for the SQL under
 # supabase/, which oxfmt does not handle. Dropping either half would make the
-# drift list disagree with what `pnpm format` does on a developer's machine,
-# and the gate would then block on files the documented command cannot fix.
-pnpm exec oxfmt . >/dev/null 2>&1
-pnpm exec prettier --write 'supabase/**/*.sql' >/dev/null 2>&1
-git diff --name-only | grep -Ev "$EXCLUDE" | sort >"$OUT/format.txt"
+# drift list disagree with what `pnpm format` does on a developer's machine.
+pnpm exec oxfmt . >/dev/null 2>&1 ||
+	echo "format: oxfmt exited $?" >>"$OUT/did-not-run.txt"
+pnpm exec prettier --write 'supabase/**/*.sql' >/dev/null 2>&1 ||
+	echo "format: prettier exited $?" >>"$OUT/did-not-run.txt"
+git diff --name-only | sort >"$OUT/format.txt"
 git checkout -- .
-
-# Never let a missing file break the render step.
-#
-# `touched.txt` is deliberately NOT in this list. The workflow writes it into
-# the same directory on the head tree only, and the formatter gate reads its
-# ABSENCE as "the step that lists this PR's files did not run" — an empty file
-# here would turn that failure into a silent pass.
-for f in typecheck lint format; do
-	[ -f "$OUT/$f.txt" ] || : >"$OUT/$f.txt"
-done
 
 wc -l "$OUT"/*.txt

@@ -5,16 +5,24 @@
 // Takes the JSON summaries written by measure-bundle.cjs, not the built
 // directories — the report job never has either tree checked out.
 
-const fs = require('fs')
-const path = require('path')
-const { formatBytes, deltaLabel, sizeTable } = require('./delta.cjs')
+const {
+	readText,
+	writeFragment,
+	writeMissing,
+	formatBytes,
+	deltaLabel,
+	sizeTable,
+} = require('./delta.cjs')
 
-const load = (p) =>
-	fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : null
+const load = (file) => {
+	const text = readText(file)
+	return text ? JSON.parse(text) : null
+}
 
-// Two builds of the same commit differ by a few bytes per chunk. Below this,
-// call it unchanged rather than teaching people that the number is noise.
-const NOISE_FLOOR = 512
+// A missing measurement means a build failed. An EMPTY one is the same failure
+// in disguise: a build that exits zero and writes nothing would otherwise
+// report a triumphant −100%.
+const empty = (m) => !m || !m.fileCount
 
 /**
  * Compare eager chunks by identity, not size.
@@ -72,16 +80,9 @@ function chunkSection(base, head) {
 }
 
 module.exports = function render({ head, base, out }) {
-	fs.mkdirSync(out, { recursive: true })
 	const h = load(head)
 	const b = load(base)
 
-	// A missing measurement means a build failed. Say so rather than rendering
-	// a delta against zeros, which would read as "the whole bundle is new".
-	//
-	// An EMPTY measurement is the same failure wearing a disguise: a build that
-	// exits zero and writes nothing would otherwise report a triumphant −100%.
-	const empty = (m) => !m || !m.fileCount
 	if (empty(h) || empty(b)) {
 		const which =
 			empty(h) && empty(b)
@@ -89,13 +90,12 @@ module.exports = function render({ head, base, out }) {
 				: empty(h)
 					? 'The PR build produced no measurable bundle'
 					: 'The base build produced no measurable bundle'
-		fs.writeFileSync(
-			path.join(out, '40-bundle.md'),
-			`#### Bundle size\n\n⚠️ ${which}, so there is nothing to compare. Check the job log.`
-		)
-		fs.writeFileSync(
-			path.join(out, '40-bundle.json'),
-			JSON.stringify({ check: 'bundle', missing: true }, null, 2)
+		writeMissing(
+			out,
+			'40-bundle',
+			'Bundle size',
+			'bundle',
+			`${which}, so there is nothing to compare.`
 		)
 		return
 	}
@@ -121,27 +121,5 @@ module.exports = function render({ head, base, out }) {
 		chunkSection(b, h),
 	].join('\n')
 
-	// Below the noise floor, report the eager delta as zero. Two builds of the
-	// same commit differ by a few bytes, and a budget that trips on those
-	// teaches people the number means nothing.
-	const gzDelta = h.js.gz - b.js.gz
-	fs.writeFileSync(path.join(out, '40-bundle.md'), markdown)
-	fs.writeFileSync(
-		path.join(out, '40-bundle.json'),
-		JSON.stringify(
-			{
-				check: 'bundle',
-				eagerRawDelta: h.js.raw - b.js.raw,
-				eagerGzDelta: Math.abs(gzDelta) < NOISE_FLOOR ? 0 : gzDelta,
-				eagerGzBase: b.js.gz,
-				entryGzDelta: h.entry.gz - b.entry.gz,
-				lazyGzDelta: h.lazy.gz - b.lazy.gz,
-			},
-			null,
-			2
-		)
-	)
+	writeFragment(out, '40-bundle', markdown, { check: 'bundle' })
 }
-
-module.exports.chunkSection = chunkSection
-module.exports.NOISE_FLOOR = NOISE_FLOOR

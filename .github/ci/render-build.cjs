@@ -15,9 +15,9 @@
 // When both trees build, this writes no markdown at all. A bot that says "the
 // build works" on every green PR is scroll cost.
 
-const fs = require('fs')
 const path = require('path')
 const { stripVTControlCharacters } = require('util')
+const { readText, writeFragment } = require('./delta.cjs')
 
 // How many log lines to quote. Enough to carry one error plus its import trace.
 const EXCERPT = 40
@@ -27,30 +27,20 @@ const EXCERPT = 40
 // and an exit code after the useful part.
 const ERROR_HEADING = /^\s*(error|ERROR|Error:|\[vite\]|✘|×|failed to)/
 
-const read = (p) => {
-	try {
-		return fs.readFileSync(p, 'utf8')
-	} catch {
-		return ''
-	}
-}
-
 /** `success`, `failure`, `skipped`, `cancelled`, or '' when the file is absent. */
-const outcome = (dir) => read(path.join(dir, 'build.outcome')).trim()
+const outcome = (dir) => readText(path.join(dir, 'build.outcome')).trim()
 
 // Only `success` counts as built. `skipped` and `cancelled` mean the tree was
 // never measured, which is not the same as a clean build.
 const built = (o) => o === 'success'
-
-/** Strip ANSI so a colourised log does not render as escape codes in markdown. */
-const stripAnsi = (s) => stripVTControlCharacters(s)
 
 /**
  * Quote the part of the log a reader needs: from the first error heading, or
  * from the tail when no heading matches.
  */
 function excerpt(log) {
-	const lines = stripAnsi(log)
+	// Strip ANSI, so a colourised log does not render as escape codes.
+	const lines = stripVTControlCharacters(log)
 		.split('\n')
 		.filter((l) => l.trim() !== '')
 	if (!lines.length) return '_The build produced no output._'
@@ -69,55 +59,35 @@ function excerpt(log) {
 }
 
 module.exports = function render({ head, base, out }) {
-	fs.mkdirSync(out, { recursive: true })
-
 	const headOutcome = outcome(head)
 	const baseOutcome = outcome(base)
 
-	// Neither job recorded an outcome: this repo took no build-dependent check,
-	// or both jobs died before the recording step. Say nothing and let the other
-	// checks' own missing-measurement rules speak.
+	// Neither job recorded an outcome: both died before the recording step.
+	// Write nothing, and the gate reports `build` as missing.
 	if (!headOutcome && !baseOutcome) return
 
 	const headOk = built(headOutcome)
 	const baseOk = built(baseOutcome)
 
+	// Whose fault the failure is belongs in the comment. A broken base branch
+	// still means this PR cannot be verified, so the gate blocks either way.
 	let markdown = null
-	if (headOk && baseOk) {
-		markdown = null
-	} else if (headOk && !baseOk) {
-		markdown = [
-			'#### Build',
-			'',
-			`✅ **This PR fixes the build.** The base branch does not build (\`${baseOutcome || 'no result'}\`); this tree does.`,
-		].join('\n')
-	} else if (!headOk && baseOk) {
-		markdown = [
-			'#### Build',
-			'',
-			'❌ **This PR breaks the build.** The base branch builds and this tree does not.',
-			'',
-			excerpt(read(path.join(head, 'build.log'))),
-		].join('\n')
-	} else {
-		markdown = [
-			'#### Build',
-			'',
-			'❌ **Neither tree builds.** The base branch is already broken, so this PR is probably not the cause — repair the base branch first.',
-			'',
-			excerpt(read(path.join(head, 'build.log'))),
-		].join('\n')
+	let why = null
+	if (headOk && !baseOk) {
+		markdown = `✅ **This PR fixes the build.** The base branch does not build (\`${baseOutcome || 'no result'}\`); this tree does.`
+	} else if (!headOk) {
+		why = baseOk
+			? 'this PR breaks the build'
+			: 'neither this PR nor the base branch builds — repair the base branch first'
+		const headline = baseOk
+			? '❌ **This PR breaks the build.** The base branch builds and this tree does not.'
+			: '❌ **Neither tree builds.** The base branch is already broken, so this PR is probably not the cause — repair the base branch first.'
+		markdown = `${headline}\n\n${excerpt(readText(path.join(head, 'build.log')))}`
 	}
 
-	if (markdown) fs.writeFileSync(path.join(out, '05-build.md'), markdown)
-	fs.writeFileSync(
-		path.join(out, '05-build.json'),
-		JSON.stringify(
-			{ check: 'build', headOk, baseOk, headOutcome, baseOutcome },
-			null,
-			2
-		)
-	)
+	writeFragment(out, '05-build', markdown && `#### Build\n\n${markdown}`, {
+		check: 'build',
+		new: headOk ? 0 : 1,
+		why,
+	})
 }
-
-module.exports.excerpt = excerpt

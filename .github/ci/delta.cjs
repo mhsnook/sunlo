@@ -7,6 +7,7 @@
 // check the pairing logic after you edit it.
 
 const fs = require('fs')
+const path = require('path')
 
 const DEFAULT_PROXIMITY = 10
 
@@ -89,18 +90,53 @@ function differential(
 	return { ...counts, added, resolved: pool, moved }
 }
 
-// ── Rendering ────────────────────────────────────────────────────────────
+// ── Files ────────────────────────────────────────────────────────────────
 
-const readLines = (path) =>
-	fs.existsSync(path)
-		? fs.readFileSync(path, 'utf8').trim().split('\n').filter(Boolean)
+/** A file's contents, or '' when it does not exist. */
+const readText = (file) =>
+	fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : ''
+
+const readLines = (file) => readText(file).trim().split('\n').filter(Boolean)
+
+/** Every file under `dir` ending in `ext`, recursively, sorted. */
+const listFiles = (dir, ext) =>
+	fs.existsSync(dir)
+		? fs
+				.readdirSync(dir, { recursive: true })
+				.filter((f) => typeof f === 'string' && f.endsWith(ext))
+				.toSorted()
 		: []
+
+/**
+ * Write one comment section: `<name>.md` for the comment, and `<name>.json`
+ * for the gate. The numeric prefix of `name` fixes the section order.
+ * Pass `markdown` as null for a check that passes silently.
+ */
+function writeFragment(out, name, markdown, sidecar) {
+	fs.mkdirSync(out, { recursive: true })
+	if (markdown !== null)
+		fs.writeFileSync(path.join(out, `${name}.md`), markdown)
+	fs.writeFileSync(
+		path.join(out, `${name}.json`),
+		JSON.stringify(sidecar, null, 2)
+	)
+}
+
+/** A section for a check that has nothing to compare. The gate fails it. */
+function writeMissing(out, name, title, check, why) {
+	writeFragment(out, name, `#### ${title}\n\n⚠️ ${why}\n\nCheck the job log.`, {
+		check,
+		missing: true,
+	})
+}
+
+// ── Rendering ────────────────────────────────────────────────────────────
 
 const trend = (head, base) => (head < base ? '🟢' : head > base ? '🔺' : '➖')
 
-const movedNote = (moved, proximity = DEFAULT_PROXIMITY) =>
+const movedNote = (moved) =>
 	moved.length
-		? ` (${moved.length} shifted within ±${proximity} lines, not counted)`
+		? ` (${moved.length} shifted within ±${DEFAULT_PROXIMITY} lines, not counted)`
 		: ''
 
 /** "**Before:** 4 error(s) → **After:** 6 error(s) (+2 new, −0 resolved)" */
@@ -147,7 +183,7 @@ function deltaLabel(head, base) {
 	const d = head - base
 	const pct = base ? ((d / base) * 100).toFixed(2) : '0.00'
 	const sign = d > 0 ? '+' : ''
-	return `${trend(head, base)} ${sign}${(d / 1024).toFixed(2)} kB (${sign}${pct}%)`
+	return `${trend(head, base)} ${sign}${formatBytes(d)} (${sign}${pct}%)`
 }
 
 function sizeTable(headRaw, headGz, baseRaw, baseGz) {
@@ -226,12 +262,13 @@ function selftest() {
 }
 
 module.exports = {
-	DEFAULT_PROXIMITY,
 	parsers,
 	differential,
+	readText,
 	readLines,
-	trend,
-	movedNote,
+	listFiles,
+	writeFragment,
+	writeMissing,
 	countSummary,
 	listBlock,
 	byExtension,

@@ -1,111 +1,108 @@
 'use strict'
 
-// Turn two directories of collected static-check output into markdown
-// fragments plus a gate sidecar. Section order comes from the numeric filename
-// prefix, so fragments render consistently whatever order the jobs finish in.
+// Turn two directories of collect-static.sh output into markdown fragments
+// plus gate sidecars.
 
 const fs = require('fs')
-const path = require('path')
 const {
 	parsers,
 	differential,
 	readLines,
+	writeFragment,
+	writeMissing,
 	countSummary,
 	listBlock,
 	byExtension,
 } = require('./delta.cjs')
 
-// How many issues to print before collapsing to "… and N more". GitHub rejects
-// a comment body over 65,536 characters, and one mechanical refactor will find
-// that limit. The inline lint section already capped at 50; the typecheck
-// section did not, and now does.
-const CAP = 50
+const CHECKS = [
+	{
+		name: '10-typecheck',
+		check: 'typecheck',
+		title: 'Type errors',
+		parse: parsers.tsc,
+		noun: 'error(s)',
+	},
+	{
+		name: '20-lint',
+		check: 'lint',
+		title: 'Lint',
+		parse: parsers.unix,
+		noun: 'issue(s)',
+	},
+	{ name: '30-format', check: 'format', title: 'Formatter drift' },
+]
 
 module.exports = function render({ head, base, out }) {
-	fs.mkdirSync(out, { recursive: true })
-	const write = (name, markdown, gate) => {
-		fs.writeFileSync(path.join(out, `${name}.md`), markdown)
-		fs.writeFileSync(
-			path.join(out, `${name}.json`),
-			JSON.stringify(gate, null, 2)
-		)
-	}
-
 	// A whole tree's output directory is absent when that job died before the
 	// static checks ran. Diffing nothing against nothing renders "no change",
-	// which is the most dangerous thing this report can say, so name the tree
-	// that is missing and let the gate fail all three checks.
+	// which is the most dangerous thing this report can say.
 	const missingTree = !fs.existsSync(head)
 		? 'The PR'
 		: !fs.existsSync(base)
 			? 'The base branch'
 			: null
 	if (missingTree) {
-		for (const [name, check, title] of [
-			['10-typecheck', 'typecheck', 'Type errors'],
-			['20-lint', 'lint', 'Lint'],
-			['30-format', 'format', 'Formatter drift'],
-		]) {
-			write(
-				name,
-				`#### ${title}\n\n⚠️ ${missingTree} job produced no measurement, so there is nothing to compare. Check the job log.`,
-				{ check, missing: true }
+		for (const c of CHECKS)
+			writeMissing(
+				out,
+				c.name,
+				c.title,
+				c.check,
+				`${missingTree} job produced no measurement, so there is nothing to compare.`
 			)
-		}
 		return
 	}
 
-	// ── Type errors ──────────────────────────────────────────────────────
-	const tc = differential(
-		readLines(`${base}/typecheck.txt`),
-		readLines(`${head}/typecheck.txt`),
-		parsers.tsc
-	)
-	write(
-		'10-typecheck',
+	// A tool that did not run in either tree leaves nothing to compare.
+	const didNotRun = (check) =>
 		[
-			'#### Type errors',
-			'',
-			countSummary(tc, 'error(s)'),
-			listBlock('New', tc.added, CAP),
-			listBlock('Resolved', tc.resolved, CAP),
-		]
-			.filter((l) => l !== null)
-			.join('\n'),
-		{
-			check: 'typecheck',
-			new: tc.added.length,
-			resolved: tc.resolved.length,
-			total: tc.head,
-		}
-	)
+			[head, 'PR'],
+			[base, 'base branch'],
+		].flatMap(([dir, tree]) =>
+			readLines(`${dir}/did-not-run.txt`)
+				.filter((l) => l.startsWith(`${check}: `))
+				.map((l) => `${tree}: ${l}`)
+		)
 
-	// ── Lint ─────────────────────────────────────────────────────────────
-	const lint = differential(
-		readLines(`${base}/lint.txt`),
-		readLines(`${head}/lint.txt`),
-		parsers.unix
-	)
-	write(
-		'20-lint',
-		[
-			'#### Lint',
-			'',
-			countSummary(lint, 'issue(s)'),
-			listBlock('New', lint.added, CAP),
-			listBlock('Resolved', lint.resolved, CAP),
-		]
-			.filter((l) => l !== null)
-			.join('\n'),
-		{
-			check: 'lint',
-			new: lint.added.length,
-			resolved: lint.resolved.length,
-			total: lint.head,
+	for (const c of CHECKS) {
+		const broken = didNotRun(c.check)
+		if (broken.length) {
+			writeMissing(
+				out,
+				c.name,
+				c.title,
+				c.check,
+				`A tool did not run, so this check measured nothing:\n\n${broken.map((l) => `- ${l}`).join('\n')}`
+			)
+			continue
 		}
-	)
+		if (c.check === 'format') renderFormat(c, head, base, out)
+		else {
+			const d = differential(
+				readLines(`${base}/${c.check}.txt`),
+				readLines(`${head}/${c.check}.txt`),
+				c.parse
+			)
+			writeFragment(
+				out,
+				c.name,
+				[
+					`#### ${c.title}`,
+					'',
+					countSummary(d, c.noun),
+					listBlock('New', d.added),
+					listBlock('Resolved', d.resolved),
+				]
+					.filter((l) => l !== null)
+					.join('\n'),
+				{ check: c.check, new: d.added.length }
+			)
+		}
+	}
+}
 
-	// ── Formatter drift ──────────────────────────────────────────────────
+function renderFormat(c, head, base, out) {
 	// The unit is the file, not the line, so shift-pairing is switched off.
 	const headFiles = readLines(`${head}/format.txt`)
 	const fmt = differential(
@@ -128,17 +125,18 @@ module.exports = function render({ head, base, out }) {
 	const dirtyTouched = headFiles.filter((f) => touched.has(f))
 	const elsewhere = fmt.added.filter((e) => !touched.has(e.file))
 
-	write(
-		'30-format',
+	writeFragment(
+		out,
+		c.name,
 		[
-			'#### Formatter drift',
+			`#### ${c.title}`,
 			'',
 			dirtyTouched.length
-				? `❌ **${dirtyTouched.length} file(s) this PR touches are not formatted.** Run the formatter and commit — a file you edited ships clean, no exceptions.`
+				? `❌ **${dirtyTouched.length} file(s) this PR touches are not formatted.** Run \`pnpm format\` and commit — a file you edited ships formatted, whatever state it was in before.`
 				: touchedKnown
 					? '✅ Every file this PR touches is formatted.'
 					: '⚠️ No list of touched files was produced, so the touched-file gate could not run.',
-			listBlock('Touched and unformatted', dirtyTouched, CAP),
+			listBlock('Touched and unformatted', dirtyTouched),
 			'',
 			'Repo-wide drift below is **context, not a gate** — debt to drive toward **0** by reformatting legacy files as you touch them.',
 			'',
@@ -146,18 +144,11 @@ module.exports = function render({ head, base, out }) {
 			ext.length
 				? '\n**By type:** ' + ext.map(([e, n]) => `\`${e}\` ${n}`).join(' · ')
 				: null,
-			listBlock('Newly unformatted elsewhere', elsewhere, CAP),
-			listBlock('Reformatted', fmt.resolved, CAP),
+			listBlock('Newly unformatted elsewhere', elsewhere),
+			listBlock('Reformatted', fmt.resolved),
 		]
 			.filter((l) => l !== null)
 			.join('\n'),
-		{
-			check: 'format',
-			new: fmt.added.length,
-			resolved: fmt.resolved.length,
-			total: fmt.head,
-			touched: dirtyTouched.length,
-			touchedKnown,
-		}
+		{ check: c.check, touched: dirtyTouched.length, touchedKnown }
 	)
 }

@@ -11,6 +11,7 @@
 const fs = require('fs')
 const path = require('path')
 const zlib = require('zlib')
+const { formatBytes } = require('./delta.cjs')
 
 // Strip the content hash, so the same logical chunk is comparable across two
 // builds. Vite on rolldown emits exactly 8 characters after a dash, which turns
@@ -56,8 +57,7 @@ function walk(dir) {
  * combined total hides the number that matters.
  *
  * Sunlo is a Vite SPA, so `dist/index.html` is the entry point and lists the
- * entry script plus every `modulepreload` chunk — the same set the retired
- * `bundle-size` job measured.
+ * entry script plus every `modulepreload` chunk.
  */
 function measure(dist) {
 	const indexPath = path.join(dist, 'index.html')
@@ -109,18 +109,15 @@ function measure(dist) {
 	for (const file of walk(dist)) {
 		if (isEager.has(file)) continue
 		if (!/\.(js|css)$/.test(file)) continue
-		if (file.endsWith('.map')) continue
-		// `add` returns a fresh {raw, gz}, so carry the count across it — reading
-		// `result.lazy.count++` off the replacement object yields NaN.
-		const count = result.lazy.count + 1
-		result.lazy = { ...add(result.lazy, sizeOf(file)), count }
+		const one = sizeOf(file)
+		result.lazy.raw += one.raw
+		result.lazy.gz += one.gz
+		result.lazy.count++
 		result.fileCount++
 	}
 
 	return result
 }
-
-module.exports = { measure, walk, sizeOf, STRIP_HASH }
 
 if (require.main === module) {
 	const [dist, out] = process.argv.slice(2)
@@ -132,8 +129,8 @@ if (require.main === module) {
 	fs.mkdirSync(path.dirname(out), { recursive: true })
 	fs.writeFileSync(out, JSON.stringify(result, null, 2))
 	console.log(
-		`${dist}: ${(result.js.gz / 1024).toFixed(2)} kB JS + ` +
-			`${(result.css.gz / 1024).toFixed(2)} kB CSS eager, gzipped ` +
+		`${dist}: ${formatBytes(result.js.gz)} JS + ` +
+			`${formatBytes(result.css.gz)} CSS eager, gzipped ` +
 			`(${Object.keys(result.eagerChunks).length} eager chunk(s), ` +
 			`${result.lazy.count} lazy)`
 	)
