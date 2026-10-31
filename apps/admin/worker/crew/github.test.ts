@@ -172,7 +172,13 @@ describe('filingReport', () => {
 	}
 
 	it('says the draft was filed as written', () => {
-		const text = filingReport({ drafted: epic, filed: epic, result, by: 'sam' })
+		const text = filingReport({
+			drafted: epic,
+			filed: epic,
+			result,
+			by: 'sam',
+			note: null,
+		})
 		expect(text).toContain('as you wrote it')
 		expect(text).toContain('#900')
 		expect(text).not.toContain('Your draft:')
@@ -180,11 +186,31 @@ describe('filingReport', () => {
 
 	it('gives both versions when the admin changed the draft', () => {
 		const filed = { ...epic, title: 'Keep new learners' }
-		const text = filingReport({ drafted: epic, filed, result, by: 'sam' })
+		const text = filingReport({
+			drafted: epic,
+			filed,
+			result,
+			by: 'sam',
+			note: null,
+		})
 		expect(text).toContain('after changing it')
 		expect(text).toContain('"title": "Onboarding that keeps people"')
 		expect(text).toContain('"title": "Keep new learners"')
 		expect(text).toContain('note_writing_style')
+		expect(text).not.toContain('Their note')
+	})
+
+	it("passes on the admin's note", () => {
+		const text = filingReport({
+			drafted: epic,
+			filed: epic,
+			result,
+			by: 'sam',
+			note: 'Good scope, keep them this size.',
+		})
+		expect(text).toContain(
+			'Their note to you, in your room: Good scope, keep them this size.'
+		)
 	})
 })
 

@@ -2237,10 +2237,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// The admin files a "github" card's draft, as they edited it: checked for
 	// personal data, published on GitHub, then recorded as the card's answer,
 	// which links to what GitHub made. The card keeps the agent's draft, and
-	// the agent hears both versions when they differ.
+	// the agent hears both versions when they differ. The admin's note goes
+	// only to the room, as their own message, once GitHub has the draft.
 	async fileDraft(input: {
 		messageId: string
 		draft: GithubDraftType
+		note: string | null
+		uid: string
 		name: string
 	}): Promise<
 		| { ok: true; url: string; agent: CrewKey; report: string }
@@ -2283,6 +2286,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			}
 		}
 		const result = await github.file(input.draft)
+		// Left unrouted: the filing report already wakes the agent.
+		const note = input.note
+			? this.insert({
+					author: adminAuthor(input.uid),
+					authorName: input.name,
+					body: input.note,
+					routing: null,
+					card: null,
+					place: message.place,
+				})
+			: null
 		const answer = {
 			actionId: FILE.id,
 			label:
@@ -2294,6 +2308,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			by: input.name,
 			at: now(),
 			url: result.url,
+			...(note && { noteId: note.id }),
 		}
 		this.sql`
 			update message set answer = ${JSON.stringify(answer)}
@@ -2310,6 +2325,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				filed: input.draft,
 				result,
 				by: input.name,
+				note: input.note,
 			}),
 		}
 	}

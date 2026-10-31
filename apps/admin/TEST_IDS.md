@@ -56,6 +56,8 @@ Register a new id here, not in the main app's registry.
 | `painter-style-example` + `data-key=<image id>`, `painter-style-example-remove`, `painter-style-save`     | An example the style keeps, its Remove button, and the form's Save button               |
 | `github-draft`, `github-draft-editor`                                                                     | A GitHub draft card's draft, and its editor                                             |
 | `github-draft-title`, `github-draft-labels`, `github-draft-due`, `github-draft-body`                      | The editor's fields                                                                     |
+| `github-draft-note`                                                                                       | A GitHub draft card's "Note to <agent>" box                                             |
+| `crew-message-note-on`                                                                                    | The line under the admin's note that names the card it was written with                 |
 | `voice-mic` (`data-state=idle\|recording\|transcribing`), `voice-replies`                                 | The mic and the voice-replies toggle in a compose bar                                   |
 | `voice-read` + `data-key=<message id>`                                                                    | The read-aloud button beside an agent's message                                         |
 | `crew-compose-input`, `crew-compose-send`                                                                 | The room's compose bar                                                                  |

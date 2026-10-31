@@ -137,14 +137,23 @@ api.post(
 // Files a "github" card's draft, as the admin edited it, on GitHub.
 api.post(
 	'/crew/messages/:id/file',
-	json(z.object({ draft: GithubDraftSchema }), 'Send { draft }'),
+	json(
+		z.object({
+			draft: GithubDraftSchema,
+			note: z.string().trim().max(2000).optional(),
+		}),
+		'Send { draft, note? }'
+	),
 	async (c) => {
+		const admin = c.get('admin')
 		const filed = await (
 			await roomFor()
 		).fileDraft({
 			messageId: c.req.param('id'),
 			draft: c.req.valid('json').draft,
-			name: c.get('admin').name,
+			note: c.req.valid('json').note || null,
+			uid: admin.uid,
+			name: admin.name,
 		})
 		if (!filed.ok) return c.json({ error: filed.error }, filed.status)
 		await deliver(filed.agent, 'crew.answer', filed.report).catch(

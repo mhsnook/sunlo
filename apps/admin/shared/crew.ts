@@ -561,6 +561,8 @@ export const CrewMessageSchema = z.object({
 			at: z.string(),
 			// What a filed "github" card became.
 			url: z.string().optional(),
+			// The admin's own message they wrote with the answer.
+			noteId: z.string().optional(),
 		})
 		.nullable(),
 	place: MessagePlaceSchema,

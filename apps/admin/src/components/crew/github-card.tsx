@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
+	displayName,
 	draftBody,
+	isCrewKey,
 	type CrewMessageType,
 	type GithubDraftType,
 } from '../../../shared/crew'
@@ -21,7 +23,8 @@ const draftLabel = (draft: GithubDraftType) =>
 			: `Comment on #${draft.issue} for GitHub`
 
 // A draft an agent made for GitHub. The admin can edit it, then file it;
-// what they file is published as it stands on the card.
+// what they file is published as it stands on the card. Their note to the
+// agent stays in the room and never reaches GitHub.
 export function GithubCard({
 	message,
 	draft,
@@ -31,8 +34,12 @@ export function GithubCard({
 }) {
 	const [shown, setShown] = useState(draft)
 	const [editing, setEditing] = useState(false)
+	const [note, setNote] = useState('')
 	const file = useFileDraft()
 	const open = !message.answer
+	const agent = isCrewKey(message.author)
+		? displayName(message.author)
+		: 'the agent'
 
 	return (
 		<CardFrame
@@ -52,6 +59,17 @@ export function GithubCard({
 			) : (
 				<DraftView draft={shown} />
 			)}
+			{open && (
+				<Textarea
+					value={note}
+					onChange={(event) => setNote(event.target.value)}
+					placeholder={`Note to ${agent} (optional). It stays in this room, not on GitHub.`}
+					rows={2}
+					maxLength={2000}
+					aria-label={`Note to ${agent}`}
+					data-testid="github-draft-note"
+				/>
+			)}
 			{file.isError && (
 				<p className="text-danger-700 text-xs" data-testid="crew-card-error">
 					{file.error.message}
@@ -68,7 +86,11 @@ export function GithubCard({
 								data-testid="crew-card-file"
 								onClick={() =>
 									file.mutate(
-										{ messageId: message.id, draft: shown },
+										{
+											messageId: message.id,
+											draft: shown,
+											note: note.trim() || undefined,
+										},
 										{ onSuccess: () => setEditing(false) }
 									)
 								}

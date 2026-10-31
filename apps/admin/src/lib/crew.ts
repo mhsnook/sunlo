@@ -760,14 +760,18 @@ export function useCorrectRouting() {
 }
 
 // Files a "github" card's draft, as the admin edited it. The socket brings
-// the answered card back.
+// the answered card back, and the note as the admin's own message.
 export function useFileDraft() {
 	return useMutation({
-		mutationFn: async (input: { messageId: string; draft: GithubDraftType }) =>
+		mutationFn: async (input: {
+			messageId: string
+			draft: GithubDraftType
+			note?: string
+		}) =>
 			z.object({ url: z.string() }).parse(
 				await adminFetch(`crew/messages/${input.messageId}/file`, {
 					method: 'POST',
-					json: { draft: input.draft },
+					json: { draft: input.draft, note: input.note },
 				})
 			),
 	})
