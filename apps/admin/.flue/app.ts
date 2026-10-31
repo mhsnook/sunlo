@@ -8,8 +8,9 @@ import {
 	PickChoiceSchema,
 	isCrewKey,
 	isRoomKey,
-	MAX_IMAGE_BYTES,
+	MAX_UPLOAD_BYTES,
 	MAX_IMAGES_PER_MESSAGE,
+	PainterStyleInputSchema,
 	roomKeys,
 	PlaceSchema,
 	RoutingSchema,
@@ -17,6 +18,7 @@ import {
 import { restoreSummary } from '../worker/crew/documents'
 import { createApi } from '../worker/api'
 import { imageInfo, verifyImageLink } from '../worker/images'
+import { SVG_POLICY } from '../worker/svg'
 import { deliver, requestReport, roomFor, wake } from './crew'
 
 // worker/api.ts checks the admin on every /api route. These routes add the
@@ -50,7 +52,12 @@ const imageHeaders = (mimeType: string) => ({
 })
 
 api.get('/crew/room', async (c) => {
-	return c.json(await (await roomFor()).snapshot(c.get('admin').uid))
+	// The app loads this first, so the room learns the origin it is served
+	// on, which the painter's signed links need.
+	const room = await roomFor()
+	return c.json(
+		await room.snapshot(c.get('admin').uid, new URL(c.req.url).origin)
+	)
 })
 
 api.get('/crew/runs', async (c) => {
@@ -499,11 +506,11 @@ api.post('/crew/images', async (c) => {
 	if (!c.req.header('content-type')?.startsWith('image/')) {
 		return c.json({ error: 'Send the image as an image/* body' }, 400)
 	}
-	if (Number(c.req.header('content-length') ?? 0) > MAX_IMAGE_BYTES) {
+	if (Number(c.req.header('content-length') ?? 0) > MAX_UPLOAD_BYTES) {
 		return c.json({ error: 'That image is too big to keep' }, 413)
 	}
 	const bytes = await c.req.arrayBuffer()
-	if (bytes.byteLength > MAX_IMAGE_BYTES) {
+	if (bytes.byteLength > MAX_UPLOAD_BYTES) {
 		return c.json({ error: 'That image is too big to keep' }, 413)
 	}
 	const info = imageInfo(new Uint8Array(bytes))
@@ -549,6 +556,65 @@ api.get('/public/images/:id', numericId('No such image'), async (c) => {
 		'cache-control': 'no-store',
 	})
 })
+
+// An SVG's text. It can only be kept once it passes checkSvg, and the app
+// shows it only through <img>; these headers are the layer that holds if
+// someone opens the route itself: no script runs in a sandboxed document,
+// and the browser saves the file instead of showing it.
+api.get('/crew/svgs/:id', numericId('No such SVG'), async (c) => {
+	const { id } = c.req.valid('param')
+	const svg = await (await roomFor()).svg(id)
+	if (!svg) return c.json({ error: 'No such SVG' }, 404)
+	return c.body(svg.text, 200, {
+		'content-type': 'image/svg+xml; charset=utf-8',
+		'content-security-policy': SVG_POLICY,
+		'content-disposition': `attachment; filename="svg-${id}.svg"`,
+		'x-content-type-options': 'nosniff',
+		'cache-control': 'private, max-age=31536000, immutable',
+	})
+})
+
+api.get('/crew/painter-styles', async (c) => {
+	return c.json(await (await roomFor()).painterStyles())
+})
+
+api.post(
+	'/crew/painter-styles',
+	json(PainterStyleInputSchema, 'Send { name, description, prompt, model }'),
+	async (c) => {
+		const saved = await (
+			await roomFor()
+		).savePainterStyle(null, c.req.valid('json'))
+		return saved.ok
+			? c.json({ id: saved.id })
+			: c.json({ error: saved.error }, saved.status)
+	}
+)
+
+api.put(
+	'/crew/painter-styles/:id',
+	numericId('No style with that id'),
+	json(PainterStyleInputSchema, 'Send { name, description, prompt, model }'),
+	async (c) => {
+		const saved = await (
+			await roomFor()
+		).savePainterStyle(c.req.valid('param').id, c.req.valid('json'))
+		return saved.ok
+			? c.json({ id: saved.id })
+			: c.json({ error: saved.error }, saved.status)
+	}
+)
+
+api.delete(
+	'/crew/painter-styles/:id',
+	numericId('No style with that id'),
+	async (c) => {
+		const ok = await (
+			await roomFor()
+		).deletePainterStyle(c.req.valid('param').id)
+		return ok ? c.json({ ok }) : c.json({ error: 'No style with that id' }, 404)
+	}
+)
 
 api.get('/crew/rooms/:room/documents', roomParam, async (c) => {
 	return c.json(await (await roomFor()).documents(c.req.valid('param').room))

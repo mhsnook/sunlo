@@ -285,6 +285,37 @@ export function describeTool(
 				),
 			])
 		}
+		case 'painter_styles':
+			return step(['Reading', 'Read', 'read', 'the painter styles'])
+		case 'paint': {
+			const styles = Array.isArray(args.styles)
+				? args.styles.filter((style) => typeof style === 'string')
+				: []
+			return step(
+				[
+					'Painting',
+					'Painted',
+					'paint',
+					named(
+						styles.length ? `in ${styles.join(', ')}` : 'a painting',
+						text(args, 'title')
+					),
+				],
+				detail('brief')
+			)
+		}
+		case 'draw_svg': {
+			const count = Array.isArray(args.svgs) ? args.svgs.length : 0
+			return step([
+				'Drawing',
+				'Drew',
+				'draw',
+				named(
+					count === 1 ? 'an SVG' : count ? `${count} SVGs` : 'SVGs',
+					text(args, 'title')
+				),
+			])
+		}
 		case 'read_sketch':
 			return step([
 				'Reading',

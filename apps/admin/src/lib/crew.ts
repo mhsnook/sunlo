@@ -29,6 +29,7 @@ import {
 	DocumentSchema,
 	DocumentSummarySchema,
 	MessageImageSchema,
+	PainterStyleSchema,
 	placeOf,
 	RevisionTextSchema,
 	roomOfPlace,
@@ -42,6 +43,7 @@ import {
 	type DocumentSummaryType,
 	type GithubDraftType,
 	type MessageImageType,
+	type PainterStyleInputType,
 	type PickChoice,
 	type CharterEntryType,
 	type RoomKey,
@@ -260,6 +262,88 @@ const SketchSourceSchema = z.object({
 	html: z.string(),
 	frame: z.enum(['phone', 'desktop']),
 })
+
+// The painter's styles. The live socket keeps this current.
+export const painterStylesQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'painter-styles'],
+		queryFn: async () =>
+			z
+				.array(PainterStyleSchema)
+				.parse(await adminFetch('crew/painter-styles')),
+		staleTime: Infinity,
+	})
+
+// Saves a new style when `id` is null. Its new example images upload first.
+export function useSavePainterStyle() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: async (input: {
+			id: number | null
+			style: Omit<PainterStyleInputType, 'examples'>
+			examples: Array<number>
+			newExamples: Array<DraftImage>
+		}) =>
+			sendWithImages(queryClient, input.newExamples, (uploaded) => {
+				const json = {
+					...input.style,
+					examples: [...input.examples, ...uploaded],
+				}
+				return input.id === null
+					? adminFetch('crew/painter-styles', { method: 'POST', json })
+					: adminFetch(`crew/painter-styles/${input.id}`, {
+							method: 'PUT',
+							json,
+						})
+			}),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: painterStylesQuery().queryKey,
+			}),
+	})
+}
+
+export function useDeletePainterStyle() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: (id: number) =>
+			adminFetch(`crew/painter-styles/${id}`, { method: 'DELETE' }),
+		onSuccess: () =>
+			queryClient.invalidateQueries({
+				queryKey: painterStylesQuery().queryKey,
+			}),
+	})
+}
+
+// An SVG never changes. The app shows it only through <img> from a data:
+// URL, never a blob: URL: a blob: URL has the app's origin, so opening one
+// in a tab would run any script the SVG held there. downloadSvg saves it.
+export const svgQuery = (id: number) =>
+	queryOptions({
+		queryKey: ['crew', 'svg', id],
+		queryFn: async () => {
+			const text = await (await adminRequest(`crew/svgs/${id}`)).text()
+			return {
+				text,
+				src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(text)}`,
+			}
+		},
+		staleTime: Infinity,
+	})
+
+// Typed application/octet-stream, so the browser saves the SVG rather than
+// shows it.
+export function downloadSvg(text: string, fileName: string) {
+	const url = URL.createObjectURL(
+		new Blob([text], { type: 'application/octet-stream' })
+	)
+	const link = document.createElement('a')
+	link.href = url
+	link.download = fileName
+	link.click()
+	// Some browsers fail a download whose URL is revoked before it starts.
+	setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
 
 // A saved revision never changes.
 export const revisionQuery = (id: number, revision: number) =>
@@ -759,6 +843,7 @@ export function useCrewLive() {
 					['crew', 'workspace'],
 					['crew', 'documents'],
 					['crew', 'document'],
+					painterStylesQuery().queryKey,
 					runsQuery().queryKey,
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
@@ -786,6 +871,11 @@ export function useCrewLive() {
 			if (event.type === 'charter') {
 				void queryClient.invalidateQueries({
 					queryKey: charterQuery(event.room).queryKey,
+				})
+			}
+			if (event.type === 'painter-styles') {
+				void queryClient.invalidateQueries({
+					queryKey: painterStylesQuery().queryKey,
 				})
 			}
 			if (event.type === 'command') {

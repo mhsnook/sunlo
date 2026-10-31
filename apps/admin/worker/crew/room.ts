@@ -53,6 +53,10 @@ import {
 	type RoutingType,
 	type RunType,
 	type SketchType,
+	type PainterStyleInputType,
+	type PainterStyleType,
+	type PaintingType,
+	type SvgRefType,
 	type WeeklyType,
 	type WorkspaceType,
 	withImageLines,
@@ -76,7 +80,23 @@ import {
 	githubFor,
 	personalDataRefusal,
 } from './github'
-import { pickReports, sketchPickReports } from './picks'
+import {
+	optionLabel,
+	paintingPickReports,
+	pickReports,
+	sketchPickReports,
+} from './picks'
+import { leftThisHour } from './hourly'
+import {
+	loadImage,
+	pruneImages,
+	saveImage,
+	type Exec,
+	type ImageKind,
+} from './image-store'
+import { imageInfo, signedImageUrl } from '../images'
+import { DEFAULT_PAINTER_STYLES } from '../painter'
+import { reservePaintings, svgsLeft, type PaintStyle } from './paintings'
 import { peopleIndex } from './queries'
 import { RunLog, type RunLogKey } from './run-log'
 import { mainRunPosted, settledStatus, type PostRow, type RunKey } from './runs'
@@ -264,6 +284,17 @@ const toCharter = (row: CharterRow): CharterEntryType => ({
 	keptAt: row.kept_at,
 })
 
+type PainterStyleRow = Omit<PainterStyleType, 'examples'> & { examples: string }
+
+const toPainterStyle = (row: PainterStyleRow): PainterStyleType => ({
+	...row,
+	examples: JSON.parse(row.examples) as Array<MessageImageType>,
+})
+
+// Keys in the room's key-value storage.
+const PUBLIC_ORIGIN = 'public-origin'
+const PAINTER_STYLES_SEEDED = 'painter-styles-seeded'
+
 // One instance, named ROOM, holds the Common Room and each subject's room,
 // each agent's workspace (to-dos, memory, open items), the charter, CLEF's
 // decision log, and the admin's WebSockets. It is an Agents SDK Agent with
@@ -280,6 +311,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		},
 		openCards: noOpenCards(),
 	}
+
+	private exec: Exec = <T>(
+		query: string,
+		...bindings: Array<string | number | null | ArrayBuffer>
+	) => this.ctx.storage.sql.exec(query, ...bindings).toArray() as Array<T>
 
 	private runLog = new RunLog(
 		(strings, ...values) => this.sql(strings, ...values),
@@ -446,8 +482,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				mime_type text not null,
 				at text not null
 			);
-			-- Pictures kept by id: the admin's uploads ("upload"). A sketch keeps
-			-- its picture in its own row.
+			-- Pictures kept by id: the admin's uploads ("upload"), paintings
+			-- ("painting"), an SVG's rendering ("svg") and a sketch's picture
+			-- copied for the painter ("sketch"). A sketch keeps its own picture
+			-- in its own row too.
 			create table if not exists image (
 				id integer primary key autoincrement,
 				kind text not null,
@@ -455,10 +493,58 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				mime_type text not null,
 				width integer not null,
 				height integer not null,
+				-- Empty when the picture is in image_part.
 				bytes blob not null,
 				at text not null
 			);
+			-- A picture over one row's 2 MB, in order.
+			create table if not exists image_part (
+				image integer not null,
+				part integer not null,
+				bytes blob not null,
+				primary key (image, part)
+			);
+			-- The styles product-2's painter paints in. examples is JSON:
+			-- Array<MessageImageType>.
+			create table if not exists painter_style (
+				id integer primary key autoincrement,
+				name text not null collate nocase unique,
+				description text not null,
+				prompt text not null,
+				model text not null,
+				examples text not null default '[]',
+				at text not null
+			);
+			-- One style's painting from one paint call. image or svg is set when
+			-- it worked, error when it did not.
+			create table if not exists painting (
+				id integer primary key autoincrement,
+				agent text not null,
+				label text not null,
+				style text not null,
+				model text not null,
+				prompt text not null,
+				image integer,
+				svg integer,
+				error text,
+				at text not null
+			);
+			-- SVGs: product-2's own, or a vector model's. png is its rendering in
+			-- the image table, when that worked.
+			create table if not exists svg (
+				id integer primary key autoincrement,
+				author text not null,
+				title text not null,
+				text text not null,
+				width real not null,
+				height real not null,
+				png integer,
+				at text not null
+			);
 			create index if not exists message_place on message (place, at);
+			create index if not exists painting_by_agent on painting (agent, at);
+			create index if not exists painting_by_svg on painting (svg);
+			create index if not exists svg_by_author on svg (author, at);
 			-- An agent's run and the steps it took, as JSON: the last RUNS_KEPT
 			-- runs of each agent. A side-thread run has its thread's first
 			-- message; a main run has none.
@@ -491,6 +577,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.addMessageImages(),
 			() => this.addEditRuns(),
 			() => this.indexThreadRuns(),
+			() => this.addSketchImageIds(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -651,6 +738,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			where thread_run_at is not null`
 	}
 
+	// A sketch's picture, copied into the image table the first time the
+	// painter takes it as a reference.
+	private addSketchImageIds() {
+		if (!this.tableColumns('sketch').has('image_id')) {
+			this.sql`alter table sketch add column image_id integer`
+		}
+	}
+
 	private renameAgentsToSeats() {
 		for (const [from, to] of Object.entries(OLD_AGENT_KEYS)) {
 			this.renameAgent(from, to)
@@ -717,7 +812,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// ---- The timelines ------------------------------------------------------
 
 	// The Common Room, with the room's synced state.
-	snapshot(uid: string): RoomSnapshotType {
+	// `origin` is the one the admin opened the app on (setPublicOrigin).
+	snapshot(uid: string, origin: string): RoomSnapshotType {
+		this.setPublicOrigin(origin)
 		return {
 			...this.state,
 			messages: this.latestRows(COMMON_ROOM, SNAPSHOT_MESSAGES).map(toMessage),
@@ -1289,6 +1386,20 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				}),
 			}
 		}
+		const painting = message.card.paintings?.find(
+			(p) => `painting-${p.id}` === action.id
+		)
+		if (painting) {
+			return {
+				ok: true,
+				reports: paintingPickReports({
+					agent,
+					title: subject,
+					painting,
+					by: input.name,
+				}),
+			}
+		}
 		const what =
 			message.card.kind === 'change'
 				? 'proposed change'
@@ -1717,6 +1828,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		ref?: number
 		draft?: GithubDraftType
 		sketches?: Array<SketchType>
+		paintings?: Array<PaintingType>
+		svgs?: Array<SvgRefType>
 	}) {
 		const message = this.insert({
 			author: input.author,
@@ -1730,6 +1843,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				ref: input.ref ?? null,
 				...(input.draft ? { draft: input.draft } : {}),
 				...(input.sketches ? { sketches: input.sketches } : {}),
+				...(input.paintings ? { paintings: input.paintings } : {}),
+				...(input.svgs ? { svgs: input.svgs } : {}),
 			},
 			place: placeOf(roomOf(input.author)),
 		})
@@ -1740,50 +1855,27 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// ---- Images ---------------------------------------------------------------
 
-	// One picture, kept by id. The caller has read its type and size from
-	// its bytes (worker/images.ts).
+	// The caller has read the picture's type and size from its bytes
+	// (worker/images.ts).
 	saveImage(input: {
-		kind: 'upload'
+		kind: ImageKind
 		author: string
 		mimeType: ImageMimeType
 		width: number
 		height: number
-		bytes: ArrayBuffer
+		bytes: ArrayBuffer | Uint8Array
 	}): MessageImageType {
-		// The sql template takes no bytes; storage.sql binds an ArrayBuffer as
-		// a blob.
-		const { id } = this.ctx.storage.sql
-			.exec<{ id: number }>(
-				`insert into image (kind, author, mime_type, width, height, bytes, at)
-				values (?, ?, ?, ?, ?, ?, ?)
-				returning id`,
-				input.kind,
-				input.author,
-				input.mimeType,
-				input.width,
-				input.height,
-				input.bytes,
-				now()
-			)
-			.one()
-		return { id, width: input.width, height: input.height }
+		return saveImage(this.exec, { ...input, at: now() })
 	}
 
 	image(id: number) {
-		const row = this.sql<{
-			bytes: ArrayBuffer
-			mime_type: ImageMimeType
-			width: number
-			height: number
-		}>`select bytes, mime_type, width, height from image where id = ${id}`[0]
-		return row
-			? {
-					bytes: row.bytes,
-					mimeType: row.mime_type,
-					width: row.width,
-					height: row.height,
-				}
-			: null
+		return loadImage(this.exec, id)
+	}
+
+	// Everything lives in this one Durable Object, which holds 10 GB, and a
+	// full store fails every write in every room. The hourly cron runs this.
+	pruneImages() {
+		return pruneImages(this.exec)
 	}
 
 	findImages(ids: Array<number>): Array<MessageImageType> | null {
@@ -1795,14 +1887,42 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return found.every(Boolean) ? found : null
 	}
 
+	// The origin the admin last opened the app on, such as
+	// https://admin.sunlo.app: the painter signs its links to reference
+	// images with it. A preview's room has the preview's origin.
+	setPublicOrigin(origin: string) {
+		if (this.ctx.storage.kv.get(PUBLIC_ORIGIN) !== origin) {
+			this.ctx.storage.kv.put(PUBLIC_ORIGIN, origin)
+		}
+	}
+
+	publicOrigin(): string | null {
+		return this.ctx.storage.kv.get<string>(PUBLIC_ORIGIN) ?? null
+	}
+
+	// Signed links an image model can fetch these images by, for 10 minutes.
+	// Null when the room knows no HTTPS origin, as on a local dev server,
+	// since a model cannot reach anything else.
+	async referenceLinks(ids: Array<number>): Promise<Array<string> | null> {
+		const origin = this.publicOrigin()
+		if (!origin?.startsWith('https://')) return null
+		return Promise.all(
+			ids.map((id) =>
+				signedImageUrl(this.env, { origin, id, seconds: 10 * 60 })
+			)
+		)
+	}
+
 	// ---- Sketches -------------------------------------------------------------
 
 	sketchesLeft(agent: CrewKey) {
-		const hourAgo = new Date(Date.now() - 3_600_000).toISOString()
-		const [{ made }] = this.sql<{ made: number }>`
-			select count(*) as made from sketch
-			where agent = ${agent} and at > ${hourAgo}`
-		return Math.max(0, SKETCHES_PER_HOUR - made)
+		return leftThisHour(
+			SKETCHES_PER_HOUR,
+			(since) =>
+				this.sql<{ made: number }>`
+					select count(*) as made from sketch
+					where agent = ${agent} and at > ${since}`[0].made
+		)
 	}
 
 	// A card in the agent's room with its mockups, one action for each: the
@@ -1833,7 +1953,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 		const at = now()
 		const sketches = input.proposals.map((proposal, index) => {
-			const label = String.fromCharCode(65 + index)
+			const label = optionLabel(index)
 			const image = proposal.image.slice().buffer
 			// The sql template takes no bytes; storage.sql binds an ArrayBuffer
 			// as a blob.
@@ -1882,6 +2002,218 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const row = this.sql<{ image: ArrayBuffer; mime_type: string }>`
 			select image, mime_type from sketch where id = ${id}`[0]
 		return row ? { image: row.image, mimeType: row.mime_type } : null
+	}
+
+	// A sketch's picture as an image the painter can take as a reference.
+	// The copy is made once and kept.
+	sketchAsImage(id: number): MessageImageType | null {
+		const row = this.sql<{ agent: string; image_id: number | null }>`
+			select agent, image_id from sketch where id = ${id}`[0]
+		if (!row) return null
+		if (row.image_id !== null) {
+			const kept = this.findImages([row.image_id])
+			if (kept) return kept[0]
+		}
+		const shot = this.sketchImage(id)
+		const info = shot ? imageInfo(new Uint8Array(shot.image)) : null
+		if (!shot || !info) return null
+		const image = this.saveImage({
+			kind: 'sketch',
+			author: row.agent,
+			...info,
+			bytes: shot.image,
+		})
+		this.sql`update sketch set image_id = ${image.id} where id = ${id}`
+		return image
+	}
+
+	// ---- The painter ----------------------------------------------------------
+
+	// The defaults go in the first time anyone reads or edits the styles.
+	// Once seeded, a style the admin deletes stays deleted.
+	private seedPainterStyles() {
+		if (this.ctx.storage.kv.get(PAINTER_STYLES_SEEDED)) return
+		const at = now()
+		for (const style of DEFAULT_PAINTER_STYLES) {
+			this.sql`
+				insert or ignore into painter_style (name, description, prompt, model, at)
+				values (${style.name}, ${style.description}, ${style.prompt}, ${style.model}, ${at})`
+		}
+		this.ctx.storage.kv.put(PAINTER_STYLES_SEEDED, true)
+	}
+
+	painterStyles(): Array<PainterStyleType> {
+		this.seedPainterStyles()
+		return this.sql<PainterStyleRow>`
+			select * from painter_style order by id`.map(toPainterStyle)
+	}
+
+	// The admin's edits to the styles: a new one when id is null. A name is
+	// unique, ignoring case.
+	savePainterStyle(
+		id: number | null,
+		input: PainterStyleInputType
+	):
+		| { ok: true; id: number }
+		| { ok: false; status: 400 | 404 | 409; error: string } {
+		this.seedPainterStyles()
+		const examples = this.findImages(input.examples)
+		if (!examples) {
+			return { ok: false, status: 400, error: 'One of those images is gone' }
+		}
+		const clash = this.sql<{ id: number }>`
+			select id from painter_style where name = ${input.name}`[0]
+		if (clash && clash.id !== id) {
+			return {
+				ok: false,
+				status: 409,
+				error: `A style named ${input.name} already exists`,
+			}
+		}
+		const json = JSON.stringify(examples)
+		let saved: number
+		if (id === null) {
+			saved = this.sql<{ id: number }>`
+				insert into painter_style (name, description, prompt, model, examples, at)
+				values (${input.name}, ${input.description}, ${input.prompt}, ${input.model}, ${json}, ${now()})
+				returning id`[0].id
+		} else {
+			const updated = this.sql<{ id: number }>`
+				update painter_style set name = ${input.name},
+					description = ${input.description}, prompt = ${input.prompt},
+					model = ${input.model}, examples = ${json}, at = ${now()}
+				where id = ${id}
+				returning id`
+			if (!updated.length) {
+				return { ok: false, status: 404, error: 'No style with that id' }
+			}
+			saved = id
+		}
+		this.push({ type: 'painter-styles' })
+		return { ok: true, id: saved }
+	}
+
+	deletePainterStyle(id: number) {
+		const deleted = this.sql<{ id: number }>`
+			delete from painter_style where id = ${id} returning id`
+		if (deleted.length) this.push({ type: 'painter-styles' })
+		return deleted.length > 0
+	}
+
+	reservePaintings(input: {
+		agent: CrewKey
+		styles: Array<string>
+		references: number
+	}) {
+		this.seedPainterStyles()
+		return reservePaintings(this.sql.bind(this), {
+			...input,
+			known: this.sql<PaintStyle>`
+				select name, model, prompt from painter_style order by id`,
+		})
+	}
+
+	svgsLeft(agent: CrewKey) {
+		return svgsLeft(this.sql.bind(this), agent)
+	}
+
+	// SVGs the caller has checked (worker/svg.ts), with no renderings yet.
+	saveSvgs(
+		author: CrewKey,
+		items: Array<{ title: string; svg: string; width: number; height: number }>
+	): Array<SvgRefType> {
+		const at = now()
+		return items.map((item) => {
+			const { id } = this.sql<{ id: number }>`
+				insert into svg (author, title, text, width, height, at)
+				values (${author}, ${item.title}, ${item.svg}, ${item.width}, ${item.height}, ${at})
+				returning id`[0]
+			return {
+				id,
+				title: item.title,
+				width: item.width,
+				height: item.height,
+				png: null,
+			}
+		})
+	}
+
+	// Keeps each SVG's rendering as an image and points the SVG at it.
+	// Returns the rendering's image id for each, in order.
+	saveSvgPngs(
+		author: CrewKey,
+		renderings: Array<{
+			svg: number
+			mimeType: ImageMimeType
+			width: number
+			height: number
+			bytes: ArrayBuffer | Uint8Array
+		}>
+	): Array<number> {
+		return renderings.map(({ svg, ...rendering }) => {
+			const png = this.saveImage({ kind: 'svg', author, ...rendering })
+			this.sql`update svg set png = ${png.id} where id = ${svg}`
+			return png.id
+		})
+	}
+
+	svg(id: number) {
+		return (
+			this.sql<{ title: string; text: string }>`
+				select title, text from svg where id = ${id}`[0] ?? null
+		)
+	}
+
+	// Fills in the paintings reservePaintings held, and posts a card in the
+	// agent's room with one painting for each style, in the order asked, and
+	// a "Go with" for each that worked.
+	postPaintings(input: {
+		agent: CrewKey
+		title: string
+		body: string
+		paintings: Array<PaintingType & { prompt: string }>
+	}): { messageId: string; paintings: Array<PaintingType> } {
+		const paintings = input.paintings.map(
+			({ prompt, ...painting }): PaintingType => {
+				this.sql`
+					update painting set prompt = ${prompt},
+						image = ${painting.image?.id ?? null}, svg = ${painting.svg?.id ?? null},
+						error = ${painting.error}
+					where id = ${painting.id} and agent = ${input.agent}`
+				return painting
+			}
+		)
+		const messageId = this.bringToAdmin({
+			author: input.agent,
+			kind: 'paintings',
+			title: input.title,
+			body: input.body,
+			actions: paintings
+				.filter((painting) => !painting.error)
+				.map((painting) => ({
+					id: `painting-${painting.id}`,
+					label: `Go with ${painting.label}`,
+				})),
+			paintings,
+		})
+		return { messageId, paintings }
+	}
+
+	// A card with SVGs the agent drew, to take away. Nothing to answer.
+	postSvgs(input: {
+		agent: CrewKey
+		title: string
+		body: string
+		svgs: Array<SvgRefType>
+	}) {
+		return this.bringToAdmin({
+			author: input.agent,
+			kind: 'svgs',
+			title: input.title,
+			body: input.body,
+			actions: [],
+			svgs: input.svgs,
+		})
 	}
 
 	// A draft for GitHub: a card in the agent's room that the admin can edit,

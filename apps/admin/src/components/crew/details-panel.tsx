@@ -45,6 +45,7 @@ import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
 import { EditableEntry } from './editable-entry'
 import { MemoryList } from './memory-list'
 import { OverviewSection } from './overview-panel'
+import { PainterStyles } from './painter-styles'
 import { Empty, Section, TodoList } from './workspace-parts'
 import { SidePanel } from './side-panel'
 
@@ -149,6 +150,21 @@ export function DetailsPanel({
 		})),
 		...(room === CREW
 			? [{ key: 'overview', title: 'Overview', content: <OverviewSection /> }]
+			: []),
+		...(room === crew['product-2'].room
+			? [
+					{
+						key: 'painter-styles',
+						title: 'Painter styles',
+						content: (
+							<Suspense
+								fallback={<Loader className="mx-auto my-6 opacity-50" />}
+							>
+								<PainterStyles />
+							</Suspense>
+						),
+					},
+				]
 			: []),
 	]
 

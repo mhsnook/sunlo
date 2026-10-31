@@ -63,6 +63,23 @@ describe('describeTool', () => {
 		})
 	})
 
+	it('names the styles a painting is in, and keeps the brief', () => {
+		expect(
+			describeTool('product-2', 'paint', {
+				title: 'The review screen',
+				brief: 'One card, huge, centred.',
+				styles: ['Brutalist', 'Toy-like'],
+			})
+		).toEqual({
+			title: {
+				running: 'Painting in Brutalist, Toy-like: The review screen',
+				done: 'Painted in Brutalist, Toy-like: The review screen',
+				failed: 'Failed to paint in Brutalist, Toy-like: The review screen',
+			},
+			detail: 'One card, huge, centred.',
+		})
+	})
+
 	it('names the document it read', () => {
 		expect(
 			describeTool('product-1', 'read_document', { name: 'Roadmap' }).title.done

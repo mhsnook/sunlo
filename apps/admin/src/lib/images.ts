@@ -1,4 +1,4 @@
-import { MAX_IMAGE_BYTES, MAX_IMAGE_SIDE } from '../../shared/crew'
+import { MAX_UPLOAD_BYTES, MAX_IMAGE_SIDE } from '../../shared/crew'
 
 // Smaller sides to try, in turn, when even a JPEG is too big.
 const SHRINK_STEPS = [1, 0.75, 0.5, 0.35]
@@ -24,7 +24,7 @@ export function encodingPlan(sourceType: string): Array<Encoding> {
 }
 
 // A picture the room can keep: at most MAX_IMAGE_SIDE pixels on its long
-// side, and under MAX_IMAGE_BYTES. PNG if the source is one and that fits,
+// side, and under MAX_UPLOAD_BYTES. PNG if the source is one and that fits,
 // otherwise JPEG.
 export async function shrinkImage(
 	file: Blob
@@ -44,12 +44,24 @@ export async function shrinkImage(
 		const width = Math.max(1, Math.round(bitmap.width * fit * next.step))
 		const height = Math.max(1, Math.round(bitmap.height * fit * next.step))
 		const blob = await encode(bitmap, width, height, next.type, next.quality)
-		return blob.size <= MAX_IMAGE_BYTES
+		return blob.size <= MAX_UPLOAD_BYTES
 			? { blob, width, height }
 			: attempt(index + 1)
 	}
 	try {
 		return await attempt(0)
+	} finally {
+		bitmap.close()
+	}
+}
+
+// The clipboard takes images as PNG only, so a JPEG or WebP painting is
+// redrawn as one before it is copied.
+export async function asPng(blob: Blob): Promise<Blob> {
+	if (blob.type === 'image/png') return blob
+	const bitmap = await createImageBitmap(blob)
+	try {
+		return await encode(bitmap, bitmap.width, bitmap.height, 'image/png')
 	} finally {
 		bitmap.close()
 	}

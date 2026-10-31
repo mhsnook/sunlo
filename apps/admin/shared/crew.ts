@@ -341,6 +341,14 @@ export const draftBody = (draft: GithubDraftType) =>
 	draft.type === 'milestone' ? draft.description : draft.body
 export type ActionType = z.infer<typeof ActionSchema>
 
+// An image the room keeps (the `image` table), as a message carries it.
+export const MessageImageSchema = z.object({
+	id: z.number().int(),
+	width: z.number().int(),
+	height: z.number().int(),
+})
+export type MessageImageType = z.infer<typeof MessageImageSchema>
+
 // One of product-2's mockups: HTML it wrote, which the room keeps with the
 // picture the Worker took of it. `label` is its letter on the card.
 export const SketchSchema = z.object({
@@ -351,6 +359,115 @@ export const SketchSchema = z.object({
 })
 export type SketchType = z.infer<typeof SketchSchema>
 export const SKETCHES_PER_HOUR = 12
+
+// ---- The painter ------------------------------------------------------------
+
+// The image models product-2's painter can use, all through the Worker's AI
+// binding. `references` is how many reference images a model takes; `svg`
+// marks a model that answers with an SVG. Costs are Cloudflare's list prices.
+export const PAINTER_MODELS = {
+	'black-forest-labs/flux-3-image-klein': {
+		label: 'FLUX.3 Klein',
+		references: 10,
+		svg: false,
+		cost: 'about $0.009 an image',
+	},
+	'krea/krea-3': {
+		label: 'Krea 3',
+		references: 8,
+		svg: false,
+		cost: '$0.03 an image, plus $0.07 for each reference image',
+	},
+	'recraft/recraftv4-1-flash': {
+		label: 'Recraft V4.1 Flash',
+		references: 0,
+		svg: false,
+		cost: '$0.007 an image',
+	},
+	'recraft/recraftv4-1-vector': {
+		label: 'Recraft V4.1 Vector (SVG)',
+		references: 0,
+		svg: true,
+		cost: '$0.08 an image',
+	},
+} as const
+export type PainterModel = keyof typeof PAINTER_MODELS
+export const painterModelIds = Object.keys(PAINTER_MODELS) as [
+	PainterModel,
+	...Array<PainterModel>,
+]
+export const PainterModelSchema = z.enum(painterModelIds)
+
+// The aspect ratios every painter model takes.
+export const ASPECT_RATIOS = [
+	'1:1',
+	'4:5',
+	'3:4',
+	'2:3',
+	'9:16',
+	'5:4',
+	'4:3',
+	'3:2',
+	'16:9',
+] as const
+export const PAINTINGS_PER_HOUR = 12
+// A painting can be bigger than one row holds; the image store splits it
+// into parts (worker/crew/image-store.ts).
+export const MAX_PAINTING_BYTES = 8_000_000
+export const MAX_STYLES_PER_PAINTING = 4
+export const MAX_PAINTER_REFERENCES = 4
+export const MAX_STYLE_EXAMPLES = 4
+
+// A style the painter paints in: the admin manages these in the Product
+// room's log. `prompt` is the text that sets the style, ahead of
+// product-2's brief.
+export const PainterStyleSchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	description: z.string(),
+	prompt: z.string(),
+	model: PainterModelSchema,
+	examples: z.array(MessageImageSchema),
+	at: z.string(),
+})
+export type PainterStyleType = z.infer<typeof PainterStyleSchema>
+
+export const PainterStyleInputSchema = z.object({
+	name: z.string().trim().min(1).max(60),
+	description: z.string().trim().min(1).max(200),
+	prompt: z.string().trim().min(1).max(2000),
+	model: PainterModelSchema,
+	// Image ids, in order.
+	examples: z.array(z.number().int()).max(MAX_STYLE_EXAMPLES).default([]),
+})
+export type PainterStyleInputType = z.infer<typeof PainterStyleInputSchema>
+
+// An SVG the room keeps (the `svg` table), with the PNG it was rendered to
+// when that worked.
+export const SvgRefSchema = z.object({
+	id: z.number(),
+	title: z.string(),
+	width: z.number(),
+	height: z.number(),
+	png: z.number().nullable(),
+})
+export type SvgRefType = z.infer<typeof SvgRefSchema>
+// The SVG table keeps one in a row, and a row holds at most 2 MB.
+export const MAX_SVG_BYTES = 1_800_000
+export const SVGS_PER_HOUR = 24
+
+// One painting on a paintings card: an image, an SVG from a vector model,
+// or the error its model gave. `label` is its letter on the card.
+export const PaintingSchema = z.object({
+	id: z.number(),
+	label: z.string(),
+	style: z.string(),
+	model: PainterModelSchema,
+	image: MessageImageSchema.nullable(),
+	svg: SvgRefSchema.nullable(),
+	error: z.string().nullable(),
+})
+export type PaintingType = z.infer<typeof PaintingSchema>
 
 // Something an agent brings the admin, with the buttons they answer with.
 // - question: a question in the Common Room; change: a proposed change to
@@ -364,6 +481,9 @@ export const SKETCHES_PER_HOUR = 12
 // - github: a draft for GitHub (`draft`), which "File it" publishes
 // - sketches: product-2's mockups (`sketches`), one action for each, which
 //   picks it
+// - paintings: the painter's paintings (`paintings`), one action for each
+//   that worked
+// - svgs: SVGs product-2 drew (`svgs`), with nothing to answer
 export const CardSchema = z.object({
 	kind: z.enum([
 		'question',
@@ -377,6 +497,8 @@ export const CardSchema = z.object({
 		'report',
 		'github',
 		'sketches',
+		'paintings',
+		'svgs',
 	]),
 	title: z.string().nullable(),
 	// Empty for a card with nothing to answer.
@@ -385,19 +507,14 @@ export const CardSchema = z.object({
 	ref: z.number().nullable(),
 	draft: GithubDraftSchema.optional(),
 	sketches: z.array(SketchSchema).optional(),
+	paintings: z.array(PaintingSchema).optional(),
+	svgs: z.array(SvgRefSchema).optional(),
 })
 export type CardType = z.infer<typeof CardSchema>
 
-// An image the room keeps (the `image` table), as a message carries it.
-export const MessageImageSchema = z.object({
-	id: z.number().int(),
-	width: z.number().int(),
-	height: z.number().int(),
-})
-export type MessageImageType = z.infer<typeof MessageImageSchema>
-
-// A Durable Object row holds at most 2 MB, bytes and every other column.
-export const MAX_IMAGE_BYTES = 1_800_000
+// The biggest image the admin can upload. The app shrinks a pasted image
+// under it.
+export const MAX_UPLOAD_BYTES = 1_800_000
 // The app scales a pasted image down to this many pixels on its long side.
 export const MAX_IMAGE_SIDE = 2000
 export const MAX_IMAGES_PER_MESSAGE = 6
@@ -713,5 +830,6 @@ export type RoomEvent =
 	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
 	| { type: 'document'; room: RoomKey; id: number }
+	| { type: 'painter-styles' }
 	// A run started, took a step, or ended.
 	| { type: 'run'; run: RunType }

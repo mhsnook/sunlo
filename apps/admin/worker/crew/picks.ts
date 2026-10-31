@@ -5,6 +5,7 @@ import {
 	principalOf,
 	roomNames,
 	type CrewKey,
+	type PaintingType,
 	type PickChoice,
 	type SketchType,
 } from '../../shared/crew'
@@ -34,8 +35,34 @@ export function pickReports(input: {
 	]
 }
 
-// The admin went with one of an agent's sketches. The room's principal hears
-// it too, as it hears a pick between two views.
+// The labels of a card's options, in order: A, B, C.
+export const optionLabel = (index: number) => String.fromCharCode(65 + index)
+
+// The agent hears `said` and then `next`. The room's principal hears it too,
+// as it hears a pick between two views, with who made it.
+function cardPickReports(input: {
+	agent: CrewKey
+	said: string
+	next: string
+	made: string
+}): Array<{ agent: CrewKey; body: string }> {
+	const { agent, said, next, made } = input
+	const room = crew[agent].room
+	const principal = principalOf(room)
+	return [
+		{ agent, body: `${said}. ${next}` },
+		...(principal === agent
+			? []
+			: [
+					{
+						agent: principal,
+						body: `${said}. ${displayName(agent)} ${made}. If the pick shows how they decide, propose it for the ${roomNames[room]}'s charter with propose_charter.`,
+					},
+				]),
+	]
+}
+
+// The admin went with one of an agent's sketches.
 export function sketchPickReports(input: {
 	agent: CrewKey
 	title: string
@@ -43,18 +70,31 @@ export function sketchPickReports(input: {
 	by: string
 }): Array<{ agent: CrewKey; body: string }> {
 	const { agent, title, sketch, by } = input
-	const room = crew[agent].room
-	const principal = principalOf(room)
-	const said = `${by} went with sketch ${sketch.label} of "${title}": ${sketch.idea}`
-	return [
-		{ agent, body: `${said}. Its HTML is sketch ${sketch.id}.` },
-		...(principal === agent
-			? []
-			: [
-					{
-						agent: principal,
-						body: `${said}. ${displayName(agent)} drew it. If the pick shows how they decide, propose it for the ${roomNames[room]}'s charter with propose_charter.`,
-					},
-				]),
-	]
+	return cardPickReports({
+		agent,
+		said: `${by} went with sketch ${sketch.label} of "${title}": ${sketch.idea}`,
+		next: `Its HTML is sketch ${sketch.id}.`,
+		made: 'drew it',
+	})
+}
+
+// The admin went with one of the painter's paintings. The agent hears where
+// to look at it and is asked to keep what the pick says about the admin's
+// taste.
+export function paintingPickReports(input: {
+	agent: CrewKey
+	title: string
+	painting: PaintingType
+	by: string
+}): Array<{ agent: CrewKey; body: string }> {
+	const { agent, title, painting, by } = input
+	const where = painting.svg
+		? `It is SVG ${painting.svg.id}${painting.svg.png === null ? '' : `; look at its rendering, image ${painting.svg.png}`}.`
+		: `It is image ${painting.image?.id}.`
+	return cardPickReports({
+		agent,
+		said: `${by} went with painting ${painting.label} of "${title}", in the ${painting.style} style`,
+		next: `${where} Look at it with look_at_image to see what they liked, keep that in your Design document or your memory, and carry it into your sketches within the brand.`,
+		made: 'had it painted',
+	})
 }
