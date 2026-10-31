@@ -10,6 +10,7 @@ import {
 	githubText,
 	sitrepText,
 	threadBriefingText,
+	timelineText,
 	type BriefingInput,
 } from './briefing'
 
@@ -410,6 +411,37 @@ describe("the character and the admin's changes", () => {
 		)
 		expect(briefingText(input('product-1'))).not.toContain(
 			'What the admin changed for you'
+		)
+	})
+})
+
+describe('timelineText', () => {
+	it("ties the admin's note to the card they answered with it", () => {
+		const card = message({
+			body: 'An epic for onboarding',
+			place: 'room:product',
+			author: 'product-1',
+			authorName: displayName('product-1'),
+			card: {
+				kind: 'github',
+				title: 'Keep new learners',
+				actions: [{ id: 'file', label: 'File it' }],
+				ref: null,
+			},
+			answer: {
+				actionId: 'file',
+				label: 'Filed #900',
+				by: 'sam',
+				at: '2026-10-28T09:20:00Z',
+				noteId: 'Shorter titles, please',
+			},
+		})
+		const note = message({
+			body: 'Shorter titles, please',
+			place: 'room:product',
+		})
+		expect(timelineText([card, note])).toContain(
+			'sam (a note on the card "Keep new learners"): Shorter titles, please'
 		)
 	})
 })
