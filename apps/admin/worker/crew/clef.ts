@@ -2,7 +2,6 @@ import {
 	crew,
 	displayName,
 	everyoneTo,
-	mentionedCrew,
 	principalOf,
 	resolveHandle,
 	type CrewKey,
@@ -33,11 +32,7 @@ export function clefPrompt(
 				`- "${key}" (${displayName(key)}, ${crew[key].title}) looks after: ${crew[key].looksAfter.join('; ')}`
 		)
 		.join('\n')
-	const example = active.find((key) => key !== fallback) ?? fallback
-	const everyoneExample = JSON.stringify({
-		kind: 'everyone',
-		agents: active.slice(0, 2),
-	})
+	const routeExample = active.find((key) => key !== fallback) ?? fallback
 	const system = `You route messages in a team chat between the founder of Sunlo, a language-learning app, and AI agents.
 
 For each message, decide one thing:
@@ -50,7 +45,7 @@ When unsure whether the message needs an answer now, choose "room".${everyone ? 
 The agents:
 ${roster}
 
-Reply with JSON only, like {"kind":"route","agents":["${example}"]}, ${everyoneExample} or {"kind":"room","agents":[]}. A "route" names exactly one agent.`
+Reply with JSON only, like {"kind":"route","agents":["${routeExample}"]} or {"kind":"room","agents":[]}. A "route" names exactly one agent. An "everyone" names each agent who should answer, by key, in the same "agents" list.`
 	const shots = examples.flatMap(
 		(example): Array<ChatMessage> => [
 			{ role: 'user', content: example.text },
@@ -74,9 +69,8 @@ Reply with JSON only, like {"kind":"route","agents":["${example}"]}, ${everyoneE
 // models. Anything that is not a "route" or an "everyone" becomes "room",
 // which wakes nobody. A route wakes one agent: when the model names several,
 // or none it may wake, the message goes to the fallback, who passes it on.
-// An "everyone" wakes each agent it names, and none named is a "room". A
-// room's name counts as its principal. With `everyone`, the message
-// @mentioned everyone, so a route reads as an "everyone" too.
+// With `everyone`, the message @mentioned everyone, so a route the model
+// sent anyway reads as an "everyone", and keeps every agent it names.
 export function parseClefReply(
 	reply: unknown,
 	active: Array<CrewKey>,
@@ -113,9 +107,3 @@ export function parseClefReply(
 					: null
 	return chosen ? { kind: 'route', agents: [chosen], by: 'model' } : room
 }
-
-// What a message that @mentions everyone does, given CLEF's decision for it:
-// it wakes the agents CLEF names, and any agent it @mentions by name,
-// whatever CLEF says.
-export const toEveryone = (decided: RoutingType, text: string): RoutingType =>
-	everyoneTo([...decided.agents, ...mentionedCrew(text)], 'model')

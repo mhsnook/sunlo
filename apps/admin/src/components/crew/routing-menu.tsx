@@ -9,43 +9,36 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-	crewList,
+	activeCrew,
+	crewNames,
 	displayName,
-	type CrewKey,
 	type RoutingType,
 } from '../../../shared/crew'
-
-const names = (agents: Array<CrewKey>) =>
-	new Intl.ListFormat('en', { type: 'conjunction' }).format(
-		agents.map(displayName)
-	)
 
 export function routingNote(routing: RoutingType) {
 	if (routing.kind === 'stack') return 'Stacked with your next message'
 	if (routing.kind === 'room') return 'Left in the room'
 	if (routing.kind === 'everyone') {
-		return `To everyone, sent to ${names(routing.agents)}`
+		return `To everyone, sent to ${crewNames(routing.agents)}`
 	}
-	return `Sent to ${names(routing.agents)}`
+	return `Sent to ${crewNames(routing.agents)}`
 }
 
-const activeKeys = crewList
-	.filter((member) => member.active)
-	.map((member) => member.key)
+const leaveInRoom = {
+	routing: { kind: 'room', agents: [], by: 'you' },
+	label: 'Leave in the room',
+} satisfies { routing: RoutingType; label: string }
 
 const routingOptions: Array<{ routing: RoutingType; label: string }> = [
-	...activeKeys.map((key) => ({
+	...activeCrew.map((key) => ({
 		routing: { kind: 'route' as const, agents: [key], by: 'you' as const },
 		label: `Send to ${displayName(key)}`,
 	})),
 	{
-		routing: { kind: 'everyone', agents: activeKeys, by: 'you' },
+		routing: { kind: 'everyone', agents: activeCrew, by: 'you' },
 		label: 'Send to everyone',
 	},
-	{
-		routing: { kind: 'room', agents: [], by: 'you' },
-		label: 'Leave in the room',
-	},
+	leaveInRoom,
 	{
 		routing: { kind: 'stack', agents: [], by: 'you' },
 		label: 'Stack with my next message',
@@ -53,13 +46,13 @@ const routingOptions: Array<{ routing: RoutingType; label: string }> = [
 ]
 
 // Where a message goes: the compose chip before sending, and the routing
-// note under a sent message, for correcting CLEF afterwards. For a message
-// to everyone (`everyone`, the agents it sends to now), the menu has a
-// check for each agent instead of one choice each.
+// note under a sent message, for correcting CLEF afterwards. A sent message
+// to everyone, or one that woke several agents, gets a check for each agent
+// instead.
 export function RoutingMenu({
 	label,
 	onChoose,
-	everyone,
+	current,
 	disabled = false,
 	includeStack = true,
 	className,
@@ -68,7 +61,7 @@ export function RoutingMenu({
 }: {
 	label: string
 	onChoose: (routing: RoutingType) => void
-	everyone?: Array<CrewKey>
+	current?: RoutingType
 	disabled?: boolean
 	// A sent message cannot stack: the next message has already gone.
 	includeStack?: boolean
@@ -76,6 +69,11 @@ export function RoutingMenu({
 	testId: string
 	children: ReactNode
 }) {
+	const several =
+		current?.kind === 'everyone' ||
+		(current?.kind === 'route' && current.agents.length > 1)
+			? current
+			: null
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
@@ -89,23 +87,23 @@ export function RoutingMenu({
 				<DropdownMenuLabel className="text-muted-foreground text-xs">
 					{label}
 				</DropdownMenuLabel>
-				{everyone ? (
+				{several ? (
 					<>
-						{activeKeys.map((key) => (
+						{activeCrew.map((key) => (
 							<DropdownMenuCheckboxItem
 								key={key}
 								data-testid="crew-routing-everyone-option"
 								data-key={key}
-								checked={everyone.includes(key)}
+								checked={several.agents.includes(key)}
 								// Each check sends a correction at once, so a second check
 								// in the same open menu would start from a stale list.
 								closeOnClick
 								onCheckedChange={(checked) =>
 									onChoose({
-										kind: 'everyone',
+										kind: several.kind,
 										agents: checked
-											? [...everyone, key]
-											: everyone.filter((agent) => agent !== key),
+											? [...several.agents, key]
+											: several.agents.filter((agent) => agent !== key),
 										by: 'you',
 									})
 								}
@@ -116,10 +114,10 @@ export function RoutingMenu({
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							data-testid="crew-routing-option"
-							data-key="room"
-							onClick={() => onChoose({ kind: 'room', agents: [], by: 'you' })}
+							data-key={leaveInRoom.routing.kind}
+							onClick={() => onChoose(leaveInRoom.routing)}
 						>
-							Leave in the room
+							{leaveInRoom.label}
 						</DropdownMenuItem>
 					</>
 				) : (

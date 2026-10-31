@@ -20,10 +20,9 @@ import { VoiceControls } from './voice-controls'
 import { AttachImageButton, DraftImageStrip, useDraftImages } from './images'
 import { RoutingMenu, routingNote } from './routing-menu'
 
-// While the admin types, the chip shows only what is certain: "..." stacks,
-// an @mention routes, and an @everyone goes to everyone CLEF picks.
-// Otherwise CLEF decides when the message is sent, unless the admin picks a
-// place from the chip first.
+// While the admin types, the chip shows only what is certain: "..." stacks
+// and an @mention routes. Otherwise CLEF decides when the message is sent,
+// unless the admin picks a place from the chip first.
 export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 	const [draft, setDraft] = useState('')
 	// The admin's own choice from the chip, which CLEF learns from.

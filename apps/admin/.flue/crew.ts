@@ -1,12 +1,7 @@
 import { dispatch, observe, type Agent } from '@flue/runtime'
 import { getAgentByName } from 'agents'
 import { env } from 'cloudflare:workers'
-import {
-	displayName,
-	isCrewKey,
-	roomOfPlace,
-	type CrewKey,
-} from '../shared/crew'
+import { crewNames, isCrewKey, roomOfPlace, type CrewKey } from '../shared/crew'
 import {
 	CONVERSATION,
 	ROOM,
@@ -104,7 +99,7 @@ export async function wake(wakes: Array<Wake>, from: string) {
 				from,
 				messageId,
 				...(thread ? { thread: thread.root } : {}),
-				...(alsoTo ? { also: alsoTo.map(displayName).join(', ') } : {}),
+				...(alsoTo?.length ? { also: crewNames(alsoTo) } : {}),
 			}
 			return deliver(agent, type, body, attributes, inThread).catch(
 				(error: unknown) => console.error(`Could not wake ${agent}`, error)

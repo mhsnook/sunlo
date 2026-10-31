@@ -3,9 +3,9 @@ import {
 	adminAuthor,
 	COMMON_ROOM,
 	crew,
-	crewKeys,
 	displayName,
 	draftTitle,
+	activeCrew,
 	everyoneTo,
 	fixedRouting,
 	githubAccess,
@@ -69,12 +69,7 @@ import {
 	timelineText,
 	type UnreadTimeline,
 } from './briefing'
-import {
-	clefPrompt,
-	parseClefReply,
-	toEveryone,
-	type ClefExample,
-} from './clef'
+import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
 import { checkSave, startingDocuments, type SaveCheck } from './documents'
 import { openingLines } from '../../shared/blocks'
@@ -129,7 +124,7 @@ export type Wake = {
 	// that thread's own conversation, and the asker hears a reply in its
 	// main one.
 	thread?: { root: string; to: 'helper' | 'asker' }
-	// The other agents a message to everyone woke.
+	// The other agents the same message woke, who answer alongside.
 	alsoTo?: Array<CrewKey>
 }
 
@@ -856,18 +851,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// CLEF: a trailing "..." always stacks, an @mention always routes, and
 	// otherwise a small model decides between waking agents and leaving the
-	// message in the room. For a message to everyone, it decides for each
-	// agent. It learns from every correction the admin makes.
+	// message in the room. It learns from every correction the admin makes.
+	// An @everyone also wakes anyone it @mentions by name, whatever CLEF says.
 	async classify(text: string): Promise<RoutingType> {
 		const fixed = fixedRouting(text)
 		if (fixed) return fixed
-		const decided = await this.askClef(text)
-		return mentionsEveryone(text) ? toEveryone(decided, text) : decided
+		const everyone = mentionsEveryone(text)
+		const decided = await this.askClef(text, everyone)
+		return everyone
+			? everyoneTo([...decided.agents, ...mentionedCrew(text)], 'model')
+			: decided
 	}
 
-	private async askClef(text: string): Promise<RoutingType> {
-		const active = crewKeys.filter((key) => crew[key].active)
-		const everyone = mentionsEveryone(text)
+	private async askClef(text: string, everyone: boolean): Promise<RoutingType> {
 		// The admin's corrections, before and after sending, are the labels.
 		const examples = this.sql<{
 			text: string
@@ -884,13 +880,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			)
 		try {
 			const reply = await this.env.AI.run(this.env.CLEF_MODEL, {
-				messages: clefPrompt(text, active, examples, everyone),
+				messages: clefPrompt(text, activeCrew, examples, everyone),
 				max_tokens: 100,
 				temperature: 0,
 			})
 			return parseClefReply(
 				'response' in reply ? reply.response : undefined,
-				active,
+				activeCrew,
 				everyone
 			)
 		} catch (error) {
@@ -932,7 +928,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`insert into clef_decision (message_id, text, predicted, final, at)
 			values (${message.id}, ${text}, ${labelOf(predicted)}, ${labelOf(routing)}, ${message.at})`
 		const body = [...stacked, text].join('\n')
-		const wake = commonRoomWakes(routing, routing.agents, body, message.id)
+		const wake = wakesFor(routing, routing.agents, {
+			body,
+			messageId: message.id,
+			place: COMMON_ROOM,
+		})
 		return { message, wake }
 	}
 
@@ -951,14 +951,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const author = adminAuthor(input.uid)
 		const routing =
 			fixedRouting(input.body, roomMembers(input.room)) ??
-			routeTo(
-				mentionsEveryone(input.body)
-					? roomMembers(input.room)
-					: [principalOf(input.room)],
-				'rule'
-			)
-		const stacked =
-			routing.kind === 'route' ? this.stackedBodies(author, place) : []
+			(mentionsEveryone(input.body)
+				? everyoneTo(roomMembers(input.room), 'rule')
+				: routeTo([principalOf(input.room)], 'rule'))
+		const stacked = routing.agents.length
+			? this.stackedBodies(author, place)
+			: []
 		const message = this.insert({
 			author,
 			authorName: input.name,
@@ -971,9 +969,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const body = [...stacked, withImageLines(input.body, input.images)].join(
 			'\n'
 		)
-		const wake = routing.agents.map(
-			(agent): Wake => ({ agent, body, messageId: message.id, place })
-		)
+		const wake = wakesFor(routing, routing.agents, {
+			body,
+			messageId: message.id,
+			place,
+		})
 		return { message, wake }
 	}
 
@@ -1012,11 +1012,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			where message_id = ${row.id}`
 		const message = { ...original, corrected }
 		this.push({ type: 'message', message })
-		const wake = commonRoomWakes(
+		const wake = wakesFor(
 			corrected,
 			corrected.agents.filter((agent) => !woken.has(agent)),
-			withImageLines(original.body, original.images),
-			row.id
+			{
+				body: withImageLines(original.body, original.images),
+				messageId: row.id,
+				place: COMMON_ROOM,
+			}
 		)
 		return { ok: true, message, wake }
 	}
@@ -3041,25 +3044,16 @@ function sanitize(routing: RoutingType): RoutingType {
 
 // `agents` may be fewer than `routing.agents`: a correction wakes only the
 // agents not woken before, but each hears of every agent the message names.
-function commonRoomWakes(
+function wakesFor(
 	routing: RoutingType,
 	agents: Array<CrewKey>,
-	body: string,
-	messageId: string
+	wake: Pick<Wake, 'body' | 'messageId' | 'place'>
 ): Array<Wake> {
-	return agents.map((agent) => {
-		const alsoTo =
-			routing.kind === 'everyone'
-				? routing.agents.filter((key) => key !== agent)
-				: []
-		return {
-			agent,
-			body,
-			messageId,
-			place: COMMON_ROOM,
-			...(alsoTo.length ? { alsoTo } : {}),
-		}
-	})
+	return agents.map((agent) => ({
+		...wake,
+		agent,
+		alsoTo: routing.agents.filter((key) => key !== agent),
+	}))
 }
 
 // The part of a routing that CLEF decides, with agents in a fixed order, so

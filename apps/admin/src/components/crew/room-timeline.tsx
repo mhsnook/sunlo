@@ -285,7 +285,7 @@ function RoutingCorrection({ message }: { message: CrewMessageType }) {
 	return (
 		<RoutingMenu
 			label="Where should this have gone?"
-			everyone={shown.kind === 'everyone' ? shown.agents : undefined}
+			current={shown}
 			includeStack={false}
 			disabled={correct.isPending}
 			testId="crew-routing-correct"

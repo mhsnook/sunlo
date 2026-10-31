@@ -236,12 +236,12 @@ export function resolveHandle(handle: string): CrewKey | null {
 
 // Every crew member the text @mentions, in roster order. The @ must start a
 // word, so the domain of an email address is not a mention.
+const MENTION = /(?<![\w.])@([a-z][a-z0-9-]*(?:['’][a-z0-9-]+)?)/gi
+const handlesIn = (text: string) =>
+	[...text.matchAll(MENTION)].map((match) => match[1].toLowerCase())
+
 export function mentionedCrew(text: string): Array<CrewKey> {
-	const named = new Set(
-		[...text.matchAll(/(?<![\w.])@([a-z][a-z0-9-]*(?:['’][a-z0-9-]+)?)/gi)].map(
-			(match) => resolveHandle(match[1])
-		)
-	)
+	const named = new Set(handlesIn(text).map(resolveHandle))
 	return crewKeys.filter((key) => named.has(key))
 }
 
@@ -253,9 +253,11 @@ export const endsWithEllipsis = (text: string) => /(\.\.\.|…)\s*$/.test(text)
 // room may be one of these (roster.test.ts checks).
 export const EVERYONE_HANDLES = ['channel', 'crew', 'everyone', 'all'] as const
 
+const everyoneHandles: ReadonlySet<string> = new Set(EVERYONE_HANDLES)
+
 export const mentionsEveryone = (text: string) =>
-	new RegExp(`(?<![\\w.])@(${EVERYONE_HANDLES.join('|')})(?![\\w-])`, 'i').test(
-		text
+	handlesIn(text).some((handle) =>
+		everyoneHandles.has(handle.split(APOSTROPHE)[0])
 	)
 
 export const RoutingSchema = z.object({
@@ -274,29 +276,36 @@ export type RoutingType = z.infer<typeof RoutingSchema>
 const activeAmong = (agents: ReadonlyArray<CrewKey>) =>
 	crewKeys.filter((key) => agents.includes(key) && crew[key].active)
 
-// Sends a message to the agents that have started. A planned agent cannot
-// wake yet, so a message only for it waits in the room.
-export function routeTo(
-	agents: Array<CrewKey>,
-	by: RoutingType['by']
-): RoutingType {
-	const active = agents.filter((key) => crew[key].active)
-	return active.length
-		? { kind: 'route', agents: active, by }
-		: { kind: 'room', agents: [], by }
-}
+export const activeCrew = activeAmong(crewKeys)
 
-// A message to everyone that wakes `agents`. When none of them can wake, it
-// stays in the room.
-export function everyoneTo(
+// A routing that wakes the started agents among `agents`. When none of them
+// can wake, the message waits in the room.
+function wakeRouting(
+	kind: 'route' | 'everyone',
 	agents: ReadonlyArray<CrewKey>,
 	by: RoutingType['by']
 ): RoutingType {
 	const active = activeAmong(agents)
 	return active.length
-		? { kind: 'everyone', agents: active, by }
+		? { kind, agents: active, by }
 		: { kind: 'room', agents: [], by }
 }
+
+export const routeTo = (
+	agents: ReadonlyArray<CrewKey>,
+	by: RoutingType['by']
+) => wakeRouting('route', agents, by)
+
+export const everyoneTo = (
+	agents: ReadonlyArray<CrewKey>,
+	by: RoutingType['by']
+) => wakeRouting('everyone', agents, by)
+
+const listFormat = new Intl.ListFormat('en', { type: 'conjunction' })
+
+// "Cmdr Riker, Data, and O'Brien".
+export const crewNames = (agents: ReadonlyArray<CrewKey>) =>
+	listFormat.format(agents.map(displayName))
 
 // The two fixed rules, checked before CLEF's model: a trailing "..." stacks,
 // and an @mention of someone in `among` routes. Null when neither applies,
