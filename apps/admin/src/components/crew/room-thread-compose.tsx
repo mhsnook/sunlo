@@ -62,8 +62,7 @@ export function RoomThreadCompose({
 				canSendEmpty={draftImages.images.length > 0}
 				topSlot={
 					<DraftImageStrip
-						images={draftImages.images}
-						adding={draftImages.adding}
+						slots={draftImages.slots}
 						onRemove={draftImages.remove}
 					/>
 				}

@@ -350,11 +350,7 @@ function StyleForm({
 					<AttachImageButton onFiles={(files) => drafts.add(files)} />
 				</div>
 				<div className="-mx-3">
-					<DraftImageStrip
-						images={drafts.images}
-						adding={drafts.adding}
-						onRemove={drafts.remove}
-					/>
+					<DraftImageStrip slots={drafts.slots} onRemove={drafts.remove} />
 				</div>
 			</div>
 			<div className="flex gap-1">

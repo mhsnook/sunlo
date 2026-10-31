@@ -17,56 +17,79 @@ import {
 import { imageQuery, type DraftImage } from '~/lib/crew'
 import { shrinkImage } from '~/lib/images'
 
+// A draft image that is still being scaled down holds its place in the
+// strip, so the images keep the order the admin added them in.
+export type DraftSlot = DraftImage | { key: string; pending: true }
+
+const isReady = (slot: DraftSlot): slot is DraftImage => !('pending' in slot)
+
 // The images in a compose bar: pasted, dropped or picked, then scaled down
 // in the browser. They upload when the message is sent.
 export function useDraftImages() {
-	const [images, setImages] = useState<Array<DraftImage>>([])
-	const [adding, setAdding] = useState(0)
+	const [slots, setSlots] = useState<Array<DraftSlot>>([])
+	// The keys of pending slots that are still in the strip. A scale that
+	// finishes after its slot was removed must not make an object URL.
+	const pending = useRef(new Set<string>())
+	const images = slots.filter(isReady)
+	const adding = slots.length - images.length
 
 	// False when none of the files is an image, so a paste of text goes on.
 	const add = (files: Iterable<File>) => {
 		const picked = [...files].filter((file) => file.type.startsWith('image/'))
 		if (!picked.length) return false
-		const room = MAX_IMAGES_PER_MESSAGE - images.length - adding
+		const room = MAX_IMAGES_PER_MESSAGE - slots.length
 		if (picked.length > room) {
 			toastError(`A message holds at most ${MAX_IMAGES_PER_MESSAGE} images`)
 		}
-		for (const file of picked.slice(0, Math.max(0, room))) {
-			setAdding((count) => count + 1)
+		const reserved = picked
+			.slice(0, Math.max(0, room))
+			.map((file) => ({ file, key: crypto.randomUUID() }))
+		for (const { key } of reserved) pending.current.add(key)
+		setSlots((current) => [
+			...current,
+			...reserved.map(({ key }) => ({ key, pending: true as const })),
+		])
+		for (const { file, key } of reserved) {
 			shrinkImage(file)
-				.then((shrunk) =>
-					setImages((current) => [
-						...current,
-						{
-							key: crypto.randomUUID(),
-							url: URL.createObjectURL(shrunk.blob),
-							...shrunk,
-						},
-					])
-				)
-				.catch((error: Error) => toastError(error.message))
-				.finally(() => setAdding((count) => count - 1))
+				.then((shrunk) => {
+					if (!pending.current.delete(key)) return
+					const image = {
+						key,
+						url: URL.createObjectURL(shrunk.blob),
+						...shrunk,
+					}
+					setSlots((current) =>
+						current.map((slot) => (slot.key === key ? image : slot))
+					)
+				})
+				.catch((error: Error) => {
+					pending.current.delete(key)
+					setSlots((current) => current.filter((slot) => slot.key !== key))
+					toastError(error.message)
+				})
 		}
 		return true
 	}
 
 	const remove = (key: string) => {
-		const gone = images.find((image) => image.key === key)
-		if (gone) URL.revokeObjectURL(gone.url)
-		setImages((current) => current.filter((image) => image.key !== key))
+		pending.current.delete(key)
+		const gone = slots.find((slot) => slot.key === key)
+		if (gone && isReady(gone)) URL.revokeObjectURL(gone.url)
+		setSlots((current) => current.filter((slot) => slot.key !== key))
 	}
 
+	// Takes the finished images and leaves pending ones in the strip.
 	// A strip URL lives only as long as its thumbnail: the timeline makes
 	// its own URLs for the same blobs, and `restore` makes new ones.
 	const take = () => {
 		const taken = images
 		for (const image of taken) URL.revokeObjectURL(image.url)
-		setImages([])
+		setSlots((current) => current.filter((slot) => !isReady(slot)))
 		return taken
 	}
 
 	const restore = (taken: Array<DraftImage>) =>
-		setImages((current) =>
+		setSlots((current) =>
 			current.length
 				? current
 				: taken.map((image) => ({
@@ -91,7 +114,7 @@ export function useDraftImages() {
 		},
 	}
 
-	return { images, adding, add, remove, take, restore, formProps }
+	return { slots, images, adding, add, remove, take, restore, formProps }
 }
 
 export function AttachImageButton({
@@ -130,48 +153,51 @@ export function AttachImageButton({
 }
 
 export function DraftImageStrip({
-	images,
-	adding,
+	slots,
 	onRemove,
 }: {
-	images: Array<DraftImage>
-	adding: number
+	slots: Array<DraftSlot>
 	onRemove: (key: string) => void
 }) {
-	if (!images.length && !adding) return null
+	if (!slots.length) return null
 	return (
 		<div
 			className="flex flex-wrap gap-2 px-3 pt-3"
 			data-testid="compose-images"
 		>
-			{images.map((image, index) => (
-				<RemovableThumbnail
-					key={image.key}
-					src={image.url}
-					alt={`Attachment ${index + 1}, ${image.width}×${image.height}`}
-					removeLabel={`Remove image ${index + 1}`}
-					onRemove={() => onRemove(image.key)}
-					testId="compose-image"
-					removeTestId="compose-image-remove"
-					dataKey={image.key}
-				/>
-			))}
-			{Array.from({ length: adding }, (_, index) => (
-				<div
-					key={`adding-${index}`}
-					className="bg-muted flex size-16 items-center justify-center rounded-xl border"
-				>
-					<Loader2 className="text-muted-foreground size-4 animate-spin" />
-				</div>
-			))}
+			{slots.map((slot, index) => {
+				const shown = isReady(slot)
+					? {
+							src: slot.url,
+							alt: `Attachment ${index + 1}, ${slot.width}×${slot.height}`,
+							testId: 'compose-image',
+						}
+					: {
+							src: undefined,
+							alt: `Attachment ${index + 1}, scaling down`,
+							testId: 'compose-image-pending',
+							pending: true,
+						}
+				return (
+					<RemovableThumbnail
+						key={slot.key}
+						{...shown}
+						removeLabel={`Remove image ${index + 1}`}
+						onRemove={() => onRemove(slot.key)}
+						removeTestId="compose-image-remove"
+						dataKey={slot.key}
+					/>
+				)
+			})}
 		</div>
 	)
 }
 
 // A small picture with a Remove button on its corner. An empty box stands
-// in while `src` loads.
+// in while `src` loads, with a spinner while the picture is `pending`.
 export function RemovableThumbnail({
 	src,
+	pending = false,
 	alt,
 	removeLabel,
 	onRemove,
@@ -180,6 +206,7 @@ export function RemovableThumbnail({
 	dataKey,
 }: {
 	src: string | undefined
+	pending?: boolean
 	alt: string
 	removeLabel: string
 	onRemove: () => void
@@ -196,7 +223,14 @@ export function RemovableThumbnail({
 					className="size-16 rounded-xl border object-cover"
 				/>
 			) : (
-				<div className="bg-muted size-16 rounded-xl border" />
+				<div className="bg-muted flex size-16 items-center justify-center rounded-xl border">
+					{pending && (
+						<Loader2
+							aria-label={alt}
+							className="text-muted-foreground size-4 animate-spin"
+						/>
+					)}
+				</div>
 			)}
 			<Button
 				type="button"
