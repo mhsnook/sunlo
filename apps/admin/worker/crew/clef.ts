@@ -1,6 +1,8 @@
 import {
 	crew,
 	displayName,
+	everyoneTo,
+	mentionedCrew,
 	principalOf,
 	resolveHandle,
 	type CrewKey,
@@ -21,7 +23,9 @@ type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string }
 export function clefPrompt(
 	text: string,
 	active: Array<CrewKey>,
-	examples: Array<ClefExample>
+	examples: Array<ClefExample>,
+	// The message @mentions everyone, so the only question is who answers.
+	everyone = false
 ): Array<ChatMessage> {
 	const roster = active
 		.map(
@@ -29,18 +33,24 @@ export function clefPrompt(
 				`- "${key}" (${displayName(key)}, ${crew[key].title}) looks after: ${crew[key].looksAfter.join('; ')}`
 		)
 		.join('\n')
+	const example = active.find((key) => key !== fallback) ?? fallback
+	const everyoneExample = JSON.stringify({
+		kind: 'everyone',
+		agents: active.slice(0, 2),
+	})
 	const system = `You route messages in a team chat between the founder of Sunlo, a language-learning app, and AI agents.
 
 For each message, decide one thing:
 - "route": the message asks a question, gives an instruction, or needs an answer now. Name the one agent who should answer. If more than one could, or you cannot tell who, name "${fallback}": ${crew[fallback].title.toLowerCase()} to the founder, who passes it on.
+- "everyone": the message is written to the whole team, as in "hey everyone", "hi all", "team," or "everyone:". For each agent, decide whether the message needs that agent's answer now, and name every agent it does. Name none when it needs no answer now.
 - "room": the message is a note, a thought, an update, or context. Nobody answers now; agents read it at their next run.
 
-When unsure whether the message needs an answer now, choose "room".
+When unsure whether the message needs an answer now, choose "room".${everyone ? '\n\nThis message is written to the whole team: reply "everyone".' : ''}
 
 The agents:
 ${roster}
 
-Reply with JSON only, like {"kind":"route","agents":["${active.find((key) => key !== fallback) ?? fallback}"]} or {"kind":"room","agents":[]}. Never name more than one agent.`
+Reply with JSON only, like {"kind":"route","agents":["${example}"]}, ${everyoneExample} or {"kind":"room","agents":[]}. A "route" names exactly one agent.`
 	const shots = examples.flatMap(
 		(example): Array<ChatMessage> => [
 			{ role: 'user', content: example.text },
@@ -61,13 +71,16 @@ Reply with JSON only, like {"kind":"route","agents":["${active.find((key) => key
 }
 
 // Workers AI returns the reply as a string, or as parsed JSON for some
-// models. Anything that is not a "route" becomes "room", which wakes nobody.
-// A route wakes one agent: when the model names several, or none it may
-// wake, the message goes to the fallback, who passes it on. A room's name
-// counts as its principal.
+// models. Anything that is not a "route" or an "everyone" becomes "room",
+// which wakes nobody. A route wakes one agent: when the model names several,
+// or none it may wake, the message goes to the fallback, who passes it on.
+// An "everyone" wakes each agent it names, and none named is a "room". A
+// room's name counts as its principal. With `everyone`, the message
+// @mentioned everyone, so a route reads as an "everyone" too.
 export function parseClefReply(
 	reply: unknown,
-	active: Array<CrewKey>
+	active: Array<CrewKey>,
+	everyone = false
 ): RoutingType {
 	const room: RoutingType = { kind: 'room', agents: [], by: 'model' }
 	let value = reply
@@ -82,13 +95,14 @@ export function parseClefReply(
 	}
 	if (!value || typeof value !== 'object') return room
 	const { kind, agents } = value as { kind?: unknown; agents?: unknown }
-	if (kind !== 'route') return room
+	if (kind !== 'route' && kind !== 'everyone') return room
 	const named = Array.isArray(agents)
 		? agents.flatMap((agent) => {
 				const key = typeof agent === 'string' ? resolveHandle(agent) : null
 				return key && active.includes(key) ? [key] : []
 			})
 		: []
+	if (kind === 'everyone' || everyone) return everyoneTo(named, 'model')
 	const chosen =
 		named.length === 1
 			? named[0]
@@ -99,3 +113,9 @@ export function parseClefReply(
 					: null
 	return chosen ? { kind: 'route', agents: [chosen], by: 'model' } : room
 }
+
+// What a message that @mentions everyone does, given CLEF's decision for it:
+// it wakes the agents CLEF names, and any agent it @mentions by name,
+// whatever CLEF says.
+export const toEveryone = (decided: RoutingType, text: string): RoutingType =>
+	everyoneTo([...decided.agents, ...mentionedCrew(text)], 'model')

@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
 	crew,
+	crewKeys,
 	crewList,
 	displayName,
+	EVERYONE_HANDLES,
+	handleOf,
 	PlaceSchema,
+	resolveHandle,
 	placeOf,
 	principalOf,
 	roomKeys,
@@ -33,6 +37,16 @@ describe('the roster', () => {
 		const { rank, name } = crew['command-1']
 		expect(displayName('command-1')).toBe(`${rank} ${name}`)
 		expect(displayName('command-2')).toBe('Data')
+	})
+
+	it('keeps the everyone handles free of every handle, key and room', () => {
+		const taken = [...crewKeys, ...crewKeys.map(handleOf), ...roomKeys].map(
+			(name) => name.toLowerCase()
+		)
+		for (const handle of EVERYONE_HANDLES) {
+			expect(taken).not.toContain(handle)
+			expect(resolveHandle(handle)).toBeNull()
+		}
 	})
 })
 

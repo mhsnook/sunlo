@@ -5,19 +5,25 @@ import {
 	MessageCircle,
 	Send,
 	Sparkles,
+	Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
-import { fixedRouting, type RoutingType } from '../../../shared/crew'
+import {
+	fixedRouting,
+	mentionsEveryone,
+	type RoutingType,
+} from '../../../shared/crew'
 import { usePostToRoom } from '~/lib/crew'
 import { VoiceControls } from './voice-controls'
 import { AttachImageButton, DraftImageStrip, useDraftImages } from './images'
 import { RoutingMenu, routingNote } from './routing-menu'
 
-// While the admin types, the chip shows only what is certain: "..." stacks
-// and an @mention routes. Otherwise CLEF decides when the message is sent,
-// unless the admin picks a place from the chip first.
+// While the admin types, the chip shows only what is certain: "..." stacks,
+// an @mention routes, and an @everyone goes to everyone CLEF picks.
+// Otherwise CLEF decides when the message is sent, unless the admin picks a
+// place from the chip first.
 export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 	const [draft, setDraft] = useState('')
 	// The admin's own choice from the chip, which CLEF learns from.
@@ -67,12 +73,18 @@ export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 						<>
 							{routing.kind === 'route' ? (
 								<Send className="size-3" />
+							) : routing.kind === 'everyone' ? (
+								<Users className="size-3" />
 							) : routing.kind === 'room' ? (
 								<MessageCircle className="size-3" />
 							) : (
 								<Layers className="size-3" />
 							)}
 							{routingNote(routing)}
+						</>
+					) : mentionsEveryone(text) ? (
+						<>
+							<Users className="size-3" /> To everyone: CLEF picks who answers
 						</>
 					) : (
 						<>

@@ -65,6 +65,7 @@ Register a new id here, not in the main app's registry.
 | `crew-image-full`                                                                                         | The full-size view of a message's image, a painting or an SVG                           |
 | `crew-clef-chip`                                                                                          | A rule's place for the draft, or "CLEF decides"; opens the menu                         |
 | `crew-routing-option` + `data-key=<kind><agents>`                                                         | One choice in a routing menu, e.g. `routeproduct-1`, `room`, `stack`                    |
+| `crew-routing-everyone-option` + `data-key=<agent>`                                                       | One agent's check in the menu of a message to everyone                                  |
 | `crew-routing-correct`                                                                                    | The routing note under your own message; opens the menu to correct it                   |
 | `details-button`, `details-panel` + `data-key=<room\|crew>`                                               | The Details toggle in a room header, and its panel; `crew` is the Common Room           |
 | `details-section` + `data-key=<documents\|charter\|weekly\|overview\|painter-styles\|agent key>`          | One section of the details; on a phone, one fold of the accordion                       |

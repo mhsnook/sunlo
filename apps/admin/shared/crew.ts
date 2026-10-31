@@ -249,14 +249,30 @@ export function mentionedCrew(text: string): Array<CrewKey> {
 // for it, and the next message that does wake someone carries it along.
 export const endsWithEllipsis = (text: string) => /(\.\.\.|…)\s*$/.test(text)
 
+// The handles that address the whole crew. No crew member's handle, key or
+// room may be one of these (roster.test.ts checks).
+export const EVERYONE_HANDLES = ['channel', 'crew', 'everyone', 'all'] as const
+
+export const mentionsEveryone = (text: string) =>
+	new RegExp(`(?<![\\w.])@(${EVERYONE_HANDLES.join('|')})(?![\\w-])`, 'i').test(
+		text
+	)
+
 export const RoutingSchema = z.object({
-	kind: z.enum(['stack', 'room', 'route']),
+	// "route" and "everyone" both wake `agents`: "everyone" is a message to
+	// the whole crew, which wakes only the agents CLEF says it needs.
+	kind: z.enum(['stack', 'room', 'route', 'everyone']),
 	agents: z.array(z.enum(crewKeys)),
 	// Who decided: a fixed rule ("..." or an @mention), the CLEF model, or
 	// the admin, by changing the chip before sending.
 	by: z.enum(['rule', 'model', 'you']),
 })
 export type RoutingType = z.infer<typeof RoutingSchema>
+
+// The started agents among `agents`, once each, in roster order. A planned
+// agent cannot wake yet.
+const activeAmong = (agents: ReadonlyArray<CrewKey>) =>
+	crewKeys.filter((key) => agents.includes(key) && crew[key].active)
 
 // Sends a message to the agents that have started. A planned agent cannot
 // wake yet, so a message only for it waits in the room.
@@ -270,13 +286,27 @@ export function routeTo(
 		: { kind: 'room', agents: [], by }
 }
 
+// A message to everyone that wakes `agents`. When none of them can wake, it
+// stays in the room.
+export function everyoneTo(
+	agents: ReadonlyArray<CrewKey>,
+	by: RoutingType['by']
+): RoutingType {
+	const active = activeAmong(agents)
+	return active.length
+		? { kind: 'everyone', agents: active, by }
+		: { kind: 'room', agents: [], by }
+}
+
 // The two fixed rules, checked before CLEF's model: a trailing "..." stacks,
-// and an @mention of someone in `among` routes. Null when neither applies.
+// and an @mention of someone in `among` routes. Null when neither applies,
+// and for an @everyone, whose agents the caller picks.
 export function fixedRouting(
 	text: string,
 	among: ReadonlyArray<CrewKey> = crewKeys
 ): RoutingType | null {
 	if (endsWithEllipsis(text)) return { kind: 'stack', agents: [], by: 'rule' }
+	if (mentionsEveryone(text)) return null
 	const mentioned = mentionedCrew(text).filter((key) => among.includes(key))
 	return mentioned.length ? routeTo(mentioned, 'rule') : null
 }
