@@ -39,14 +39,11 @@ export const CREW_DURABILITY = { maxAttempts: 3 }
 // Flue compacts when the context passes the model's window minus
 // `reserveTokens`, so this keeps a conversation near CONTEXT_BUDGET whatever
 // the model's window.
-export const CONTEXT_BUDGET = 64_000
+export const CONTEXT_BUDGET = 240_000
 
 function compactionFor(contextWindow: number) {
 	return contextWindow > CONTEXT_BUDGET * 2
-		? {
-				reserveTokens: contextWindow - CONTEXT_BUDGET,
-				model: `cloudflare/${env.CREW_MODEL}`,
-			}
+		? { reserveTokens: contextWindow - CONTEXT_BUDGET }
 		: undefined
 }
 
