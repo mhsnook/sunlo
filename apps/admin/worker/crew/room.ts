@@ -1887,17 +1887,27 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return found.every(Boolean) ? found : null
 	}
 
-	// The origin the admin last opened the app on, such as
-	// https://admin.sunlo.app: the painter signs its links to reference
-	// images with it. A preview's room has the preview's origin.
+	// The origin the painter signs its links to reference images with:
+	// ADMIN_URL on production, or else the origin the admin last opened the
+	// app on, so a preview's room has the preview's origin.
 	setPublicOrigin(origin: string) {
+		if (this.adminUrl()) return
 		if (this.ctx.storage.kv.get(PUBLIC_ORIGIN) !== origin) {
 			this.ctx.storage.kv.put(PUBLIC_ORIGIN, origin)
 		}
 	}
 
 	publicOrigin(): string | null {
-		return this.ctx.storage.kv.get<string>(PUBLIC_ORIGIN) ?? null
+		return (
+			this.adminUrl() ?? this.ctx.storage.kv.get<string>(PUBLIC_ORIGIN) ?? null
+		)
+	}
+
+	// The generated Env types ADMIN_URL from the top-level vars, but a
+	// preview and a local dev server run without it.
+	private adminUrl(): string | null {
+		const env: { ADMIN_URL?: string } = this.env
+		return env.ADMIN_URL || null
 	}
 
 	// Signed links an image model can fetch these images by, for 10 minutes.
