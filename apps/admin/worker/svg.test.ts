@@ -206,6 +206,41 @@ describe('checkSvg', () => {
 		).toBe(true)
 	})
 
+	it('keeps colons in text and in attributes that hold no link', () => {
+		for (const svg of [
+			'<svg aria-label="Step: one"><rect width="1" height="1"/></svg>',
+			'<svg><g aria-description="See https://sunlo.app" data-note="a: b"/></svg>',
+			'<svg><a href="#a" xlink:title="Next: two"/></svg>',
+			'<svg><title>Step: one</title><desc>Time: 10:30</desc></svg>',
+			'<svg><text font-family="Noto: Sans, serif">Ratio 2:1</text></svg>',
+			'<svg><text style="font-family: Arial">x</text></svg>',
+			'<svg><rect class="md:fill-red"/></svg>',
+		]) {
+			expect(refusal(svg)).toBeNull()
+		}
+	})
+
+	it('still refuses links where colons are now kept', () => {
+		expect(
+			refusal('<svg><g aria-label="javascript:alert(1)"/></svg>')
+		).toContain('javascript:')
+		expect(refusal('<svg><title>vbscript:x</title></svg>')).toContain(
+			'vbscript:'
+		)
+		expect(
+			refusal('<svg><text font-family="https://evil.example/x"/></svg>')
+		).toContain('URLs in attributes')
+		expect(
+			refusal('<svg><rect class="x data:image/png;base64,AAAA"/></svg>')
+		).toContain('URLs in attributes')
+		expect(
+			refusal('<svg><rect fill="url(https://evil.example/x)"/></svg>')
+		).toContain('CSS url()')
+		expect(
+			refusal('<svg><a href="https://evil.example/" aria-label="a: b"/></svg>')
+		).toContain('Links in an SVG')
+	})
+
 	it('refuses what an HTML parser reads differently', () => {
 		expect(refusal('<svg><!-- --!><rect/> --></svg>')).toContain('comment')
 		expect(refusal('<svg><!--><rect/>--></svg>')).toContain('comment')
