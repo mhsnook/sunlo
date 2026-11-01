@@ -265,7 +265,7 @@ describe('documentsText', () => {
 		expect(text).toContain(
 			"## The Product room's documents\n\n- Roadmap (doc:3): revision 2, saved by Product officer, 2026-10-28 07:01 UTC\n- Launch checklist (doc:4): not written yet"
 		)
-		expect(text).toContain('[the Roadmap](doc:3)')
+		expect(text).not.toContain('Link to a document')
 	})
 
 	it('comes before the room’s cards in the briefing', () => {

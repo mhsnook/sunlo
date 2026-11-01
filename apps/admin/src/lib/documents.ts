@@ -3,6 +3,7 @@ import {
 	type DocumentSummaryType,
 	type RoomKey,
 } from '../../shared/crew'
+import { dayLabel } from './format'
 
 // The Common Room, which is not a room in `roomKeys`.
 export const CREW = 'crew'
@@ -35,3 +36,8 @@ export function documentLinkOptions(
 		? ({ to: '/', search } as const)
 		: ({ to: '/room/$room', params: { room }, search } as const)
 }
+
+export const documentStatus = (document: DocumentSummaryType) =>
+	document.at
+		? `Revision ${document.revision} · ${document.byName}, ${dayLabel(document.at)}`
+		: 'Not written yet'

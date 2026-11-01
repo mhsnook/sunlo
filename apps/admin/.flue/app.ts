@@ -646,8 +646,6 @@ api.delete(
 	}
 )
 
-// Every room's documents at once: the room log filters them to the room it
-// shows, and a `doc:` link in a message resolves its id against them all.
 api.get('/crew/documents', async (c) => {
 	return c.json(await (await roomFor()).allDocuments())
 })

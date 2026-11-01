@@ -72,10 +72,8 @@ export function DetailsPanel({
 }) {
 	const { data: all } = useSuspenseQuery(documentsQuery())
 	const documents = roomDocuments(room, all)
-	// Which document the panel shows is in the URL, so a `doc:` link in a
-	// message opens it, and the back button closes it again.
 	const { doc } = useSearch({ from: '/_admin' })
-	const open = documents.find((item) => item.id === doc) ?? null
+	const open = documents.find((item) => item.id === doc)
 	const closeDocument = useCloseDocument()
 	const members = room === CREW ? crewKeys : roomMembers(room)
 

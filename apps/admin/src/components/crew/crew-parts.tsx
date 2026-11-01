@@ -1,7 +1,7 @@
 import Markdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Link, useParams } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { GithubCard } from './github-card'
@@ -12,7 +12,6 @@ import { remarkCrew } from './remark-crew'
 import { Children, useState, type ReactNode } from 'react'
 import { Check, Copy, Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ago } from '@/lib/dayjs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageMarker } from '@/components/ui/message'
@@ -28,8 +27,14 @@ import {
 	type CrewMessageType,
 	type RoomKey,
 } from '../../../shared/crew'
-import { crewIcons, documentsQuery, roomIcons, useAnswerCard } from '~/lib/crew'
-import { CREW, documentLinkOptions } from '~/lib/documents'
+import {
+	crewIcons,
+	documentQuery,
+	documentsQuery,
+	roomIcons,
+	useAnswerCard,
+} from '~/lib/crew'
+import { CREW, documentLinkOptions, documentStatus } from '~/lib/documents'
 import { RefCard } from './ref-card'
 
 type AvatarSize = 'sm' | 'md' | 'lg'
@@ -112,22 +117,25 @@ export function AdminAvatar({ name }: { name: string }) {
 	)
 }
 
-// A link an agent wrote to a document, as `[the Roadmap](doc:3)`. It opens
-// the document in its room's details, and its card shows the document as it
-// is now. Empty link text, as in `[](doc:3)`, shows the current name. An id
-// no document answers to stays plain text, so a wrong id never becomes a
-// dead link.
+// Empty link text, as in `[](doc:3)`, shows the document's current name.
 function DocumentLink({ id, children }: { id: number; children: ReactNode }) {
-	const { data: documents } = useQuery(documentsQuery())
+	const queryClient = useQueryClient()
+	const { data: document } = useQuery({
+		...documentsQuery(),
+		select: (documents) => documents.find((item) => item.id === id),
+	})
 	const { room } = useParams({ strict: false })
-	const document = documents?.find((item) => item.id === id)
 	if (!document) return <>{children}</>
 	return (
 		<RefCard
 			testId="crew-document-card"
 			testKey={document.name}
+			onOpen={() => void queryClient.prefetchQuery(documentQuery(id))}
 			trigger={
+				// Hovering opens the card; preloading the route on that hover
+				// would fetch another room's whole log.
 				<Link
+					preload={false}
 					{...documentLinkOptions(
 						room && isRoomKey(room) ? room : CREW,
 						document
@@ -142,10 +150,7 @@ function DocumentLink({ id, children }: { id: number; children: ReactNode }) {
 		>
 			<p className="font-medium">{document.name}</p>
 			<p className="text-muted-foreground mt-1">
-				{roomNames[document.room]} ·{' '}
-				{document.at
-					? `revision ${document.revision}, saved by ${document.byName} ${ago(document.at)}`
-					: 'not written yet'}
+				{roomNames[document.room]} · {documentStatus(document)}
 			</p>
 		</RefCard>
 	)

@@ -7,9 +7,7 @@ import { documentsQuery, useCrewLive } from '~/lib/crew'
 import { CrewSidebar } from '~/components/crew/crew-sidebar'
 import { MeetingBanner } from '~/components/crew/meeting-banner'
 
-// `doc` is the id of the document the details panel shows. Every page under
-// the layout takes it, so a `doc:` link in a message opens the document
-// beside the room that keeps it.
+// `doc` is the id of the document the details panel shows.
 type DetailsSearch = { doc?: number }
 
 export const Route = createFileRoute('/_admin')({
@@ -23,8 +21,6 @@ export const Route = createFileRoute('/_admin')({
 		)
 		return { session, isAdmin }
 	},
-	// Every room's documents: the details panel lists them, and a `doc:`
-	// link resolves against them wherever a message renders.
 	loader: ({ context }) =>
 		context.queryClient.ensureQueryData(documentsQuery()),
 	component: AdminLayout,

@@ -2530,8 +2530,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return this.allDocuments().filter((doc) => doc.room === room)
 	}
 
-	// Every room's documents, which the app asks for once: its room log
-	// filters them, and a `doc:` link resolves its id against them all.
 	allDocuments(): Array<DocumentSummaryType> {
 		return this.sql<DocumentRow>`
 			select document.id, document.room, document.name, document.revision,
@@ -2661,14 +2659,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	private documentSummary(id: number): DocumentSummaryType | null {
-		const row = this.sql<DocumentRow>`
-			select document.id, document.room, document.name, document.revision,
-				document_revision.by_name, document_revision.at
-			from document
-			left join document_revision on document_revision.document = document.id
-				and document_revision.revision = document.revision
-			where document.id = ${id}`[0]
-		return row ? toDocumentSummary(row) : null
+		return this.allDocuments().find((doc) => doc.id === id) ?? null
 	}
 
 	private saveRevision(input: {
@@ -2699,7 +2690,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			insert into document_revision (document, revision, text, summary, by, by_name, at)
 			values (${id}, ${check.revision}, ${text}, ${input.summary.trim()}, ${input.by}, ${input.byName}, ${now()})`
 		this.sql`update document set revision = ${check.revision} where id = ${id}`
-		this.push({ type: 'document', room: input.room, id })
+		this.push({ type: 'document', id })
 		return { ...check, id }
 	}
 

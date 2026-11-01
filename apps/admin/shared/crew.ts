@@ -715,13 +715,9 @@ export const DOCUMENT_MAX = 40_000
 export const documentMax = (name: string) =>
 	name === SITREP ? SITREP_MAX : DOCUMENT_MAX
 
-// Anything a message or a document writes about a document links to it: an
-// ordinary Markdown link whose target is "doc:" and the document's id, as in
-// `[the Roadmap](doc:3)`. The app opens that document; a target no document
-// answers to stays plain text. The id never changes, unlike a name.
-export const DOCUMENT_SCHEME = 'doc:'
-
-export const documentHref = (id: number) => `${DOCUMENT_SCHEME}${id}`
+// A link to a document is `[the Roadmap](doc:3)`. It names the id, not the
+// name, because two names can slug alike and an id never changes.
+export const documentHref = (id: number) => `doc:${id}`
 
 // The id a link target names, or null for an ordinary URL.
 export function documentIdInHref(href: string): number | null {
@@ -886,7 +882,7 @@ export type RoomEvent =
 	| { type: 'command' }
 	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
-	| { type: 'document'; room: RoomKey; id: number }
+	| { type: 'document'; id: number }
 	| { type: 'painter-styles' }
 	// A run started, took a step, or ended.
 	| { type: 'run'; run: RunType }

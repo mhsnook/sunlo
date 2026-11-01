@@ -7,15 +7,17 @@ export function RefCard({
 	trigger,
 	testId,
 	testKey,
+	onOpen,
 	children,
 }: {
 	trigger: ReactElement
 	testId: string
 	testKey: string
+	onOpen?: () => void
 	children: ReactNode
 }) {
 	return (
-		<PreviewCard.Root>
+		<PreviewCard.Root onOpenChange={(open) => open && onOpen?.()}>
 			<PreviewCard.Trigger render={trigger} />
 			<PreviewCard.Portal>
 				<PreviewCard.Positioner sideOffset={6} className="isolate z-50">
