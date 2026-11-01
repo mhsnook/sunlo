@@ -50,7 +50,7 @@ type MilestoneData = {
 	html_url: string
 }
 
-const labelNames = (labels: IssueData['labels']) =>
+export const labelNames = (labels: IssueData['labels']) =>
 	labels.flatMap((label) =>
 		typeof label === 'string' ? [label] : label.name ? [label.name] : []
 	)
@@ -234,6 +234,32 @@ export function githubClient(request: Request, repository: string) {
 				per_page: 100,
 			})
 			return (data as Array<IssueData>).map(toIssue)
+		},
+
+		// Issues and pull requests as GitHub returns them, newest first, up to
+		// `pages` pages of 100: every open one, or every one updated since a
+		// time. `complete` is false when there were more.
+		async issuePages(query: {
+			state: 'open' | 'all'
+			since?: string
+			pages: number
+		}) {
+			const items: Array<unknown> = []
+			for (let page = 1; page <= query.pages; page++) {
+				// One page at a time: a short page is the last one.
+				// oxlint-disable-next-line no-await-in-loop
+				const { data } = await request('GET /repos/{owner}/{repo}/issues', {
+					...at,
+					state: query.state,
+					since: query.since,
+					sort: 'updated',
+					per_page: 100,
+					page,
+				})
+				items.push(...data)
+				if (data.length < 100) return { items, complete: true }
+			}
+			return { items, complete: false }
 		},
 	}
 }

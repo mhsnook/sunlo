@@ -28,6 +28,7 @@ import {
 	CrewMessageSchema,
 	DocumentSchema,
 	DocumentSummarySchema,
+	GithubLogSchema,
 	MessageImageSchema,
 	PainterStyleSchema,
 	placeOf,
@@ -262,6 +263,15 @@ const SketchSourceSchema = z.object({
 	html: z.string(),
 	frame: z.enum(['phone', 'desktop']),
 })
+
+// What is open on GitHub, and what closed lately, as the room keeps it. The
+// live socket keeps this current.
+export const githubLogQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'github'],
+		queryFn: async () => GithubLogSchema.parse(await adminFetch('crew/github')),
+		staleTime: Infinity,
+	})
 
 // The painter's styles. The live socket keeps this current.
 export const painterStylesQuery = () =>
@@ -642,6 +652,7 @@ const pendingMessage = (
 	parent: null,
 	thread: null,
 	pick: null,
+	github: null,
 })
 
 // A message someone else wrote after the admin last opened its timeline.
@@ -848,6 +859,7 @@ export function useCrewLive() {
 					['crew', 'documents'],
 					['crew', 'document'],
 					painterStylesQuery().queryKey,
+					githubLogQuery().queryKey,
 					runsQuery().queryKey,
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
@@ -880,6 +892,11 @@ export function useCrewLive() {
 			if (event.type === 'painter-styles') {
 				void queryClient.invalidateQueries({
 					queryKey: painterStylesQuery().queryKey,
+				})
+			}
+			if (event.type === 'github') {
+				void queryClient.invalidateQueries({
+					queryKey: githubLogQuery().queryKey,
 				})
 			}
 			if (event.type === 'command') {

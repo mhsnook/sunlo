@@ -22,6 +22,11 @@ import {
 	RoutingSchema,
 } from '../shared/crew'
 import { restoreSummary } from '../worker/crew/documents'
+import {
+	githubWebhook,
+	MAX_WEBHOOK_BYTES,
+	verifyGithubSignature,
+} from '../worker/crew/github-log'
 import { createApi } from '../worker/api'
 import { imageInfo, verifyImageLink } from '../worker/images'
 import { SVG_POLICY } from '../worker/svg'
@@ -530,19 +535,28 @@ api.get('/crew/sketches/:id/image', numericId('No such sketch'), async (c) => {
 	})
 })
 
+// The request body, or null when it is bigger than `max`. A body sent
+// without a content-length is read before it can be measured.
+async function readCapped(
+	req: {
+		header: (name: string) => string | undefined
+		arrayBuffer: () => Promise<ArrayBuffer>
+	},
+	max: number
+) {
+	if (Number(req.header('content-length') ?? 0) > max) return null
+	const bytes = await req.arrayBuffer()
+	return bytes.byteLength > max ? null : bytes
+}
+
 // The body is the image itself, with its content type. A message then
 // names it by the id this returns.
 api.post('/crew/images', async (c) => {
 	if (!c.req.header('content-type')?.startsWith('image/')) {
 		return c.json({ error: 'Send the image as an image/* body' }, 400)
 	}
-	if (Number(c.req.header('content-length') ?? 0) > MAX_UPLOAD_BYTES) {
-		return c.json({ error: 'That image is too big to keep' }, 413)
-	}
-	const bytes = await c.req.arrayBuffer()
-	if (bytes.byteLength > MAX_UPLOAD_BYTES) {
-		return c.json({ error: 'That image is too big to keep' }, 413)
-	}
+	const bytes = await readCapped(c.req, MAX_UPLOAD_BYTES)
+	if (!bytes) return c.json({ error: 'That image is too big to keep' }, 413)
 	const info = imageInfo(new Uint8Array(bytes))
 	if (!info) {
 		return c.json({ error: 'Send a PNG, JPEG, WebP or GIF image' }, 400)
@@ -585,6 +599,49 @@ api.get('/public/images/:id', numericId('No such image'), async (c) => {
 		// No shared cache may serve the image after the link expires.
 		'cache-control': 'no-store',
 	})
+})
+
+// GitHub's webhook for mhsnook/sunlo's issues and pull requests (README,
+// "GitHub's running log"). worker/api.ts lets /api/public/ through without a
+// token; the X-Hub-Signature-256 HMAC is the check, so a Worker without
+// GITHUB_WEBHOOK_SECRET refuses every delivery.
+api.post('/public/github/webhook', async (c) => {
+	const secret = c.env.GITHUB_WEBHOOK_SECRET
+	if (!secret) {
+		return c.json({ error: 'GITHUB_WEBHOOK_SECRET is not set' }, 503)
+	}
+	const body = await readCapped(c.req, MAX_WEBHOOK_BYTES)
+	if (!body) return c.json({ error: 'Too large' }, 413)
+	const signed = await verifyGithubSignature(
+		secret,
+		body,
+		c.req.header('x-hub-signature-256')
+	)
+	if (!signed) return c.json({ error: 'Bad signature' }, 401)
+	const delivery = c.req.header('x-github-delivery')
+	if (!delivery || delivery.length > 100) {
+		return c.json({ error: 'No X-GitHub-Delivery' }, 400)
+	}
+	let payload: unknown
+	try {
+		payload = JSON.parse(new TextDecoder().decode(body))
+	} catch {
+		return c.json({ error: 'The body is not JSON' }, 400)
+	}
+	const result = githubWebhook(
+		c.req.header('x-github-event'),
+		payload,
+		c.env.GITHUB_REPO
+	)
+	if (result.kind === 'ping') return c.json({ ok: true })
+	if (result.kind === 'ignore') return c.body(null, 204)
+	const taken = await (await roomFor()).githubDelivery(delivery, result)
+	return c.json({ ok: true, duplicate: !taken })
+})
+
+// The room's copy of what is open on GitHub, for the Product room's details.
+api.get('/crew/github', async (c) => {
+	return c.json(await (await roomFor()).githubLog())
 })
 
 // An SVG's text. It can only be kept once it passes checkSvg, and the app

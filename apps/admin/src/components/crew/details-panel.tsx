@@ -21,6 +21,7 @@ import {
 	principalOf,
 	roomMembers,
 	roomNames,
+	roomOf,
 	SITREP,
 	type CrewKey,
 	type DocumentSummaryType,
@@ -43,6 +44,7 @@ import { CrewCharterSection } from './common-knowledge-panel'
 import { DocumentView } from './document-view'
 import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
 import { EditableEntry } from './editable-entry'
+import { GithubLogSection } from './github-log'
 import { MemoryList } from './memory-list'
 import { OverviewSection } from './overview-panel'
 import { PainterStyles } from './painter-styles'
@@ -150,6 +152,21 @@ export function DetailsPanel({
 		})),
 		...(room === CREW
 			? [{ key: 'overview', title: 'Overview', content: <OverviewSection /> }]
+			: []),
+		...(room === roomOf('product-1')
+			? [
+					{
+						key: 'github',
+						title: 'GitHub',
+						content: (
+							<Suspense
+								fallback={<Loader className="mx-auto my-6 opacity-50" />}
+							>
+								<GithubLogSection />
+							</Suspense>
+						),
+					},
+				]
 			: []),
 		...(room === crew['product-2'].room
 			? [

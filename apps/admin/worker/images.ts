@@ -108,7 +108,7 @@ export const MAX_LINK_SECONDS = 24 * 60 * 60
 const encoder = new TextEncoder()
 const signedText = (id: number, expires: number) => `image:${id}:${expires}`
 
-const hmacKey = (secret: string) =>
+export const hmacKey = (secret: string) =>
 	crypto.subtle.importKey(
 		'raw',
 		encoder.encode(secret),
