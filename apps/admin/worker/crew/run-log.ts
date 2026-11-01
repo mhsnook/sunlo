@@ -31,9 +31,11 @@ type RunRow = {
 	message_id: string | null
 	steps: string
 	dropped: number
+	error: string | null
 }
 
 const NO_STEPS = '[]'
+const MAX_ERROR = 500
 
 const toRun = (row: RunRow): RunType => ({
 	id: row.id,
@@ -45,6 +47,7 @@ const toRun = (row: RunRow): RunType => ({
 	messageId: row.message_id,
 	steps: JSON.parse(row.steps) as Array<RunStepType>,
 	dropped: row.dropped,
+	error: row.error,
 })
 
 // The room's `run` table: each run's steps, and the message it produced.
@@ -58,11 +61,12 @@ export class RunLog {
 		private now = () => new Date().toISOString()
 	) {}
 
-	// Runs without steps stay out: a delivery that joined a live run settles
-	// as a submission of its own.
+	// Runs without steps or an error stay out: a delivery that joined a live
+	// run settles as a submission of its own.
 	list(): Array<RunType> {
 		return this.sql<RunRow>`
-			select * from run where steps != ${NO_STEPS} order by id`.map(toRun)
+			select * from run where steps != ${NO_STEPS} or error is not null
+			order by id`.map(toRun)
 	}
 
 	start(key: RunLogKey, at: string) {
@@ -86,7 +90,12 @@ export class RunLog {
 
 	// `fallback` is what the run answers when it posted nothing: the message
 	// that woke it.
-	settle(key: RunLogKey, outcome: 'done' | 'failed', fallback: string | null) {
+	settle(
+		key: RunLogKey,
+		outcome: 'done' | 'failed',
+		fallback: string | null,
+		error: string | null = null
+	) {
 		const row =
 			this.find(key) ??
 			this.sql<RunRow>`
@@ -94,7 +103,7 @@ export class RunLog {
 				values (${key.agent}, ${key.thread}, ${key.submission}, ${this.now()}, 'working')
 				returning *`[0]
 		if (row.ended_at) return
-		this.close(row, outcome, fallback)
+		this.close(row, outcome, fallback, error)
 	}
 
 	// A main run's trigger leaves the room's records when the run finishes,
@@ -135,14 +144,16 @@ export class RunLog {
 	private close(
 		row: RunRow,
 		outcome: 'done' | 'failed',
-		fallback: string | null
+		fallback: string | null,
+		error: string | null = null
 	) {
 		const produced =
 			this.lastPost(row.agent, row.started_at, row.thread) ??
 			row.message_id ??
 			fallback
 		const [closed] = this.sql<RunRow>`
-			update run set ended_at = ${this.now()}, outcome = ${outcome}, message_id = ${produced}
+			update run set ended_at = ${this.now()}, outcome = ${outcome}, message_id = ${produced},
+				error = ${error?.slice(0, MAX_ERROR) ?? null}
 			where id = ${row.id}
 			returning *`
 		this.show(closed)
@@ -163,6 +174,6 @@ export class RunLog {
 	}
 
 	private show(row: RunRow) {
-		if (row.steps !== NO_STEPS) this.push(toRun(row))
+		if (row.steps !== NO_STEPS || row.error) this.push(toRun(row))
 	}
 }

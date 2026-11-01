@@ -36,7 +36,8 @@ const SCHEMA = `
 		outcome text not null,
 		message_id text,
 		steps text not null default '[]',
-		dropped integer not null default 0
+		dropped integer not null default 0,
+		error text
 	);
 `
 
@@ -146,6 +147,18 @@ describe('RunLog', () => {
 		log.step(main('a'), toolStart('a-1'))
 		log.settle(main('other'), 'done', null)
 		expect(run(main('a'))?.outcome).toBe('working')
+	})
+
+	it('keeps a failed run with no steps, and its error', () => {
+		log.settle(main('s'), 'failed', 'wake-1', 'No such model: x')
+		expect(log.list()).toMatchObject([
+			{
+				outcome: 'failed',
+				messageId: 'wake-1',
+				steps: [],
+				error: 'No such model: x',
+			},
+		])
 	})
 
 	it('keeps a close that arrives before the first step', () => {

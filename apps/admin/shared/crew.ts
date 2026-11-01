@@ -857,6 +857,8 @@ export const RunSchema = z.object({
 	steps: z.array(RunStepSchema),
 	// Steps left out to keep the list short: the run took this many more.
 	dropped: z.number(),
+	// Why a failed run stopped, as Flue reported it.
+	error: z.string().nullable(),
 })
 export type RunType = z.infer<typeof RunSchema>
 
