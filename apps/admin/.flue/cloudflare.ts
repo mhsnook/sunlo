@@ -6,8 +6,8 @@ export { CrewRoom } from '../worker/crew/room'
 export default {
 	// wrangler.jsonc `triggers.crons`: "0 * * * *". product-1's daily run is
 	// at 07:00 UTC; command-1's brief is at Sunday 04:00 in the admin's time
-	// zone. Every hour, the room checks its copy of what is open on GitHub
-	// against the API, and prunes old paintings and SVG renderings.
+	// zone. Every hour, the room prunes its GitHub list (and fills it once,
+	// from the API) and prunes old paintings and SVG renderings.
 	async scheduled(controller) {
 		const now = new Date(controller.scheduledTime)
 		const room = await roomFor()
@@ -29,8 +29,10 @@ export default {
 			)
 		}
 		await room
-			.checkGithub()
-			.catch((error: unknown) => console.error('Could not check GitHub', error))
+			.tendGithubLog()
+			.catch((error: unknown) =>
+				console.error('Could not fill the GitHub list', error)
+			)
 		await room.pruneImages()
 	},
 } satisfies ExportedHandler<Env>

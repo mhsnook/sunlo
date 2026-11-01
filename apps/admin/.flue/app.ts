@@ -535,19 +535,28 @@ api.get('/crew/sketches/:id/image', numericId('No such sketch'), async (c) => {
 	})
 })
 
+// The request body, or null when it is bigger than `max`. A body sent
+// without a content-length is read before it can be measured.
+async function readCapped(
+	req: {
+		header: (name: string) => string | undefined
+		arrayBuffer: () => Promise<ArrayBuffer>
+	},
+	max: number
+) {
+	if (Number(req.header('content-length') ?? 0) > max) return null
+	const bytes = await req.arrayBuffer()
+	return bytes.byteLength > max ? null : bytes
+}
+
 // The body is the image itself, with its content type. A message then
 // names it by the id this returns.
 api.post('/crew/images', async (c) => {
 	if (!c.req.header('content-type')?.startsWith('image/')) {
 		return c.json({ error: 'Send the image as an image/* body' }, 400)
 	}
-	if (Number(c.req.header('content-length') ?? 0) > MAX_UPLOAD_BYTES) {
-		return c.json({ error: 'That image is too big to keep' }, 413)
-	}
-	const bytes = await c.req.arrayBuffer()
-	if (bytes.byteLength > MAX_UPLOAD_BYTES) {
-		return c.json({ error: 'That image is too big to keep' }, 413)
-	}
+	const bytes = await readCapped(c.req, MAX_UPLOAD_BYTES)
+	if (!bytes) return c.json({ error: 'That image is too big to keep' }, 413)
 	const info = imageInfo(new Uint8Array(bytes))
 	if (!info) {
 		return c.json({ error: 'Send a PNG, JPEG, WebP or GIF image' }, 400)
@@ -601,13 +610,8 @@ api.post('/public/github/webhook', async (c) => {
 	if (!secret) {
 		return c.json({ error: 'GITHUB_WEBHOOK_SECRET is not set' }, 503)
 	}
-	if (Number(c.req.header('content-length') ?? 0) > MAX_WEBHOOK_BYTES) {
-		return c.json({ error: 'Too large' }, 413)
-	}
-	const body = await c.req.arrayBuffer()
-	if (body.byteLength > MAX_WEBHOOK_BYTES) {
-		return c.json({ error: 'Too large' }, 413)
-	}
+	const body = await readCapped(c.req, MAX_WEBHOOK_BYTES)
+	if (!body) return c.json({ error: 'Too large' }, 413)
 	const signed = await verifyGithubSignature(
 		secret,
 		body,
@@ -631,18 +635,8 @@ api.post('/public/github/webhook', async (c) => {
 	)
 	if (result.kind === 'ping') return c.json({ ok: true })
 	if (result.kind === 'ignore') return c.body(null, 204)
-	const room = await roomFor()
-	const { duplicate, unchecked } = await room.githubDelivery(delivery, result)
-	if (unchecked) {
-		c.executionCtx.waitUntil(
-			room
-				.checkGithub()
-				.catch((error: unknown) =>
-					console.error('Could not check GitHub after a delivery', error)
-				)
-		)
-	}
-	return c.json({ ok: true, duplicate })
+	const taken = await (await roomFor()).githubDelivery(delivery, result)
+	return c.json({ ok: true, duplicate: !taken })
 })
 
 // The room's copy of what is open on GitHub, for the Product room's details.

@@ -4,19 +4,18 @@ import {
 	type GithubEventType,
 	type GithubItemType,
 } from '../../shared/crew'
+import { hmacKey } from '../images'
+import { labelNames } from './github'
 import type { Sql } from './paintings'
+import { clip } from './steps'
 
 // Issue and pull request titles are anyone's text on a public repository.
 export const GITHUB_TITLE_MAX = 200
 const LABEL_MAX = 50
 const LABELS_MAX = 10
-// GitHub caps a payload at 25 MB; an issue or pull request event is far
-// smaller, and the route refuses anything bigger than this before reading it.
 export const MAX_WEBHOOK_BYTES = 1_000_000
 // Deliveries are kept this long to spot a redelivery.
 export const DELIVERY_DAYS = 7
-
-const encoder = new TextEncoder()
 
 // X-Hub-Signature-256 is "sha256=" and the hex HMAC-SHA256 of the raw body,
 // keyed with the webhook's secret. False without a secret, so a Worker with
@@ -29,30 +28,22 @@ export async function verifyGithubSignature(
 	if (!secret || !header) return false
 	const hex = /^sha256=([0-9a-f]{64})$/i.exec(header.trim())?.[1]
 	if (!hex) return false
-	const signature = new Uint8Array(32)
-	for (let i = 0; i < 32; i++) {
-		signature[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
-	}
-	const key = await crypto.subtle.importKey(
-		'raw',
-		encoder.encode(secret),
-		{ name: 'HMAC', hash: 'SHA-256' },
-		false,
-		['verify']
-	)
 	// subtle.verify compares in constant time.
-	return crypto.subtle.verify('HMAC', key, signature, body)
+	return crypto.subtle.verify(
+		'HMAC',
+		await hmacKey(secret),
+		Buffer.from(hex, 'hex'),
+		body
+	)
 }
 
 // One line of plain text: no control or format characters (newlines,
 // bidirectional overrides, zero-width marks), at most `max` characters.
-export function plainLine(text: string, max: number) {
-	const line = text
-		.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, ' ')
-		.replace(/\s+/g, ' ')
-		.trim()
-	return line.length > max ? `${line.slice(0, max - 1).trimEnd()}…` : line
-}
+export const plainLine = (text: string, max: number) =>
+	clip(
+		text.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, ' ').replace(/\s+/g, ' '),
+		max
+	)
 
 const Label = z.union([z.string(), z.object({ name: z.string().optional() })])
 
@@ -92,10 +83,7 @@ export function githubItemOf(
 		kind: kind ?? (issue.pull_request ? 'pr' : 'issue'),
 		title: plainLine(issue.title, GITHUB_TITLE_MAX),
 		url: issue.html_url,
-		labels: (issue.labels ?? [])
-			.flatMap((label) =>
-				typeof label === 'string' ? [label] : label.name ? [label.name] : []
-			)
+		labels: labelNames(issue.labels ?? [])
 			.map((label) => plainLine(label, LABEL_MAX))
 			.filter(Boolean)
 			.slice(0, LABELS_MAX),
@@ -163,28 +151,6 @@ export function githubWebhook(
 	return { kind: 'item', item, event }
 }
 
-// How a check against GitHub's API changes the room's copy: every item it
-// returned is written (the open list wins over the recently updated one),
-// and an item the room holds as open that GitHub no longer lists is closed.
-// When the open list was cut short, nothing is closed, since the missing
-// items may be on a page that was not read.
-export function reconcileGithub(input: {
-	storedOpen: Array<number>
-	open: Array<GithubItemType>
-	openComplete: boolean
-	recent: Array<GithubItemType>
-}) {
-	const items = new Map<number, GithubItemType>()
-	for (const item of input.recent) items.set(item.number, item)
-	for (const item of input.open) items.set(item.number, item)
-	return {
-		upserts: [...items.values()],
-		closed: input.openComplete
-			? input.storedOpen.filter((number) => !items.has(number))
-			: [],
-	}
-}
-
 // ---- The room's tables (github_item, github_delivery) ---------------------
 
 type GithubItemRow = {
@@ -211,14 +177,13 @@ const toGithubItem = (row: GithubItemRow): GithubItemType => ({
 	closedAt: row.closed_at,
 })
 
-const daysBefore = (at: number, days: number) =>
+export const daysBefore = (at: number, days: number) =>
 	new Date(at - days * 86_400_000).toISOString()
 
 // True the first time the room sees a delivery id, false for a redelivery.
 // The caller writes what the delivery means with no await after this, so
 // two copies of one delivery cannot both pass.
 export function takeDelivery(sql: Sql, id: string, at = Date.now()) {
-	sql`delete from github_delivery where at < ${daysBefore(at, DELIVERY_DAYS)}`
 	if (sql`select 1 from github_delivery where id = ${id}`.length) return false
 	sql`insert into github_delivery (id, at) values (${id}, ${new Date(at).toISOString()})`
 	return true
@@ -239,35 +204,15 @@ export function writeGithubItem(sql: Sql, item: GithubItemType) {
 			state = excluded.state,
 			updated_at = excluded.updated_at,
 			closed_at = excluded.closed_at
-		where excluded.updated_at >= github_item.updated_at`
+		where excluded.updated_at > github_item.updated_at`
 }
 
 export function removeGithubItem(sql: Sql, number: number) {
 	sql`delete from github_item where number = ${number}`
 }
 
-export const storedOpenItems = (sql: Sql) =>
-	sql<{ number: number }>`
-		select number from github_item where state = 'open'`.map(
-		(row) => row.number
-	)
-
-// The items reconcileGithub found closed. One that a delivery opened while
-// the lists were loading is missing from them, and stays open.
-export function closeGithubItems(
-	sql: Sql,
-	numbers: Array<number>,
-	checkStarted: string
-) {
-	for (const number of numbers) {
-		sql`
-			update github_item
-			set state = 'closed', closed_at = ${checkStarted}, updated_at = ${checkStarted}
-			where number = ${number} and updated_at < ${checkStarted}`
-	}
-}
-
-export function pruneGithubItems(sql: Sql, at = Date.now()) {
+export function pruneGithubLog(sql: Sql, at = Date.now()) {
+	sql`delete from github_delivery where at < ${daysBefore(at, DELIVERY_DAYS)}`
 	sql`
 		delete from github_item
 		where state != 'open'

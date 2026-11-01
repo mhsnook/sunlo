@@ -1,5 +1,7 @@
 import {
 	crewNames,
+	GITHUB_CLOSED_DAYS,
+	githubRef,
 	displayName,
 	meetingDue,
 	roomOfPlace,
@@ -20,6 +22,7 @@ import {
 	type WorkspaceType,
 	withImageLines,
 } from '../../shared/crew'
+import { clip } from './steps'
 
 // Room times for the model: minutes are enough, and UTC is explicit.
 export const stamp = (iso: string) =>
@@ -84,7 +87,7 @@ export type BriefingInput = {
 	github: {
 		access: 'read' | 'write'
 		connected: boolean
-		log?: GithubLogType
+		log: GithubLogType
 	} | null
 	workspace: WorkspaceType
 	// The cards in the agent's own room.
@@ -131,7 +134,7 @@ export function briefingText(input: BriefingInput) {
 	]
 	if (input.command) sections.push(commandText(input.command, input.now))
 	if (input.github) {
-		sections.push(githubText(input.github, Date.parse(input.now)))
+		sections.push(githubText(input.github))
 	}
 	sections.push(
 		documentsText(room, input.documents),
@@ -192,10 +195,7 @@ export function sitrepText(sitrep: Sitrep | null) {
 	].join('\n\n')
 }
 
-export function githubText(
-	github: NonNullable<BriefingInput['github']>,
-	now = Date.now()
-) {
+export function githubText(github: NonNullable<BriefingInput['github']>) {
 	return [
 		'## GitHub',
 		github.connected
@@ -203,7 +203,7 @@ export function githubText(
 				? "Connected: you keep mhsnook/sunlo's milestones and epics."
 				: "Connected, read-only: you can read mhsnook/sunlo's milestones, epics and issues."
 			: 'Not connected: the GitHub App is not set up, so you have no GitHub tools. If the admin asks for GitHub work, say so.',
-		...(github.log ? [githubLogText(github.log, now)] : []),
+		githubLogText(github.log),
 	].join('\n\n')
 }
 
@@ -211,16 +211,11 @@ export function githubText(
 // stays short however busy the repository is.
 export const GITHUB_BRIEFING_ITEMS = 15
 const GITHUB_BRIEFING_TITLE = 100
-const RECENT_DAYS = 7
-
 const itemLine = (item: GithubItemType) => {
-	const title =
-		item.title.length > GITHUB_BRIEFING_TITLE
-			? `${item.title.slice(0, GITHUB_BRIEFING_TITLE - 1)}…`
-			: item.title
+	const title = clip(item.title, GITHUB_BRIEFING_TITLE)
 	const labels = item.labels.length ? ` [${item.labels.join(', ')}]` : ''
 	const milestone = item.milestone ? ` (milestone: ${item.milestone})` : ''
-	return `- ${item.kind === 'pr' ? 'PR ' : ''}#${item.number} ${JSON.stringify(title)}${labels}${milestone}`
+	return `- ${githubRef(item)} ${JSON.stringify(title)}${labels}${milestone}`
 }
 
 const listText = (
@@ -230,19 +225,15 @@ const listText = (
 ) =>
 	`${heading}${items.length > GITHUB_BRIEFING_ITEMS ? `, the ${GITHUB_BRIEFING_ITEMS} newest` : ''}:\n${items.slice(0, GITHUB_BRIEFING_ITEMS).map(line).join('\n') || '(none)'}`
 
-// What is open on GitHub now, and what closed in the last week, from the
-// room's copy. Titles come from anyone who can open an issue on a public
-// repository, so they are quoted and marked as data.
-export function githubLogText(log: GithubLogType, now = Date.now()) {
+// What is open on GitHub now, and what closed lately, from the room's copy.
+// Titles come from anyone who can open an issue on a public repository, so
+// they are quoted and marked as data.
+export function githubLogText(log: GithubLogType) {
 	if (!log.checkedAt && !log.items.length) {
 		return 'What is open on GitHub: the room has no copy yet (no webhook delivery and no check against the API so far).'
 	}
 	const open = log.items.filter((item) => item.state === 'open')
-	const weekAgo = new Date(now - RECENT_DAYS * 86_400_000).toISOString()
-	const closed = log.items.filter(
-		(item) =>
-			item.state !== 'open' && (item.closedAt ?? item.updatedAt) >= weekAgo
-	)
+	const closed = log.items.filter((item) => item.state !== 'open')
 	const prs = open.filter((item) => item.kind === 'pr')
 	const issues = open.filter((item) => item.kind === 'issue')
 	return [
@@ -250,14 +241,14 @@ export function githubLogText(log: GithubLogType, now = Date.now()) {
 		listText(`Open pull requests (${prs.length})`, prs),
 		listText(`Open issues (${issues.length}), last updated first`, issues),
 		listText(
-			`Closed or merged in the last ${RECENT_DAYS} days (${closed.length})`,
+			`Closed or merged in the last ${GITHUB_CLOSED_DAYS} days (${closed.length})`,
 			closed,
 			(item) =>
 				`${itemLine(item)}: ${item.state}${item.closedAt ? ` ${stamp(item.closedAt)}` : ''}`
 		),
 		log.checkedAt
-			? `(Last checked against GitHub's API at ${stamp(log.checkedAt)}.)`
-			: "(Not checked against GitHub's API yet.)",
+			? `(Filled from GitHub's API at ${stamp(log.checkedAt)}; the webhook keeps it current.)`
+			: "(Not filled from GitHub's API yet; the webhook adds what changes.)",
 	].join('\n\n')
 }
 

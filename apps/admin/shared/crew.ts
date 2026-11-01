@@ -384,18 +384,6 @@ export type ActionType = z.infer<typeof ActionSchema>
 // member and not an admin, so nothing it posts wakes anyone.
 export const GITHUB_AUTHOR = 'github'
 
-// One line in the Product room for an issue or a pull request that opened,
-// closed, merged or reopened on GitHub. The title is anyone's text on a
-// public repository: the app shows it as plain text only.
-export const GithubEventSchema = z.object({
-	kind: z.enum(['issue', 'pr']),
-	action: z.enum(['opened', 'closed', 'merged', 'reopened']),
-	number: z.number().int(),
-	title: z.string(),
-	url: z.string(),
-})
-export type GithubEventType = z.infer<typeof GithubEventSchema>
-
 // An issue or pull request in the room's copy of what is open on GitHub,
 // and of what closed lately.
 export const GithubItemSchema = z.object({
@@ -411,11 +399,22 @@ export const GithubItemSchema = z.object({
 })
 export type GithubItemType = z.infer<typeof GithubItemSchema>
 
+// One line in the Product room for an issue or a pull request that opened,
+// closed, merged or reopened on GitHub. The title is anyone's text on a
+// public repository: the app shows it as plain text only.
+export const GithubEventSchema = GithubItemSchema.pick({
+	kind: true,
+	number: true,
+	title: true,
+	url: true,
+}).extend({ action: z.enum(['opened', 'closed', 'merged', 'reopened']) })
+export type GithubEventType = z.infer<typeof GithubEventSchema>
+
 export const GithubLogSchema = z.object({
 	// Open items, then the ones closed in the last GITHUB_CLOSED_DAYS, each
 	// newest first.
 	items: z.array(GithubItemSchema),
-	// When the room last checked its copy against GitHub's API.
+	// When the room filled its copy from GitHub's API, once.
 	checkedAt: z.string().nullable(),
 })
 export type GithubLogType = z.infer<typeof GithubLogSchema>
@@ -423,9 +422,13 @@ export type GithubLogType = z.infer<typeof GithubLogSchema>
 // Closed items stay in the room's copy this long.
 export const GITHUB_CLOSED_DAYS = 14
 
+// "#851" or "PR #852".
+export const githubRef = (item: Pick<GithubItemType, 'kind' | 'number'>) =>
+	`${item.kind === 'pr' ? 'PR ' : ''}#${item.number}`
+
 // "#851 opened: …" or "PR #852 merged: …".
 export const githubEventLine = (event: GithubEventType) =>
-	`${event.kind === 'pr' ? 'PR ' : ''}#${event.number} ${event.action}: ${event.title}`
+	`${githubRef(event)} ${event.action}: ${event.title}`
 
 // An image the room keeps (the `image` table), as a message carries it.
 export const MessageImageSchema = z.object({

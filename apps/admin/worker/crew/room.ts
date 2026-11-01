@@ -3,6 +3,7 @@ import {
 	adminAuthor,
 	COMMON_ROOM,
 	crew,
+	crewKeys,
 	displayName,
 	draftTitle,
 	activeCrew,
@@ -94,13 +95,11 @@ import {
 	sketchPickReports,
 } from './picks'
 import {
-	closeGithubItems,
+	daysBefore,
 	githubItemOf,
 	githubItems,
-	pruneGithubItems,
-	reconcileGithub,
+	pruneGithubLog,
 	removeGithubItem,
-	storedOpenItems,
 	takeDelivery,
 	writeGithubItem,
 	type WebhookResult,
@@ -314,6 +313,9 @@ const toPainterStyle = (row: PainterStyleRow): PainterStyleType => ({
 	...row,
 	examples: JSON.parse(row.examples) as Array<MessageImageType>,
 })
+
+// For SQL that keeps only the crew's and the admin's messages.
+const CREW_KEYS = JSON.stringify(crewKeys)
 
 // Keys in the room's key-value storage.
 const PUBLIC_ORIGIN = 'public-origin'
@@ -2762,21 +2764,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// ---- GitHub's log -------------------------------------------------------
 
-	// One verified webhook delivery: it updates the room's copy of what is
-	// open, and an issue or pull request that opened, closed, merged or
-	// reopened gets a line in the Product room, where product-1 keeps the
-	// milestones and epics. The line has no routing and its author is no
-	// agent, so it wakes nobody. A delivery the room has seen changes
-	// nothing. `unchecked` is true while the copy was never checked against
-	// GitHub's API.
+	// One verified webhook delivery. Its line in the Product room has no
+	// routing, so it wakes nobody. False for a delivery the room has seen.
 	githubDelivery(
 		delivery: string,
 		result: Extract<WebhookResult, { kind: 'item' | 'remove' }>
 	) {
 		const sql = this.sql.bind(this)
-		if (!takeDelivery(sql, delivery)) {
-			return { duplicate: true, unchecked: false }
-		}
+		if (!takeDelivery(sql, delivery)) return false
 		if (result.kind === 'remove') {
 			removeGithubItem(sql, result.number)
 		} else {
@@ -2793,44 +2788,32 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				})
 			}
 		}
-		pruneGithubItems(sql)
 		this.push({ type: 'github' })
-		return {
-			duplicate: false,
-			unchecked: !this.ctx.storage.kv.get(GITHUB_CHECKED_AT),
-		}
+		return true
 	}
 
-	// Checks the room's copy against GitHub's API, so it holds even when
-	// deliveries were missed. The hourly cron runs it, and so does the first
-	// delivery to an unchecked copy. False without the GitHub App's secrets.
-	async checkGithub() {
+	// The hourly cron prunes the room's copy of GitHub. GitHub's webhook only
+	// reports changes, so the copy also starts with one backfill from GitHub's
+	// API: the open items and those closed in the last GITHUB_CLOSED_DAYS.
+	// After the first backfill that succeeds, this reads nothing from GitHub.
+	async tendGithubLog() {
+		pruneGithubLog(this.sql.bind(this))
+		const kv = this.ctx.storage.kv
+		if (kv.get(GITHUB_CHECKED_AT)) return false
 		const github = githubFor(this.env)
 		if (!github) return false
 		const started = now()
-		const since =
-			this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ??
-			new Date(Date.now() - GITHUB_CLOSED_DAYS * 86_400_000).toISOString()
-		const [open, recent] = await Promise.all([
+		const since = daysBefore(Date.now(), GITHUB_CLOSED_DAYS)
+		const pages = await Promise.all([
 			github.issuePages({ state: 'open', pages: GITHUB_OPEN_PAGES }),
 			github.issuePages({ state: 'all', since, pages: GITHUB_RECENT_PAGES }),
 		])
-		const items = (list: Array<unknown>) =>
-			list.flatMap((data) => {
-				const item = githubItemOf(data, this.env.GITHUB_REPO)
-				return item ? [item] : []
-			})
 		const sql = this.sql.bind(this)
-		const plan = reconcileGithub({
-			storedOpen: storedOpenItems(sql),
-			open: items(open.items),
-			openComplete: open.complete,
-			recent: items(recent.items),
-		})
-		for (const item of plan.upserts) writeGithubItem(sql, item)
-		closeGithubItems(sql, plan.closed, started)
-		pruneGithubItems(sql)
-		this.ctx.storage.kv.put(GITHUB_CHECKED_AT, started)
+		for (const data of pages.flatMap((page) => page.items)) {
+			const item = githubItemOf(data, this.env.GITHUB_REPO)
+			if (item) writeGithubItem(sql, item)
+		}
+		kv.put(GITHUB_CHECKED_AT, started)
 		this.push({ type: 'github' })
 		return true
 	}
@@ -2952,9 +2935,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return stacked
 	}
 
-	// A timeline's latest messages.
-	private latestRows(place: PlaceType, limit: number) {
-		return this.sql<MessageRow>`select * from (
+	// A timeline's latest messages. `speakers` keeps only the admin's and the
+	// crew's, leaving out lines such as GitHub's.
+	private latestRows(place: PlaceType, limit: number, speakers = false) {
+		return speakers
+			? this.sql<MessageRow>`select * from (
+					select * from message
+					where place = ${place}
+						and (author like 'admin:%' or author in (select value from json_each(${CREW_KEYS})))
+					order by at desc, id desc limit ${limit}
+				) order by at, id`
+			: this.sql<MessageRow>`select * from (
 					select * from message where place = ${place}
 					order by at desc, id desc limit ${limit}
 				) order by at, id`
@@ -2971,10 +2962,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return replies
 	}
 
-	// The messages in one timeline since the agent last finished a run there.
-	// The cursor moves when the run finishes. GitHub's lines are left out:
-	// a burst of them would push the conversation out of the 60, and the
-	// agents that need them read the GitHub section of their briefing.
+	// The messages the admin and the crew wrote in one timeline since the
+	// agent last finished a run there. The cursor moves when the run
+	// finishes. Lines such as GitHub's are left out: a burst of them would
+	// push the conversation out of the 60, and the agents that need them read
+	// the GitHub section of their briefing.
 	private unread(agent: CrewKey, place: PlaceType): UnreadTimeline {
 		const cursor = this.sql<{
 			at: string | null
@@ -2982,14 +2974,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const rows = cursor
 			? this.sql<MessageRow>`select * from (
 							select * from message
-							where place = ${place} and at > ${cursor} and github is null
+							where place = ${place} and at > ${cursor}
+								and (author like 'admin:%' or author in (select value from json_each(${CREW_KEYS})))
 							order by at desc limit 60
 						) order by at, id`
-			: this.sql<MessageRow>`select * from (
-							select * from message
-							where place = ${place} and github is null
-							order by at desc, id desc limit 30
-						) order by at, id`
+			: this.latestRows(place, 30, true)
 		const last = rows.at(-1)?.at
 		if (last) {
 			this.sql`
@@ -3190,13 +3179,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// True while a room's principal and associate have spoken fewer than
 	// ROOM_TURNS times in a row in this timeline since the admin last wrote
 	// there.
-	// Receipts and GitHub's lines are not turns.
+	// Only the admin's and the crew's messages count, and receipts are not
+	// turns.
 	private roomTurnLeft(place: PlaceType) {
 		const recent = this.sql<{
 			author: string
 		}>`
 			select author from message
-			where place = ${place} and receipt = 0 and github is null
+			where place = ${place} and receipt = 0
+				and (author like 'admin:%' or author in (select value from json_each(${CREW_KEYS})))
 			order by at desc, id desc
 			limit ${ROOM_TURNS}`
 		return (

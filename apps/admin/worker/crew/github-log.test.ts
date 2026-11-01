@@ -3,15 +3,12 @@ import { DatabaseSync } from 'node:sqlite'
 import { describe, expect, it } from 'vitest'
 import type { GithubItemType } from '../../shared/crew'
 import {
-	closeGithubItems,
 	GITHUB_TITLE_MAX,
 	githubItemOf,
 	githubItems,
 	githubWebhook,
 	plainLine,
-	pruneGithubItems,
-	reconcileGithub,
-	storedOpenItems,
+	pruneGithubLog,
 	takeDelivery,
 	verifyGithubSignature,
 	writeGithubItem,
@@ -314,40 +311,6 @@ const item = (over: Partial<GithubItemType> = {}): GithubItemType => ({
 	...over,
 })
 
-describe('reconcileGithub', () => {
-	it('closes what the room holds open and GitHub no longer lists', () => {
-		const plan = reconcileGithub({
-			storedOpen: [1, 2, 3],
-			open: [item({ number: 1 })],
-			openComplete: true,
-			recent: [item({ number: 2, state: 'merged', kind: 'pr' })],
-		})
-		expect(plan.closed).toEqual([3])
-		expect(plan.upserts.map((i) => i.number).toSorted()).toEqual([1, 2])
-	})
-
-	it('lets the open list win over the recently updated one', () => {
-		const plan = reconcileGithub({
-			storedOpen: [],
-			open: [item({ number: 1, state: 'open' })],
-			openComplete: true,
-			recent: [item({ number: 1, state: 'closed' })],
-		})
-		expect(plan.upserts).toEqual([item({ number: 1, state: 'open' })])
-	})
-
-	it('closes nothing when the open list was cut short', () => {
-		expect(
-			reconcileGithub({
-				storedOpen: [1, 2],
-				open: [item({ number: 1 })],
-				openComplete: false,
-				recent: [],
-			}).closed
-		).toEqual([])
-	})
-})
-
 // The tables these read, as the room creates them.
 function room() {
 	const db = new DatabaseSync(':memory:')
@@ -373,6 +336,13 @@ function room() {
 	return sql
 }
 
+const openNumbers = (sql: Sql) =>
+	sql<{
+		number: number
+	}>`select number from github_item where state = 'open' order by number`.map(
+		(row) => row.number
+	)
+
 describe('takeDelivery', () => {
 	it('passes a delivery id once', () => {
 		const sql = room()
@@ -381,11 +351,13 @@ describe('takeDelivery', () => {
 		expect(takeDelivery(sql, 'b')).toBe(true)
 	})
 
-	it('forgets a delivery after a week', () => {
+	it('forgets a delivery a week after the log is pruned', () => {
 		const sql = room()
 		const at = Date.parse('2026-10-01T00:00:00Z')
 		expect(takeDelivery(sql, 'a', at)).toBe(true)
+		pruneGithubLog(sql, at + 6 * 86_400_000)
 		expect(takeDelivery(sql, 'a', at + 6 * 86_400_000)).toBe(false)
+		pruneGithubLog(sql, at + 8 * 86_400_000)
 		expect(takeDelivery(sql, 'a', at + 8 * 86_400_000)).toBe(true)
 	})
 })
@@ -408,15 +380,7 @@ describe('the github_item table', () => {
 			sql,
 			item({ state: 'open', updatedAt: '2026-10-31T11:00:00Z' })
 		)
-		expect(storedOpenItems(sql)).toEqual([851])
-	})
-
-	it('closes only items not updated since the check started', () => {
-		const sql = room()
-		writeGithubItem(sql, item({ number: 1, updatedAt: '2026-10-30T00:00:00Z' }))
-		writeGithubItem(sql, item({ number: 2, updatedAt: '2026-10-31T12:01:00Z' }))
-		closeGithubItems(sql, [1, 2], '2026-10-31T12:00:00Z')
-		expect(storedOpenItems(sql)).toEqual([2])
+		expect(openNumbers(sql)).toEqual([851])
 	})
 
 	it('lists open items first and drops closed ones after two weeks', () => {
@@ -443,7 +407,7 @@ describe('the github_item table', () => {
 			})
 		)
 		expect(githubItems(sql, now).map((i) => i.number)).toEqual([1, 2])
-		pruneGithubItems(sql, now)
+		pruneGithubLog(sql, now)
 		writeGithubItem(sql, item({ number: 4, updatedAt: '2026-10-31T00:00:00Z' }))
 		expect(githubItems(sql, now).map((i) => i.number)).toEqual([4, 1, 2])
 		expect(githubItems(sql, now)[2].labels).toEqual([])

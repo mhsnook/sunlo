@@ -8,6 +8,8 @@ import {
 	type LucideIcon,
 } from 'lucide-react'
 import {
+	GITHUB_CLOSED_DAYS,
+	githubRef,
 	type CrewMessageType,
 	type GithubEventType,
 	type GithubItemType,
@@ -19,26 +21,29 @@ import { Empty, Section } from './workspace-parts'
 // Titles and labels are anyone's text on a public repository. Everything
 // here renders them as React text, never through CrewText's Markdown.
 
-const icon = (
-	kind: GithubItemType['kind'],
-	state: GithubItemType['state'] | GithubEventType['action']
-): LucideIcon =>
-	state === 'merged'
-		? GitMerge
-		: state === 'closed'
-			? kind === 'pr'
-				? GitPullRequestClosed
-				: CircleCheck
-			: kind === 'pr'
-				? GitPullRequest
-				: CircleDot
+const icons: Record<
+	GithubItemType['kind'],
+	Record<GithubItemType['state'] | GithubEventType['action'], LucideIcon>
+> = {
+	issue: {
+		open: CircleDot,
+		opened: CircleDot,
+		reopened: CircleDot,
+		closed: CircleCheck,
+		merged: GitMerge,
+	},
+	pr: {
+		open: GitPullRequest,
+		opened: GitPullRequest,
+		reopened: GitPullRequest,
+		closed: GitPullRequestClosed,
+		merged: GitMerge,
+	},
+}
 
 // The server only keeps github.com links; this holds if one slips through.
 const safeUrl = (url: string) =>
 	url.startsWith('https://github.com/') ? url : undefined
-
-const ref = (item: { kind: GithubItemType['kind']; number: number }) =>
-	`${item.kind === 'pr' ? 'PR ' : ''}#${item.number}`
 
 // The room's lines for GitHub events, in a timeline: one quiet line each.
 export function GithubLines({
@@ -54,7 +59,7 @@ export function GithubLines({
 			{messages.map((message) => {
 				const event = message.github
 				if (!event) return null
-				const Icon = icon(event.kind, event.action)
+				const Icon = icons[event.kind][event.action]
 				return (
 					<li
 						key={message.id}
@@ -69,7 +74,7 @@ export function GithubLines({
 							rel="noreferrer"
 							className="text-foreground shrink-0 font-medium hover:underline"
 						>
-							{ref(event)} {event.action}
+							{githubRef(event)} {event.action}
 						</a>
 						<span className="min-w-0 truncate" title={event.title}>
 							{event.title}
@@ -98,7 +103,7 @@ export function GithubLogSection() {
 			<Section title={`Closed lately · ${closed.length}`}>
 				<ItemList
 					items={closed}
-					empty="Nothing closed in the last two weeks."
+					empty={`Nothing closed in the last ${GITHUB_CLOSED_DAYS} days.`}
 				/>
 			</Section>
 			<Section title={`Open issues · ${issues.length}`}>
@@ -106,8 +111,8 @@ export function GithubLogSection() {
 			</Section>
 			<p className="text-muted-foreground text-xs">
 				{log.checkedAt
-					? `Checked against GitHub ${dayLabel(log.checkedAt)}, ${timeLabel(log.checkedAt)}.`
-					: 'Not checked against GitHub yet. GitHub’s webhook adds what changes.'}
+					? `Filled from GitHub ${dayLabel(log.checkedAt)}, ${timeLabel(log.checkedAt)}. GitHub’s webhook keeps it current.`
+					: 'Not filled from GitHub yet. GitHub’s webhook adds what changes.'}
 			</p>
 		</div>
 	)
@@ -127,7 +132,7 @@ function ItemList({
 	return (
 		<ul className="bg-card divide-y rounded border text-sm">
 			{items.slice(0, LIST_MAX).map((item) => {
-				const Icon = icon(item.kind, item.state)
+				const Icon = icons[item.kind][item.state]
 				return (
 					<li
 						key={item.number}
@@ -147,7 +152,7 @@ function ItemList({
 								className="hover:underline"
 							>
 								<span className="text-muted-foreground me-1.5">
-									{ref(item)}
+									{githubRef(item)}
 								</span>
 								{item.title}
 							</a>

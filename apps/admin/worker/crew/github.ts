@@ -50,7 +50,7 @@ type MilestoneData = {
 	html_url: string
 }
 
-const labelNames = (labels: IssueData['labels']) =>
+export const labelNames = (labels: IssueData['labels']) =>
 	labels.flatMap((label) =>
 		typeof label === 'string' ? [label] : label.name ? [label.name] : []
 	)
