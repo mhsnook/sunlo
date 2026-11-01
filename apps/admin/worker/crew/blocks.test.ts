@@ -78,6 +78,37 @@ describe('remarkCrew', () => {
 		expect(JSON.stringify(tree)).not.toContain('strong')
 	})
 
+	it('links an issue or pull request number', () => {
+		const [paragraph] = transform('Fixed in #854, see #12.').children
+		expect(paragraph).toMatchObject({
+			type: 'paragraph',
+			children: [
+				{ type: 'text', value: 'Fixed in ' },
+				{
+					type: 'link',
+					url: 'github:854',
+					children: [{ type: 'text', value: '#854' }],
+				},
+				{ type: 'text', value: ', see ' },
+				{ type: 'link', url: 'github:12' },
+				{ type: 'text', value: '.' },
+			],
+		})
+	})
+
+	it('leaves a number that is not a reference alone', () => {
+		for (const text of [
+			'a#854',
+			'&#854;',
+			'see https://x.dev/#854',
+			'#854a',
+			'`#854`',
+			'[the PR #854](https://example.com)',
+		]) {
+			expect(JSON.stringify(transform(text)), text).not.toContain('github:')
+		}
+	})
+
 	it('turns a component block into a figure and keeps its JSON intact', () => {
 		const source = '{"items": [{"label": "asked @product", "value": 1}]}'
 		const [block] = transform(fence('stats', source)).children

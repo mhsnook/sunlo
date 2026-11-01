@@ -416,6 +416,8 @@ export const GithubLogSchema = z.object({
 	items: z.array(GithubItemSchema),
 	// When the room filled its copy from GitHub's API, once.
 	checkedAt: z.string().nullable(),
+	// "mhsnook/sunlo": the repository the copy follows.
+	repo: z.string(),
 })
 export type GithubLogType = z.infer<typeof GithubLogSchema>
 
@@ -425,6 +427,11 @@ export const GITHUB_CLOSED_DAYS = 14
 // "#851" or "PR #852".
 export const githubRef = (item: Pick<GithubItemType, 'kind' | 'number'>) =>
 	`${item.kind === 'pr' ? 'PR ' : ''}#${item.number}`
+
+// GitHub sends /issues/<n> on to /pull/<n> for a pull request, so this
+// holds for a number the room's copy does not have.
+export const githubIssueUrl = (repo: string, number: number) =>
+	`https://github.com/${repo}/issues/${number}`
 
 // "#851 opened: …" or "PR #852 merged: …".
 export const githubEventLine = (event: GithubEventType) =>
