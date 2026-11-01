@@ -208,7 +208,7 @@ export function documentsText(
 	return [
 		`## The ${room}'s documents`,
 		lines.join('\n') || '(none yet)',
-		'Link to a document whenever you write about one in a room or in another document, so the admin can open it. The link is ordinary Markdown, and its target is the `doc:` id beside the name above: "Roadmap updated: [the Roadmap](doc:3) now puts the AI Coach first." Only this app reads `doc:`, so leave such a link out of anything you file on GitHub.',
+		'Link to a document whenever you write about one in a room or in another document, so the admin can open it. The link is ordinary Markdown, and its target is the `doc:` id beside the name above, or the `link` that read_document and write_document return: "Roadmap updated: [the Roadmap](doc:3) now puts the AI Coach first." With empty text, as in `[](doc:3)`, the link shows the current name of the document. Only this app reads `doc:`, so leave such a link out of anything you file on GitHub.',
 	].join('\n\n')
 }
 

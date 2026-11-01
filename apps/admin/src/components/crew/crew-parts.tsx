@@ -9,9 +9,10 @@ import { PaintingsCard, SvgsCard } from './paintings-card'
 import { SketchesCard } from './sketches-card'
 import { MermaidBlock } from './mermaid-block'
 import { remarkCrew } from './remark-crew'
-import { useState, type ReactNode } from 'react'
+import { Children, useState, type ReactNode } from 'react'
 import { Check, Copy, Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ago } from '@/lib/dayjs'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { MessageMarker } from '@/components/ui/message'
@@ -21,6 +22,7 @@ import {
 	documentIdInHref,
 	isCrewKey,
 	isRoomKey,
+	roomNames,
 	type CardType,
 	type CrewKey,
 	type CrewMessageType,
@@ -28,6 +30,7 @@ import {
 } from '../../../shared/crew'
 import { crewIcons, documentsQuery, roomIcons, useAnswerCard } from '~/lib/crew'
 import { CREW, documentLinkOptions } from '~/lib/documents'
+import { RefCard } from './ref-card'
 
 type AvatarSize = 'sm' | 'md' | 'lg'
 
@@ -110,22 +113,41 @@ export function AdminAvatar({ name }: { name: string }) {
 }
 
 // A link an agent wrote to a document, as `[the Roadmap](doc:3)`. It opens
-// the document in its room's details. An id no document answers to stays
-// plain text, so a wrong id never becomes a dead link.
+// the document in its room's details, and its card shows the document as it
+// is now. Empty link text, as in `[](doc:3)`, shows the current name. An id
+// no document answers to stays plain text, so a wrong id never becomes a
+// dead link.
 function DocumentLink({ id, children }: { id: number; children: ReactNode }) {
 	const { data: documents } = useQuery(documentsQuery())
 	const { room } = useParams({ strict: false })
 	const document = documents?.find((item) => item.id === id)
 	if (!document) return <>{children}</>
 	return (
-		<Link
-			{...documentLinkOptions(room && isRoomKey(room) ? room : CREW, document)}
-			className="text-primary-700 underline"
-			data-testid="crew-document-link"
-			data-key={document.name}
+		<RefCard
+			testId="crew-document-card"
+			testKey={document.name}
+			trigger={
+				<Link
+					{...documentLinkOptions(
+						room && isRoomKey(room) ? room : CREW,
+						document
+					)}
+					className="text-primary-700 underline"
+					data-testid="crew-document-link"
+					data-key={document.name}
+				>
+					{Children.count(children) ? children : document.name}
+				</Link>
+			}
 		>
-			{children}
-		</Link>
+			<p className="font-medium">{document.name}</p>
+			<p className="text-muted-foreground mt-1">
+				{roomNames[document.room]} ·{' '}
+				{document.at
+					? `revision ${document.revision}, saved by ${document.byName} ${ago(document.at)}`
+					: 'not written yet'}
+			</p>
+		</RefCard>
 	)
 }
 

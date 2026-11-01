@@ -71,7 +71,7 @@ import {
 } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
-import { checkSave, startingDocuments, type SaveCheck } from './documents'
+import { checkSave, startingDocuments, type SavedDocument } from './documents'
 import { openingLines } from '../../shared/blocks'
 import { defaultCharacter } from '../../shared/characters'
 import {
@@ -2596,7 +2596,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		baseRevision: number
 		summary: string
 		thread: RunKey
-	}): SaveCheck {
+	}): SavedDocument {
 		const room = roomOf(input.agent)
 		const existing = this.findDocument(room, input.name)
 		const name = existing?.name ?? input.name.trim()
@@ -2641,7 +2641,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		summary: string
 		by: string
 		byName: string
-	}): SaveCheck {
+	}): SavedDocument {
 		const document = this.documentSummary(input.id)
 		if (!document) {
 			return { ok: false, status: 404, error: 'No document with that id' }
@@ -2681,7 +2681,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		summary: string
 		by: string
 		byName: string
-	}): SaveCheck {
+	}): SavedDocument {
 		const text = input.text.trim()
 		const check = checkSave({
 			name: input.name,
@@ -2700,7 +2700,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			values (${id}, ${check.revision}, ${text}, ${input.summary.trim()}, ${input.by}, ${input.byName}, ${now()})`
 		this.sql`update document set revision = ${check.revision} where id = ${id}`
 		this.push({ type: 'document', room: input.room, id })
-		return check
+		return { ...check, id }
 	}
 
 	private meetingStartedAt() {

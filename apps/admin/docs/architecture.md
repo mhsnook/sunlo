@@ -28,7 +28,7 @@ This is the model behind the admin crew: what a room, a seat and a run are, wher
 ## Documents and GitHub
 
 - **The agent owns a document's format:** Markdown, Mermaid diagrams, checklists and component blocks. Conventions live in the agent's memory, not in code.
-- **A document has an address.** Anything written about one links to it as `[text](doc:<id>)`, and the app opens it in the details beside the room that keeps it. The agent writes that link itself, from the ids its briefing prints; no code rewrites what it wrote, and an id no document answers to renders as plain text.
+- **A document has an address.** Anything written about one links to it as `[text](doc:<id>)`, and the app opens it in the details beside the room that keeps it. The agent writes that link itself, from the ids its briefing prints or the `link` that `read_document` and `write_document` return; no code rewrites what it wrote. The app resolves the id when it renders, so a link's hover card, and a link with empty text, show the document's current name. An id no document answers to renders as plain text.
 - **Every save keeps a revision** and names the revision it started from. The room refuses a save from anything but the current revision, so nobody overwrites a change they have not seen (`worker/crew/documents.ts`).
 - **The Roadmap is the plan, and GitHub is a projection of it.** `product-1` keeps the part that is ready to build as milestones and epics on GitHub, with tools; no code parses the Roadmap. Anything new on GitHub goes to the admin as a card first, which the admin can edit, then file. After that, the agent edits directly, and each change appears in its run's receipt.
 
