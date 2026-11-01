@@ -1,15 +1,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { FileCode, ImageIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { FileCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import type { CrewMessageType, SketchType } from '../../../shared/crew'
+import {
+	stepLabel,
+	type CrewMessageType,
+	type SketchType,
+} from '../../../shared/crew'
 import { sketchImageQuery, sketchQuery } from '~/lib/crew'
 import {
 	fileName,
 	GalleryCard,
 	GalleryTile,
 	PictureButtons,
+	SketchPicture,
+	sketchFrameClass,
 	TileCaption,
 	tileButtonClass,
 } from './gallery-card'
@@ -35,7 +40,7 @@ export function SketchesCard({
 				message.card?.actions.length
 					? 'Sketches · go with one'
 					: origin
-						? `Step ${origin.label}, drawn again`
+						? `Step ${stepLabel(origin.step)}, drawn again`
 						: 'Sketches'
 			}
 			above={origin && <OriginLine origin={origin} />}
@@ -59,7 +64,7 @@ export function SketchesCard({
 
 function Sketch({ sketch, picked }: { sketch: SketchType; picked: boolean }) {
 	const queryClient = useQueryClient()
-	const { data: image, isError } = useQuery(sketchImageQuery(sketch.id))
+	const { data: image } = useQuery(sketchImageQuery(sketch.id))
 
 	const copyBrief = () => {
 		queryClient
@@ -81,27 +86,14 @@ function Sketch({ sketch, picked }: { sketch: SketchType; picked: boolean }) {
 				href={image?.url}
 				target="_blank"
 				rel="noreferrer"
-				className={cn(
-					'bg-muted flex items-center justify-center overflow-hidden rounded border',
-					sketch.frame === 'phone' ? 'aspect-390/844' : 'aspect-8/5'
-				)}
+				className={sketchFrameClass(sketch.frame)}
 				aria-label={`Open sketch ${sketch.label} full size`}
 			>
-				{image ? (
-					<img
-						src={image.url}
-						alt={`Sketch ${sketch.label}: ${sketch.idea}`}
-						className="h-full w-full object-cover object-top"
-						data-testid="sketch-image"
-					/>
-				) : (
-					<ImageIcon
-						className={cn(
-							'text-muted-foreground size-6',
-							!isError && 'animate-pulse'
-						)}
-					/>
-				)}
+				<SketchPicture
+					sketchId={sketch.id}
+					alt={`Sketch ${sketch.label}: ${sketch.idea}`}
+					testId="sketch-image"
+				/>
 			</a>
 			<TileCaption picked={picked}>
 				<span className="font-semibold">{sketch.label}</span> {sketch.idea}

@@ -1,14 +1,11 @@
 import {
 	currentSketch,
-	type CardType,
+	DEFAULT_REDO_VERSIONS,
+	stepLabel,
 	type SketchType,
 	type SketchVersionType,
 	type StepRequestType,
 } from '../../shared/crew'
-
-// A flow's steps are numbered from 1; an options card's sketches are
-// lettered (optionLabel in ./picks).
-export const stepLabel = (index: number) => String(index + 1)
 
 // The step whose current picture is this sketch, or -1.
 export const findStep = (steps: ReadonlyArray<SketchType>, sketchId: number) =>
@@ -42,13 +39,12 @@ export const replyWithVersions = (
 	steps: ReadonlyArray<SketchType>,
 	index: number,
 	replyId: string,
-	by: string,
-	at: string
+	by: string
 ) =>
 	withStep(steps, index, (step) => ({
 		...step,
 		request: {
-			...(step.request ?? { kind: 'redo', note: '', count: 0, by, at }),
+			...(step.request ?? { note: '', by }),
 			kind: 'redo',
 			reply: replyId,
 		},
@@ -92,9 +88,6 @@ export const approveFlow = (steps: ReadonlyArray<SketchType>) =>
 
 export const APPROVE_FLOW = { id: 'approve-flow', label: 'Approve the flow' }
 
-export const isFlow = (card: CardType | null | undefined) =>
-	card?.kind === 'sketches' && card.layout === 'flow'
-
 const stepName = (title: string, index: number, step: SketchType) => {
 	const current = currentSketch(step)
 	return `step ${stepLabel(index)} of your flow "${title}" (sketch ${current.id}: ${current.idea})`
@@ -112,8 +105,8 @@ export function stepRequestReport(input: {
 	const id = currentSketch(step).id
 	const note = request.note ? ` Their note: ${request.note}` : ''
 	if (request.kind === 'redo') {
-		const versions =
-			request.count === 1 ? 'one new version' : `${request.count} new versions`
+		const count = request.count ?? DEFAULT_REDO_VERSIONS
+		const versions = count === 1 ? 'one new version' : `${count} new versions`
 		return `${request.by} wants ${stepName(title, index, step)} drawn again.${note}\n\nRead it with read_sketch, then draw ${versions} with sketch_screens: layout "options", replaces ${id}. The card links to the flow, and the version the admin goes with becomes step ${stepLabel(index)}.`
 	}
 	return `${request.by} wants ${stepName(title, index, step)} expanded into a sub-flow.${note}\n\nDraw the sub-flow with sketch_screens: layout "flow", expands ${id}. Start from the screen this step shows, and end where the next step of the flow begins.`
@@ -128,20 +121,9 @@ export const approvalNote = (
 ) =>
 	`${approved ? 'approved' : 'took back the approval of'} ${stepName(title, index, step)}`
 
-// What product-2 hears when a version becomes a step's picture.
-export const adoptedReport = (input: {
-	by: string
-	title: string
-	index: number
-	version: SketchVersionType
-	picked: boolean
-}) => {
-	const { by, title, index, version, picked } = input
-	const how = picked
-		? `${by} went with version ${version.label}`
-		: 'Your one version'
-	return `${how} for step ${stepLabel(index)} of your flow "${title}": ${version.idea}. Step ${stepLabel(index)} is now sketch ${version.id}; use that id in the flow's document.`
-}
+// What a version becoming a step's picture means for the flow's document.
+export const adoptedLine = (index: number, sketchId: number) =>
+	`Step ${stepLabel(index)} is now sketch ${sketchId}; use that id in the flow's document.`
 
 export const approvedFlowReport = (by: string, title: string) =>
 	`${by} approved your flow "${title}": every step that is not being redrawn. Record it in the flow's document, with each step's current sketch.`

@@ -1,20 +1,27 @@
 import type { ReactNode } from 'react'
-import { ClipboardCopy, Download } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ClipboardCopy, Download, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import type { CardType, CrewMessageType } from '../../../shared/crew'
+import type {
+	CardType,
+	CrewMessageType,
+	SketchType,
+} from '../../../shared/crew'
+import { sketchImageQuery } from '~/lib/crew'
 import { asPng } from '~/lib/images'
 import { CardActions, CardFrame, CrewText } from './crew-parts'
 
-// A card of pictures side by side: sketches, paintings or SVGs. The tiles
-// are its children.
+// A card of pictures: sketches, paintings or SVGs. The tiles are its
+// children, side by side in a grid unless `grid` is false.
 export function GalleryCard({
 	message,
 	kind,
 	label,
 	brief,
 	wide = false,
+	grid = true,
 	above,
 	children,
 }: {
@@ -24,6 +31,7 @@ export function GalleryCard({
 	brief: Array<string | null | undefined>
 	// Three columns on a wide card, not two.
 	wide?: boolean
+	grid?: boolean
 	// A line above the title.
 	above?: ReactNode
 	children: ReactNode
@@ -37,16 +45,20 @@ export function GalleryCard({
 			<div className="text-sm">
 				<CrewText text={message.body} />
 			</div>
-			<div className="@container">
-				<div
-					className={cn(
-						'grid gap-3 @md:grid-cols-2',
-						wide && '@2xl:grid-cols-3'
-					)}
-				>
-					{children}
+			{grid ? (
+				<div className="@container">
+					<div
+						className={cn(
+							'grid gap-3 @md:grid-cols-2',
+							wide && '@2xl:grid-cols-3'
+						)}
+					>
+						{children}
+					</div>
 				</div>
-			</div>
+			) : (
+				children
+			)}
 			<CardActions message={message} />
 		</CardFrame>
 	)
@@ -97,6 +109,50 @@ export function TileCaption({
 }
 
 export const tileButtonClass = 'h-7 px-2 shadow-none'
+
+// The box a sketch's picture sits in, in the shape of its frame.
+export const sketchFrameClass = (frame: SketchType['frame']) =>
+	cn(
+		'bg-muted relative flex items-center justify-center overflow-hidden rounded border',
+		frame === 'phone' ? 'aspect-390/844' : 'aspect-8/5'
+	)
+
+// Pulses while a picture loads, and stops if loading failed.
+export function PicturePlaceholder({ failed }: { failed: boolean }) {
+	return (
+		<ImageIcon
+			className={cn('text-muted-foreground size-6', !failed && 'animate-pulse')}
+		/>
+	)
+}
+
+// A sketch's picture, cropped to the top of its frame.
+export function SketchPicture({
+	sketchId,
+	alt,
+	dim = false,
+	testId,
+}: {
+	sketchId: number
+	alt: string
+	dim?: boolean
+	testId?: string
+}) {
+	const { data: image, isError } = useQuery(sketchImageQuery(sketchId))
+	return image ? (
+		<img
+			src={image.url}
+			alt={alt}
+			className={cn(
+				'h-full w-full object-cover object-top',
+				dim && 'opacity-40'
+			)}
+			data-testid={testId}
+		/>
+	) : (
+		<PicturePlaceholder failed={isError} />
+	)
+}
 
 const extensions: Record<string, string> = {
 	'image/png': 'png',

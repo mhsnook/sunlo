@@ -38,7 +38,12 @@ import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
 import { MessageImages } from './images'
 import { useReadOnArrival } from '~/lib/voice'
-import { isNewFor, isPendingMessage, useCorrectRouting } from '~/lib/crew'
+import {
+	isNewFor,
+	isPendingMessage,
+	messageElementId,
+	useCorrectRouting,
+} from '~/lib/crew'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
 
@@ -192,6 +197,7 @@ function AuthorGroup({
 				return (
 					<Message
 						key={message.id}
+						id={messageElementId(message.id)}
 						align={mine ? 'end' : 'start'}
 						data-testid="crew-message"
 						data-key={message.id}

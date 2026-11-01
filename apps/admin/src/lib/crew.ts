@@ -791,6 +791,9 @@ export function usePickView() {
 	})
 }
 
+// The element id of a message in a timeline, to scroll to it.
+export const messageElementId = (id: string) => `message-${id}`
+
 // Approves, redoes or expands one step of a flow card. The socket brings
 // the card back with the step changed.
 export function useStepAction() {

@@ -403,13 +403,13 @@ export type SketchVersionType = z.infer<typeof SketchVersionSchema>
 export const StepRequestSchema = z.object({
 	kind: z.enum(['redo', 'expand']),
 	note: z.string(),
-	// How many versions to draw for a redo.
-	count: z.number().int(),
+	// How many versions to draw, on a redo.
+	count: z.number().int().optional(),
 	by: z.string(),
-	at: z.string(),
 	reply: z.string().optional(),
 })
 export type StepRequestType = z.infer<typeof StepRequestSchema>
+export const DEFAULT_REDO_VERSIONS = 2
 export const MAX_REDO_VERSIONS = 4
 
 // One of product-2's mockups: HTML it wrote, which the room keeps with the
@@ -442,7 +442,6 @@ export const SketchOriginSchema = z.object({
 	kind: z.enum(['redo', 'expand']),
 	messageId: z.string(),
 	step: z.number().int(),
-	label: z.string(),
 	title: z.string(),
 })
 export type SketchOriginType = z.infer<typeof SketchOriginSchema>
@@ -454,7 +453,12 @@ export const StepActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('redo'),
 		note: z.string().trim().max(2000).default(''),
-		count: z.number().int().min(1).max(MAX_REDO_VERSIONS).default(2),
+		count: z
+			.number()
+			.int()
+			.min(1)
+			.max(MAX_REDO_VERSIONS)
+			.default(DEFAULT_REDO_VERSIONS),
 	}),
 	z.object({
 		action: z.literal('expand'),
@@ -463,6 +467,13 @@ export const StepActionSchema = z.discriminatedUnion('action', [
 ])
 export type StepActionType = z.infer<typeof StepActionSchema>
 export type StepActionInputType = z.input<typeof StepActionSchema>
+
+// A flow's steps are numbered from 1; an options card's sketches are
+// lettered (optionLabel in worker/crew/picks.ts).
+export const stepLabel = (index: number) => String(index + 1)
+
+export const isFlow = (card: CardType | null | undefined) =>
+	card?.kind === 'sketches' && card.layout === 'flow'
 
 // The step's picture now: its newest version, or the sketch it began as.
 export const currentSketch = (step: SketchType) => step.versions?.at(-1) ?? step
@@ -615,8 +626,8 @@ export const CardSchema = z.object({
 	ref: z.number().nullable(),
 	draft: GithubDraftSchema.optional(),
 	sketches: z.array(SketchSchema).optional(),
-	// A sketches card with no layout shows options.
-	layout: z.enum(['options', 'flow']).optional(),
+	// Set on a flow only: a sketches card without it shows options.
+	layout: z.literal('flow').optional(),
 	from: SketchOriginSchema.optional(),
 	paintings: z.array(PaintingSchema).optional(),
 	svgs: z.array(SvgRefSchema).optional(),

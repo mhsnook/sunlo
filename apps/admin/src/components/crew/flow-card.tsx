@@ -1,39 +1,33 @@
 import { useState, type ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import {
-	ArrowRight,
-	Check,
-	ImageIcon,
-	Loader2,
-	Split,
-	Undo2,
-	X,
-} from 'lucide-react'
+import { ArrowRight, Check, Loader2, Split, Undo2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
 import {
 	currentSketch,
+	DEFAULT_REDO_VERSIONS,
 	displayName,
 	isCrewKey,
 	MAX_REDO_VERSIONS,
+	stepLabel,
 	type CrewMessageType,
 	type SketchOriginType,
 	type SketchType,
 } from '../../../shared/crew'
-import { sketchImageQuery, useStepAction } from '~/lib/crew'
-import { CardActions, CardFrame, CrewText } from './crew-parts'
+import { messageElementId, useStepAction } from '~/lib/crew'
+import {
+	GalleryCard,
+	SketchPicture,
+	sketchFrameClass,
+	tileButtonClass,
+} from './gallery-card'
 import { SketchViewer } from './sketch-viewer'
-
-const DEFAULT_REDO_VERSIONS = 2
 
 // Scrolls the room to another message, such as the card that answered a
 // step, and flashes it.
-export function showMessage(id: string) {
-	const target = document.querySelector<HTMLElement>(
-		`[data-testid="crew-message"][data-key="${CSS.escape(id)}"]`
-	)
+function showMessage(id: string) {
+	const target = document.getElementById(messageElementId(id))
 	if (!target) {
 		toastError('That card is further back in the room than this page goes')
 		return
@@ -72,7 +66,7 @@ export function OriginLine({ origin }: { origin: SketchOriginType }) {
 	const what = origin.kind === 'redo' ? 'New versions of' : 'A sub-flow of'
 	return (
 		<p className="text-muted-foreground text-xs" data-testid="sketch-origin">
-			{what} step {origin.label} of{' '}
+			{what} step {stepLabel(origin.step)} of{' '}
 			<MessageLink to={origin.messageId} testId="sketch-origin-link">
 				“{origin.title}”
 			</MessageLink>
@@ -113,8 +107,11 @@ export function FlowCard({
 		note: step.action,
 	}))
 	return (
-		<CardFrame
+		<GalleryCard
+			message={message}
 			kind="sketches"
+			grid={false}
+			above={message.card?.from && <OriginLine origin={message.card.from} />}
 			label={`Flow · ${steps.length} step${steps.length === 1 ? '' : 's'}`}
 			brief={[
 				message.card?.title,
@@ -125,13 +122,6 @@ export function FlowCard({
 				),
 			]}
 		>
-			{message.card?.from && <OriginLine origin={message.card.from} />}
-			{message.card?.title && (
-				<p className="text-sm font-semibold">{message.card.title}</p>
-			)}
-			<div className="text-sm">
-				<CrewText text={message.body} />
-			</div>
 			<ol
 				className="-mx-3 flex snap-x items-stretch gap-1 overflow-x-auto px-3 pb-2"
 				data-testid="flow-steps"
@@ -176,14 +166,13 @@ export function FlowCard({
 					}
 				/>
 			)}
-			<CardActions message={message} />
 			<SketchViewer
 				screens={screens}
 				index={viewing}
 				onIndex={setViewing}
 				noun="Step"
 			/>
-		</CardFrame>
+		</GalleryCard>
 	)
 }
 
@@ -212,7 +201,6 @@ function FlowStep({
 	onForm: (kind: Form['kind']) => void
 }) {
 	const current = currentSketch(step)
-	const { data: image, isError } = useQuery(sketchImageQuery(current.id))
 	const approved = step.status === 'approved'
 	const redrawing = step.request?.kind === 'redo'
 	return (
@@ -223,37 +211,20 @@ function FlowStep({
 			)}
 			data-testid="flow-step"
 			data-key={index}
-			data-status={
-				approved ? 'approved' : redrawing ? 'redrawing' : step.status
-			}
+			data-status={approved ? 'approved' : redrawing ? 'redrawing' : undefined}
 		>
 			<button
 				type="button"
 				onClick={open}
-				className={cn(
-					'bg-muted relative flex items-center justify-center overflow-hidden rounded border',
-					step.frame === 'phone' ? 'aspect-390/844' : 'aspect-8/5'
-				)}
+				className={sketchFrameClass(step.frame)}
 				aria-label={`Open step ${step.label} full size`}
 				data-testid="flow-step-open"
 			>
-				{image ? (
-					<img
-						src={image.url}
-						alt={`Step ${step.label}: ${current.idea}`}
-						className={cn(
-							'h-full w-full object-cover object-top',
-							redrawing && 'opacity-40'
-						)}
-					/>
-				) : (
-					<ImageIcon
-						className={cn(
-							'text-muted-foreground size-6',
-							!isError && 'animate-pulse'
-						)}
-					/>
-				)}
+				<SketchPicture
+					sketchId={current.id}
+					alt={`Step ${step.label}: ${current.idea}`}
+					dim={redrawing}
+				/>
 				<span
 					className={cn(
 						'absolute start-1 top-1 flex items-center gap-0.5 rounded-full px-1.5 text-xs font-semibold',
@@ -270,10 +241,7 @@ function FlowStep({
 				<Button
 					size="sm"
 					variant="ghost"
-					className={cn(
-						'h-7 px-1.5 shadow-none',
-						approved && 'text-success-800'
-					)}
+					className={cn(tileButtonClass, approved && 'text-success-800')}
 					disabled={busy || redrawing}
 					onClick={() => onApprove(!approved)}
 					aria-label={
@@ -289,7 +257,7 @@ function FlowStep({
 				<Button
 					size="sm"
 					variant="ghost"
-					className="h-7 px-1.5 shadow-none"
+					className={tileButtonClass}
 					disabled={busy}
 					onClick={() => onForm('redo')}
 					aria-label={`Draw step ${step.label} again`}
@@ -302,7 +270,7 @@ function FlowStep({
 					<Button
 						size="sm"
 						variant="ghost"
-						className="h-7 px-1.5 shadow-none"
+						className={tileButtonClass}
 						disabled={busy}
 						onClick={() => onForm('expand')}
 						aria-label={`Expand step ${step.label} into a sub-flow`}

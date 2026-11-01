@@ -1,9 +1,11 @@
 import { openingLines } from '../../shared/blocks'
+import { adoptedLine } from './flows'
 import {
 	crew,
 	displayName,
 	principalOf,
 	roomNames,
+	stepLabel,
 	type CrewKey,
 	type PaintingType,
 	type PickChoice,
@@ -62,18 +64,24 @@ function cardPickReports(input: {
 	]
 }
 
-// The admin went with one of an agent's sketches.
+// The admin went with one of an agent's sketches. On a card of new versions
+// for a flow's step, the pick becomes that step's picture.
 export function sketchPickReports(input: {
 	agent: CrewKey
 	title: string
 	sketch: SketchType
 	by: string
+	step?: { index: number; flowTitle: string }
 }): Array<{ agent: CrewKey; body: string }> {
-	const { agent, title, sketch, by } = input
+	const { agent, title, sketch, by, step } = input
 	return cardPickReports({
 		agent,
-		said: `${by} went with sketch ${sketch.label} of "${title}": ${sketch.idea}`,
-		next: `Its HTML is sketch ${sketch.id}.`,
+		said: step
+			? `${by} went with version ${sketch.label} for step ${stepLabel(step.index)} of the flow "${step.flowTitle}": ${sketch.idea}`
+			: `${by} went with sketch ${sketch.label} of "${title}": ${sketch.idea}`,
+		next: step
+			? adoptedLine(step.index, sketch.id)
+			: `Its HTML is sketch ${sketch.id}.`,
 		made: 'drew it',
 	})
 }

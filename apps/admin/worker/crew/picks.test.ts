@@ -133,6 +133,22 @@ describe('sketchPickReports', () => {
 		expect(principal.body).toContain('propose_charter')
 	})
 
+	it('names the flow step a picked version replaces, for both agents', () => {
+		const [drew, principal] = sketchPickReports({
+			agent: 'product-2',
+			title: 'Step 3, calmer',
+			sketch,
+			by: 'sam',
+			step: { index: 2, flowTitle: 'First review' },
+		})
+		const said =
+			'sam went with version B for step 3 of the flow "First review": One card at a time, full screen'
+		expect(drew.body).toBe(
+			`${said}. Step 3 is now sketch 7; use that id in the flow's document.`
+		)
+		expect(principal.body).toContain(said)
+	})
+
 	it('tells a principal who drew it only once', () => {
 		expect(
 			sketchPickReports({

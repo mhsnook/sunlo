@@ -1,10 +1,10 @@
 import { useQueries, useQuery } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { KeyboardEvent } from 'react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { sketchImageQuery } from '~/lib/crew'
+import { PicturePlaceholder } from './gallery-card'
 
 export type ViewerScreen = {
 	id: number
@@ -124,7 +124,7 @@ function ViewerImage({
 		/>
 	) : (
 		<div className="text-muted-foreground flex min-h-64 flex-col items-center justify-center gap-2 text-sm">
-			<ImageIcon className={cn('size-6', !isError && 'animate-pulse')} />
+			<PicturePlaceholder failed={isError} />
 			{isError && 'This sketch did not load.'}
 		</div>
 	)

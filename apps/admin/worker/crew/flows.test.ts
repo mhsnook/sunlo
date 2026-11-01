@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { currentSketch, type SketchType } from '../../shared/crew'
+import { currentSketch, stepLabel, type SketchType } from '../../shared/crew'
 import {
 	addSubflow,
 	adoptVersion,
@@ -8,7 +8,6 @@ import {
 	replyWithVersions,
 	requestStep,
 	setApproval,
-	stepLabel,
 	stepRequestReport,
 } from './flows'
 
@@ -29,7 +28,6 @@ const redo = {
 	note: 'Too busy',
 	count: 2,
 	by: 'Ana',
-	at: '2026-11-01T10:00:00.000Z',
 }
 
 describe('stepLabel', () => {
@@ -44,7 +42,7 @@ describe('a step redrawn', () => {
 		expect(asked[2].request).toEqual(redo)
 		expect(asked[0]).toBe(steps[0])
 
-		const answered = replyWithVersions(asked, 2, 'card-2', 'Keiko', redo.at)
+		const answered = replyWithVersions(asked, 2, 'card-2', 'Keiko')
 		expect(answered[2].request).toEqual({ ...redo, reply: 'card-2' })
 
 		const version = { id: 20, label: 'B', idea: 'Calmer', messageId: 'card-2' }
@@ -60,7 +58,7 @@ describe('a step redrawn', () => {
 	})
 
 	it('records a redo the agent drew without a button', () => {
-		const answered = replyWithVersions(steps, 1, 'card-3', 'Keiko', redo.at)
+		const answered = replyWithVersions(steps, 1, 'card-3', 'Keiko')
 		expect(answered[1].request).toMatchObject({ kind: 'redo', reply: 'card-3' })
 	})
 

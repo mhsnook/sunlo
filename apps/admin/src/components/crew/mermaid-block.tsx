@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react'
 import {
+	queryOptions,
 	useQuery,
 	useQueryClient,
 	type QueryClient,
@@ -8,6 +9,7 @@ import { Images, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/components/theme-provider'
 import { sketchImageQuery } from '~/lib/crew'
+import { asDataUrl, encode } from '~/lib/images'
 import { SketchViewer, type ViewerScreen } from './sketch-viewer'
 
 type Mode = 'light' | 'dark'
@@ -35,78 +37,88 @@ async function drawMermaid(source: string, mode: Mode) {
 	})
 	await mermaid.parse(source)
 	// mermaid.render needs an element id no other drawing is using.
-	return (await mermaid.render(`mermaid-${++drawings}`, source)).svg
+	const renderId = `mermaid-${++drawings}`
+	return { svg: (await mermaid.render(renderId, source)).svg, renderId }
 }
 
 // A node drawn with `img: "sketch:41"` shows that sketch's picture. Mermaid
 // measures an image by loading it, and the sketch's URL needs the admin's
 // token, so each picture goes into the source as a small data URI.
-const SKETCH_NODE = /@\{[^}]*?img:\s*"sketch:(\d+)"[^}]*\}/g
+const SKETCH_NODE = /([\w-]+)@\{[^}]*?img:\s*"sketch:(\d+)"[^}]*\}/g
 const NODE_LABEL = /label:\s*"([^"]*)"/
 
-// The sketches a diagram shows, in the order its source names them.
-export function sketchScreens(source: string): Array<ViewerScreen> {
+// The sketches a diagram shows, in the order its source names them, and
+// the sketch behind each node id.
+function sketchNodes(source: string) {
 	const screens = new Map<number, ViewerScreen>()
+	const sketchByNode = new Map<string, number>()
 	for (const match of source.matchAll(SKETCH_NODE)) {
-		const id = Number(match[1])
+		const id = Number(match[2])
+		sketchByNode.set(match[1], id)
 		const label = NODE_LABEL.exec(match[0])?.[1]
 		if (!screens.has(id))
 			screens.set(id, { id, title: label || `Sketch ${id}` })
 	}
-	return [...screens.values()]
+	return { screens: [...screens.values()], sketchByNode }
 }
 
 const THUMBNAIL_WIDTH = 240
 
-async function thumbnail(blob: Blob) {
-	const bitmap = await createImageBitmap(blob)
-	const scale = Math.min(1, THUMBNAIL_WIDTH / bitmap.width)
-	const canvas = document.createElement('canvas')
-	canvas.width = Math.round(bitmap.width * scale)
-	canvas.height = Math.round(bitmap.height * scale)
-	canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-	bitmap.close()
-	return canvas.toDataURL('image/jpeg', 0.82)
-}
+// A thumbnail is the same in either theme, so it is cached by sketch.
+const thumbnailQuery = (id: number, queryClient: QueryClient) =>
+	queryOptions({
+		queryKey: ['crew', 'sketch', id, 'thumbnail'],
+		queryFn: async () => {
+			const { blob } = await queryClient.fetchQuery(sketchImageQuery(id))
+			const bitmap = await createImageBitmap(blob)
+			const scale = Math.min(1, THUMBNAIL_WIDTH / bitmap.width)
+			try {
+				return await asDataUrl(
+					await encode(
+						bitmap,
+						Math.round(bitmap.width * scale),
+						Math.round(bitmap.height * scale),
+						'image/jpeg',
+						0.82
+					)
+				)
+			} finally {
+				bitmap.close()
+			}
+		},
+		staleTime: Infinity,
+		retry: false,
+	})
 
 // A grey picture for a sketch that did not load, so the rest still draws.
-const missingPicture = () => {
-	const canvas = document.createElement('canvas')
-	canvas.width = 12
-	canvas.height = 26
-	const context = canvas.getContext('2d')
-	if (context) {
-		context.fillStyle = '#d4d4d4'
-		context.fillRect(0, 0, canvas.width, canvas.height)
-	}
-	return canvas.toDataURL('image/png')
-}
+const MISSING_PICTURE =
+	'data:image/svg+xml,' +
+	encodeURIComponent(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="26"><rect width="12" height="26" fill="#d4d4d4"/></svg>'
+	)
 
-// The source with each sketch's picture in place, and the sketch each
-// picture stands for, by its data URI.
 async function withSketches(
 	source: string,
 	screens: Array<ViewerScreen>,
 	queryClient: QueryClient
 ) {
-	const pictures = new Map<number, string>()
-	await Promise.all(
-		screens.map(async ({ id }) => {
-			const picture = await queryClient
-				.fetchQuery(sketchImageQuery(id))
-				.then((image) => thumbnail(image.blob))
-				.catch(missingPicture)
-			pictures.set(id, picture)
-		})
+	const pictures = new Map(
+		await Promise.all(
+			screens.map(
+				async ({ id }) =>
+					[
+						id,
+						await queryClient
+							.fetchQuery(thumbnailQuery(id, queryClient))
+							.catch(() => MISSING_PICTURE),
+					] as const
+			)
+		)
 	)
-	const sketchByPicture = new Map(
-		[...pictures].map(([id, picture]) => [picture, id])
-	)
-	const drawn = source.replace(/"sketch:(\d+)"/g, (whole, id: string) => {
+	return source.replace(/"sketch:(\d+)"/g, (whole, id: string) => {
 		const picture = pictures.get(Number(id))
 		return picture ? `"${picture}"` : whole
 	})
-	return { drawn, sketchByPicture }
 }
 
 const useMode = (): Mode => {
@@ -122,30 +134,26 @@ const useMode = (): Mode => {
 export function MermaidBlock({ source }: { source: string }) {
 	const mode = useMode()
 	const queryClient = useQueryClient()
-	const screens = sketchScreens(source)
+	const { screens, sketchByNode } = sketchNodes(source)
 	const [viewing, setViewing] = useState<number | null>(null)
 	const diagram = useQuery({
 		queryKey: ['mermaid', mode, source],
 		queryFn: async () => {
-			const { drawn, sketchByPicture } = await withSketches(
-				source,
-				screens,
-				queryClient
-			)
-			return { svg: await drawMermaid(drawn, mode), sketchByPicture }
+			void loadMermaid()
+			return drawMermaid(await withSketches(source, screens, queryClient), mode)
 		},
 		staleTime: Infinity,
 		retry: false,
 	})
 	const openSketch = (event: MouseEvent) => {
 		// An image node's group is classed by its shape (image-shape), not
-		// "node" as other shapes are.
-		const picture = (event.target as Element)
-			.closest('g.nodes > g')
-			?.querySelector('image')
-		const href =
-			picture?.getAttribute('href') ?? picture?.getAttribute('xlink:href')
-		const id = href ? diagram.data?.sketchByPicture.get(href) : undefined
+		// "node" as other shapes are. Its id is
+		// <render id>-flowchart-<node id>-<n>.
+		const group = (event.target as Element).closest('g.nodes > g')
+		const prefix = `${diagram.data?.renderId}-flowchart-`
+		if (!group?.id.startsWith(prefix)) return
+		const node = group.id.slice(prefix.length).replace(/-\d+$/, '')
+		const id = sketchByNode.get(node)
 		const index = screens.findIndex((screen) => screen.id === id)
 		if (index !== -1) setViewing(index)
 	}

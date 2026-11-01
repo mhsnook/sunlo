@@ -18,6 +18,7 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
 	isCrewKey,
+	isFlow,
 	type CardType,
 	type CrewKey,
 	type CrewMessageType,
@@ -341,7 +342,7 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 	if (card.kind === 'github' && card.draft) {
 		return <GithubCard message={message} draft={card.draft} />
 	}
-	if (card.kind === 'sketches' && card.sketches && card.layout === 'flow') {
+	if (isFlow(card) && card.sketches) {
 		return <FlowCard message={message} steps={card.sketches} />
 	}
 	if (card.kind === 'sketches' && card.sketches) {

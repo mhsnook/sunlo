@@ -21,6 +21,8 @@ import {
 	placeOf,
 	threadPlace,
 	isThreadPlace,
+	isFlow,
+	stepLabel,
 	type MessagePlaceType,
 	principalOf,
 	roomMembers,
@@ -93,18 +95,16 @@ import {
 import { leftThisHour } from './hourly'
 import {
 	addSubflow,
-	adoptedReport,
+	adoptedLine,
 	adoptVersion,
 	approvalNote,
 	approvedFlowReport,
 	approveFlow,
 	APPROVE_FLOW,
 	findStep,
-	isFlow,
 	replyWithVersions,
 	requestStep,
 	setApproval,
-	stepLabel,
 	stepRequestReport,
 } from './flows'
 import {
@@ -1378,8 +1378,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			by: input.name,
 			at,
 		}
+		const approvesFlow = action.id === APPROVE_FLOW.id && isFlow(message.card)
+		const card = approvesFlow
+			? { ...message.card, sketches: approveFlow(message.card.sketches ?? []) }
+			: message.card
 		this.sql`
-			update message set answer = ${JSON.stringify(answer)}
+			update message set answer = ${JSON.stringify(answer)},
+				card = ${JSON.stringify(card)}
 			where id = ${message.id}`
 		const agent = message.author
 		const subject = message.card.title ?? message.body
@@ -1409,14 +1414,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			const room = roomOfPlace(message.place)
 			if (room) this.push({ type: 'charter', room })
 		}
-		this.push({ type: 'message', message: { ...message, answer } })
+		this.push({ type: 'message', message: { ...message, answer, card } })
 		this.push({ type: 'workspace', agent })
 		if (roomOfPlace(message.place)) this.openCardsChanged()
-		if (action.id === APPROVE_FLOW.id && isFlow(message.card)) {
-			this.saveSteps(
-				{ ...message, answer },
-				approveFlow(message.card.sketches ?? [])
-			)
+		if (approvesFlow) {
 			return {
 				ok: true,
 				reports: [{ agent, body: approvedFlowReport(input.name, subject) }],
@@ -1426,19 +1427,22 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			(s) => `sketch-${s.id}` === action.id
 		)
 		if (sketch) {
+			const from = message.card.from
 			const adopted =
-				message.card.from?.kind === 'redo'
-					? this.adoptPicked(message.card.from, sketch, message.id, input.name)
-					: null
-			const reports = sketchPickReports({
-				agent,
-				title: subject,
-				sketch,
-				by: input.name,
-			})
-			const own = reports.find((report) => report.agent === agent)
-			if (adopted && own) own.body = adopted
-			return { ok: true, reports }
+				from?.kind === 'redo' && this.adoptPicked(from, sketch, message.id)
+			return {
+				ok: true,
+				reports: sketchPickReports({
+					agent,
+					title: subject,
+					sketch,
+					by: input.name,
+					step:
+						adopted && from
+							? { index: from.step, flowTitle: from.title }
+							: undefined,
+				}),
+			}
 		}
 		const painting = message.card.paintings?.find(
 			(p) => `painting-${p.id}` === action.id
@@ -1467,31 +1471,21 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// The admin went with one of the versions a redo offered: it becomes the
-	// step's picture in the flow. Returns what the agent hears, or null when
-	// the flow is gone.
+	// step's picture in the flow. False when the flow is gone.
 	private adoptPicked(
 		from: SketchOriginType,
 		sketch: SketchType,
-		messageId: string,
-		by: string
+		messageId: string
 	) {
 		const flow = this.messageById(from.messageId)
 		const steps = flow?.card?.sketches
-		if (!flow || !steps?.[from.step]) return null
-		const version = {
-			id: sketch.id,
-			label: sketch.label,
-			idea: sketch.idea,
-			messageId,
-		}
-		this.saveSteps(flow, adoptVersion(steps, from.step, version, true))
-		return adoptedReport({
-			by,
-			title: from.title,
-			index: from.step,
-			version,
-			picked: true,
-		})
+		if (!flow || !steps?.[from.step]) return false
+		const { id, label, idea } = sketch
+		this.saveSteps(
+			flow,
+			adoptVersion(steps, from.step, { id, label, idea, messageId }, true)
+		)
+		return true
 	}
 
 	// ---- Agent runs ---------------------------------------------------------
@@ -2055,9 +2049,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const target = input.replaces ?? input.expands
 		const source = target === undefined ? null : this.flowStepOf(target)
 		if (source && 'error' in source) return { ok: false, error: source.error }
-		if (source && input.expands !== undefined) {
-			const step = source.steps[source.index]
-			if (step.status !== 'approved') {
+		// A lone redrawn version becomes the step's picture at once, so its
+		// card has nothing to pick.
+		const mode = !source
+			? null
+			: input.expands !== undefined
+				? 'expand'
+				: input.proposals.length === 1
+					? 'adopt'
+					: 'redo'
+		if (source && mode === 'expand') {
+			if (source.steps[source.index].status !== 'approved') {
 				return {
 					ok: false,
 					error: `Nothing was posted: step ${stepLabel(source.index)} is not approved yet, and only an approved step is expanded.`,
@@ -2096,69 +2098,53 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				? { ...sketch, action: proposal.action }
 				: sketch
 		})
-		// A lone redrawn version becomes the step's picture at once, so its
-		// card has nothing to pick.
-		const adoptAtOnce =
-			source !== null && input.replaces !== undefined && sketches.length === 1
-		const actions = flow
-			? [APPROVE_FLOW]
-			: adoptAtOnce
-				? []
-				: sketches.map((sketch) => ({
-						id: `sketch-${sketch.id}`,
-						label: `Go with ${sketch.label}`,
-					}))
 		const messageId = this.bringToAdmin({
 			author: input.agent,
 			kind: 'sketches',
 			title: input.title,
 			body: input.body,
-			actions,
+			actions: flow
+				? [APPROVE_FLOW]
+				: mode === 'adopt'
+					? []
+					: sketches.map((sketch) => ({
+							id: `sketch-${sketch.id}`,
+							label: `Go with ${sketch.label}`,
+						})),
 			sketches,
-			layout: input.layout,
+			...(flow ? { layout: 'flow' as const } : {}),
 			...(source
 				? {
 						from: {
-							kind: input.replaces !== undefined ? 'redo' : 'expand',
+							kind: mode === 'expand' ? 'expand' : 'redo',
 							messageId: source.message.id,
 							step: source.index,
-							label: stepLabel(source.index),
 							title: source.message.card?.title ?? source.message.body,
 						},
 					}
 				: {}),
 		})
-		if (source) {
-			const steps =
-				input.expands !== undefined
-					? addSubflow(source.steps, source.index, messageId)
-					: adoptAtOnce
-						? adoptVersion(
-								source.steps,
-								source.index,
-								{ ...sketches[0], messageId },
-								false
-							)
-						: replyWithVersions(
-								source.steps,
-								source.index,
-								messageId,
-								displayName(input.agent),
-								at
-							)
-			this.saveSteps(source.message, steps)
+		if (!source) return { ok: true, messageId, sketches, note: null }
+		const { steps, index } = source
+		if (mode === 'expand') {
+			this.saveSteps(source.message, addSubflow(steps, index, messageId))
+			return { ok: true, messageId, sketches, note: null }
 		}
-		const note =
-			source && adoptAtOnce
-				? adoptedReport({
-						by: displayName(input.agent),
-						title: source.message.card?.title ?? source.message.body,
-						index: source.index,
-						version: { ...sketches[0], messageId },
-						picked: false,
-					})
-				: null
-		return { ok: true, messageId, sketches, note }
+		if (mode === 'adopt') {
+			const version = { ...sketches[0], messageId }
+			this.saveSteps(source.message, adoptVersion(steps, index, version, false))
+			return {
+				ok: true,
+				messageId,
+				sketches,
+				note: adoptedLine(index, version.id),
+			}
+		}
+		this.saveSteps(
+			source.message,
+			replyWithVersions(steps, index, messageId, displayName(input.agent))
+		)
+		return { ok: true, messageId, sketches, note: null }
 	}
 
 	// The flow and the step that a sketch is the current picture of. A
@@ -2171,22 +2157,21 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				index: number
 		  }
 		| { error: string } {
-		const posted = this.sql<MessageRow>`
+		const row = this.sql<MessageRow>`
 			select * from message
 			where card is not null and exists (
 				select 1 from json_each(message.card, '$.sketches') as s
 				where json_extract(s.value, '$.id') = ${sketchId}
-			)`[0]
-		const card = posted ? toMessage(posted).card : null
+			)
+			limit 1`[0]
+		const posted = row ? toMessage(row) : null
+		const card = posted?.card
 		if (!posted || !card) return { error: `No sketch ${sketchId}.` }
-		const flowRow =
-			card.layout === 'flow'
-				? posted
-				: card.from?.kind === 'redo'
-					? this.sql<MessageRow>`
-							select * from message where id = ${card.from.messageId}`[0]
-					: undefined
-		const flow = flowRow ? toMessage(flowRow) : null
+		const flow = isFlow(card)
+			? posted
+			: card.from?.kind === 'redo'
+				? this.messageById(card.from.messageId)
+				: null
 		if (!flow || !isFlow(flow.card) || !flow.card?.sketches) {
 			return {
 				error: `Sketch ${sketchId} is not a step of a flow. replaces and expands take the sketch id of a flow's step.`,
@@ -2220,9 +2205,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}):
 		| { ok: true; report: { agent: CrewKey; body: string } | null }
 		| { ok: false; status: 404 | 409; error: string } {
-		const row = this.sql<MessageRow>`
-			select * from message where id = ${input.messageId}`[0]
-		const message = row && toMessage(row)
+		const message = this.messageById(input.messageId)
 		const steps = message?.card?.sketches
 		if (!message || !isFlow(message.card) || !steps) {
 			return { ok: false, status: 404, error: 'No flow with that id' }
@@ -2257,9 +2240,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const request = {
 			kind: action.action,
 			note: action.note,
-			count: action.action === 'redo' ? action.count : 1,
+			...(action.action === 'redo' ? { count: action.count } : {}),
 			by: input.name,
-			at: now(),
 		}
 		this.saveSteps(message, requestStep(steps, input.step, request))
 		return {
