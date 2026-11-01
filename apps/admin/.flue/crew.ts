@@ -69,7 +69,9 @@ observe((event) => {
 	}
 	if (event.type === 'submission_settled') {
 		const key = { agent, thread, submission: event.submissionId }
-		record((room) => room.settleRun(key, event.outcome))
+		record((room) =>
+			room.settleRun(key, event.outcome, event.error?.message ?? null)
+		)
 		return
 	}
 	const change = stepChange(agent, event)

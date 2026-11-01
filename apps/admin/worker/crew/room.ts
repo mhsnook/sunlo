@@ -582,6 +582,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.addEditRuns(),
 			() => this.indexThreadRuns(),
 			() => this.addSketchImageIds(),
+			() => this.addRunErrors(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -747,6 +748,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	private addSketchImageIds() {
 		if (!this.tableColumns('sketch').has('image_id')) {
 			this.sql`alter table sketch add column image_id integer`
+		}
+	}
+
+	private addRunErrors() {
+		if (!this.tableColumns('run').has('error')) {
+			this.sql`alter table run add column error text`
 		}
 	}
 
@@ -1537,10 +1544,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// Every submission settles, a completed one after finishRun or
 	// finishThreadRun.
-	settleRun(key: RunLogKey, outcome: 'completed' | 'failed' | 'aborted') {
+	settleRun(
+		key: RunLogKey,
+		outcome: 'completed' | 'failed' | 'aborted',
+		error: string | null = null
+	) {
 		const failed = outcome !== 'completed'
 		const trigger = key.thread ?? (failed ? this.runTrigger(key.agent) : null)
-		this.runLog.settle(key, failed ? 'failed' : 'done', trigger)
+		this.runLog.settle(key, failed ? 'failed' : 'done', trigger, error)
 		if (!failed) return
 		if (key.thread) this.failThreadRun(key.agent, key.thread)
 		else this.failRun(key.agent)

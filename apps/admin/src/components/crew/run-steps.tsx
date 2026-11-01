@@ -112,7 +112,9 @@ export function RunTrace({ run, who }: { run: RunType; who: string | null }) {
 	const summary = running
 		? `${stepCount(count)} so far`
 		: run.outcome === 'failed'
-			? `stopped after ${stepCount(count)}`
+			? count
+				? `stopped after ${stepCount(count)}`
+				: 'stopped before its first step'
 			: `worked in ${stepCount(count)}${failed ? `, ${failed} failed` : ''}`
 	const title = who
 		? `${who}${running ? ', ' : ' '}${summary}`
@@ -130,6 +132,14 @@ export function RunTrace({ run, who }: { run: RunType; who: string | null }) {
 				</TraceCollapsibleTrigger>
 				<TraceCollapsibleContent>
 					<Trace>
+						{run.error && (
+							<p
+								className="text-destructive text-xs break-words"
+								data-testid="run-error"
+							>
+								{run.error}
+							</p>
+						)}
 						{run.dropped > 0 && (
 							<TraceLine status="pending">
 								<TraceTitle>
@@ -186,7 +196,7 @@ export function MessageRuns({ message }: { message: CrewMessageType }) {
 				(run) =>
 					run.messageId === message.id &&
 					run.outcome !== 'working' &&
-					run.steps.length + run.dropped > 0
+					(run.steps.length + run.dropped > 0 || run.error !== null)
 			),
 	})
 	if (!runs.length) return null

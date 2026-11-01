@@ -89,7 +89,8 @@
 		"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
 		// product-2's model, through Workers AI with no API key. The id is
 		// pi-ai's, with dashes: Flue knows that one, and with it that the model
-		// takes images. Cloudflare's catalog writes it anthropic/claude-opus-5.5.
+		// takes images. The binding only takes anthropic/claude-opus-5.5, so
+		// .flue/app.ts rewrites the id on every call (worker/models.ts).
 		"MODEL_PRODUCT_2": "anthropic/claude-opus-5-5",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
