@@ -1,8 +1,10 @@
 import { useCallback, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { eq, inArray, useLiveQuery } from '@tanstack/react-db'
-import { cardsCollection } from '@/features/deck/collections'
-import { usePreferredTranslationLang } from '@/features/deck/hooks'
+import { inArray, useLiveQuery } from '@tanstack/react-db'
+import {
+	useDeckCards,
+	usePreferredTranslationLang,
+} from '@/features/deck/hooks'
 import { phrasesFull } from '@/features/phrases/live'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { useProfile } from '@/features/profile/hooks'
@@ -12,8 +14,18 @@ import {
 } from '@/features/requests/live'
 import { useUserId } from '@/lib/use-auth'
 import { sendToCoach } from './engine'
-import type { DeckStatus } from './library'
-import { emptyThread, threadKey, useCoachStore } from './store'
+import {
+	activeIds,
+	answerPhraseIds,
+	countTags,
+	statusesFromCards,
+} from './library'
+import {
+	emptyThread,
+	threadKey,
+	useCoachBusyStore,
+	useCoachStore,
+} from './store'
 import type { NavTarget, ToolContext } from './tools'
 
 export function useCoachThread(key: string) {
@@ -21,7 +33,7 @@ export function useCoachThread(key: string) {
 }
 
 export function useCoachBusy(key: string) {
-	return useCoachStore((state) => !!state.busy[key])
+	return useCoachBusyStore((state) => !!state[key])
 }
 
 function useNavTarget(lang: string) {
@@ -80,24 +92,6 @@ export function useCoach(lang: string) {
 	return { key, ctx, send, translationLang, learnerName }
 }
 
-export function useDeckStatuses(lang: string) {
-	const { data } = useLiveQuery(
-		(q) =>
-			q
-				.from({ card: cardsCollection })
-				.where(({ card }) => eq(card.lang, lang)),
-		[lang]
-	)
-	return useMemo(() => {
-		const out = new Map<string, DeckStatus>()
-		for (const card of data ?? []) {
-			if (out.get(card.phrase_id) === 'active') continue
-			out.set(card.phrase_id, card.status)
-		}
-		return out
-	}, [data])
-}
-
 function inOrder<T extends { id: string }>(
 	rows: Array<T> | undefined,
 	ids: Array<string>
@@ -140,13 +134,7 @@ export function useRequestsByIds(ids: Array<string>) {
 			// oxlint-disable-next-line no-map-spread -- the rows belong to the live query; mutating them would change its data
 			inOrder(requests, ids).map((request) => ({
 				...request,
-				answerIds: [
-					...new Set(
-						(links ?? [])
-							.filter((link) => link.request_id === request.id)
-							.map((link) => link.phrase_id)
-					),
-				],
+				answerIds: answerPhraseIds(request.id, links ?? []),
 			})),
 		[requests, links, ids]
 	)
@@ -164,21 +152,12 @@ export function usePlaylistsByIds(ids: Array<string>) {
 }
 
 export function useDeckMeter(lang: string) {
-	const statuses = useDeckStatuses(lang)
-	const activeIds = useMemo(
-		() => [...statuses].filter(([, s]) => s === 'active').map(([pid]) => pid),
-		[statuses]
-	)
-	const phrases = usePhrasesByIds(activeIds)
-	return useMemo(() => {
-		const counts = new Map<string, number>()
-		for (const phrase of phrases)
-			for (const tag of phrase.tags)
-				counts.set(tag.name, (counts.get(tag.name) ?? 0) + 1)
-		const tags = [...counts]
-			.toSorted((a, b) => b[1] - a[1])
-			.slice(0, 3)
-			.map(([name, count]) => ({ name, count }))
-		return { size: activeIds.length, tags }
-	}, [phrases, activeIds.length])
+	const { data: cards } = useDeckCards(lang)
+	const statuses = useMemo(() => statusesFromCards(cards ?? []), [cards])
+	const active = useMemo(() => activeIds(statuses), [statuses])
+	const phrases = usePhrasesByIds(active)
+	const tags = useMemo(() => countTags(phrases).slice(0, 3), [phrases])
+	return { size: active.length, tags, statuses }
 }
+
+export type DeckMeter = ReturnType<typeof useDeckMeter>

@@ -1,4 +1,10 @@
-import { Check, ListMusic, MessageCircleQuestion, Plus } from 'lucide-react'
+import {
+	Check,
+	ListMusic,
+	MessageCircleQuestion,
+	Plus,
+	type LucideIcon,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -8,29 +14,26 @@ import { cn } from '@/lib/utils'
 import { notePageAction } from '../engine'
 import {
 	useCoachThread,
-	useDeckMeter,
-	useDeckStatuses,
 	usePhrasesByIds,
 	usePlaylistsByIds,
 	useRequestsByIds,
+	type DeckMeter as DeckMeterData,
 } from '../hooks'
 import { playlistPhraseIds, translationFor, type DeckStatus } from '../library'
 import { DECK_TARGET } from '../protocol'
-import { logId, updateThread, type CoachView } from '../store'
+import { pushView, updateThread, type CoachView } from '../store'
 
 type Props = {
 	coachKey: string
 	lang: string
 	uid: string
 	translationLang: string
+	deck: DeckMeterData
 }
 
 export function CoachCanvas(props: Props) {
 	const thread = useCoachThread(props.coachKey)
-	const view =
-		thread.views.find((v) => v.id === thread.activeViewId) ??
-		thread.views.at(-1) ??
-		null
+	const view = thread.views.find((v) => v.id === thread.activeViewId) ?? null
 
 	return (
 		<div className="flex flex-col gap-6" data-testid="coach-canvas">
@@ -49,7 +52,7 @@ export function CoachCanvas(props: Props) {
 								: 'Tell your coach why you are learning. Phrases they find for you show up here.')}
 					</p>
 				</div>
-				<DeckMeter lang={props.lang} />
+				<DeckMeter lang={props.lang} deck={props.deck} />
 			</header>
 
 			{thread.views.length > 1 && (
@@ -76,8 +79,8 @@ export function CoachCanvas(props: Props) {
 	)
 }
 
-function DeckMeter({ lang }: { lang: string }) {
-	const { size, tags } = useDeckMeter(lang)
+function DeckMeter({ lang, deck }: { lang: string; deck: DeckMeterData }) {
+	const { size, tags } = deck
 	const percent = Math.min(100, Math.round((size / DECK_TARGET) * 100))
 	return (
 		<div
@@ -145,28 +148,20 @@ function ViewContent({
 	lang,
 	uid,
 	translationLang,
+	deck,
 }: Props & { view: CoachView }) {
 	const phrases = usePhrasesByIds(view.phraseIds)
 	const requests = useRequestsByIds(view.requestIds)
 	const playlists = usePlaylistsByIds(view.playlistIds)
-	const statuses = useDeckStatuses(lang)
 
 	const openSet = (title: string, phraseIds: Array<string>, note: string) => {
-		const id = logId()
-		updateThread(coachKey, (thread) => ({
-			views: [
-				...thread.views,
-				{
-					id,
-					title,
-					subtitle: null,
-					phraseIds,
-					requestIds: [],
-					playlistIds: [],
-				},
-			],
-			activeViewId: id,
-		}))
+		pushView(coachKey, {
+			title,
+			subtitle: null,
+			phraseIds,
+			requestIds: [],
+			playlistIds: [],
+		})
 		notePageAction(coachKey, note)
 	}
 
@@ -181,7 +176,7 @@ function ViewContent({
 					text={phrase.text}
 					translation={translationFor(phrase, translationLang)}
 					tag={phrase.tags[0]?.name ?? null}
-					status={statuses.get(phrase.id) ?? null}
+					status={deck.statuses.get(phrase.id) ?? null}
 					phraseId={phrase.id}
 					onAdd={() => {
 						addPhrasesToDeck(lang, uid, [
@@ -224,57 +219,42 @@ function ViewContent({
 			<TabsContent value="requests" className="mt-4">
 				<ul className="flex flex-col gap-2">
 					{requests.map((request) => (
-						<li key={request.id} data-key={request.id}>
-							<button
-								type="button"
-								data-testid="coach-request"
-								className="hover:border-primary-400 bg-card flex w-full items-center gap-3 rounded-2xl border border-dashed p-4 text-start"
-								onClick={() =>
-									openSet(
-										request.prompt,
-										request.answerIds,
-										`opened the request “${request.prompt}”`
-									)
-								}
-							>
-								<MessageCircleQuestion className="text-primary-600 size-5 shrink-0" />
-								<span className="flex-1">{request.prompt}</span>
-								<span className="text-muted-foreground text-sm">
-									{request.answerIds.length} answer
-									{request.answerIds.length === 1 ? '' : 's'}
-								</span>
-							</button>
-						</li>
+						<SetButton
+							key={request.id}
+							id={request.id}
+							testId="coach-request"
+							icon={MessageCircleQuestion}
+							title={request.prompt}
+							detail={`${request.answerIds.length} answer${request.answerIds.length === 1 ? '' : 's'}`}
+							onOpen={() =>
+								openSet(
+									request.prompt,
+									request.answerIds,
+									`opened the request “${request.prompt}”`
+								)
+							}
+						/>
 					))}
 				</ul>
 			</TabsContent>
 			<TabsContent value="sets" className="mt-4">
-				<ul className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+				<ul className="flex flex-col gap-2">
 					{playlists.map((playlist) => (
-						<li key={playlist.id} data-key={playlist.id}>
-							<button
-								type="button"
-								data-testid="coach-playlist"
-								className="hover:border-primary-400 bg-card flex h-full w-full flex-col gap-1 rounded-2xl border p-4 text-start"
-								onClick={() =>
-									openSet(
-										playlist.title,
-										playlistPhraseIds(playlist.id),
-										`opened the set “${playlist.title}”`
-									)
-								}
-							>
-								<span className="flex items-center gap-2 font-semibold">
-									<ListMusic className="text-primary-600 size-4" />
-									{playlist.title}
-								</span>
-								{playlist.description && (
-									<span className="text-muted-foreground line-clamp-2 text-sm">
-										{playlist.description}
-									</span>
-								)}
-							</button>
-						</li>
+						<SetButton
+							key={playlist.id}
+							id={playlist.id}
+							testId="coach-playlist"
+							icon={ListMusic}
+							title={playlist.title}
+							detail={playlist.description}
+							onOpen={() =>
+								openSet(
+									playlist.title,
+									playlistPhraseIds(playlist.id),
+									`opened the set “${playlist.title}”`
+								)
+							}
+						/>
 					))}
 				</ul>
 			</TabsContent>
@@ -334,6 +314,41 @@ function PhraseTile({
 					<Plus /> Add
 				</Button>
 			)}
+		</li>
+	)
+}
+
+function SetButton({
+	id,
+	testId,
+	icon: Icon,
+	title,
+	detail,
+	onOpen,
+}: {
+	id: string
+	testId: string
+	icon: LucideIcon
+	title: string
+	detail: string | null
+	onOpen: () => void
+}) {
+	return (
+		<li data-key={id}>
+			<button
+				type="button"
+				data-testid={testId}
+				className="hover:border-primary-400 bg-card flex w-full items-center gap-3 rounded-2xl border p-4 text-start"
+				onClick={onOpen}
+			>
+				<Icon className="text-primary-600 size-5 shrink-0" />
+				<span className="flex-1 font-medium">{title}</span>
+				{detail && (
+					<span className="text-muted-foreground line-clamp-2 max-w-1/2 text-sm">
+						{detail}
+					</span>
+				)}
+			</button>
 		</li>
 	)
 }

@@ -1,9 +1,10 @@
-import { useCoach } from '../hooks'
+import { useCoach, useDeckMeter } from '../hooks'
 import { CoachCanvas } from './coach-canvas'
 import { CoachChat } from './coach-chat'
 
 export function CoachPage({ lang }: { lang: string }) {
 	const coach = useCoach(lang)
+	const deck = useDeckMeter(lang)
 
 	return (
 		<div
@@ -18,6 +19,7 @@ export function CoachPage({ lang }: { lang: string }) {
 						lang={lang}
 						uid={coach.ctx.uid}
 						translationLang={coach.translationLang}
+						deck={deck}
 					/>
 				)}
 			</main>
@@ -26,6 +28,7 @@ export function CoachPage({ lang }: { lang: string }) {
 					coachKey={coach.key}
 					lang={lang}
 					learnerName={coach.learnerName}
+					deckSize={deck.size}
 					send={coach.send}
 				/>
 			</aside>

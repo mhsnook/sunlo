@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { CoachMessage } from './protocol'
-import { appendUserBlocks, windowTranscript } from './transcript'
+import {
+	appendUserBlocks,
+	compactTranscript,
+	windowTranscript,
+} from './transcript'
 
 const said = (text: string) => ({ type: 'text' as const, text })
 const result = (id: string) => ({
@@ -85,5 +89,30 @@ describe('windowTranscript', () => {
 		expect(windowTranscript(transcript, 3)).toEqual([
 			{ role: 'user', content: [said('three')] },
 		])
+	})
+})
+
+describe('compactTranscript', () => {
+	it('shortens long tool results outside the last six messages', () => {
+		const long = 'x'.repeat(5000)
+		const transcript: Array<CoachMessage> = [
+			{ role: 'user', content: [said('hi')] },
+			{ role: 'assistant', content: [toolCall('a')] },
+			{ role: 'user', content: [{ ...result('a'), content: long }] },
+			...Array.from(
+				{ length: 6 },
+				(_, i): CoachMessage =>
+					i % 2
+						? { role: 'user', content: [{ ...result(`r${i}`), content: long }] }
+						: { role: 'assistant', content: [toolCall(`r${i + 1}`)] }
+			),
+		]
+		const compacted = compactTranscript(transcript)
+		const lengths = compacted.flatMap((m) =>
+			m.content.flatMap((b) =>
+				b.type === 'tool_result' ? [b.content.length] : []
+			)
+		)
+		expect(lengths).toEqual([1501, 5000, 5000, 5000])
 	})
 })

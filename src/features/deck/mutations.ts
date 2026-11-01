@@ -5,6 +5,7 @@ import { useUserId } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { cardsCollection, decksCollection } from './collections'
 import { directionsForPhrase } from './card-directions'
+import { updatePhraseLearnerCount } from './card-status'
 import { DeckSchema, type CardType, type DeckType } from './schemas'
 
 export function optimisticNewDeck(lang: string, uid: string): DeckType {
@@ -40,15 +41,15 @@ export function useCreateDeck() {
 
 /**
  * Puts phrases in the deck as active cards: inserts the missing directions
- * and reactivates skipped or learned ones. Creates the deck first when there
- * is none, because a card needs its deck row. Resolves once the server has
- * every write.
+ * and reactivates skipped ones. A learned card stays learned. Creates or
+ * unarchives the deck first, because a card needs its deck row. Resolves with
+ * the number of cards written, once the server has every write.
  */
 export async function addPhrasesToDeck(
 	lang: string,
 	uid: string,
 	phrases: Array<{ id: string; only_reverse: boolean | null }>
-): Promise<{ inserted: number; reactivated: number }> {
+): Promise<number> {
 	const deck = decksCollection.get(lang)
 	if (!deck) {
 		await decksCollection.insert(optimisticNewDeck(lang, uid)).isPersisted
@@ -67,11 +68,18 @@ export async function addPhrasesToDeck(
 	const nowIso = new Date().toISOString()
 	const toInsert: Array<CardType> = []
 	const toActivate: Array<string> = []
+	const reverts: Array<() => void> = []
 	for (const phrase of phrases) {
-		for (const direction of directionsForPhrase(phrase.only_reverse)) {
-			const card = existing.get(`${phrase.id}:${direction}`)
+		const cards = directionsForPhrase(phrase.only_reverse).map((direction) => ({
+			direction,
+			card: existing.get(`${phrase.id}:${direction}`),
+		}))
+		const before = cards.find((c) => c.card?.status === 'active')
+			? 'active'
+			: cards.find((c) => c.card)?.card?.status
+		for (const { direction, card } of cards) {
 			if (card) {
-				if (card.status !== 'active') toActivate.push(card.id)
+				if (card.status === 'skipped') toActivate.push(card.id)
 				continue
 			}
 			toInsert.push({
@@ -85,19 +93,28 @@ export async function addPhrasesToDeck(
 				updated_at: nowIso,
 			})
 		}
+		if (before !== 'learned') {
+			const revert = updatePhraseLearnerCount(phrase.id, before, 'active')
+			if (revert) reverts.push(revert)
+		}
 	}
 
-	await Promise.all([
-		toInsert.length
-			? cardsCollection.insert(toInsert).isPersisted.promise
-			: undefined,
-		toActivate.length
-			? cardsCollection.update(toActivate, (drafts) => {
-					drafts.forEach((draft) => {
-						draft.status = 'active'
-					})
-				}).isPersisted.promise
-			: undefined,
-	])
-	return { inserted: toInsert.length, reactivated: toActivate.length }
+	try {
+		await Promise.all([
+			toInsert.length
+				? cardsCollection.insert(toInsert).isPersisted.promise
+				: undefined,
+			toActivate.length
+				? cardsCollection.update(toActivate, (drafts) => {
+						drafts.forEach((draft) => {
+							draft.status = 'active'
+						})
+					}).isPersisted.promise
+				: undefined,
+		])
+	} catch (err) {
+		reverts.forEach((revert) => revert())
+		throw err
+	}
+	return toInsert.length + toActivate.length
 }

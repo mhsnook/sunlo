@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CoachMessage } from './protocol'
+import { compactTranscript } from './transcript'
 
 export type CoachLogEntry = {
 	id: string
@@ -41,12 +42,6 @@ export const emptyThread: CoachThread = {
 
 type CoachState = {
 	threads: Record<string, CoachThread>
-	busy: Record<string, boolean>
-	update: (
-		key: string,
-		fn: (thread: CoachThread) => Partial<CoachThread>
-	) => void
-	setBusy: (key: string, busy: boolean) => void
 	reset: (key: string) => void
 }
 
@@ -54,16 +49,6 @@ export const useCoachStore = create<CoachState>()(
 	persist(
 		(set) => ({
 			threads: {},
-			busy: {},
-			update: (key, fn) =>
-				set((state) => {
-					const thread = state.threads[key] ?? emptyThread
-					return {
-						threads: { ...state.threads, [key]: { ...thread, ...fn(thread) } },
-					}
-				}),
-			setBusy: (key, busy) =>
-				set((state) => ({ busy: { ...state.busy, [key]: busy } })),
 			reset: (key) =>
 				set((state) => {
 					const { [key]: _gone, ...threads } = state.threads
@@ -73,10 +58,22 @@ export const useCoachStore = create<CoachState>()(
 		{
 			name: 'sunlo-coach',
 			version: 1,
-			partialize: (state) => ({ threads: state.threads }),
+			// persist rewrites localStorage on every change, several times a turn,
+			// so it stores the compacted transcript the model would see anyway.
+			partialize: (state) => ({
+				threads: Object.fromEntries(
+					Object.entries(state.threads).map(([key, thread]) => [
+						key,
+						{ ...thread, transcript: compactTranscript(thread.transcript) },
+					])
+				),
+			}),
 		}
 	)
 )
+
+// Kept out of the persisted store, so flipping it writes nothing to storage.
+export const useCoachBusyStore = create<Record<string, boolean>>()(() => ({}))
 
 export const threadKey = (uid: string, lang: string) => `${uid}:${lang}`
 
@@ -86,6 +83,20 @@ export const getThread = (key: string) =>
 export const updateThread = (
 	key: string,
 	fn: (thread: CoachThread) => Partial<CoachThread>
-) => useCoachStore.getState().update(key, fn)
+) =>
+	useCoachStore.setState((state) => {
+		const thread = state.threads[key] ?? emptyThread
+		return {
+			threads: { ...state.threads, [key]: { ...thread, ...fn(thread) } },
+		}
+	})
 
 export const logId = () => crypto.randomUUID()
+
+export function pushView(key: string, view: Omit<CoachView, 'id'>) {
+	const id = logId()
+	updateThread(key, (thread) => ({
+		views: [...thread.views, { id, ...view }],
+		activeViewId: id,
+	}))
+}

@@ -1,6 +1,6 @@
 import languages from '@/lib/languages'
 import { coachStep } from './api'
-import { activePhraseIds, preloadLibrary } from './library'
+import { activeIds, deckStatusByPhrase, preloadLibrary } from './library'
 import {
 	KICKOFF_TEXT,
 	type TextBlock,
@@ -11,11 +11,11 @@ import {
 	getThread,
 	logId,
 	updateThread,
-	useCoachStore,
+	useCoachBusyStore,
 	type CoachLogEntry,
 } from './store'
 import { runTool, type ToolContext } from './tools'
-import { appendUserBlocks, windowTranscript } from './transcript'
+import { appendUserBlocks, compactTranscript } from './transcript'
 
 const MAX_STEPS = 8
 const MAX_RESULT_CHARS = 20_000
@@ -51,9 +51,8 @@ export type SendOptions = {
 
 export async function sendToCoach({ ctx, learnerName, text }: SendOptions) {
 	const { key } = ctx
-	const store = useCoachStore.getState()
-	if (store.busy[key]) return
-	store.setBusy(key, true)
+	if (useCoachBusyStore.getState()[key]) return
+	useCoachBusyStore.setState({ [key]: true })
 
 	try {
 		const notes = getThread(key).pageNotes
@@ -74,7 +73,7 @@ export async function sendToCoach({ ctx, learnerName, text }: SendOptions) {
 			const opening = openingLine(
 				learnerName,
 				ctx.lang,
-				activePhraseIds(ctx.lang).length
+				activeIds(deckStatusByPhrase(ctx.lang)).length
 			)
 			return {
 				transcript: [
@@ -98,7 +97,7 @@ export async function sendToCoach({ ctx, learnerName, text }: SendOptions) {
 				lang: ctx.lang,
 				translationLang: ctx.translationLang,
 				learnerName,
-				messages: windowTranscript(getThread(key).transcript),
+				messages: compactTranscript(getThread(key).transcript),
 			})
 			if (!response.content.length) break
 
@@ -149,7 +148,7 @@ export async function sendToCoach({ ctx, learnerName, text }: SendOptions) {
 			log: [...thread.log, entry('error', message)],
 		}))
 	} finally {
-		useCoachStore.getState().setBusy(key, false)
+		useCoachBusyStore.setState({ [key]: false })
 	}
 }
 

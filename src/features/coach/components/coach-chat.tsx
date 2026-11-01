@@ -8,22 +8,28 @@ import { MessageScroller } from '@/components/ui/message-scroller'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
 import { OPENING_REPLIES, openingLine } from '../engine'
-import { useCoachBusy, useCoachThread, useDeckMeter } from '../hooks'
+import { useCoachBusy, useCoachThread } from '../hooks'
 import { useCoachStore, type CoachLogEntry } from '../store'
 
 type Props = {
 	coachKey: string
 	lang: string
 	learnerName: string | null
+	deckSize: number
 	send: (text: string) => void
 }
 
-export function CoachChat({ coachKey, lang, learnerName, send }: Props) {
+export function CoachChat({
+	coachKey,
+	lang,
+	learnerName,
+	deckSize,
+	send,
+}: Props) {
 	const thread = useCoachThread(coachKey)
 	const busy = useCoachBusy(coachKey)
 	const [draft, setDraft] = useState('')
 	const reset = useCoachStore((s) => s.reset)
-	const deck = useDeckMeter(lang)
 
 	const started = thread.log.length > 0
 	const replies = started ? thread.suggestions : OPENING_REPLIES
@@ -60,7 +66,7 @@ export function CoachChat({ coachKey, lang, learnerName, send }: Props) {
 						thread.log.map((entry) => <LogEntry key={entry.id} entry={entry} />)
 					) : (
 						<Bubble variant="soft" align="start">
-							{openingLine(learnerName, lang, deck.size)}
+							{openingLine(learnerName, lang, deckSize)}
 						</Bubble>
 					)}
 					{busy && (

@@ -3,4 +3,3 @@
 
 export { CoachPage } from './components/coach-page'
 export { preloadLibrary } from './library'
-export { useCoachStore } from './store'

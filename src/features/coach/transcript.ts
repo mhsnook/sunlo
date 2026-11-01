@@ -58,3 +58,33 @@ export function windowTranscript(
 	}
 	return transcript.slice(-1)
 }
+
+const RECENT_MESSAGES = 6
+const OLD_RESULT_CHARS = 1500
+
+// Windows the transcript and shortens tool results older than the last few
+// messages. The model still has the ids it showed (they are in its own
+// show_on_page calls), and each step stops resending full old search results.
+export function compactTranscript(
+	transcript: Array<CoachMessage>
+): Array<CoachMessage> {
+	const windowed = windowTranscript(transcript)
+	const recentFrom = windowed.length - RECENT_MESSAGES
+	return windowed.map((message, i) => {
+		if (i >= recentFrom || message.role !== 'user') return message
+		if (
+			!message.content.some(
+				(b) => b.type === 'tool_result' && b.content.length > OLD_RESULT_CHARS
+			)
+		)
+			return message
+		return {
+			role: 'user',
+			content: message.content.map((b) =>
+				b.type === 'tool_result' && b.content.length > OLD_RESULT_CHARS
+					? { ...b, content: `${b.content.slice(0, OLD_RESULT_CHARS)}…` }
+					: b
+			),
+		}
+	})
+}
