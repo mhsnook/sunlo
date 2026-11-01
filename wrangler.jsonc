@@ -34,7 +34,7 @@
 	// scripts/cf-preview.sh overrides the Supabase pair with --var.
 	"vars": {
 		"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
-		"COACH_MODEL": "anthropic/claude-sonnet-5.5",
+		"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
 	},

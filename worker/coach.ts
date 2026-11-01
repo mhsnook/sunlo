@@ -4,35 +4,22 @@ import {
 	coachTools,
 	CoachResponseSchema,
 	DECK_TARGET,
-	TextBlockSchema,
-	ToolUseBlockSchema,
 	type CoachMessage,
 	type CoachRequest,
 	type CoachResponse,
 } from '../src/features/coach/protocol'
 
-const MAX_OUTPUT_TOKENS = 2048
+const MAX_OUTPUT_TOKENS = 1024
 
-type ToolDefinition = {
-	name: string
-	description: string
-	input_schema: Record<string, unknown>
-	cache_control?: { type: 'ephemeral' }
-}
-
-function toolDefinitions(): Array<ToolDefinition> {
-	const defs: Array<ToolDefinition> = Object.entries(coachTools).map(
-		([name, tool]) => {
-			const { $schema: _drop, ...schema } = z.toJSONSchema(tool.input)
-			return { name, description: tool.description, input_schema: schema }
+const TOOLS: Array<ChatCompletionTool> = Object.entries(coachTools).map(
+	([name, tool]) => {
+		const { $schema: _drop, ...parameters } = z.toJSONSchema(tool.input)
+		return {
+			type: 'function',
+			function: { name, description: tool.description, parameters },
 		}
-	)
-	// One breakpoint after the last tool caches every tool definition.
-	defs[defs.length - 1].cache_control = { type: 'ephemeral' }
-	return defs
-}
-
-const TOOLS = toolDefinitions()
+	}
+)
 
 export function buildSystemPrompt(body: CoachRequest) {
 	const langName = languages[body.lang] ?? body.lang
@@ -40,73 +27,141 @@ export function buildSystemPrompt(body: CoachRequest) {
 		languages[body.translationLang] ?? body.translationLang
 	const name = body.learnerName ? body.learnerName : 'the learner'
 	return [
-		`You are the coach on Sunlo, a language-learning app. You are helping ${name} learn ${langName} (ISO 639-3 "${body.lang}"). They read ${translationName}; write to them in ${translationName}.`,
+		`You are the coach on Sunlo, a language-learning app. You are helping ${name} learn ${langName}. Write to them in ${translationName}.`,
 		``,
-		`Sunlo has a public library of ${langName} phrases written by learners and native speakers, with translations and tags. Learners also post requests ("How do I say ...?") that others answer, and sets of phrases called playlists. Each phrase a learner adds to their deck becomes a flashcard, and spaced repetition brings it back just before they would forget it.`,
+		`Sunlo has a public library of ${langName} phrases with translations and tags, requests ("How do I say ...?") that other learners answered, and sets of phrases called playlists. Each phrase in the learner's deck becomes a flashcard.`,
 		``,
-		`Your job is to get ${name} to a deck that fits their life. About ${DECK_TARGET} phrases is a good start: enough for the first weeks of reviews. When they run low later, you find more.`,
+		`Your job: help ${name} build a deck that fits their life. About ${DECK_TARGET} phrases is a good start.`,
 		``,
-		`How to work:`,
-		`- The screen has two halves. You are the chat on the right. The page on the left shows whatever you put there with show_on_page. Use the page for phrases; never list phrases in chat.`,
-		`- Keep chat messages short: one to three sentences. Talk like a friendly tutor, not a salesperson.`,
-		`- Early on, learn why they want ${langName} (family, a partner, moving, travel, friends, work) and what situations they expect. Ask one question at a time, and offer suggest_replies buttons for likely answers.`,
-		`- Show something as soon as you have any idea what they want. Search, then show_on_page, then ask what they think. A page of real phrases teaches you more about their taste than another question.`,
-		`- Mix topics so the deck covers greetings, getting around, food and the people they will talk to, weighted toward what they told you.`,
-		`- Add to the deck only when they ask, in specific or general terms. "Add them" means the set on the page. After adding, say where the deck stands out of ${DECK_TARGET} and suggest a next set.`,
-		`- Only use ids that a tool gave you. Never invent a phrase or translation. If the library has nothing for what they want, say so and suggest posting a request.`,
-		`- Lines in square brackets that start with "Page:" are things the learner did on the page, such as adding or skipping a phrase. Take them into account, and do not thank them for it.`,
-		`- Close most turns with suggest_replies, so the learner always has an easy next step.`,
+		`The screen has two halves: this chat, and a page beside it. The learner sees phrases only on the page, and only after you call show_on_page.`,
+		``,
+		`On each turn:`,
+		`1. If you know what the learner wants, call search_library (or find_similar), then call show_on_page with the phrase ids you want them to see.`,
+		`2. Write one to three short, friendly sentences about what you showed, or ask one question.`,
+		`3. Call suggest_replies with 2 to 4 short answers the learner might give.`,
+		``,
+		`Rules:`,
+		`- Never write phrases or translations in the chat. Put them on the page.`,
+		`- Show phrases early. Do not ask more than one question before showing something.`,
+		`- Early on, find out why they are learning ${langName}: family, a partner, moving, travel, friends or work.`,
+		`- Call add_to_deck only when the learner asks. "Add them" means the set on the page. After adding, say how many phrases the deck has out of ${DECK_TARGET}.`,
+		`- Use only ids that a tool returned, copied exactly. Never invent a phrase.`,
+		`- If a search finds nothing, try a shorter or different query once. If it still finds nothing, say so and suggest the learner post a request.`,
+		`- A line like "[Page: added ...]" is something the learner did on the page. Take it into account; do not thank them for it.`,
 	].join('\n')
 }
 
-// A breakpoint on the newest block caches the whole conversation so far, so
-// the next step pays the cached rate for everything before it.
-function withConversationCache(messages: Array<CoachMessage>) {
-	return messages.map((message, i) => {
-		if (i !== messages.length - 1) return message
-		return {
-			...message,
-			content: message.content.map((block, j) =>
-				j === message.content.length - 1
-					? { ...block, cache_control: { type: 'ephemeral' } }
-					: block
-			),
+// Our transcript keeps tool calls and results inside the assistant and user
+// messages, as content blocks. Chat completions wants each tool result as its
+// own `tool` message, right after the assistant message that called it.
+export function toChatMessages(
+	system: string,
+	messages: Array<CoachMessage>
+): Array<ChatCompletionMessageParam> {
+	const out: Array<ChatCompletionMessageParam> = [
+		{ role: 'system', content: system },
+	]
+	for (const message of messages) {
+		if (message.role === 'assistant') {
+			const text = message.content
+				.flatMap((b) => (b.type === 'text' ? [b.text] : []))
+				.join('\n')
+			const calls = message.content.flatMap((b) =>
+				b.type === 'tool_use'
+					? [
+							{
+								id: b.id,
+								type: 'function' as const,
+								function: { name: b.name, arguments: JSON.stringify(b.input) },
+							},
+						]
+					: []
+			)
+			out.push({
+				role: 'assistant',
+				content: text || null,
+				...(calls.length ? { tool_calls: calls } : {}),
+			})
+			continue
 		}
-	})
+		for (const block of message.content)
+			if (block.type === 'tool_result')
+				out.push({
+					role: 'tool',
+					tool_call_id: block.tool_use_id,
+					content: block.is_error ? `Error: ${block.content}` : block.content,
+				})
+		const text = message.content
+			.flatMap((b) => (b.type === 'text' ? [b.text] : []))
+			.join('\n')
+		if (text) out.push({ role: 'user', content: text })
+	}
+	return out
 }
 
-const ModelOutputSchema = z.object({
-	content: z.array(z.looseObject({ type: z.string() })),
-	stop_reason: z.string().nullable().optional(),
+const ToolCallSchema = z.object({
+	id: z.string().optional(),
+	type: z.string().optional(),
+	function: z.object({
+		name: z.string(),
+		// JSON text by the OpenAI contract; some models send the object.
+		arguments: z.union([z.string(), z.record(z.string(), z.unknown())]),
+	}),
 })
 
-// The model can return block types the page does not handle, such as
-// thinking. Keep the text and tool calls only.
+const ModelOutputSchema = z.object({
+	choices: z
+		.array(
+			z.object({
+				message: z.object({
+					content: z.string().nullable().optional(),
+					tool_calls: z.array(ToolCallSchema).nullable().optional(),
+				}),
+				finish_reason: z.string().nullable().optional(),
+			})
+		)
+		.min(1),
+})
+
+function parseArguments(args: string | Record<string, unknown>) {
+	if (typeof args !== 'string') return args
+	try {
+		const parsed: unknown = JSON.parse(args || '{}')
+		return parsed && typeof parsed === 'object'
+			? (parsed as Record<string, unknown>)
+			: {}
+	} catch {
+		// The page validates the input and tells the model what was wrong.
+		return {}
+	}
+}
+
 export function cleanModelOutput(raw: unknown): CoachResponse {
-	const output = ModelOutputSchema.parse(raw)
-	const content = output.content.flatMap((block): CoachResponse['content'] => {
-		const text = TextBlockSchema.safeParse(block)
-		if (text.success) return [text.data]
-		const tool = ToolUseBlockSchema.safeParse(block)
-		if (tool.success) return [tool.data]
-		return []
-	})
+	const choice = ModelOutputSchema.parse(raw).choices[0]
+	const text = choice.message.content?.trim()
+	const calls = (choice.message.tool_calls ?? []).map((call, i) => ({
+		type: 'tool_use' as const,
+		id: call.id || `call_${Date.now()}_${i}`,
+		name: call.function.name,
+		input: parseArguments(call.function.arguments),
+	}))
 	return CoachResponseSchema.parse({
-		content,
-		stop_reason: output.stop_reason ?? null,
+		content: [...(text ? [{ type: 'text', text }] : []), ...calls],
+		stop_reason: choice.finish_reason ?? null,
 	})
 }
 
 export async function coachStep(
 	ai: Ai,
-	model: string,
+	model: Env['COACH_MODEL'],
 	body: CoachRequest
 ): Promise<CoachResponse> {
 	const output = await ai.run(model, {
-		max_tokens: MAX_OUTPUT_TOKENS,
-		system: buildSystemPrompt(body),
+		messages: toChatMessages(buildSystemPrompt(body), body.messages),
 		tools: TOOLS,
-		messages: withConversationCache(body.messages),
+		chat_template_kwargs: { enable_thinking: false },
+		temperature: 0.4,
+		max_completion_tokens: MAX_OUTPUT_TOKENS,
 	})
 	return cleanModelOutput(output)
 }
