@@ -1,34 +1,44 @@
 import type { ReactNode } from 'react'
 import {
 	DropdownMenu,
+	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuLabel,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { crewList, displayName, type RoutingType } from '../../../shared/crew'
+import {
+	activeCrew,
+	crewNames,
+	displayName,
+	type RoutingType,
+} from '../../../shared/crew'
 
 export function routingNote(routing: RoutingType) {
 	if (routing.kind === 'stack') return 'Stacked with your next message'
 	if (routing.kind === 'room') return 'Left in the room'
-	return `Sent to ${routing.agents.map(displayName).join(' and ')}`
+	if (routing.kind === 'everyone') {
+		return `To everyone, sent to ${crewNames(routing.agents)}`
+	}
+	return `Sent to ${crewNames(routing.agents)}`
 }
 
+const leaveInRoom = {
+	routing: { kind: 'room', agents: [], by: 'you' },
+	label: 'Leave in the room',
+} satisfies { routing: RoutingType; label: string }
+
 const routingOptions: Array<{ routing: RoutingType; label: string }> = [
-	...crewList
-		.filter((member) => member.active)
-		.map((member) => ({
-			routing: {
-				kind: 'route' as const,
-				agents: [member.key],
-				by: 'you' as const,
-			},
-			label: `Send to ${displayName(member.key)}`,
-		})),
+	...activeCrew.map((key) => ({
+		routing: { kind: 'route' as const, agents: [key], by: 'you' as const },
+		label: `Send to ${displayName(key)}`,
+	})),
 	{
-		routing: { kind: 'room', agents: [], by: 'you' },
-		label: 'Leave in the room',
+		routing: { kind: 'everyone', agents: activeCrew, by: 'you' },
+		label: 'Send to everyone',
 	},
+	leaveInRoom,
 	{
 		routing: { kind: 'stack', agents: [], by: 'you' },
 		label: 'Stack with my next message',
@@ -36,10 +46,13 @@ const routingOptions: Array<{ routing: RoutingType; label: string }> = [
 ]
 
 // Where a message goes: the compose chip before sending, and the routing
-// note under a sent message, for correcting CLEF afterwards.
+// note under a sent message, for correcting CLEF afterwards. A sent message
+// to everyone, or one that woke several agents, gets a check for each agent
+// instead.
 export function RoutingMenu({
 	label,
 	onChoose,
+	current,
 	disabled = false,
 	includeStack = true,
 	className,
@@ -48,6 +61,7 @@ export function RoutingMenu({
 }: {
 	label: string
 	onChoose: (routing: RoutingType) => void
+	current?: RoutingType
 	disabled?: boolean
 	// A sent message cannot stack: the next message has already gone.
 	includeStack?: boolean
@@ -55,6 +69,11 @@ export function RoutingMenu({
 	testId: string
 	children: ReactNode
 }) {
+	const several =
+		current?.kind === 'everyone' ||
+		(current?.kind === 'route' && current.agents.length > 1)
+			? current
+			: null
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
@@ -68,18 +87,53 @@ export function RoutingMenu({
 				<DropdownMenuLabel className="text-muted-foreground text-xs">
 					{label}
 				</DropdownMenuLabel>
-				{routingOptions
-					.filter((option) => includeStack || option.routing.kind !== 'stack')
-					.map((option) => (
+				{several ? (
+					<>
+						{activeCrew.map((key) => (
+							<DropdownMenuCheckboxItem
+								key={key}
+								data-testid="crew-routing-everyone-option"
+								data-key={key}
+								checked={several.agents.includes(key)}
+								// Each check sends a correction at once, so a second check
+								// in the same open menu would start from a stale list.
+								closeOnClick
+								onCheckedChange={(checked) =>
+									onChoose({
+										kind: several.kind,
+										agents: checked
+											? [...several.agents, key]
+											: several.agents.filter((agent) => agent !== key),
+										by: 'you',
+									})
+								}
+							>
+								{displayName(key)}
+							</DropdownMenuCheckboxItem>
+						))}
+						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							key={option.label}
 							data-testid="crew-routing-option"
-							data-key={option.routing.kind + option.routing.agents.join()}
-							onClick={() => onChoose(option.routing)}
+							data-key={leaveInRoom.routing.kind}
+							onClick={() => onChoose(leaveInRoom.routing)}
 						>
-							{option.label}
+							{leaveInRoom.label}
 						</DropdownMenuItem>
-					))}
+					</>
+				) : (
+					routingOptions
+						.filter((option) => includeStack || option.routing.kind !== 'stack')
+						.map((option) => (
+							<DropdownMenuItem
+								key={option.label}
+								data-testid="crew-routing-option"
+								data-key={option.routing.kind + option.routing.agents.join()}
+								onClick={() => onChoose(option.routing)}
+							>
+								{option.label}
+							</DropdownMenuItem>
+						))
+				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
