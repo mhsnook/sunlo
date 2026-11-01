@@ -1,5 +1,5 @@
 import { openingLines } from '../../shared/blocks'
-import { adoptedLine } from './flows'
+import { pickedLine } from './flows'
 import {
 	crew,
 	displayName,
@@ -71,7 +71,7 @@ export function sketchPickReports(input: {
 	title: string
 	sketch: SketchType
 	by: string
-	step?: { index: number; flowTitle: string }
+	step?: { index: number; flowTitle: string; kept: boolean }
 }): Array<{ agent: CrewKey; body: string }> {
 	const { agent, title, sketch, by, step } = input
 	return cardPickReports({
@@ -80,7 +80,7 @@ export function sketchPickReports(input: {
 			? `${by} went with version ${sketch.label} for step ${stepLabel(step.index)} of the flow "${step.flowTitle}": ${sketch.idea}`
 			: `${by} went with sketch ${sketch.label} of "${title}": ${sketch.idea}`,
 		next: step
-			? adoptedLine(step.index, sketch.id)
+			? pickedLine(step.index, sketch.id, step.kept)
 			: `Its HTML is sketch ${sketch.id}.`,
 		made: 'drew it',
 	})

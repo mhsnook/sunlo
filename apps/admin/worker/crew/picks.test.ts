@@ -139,7 +139,7 @@ describe('sketchPickReports', () => {
 			title: 'Step 3, calmer',
 			sketch,
 			by: 'sam',
-			step: { index: 2, flowTitle: 'First review' },
+			step: { index: 2, flowTitle: 'First review', kept: false },
 		})
 		const said =
 			'sam went with version B for step 3 of the flow "First review": One card at a time, full screen'
@@ -147,6 +147,19 @@ describe('sketchPickReports', () => {
 			`${said}. Step 3 is now sketch 7; use that id in the flow's document.`
 		)
 		expect(principal.body).toContain(said)
+	})
+
+	it('says the step keeps its picture when that was the one picked', () => {
+		const [drew] = sketchPickReports({
+			agent: 'product-2',
+			title: 'Step 3, calmer',
+			sketch,
+			by: 'sam',
+			step: { index: 2, flowTitle: 'First review', kept: true },
+		})
+		expect(drew.body).toContain(
+			"That was the step's current picture, so step 3 keeps sketch 7."
+		)
 	})
 
 	it('tells a principal who drew it only once', () => {

@@ -1,24 +1,22 @@
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import {
-	stepLabel,
-	type CrewMessageType,
-	type SketchType,
-} from '../../../shared/crew'
+import type { CrewMessageType, SketchType } from '../../../shared/crew'
 import { sketchImageQuery, sketchQuery } from '~/lib/crew'
 import {
 	fileName,
 	GalleryCard,
 	GalleryTile,
 	PictureButtons,
+	SketchFrame,
 	SketchPicture,
-	sketchFrameClass,
 	TileCaption,
 	tileButtonClass,
 } from './gallery-card'
 import { OriginLine } from './flow-card'
+import { SketchViewer } from './sketch-viewer'
 
 // product-2's mockups as options, side by side. The admin goes with one
 // through the card's own actions, and takes any of them away as a picture
@@ -32,16 +30,13 @@ export function SketchesCard({
 }) {
 	const picked = message.answer?.actionId
 	const origin = message.card?.from
+	const [viewing, setViewing] = useState<number | null>(null)
 	return (
 		<GalleryCard
 			message={message}
 			kind="sketches"
 			label={
-				message.card?.actions.length
-					? 'Sketches · go with one'
-					: origin
-						? `Step ${stepLabel(origin.step)}, drawn again`
-						: 'Sketches'
+				message.card?.actions.length ? 'Sketches · go with one' : 'Sketches'
 			}
 			above={origin && <OriginLine origin={origin} />}
 			brief={[
@@ -51,18 +46,35 @@ export function SketchesCard({
 			]}
 			wide
 		>
-			{sketches.map((sketch) => (
+			{sketches.map((sketch, index) => (
 				<Sketch
 					key={sketch.id}
 					sketch={sketch}
 					picked={picked === `sketch-${sketch.id}`}
+					onView={() => setViewing(index)}
 				/>
 			))}
+			<SketchViewer
+				screens={sketches.map((sketch) => ({
+					id: sketch.id,
+					title: `${sketch.label}. ${sketch.idea}`,
+				}))}
+				index={viewing}
+				onIndex={setViewing}
+			/>
 		</GalleryCard>
 	)
 }
 
-function Sketch({ sketch, picked }: { sketch: SketchType; picked: boolean }) {
+function Sketch({
+	sketch,
+	picked,
+	onView,
+}: {
+	sketch: SketchType
+	picked: boolean
+	onView: () => void
+}) {
 	const queryClient = useQueryClient()
 	const { data: image } = useQuery(sketchImageQuery(sketch.id))
 
@@ -71,7 +83,7 @@ function Sketch({ sketch, picked }: { sketch: SketchType; picked: boolean }) {
 			.fetchQuery(sketchQuery(sketch.id))
 			.then((source) =>
 				navigator.clipboard.writeText(
-					`Mockup ${source.label} (${source.frame}): ${source.idea}\n\n\`\`\`html\n${source.html}\n\`\`\``
+					`Mockup ${sketch.label} (${source.frame}): ${source.idea}\n\n\`\`\`html\n${source.html}\n\`\`\``
 				)
 			)
 			.then(
@@ -82,19 +94,18 @@ function Sketch({ sketch, picked }: { sketch: SketchType; picked: boolean }) {
 
 	return (
 		<GalleryTile picked={picked} testId="sketch" dataKey={sketch.id}>
-			<a
-				href={image?.url}
-				target="_blank"
-				rel="noreferrer"
-				className={sketchFrameClass(sketch.frame)}
-				aria-label={`Open sketch ${sketch.label} full size`}
+			<SketchFrame
+				frame={sketch.frame}
+				viewLabel={`View sketch ${sketch.label} full size`}
+				onView={onView}
+				testId="sketch-open"
 			>
 				<SketchPicture
 					sketchId={sketch.id}
 					alt={`Sketch ${sketch.label}: ${sketch.idea}`}
 					testId="sketch-image"
 				/>
-			</a>
+			</SketchFrame>
 			<TileCaption picked={picked}>
 				<span className="font-semibold">{sketch.label}</span> {sketch.idea}
 			</TileCaption>

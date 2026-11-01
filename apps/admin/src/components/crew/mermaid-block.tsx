@@ -102,6 +102,7 @@ async function withSketches(
 	screens: Array<ViewerScreen>,
 	queryClient: QueryClient
 ) {
+	let missing = false
 	const pictures = new Map(
 		await Promise.all(
 			screens.map(
@@ -110,15 +111,19 @@ async function withSketches(
 						id,
 						await queryClient
 							.fetchQuery(thumbnailQuery(id, queryClient))
-							.catch(() => MISSING_PICTURE),
+							.catch(() => {
+								missing = true
+								return MISSING_PICTURE
+							}),
 					] as const
 			)
 		)
 	)
-	return source.replace(/"sketch:(\d+)"/g, (whole, id: string) => {
+	const drawn = source.replace(/"sketch:(\d+)"/g, (whole, id: string) => {
 		const picture = pictures.get(Number(id))
 		return picture ? `"${picture}"` : whole
 	})
+	return { drawn, missing }
 }
 
 const useMode = (): Mode => {
@@ -140,9 +145,16 @@ export function MermaidBlock({ source }: { source: string }) {
 		queryKey: ['mermaid', mode, source],
 		queryFn: async () => {
 			void loadMermaid()
-			return drawMermaid(await withSketches(source, screens, queryClient), mode)
+			const { drawn, missing } = await withSketches(
+				source,
+				screens,
+				queryClient
+			)
+			return { ...(await drawMermaid(drawn, mode)), missing }
 		},
-		staleTime: Infinity,
+		// A diagram drawn with a missing picture draws again on the next mount
+		// or focus, so a brief failure does not stick.
+		staleTime: (query) => (query.state.data?.missing ? 0 : Infinity),
 		retry: false,
 	})
 	const openSketch = (event: MouseEvent) => {

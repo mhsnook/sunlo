@@ -398,12 +398,11 @@ export const SketchVersionSchema = z.object({
 export type SketchVersionType = z.infer<typeof SketchVersionSchema>
 
 // What the admin asked product-2 to do with one step of a flow: draw it
-// again, or expand it into a sub-flow. `reply` is the card product-2
-// answered with, which links the two.
+// again, or expand it into a sub-flow. A redo's `reply` is the card of new
+// versions product-2 answered with; an expand's answer goes in `subflows`.
 export const StepRequestSchema = z.object({
-	kind: z.enum(['redo', 'expand']),
 	note: z.string(),
-	// How many versions to draw, on a redo.
+	// How many new versions to draw, on a redo.
 	count: z.number().int().optional(),
 	by: z.string(),
 	reply: z.string().optional(),
@@ -423,8 +422,10 @@ export const SketchSchema = z.object({
 	frame: z.enum(['phone', 'desktop']),
 	// What the person does on this screen to reach the next one.
 	action: z.string().optional(),
+	// Shown to the admin only: nothing in the room waits on it.
 	status: z.literal('approved').optional(),
-	request: StepRequestSchema.optional(),
+	redo: StepRequestSchema.optional(),
+	expand: StepRequestSchema.optional(),
 	// The versions that replaced this step's picture, oldest first. The last
 	// one is the step's current picture.
 	versions: z.array(SketchVersionSchema).optional(),
@@ -446,10 +447,11 @@ export const SketchOriginSchema = z.object({
 })
 export type SketchOriginType = z.infer<typeof SketchOriginSchema>
 
-// The admin's controls on one step of a flow.
+// The admin's controls on a flow: one step, or (approve-all) every step.
 export const StepActionSchema = z.discriminatedUnion('action', [
 	z.object({ action: z.literal('approve') }),
 	z.object({ action: z.literal('unapprove') }),
+	z.object({ action: z.literal('approve-all') }),
 	z.object({
 		action: z.literal('redo'),
 		note: z.string().trim().max(2000).default(''),
@@ -626,8 +628,9 @@ export const CardSchema = z.object({
 	ref: z.number().nullable(),
 	draft: GithubDraftSchema.optional(),
 	sketches: z.array(SketchSchema).optional(),
-	// Set on a flow only: a sketches card without it shows options.
-	layout: z.literal('flow').optional(),
+	// A sketches card without it shows options. Only a flow stores it now;
+	// cards from before keep 'options'.
+	layout: z.enum(['options', 'flow']).optional(),
 	from: SketchOriginSchema.optional(),
 	paintings: z.array(PaintingSchema).optional(),
 	svgs: z.array(SvgRefSchema).optional(),

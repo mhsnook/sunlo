@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ClipboardCopy, Download, ImageIcon } from 'lucide-react'
+import { ClipboardCopy, Download, ImageIcon, Maximize2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
@@ -23,6 +23,7 @@ export function GalleryCard({
 	wide = false,
 	grid = true,
 	above,
+	primary,
 	children,
 }: {
 	message: CrewMessageType
@@ -34,6 +35,8 @@ export function GalleryCard({
 	grid?: boolean
 	// A line above the title.
 	above?: ReactNode
+	// Buttons in place of the card's own actions.
+	primary?: ReactNode
 	children: ReactNode
 }) {
 	return (
@@ -59,7 +62,7 @@ export function GalleryCard({
 			) : (
 				children
 			)}
-			<CardActions message={message} />
+			<CardActions message={message} primary={primary} />
 		</CardFrame>
 	)
 }
@@ -110,12 +113,43 @@ export function TileCaption({
 
 export const tileButtonClass = 'h-7 px-2 shadow-none'
 
-// The box a sketch's picture sits in, in the shape of its frame.
-export const sketchFrameClass = (frame: SketchType['frame']) =>
-	cn(
-		'bg-muted relative flex items-center justify-center overflow-hidden rounded border',
-		frame === 'phone' ? 'aspect-390/844' : 'aspect-8/5'
+// A sketch's picture in the shape of its frame. The picture itself takes no
+// clicks, since what matters can sit in its corners; a View button shows
+// over it on hover or keyboard focus.
+export function SketchFrame({
+	frame,
+	viewLabel,
+	onView,
+	testId,
+	children,
+}: {
+	frame: SketchType['frame']
+	viewLabel: string
+	onView: () => void
+	testId: string
+	children: ReactNode
+}) {
+	return (
+		<div
+			className={cn(
+				'group bg-muted relative flex items-center justify-center overflow-hidden rounded border',
+				frame === 'phone' ? 'aspect-390/844' : 'aspect-8/5'
+			)}
+		>
+			{children}
+			<Button
+				size="sm"
+				variant="soft"
+				className="absolute inset-x-2 bottom-2 rounded-2xl opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+				onClick={onView}
+				aria-label={viewLabel}
+				data-testid={testId}
+			>
+				<Maximize2 /> View
+			</Button>
+		</div>
 	)
+}
 
 // Pulses while a picture loads, and stops if loading failed.
 export function PicturePlaceholder({ failed }: { failed: boolean }) {

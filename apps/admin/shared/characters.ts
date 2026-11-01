@@ -123,8 +123,8 @@ Decide before you draw, from what was asked:
 
 1. Look at the screens as they are, as below.
 2. Draw the whole flow on one card, start to finish, up to ${MAX_FLOW_STEPS} steps. Each step's idea is what the screen is for; its action is what the person does there to reach the next step. Keep the frame and the visual language the same across the steps, so the flow reads as one product.
-3. The admin approves steps, or asks for one to be drawn again with a note and a number of versions. That request wakes you: draw the versions with layout "options" and replaces set to the step's sketch id. The admin goes with one, and it becomes the step's picture; a single version does at once. When the admin asks in words instead ("I don't like number 3, try again"), do the same: replaces is how the flow learns that step 3 was drawn again.
-4. Once a step is approved, the admin can ask you to expand it into a sub-flow: draw it with layout "flow" and expands set to the step's sketch id, from that step's screen to where the next step begins.
+3. The admin approves steps, or asks for one to be drawn again with a note and a number of versions. Approval only shows the admin where they stand; nothing waits on it. A redo request wakes you: draw the versions with layout "options" and replaces set to the step's sketch id. The room adds the step's current picture among your versions, unmarked, so the admin may keep it without knowing; never say which one it is. The admin goes with one, and it becomes the step's picture. When the admin asks in words instead ("I don't like number 3, try again"), do the same: replaces is how the flow learns that step 3 was drawn again.
+4. The admin can ask you to expand a step into a sub-flow: draw it with layout "flow" and expands set to the step's sketch id, from that step's screen to where the next step begins.
 
 ## Flow documents
 

@@ -18,8 +18,8 @@ import {
 import { messageElementId, useStepAction } from '~/lib/crew'
 import {
 	GalleryCard,
+	SketchFrame,
 	SketchPicture,
-	sketchFrameClass,
 	tileButtonClass,
 } from './gallery-card'
 import { SketchViewer } from './sketch-viewer'
@@ -101,6 +101,12 @@ export function FlowCard({
 			},
 			{ onError: (error) => toastError(error.message) }
 		)
+	const approveAll = () =>
+		stepAction.mutate(
+			{ messageId: message.id, step: 0, action: { action: 'approve-all' } },
+			{ onError: (error) => toastError(error.message) }
+		)
+	const allApproved = steps.every((step) => step.status === 'approved')
 	const screens = steps.map((step) => ({
 		id: currentSketch(step).id,
 		title: currentSketch(step).idea,
@@ -113,6 +119,18 @@ export function FlowCard({
 			grid={false}
 			above={message.card?.from && <OriginLine origin={message.card.from} />}
 			label={`Flow · ${steps.length} step${steps.length === 1 ? '' : 's'}`}
+			primary={
+				!allApproved && (
+					<Button
+						size="sm"
+						disabled={stepAction.isPending}
+						onClick={approveAll}
+						data-testid="flow-approve-all"
+					>
+						<Check /> Approve every step
+					</Button>
+				)
+			}
 			brief={[
 				message.card?.title,
 				message.body,
@@ -202,7 +220,7 @@ function FlowStep({
 }) {
 	const current = currentSketch(step)
 	const approved = step.status === 'approved'
-	const redrawing = step.request?.kind === 'redo'
+	const redrawing = !!step.redo && !step.redo.reply
 	return (
 		<figure
 			className={cn(
@@ -213,17 +231,15 @@ function FlowStep({
 			data-key={index}
 			data-status={approved ? 'approved' : redrawing ? 'redrawing' : undefined}
 		>
-			<button
-				type="button"
-				onClick={open}
-				className={sketchFrameClass(step.frame)}
-				aria-label={`Open step ${step.label} full size`}
-				data-testid="flow-step-open"
+			<SketchFrame
+				frame={step.frame}
+				viewLabel={`View step ${step.label} full size`}
+				onView={open}
+				testId="flow-step-open"
 			>
 				<SketchPicture
 					sketchId={current.id}
 					alt={`Step ${step.label}: ${current.idea}`}
-					dim={redrawing}
 				/>
 				<span
 					className={cn(
@@ -234,7 +250,7 @@ function FlowStep({
 					{approved && <Check className="size-3" />}
 					{step.label}
 				</span>
-			</button>
+			</SketchFrame>
 			<figcaption className="line-clamp-3 text-xs">{current.idea}</figcaption>
 			<StepStatus step={step} />
 			<div className="mt-auto flex gap-0.5">
@@ -242,7 +258,7 @@ function FlowStep({
 					size="sm"
 					variant="ghost"
 					className={cn(tileButtonClass, approved && 'text-success-800')}
-					disabled={busy || redrawing}
+					disabled={busy}
 					onClick={() => onApprove(!approved)}
 					aria-label={
 						approved
@@ -289,7 +305,7 @@ function FlowStep({
 // among new versions, redrawn, or expanded.
 function StepStatus({ step }: { step: SketchType }) {
 	const lines: Array<ReactNode> = []
-	const { request, versions, subflows } = step
+	const { redo, expand, versions, subflows } = step
 	if (step.status === 'approved') {
 		lines.push(
 			<span key="approved" className="text-success-800 font-medium">
@@ -297,26 +313,26 @@ function StepStatus({ step }: { step: SketchType }) {
 			</span>
 		)
 	}
-	if (request?.kind === 'redo' && !request.reply) {
+	if (redo && !redo.reply) {
 		lines.push(
-			<span key="redo" title={request.note || undefined}>
+			<span key="redo" title={redo.note || undefined}>
 				<Loader2 className="inline size-3 animate-spin" /> Being drawn again
 			</span>
 		)
 	}
-	if (request?.kind === 'redo' && request.reply) {
+	if (redo?.reply) {
 		lines.push(
 			<span key="replaced">
-				Superseded:{' '}
-				<MessageLink to={request.reply} testId="flow-step-versions">
-					new versions
-				</MessageLink>
+				<MessageLink to={redo.reply} testId="flow-step-versions">
+					New versions
+				</MessageLink>{' '}
+				to pick from
 			</span>
 		)
 	}
-	if (request?.kind === 'expand') {
+	if (expand) {
 		lines.push(
-			<span key="expand" title={request.note || undefined}>
+			<span key="expand" title={expand.note || undefined}>
 				<Loader2 className="inline size-3 animate-spin" /> Sub-flow coming
 			</span>
 		)

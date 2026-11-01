@@ -27,12 +27,14 @@ export const setApproval = (
 		status: approved ? 'approved' : undefined,
 	}))
 
-// A new request replaces any earlier one on the step.
+// A new request replaces an earlier one of the same kind. A redo and an
+// expand can wait side by side.
 export const requestStep = (
 	steps: ReadonlyArray<SketchType>,
 	index: number,
+	kind: 'redo' | 'expand',
 	request: StepRequestType
-) => withStep(steps, index, (step) => ({ ...step, request }))
+) => withStep(steps, index, (step) => ({ ...step, [kind]: request }))
 
 // product-2 answered with new versions of a step, on the card `replyId`.
 export const replyWithVersions = (
@@ -43,26 +45,34 @@ export const replyWithVersions = (
 ) =>
 	withStep(steps, index, (step) => ({
 		...step,
-		request: {
-			...(step.request ?? { note: '', by }),
-			kind: 'redo',
-			reply: replyId,
-		},
+		redo: { ...(step.redo ?? { note: '', by }), reply: replyId },
 	}))
 
-// A version becomes the step's picture. Going with it among other versions
-// approves it; a lone version still waits for the admin.
-export const adoptVersion = (
+// The new versions with the step's current picture among them at
+// `position`, so the admin can go with what they had without knowing it.
+export const mixInCurrent = <T>(
+	versions: ReadonlyArray<T>,
+	current: T,
+	position: number
+) => [...versions.slice(0, position), current, ...versions.slice(position)]
+
+// The admin went with a version on the card `cardId`. The step's current
+// picture may be among them, and then the step keeps it. A redo the admin
+// asked for after that card stays open.
+export const pickVersion = (
 	steps: ReadonlyArray<SketchType>,
 	index: number,
 	version: SketchVersionType,
-	approved: boolean
+	cardId: string
 ) =>
 	withStep(steps, index, (step) => ({
 		...step,
-		versions: [...(step.versions ?? []), version],
-		request: undefined,
-		status: approved ? 'approved' : undefined,
+		versions:
+			version.id === currentSketch(step).id
+				? step.versions
+				: [...(step.versions ?? []), version],
+		redo: step.redo?.reply === cardId ? undefined : step.redo,
+		status: 'approved',
 	}))
 
 // product-2 expanded a step into the sub-flow on the card `flowId`.
@@ -74,19 +84,11 @@ export const addSubflow = (
 	withStep(steps, index, (step) => ({
 		...step,
 		subflows: [...(step.subflows ?? []), flowId],
-		request: step.request?.kind === 'expand' ? undefined : step.request,
+		expand: undefined,
 	}))
 
-// Approving the whole flow approves each step that is not waiting on a
-// redo.
 export const approveFlow = (steps: ReadonlyArray<SketchType>) =>
-	steps.map((step) =>
-		step.request?.kind === 'redo'
-			? step
-			: { ...step, status: 'approved' as const }
-	)
-
-export const APPROVE_FLOW = { id: 'approve-flow', label: 'Approve the flow' }
+	steps.map((step) => ({ ...step, status: 'approved' as const }))
 
 const stepName = (title: string, index: number, step: SketchType) => {
 	const current = currentSketch(step)
@@ -99,31 +101,34 @@ export function stepRequestReport(input: {
 	title: string
 	index: number
 	step: SketchType
+	kind: 'redo' | 'expand'
 	request: StepRequestType
 }) {
-	const { title, index, step, request } = input
+	const { title, index, step, kind, request } = input
 	const id = currentSketch(step).id
 	const note = request.note ? ` Their note: ${request.note}` : ''
-	if (request.kind === 'redo') {
+	if (kind === 'redo') {
 		const count = request.count ?? DEFAULT_REDO_VERSIONS
 		const versions = count === 1 ? 'one new version' : `${count} new versions`
-		return `${request.by} wants ${stepName(title, index, step)} drawn again.${note}\n\nRead it with read_sketch, then draw ${versions} with sketch_screens: layout "options", replaces ${id}. The card links to the flow, and the version the admin goes with becomes step ${stepLabel(index)}.`
+		return `${request.by} wants ${stepName(title, index, step)} drawn again.${note}\n\nRead it with read_sketch, then draw ${versions} with sketch_screens: layout "options", replaces ${id}. The room adds the step's current picture among your versions, unmarked, so the admin can keep it without knowing; do not say which one it is. The version the admin goes with becomes step ${stepLabel(index)}.`
 	}
 	return `${request.by} wants ${stepName(title, index, step)} expanded into a sub-flow.${note}\n\nDraw the sub-flow with sketch_screens: layout "flow", expands ${id}. Start from the screen this step shows, and end where the next step of the flow begins.`
 }
 
-// What product-2 notes, without waking, when the admin approves a step.
+// What product-2 notes, without waking, when the admin approves a step or
+// the whole flow.
 export const approvalNote = (
 	title: string,
-	index: number,
-	step: SketchType,
-	approved: boolean
+	approval:
+		| { index: number; step: SketchType; approved: boolean }
+		| { all: true }
 ) =>
-	`${approved ? 'approved' : 'took back the approval of'} ${stepName(title, index, step)}`
+	'all' in approval
+		? `approved every step of your flow "${title}"; record it in the flow's document, with each step's current sketch`
+		: `${approval.approved ? 'approved' : 'took back the approval of'} ${stepName(title, approval.index, approval.step)}`
 
-// What a version becoming a step's picture means for the flow's document.
-export const adoptedLine = (index: number, sketchId: number) =>
-	`Step ${stepLabel(index)} is now sketch ${sketchId}; use that id in the flow's document.`
-
-export const approvedFlowReport = (by: string, title: string) =>
-	`${by} approved your flow "${title}": every step that is not being redrawn. Record it in the flow's document, with each step's current sketch.`
+// What a pick means for the flow's document.
+export const pickedLine = (index: number, sketchId: number, kept: boolean) =>
+	kept
+		? `That was the step's current picture, so step ${stepLabel(index)} keeps sketch ${sketchId}.`
+		: `Step ${stepLabel(index)} is now sketch ${sketchId}; use that id in the flow's document.`

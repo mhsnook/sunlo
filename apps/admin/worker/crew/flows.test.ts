@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { currentSketch, stepLabel, type SketchType } from '../../shared/crew'
 import {
 	addSubflow,
-	adoptVersion,
 	approveFlow,
 	findStep,
+	mixInCurrent,
+	pickVersion,
 	replyWithVersions,
 	requestStep,
 	setApproval,
@@ -23,12 +24,7 @@ const steps: Array<SketchType> = [
 	{ id: 12, label: '3', idea: 'Done', frame: 'phone' },
 ]
 
-const redo = {
-	kind: 'redo' as const,
-	note: 'Too busy',
-	count: 2,
-	by: 'Ana',
-}
+const redo = { note: 'Too busy', count: 2, by: 'Ana' }
 
 describe('stepLabel', () => {
 	it('numbers steps from 1', () => {
@@ -38,33 +34,57 @@ describe('stepLabel', () => {
 
 describe('a step redrawn', () => {
 	it('carries the request, then the reply card, then the picked version', () => {
-		const asked = requestStep(steps, 2, redo)
-		expect(asked[2].request).toEqual(redo)
+		const asked = requestStep(steps, 2, 'redo', redo)
+		expect(asked[2].redo).toEqual(redo)
 		expect(asked[0]).toBe(steps[0])
 
 		const answered = replyWithVersions(asked, 2, 'card-2', 'Keiko')
-		expect(answered[2].request).toEqual({ ...redo, reply: 'card-2' })
+		expect(answered[2].redo).toEqual({ ...redo, reply: 'card-2' })
 
 		const version = { id: 20, label: 'B', idea: 'Calmer', messageId: 'card-2' }
-		const adopted = adoptVersion(answered, 2, version, true)
-		expect(adopted[2]).toEqual({
+		const picked = pickVersion(answered, 2, version, 'card-2')
+		expect(picked[2]).toEqual({
 			...steps[2],
 			versions: [version],
+			redo: undefined,
 			status: 'approved',
 		})
-		expect(currentSketch(adopted[2]).id).toBe(20)
-		expect(findStep(adopted, 20)).toBe(2)
-		expect(findStep(adopted, 12)).toBe(-1)
+		expect(currentSketch(picked[2]).id).toBe(20)
+		expect(findStep(picked, 20)).toBe(2)
+		expect(findStep(picked, 12)).toBe(-1)
+	})
+
+	it('keeps the current picture when the admin goes with it', () => {
+		const answered = replyWithVersions(steps, 2, 'card-2', 'Keiko')
+		const current = { id: 12, label: 'C', idea: 'Done', messageId: 'card-2' }
+		const picked = pickVersion(answered, 2, current, 'card-2')
+		expect(picked[2].versions).toBeUndefined()
+		expect(picked[2].redo).toBeUndefined()
+		expect(currentSketch(picked[2]).id).toBe(12)
+	})
+
+	it('leaves a later redo open when an older card is picked', () => {
+		const later = requestStep(
+			replyWithVersions(steps, 1, 'card-1', 'Keiko'),
+			1,
+			'redo',
+			redo
+		)
+		const version = { id: 30, label: 'A', idea: 'Older', messageId: 'card-1' }
+		expect(pickVersion(later, 1, version, 'card-1')[1].redo).toEqual(redo)
 	})
 
 	it('records a redo the agent drew without a button', () => {
 		const answered = replyWithVersions(steps, 1, 'card-3', 'Keiko')
-		expect(answered[1].request).toMatchObject({ kind: 'redo', reply: 'card-3' })
+		expect(answered[1].redo).toMatchObject({ reply: 'card-3' })
 	})
+})
 
-	it('leaves a lone version unapproved', () => {
-		const version = { id: 21, label: 'A', idea: 'Calmer', messageId: 'c' }
-		expect(adoptVersion(steps, 0, version, false)[0].status).toBeUndefined()
+describe('mixInCurrent', () => {
+	it('puts the current picture at the given place among the new ones', () => {
+		expect(mixInCurrent(['a', 'b'], 'now', 0)).toEqual(['now', 'a', 'b'])
+		expect(mixInCurrent(['a', 'b'], 'now', 1)).toEqual(['a', 'now', 'b'])
+		expect(mixInCurrent(['a', 'b'], 'now', 2)).toEqual(['a', 'b', 'now'])
 	})
 })
 
@@ -75,22 +95,29 @@ describe('approval', () => {
 		expect(setApproval(approved, 1, false)[1].status).toBeUndefined()
 	})
 
-	it('approves the whole flow except a step being drawn again', () => {
-		const flow = approveFlow(requestStep(steps, 1, redo))
+	it('approves every step, even one being drawn again', () => {
+		const flow = approveFlow(requestStep(steps, 1, 'redo', redo))
 		expect(flow.map((step) => step.status)).toEqual([
 			'approved',
-			undefined,
+			'approved',
 			'approved',
 		])
 	})
 })
 
-describe('addSubflow', () => {
-	it('links the sub-flow and clears the expand request', () => {
-		const asked = requestStep(steps, 0, { ...redo, kind: 'expand' })
+describe('a redo and an expand side by side', () => {
+	it('keeps both, and the sub-flow clears only the expand', () => {
+		const asked = requestStep(
+			requestStep(steps, 0, 'redo', redo),
+			0,
+			'expand',
+			{ note: 'Empty deck?', by: 'Ana' }
+		)
+		expect(asked[0].redo).toEqual(redo)
 		const expanded = addSubflow(asked, 0, 'flow-2')
 		expect(expanded[0].subflows).toEqual(['flow-2'])
-		expect(expanded[0].request).toBeUndefined()
+		expect(expanded[0].expand).toBeUndefined()
+		expect(expanded[0].redo).toEqual(redo)
 	})
 })
 
@@ -100,6 +127,7 @@ describe('stepRequestReport', () => {
 			title: 'First review',
 			index: 2,
 			step: steps[2],
+			kind: 'redo',
 			request: redo,
 		})
 		expect(body).toContain(
@@ -108,6 +136,7 @@ describe('stepRequestReport', () => {
 		expect(body).toContain('Their note: Too busy')
 		expect(body).toContain('2 new versions')
 		expect(body).toContain('replaces 12')
+		expect(body).toContain('current picture among your versions')
 	})
 
 	it('names the current version once a step was redrawn', () => {
@@ -115,8 +144,9 @@ describe('stepRequestReport', () => {
 		const body = stepRequestReport({
 			title: 'First review',
 			index: 2,
-			step: adoptVersion(steps, 2, version, true)[2],
-			request: { ...redo, kind: 'expand', note: '' },
+			step: pickVersion(steps, 2, version, 'c')[2],
+			kind: 'expand',
+			request: { note: '', by: 'Ana' },
 		})
 		expect(body).toContain('expands 20')
 		expect(body).not.toContain('Their note')
