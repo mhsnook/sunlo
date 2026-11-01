@@ -18,8 +18,7 @@ import { MessageMarker } from '@/components/ui/message'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
-	documentSlugInHref,
-	findDocumentBySlug,
+	documentIdInHref,
 	isCrewKey,
 	isRoomKey,
 	type CardType,
@@ -110,20 +109,13 @@ export function AdminAvatar({ name }: { name: string }) {
 	)
 }
 
-// A link an agent wrote to a document, as `[the Roadmap](doc:roadmap)`. It
-// opens the document in its room's details. A slug no document answers to
-// stays plain text, so a name the agent got wrong never becomes a dead
-// link.
-function DocumentLink({
-	slug,
-	children,
-}: {
-	slug: string
-	children: ReactNode
-}) {
+// A link an agent wrote to a document, as `[the Roadmap](doc:3)`. It opens
+// the document in its room's details. An id no document answers to stays
+// plain text, so a wrong id never becomes a dead link.
+function DocumentLink({ id, children }: { id: number; children: ReactNode }) {
 	const { data: documents } = useQuery(documentsQuery())
 	const { room } = useParams({ strict: false })
-	const document = documents && findDocumentBySlug(documents, slug)
+	const document = documents?.find((item) => item.id === id)
 	if (!document) return <>{children}</>
 	return (
 		<Link
@@ -140,7 +132,7 @@ function DocumentLink({
 // react-markdown drops a link whose scheme it does not know, which would
 // blank every `doc:` link's href before the renderer sees it.
 const keepDocumentLinks = (url: string) =>
-	documentSlugInHref(url) ? url : defaultUrlTransform(url)
+	documentIdInHref(url) !== null ? url : defaultUrlTransform(url)
 
 // Agents write markdown, with GitHub's checklists and tables. @mentions
 // render bold, as in the design, a `doc:` link opens a room's document, and
@@ -199,9 +191,9 @@ export function CrewText({ text }: { text: string }) {
 					<td className="border-t px-3 py-1.5">{children}</td>
 				),
 				a: ({ children, href }) => {
-					const slug = href ? documentSlugInHref(href) : null
-					return slug ? (
-						<DocumentLink slug={slug}>{children}</DocumentLink>
+					const id = href ? documentIdInHref(href) : null
+					return id !== null ? (
+						<DocumentLink id={id}>{children}</DocumentLink>
 					) : (
 						<a
 							href={href}

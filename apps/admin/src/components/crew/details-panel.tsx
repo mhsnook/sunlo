@@ -19,7 +19,6 @@ import {
 	crew,
 	crewKeys,
 	displayName,
-	findDocumentBySlug,
 	principalOf,
 	roomMembers,
 	roomNames,
@@ -76,7 +75,7 @@ export function DetailsPanel({
 	// Which document the panel shows is in the URL, so a `doc:` link in a
 	// message opens it, and the back button closes it again.
 	const { doc } = useSearch({ from: '/_admin' })
-	const open = doc ? findDocumentBySlug(documents, doc) : null
+	const open = documents.find((item) => item.id === doc) ?? null
 	const closeDocument = useCloseDocument()
 	const members = room === CREW ? crewKeys : roomMembers(room)
 

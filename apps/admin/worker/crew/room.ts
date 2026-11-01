@@ -2531,7 +2531,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// Every room's documents, which the app asks for once: its room log
-	// filters them, and a `doc:` link resolves its slug against them all.
+	// filters them, and a `doc:` link resolves its id against them all.
 	allDocuments(): Array<DocumentSummaryType> {
 		return this.sql<DocumentRow>`
 			select document.id, document.room, document.name, document.revision,

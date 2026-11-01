@@ -8,7 +8,6 @@ import {
 	placeOf,
 	roomNames,
 	roomOf,
-	SITREP,
 	type AdminChangeType,
 	type CharacterType,
 	type CharterEntryType,
@@ -97,7 +96,7 @@ export type BriefingInput = {
 	unread: { common: UnreadTimeline; own: UnreadTimeline }
 }
 
-type Sitrep = Pick<DocumentSummaryType, 'revision' | 'byName' | 'at'> & {
+type Sitrep = Pick<DocumentSummaryType, 'id' | 'revision' | 'byName' | 'at'> & {
 	text: string
 }
 
@@ -180,7 +179,7 @@ export function sitrepText(sitrep: Sitrep | null) {
 	return [
 		'## The Situation Report: where Sunlo and each room stand now',
 		sitrep?.at
-			? `${sitrep.text}\n\n(Revision ${sitrep.revision}, saved by ${sitrep.byName}, ${stamp(sitrep.at)}. Link to it as [the Situation Report](${documentHref(SITREP)}).)`
+			? `${sitrep.text}\n\n(Revision ${sitrep.revision}, saved by ${sitrep.byName}, ${stamp(sitrep.at)}. Link to it as [the Situation Report](${documentHref(sitrep.id)}).)`
 			: '(Nobody has written it yet.)',
 	].join('\n\n')
 }
@@ -204,12 +203,12 @@ export function documentsText(
 		const written = doc.at
 			? `revision ${doc.revision}, saved by ${doc.byName}, ${stamp(doc.at)}`
 			: 'not written yet'
-		return `- ${doc.name} (${documentHref(doc.name)}): ${written}`
+		return `- ${doc.name} (${documentHref(doc.id)}): ${written}`
 	})
 	return [
 		`## The ${room}'s documents`,
 		lines.join('\n') || '(none yet)',
-		'Link to a document whenever you write about one in a room or in another document, so the admin can open it. The link is ordinary Markdown, and its target is the `doc:` slug beside the name above: "Roadmap updated: [the Roadmap](doc:roadmap) now puts the AI Coach first." Only this app reads `doc:`, so leave such a link out of anything you file on GitHub.',
+		'Link to a document whenever you write about one in a room or in another document, so the admin can open it. The link is ordinary Markdown, and its target is the `doc:` id beside the name above: "Roadmap updated: [the Roadmap](doc:3) now puts the AI Coach first." Only this app reads `doc:`, so leave such a link out of anything you file on GitHub.',
 	].join('\n\n')
 }
 

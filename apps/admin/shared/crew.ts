@@ -716,47 +716,18 @@ export const documentMax = (name: string) =>
 	name === SITREP ? SITREP_MAX : DOCUMENT_MAX
 
 // Anything a message or a document writes about a document links to it: an
-// ordinary Markdown link whose target is "doc:" and the document's slug, as
-// in `[the Roadmap](doc:roadmap)`. The app resolves the slug and opens that
-// document; text it cannot resolve stays plain text.
+// ordinary Markdown link whose target is "doc:" and the document's id, as in
+// `[the Roadmap](doc:3)`. The app opens that document; a target no document
+// answers to stays plain text. The id never changes, unlike a name.
 export const DOCUMENT_SCHEME = 'doc:'
 
-// Lower-cased, with every run of other characters turned into one hyphen.
-// A Markdown link target cannot hold a space, and a download's name should
-// not either.
-export const slugify = (text: string) =>
-	text
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '')
+export const documentHref = (id: number) => `${DOCUMENT_SCHEME}${id}`
 
-// Two names can share a slug ("Roadmap" and "roadmap!"), because
-// writeDocument compares names exactly. `findDocumentBySlug` returns the
-// first match, so a link to the later one opens the earlier one.
-export const documentSlug = slugify
-
-export const documentHref = (name: string) =>
-	`${DOCUMENT_SCHEME}${documentSlug(name)}`
-
-// The slug a link target names, or null for an ordinary URL. A target the
-// writer spelt with spaces or capitals still resolves, since both sides are
-// slugged.
-export function documentSlugInHref(href: string): string | null {
-	if (!href.toLowerCase().startsWith(DOCUMENT_SCHEME)) return null
-	const target = href.slice(DOCUMENT_SCHEME.length)
-	let name = target
-	try {
-		name = decodeURIComponent(target)
-	} catch {
-		// A malformed escape such as "%E0%A4%A" stays as written.
-	}
-	return documentSlug(name) || null
+// The id a link target names, or null for an ordinary URL.
+export function documentIdInHref(href: string): number | null {
+	const match = /^doc:(\d+)$/i.exec(href)
+	return match ? Number(match[1]) : null
 }
-
-export const findDocumentBySlug = <T extends { name: string }>(
-	documents: ReadonlyArray<T>,
-	slug: string
-): T | null => documents.find((doc) => documentSlug(doc.name) === slug) ?? null
 
 // A room's documents, as its room log lists them. Revision 0 is a document
 // nobody has written yet.

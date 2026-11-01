@@ -2,12 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
 	DOCUMENT_MAX,
 	documentHref,
-	documentSlug,
-	documentSlugInHref,
-	findDocumentBySlug,
+	documentIdInHref,
 	SITREP,
 	SITREP_MAX,
-	type DocumentSummaryType,
 } from '../../shared/crew'
 import { checkSave } from './documents'
 
@@ -73,59 +70,20 @@ describe('checkSave', () => {
 })
 
 describe('document links', () => {
-	it('slugs a name so a Markdown link target can hold it', () => {
-		expect(documentSlug('Roadmap')).toBe('roadmap')
-		expect(documentSlug(SITREP)).toBe('situation-report')
-		expect(documentSlug('Business plan and status')).toBe(
-			'business-plan-and-status'
-		)
-		expect(documentSlug("O'Brien's six-week plan!")).toBe(
-			'o-brien-s-six-week-plan'
-		)
+	it('writes a link target from a document id', () => {
+		expect(documentHref(3)).toBe('doc:3')
 	})
 
-	it('writes a link target for a document', () => {
-		expect(documentHref('Business plan and status')).toBe(
-			'doc:business-plan-and-status'
-		)
+	it('reads the id back from a target', () => {
+		expect(documentIdInHref('doc:3')).toBe(3)
+		expect(documentIdInHref('DOC:12')).toBe(12)
 	})
 
-	it('reads the slug back from a target, however it was spelt', () => {
-		expect(documentSlugInHref('doc:roadmap')).toBe('roadmap')
-		expect(documentSlugInHref('doc:Roadmap')).toBe('roadmap')
-		expect(documentSlugInHref('doc:Business%20plan%20and%20status')).toBe(
-			'business-plan-and-status'
-		)
-		expect(documentSlugInHref('doc:%E0%A4%A')).toBe('e0-a4-a')
-	})
-
-	it('leaves an ordinary URL alone', () => {
-		expect(documentSlugInHref('https://sunlo.app/doc:roadmap')).toBe(null)
-		expect(documentSlugInHref('/room/product')).toBe(null)
-		expect(documentSlugInHref('doc:')).toBe(null)
-	})
-
-	it('finds the document a slug names', () => {
-		const documents: Array<DocumentSummaryType> = [
-			{
-				id: 1,
-				room: 'command',
-				name: SITREP,
-				revision: 3,
-				byName: 'Riker',
-				at: '2026-10-28T07:01:00Z',
-			},
-			{
-				id: 2,
-				room: 'product',
-				name: 'Roadmap',
-				revision: 1,
-				byName: "O'Brien",
-				at: '2026-10-28T07:01:00Z',
-			},
-		]
-		expect(findDocumentBySlug(documents, 'situation-report')?.id).toBe(1)
-		expect(findDocumentBySlug(documents, 'roadmap')?.id).toBe(2)
-		expect(findDocumentBySlug(documents, 'launch-checklist')).toBe(null)
+	it('leaves an ordinary URL, and a target that is not an id, alone', () => {
+		expect(documentIdInHref('https://sunlo.app/doc:3')).toBe(null)
+		expect(documentIdInHref('/room/product')).toBe(null)
+		expect(documentIdInHref('doc:')).toBe(null)
+		expect(documentIdInHref('doc:roadmap')).toBe(null)
+		expect(documentIdInHref('doc:3x')).toBe(null)
 	})
 })

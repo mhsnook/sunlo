@@ -42,7 +42,7 @@ describe('documentLinkOptions', () => {
 		expect(documentLinkOptions('product', roadmap)).toEqual({
 			to: '/room/$room',
 			params: { room: 'product' },
-			search: { doc: 'roadmap' },
+			search: { doc: roadmap.id },
 		})
 	})
 
@@ -50,24 +50,24 @@ describe('documentLinkOptions', () => {
 		expect(documentLinkOptions('library', roadmap)).toEqual({
 			to: '/room/$room',
 			params: { room: 'product' },
-			search: { doc: 'roadmap' },
+			search: { doc: roadmap.id },
 		})
 		expect(documentLinkOptions(CREW, plan)).toEqual({
 			to: '/room/$room',
 			params: { room: 'command' },
-			search: { doc: 'business-plan-and-status' },
+			search: { doc: plan.id },
 		})
 	})
 
 	it('keeps the Situation Report where the admin already is', () => {
 		expect(documentLinkOptions(CREW, sitrep)).toEqual({
 			to: '/',
-			search: { doc: 'situation-report' },
+			search: { doc: sitrep.id },
 		})
 		expect(documentLinkOptions('product', sitrep)).toEqual({
 			to: '/room/$room',
 			params: { room: 'product' },
-			search: { doc: 'situation-report' },
+			search: { doc: sitrep.id },
 		})
 	})
 })

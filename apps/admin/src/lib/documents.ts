@@ -1,5 +1,4 @@
 import {
-	documentSlug,
 	SITREP,
 	type DocumentSummaryType,
 	type RoomKey,
@@ -31,7 +30,7 @@ export function documentLinkOptions(
 	document: DocumentSummaryType
 ) {
 	const room = showsDocument(from, document) ? from : document.room
-	const search = { doc: documentSlug(document.name) }
+	const search = { doc: document.id }
 	return room === CREW
 		? ({ to: '/', search } as const)
 		: ({ to: '/room/$room', params: { room }, search } as const)
