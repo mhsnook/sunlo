@@ -137,6 +137,11 @@ function DocumentLink({
 	)
 }
 
+// react-markdown drops a link whose scheme it does not know, which would
+// blank every `doc:` link's href before the renderer sees it.
+const keepDocumentLinks = (url: string) =>
+	documentSlugInHref(url) ? url : defaultUrlTransform(url)
+
 // Agents write markdown, with GitHub's checklists and tables. @mentions
 // render bold, as in the design, a `doc:` link opens a room's document, and
 // a fenced block in a component's language (```chart, ```stats, ```table,
@@ -145,11 +150,7 @@ export function CrewText({ text }: { text: string }) {
 	return (
 		<Markdown
 			remarkPlugins={[remarkGfm, remarkCrew]}
-			// react-markdown drops a link whose scheme it does not know, which
-			// would blank every `doc:` link's href before the renderer sees it.
-			urlTransform={(url) =>
-				documentSlugInHref(url) ? url : defaultUrlTransform(url)
-			}
+			urlTransform={keepDocumentLinks}
 			components={{
 				p: ({ children }) => <p className="not-first:mt-2">{children}</p>,
 				ul: ({ children, className }) => (

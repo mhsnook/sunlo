@@ -5,35 +5,24 @@ import {
 	type RoomKey,
 } from '../../shared/crew'
 
-// Where the app shows a room's documents, and where a link to one goes. The
-// details panel beside every room lists them, and the document it shows is
-// the `doc` slug in the URL (`_admin`), so a `doc:` link in a message opens
-// one.
-
 // The Common Room, which is not a room in `roomKeys`.
 export const CREW = 'crew'
 export type DetailsRoom = RoomKey | typeof CREW
 
-// Which documents one room's details panel lists: its own, with the
-// Situation Report pinned first since every agent reads it. The Common Room
-// lists the Situation Report alone.
-export function roomDocuments(
-	room: DetailsRoom,
-	documents: Array<DocumentSummaryType>
-): Array<DocumentSummaryType> {
-	const sitrep = documents.find((doc) => doc.name === SITREP)
-	if (room === CREW) return sitrep ? [sitrep] : []
-	const own = documents.filter((doc) => doc.room === room)
-	if (room === 'command') {
-		return own.toSorted((a, b) =>
-			a.name === SITREP ? -1 : b.name === SITREP ? 1 : 0
-		)
-	}
-	return sitrep ? [sitrep, ...own] : own
-}
-
+// A room's details panel lists the Situation Report, which every agent
+// reads, and the room's own documents. The Common Room has no documents of
+// its own, so it lists the Situation Report alone.
 const showsDocument = (room: DetailsRoom, document: DocumentSummaryType) =>
 	document.name === SITREP || document.room === room
+
+// What one room's details panel lists, with the Situation Report first.
+export const roomDocuments = (
+	room: DetailsRoom,
+	documents: Array<DocumentSummaryType>
+): Array<DocumentSummaryType> =>
+	documents
+		.filter((doc) => showsDocument(room, doc))
+		.toSorted((a, b) => Number(b.name === SITREP) - Number(a.name === SITREP))
 
 // Where a link to a document goes: the room the admin is reading, when its
 // details list that document, and otherwise the room that keeps it.

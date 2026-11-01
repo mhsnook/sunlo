@@ -721,15 +721,19 @@ export const documentMax = (name: string) =>
 // document; text it cannot resolve stays plain text.
 export const DOCUMENT_SCHEME = 'doc:'
 
-// A Markdown link target cannot hold a space, so the slug is the name
-// lower-cased with every other run of characters turned into one hyphen.
-// A name belongs to one room only (writeDocument refuses a name another
-// room keeps), so the slug on its own names one document.
-export const documentSlug = (name: string) =>
-	name
+// Lower-cased, with every run of other characters turned into one hyphen.
+// A Markdown link target cannot hold a space, and a download's name should
+// not either.
+export const slugify = (text: string) =>
+	text
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '')
+
+// Two names can share a slug ("Roadmap" and "roadmap!"), because
+// writeDocument compares names exactly. `findDocumentBySlug` returns the
+// first match, so a link to the later one opens the earlier one.
+export const documentSlug = slugify
 
 export const documentHref = (name: string) =>
 	`${DOCUMENT_SCHEME}${documentSlug(name)}`
@@ -744,7 +748,7 @@ export function documentSlugInHref(href: string): string | null {
 	try {
 		name = decodeURIComponent(target)
 	} catch {
-		name = target
+		// A malformed escape such as "%E0%A4%A" stays as written.
 	}
 	return documentSlug(name) || null
 }

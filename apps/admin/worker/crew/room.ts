@@ -2527,19 +2527,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// ---- Room documents -----------------------------------------------------
 
 	documents(room: RoomKey): Array<DocumentSummaryType> {
-		return this.sql<IdRow>`
-			select id from document where room = ${room} order by id`.flatMap(
-			(row) => this.documentSummary(row.id) ?? []
-		)
+		return this.allDocuments().filter((doc) => doc.room === room)
 	}
 
 	// Every room's documents, which the app asks for once: its room log
 	// filters them, and a `doc:` link resolves its slug against them all.
 	allDocuments(): Array<DocumentSummaryType> {
-		return this.sql<IdRow>`
-			select id from document order by room, id`.flatMap(
-			(row) => this.documentSummary(row.id) ?? []
-		)
+		return this.sql<DocumentRow>`
+			select document.id, document.room, document.name, document.revision,
+				document_revision.by_name, document_revision.at
+			from document
+			left join document_revision on document_revision.document = document.id
+				and document_revision.revision = document.revision
+			order by document.id`.map(toDocumentSummary)
 	}
 
 	document(id: number): DocumentType | null {

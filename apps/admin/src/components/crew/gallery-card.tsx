@@ -3,7 +3,11 @@ import { ClipboardCopy, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import type { CardType, CrewMessageType } from '../../../shared/crew'
+import {
+	slugify,
+	type CardType,
+	type CrewMessageType,
+} from '../../../shared/crew'
 import { asPng } from '~/lib/images'
 import { CardActions, CardFrame, CrewText } from './crew-parts'
 
@@ -102,12 +106,6 @@ const extensions: Record<string, string> = {
 	'image/svg+xml': 'svg',
 }
 
-const slug = (text: string) =>
-	text
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-|-$/g, '')
-
 // A download's name, such as painting-12-b-luxury.jpg.
 export const fileName = (
 	kind: string,
@@ -115,7 +113,7 @@ export const fileName = (
 	words: Array<string>,
 	type: string
 ) =>
-	`${[kind, String(id), ...words.map(slug)].join('-')}.${extensions[type] ?? 'png'}`
+	`${[kind, String(id), ...words.map(slugify)].join('-')}.${extensions[type] ?? 'png'}`
 
 // Copy image and Download for a picture the app holds as a blob.
 export function PictureButtons({
