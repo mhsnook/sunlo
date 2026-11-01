@@ -101,10 +101,24 @@ When a room's principal asks its associate in, and the associate sees it differe
 
 ### Keiko's sketches
 
-Keiko's main job is to reimagine screens. Ask in the Product room, such as "@keiko the review screen is a mess", and Keiko looks at the screen, then posts a **sketches** card: usually three mockups that differ on purpose (a faithful cleanup, a bold reimagining and an off-the-wall idea), each with a one-line idea. Each mockup has Copy image, Download and Copy brief (its idea and HTML), for pasting into a GitHub issue or a Claude Code session. "Go with A" picks one, and Keiko and O'Brien both hear which.
+Keiko's main job is to reimagine screens. A **sketches** card shows either options or a flow, and Keiko picks the layout from what you asked:
+
+- **Options** answer one question, such as "@keiko the review screen is a mess": usually three mockups that differ on purpose (a faithful cleanup, a bold reimagining and an off-the-wall idea), lettered A, B, C, each with a one-line idea. Each mockup has Copy image, Download and Copy brief (its idea and HTML), for pasting into a GitHub issue or a Claude Code session. "Go with A" picks one, and Keiko and O'Brien both hear which.
+- **A flow** is a sequence, such as "@keiko walk me through the first review": the screens someone passes through, numbered 1, 2, 3 in a row, with what the person does between each pair. Click a screen to open it full size, and page through the flow with the arrow keys.
+
+Each step of a flow has its own controls, and the card shows where each step stands:
+
+- ✓ approves the step. Keiko notes it on her next run, without waking.
+- ✕ asks Keiko to draw the step again: a note on what is wrong, and how many versions (2 by default). Keiko posts the versions as options that link back to the flow, and the step reads "Superseded: new versions" with a link to them. The one you go with becomes the step's picture ("Version 2", linked to where you picked it). A single version takes the step's place at once. Keiko does the same when you say it in words ("I don't like number 3"), because `sketch_screens` takes the step to replace.
+- The split icon, on an approved step, asks for a sub-flow of it. Keiko posts it as a flow card of its own, linked from the step, so a step can hold several sub-flows, and a sub-flow's steps can be expanded in turn.
+- "Approve the flow" approves every step that is not being drawn again, and wakes Keiko to record it.
+
+The step's state lives in the flow card's JSON (`card.sketches`, with `status`, `request`, `versions` and `subflows`), and a card that answers a step names it in `card.from`. The room finds the step from a sketch id by searching the cards that hold it (`flowStepOf` in `worker/crew/room.ts`); the pure step logic is `worker/crew/flows.ts`. The admin's controls post to `POST /api/crew/messages/:id/steps/:step`.
+
+Keiko keeps a document per flow ("Flow: First review"), with a Mermaid flowchart whose nodes show the steps' pictures: `s41@{ img: "sketch:41", label: "1. Deck home", w: 120, h: 260 }`. The app fetches each sketch with the admin's token and puts a thumbnail into the diagram as a data URI before Mermaid draws it, because Mermaid loads an image to measure it and its strict mode drops `blob:` URLs. Clicking a thumbnail opens the same viewer, and "Page through N screens" under the diagram does too, from the keyboard.
 
 - `look_at_screen` screenshots a page of the app (a path on `SUNLO_URL`, or any URL, such as a pull request's preview) or one of Keiko's sketches, in a phone (390×844) or desktop (1440×900) frame, and passes the pictures to Keiko's model in a `harness.prompt`, because a Flue tool result reaches the model only as text. The browser is signed out, so for a screen behind sign-in Keiko asks you to paste a screenshot, and looks at it with `look_at_image`.
-- `sketch_screens` takes up to four whole HTML documents that Keiko writes, renders each with [Browser Rendering](https://developers.cloudflare.com/browser-rendering/) (the `BROWSER` binding, through `@cloudflare/puppeteer`), and posts the card. The room keeps each picture and its HTML in its `sketch` table, served at `/api/crew/sketches/:id` and `/api/crew/sketches/:id/image`. Keiko can make 12 sketches an hour (`SKETCHES_PER_HOUR`).
+- `sketch_screens` takes whole HTML documents that Keiko writes (up to four options, or a flow of up to eight steps), renders each with [Browser Rendering](https://developers.cloudflare.com/browser-rendering/) (the `BROWSER` binding, through `@cloudflare/puppeteer`), and posts the card. The room keeps each picture and its HTML in its `sketch` table, served at `/api/crew/sketches/:id` and `/api/crew/sketches/:id/image`. Keiko can make 24 sketches an hour (`SKETCHES_PER_HOUR`), which leaves room for a whole flow and a few redraws.
 - `read_sketch` returns a sketch's HTML, to draw the next version from it.
 - Keiko mounts [Impeccable](https://github.com/pbakaus/impeccable)'s design skill with Flue's `useSkill`: its references load only when Keiko activates the skill or reads one. The skill is copied unchanged from upstream v4.8.0 (`plugin/skills/impeccable`, without its `scripts/` command-line tools) into `.flue/skills/impeccable/`, with its Apache-2.0 `LICENSE` and `NOTICE.md`. oxfmt skips it (`.prettierignore`), so it stays as published.
 

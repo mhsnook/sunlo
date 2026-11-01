@@ -15,6 +15,7 @@ export function GalleryCard({
 	label,
 	brief,
 	wide = false,
+	above,
 	children,
 }: {
 	message: CrewMessageType
@@ -23,10 +24,13 @@ export function GalleryCard({
 	brief: Array<string | null | undefined>
 	// Three columns on a wide card, not two.
 	wide?: boolean
+	// A line above the title.
+	above?: ReactNode
 	children: ReactNode
 }) {
 	return (
 		<CardFrame kind={kind} label={label} brief={brief}>
+			{above}
 			{message.card?.title && (
 				<p className="text-sm font-semibold">{message.card.title}</p>
 			)}

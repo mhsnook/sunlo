@@ -3,6 +3,8 @@ import { env } from 'cloudflare:workers'
 import * as v from 'valibot'
 import {
 	ASPECT_RATIOS,
+	MAX_FLOW_STEPS,
+	MAX_OPTIONS,
 	MAX_PAINTER_REFERENCES,
 	MAX_PAINTING_BYTES,
 	MAX_STYLES_PER_PAINTING,
@@ -102,25 +104,58 @@ export function designTools(agent: CrewKey) {
 
 	const sketchScreens = defineTool({
 		name: 'sketch_screens',
-		description: `Draw mockups for the admin and post them as one card in your room, with a button to go with each. Each proposal is a whole HTML document you write: inline CSS, real Sunlo text and data (never lorem ipsum), and no scripts. Web fonts from Google Fonts load. The browser renders one viewport of the frame: phone is 390×844, desktop is 1440×900, so lay the screen out to fit it. Give each proposal a one-line \`idea\`. \`body\` is your message on the card: what you were asked, and how the proposals differ. You can make ${SKETCHES_PER_HOUR} sketches an hour.`,
+		description: `Draw mockups for the admin and post them as one card in your room. Each sketch is a whole HTML document you write: inline CSS, real Sunlo text and data (never lorem ipsum), and no scripts. Web fonts from Google Fonts load. The browser renders one viewport of the frame: phone is 390×844, desktop is 1440×900, so lay the screen out to fit it.
+
+\`layout\` says what the sketches are to each other:
+- "flow": the screens someone passes through, in order, numbered 1, 2, 3 on the card (up to ${MAX_FLOW_STEPS}). Give each step's \`idea\` (what this screen is for) and \`action\` (what the person does here to reach the next screen; leave it out on the last). The admin approves steps, asks for a step to be drawn again, or asks for an approved step to be expanded into a sub-flow.
+- "options": different answers to one question, lettered A, B, C on the card, with a button to go with each (up to ${MAX_OPTIONS}). Give each \`idea\` as one line on what it bets on.
+
+\`replaces\` takes the sketch id of a flow's step: post new versions of that step as options, and the version the admin goes with becomes the step's picture (a single version does at once). Use it whenever the admin asks for a step to be drawn again, by its button or in words. \`expands\` takes the sketch id of an approved step: post a sub-flow of it as a flow.
+
+\`body\` is your message on the card: what you were asked, and, for options, how they differ. You can make ${SKETCHES_PER_HOUR} sketches an hour.`,
 		input: v.object({
 			title: v.pipe(Text, v.maxLength(140)),
 			body: v.pipe(Text, v.maxLength(2000)),
 			frame: FrameInput,
+			layout: v.picklist(['options', 'flow']),
+			replaces: v.optional(Id),
+			expands: v.optional(Id),
 			proposals: v.pipe(
 				v.array(
 					v.object({
 						idea: v.pipe(Text, v.maxLength(200)),
+						action: v.optional(v.pipe(Text, v.maxLength(200))),
 						html: v.pipe(Text, v.maxLength(60_000)),
 					})
 				),
 				v.minLength(1),
-				v.maxLength(4)
+				v.maxLength(MAX_FLOW_STEPS)
 			),
 		}),
 		durable: true,
 		async run({ data, step }) {
 			assertBlocks(data.body)
+			const most = data.layout === 'flow' ? MAX_FLOW_STEPS : MAX_OPTIONS
+			if (data.proposals.length > most) {
+				throw new Error(
+					`Nothing was drawn: a card holds at most ${most} ${data.layout === 'flow' ? 'steps' : 'options'}.`
+				)
+			}
+			if (data.replaces !== undefined && data.expands !== undefined) {
+				throw new Error(
+					'Nothing was drawn: give replaces or expands, not both.'
+				)
+			}
+			if (data.replaces !== undefined && data.layout !== 'options') {
+				throw new Error(
+					'Nothing was drawn: new versions of a step are options, so give layout "options" with replaces.'
+				)
+			}
+			if (data.expands !== undefined && data.layout !== 'flow') {
+				throw new Error(
+					'Nothing was drawn: a sub-flow is a flow, so give layout "flow" with expands.'
+				)
+			}
 			const room = await roomFor()
 			const left = await room.sketchesLeft(agent)
 			if (data.proposals.length > left) {
@@ -141,6 +176,9 @@ export function designTools(agent: CrewKey) {
 					title: data.title,
 					body: data.body,
 					frame: data.frame,
+					layout: data.layout,
+					replaces: data.replaces,
+					expands: data.expands,
 					proposals: data.proposals.map((proposal, index) => ({
 						...proposal,
 						image: shots[index].image,
@@ -153,6 +191,7 @@ export function designTools(agent: CrewKey) {
 				output: {
 					messageId: posted.messageId,
 					sketches: posted.sketches.map(({ id, label }) => ({ id, label })),
+					...(posted.note ? { note: posted.note } : {}),
 				},
 			}
 		},

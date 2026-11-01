@@ -52,6 +52,7 @@ import {
 	type RoomStateType,
 	type RoutingType,
 	type RunType,
+	type StepActionInputType,
 } from '../../shared/crew'
 import { adminFetch, adminRequest } from './api'
 import { uploadOnce } from './images'
@@ -786,6 +787,22 @@ export function usePickView() {
 			adminFetch(`crew/messages/${input.messageId}/pick`, {
 				method: 'POST',
 				json: { chosen: input.chosen },
+			}),
+	})
+}
+
+// Approves, redoes or expands one step of a flow card. The socket brings
+// the card back with the step changed.
+export function useStepAction() {
+	return useMutation({
+		mutationFn: (input: {
+			messageId: string
+			step: number
+			action: StepActionInputType
+		}) =>
+			adminFetch(`crew/messages/${input.messageId}/steps/${input.step}`, {
+				method: 'POST',
+				json: input.action,
 			}),
 	})
 }

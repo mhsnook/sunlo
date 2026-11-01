@@ -13,9 +13,11 @@ import {
 	TileCaption,
 	tileButtonClass,
 } from './gallery-card'
+import { OriginLine } from './flow-card'
 
-// product-2's mockups, side by side. The admin goes with one through the
-// card's own actions, and takes any of them away as a picture or as HTML.
+// product-2's mockups as options, side by side. The admin goes with one
+// through the card's own actions, and takes any of them away as a picture
+// or as HTML. A flow's screens are a FlowCard instead.
 export function SketchesCard({
 	message,
 	sketches,
@@ -24,11 +26,19 @@ export function SketchesCard({
 	sketches: Array<SketchType>
 }) {
 	const picked = message.answer?.actionId
+	const origin = message.card?.from
 	return (
 		<GalleryCard
 			message={message}
 			kind="sketches"
-			label="Sketches · go with one"
+			label={
+				message.card?.actions.length
+					? 'Sketches · go with one'
+					: origin
+						? `Step ${origin.label}, drawn again`
+						: 'Sketches'
+			}
+			above={origin && <OriginLine origin={origin} />}
 			brief={[
 				message.card?.title,
 				message.body,

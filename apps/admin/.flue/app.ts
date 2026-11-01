@@ -12,6 +12,7 @@ import {
 	crewKeys,
 	GithubDraftSchema,
 	PickChoiceSchema,
+	StepActionSchema,
 	isCrewKey,
 	isRoomKey,
 	MAX_UPLOAD_BYTES,
@@ -512,6 +513,32 @@ api.post(
 				)
 			)
 		)
+		return c.json({ ok: true })
+	}
+)
+
+api.post(
+	'/crew/messages/:id/steps/:step',
+	json(StepActionSchema, 'Send { action, note?, count? }'),
+	async (c) => {
+		const step = z.coerce.number().int().min(0).safeParse(c.req.param('step'))
+		if (!step.success) return c.json({ error: 'No such step' }, 404)
+		const result = await (
+			await roomFor()
+		).stepAction({
+			messageId: c.req.param('id'),
+			step: step.data,
+			action: c.req.valid('json'),
+			name: c.get('admin').name,
+		})
+		if (!result.ok) return c.json({ error: result.error }, result.status)
+		if (result.report) {
+			await deliver(
+				result.report.agent,
+				'crew.answer',
+				result.report.body
+			).catch(logFailedDelivery)
+		}
 		return c.json({ ok: true })
 	}
 )
