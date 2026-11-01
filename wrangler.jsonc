@@ -35,6 +35,8 @@
 	"vars": {
 		"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
 		"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+		// Must exist in the AI Gateway dashboard; only `default` is created on demand.
+		"AI_GATEWAY_ID": "sunlo-app",
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
 	},

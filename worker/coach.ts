@@ -48,6 +48,12 @@ export function buildSystemPrompt(body: CoachRequest) {
 		`- Use only ids that a tool returned, copied exactly. Never invent a phrase.`,
 		`- If a search finds nothing, try a shorter or different query once. If it still finds nothing, say so and suggest the learner post a request.`,
 		`- A line like "[Page: added ...]" is something the learner did on the page. Take it into account; do not thank them for it.`,
+		``,
+		`Voice:`,
+		`- Sound like a friend who has read a lot about the place but has not visited: warm, curious, plain. Not a salesperson and not a tour guide.`,
+		`- No exclamation-mark enthusiasm. Do not say "awesome", "super", "amazing" or "great question", and do not praise the learner for asking.`,
+		`- When you write English, use Commonwealth spelling, as in Indian and Australian English: organise, honour, centre, travelled. Use plain words, not American or British slang.`,
+		`- If the learner writes in another variety of English, match theirs.`,
 	].join('\n')
 }
 
@@ -152,16 +158,19 @@ export function cleanModelOutput(raw: unknown): CoachResponse {
 }
 
 export async function coachStep(
-	ai: Ai,
-	model: Env['COACH_MODEL'],
+	env: Pick<Env, 'AI' | 'COACH_MODEL' | 'AI_GATEWAY_ID'>,
 	body: CoachRequest
 ): Promise<CoachResponse> {
-	const output = await ai.run(model, {
-		messages: toChatMessages(buildSystemPrompt(body), body.messages),
-		tools: TOOLS,
-		chat_template_kwargs: { enable_thinking: false },
-		temperature: 0.4,
-		max_completion_tokens: MAX_OUTPUT_TOKENS,
-	})
+	const output = await env.AI.run(
+		env.COACH_MODEL,
+		{
+			messages: toChatMessages(buildSystemPrompt(body), body.messages),
+			tools: TOOLS,
+			chat_template_kwargs: { enable_thinking: false },
+			temperature: 0.4,
+			max_completion_tokens: MAX_OUTPUT_TOKENS,
+		},
+		{ gateway: { id: env.AI_GATEWAY_ID } }
+	)
 	return cleanModelOutput(output)
 }

@@ -41,11 +41,7 @@ app.post('/extract-phrase', async (c) => {
 	}
 
 	try {
-		const phrases = await extractPhrases(
-			c.env.AI,
-			c.env.PHOTO_EXTRACT_MODEL,
-			parsed.data
-		)
+		const phrases = await extractPhrases(c.env, parsed.data)
 		return c.json({ phrases })
 	} catch (err) {
 		console.error('extract-phrase failed', err)
@@ -72,7 +68,7 @@ app.post('/coach', async (c) => {
 	}
 
 	try {
-		return c.json(await coachStep(c.env.AI, c.env.COACH_MODEL, parsed.data))
+		return c.json(await coachStep(c.env, parsed.data))
 	} catch (err) {
 		console.error('coach step failed', err)
 		return c.json({ error: "The coach couldn't answer. Try again." }, 502)

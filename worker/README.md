@@ -26,6 +26,7 @@ Every `/api` route requires the `Authorization: Bearer <access token>` header fr
 | `PHOTO_EXTRACT_MODEL` | var     | `wrangler.jsonc`                                   | Workers AI model id for `/api/extract-phrase`.                |
 | `EXTRACT_LIMITER`     | binding | `wrangler.jsonc`                                   | 10 requests per user per minute.                              |
 | `COACH_MODEL`         | var     | `wrangler.jsonc`                                   | Workers AI model id for `/api/coach`; needs function calling. |
+| `AI_GATEWAY_ID`       | var     | `wrangler.jsonc`                                   | AI Gateway every model call goes through (`sunlo-app`).       |
 | `COACH_LIMITER`       | binding | `wrangler.jsonc`                                   | 40 coach steps per user per minute.                           |
 
 `wrangler.jsonc` holds the production Supabase values. `scripts/cf-preview.sh` replaces them on a preview version with the values its Vite build used, so a preview's app and worker use the same Supabase project. They are vars, not secrets, because a preview version can need different values from production, and both are public.

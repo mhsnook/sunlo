@@ -15,7 +15,11 @@ const BODY = {
 	messages: [{ role: 'user', content: [{ type: 'text', text: 'tea please' }] }],
 }
 
-type RunFn = (model: string, input: Record<string, unknown>) => Promise<unknown>
+type RunFn = (
+	model: string,
+	input: Record<string, unknown>,
+	options?: { gateway?: { id: string } }
+) => Promise<unknown>
 
 function makeEnv(overrides: { limitOk?: boolean; output?: unknown } = {}) {
 	const run = vi.fn<RunFn>().mockResolvedValue(
@@ -42,6 +46,7 @@ function makeEnv(overrides: { limitOk?: boolean; output?: unknown } = {}) {
 	)
 	const env = {
 		COACH_MODEL: '@cf/google/gemma-4-26b-a4b-it',
+		AI_GATEWAY_ID: 'sunlo-app',
 		SUPABASE_URL: 'http://supabase.test',
 		SUPABASE_ANON_KEY: 'anon',
 		AI: { run },
@@ -93,8 +98,9 @@ describe('POST /api/coach', () => {
 			stop_reason: 'tool_calls',
 		})
 
-		const [model, input] = run.mock.calls[0]
+		const [model, input, options] = run.mock.calls[0]
 		expect(model).toBe('@cf/google/gemma-4-26b-a4b-it')
+		expect(options).toEqual({ gateway: { id: 'sunlo-app' } })
 		const messages = input.messages as Array<{ role: string; content: string }>
 		expect(messages[0].role).toBe('system')
 		expect(messages[0].content).toContain('Priya')
