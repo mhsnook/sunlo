@@ -51,6 +51,9 @@ docs:
 - task: "Deciding whether a PR targets main or next-<version>; cutting a release; version bumps; production builds"
   load: "docs/deployment.md"
 
+- task: "Changing the admin crew — apps/admin/worker/crew, apps/admin/.flue, apps/admin/shared/crew.ts, CrewRoom migrations, new agents"
+  load: "apps/admin/docs/architecture.md"
+
 **Where a new doc goes:** `docs/*.md` holds cross-cutting concerns — the ones that apply wherever you are working. A doc about one domain lives beside its code as `src/features/<domain>/docs.md`, and a comment in that folder can point at it as `./docs.md`. Register either kind in the list above.
 
 ## Commands

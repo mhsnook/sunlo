@@ -3,9 +3,10 @@ import {
 	adminAuthor,
 	COMMON_ROOM,
 	crew,
-	crewKeys,
 	displayName,
 	draftTitle,
+	activeCrew,
+	everyoneTo,
 	fixedRouting,
 	githubAccess,
 	githubEventLine,
@@ -21,6 +22,7 @@ import {
 	roomOfPlace,
 	meetingDue,
 	mentionedCrew,
+	mentionsEveryone,
 	placeOf,
 	threadPlace,
 	isThreadPlace,
@@ -139,6 +141,8 @@ export type Wake = {
 	// that thread's own conversation, and the asker hears a reply in its
 	// main one.
 	thread?: { root: string; to: 'helper' | 'asker' }
+	// The other agents the same message woke, who answer alongside.
+	alsoTo?: Array<CrewKey>
 }
 
 type MessageRow = {
@@ -623,6 +627,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.addEditRuns(),
 			() => this.indexThreadRuns(),
 			() => this.addSketchImageIds(),
+			() => this.addRunErrors(),
 			() => this.addGithubLines(),
 		]
 		if (version < migrations.length) {
@@ -792,6 +797,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
+	private addRunErrors() {
+		if (!this.tableColumns('run').has('error')) {
+			this.sql`alter table run add column error text`
+		}
+	}
+
 	private addGithubLines() {
 		if (!this.tableColumns('message').has('github')) {
 			this.sql`alter table message add column github text`
@@ -900,10 +911,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// CLEF: a trailing "..." always stacks, an @mention always routes, and
 	// otherwise a small model decides between waking agents and leaving the
 	// message in the room. It learns from every correction the admin makes.
+	// An @everyone also wakes anyone it @mentions by name, whatever CLEF says.
 	async classify(text: string): Promise<RoutingType> {
 		const fixed = fixedRouting(text)
 		if (fixed) return fixed
-		const active = crewKeys.filter((key) => crew[key].active)
+		const everyone = mentionsEveryone(text)
+		const decided = await this.askClef(text, everyone)
+		return everyone
+			? everyoneTo([...decided.agents, ...mentionedCrew(text)], 'model')
+			: decided
+	}
+
+	private async askClef(text: string, everyone: boolean): Promise<RoutingType> {
 		// The admin's corrections, before and after sending, are the labels.
 		const examples = this.sql<{
 			text: string
@@ -920,13 +939,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			)
 		try {
 			const reply = await this.env.AI.run(this.env.CLEF_MODEL, {
-				messages: clefPrompt(text, active, examples),
-				max_tokens: 60,
+				messages: clefPrompt(text, activeCrew, examples, everyone),
+				max_tokens: 100,
 				temperature: 0,
 			})
 			return parseClefReply(
 				'response' in reply ? reply.response : undefined,
-				active
+				activeCrew,
+				everyone
 			)
 		} catch (error) {
 			console.error('CLEF could not classify a message', error)
@@ -952,8 +972,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const routing =
 			fixed ?? (input.routing ? sanitize(input.routing) : predicted)
 		const author = adminAuthor(input.uid)
-		const stacked =
-			routing.kind === 'route' ? this.stackedBodies(author, COMMON_ROOM) : []
+		const stacked = routing.agents.length
+			? this.stackedBodies(author, COMMON_ROOM)
+			: []
 		const message = this.insert({
 			author,
 			authorName: input.name,
@@ -966,14 +987,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`insert into clef_decision (message_id, text, predicted, final, at)
 			values (${message.id}, ${text}, ${labelOf(predicted)}, ${labelOf(routing)}, ${message.at})`
 		const body = [...stacked, text].join('\n')
-		const wake = routing.agents.map(
-			(agent): Wake => ({
-				agent,
-				body,
-				messageId: message.id,
-				place: COMMON_ROOM,
-			})
-		)
+		const wake = wakesFor(routing, routing.agents, {
+			body,
+			messageId: message.id,
+			place: COMMON_ROOM,
+		})
 		return { message, wake }
 	}
 
@@ -992,9 +1010,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const author = adminAuthor(input.uid)
 		const routing =
 			fixedRouting(input.body, roomMembers(input.room)) ??
-			routeTo([principalOf(input.room)], 'rule')
-		const stacked =
-			routing.kind === 'route' ? this.stackedBodies(author, place) : []
+			(mentionsEveryone(input.body)
+				? everyoneTo(roomMembers(input.room), 'rule')
+				: routeTo([principalOf(input.room)], 'rule'))
+		const stacked = routing.agents.length
+			? this.stackedBodies(author, place)
+			: []
 		const message = this.insert({
 			author,
 			authorName: input.name,
@@ -1007,9 +1028,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const body = [...stacked, withImageLines(input.body, input.images)].join(
 			'\n'
 		)
-		const wake = routing.agents.map(
-			(agent): Wake => ({ agent, body, messageId: message.id, place })
-		)
+		const wake = wakesFor(routing, routing.agents, {
+			body,
+			messageId: message.id,
+			place,
+		})
 		return { message, wake }
 	}
 
@@ -1048,16 +1071,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			where message_id = ${row.id}`
 		const message = { ...original, corrected }
 		this.push({ type: 'message', message })
-		const wake = corrected.agents
-			.filter((agent) => !woken.has(agent))
-			.map(
-				(agent): Wake => ({
-					agent,
-					body: withImageLines(original.body, original.images),
-					messageId: row.id,
-					place: COMMON_ROOM,
-				})
-			)
+		const wake = wakesFor(
+			corrected,
+			corrected.agents.filter((agent) => !woken.has(agent)),
+			{
+				body: withImageLines(original.body, original.images),
+				messageId: row.id,
+				place: COMMON_ROOM,
+			}
+		)
 		return { ok: true, message, wake }
 	}
 
@@ -1578,10 +1600,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// Every submission settles, a completed one after finishRun or
 	// finishThreadRun.
-	settleRun(key: RunLogKey, outcome: 'completed' | 'failed' | 'aborted') {
+	settleRun(
+		key: RunLogKey,
+		outcome: 'completed' | 'failed' | 'aborted',
+		error: string | null = null
+	) {
 		const failed = outcome !== 'completed'
 		const trigger = key.thread ?? (failed ? this.runTrigger(key.agent) : null)
-		this.runLog.settle(key, failed ? 'failed' : 'done', trigger)
+		this.runLog.settle(key, failed ? 'failed' : 'done', trigger, error)
 		if (!failed) return
 		if (key.thread) this.failThreadRun(key.agent, key.thread)
 		else this.failRun(key.agent)
@@ -2293,10 +2319,13 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// The admin files a "github" card's draft, as they edited it: checked for
 	// personal data, published on GitHub, then recorded as the card's answer,
 	// which links to what GitHub made. The card keeps the agent's draft, and
-	// the agent hears both versions when they differ.
+	// the agent hears both versions when they differ. The admin's note goes
+	// only to the room, as their own message, once GitHub has the draft.
 	async fileDraft(input: {
 		messageId: string
 		draft: GithubDraftType
+		note: string | null
+		uid: string
 		name: string
 	}): Promise<
 		| { ok: true; url: string; agent: CrewKey; report: string }
@@ -2339,6 +2368,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			}
 		}
 		const result = await github.file(input.draft)
+		// Left unrouted: the filing report already wakes the agent.
+		const note = input.note
+			? this.insert({
+					author: adminAuthor(input.uid),
+					authorName: input.name,
+					body: input.note,
+					routing: null,
+					card: null,
+					place: message.place,
+				})
+			: null
 		const answer = {
 			actionId: FILE.id,
 			label:
@@ -2350,6 +2390,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			by: input.name,
 			at: now(),
 			url: result.url,
+			...(note && { noteId: note.id }),
 		}
 		this.sql`
 			update message set answer = ${JSON.stringify(answer)}
@@ -2366,6 +2407,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				filed: input.draft,
 				result,
 				by: input.name,
+				note: input.note,
 			}),
 		}
 	}
@@ -3168,9 +3210,23 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 }
 
 function sanitize(routing: RoutingType): RoutingType {
-	return routing.kind === 'route'
-		? routeTo(routing.agents, routing.by)
-		: { ...routing, agents: [] }
+	if (routing.kind === 'route') return routeTo(routing.agents, routing.by)
+	if (routing.kind === 'everyone') return everyoneTo(routing.agents, routing.by)
+	return { ...routing, agents: [] }
+}
+
+// `agents` may be fewer than `routing.agents`: a correction wakes only the
+// agents not woken before, but each hears of every agent the message names.
+function wakesFor(
+	routing: RoutingType,
+	agents: Array<CrewKey>,
+	wake: Pick<Wake, 'body' | 'messageId' | 'place'>
+): Array<Wake> {
+	return agents.map((agent) => ({
+		...wake,
+		agent,
+		alsoTo: routing.agents.filter((key) => key !== agent),
+	}))
 }
 
 // The part of a routing that CLEF decides, with agents in a fixed order, so

@@ -1,4 +1,5 @@
 import {
+	crewNames,
 	displayName,
 	meetingDue,
 	roomOfPlace,
@@ -26,14 +27,25 @@ export const stamp = (iso: string) =>
 
 // One timeline's messages for the model, a line each.
 export function timelineText(messages: Array<CrewMessageType>) {
+	const cardsByNote = new Map(
+		messages.flatMap((message) =>
+			message.answer?.noteId ? [[message.answer.noteId, message] as const] : []
+		)
+	)
 	return messages
 		.map((message) => {
+			const noteOn = cardsByNote.get(message.id)
+			const about = noteOn
+				? ` (a note on the card "${noteOn.card?.title ?? noteOn.body}")`
+				: ''
 			const note =
 				message.routing?.kind === 'stack'
 					? ' (more coming)'
 					: message.routing?.kind === 'room'
 						? ' (left in the room)'
-						: ''
+						: message.routing?.kind === 'everyone'
+							? ` (to everyone; woke ${crewNames(message.routing.agents)})`
+							: ''
 			const side = message.thread
 				? ` (a side-thread with ${displayName(message.thread.with)}${message.thread.closedAt ? ', closed' : ''})`
 				: ''
@@ -47,7 +59,7 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					? ` [answered: ${message.answer.label}]`
 					: ` [waiting for an answer: ${message.card.actions.map((a) => a.label).join(' / ')}]`
 				: ''
-			return `[${stamp(message.at)}] ${message.authorName}${note}${side}${view}: ${withImageLines(message.body, message.images)}${card}`
+			return `[${stamp(message.at)}] ${message.authorName}${note}${side}${view}${about}: ${withImageLines(message.body, message.images)}${card}`
 		})
 		.join('\n')
 }

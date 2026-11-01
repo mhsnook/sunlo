@@ -291,6 +291,11 @@ const ATTRIBUTES = new Set(
 )
 
 const LINK_ATTRIBUTES = new Set(['href', 'xlink:href'])
+// Text for people, which no browser reads as CSS or as a link.
+const TEXT_ATTRIBUTE = /^((data|aria)-[\w.-]+|xlink:title)$/
+// An animation writes these values into the attribute it animates, so they
+// can carry a link even though their own name is not href.
+const ANIMATION_VALUES = new Set(['to', 'from', 'by', 'values'])
 const ANIMATIONS = new Set(['animate', 'set', 'animatemotion'])
 const SAFE_LINK = /^(#|data:image\/(png|jpeg|gif|webp);)/i
 // XML knows only these entities without a DTD, and the check refuses a
@@ -298,8 +303,14 @@ const SAFE_LINK = /^(#|data:image\/(png|jpeg|gif|webp);)/i
 // such as &colon; that a browser would decode.
 const ENTITY = /&(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-f]+);/giy
 // A scheme at the start of a value or of a token in it: "https:",
-// "data:", "url(ftp:". Whitespace was taken out of the scheme first.
+// "data:", "url(ftp:". Whitespace was taken out of the scheme first. It
+// also matches ordinary text such as "Step: one", so only values that can
+// hold a link are tested with it.
 const SCHEME = /(?:^|[\s,;("'])[a-z][a-z0-9+.-]*:/
+// The schemes that load or run something, refused in any attribute that is
+// not text for people.
+const FETCHED =
+	/(?:^|[\s,;("'])(?:https?|ftp|file|blob|data|javascript|vbscript):/
 const NAME = /[a-z_][\w.:-]*/iy
 const ATTRIBUTE = /([a-z_][\w.:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/iy
 
@@ -386,7 +397,7 @@ function checkAttribute(element: string, name: string, raw: string) {
 	if (attribute.startsWith('on')) {
 		refuse('Leave out event-handler attributes such as onload and onclick.')
 	}
-	if (!ATTRIBUTES.has(attribute) && !/^(data|aria)-[\w.-]+$/.test(attribute)) {
+	if (!ATTRIBUTES.has(attribute) && !TEXT_ATTRIBUTE.test(attribute)) {
 		refuse(
 			`Leave out the ${name} attribute on <${element}>: an SVG here keeps to drawing attributes, without editor metadata.`
 		)
@@ -423,11 +434,13 @@ function checkAttribute(element: string, name: string, raw: string) {
 	) {
 		refuse(`Leave out <${element}> that changes a link.`)
 	}
+	// The javascript: check in checkSvg still covers text attributes.
+	if (TEXT_ATTRIBUTE.test(attribute)) return
 	if (value.includes('\\')) {
 		refuse(`Leave out backslashes in the ${name} attribute.`)
 	}
 	checkCssUrls(value)
-	if (SCHEME.test(link)) {
+	if ((ANIMATION_VALUES.has(attribute) ? SCHEME : FETCHED).test(link)) {
 		refuse(
 			`Leave out URLs in attributes (only href takes a link, to #id or a data:image): ${name}="${value.slice(0, 80)}"`
 		)

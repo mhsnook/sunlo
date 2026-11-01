@@ -317,28 +317,35 @@ export const draftText = (draft: GithubDraftType) =>
 
 // What reaches the agent once the admin files its draft. When the admin
 // changed the draft first, both versions go, so the agent can learn how the
-// admin writes.
+// admin writes. Their note is for the agent only: it never reaches GitHub.
 export function filingReport(input: {
 	drafted: GithubDraftType
 	filed: GithubDraftType
 	result: Filed
 	by: string
+	note: string | null
 }) {
-	const { drafted, filed, result, by } = input
+	const { drafted, filed, result, by, note } = input
 	const where =
 		filed.type === 'comment' ? result.url : `#${result.number}, ${result.url}`
 	const opening = `${by} filed your ${filed.type} draft "${draftTitle(drafted)}" (${where})`
 	const roadmap =
 		filed.type === 'comment' ? '' : ' Put its number in the Roadmap.'
+	const noted = note ? `Their note to you, in your room: ${note}` : null
 	if (JSON.stringify(drafted) === JSON.stringify(filed)) {
-		return `${opening} as you wrote it.${roadmap}`
+		return [`${opening} as you wrote it.${roadmap}`, noted]
+			.filter(Boolean)
+			.join('\n\n')
 	}
 	return [
 		`${opening}, after changing it.${roadmap}`,
+		noted,
 		`Your draft:\n${JSON.stringify(drafted, null, 2)}`,
 		`What ${by} filed:\n${JSON.stringify(filed, null, 2)}`,
 		'If the changes show how they like issues written, save that with note_writing_style.',
-	].join('\n\n')
+	]
+		.filter(Boolean)
+		.join('\n\n')
 }
 
 // One receipt line for a direct edit, built from what the tool changed.

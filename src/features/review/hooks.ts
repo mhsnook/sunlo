@@ -6,7 +6,6 @@ import {
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
-	useReviewStage,
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
@@ -30,7 +29,9 @@ import {
 	findLastSighting,
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
+	getIndexOfNextValidCard,
 	isScoringReview,
+	resumeIndexForStage,
 	type ReviewsMap,
 	type ReviewStages,
 } from './review-utils'
@@ -135,20 +136,14 @@ function mapToStats(
 		firstTryTotal,
 	}
 
-	const stage: ReviewStages =
+	const inferredStage: ReviewStages =
 		stats.reviewed < stats.count ? 1 : stats.again === 0 ? 5 : 4
-	const index =
-		stage === 4
-			? stats.firstAgainIndex
-			: stage === 5
-				? manifest.length
-				: stats.firstUnreviewedIndex
 
 	return {
 		...stats,
 		unreviewed: stats.count - stats.reviewed,
 		complete: stats.reviewed - stats.again,
-		inferred: { stage, index },
+		inferredStage,
 	}
 }
 
@@ -156,22 +151,23 @@ export function useNextValid(): number {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
 	const day_session = useReviewDayString()
-	const stage = useReviewStage()
-	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	const { manifest, reviewsMap } = reviewsData
-	return (stage ?? 0) < 3
-		? getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
-		: getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
+	const { data } = useReviewsTodayStats(lang, day_session)
+	return getIndexOfNextValidCard(
+		data.stage,
+		data.manifest,
+		data.reviewsMap,
+		currentCardIndex
+	)
 }
 
 /**
- * The server-persisted stage for a session: the `stage` of the latest
- * user_review_milestone. Replaces the old mutable `user_review_session.stage` —
- * progress is now an append-only log, so the newest milestone wins. Returns
- * undefined when no milestone has landed yet (brand-new session), which lets
- * callers fall back to the client-inferred stage.
+ * The current stage for a session: the `stage` of the latest
+ * user_review_milestone. Progress is an append-only log, so the newest
+ * milestone wins, and realtime keeps it current across devices.
+ * Returns undefined when no milestone has landed yet (brand-new session),
+ * which lets callers fall back to the client-inferred stage.
  */
-export function useReviewStageServer(
+export function useReviewStage(
 	lang: string,
 	day_session: string
 ): ReviewStages | undefined {
@@ -204,7 +200,7 @@ export function useReviewsToday(lang: string, day_session: string) {
 	)
 	const reviewDayQuery = useReviewDay(lang, day_session)
 	// Stage now folds out of the append-only milestone log, not the session row.
-	const stage = useReviewStageServer(lang, day_session)
+	const stage = useReviewStage(lang, day_session)
 	return {
 		isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
 		data: {
@@ -218,22 +214,22 @@ export function useReviewsToday(lang: string, day_session: string) {
 
 export function useReviewsTodayStats(lang: string, day_session: string) {
 	const query = useReviewsToday(lang, day_session)
+	const manifest = query.data.manifest ?? []
 	const computed = mapToStats(
 		query.data.reviewsMap,
-		query.data.manifest ?? [],
+		manifest,
 		query.data.reviews
 	)
-	// Use server-persisted stage when available, fall back to inferred
-	const stage = (query.data.stage as ReviewStages) ?? computed.inferred.stage
-	const index =
-		stage >= 5
-			? computed.count
-			: stage >= 3
-				? computed.firstAgainIndex
-				: computed.firstUnreviewedIndex
+	const stage = query.data.stage ?? computed.inferredStage
 	return {
 		...query,
-		data: { ...computed, stage, index },
+		data: {
+			...computed,
+			stage,
+			index: resumeIndexForStage(stage, computed),
+			manifest,
+			reviewsMap: query.data.reviewsMap,
+		},
 	}
 }
 
@@ -503,7 +499,7 @@ export const useOneCardReviews = (
 /**
  * Append a review-session milestone as an optimistic collection action. The
  * row (client-generated id + created_at) lands in the collection immediately —
- * so `useReviewStageServer` reflects it at once — and the collection's onInsert
+ * so `useReviewStage` reflects it at once — and the collection's onInsert
  * persists it and owns any error.
  */
 export function insertMilestone(input: {

@@ -1,3 +1,9 @@
+import { setProvider } from '@flue/runtime'
+import {
+	cloudflareBindingProvider,
+	type CloudflareAIBinding,
+} from '@flue/runtime/cloudflare/workers-ai'
+import { env } from 'cloudflare:workers'
 import { validator } from 'hono/validator'
 import { z } from 'zod'
 import {
@@ -24,7 +30,22 @@ import {
 import { createApi } from '../worker/api'
 import { imageInfo, verifyImageLink } from '../worker/images'
 import { SVG_POLICY } from '../worker/svg'
+import { bindingModelId } from '../worker/models'
 import { deliver, requestReport, roomFor, wake } from './crew'
+
+// Replaces the Workers AI provider that @flue/vite registers. Without the
+// id rewrite, the binding refuses every Claude call. Without
+// `cacheRetention`, a Claude step pays full price for the whole
+// conversation every time.
+const ai = env.AI as unknown as CloudflareAIBinding
+setProvider(
+	cloudflareBindingProvider({
+		binding: {
+			run: (id, inputs, options) => ai.run(bindingModelId(id), inputs, options),
+		},
+		cacheRetention: 'short',
+	})
+)
 
 // worker/api.ts checks the admin on every /api route. These routes add the
 // crew room and the agents to that app.
@@ -142,14 +163,23 @@ api.post(
 // Files a "github" card's draft, as the admin edited it, on GitHub.
 api.post(
 	'/crew/messages/:id/file',
-	json(z.object({ draft: GithubDraftSchema }), 'Send { draft }'),
+	json(
+		z.object({
+			draft: GithubDraftSchema,
+			note: z.string().trim().max(2000).optional(),
+		}),
+		'Send { draft, note? }'
+	),
 	async (c) => {
+		const admin = c.get('admin')
 		const filed = await (
 			await roomFor()
 		).fileDraft({
 			messageId: c.req.param('id'),
 			draft: c.req.valid('json').draft,
-			name: c.get('admin').name,
+			note: c.req.valid('json').note || null,
+			uid: admin.uid,
+			name: admin.name,
 		})
 		if (!filed.ok) return c.json({ error: filed.error }, filed.status)
 		await deliver(filed.agent, 'crew.answer', filed.report).catch(

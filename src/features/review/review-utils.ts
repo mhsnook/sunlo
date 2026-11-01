@@ -10,14 +10,13 @@ import type { uuid } from '@/types/main'
 import { toManifestEntry, type ManifestEntry } from './manifest'
 
 /*
-	null: not yet initialised (zustand store only)
 	1. doing the first review
 	2. going back for unreviewed
 	3. skip unreviewed and see screen asking to re-review
 	4. doing re-reviews
 	5. skip re-reviews and end
 */
-export type ReviewStages = null | 1 | 2 | 3 | 4 | 5
+export type ReviewStages = 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
 	[key: ManifestEntry]: CardReviewType
 }
@@ -159,4 +158,36 @@ export function getIndexOfNextAgainCard(
 	return index !== -1
 		? (index + currentCardIndex + 1) % manifest.length
 		: manifest.length
+}
+
+/**
+ * The next card that needs attention in the session's current stage: the next
+ * unreviewed card while scoring (stages 1–2), else the next Again card.
+ */
+export function getIndexOfNextValidCard(
+	stage: ReviewStages,
+	manifest: Array<ManifestEntry>,
+	reviewsMap: ReviewsMap,
+	currentCardIndex: number
+) {
+	return stage < 3
+		? getIndexOfNextUnreviewedCard(manifest, reviewsMap, currentCardIndex)
+		: getIndexOfNextAgainCard(manifest, reviewsMap, currentCardIndex)
+}
+
+/**
+ * Where a session at `stage` resumes. Stages 3 and 5 resume at the end of the
+ * manifest, which renders the offer screen or the finished screen, not a card.
+ */
+export function resumeIndexForStage(
+	stage: ReviewStages,
+	positions: {
+		count: number
+		firstUnreviewedIndex: number
+		firstAgainIndex: number
+	}
+) {
+	if (stage === 4) return positions.firstAgainIndex
+	if (stage === 3 || stage === 5) return positions.count
+	return positions.firstUnreviewedIndex
 }

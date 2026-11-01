@@ -97,6 +97,11 @@ export function RoomTimeline({
 		)
 	)
 	const threads = new Map(Object.entries(replies))
+	const cardsByNote = new Map(
+		messages.flatMap((message) =>
+			message.answer?.noteId ? [[message.answer.noteId, message] as const] : []
+		)
+	)
 	const shown = messages.filter(
 		(message) => !message.otherViewOf || !others.has(message.otherViewOf)
 	)
@@ -128,6 +133,7 @@ export function RoomTimeline({
 									myAuthor={myAuthor}
 									others={others}
 									threads={threads}
+									cardsByNote={cardsByNote}
 								/>
 								{newSinceMarker}
 								<AuthorGroup
@@ -135,6 +141,7 @@ export function RoomTimeline({
 									myAuthor={myAuthor}
 									others={others}
 									threads={threads}
+									cardsByNote={cardsByNote}
 								/>
 							</>
 						) : (
@@ -145,6 +152,7 @@ export function RoomTimeline({
 									myAuthor={myAuthor}
 									others={others}
 									threads={threads}
+									cardsByNote={cardsByNote}
 								/>
 							</>
 						)}
@@ -160,6 +168,7 @@ function AuthorGroup({
 	myAuthor,
 	others,
 	threads,
+	cardsByNote,
 }: {
 	messages: Array<CrewMessageType>
 	myAuthor: string
@@ -167,6 +176,8 @@ function AuthorGroup({
 	others: Map<string, CrewMessageType>
 	// Side-thread replies, by the id of the thread's first message.
 	threads: Map<string, Array<CrewMessageType>>
+	// Cards, by the id of the note the admin wrote when answering each.
+	cardsByNote: Map<string, CrewMessageType>
 }) {
 	const first = messages[0]
 	const mine = first.author === myAuthor
@@ -187,6 +198,7 @@ function AuthorGroup({
 				const asksYou = !!message.card && message.card.kind === 'question'
 				const blocks = hasBlocks(message.body)
 				const other = others.get(message.id)
+				const noteOn = cardsByNote.get(message.id)
 				return (
 					<Message
 						key={message.id}
@@ -267,6 +279,11 @@ function AuthorGroup({
 									replies={threads.get(message.id) ?? []}
 								/>
 							)}
+							{noteOn && (
+								<MessageFooter data-testid="crew-message-note-on">
+									Note on “{noteOn.card?.title ?? noteOn.body}”
+								</MessageFooter>
+							)}
 							{mine && message.routing && message.place === 'room' && (
 								<MessageFooter>
 									<RoutingCorrection message={message} />
@@ -291,9 +308,11 @@ function RoutingCorrection({ message }: { message: CrewMessageType }) {
 	const correct = useCorrectRouting()
 	const shown = message.corrected ?? message.routing
 	if (!shown) return null
+	const note = routingNote(shown)
 	return (
 		<RoutingMenu
 			label="Where should this have gone?"
+			current={shown}
 			includeStack={false}
 			disabled={correct.isPending}
 			testId="crew-routing-correct"
@@ -306,8 +325,8 @@ function RoutingCorrection({ message }: { message: CrewMessageType }) {
 			}
 		>
 			{message.corrected
-				? `Corrected: ${routingNote(shown).toLowerCase()}`
-				: routingNote(shown)}
+				? `Corrected: ${note[0].toLowerCase()}${note.slice(1)}`
+				: note}
 			<ChevronDown className="size-3" />
 		</RoutingMenu>
 	)

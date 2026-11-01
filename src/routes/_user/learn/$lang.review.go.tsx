@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffectEvent, useLayoutEffect, useState } from 'react'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -7,9 +7,13 @@ import {
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
-	useReviewStage,
 } from '@/features/review/store'
-import { useNextValid, useReviewDay } from '@/features/review/hooks'
+import {
+	useReviewDay,
+	useReviewsTodayStats,
+	useUpdateReviewStage,
+} from '@/features/review/hooks'
+import { getIndexOfNextValidCard } from '@/features/review/review-utils'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
@@ -45,11 +49,13 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 function ReviewPage() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
+	const currentCardIndex = useCardIndex()
 	const { data: day, isLoading } = useReviewDay(lang, dayString)
-	const stage = useReviewStage()
 
 	if (isLoading) return <Loader />
-	if (!day?.manifest?.length || stage === null)
+	// -1: no session was started in this browser, so send the user to the index
+	// route to start or continue one.
+	if (!day?.manifest?.length || currentCardIndex === -1)
 		return <Navigate to="/learn/$lang/review" from={Route.fullPath} />
 
 	return (
@@ -65,9 +71,41 @@ function FlashCardReviewSession({
 	dayString: string
 }) {
 	const currentCardIndex = useCardIndex()
-	const reviewStage = useReviewStage()
+	const lang = useReviewLang()
+	const stats = useReviewsTodayStats(lang, dayString).data
+	const reviewStage = stats.stage
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
-	const nextValidIndex = useNextValid()
+	const updateStage = useUpdateReviewStage(lang, dayString)
+	const nextValidIndex = getIndexOfNextValidCard(
+		reviewStage,
+		manifest,
+		stats.reviewsMap,
+		currentCardIndex
+	)
+
+	// "Skip for today" means different things per phase. In the go-back phase
+	// (stage 2) it skips one unreviewed card and walks forward to the end. In the
+	// again round (stage >= 3) there's no forward end to walk to — unmastered
+	// Again cards keep the complete-screen re-offering the round, and the phase
+	// only closes by advancing to stage 5. So skipping the again round finishes
+	// it outright rather than cycling back onto the remaining Again cards.
+	const handleSkipForToday = () => {
+		if (reviewStage >= 3) {
+			updateStage(5)
+			gotoIndex(manifest.length)
+		} else {
+			gotoIndex(nextValidIndex)
+		}
+	}
+
+	// Re-seed the cursor from the stage's resume index on mount and on every stage
+	// change, including one from another device, so a stored cursor is never read
+	// against a different stage. Keyed on the stage alone: re-seeding when
+	// stats.index moves would undo in-stage navigation and answer-advance.
+	const reseedCursor = useEffectEvent(() => gotoIndex(stats.index))
+	useLayoutEffect(() => {
+		reseedCursor()
+	}, [reviewStage])
 
 	const atTheEnd = currentCardIndex === manifest.length
 
@@ -130,14 +168,12 @@ function FlashCardReviewSession({
 								<ChevronRight className="size-4" />
 							</Button>
 						</>
-					) : !atTheEnd && (reviewStage ?? 0) > 1 ? (
+					) : !atTheEnd && reviewStage > 1 ? (
 						<Button
 							size="sm"
 							variant="ghost"
 							aria-label="skip for today"
-							onClick={() =>
-								animateAndNavigate(() => gotoIndex(nextValidIndex))
-							}
+							onClick={() => animateAndNavigate(handleSkipForToday)}
 							className="ps-4 pe-2"
 						>
 							Skip for today <ChevronRight className="size-4" />
@@ -171,7 +207,7 @@ function FlashCardReviewSession({
 								<ReviewSingleCard
 									pid={phraseId}
 									direction={direction}
-									reviewStage={reviewStage ?? 1}
+									reviewStage={reviewStage}
 									dayString={dayString}
 									triggerSlide={triggerSlide}
 								/>
