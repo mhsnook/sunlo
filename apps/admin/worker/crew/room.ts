@@ -940,11 +940,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				})
 			)
 		try {
-			const reply = await this.env.AI.run(this.env.CLEF_MODEL, {
-				messages: clefPrompt(text, activeCrew, examples, everyone),
-				max_tokens: 100,
-				temperature: 0,
-			})
+			const reply = await this.env.AI.run(
+				this.env.CLEF_MODEL,
+				{
+					messages: clefPrompt(text, activeCrew, examples, everyone),
+					max_tokens: 100,
+					temperature: 0,
+				},
+				{ gateway: { id: this.env.AI_GATEWAY_ID } }
+			)
 			return parseClefReply(
 				'response' in reply ? reply.response : undefined,
 				activeCrew,

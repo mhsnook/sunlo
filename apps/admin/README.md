@@ -252,6 +252,8 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2`, `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`) and `MODEL_PRODUCT_2` (Claude Opus 5.5). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
 
+Every model call the admin Worker makes, for the agents, CLEF, the painter and voice, goes through the `sunlo-admin` AI Gateway (`AI_GATEWAY_ID`), so its logs, costs and limits stay apart from the app's `sunlo-app` gateway. The gateway has to exist in the Cloudflare dashboard: only `default` is created on demand. `.flue/app.ts` hands the id to Flue's provider, whose own default is `default`.
+
 ### GitHub: milestones and epics
 
 The Roadmap, a Product room document, is the plan. GitHub (`mhsnook/sunlo`, the `GITHUB_REPO` var) holds the part of it that is ready to build, as milestones and epics, and `product-1` keeps them current. An epic is an ordinary issue labelled `epic`, with a checklist of PR-sized steps, inside a milestone; Claude Code sessions take their work from it. The Roadmap links to GitHub by convention, such as `- [ ] Onboarding (#812)`, and no code parses it.
