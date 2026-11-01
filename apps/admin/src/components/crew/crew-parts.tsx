@@ -1,7 +1,5 @@
 import Markdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Link, useParams } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { GithubCard } from './github-card'
@@ -9,7 +7,7 @@ import { PaintingsCard, SvgsCard } from './paintings-card'
 import { SketchesCard } from './sketches-card'
 import { MermaidBlock } from './mermaid-block'
 import { remarkCrew } from './remark-crew'
-import { Children, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Check, Copy, Users, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -18,24 +16,15 @@ import { MessageMarker } from '@/components/ui/message'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
-	documentIdInHref,
 	isCrewKey,
-	isRoomKey,
-	roomNames,
 	type CardType,
 	type CrewKey,
 	type CrewMessageType,
 	type RoomKey,
 } from '../../../shared/crew'
-import {
-	crewIcons,
-	documentQuery,
-	documentsQuery,
-	roomIcons,
-	useAnswerCard,
-} from '~/lib/crew'
-import { CREW, documentLinkOptions, documentStatus } from '~/lib/documents'
-import { RefCard } from './ref-card'
+import { crewIcons, roomIcons, useAnswerCard } from '~/lib/crew'
+import { RefLink } from './ref-links'
+import { parseRef } from '~/lib/refs'
 
 type AvatarSize = 'sm' | 'md' | 'lg'
 
@@ -117,59 +106,21 @@ export function AdminAvatar({ name }: { name: string }) {
 	)
 }
 
-// Empty link text, as in `[](doc:3)`, shows the document's current name.
-function DocumentLink({ id, children }: { id: number; children: ReactNode }) {
-	const queryClient = useQueryClient()
-	const { data: document } = useQuery({
-		...documentsQuery(),
-		select: (documents) => documents.find((item) => item.id === id),
-	})
-	const { room } = useParams({ strict: false })
-	if (!document) return <>{children}</>
-	return (
-		<RefCard
-			testId="crew-document-card"
-			testKey={document.name}
-			onOpen={() => void queryClient.prefetchQuery(documentQuery(id))}
-			trigger={
-				// Hovering opens the card; preloading the route on that hover
-				// would fetch another room's whole log.
-				<Link
-					preload={false}
-					{...documentLinkOptions(
-						room && isRoomKey(room) ? room : CREW,
-						document
-					)}
-					className="text-primary-700 underline"
-					data-testid="crew-document-link"
-					data-key={document.name}
-				>
-					{Children.count(children) ? children : document.name}
-				</Link>
-			}
-		>
-			<p className="font-medium">{document.name}</p>
-			<p className="text-muted-foreground mt-1">
-				{roomNames[document.room]} · {documentStatus(document)}
-			</p>
-		</RefCard>
-	)
-}
-
 // react-markdown drops a link whose scheme it does not know, which would
-// blank every `doc:` link's href before the renderer sees it.
-const keepDocumentLinks = (url: string) =>
-	documentIdInHref(url) !== null ? url : defaultUrlTransform(url)
+// blank every `doc:` and `github:` href before the renderer sees it.
+const keepRefLinks = (url: string) =>
+	parseRef(url) ? url : defaultUrlTransform(url)
 
 // Agents write markdown, with GitHub's checklists and tables. @mentions
-// render bold, as in the design, a `doc:` link opens a room's document, and
+// render bold, as in the design, a `doc:` link or a "#854" shows a card on
+// hover, and
 // a fenced block in a component's language (```chart, ```stats, ```table,
 // ```mermaid) renders as that component.
 export function CrewText({ text }: { text: string }) {
 	return (
 		<Markdown
 			remarkPlugins={[remarkGfm, remarkCrew]}
-			urlTransform={keepDocumentLinks}
+			urlTransform={keepRefLinks}
 			components={{
 				p: ({ children }) => <p className="not-first:mt-2">{children}</p>,
 				ul: ({ children, className }) => (
@@ -218,9 +169,9 @@ export function CrewText({ text }: { text: string }) {
 					<td className="border-t px-3 py-1.5">{children}</td>
 				),
 				a: ({ children, href }) => {
-					const id = href ? documentIdInHref(href) : null
-					return id !== null ? (
-						<DocumentLink id={id}>{children}</DocumentLink>
+					const target = href ? parseRef(href) : null
+					return target ? (
+						<RefLink target={target}>{children}</RefLink>
 					) : (
 						<a
 							href={href}

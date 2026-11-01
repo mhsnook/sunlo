@@ -21,7 +21,7 @@ import { Empty, Section } from './workspace-parts'
 // Titles and labels are anyone's text on a public repository. Everything
 // here renders them as React text, never through CrewText's Markdown.
 
-const icons: Record<
+export const githubIcons: Record<
 	GithubItemType['kind'],
 	Record<GithubItemType['state'] | GithubEventType['action'], LucideIcon>
 > = {
@@ -42,7 +42,7 @@ const icons: Record<
 }
 
 // The server only keeps github.com links; this holds if one slips through.
-const safeUrl = (url: string) =>
+export const safeGithubUrl = (url: string) =>
 	url.startsWith('https://github.com/') ? url : undefined
 
 // The room's lines for GitHub events, in a timeline: one quiet line each.
@@ -59,7 +59,7 @@ export function GithubLines({
 			{messages.map((message) => {
 				const event = message.github
 				if (!event) return null
-				const Icon = icons[event.kind][event.action]
+				const Icon = githubIcons[event.kind][event.action]
 				return (
 					<li
 						key={message.id}
@@ -69,7 +69,7 @@ export function GithubLines({
 					>
 						<Icon className="size-3.5 shrink-0" aria-hidden />
 						<a
-							href={safeUrl(event.url)}
+							href={safeGithubUrl(event.url)}
 							target="_blank"
 							rel="noreferrer"
 							className="text-foreground shrink-0 font-medium hover:underline"
@@ -132,7 +132,7 @@ function ItemList({
 	return (
 		<ul className="bg-card divide-y rounded border text-sm">
 			{items.slice(0, LIST_MAX).map((item) => {
-				const Icon = icons[item.kind][item.state]
+				const Icon = githubIcons[item.kind][item.state]
 				return (
 					<li
 						key={item.number}
@@ -146,7 +146,7 @@ function ItemList({
 						/>
 						<div className="min-w-0">
 							<a
-								href={safeUrl(item.url)}
+								href={safeGithubUrl(item.url)}
 								target="_blank"
 								rel="noreferrer"
 								className="hover:underline"
