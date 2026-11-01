@@ -1,5 +1,7 @@
-import Markdown from 'react-markdown'
+import Markdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Link, useParams } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { GithubCard } from './github-card'
@@ -16,13 +18,17 @@ import { MessageMarker } from '@/components/ui/message'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
+	documentSlugInHref,
+	findDocumentBySlug,
 	isCrewKey,
+	isRoomKey,
 	type CardType,
 	type CrewKey,
 	type CrewMessageType,
 	type RoomKey,
 } from '../../../shared/crew'
-import { crewIcons, roomIcons, useAnswerCard } from '~/lib/crew'
+import { crewIcons, documentsQuery, roomIcons, useAnswerCard } from '~/lib/crew'
+import { CREW, documentLinkOptions } from '~/lib/documents'
 
 type AvatarSize = 'sm' | 'md' | 'lg'
 
@@ -104,14 +110,46 @@ export function AdminAvatar({ name }: { name: string }) {
 	)
 }
 
+// A link an agent wrote to a document, as `[the Roadmap](doc:roadmap)`. It
+// opens the document in its room's details. A slug no document answers to
+// stays plain text, so a name the agent got wrong never becomes a dead
+// link.
+function DocumentLink({
+	slug,
+	children,
+}: {
+	slug: string
+	children: ReactNode
+}) {
+	const { data: documents } = useQuery(documentsQuery())
+	const { room } = useParams({ strict: false })
+	const document = documents && findDocumentBySlug(documents, slug)
+	if (!document) return <>{children}</>
+	return (
+		<Link
+			{...documentLinkOptions(room && isRoomKey(room) ? room : CREW, document)}
+			className="text-primary-700 underline"
+			data-testid="crew-document-link"
+			data-key={document.name}
+		>
+			{children}
+		</Link>
+	)
+}
+
 // Agents write markdown, with GitHub's checklists and tables. @mentions
-// render bold, as in the design, and a fenced block in a component's
-// language (```chart, ```stats, ```table, ```mermaid) renders as that
-// component.
+// render bold, as in the design, a `doc:` link opens a room's document, and
+// a fenced block in a component's language (```chart, ```stats, ```table,
+// ```mermaid) renders as that component.
 export function CrewText({ text }: { text: string }) {
 	return (
 		<Markdown
 			remarkPlugins={[remarkGfm, remarkCrew]}
+			// react-markdown drops a link whose scheme it does not know, which
+			// would blank every `doc:` link's href before the renderer sees it.
+			urlTransform={(url) =>
+				documentSlugInHref(url) ? url : defaultUrlTransform(url)
+			}
 			components={{
 				p: ({ children }) => <p className="not-first:mt-2">{children}</p>,
 				ul: ({ children, className }) => (
@@ -159,11 +197,21 @@ export function CrewText({ text }: { text: string }) {
 				td: ({ children }) => (
 					<td className="border-t px-3 py-1.5">{children}</td>
 				),
-				a: ({ children, href }) => (
-					<a href={href} className="underline" target="_blank" rel="noreferrer">
-						{children}
-					</a>
-				),
+				a: ({ children, href }) => {
+					const slug = href ? documentSlugInHref(href) : null
+					return slug ? (
+						<DocumentLink slug={slug}>{children}</DocumentLink>
+					) : (
+						<a
+							href={href}
+							className="underline"
+							target="_blank"
+							rel="noreferrer"
+						>
+							{children}
+						</a>
+					)
+				},
 				pre: ({ children }) => (
 					<pre className="bg-muted my-2 overflow-x-auto rounded p-2 text-xs">
 						{children}

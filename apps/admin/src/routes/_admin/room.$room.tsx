@@ -31,9 +31,9 @@ import {
 import { RoomAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { LiveRuns, useLiveRuns } from '~/components/crew/run-steps'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
-import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
+import { SidePanelSlot } from '~/components/crew/side-panel'
 import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
-import { DetailsPanel } from '~/components/crew/details-panel'
+import { DetailsPanel, useDetailsPanel } from '~/components/crew/details-panel'
 import { RoomTimeline } from '~/components/crew/room-timeline'
 
 export const Route = createFileRoute('/_admin/room/$room')({
@@ -47,9 +47,7 @@ export const Route = createFileRoute('/_admin/room/$room')({
 		Promise.all([
 			context.queryClient.ensureQueryData(threadQuery(params.room)),
 			context.queryClient.ensureQueryData(roomQuery()),
-			context.queryClient.ensureQueryData(documentsQuery(params.room)),
-			// The Situation Report is pinned first in every room's documents.
-			context.queryClient.ensureQueryData(documentsQuery('command')),
+			context.queryClient.ensureQueryData(documentsQuery()),
 			context.queryClient.ensureQueryData(charterQuery(params.room)),
 			...(params.room === 'command'
 				? [context.queryClient.ensureQueryData(commandQuery())]
@@ -82,8 +80,7 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	const { data: thread } = useSuspenseQuery(threadQuery(room))
 	const { data: crewRoom } = useSuspenseQuery(roomQuery())
 	const [newSince] = useState(thread.seenAt)
-	const [panel, setPanel] = useSidePanel('details')
-	const panelOpen = panel !== null
+	const details = useDetailsPanel()
 	const members = roomMembers(room)
 	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
 	const liveRuns = useLiveRuns(members)
@@ -108,8 +105,8 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 						variant="ghost"
 						data-testid="details-button"
 						className="@max-sm:px-2.5"
-						aria-pressed={panelOpen}
-						onClick={() => setPanel((open) => (open ? null : 'details'))}
+						aria-pressed={details.open}
+						onClick={details.toggle}
 					>
 						<Info /> <span className="@max-sm:sr-only">Details</span>
 					</Button>
@@ -136,9 +133,9 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 					myAuthor={myAuthor}
 				/>
 			</section>
-			{panelOpen && (
+			{details.open && (
 				<SidePanelSlot>
-					<DetailsPanel room={room} onClose={() => setPanel(null)} />
+					<DetailsPanel room={room} onClose={details.close} />
 				</SidePanelSlot>
 			)}
 		</div>

@@ -20,11 +20,12 @@ import {
 	markSeen,
 	roomQuery,
 } from '~/lib/crew'
+import { CREW } from '~/lib/documents'
 import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
 import { LiveRuns, useLiveRuns } from '~/components/crew/run-steps'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
-import { SidePanelSlot, useSidePanel } from '~/components/crew/side-panel'
-import { CREW, DetailsPanel } from '~/components/crew/details-panel'
+import { SidePanelSlot } from '~/components/crew/side-panel'
+import { DetailsPanel, useDetailsPanel } from '~/components/crew/details-panel'
 import { RoomCompose } from '~/components/crew/room-compose'
 import { RoomTimeline } from '~/components/crew/room-timeline'
 
@@ -34,7 +35,7 @@ export const Route = createFileRoute('/_admin/')({
 			context.queryClient.ensureQueryData(roomQuery()),
 			context.queryClient.ensureQueryData(commonKnowledgeQuery()),
 			context.queryClient
-				.ensureQueryData(documentsQuery('command'))
+				.ensureQueryData(documentsQuery())
 				.then((documents) => {
 					const sitrep = documents.find((doc) => doc.name === SITREP)
 					return (
@@ -57,8 +58,7 @@ function CrewRoomPage() {
 	const [newSince] = useState(room.seenAt)
 	// The details, with the Situation Report first, sit beside the room on a
 	// wide screen, since the room is where the admin comes for the overview.
-	const [panel, setPanel] = useSidePanel('details')
-	const panelOpen = panel !== null
+	const details = useDetailsPanel()
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
 	const liveRuns = useLiveRuns(crewKeys)
 	const liveSteps = liveRuns.reduce((sum, run) => sum + run.steps.length, 0)
@@ -83,8 +83,8 @@ function CrewRoomPage() {
 						variant="ghost"
 						data-testid="details-button"
 						className="@max-sm:px-2.5"
-						aria-pressed={panelOpen}
-						onClick={() => setPanel((open) => (open ? null : 'details'))}
+						aria-pressed={details.open}
+						onClick={details.toggle}
 					>
 						<Info /> <span className="@max-sm:sr-only">Details</span>
 					</Button>
@@ -106,9 +106,9 @@ function CrewRoomPage() {
 				</MessageScroller>
 				<RoomCompose myAuthor={myAuthor} />
 			</section>
-			{panelOpen && (
+			{details.open && (
 				<SidePanelSlot>
-					<DetailsPanel room={CREW} onClose={() => setPanel(null)} />
+					<DetailsPanel room={CREW} onClose={details.close} />
 				</SidePanelSlot>
 			)}
 		</div>

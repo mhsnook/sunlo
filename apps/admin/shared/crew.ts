@@ -715,6 +715,45 @@ export const DOCUMENT_MAX = 40_000
 export const documentMax = (name: string) =>
 	name === SITREP ? SITREP_MAX : DOCUMENT_MAX
 
+// Anything a message or a document writes about a document links to it: an
+// ordinary Markdown link whose target is "doc:" and the document's slug, as
+// in `[the Roadmap](doc:roadmap)`. The app resolves the slug and opens that
+// document; text it cannot resolve stays plain text.
+export const DOCUMENT_SCHEME = 'doc:'
+
+// A Markdown link target cannot hold a space, so the slug is the name
+// lower-cased with every other run of characters turned into one hyphen.
+// A name belongs to one room only (writeDocument refuses a name another
+// room keeps), so the slug on its own names one document.
+export const documentSlug = (name: string) =>
+	name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+
+export const documentHref = (name: string) =>
+	`${DOCUMENT_SCHEME}${documentSlug(name)}`
+
+// The slug a link target names, or null for an ordinary URL. A target the
+// writer spelt with spaces or capitals still resolves, since both sides are
+// slugged.
+export function documentSlugInHref(href: string): string | null {
+	if (!href.toLowerCase().startsWith(DOCUMENT_SCHEME)) return null
+	const target = href.slice(DOCUMENT_SCHEME.length)
+	let name = target
+	try {
+		name = decodeURIComponent(target)
+	} catch {
+		name = target
+	}
+	return documentSlug(name) || null
+}
+
+export const findDocumentBySlug = <T extends { name: string }>(
+	documents: ReadonlyArray<T>,
+	slug: string
+): T | null => documents.find((doc) => documentSlug(doc.name) === slug) ?? null
+
 // A room's documents, as its room log lists them. Revision 0 is a document
 // nobody has written yet.
 export const DocumentSummarySchema = z.object({

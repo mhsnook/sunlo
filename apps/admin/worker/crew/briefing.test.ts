@@ -229,7 +229,7 @@ describe('sitrepText', () => {
 			at: '2026-10-27T14:02:00Z',
 		})
 		expect(text).toBe(
-			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Revision 4, saved by First officer, 2026-10-27 14:02 UTC.)'
+			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Revision 4, saved by First officer, 2026-10-27 14:02 UTC. Link to it as [the Situation Report](doc:situation-report).)'
 		)
 	})
 
@@ -242,7 +242,7 @@ describe('sitrepText', () => {
 })
 
 describe('documentsText', () => {
-	it('lists each document without its text', () => {
+	it('lists each document with its link slug, and not its text', () => {
 		const text = documentsText('Product room', [
 			{
 				id: 3,
@@ -261,9 +261,10 @@ describe('documentsText', () => {
 				at: null,
 			},
 		])
-		expect(text).toBe(
-			"## The Product room's documents\n\n- Roadmap: revision 2, saved by Product officer, 2026-10-28 07:01 UTC\n- Launch checklist: not written yet"
+		expect(text).toContain(
+			"## The Product room's documents\n\n- Roadmap (doc:roadmap): revision 2, saved by Product officer, 2026-10-28 07:01 UTC\n- Launch checklist (doc:launch-checklist): not written yet"
 		)
+		expect(text).toContain('[the Roadmap](doc:roadmap)')
 	})
 
 	it('comes before the room’s cards in the briefing', () => {

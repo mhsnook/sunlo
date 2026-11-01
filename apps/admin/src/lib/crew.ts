@@ -133,15 +133,14 @@ export const charterQuery = (room: RoomKey) =>
 		staleTime: Infinity,
 	})
 
-// A room's documents, without their text. The live socket keeps this and
-// the two document queries below current.
-export const documentsQuery = (room: RoomKey) =>
+// Every room's documents, without their text. One query for all of them,
+// because a `doc:` link in a message names a document in any room. The live
+// socket keeps this and the two document queries below current.
+export const documentsQuery = () =>
 	queryOptions({
-		queryKey: ['crew', 'documents', room],
+		queryKey: ['crew', 'documents'],
 		queryFn: async () =>
-			z
-				.array(DocumentSummarySchema)
-				.parse(await adminFetch(`crew/rooms/${room}/documents`)),
+			z.array(DocumentSummarySchema).parse(await adminFetch('crew/documents')),
 		staleTime: Infinity,
 	})
 
@@ -374,14 +373,9 @@ export function useSaveDocument(document: DocumentSummaryType) {
 	})
 }
 
-const documentChanged = (
-	queryClient: QueryClient,
-	document: { room: RoomKey; id: number }
-) =>
+const documentChanged = (queryClient: QueryClient, document: { id: number }) =>
 	Promise.all([
-		queryClient.invalidateQueries({
-			queryKey: documentsQuery(document.room).queryKey,
-		}),
+		queryClient.invalidateQueries({ queryKey: documentsQuery().queryKey }),
 		queryClient.invalidateQueries({
 			queryKey: documentQuery(document.id).queryKey,
 		}),

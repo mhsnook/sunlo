@@ -646,8 +646,10 @@ api.delete(
 	}
 )
 
-api.get('/crew/rooms/:room/documents', roomParam, async (c) => {
-	return c.json(await (await roomFor()).documents(c.req.valid('param').room))
+// Every room's documents at once: the room log filters them to the room it
+// shows, and a `doc:` link in a message resolves its slug against them all.
+api.get('/crew/documents', async (c) => {
+	return c.json(await (await roomFor()).allDocuments())
 })
 
 api.get(
