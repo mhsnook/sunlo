@@ -3,11 +3,16 @@ import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import supabase from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
 import { getSession, isAdminQuery } from '~/lib/session'
-import { useCrewLive } from '~/lib/crew'
+import { documentsQuery, useCrewLive } from '~/lib/crew'
 import { CrewSidebar } from '~/components/crew/crew-sidebar'
 import { MeetingBanner } from '~/components/crew/meeting-banner'
 
+// `doc` is the id of the document the details panel shows.
+type DetailsSearch = { doc?: number }
+
 export const Route = createFileRoute('/_admin')({
+	validateSearch: (search: Record<string, unknown>): DetailsSearch =>
+		Number.isInteger(search.doc) ? { doc: search.doc as number } : {},
 	beforeLoad: async ({ context }) => {
 		const session = await getSession()
 		if (!session) throw redirect({ to: '/login' })
@@ -16,6 +21,8 @@ export const Route = createFileRoute('/_admin')({
 		)
 		return { session, isAdmin }
 	},
+	loader: ({ context }) =>
+		context.queryClient.ensureQueryData(documentsQuery()),
 	component: AdminLayout,
 })
 

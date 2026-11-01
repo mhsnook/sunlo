@@ -12,6 +12,10 @@ export type SaveCheck =
 	| { ok: true; revision: number }
 	| { ok: false; status: 400 | 404 | 409; error: string }
 
+export type SavedDocument =
+	| { ok: true; id: number; revision: number }
+	| Extract<SaveCheck, { ok: false }>
+
 // A save names the revision it started from, and lands only if that is still
 // the current one, so no save overwrites a change its writer has not seen.
 // `current` is null when the room has no document with that name: then only

@@ -77,7 +77,7 @@ import {
 } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
-import { checkSave, startingDocuments, type SaveCheck } from './documents'
+import { checkSave, startingDocuments, type SavedDocument } from './documents'
 import { openingLines } from '../../shared/blocks'
 import { defaultCharacter } from '../../shared/characters'
 import {
@@ -2585,10 +2585,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// ---- Room documents -----------------------------------------------------
 
 	documents(room: RoomKey): Array<DocumentSummaryType> {
-		return this.sql<IdRow>`
-			select id from document where room = ${room} order by id`.flatMap(
-			(row) => this.documentSummary(row.id) ?? []
-		)
+		return this.allDocuments().filter((doc) => doc.room === room)
+	}
+
+	allDocuments(): Array<DocumentSummaryType> {
+		return this.sql<DocumentRow>`
+			select document.id, document.room, document.name, document.revision,
+				document_revision.by_name, document_revision.at
+			from document
+			left join document_revision on document_revision.document = document.id
+				and document_revision.revision = document.revision
+			order by document.id`.map(toDocumentSummary)
 	}
 
 	document(id: number): DocumentType | null {
@@ -2645,7 +2652,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		baseRevision: number
 		summary: string
 		thread: RunKey
-	}): SaveCheck {
+	}): SavedDocument {
 		const room = roomOf(input.agent)
 		const existing = this.findDocument(room, input.name)
 		const name = existing?.name ?? input.name.trim()
@@ -2690,7 +2697,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		summary: string
 		by: string
 		byName: string
-	}): SaveCheck {
+	}): SavedDocument {
 		const document = this.documentSummary(input.id)
 		if (!document) {
 			return { ok: false, status: 404, error: 'No document with that id' }
@@ -2710,14 +2717,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	private documentSummary(id: number): DocumentSummaryType | null {
-		const row = this.sql<DocumentRow>`
-			select document.id, document.room, document.name, document.revision,
-				document_revision.by_name, document_revision.at
-			from document
-			left join document_revision on document_revision.document = document.id
-				and document_revision.revision = document.revision
-			where document.id = ${id}`[0]
-		return row ? toDocumentSummary(row) : null
+		return this.allDocuments().find((doc) => doc.id === id) ?? null
 	}
 
 	private saveRevision(input: {
@@ -2730,7 +2730,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		summary: string
 		by: string
 		byName: string
-	}): SaveCheck {
+	}): SavedDocument {
 		const text = input.text.trim()
 		const check = checkSave({
 			name: input.name,
@@ -2748,8 +2748,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			insert into document_revision (document, revision, text, summary, by, by_name, at)
 			values (${id}, ${check.revision}, ${text}, ${input.summary.trim()}, ${input.by}, ${input.byName}, ${now()})`
 		this.sql`update document set revision = ${check.revision} where id = ${id}`
-		this.push({ type: 'document', room: input.room, id })
-		return check
+		this.push({ type: 'document', id })
+		return { ...check, id }
 	}
 
 	private meetingStartedAt() {

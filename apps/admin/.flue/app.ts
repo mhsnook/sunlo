@@ -703,8 +703,8 @@ api.delete(
 	}
 )
 
-api.get('/crew/rooms/:room/documents', roomParam, async (c) => {
-	return c.json(await (await roomFor()).documents(c.req.valid('param').room))
+api.get('/crew/documents', async (c) => {
+	return c.json(await (await roomFor()).allDocuments())
 })
 
 api.get(

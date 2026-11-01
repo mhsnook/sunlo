@@ -767,6 +767,16 @@ export const DOCUMENT_MAX = 40_000
 export const documentMax = (name: string) =>
 	name === SITREP ? SITREP_MAX : DOCUMENT_MAX
 
+// A link to a document is `[the Roadmap](doc:3)`. It names the id, not the
+// name, because two names can slug alike and an id never changes.
+export const documentHref = (id: number) => `doc:${id}`
+
+// The id a link target names, or null for an ordinary URL.
+export function documentIdInHref(href: string): number | null {
+	const match = /^doc:(\d+)$/i.exec(href)
+	return match ? Number(match[1]) : null
+}
+
 // A room's documents, as its room log lists them. Revision 0 is a document
 // nobody has written yet.
 export const DocumentSummarySchema = z.object({
@@ -924,7 +934,7 @@ export type RoomEvent =
 	| { type: 'command' }
 	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
-	| { type: 'document'; room: RoomKey; id: number }
+	| { type: 'document'; id: number }
 	| { type: 'painter-styles' }
 	// The room's copy of what is open on GitHub changed.
 	| { type: 'github' }

@@ -3,6 +3,7 @@ import {
 	GITHUB_CLOSED_DAYS,
 	githubRef,
 	displayName,
+	documentHref,
 	meetingDue,
 	roomOfPlace,
 	principalOf,
@@ -105,7 +106,7 @@ export type BriefingInput = {
 	unread: { common: UnreadTimeline; own: UnreadTimeline }
 }
 
-type Sitrep = Pick<DocumentSummaryType, 'revision' | 'byName' | 'at'> & {
+type Sitrep = Pick<DocumentSummaryType, 'id' | 'revision' | 'byName' | 'at'> & {
 	text: string
 }
 
@@ -190,7 +191,7 @@ export function sitrepText(sitrep: Sitrep | null) {
 	return [
 		'## The Situation Report: where Sunlo and each room stand now',
 		sitrep?.at
-			? `${sitrep.text}\n\n(Revision ${sitrep.revision}, saved by ${sitrep.byName}, ${stamp(sitrep.at)}.)`
+			? `${sitrep.text}\n\n(Revision ${sitrep.revision}, saved by ${sitrep.byName}, ${stamp(sitrep.at)}. Link to it as [the Situation Report](${documentHref(sitrep.id)}).)`
 			: '(Nobody has written it yet.)',
 	].join('\n\n')
 }
@@ -256,11 +257,12 @@ export function documentsText(
 	room: string,
 	documents: Array<DocumentSummaryType>
 ) {
-	const lines = documents.map((doc) =>
-		doc.at
-			? `- ${doc.name}: revision ${doc.revision}, saved by ${doc.byName}, ${stamp(doc.at)}`
-			: `- ${doc.name}: not written yet`
-	)
+	const lines = documents.map((doc) => {
+		const written = doc.at
+			? `revision ${doc.revision}, saved by ${doc.byName}, ${stamp(doc.at)}`
+			: 'not written yet'
+		return `- ${doc.name} (${documentHref(doc.id)}): ${written}`
+	})
 	return [`## The ${room}'s documents`, lines.join('\n') || '(none yet)'].join(
 		'\n\n'
 	)

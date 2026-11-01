@@ -227,26 +227,27 @@ describe('briefingText', () => {
 describe('sitrepText', () => {
 	it('gives the whole report, then its revision and who saved it', () => {
 		const text = sitrepText({
+			id: 1,
 			text: 'Retention first this month.\n\n**Product room**: onboarding.',
 			revision: 4,
 			byName: 'First officer',
 			at: '2026-10-27T14:02:00Z',
 		})
 		expect(text).toBe(
-			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Revision 4, saved by First officer, 2026-10-27 14:02 UTC.)'
+			'## The Situation Report: where Sunlo and each room stand now\n\nRetention first this month.\n\n**Product room**: onboarding.\n\n(Revision 4, saved by First officer, 2026-10-27 14:02 UTC. Link to it as [the Situation Report](doc:1).)'
 		)
 	})
 
 	it('says so when nobody has written it', () => {
 		expect(sitrepText(null)).toContain('(Nobody has written it yet.)')
 		expect(
-			sitrepText({ text: '', revision: 0, byName: null, at: null })
+			sitrepText({ id: 1, text: '', revision: 0, byName: null, at: null })
 		).toContain('(Nobody has written it yet.)')
 	})
 })
 
 describe('documentsText', () => {
-	it('lists each document without its text', () => {
+	it('lists each document with its link id, and not its text', () => {
 		const text = documentsText('Product room', [
 			{
 				id: 3,
@@ -265,9 +266,10 @@ describe('documentsText', () => {
 				at: null,
 			},
 		])
-		expect(text).toBe(
-			"## The Product room's documents\n\n- Roadmap: revision 2, saved by Product officer, 2026-10-28 07:01 UTC\n- Launch checklist: not written yet"
+		expect(text).toContain(
+			"## The Product room's documents\n\n- Roadmap (doc:3): revision 2, saved by Product officer, 2026-10-28 07:01 UTC\n- Launch checklist (doc:4): not written yet"
 		)
+		expect(text).not.toContain('Link to a document')
 	})
 
 	it('comes before the room’s cards in the briefing', () => {
