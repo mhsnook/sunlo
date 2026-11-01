@@ -6,10 +6,12 @@ The worker only runs for the paths in `run_worker_first`. Every other request is
 
 | Path       | Code                                      | Does                                                                                       |
 | ---------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `/api/*`   | `api.ts` (a [Hono](https://hono.dev) app) | The API. Today: `POST /api/extract-phrase`.                                                |
+| `/api/*`   | `api.ts` (a [Hono](https://hono.dev) app) | The API. Today: `POST /api/extract-phrase` and `POST /api/coach`.                          |
 | `/learn/*` | `og.ts`                                   | Serves an HTML page with Open Graph tags to social crawlers, and the app to everyone else. |
 
 `POST /api/extract-phrase` reads the text in one image with a Workers AI vision model and returns phrases with transliteration and translation. It uses the `AI` and `EXTRACT_LIMITER` bindings.
+
+`POST /api/coach` (`coach.ts`) runs one step of the AI coach: it sends the conversation to Claude through the `AI` binding, with the coach's system prompt and tool definitions, and returns the reply. The browser runs the tools and calls again. It uses the `AI` and `COACH_LIMITER` bindings. The design is in `src/features/coach/docs.md`.
 
 ## Auth
 
@@ -17,12 +19,14 @@ Every `/api` route requires the `Authorization: Bearer <access token>` header fr
 
 ## Configuration
 
-| Name                  | Kind    | Set in                                             | Purpose                                                  |
-| --------------------- | ------- | -------------------------------------------------- | -------------------------------------------------------- |
-| `SUPABASE_URL`        | var     | `wrangler.jsonc`; `--var` on previews; `.dev.vars` | Project to verify tokens against and read previews from. |
-| `SUPABASE_ANON_KEY`   | var     | `wrangler.jsonc`; `--var` on previews; `.dev.vars` | Public (publishable) key for the Supabase client.        |
-| `PHOTO_EXTRACT_MODEL` | var     | `wrangler.jsonc`                                   | Workers AI model id for `/api/extract-phrase`.           |
-| `EXTRACT_LIMITER`     | binding | `wrangler.jsonc`                                   | 10 requests per user per minute.                         |
+| Name                  | Kind    | Set in                                             | Purpose                                                    |
+| --------------------- | ------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| `SUPABASE_URL`        | var     | `wrangler.jsonc`; `--var` on previews; `.dev.vars` | Project to verify tokens against and read previews from.   |
+| `SUPABASE_ANON_KEY`   | var     | `wrangler.jsonc`; `--var` on previews; `.dev.vars` | Public (publishable) key for the Supabase client.          |
+| `PHOTO_EXTRACT_MODEL` | var     | `wrangler.jsonc`                                   | Workers AI model id for `/api/extract-phrase`.             |
+| `EXTRACT_LIMITER`     | binding | `wrangler.jsonc`                                   | 10 requests per user per minute.                           |
+| `COACH_MODEL`         | var     | `wrangler.jsonc`                                   | Claude model id for `/api/coach`, as the binding names it. |
+| `COACH_LIMITER`       | binding | `wrangler.jsonc`                                   | 40 coach steps per user per minute.                        |
 
 `wrangler.jsonc` holds the production Supabase values. `scripts/cf-preview.sh` replaces them on a preview version with the values its Vite build used, so a preview's app and worker use the same Supabase project. They are vars, not secrets, because a preview version can need different values from production, and both are public.
 
