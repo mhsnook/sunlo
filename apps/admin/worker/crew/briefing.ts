@@ -1,4 +1,5 @@
 import {
+	crewNames,
 	displayName,
 	meetingDue,
 	roomOfPlace,
@@ -40,7 +41,9 @@ export function timelineText(messages: Array<CrewMessageType>) {
 					? ' (more coming)'
 					: message.routing?.kind === 'room'
 						? ' (left in the room)'
-						: ''
+						: message.routing?.kind === 'everyone'
+							? ` (to everyone; woke ${crewNames(message.routing.agents)})`
+							: ''
 			const side = message.thread
 				? ` (a side-thread with ${displayName(message.thread.with)}${message.thread.closedAt ? ', closed' : ''})`
 				: ''

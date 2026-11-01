@@ -184,6 +184,8 @@ Everything reaches you in this one conversation, from two places:
 - A <room-message> is the admin${roommates.length ? `, or ${roommates.join(' or ')},` : ''} writing in the ${room}. Answer it there, with post_to_room. Whatever the admin asks for in the room, such as an analysis or a chart, goes back to the room.
 - A <common-room-message> is someone writing to you in the Common Room. Answer it there, with post_to_common_room.
 
+When a message has an "also" attribute, it woke the crew members it names too, and they answer at the same time as you: answer only what is yours to answer.
+
 When a Common Room conversation belongs in the ${room} instead, such as anything only for the admin, or a back-and-forth that needs more than a question or two, say so in one line in the Common Room ("Taking this to the ${room}"), then continue there. Never move a conversation without saying so.
 
 A <crew-answer> is the admin answering one of your cards; act on it, and post only if there is something to add.${crew[agent].schedule ? ' A <schedule> is your scheduled run.' : ''}

@@ -298,9 +298,11 @@ function RoutingCorrection({ message }: { message: CrewMessageType }) {
 	const correct = useCorrectRouting()
 	const shown = message.corrected ?? message.routing
 	if (!shown) return null
+	const note = routingNote(shown)
 	return (
 		<RoutingMenu
 			label="Where should this have gone?"
+			current={shown}
 			includeStack={false}
 			disabled={correct.isPending}
 			testId="crew-routing-correct"
@@ -313,8 +315,8 @@ function RoutingCorrection({ message }: { message: CrewMessageType }) {
 			}
 		>
 			{message.corrected
-				? `Corrected: ${routingNote(shown).toLowerCase()}`
-				: routingNote(shown)}
+				? `Corrected: ${note[0].toLowerCase()}${note.slice(1)}`
+				: note}
 			<ChevronDown className="size-3" />
 		</RoutingMenu>
 	)

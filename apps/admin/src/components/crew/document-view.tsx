@@ -132,8 +132,12 @@ function DocumentEditor({
 }) {
 	const save = useSaveDocument(document)
 	// Someone saved while the admin was editing: the server refuses a save
-	// from the old revision, so the editor says so before they try.
-	const stale = document.revision !== mode.base
+	// from the old revision, so the editor says so before they try. This
+	// editor's own save brings a new revision too, through the socket or
+	// the refetch, before `onDone` closes it. A save that loses to another
+	// one fails, and then counts as stale.
+	const stale =
+		document.revision !== mode.base && !save.isPending && !save.isSuccess
 	const max = documentMax(document.name)
 	return (
 		<div className="space-y-2">
