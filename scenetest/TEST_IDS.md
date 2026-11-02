@@ -591,6 +591,37 @@ Prototype-only feature in `src/features/chat/`. Public route, no auth.
 | `chat-input`                    | data-testid | Chat input                                        | Text input for the user's query                        |
 | `chat-send-button`              | data-testid | Chat input                                        | Submit button                                          |
 
+## Coach (`/coach`)
+
+The AI coach in `src/features/coach/`. Signed-in only; specs run it against the scripted mock model (`VITE_COACH_USE_MOCK`).
+
+| Selector                | Attribute   | Component/Location            | Description                                        |
+| ----------------------- | ----------- | ----------------------------- | -------------------------------------------------- |
+| `coach-index-page`      | data-testid | `routes/coach.index.lazy.tsx` | /coach language picker                             |
+| `coach-language-list`   | data-testid | Index page                    | Grid of language tiles; items keyed by `lang`      |
+| `coach-language-link`   | data-testid | Index page                    | Tile that routes to /coach/$lang                   |
+| `coach-page`            | data-testid | `coach-page.tsx`              | The two-column coach screen, with `data-lang`      |
+| `coach-canvas`          | data-testid | `coach-canvas.tsx`            | The page half: sets the coach shows                |
+| `coach-view-title`      | data-testid | Canvas header                 | Title of the set on the page                       |
+| `coach-view-tab`        | data-testid | Canvas                        | Button for an earlier set; keyed by view id        |
+| `coach-deck-meter`      | data-testid | Canvas header                 | Deck size out of 100, with `data-size`             |
+| `coach-phrases`         | data-testid | Canvas                        | Phrase grid; items keyed by phrase id              |
+| `coach-phrase`          | data-testid | Canvas                        | One phrase tile, with `data-in-deck`               |
+| `coach-add-phrase`      | data-testid | Phrase tile                   | Adds that phrase to the deck                       |
+| `coach-request`         | data-testid | Canvas, Requests tab          | Opens a request's answers as a set                 |
+| `coach-playlist`        | data-testid | Canvas, Sets tab              | Opens a playlist's phrases as a set                |
+| `coach-log`             | data-testid | `coach-chat.tsx`              | The chat's scroll area                             |
+| `coach-message`         | data-testid | Chat                          | A coach message                                    |
+| `coach-learner-message` | data-testid | Chat                          | A learner message                                  |
+| `coach-action`          | data-testid | Chat                          | A one-line note of something done (added, showing) |
+| `coach-error`           | data-testid | Chat                          | A one-line error from a failed turn                |
+| `coach-thinking`        | data-testid | Chat                          | Shown while the coach works on a turn              |
+| `coach-suggestions`     | data-testid | Chat                          | Row of suggested replies                           |
+| `coach-suggestion`      | data-testid | Chat                          | One suggested reply; keyed by its text             |
+| `coach-input`           | data-testid | Chat compose bar              | Message textarea                                   |
+| `coach-send`            | data-testid | Chat compose bar              | Send button                                        |
+| `coach-reset`           | data-testid | Chat header                   | Starts the conversation over                       |
+
 ## Admin Phrase Management
 
 | Selector                       | Purpose                                |

@@ -44,6 +44,7 @@ setProvider(
 			run: (id, inputs, options) => ai.run(bindingModelId(id), inputs, options),
 		},
 		cacheRetention: 'short',
+		gateway: { id: env.AI_GATEWAY_ID },
 	})
 )
 
