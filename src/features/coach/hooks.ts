@@ -1,6 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { inArray, useLiveQuery } from '@tanstack/react-db'
+import { useFlueAgent } from '@flue/react'
+import { createFlueClient } from '@flue/sdk'
+import { toastError } from '@/components/ui/sonner'
+import { cardsCollection } from '@/features/deck/collections'
+import { addPhrasesToDeck } from '@/features/deck/mutations'
 import {
 	useDeckCards,
 	usePreferredTranslationLang,
@@ -12,8 +17,14 @@ import {
 	commentPhraseLinksActive,
 	phraseRequestsActive,
 } from '@/features/requests/live'
-import { useUserId } from '@/lib/use-auth'
-import { sendToCoach } from './engine'
+import supabase from '@/lib/supabase-client'
+import {
+	composeMessage,
+	deckLine,
+	openingLine,
+	pageActions,
+	readConversation,
+} from './conversation'
 import {
 	activeIds,
 	answerPhraseIds,
@@ -21,25 +32,16 @@ import {
 	statusesFromCards,
 } from './library'
 import {
-	emptyThread,
-	threadKey,
-	useCoachBusyStore,
-	useCoachStore,
-} from './store'
-import type { NavTarget, ToolContext } from './tools'
-
-export function useCoachThread(key: string) {
-	return useCoachStore((state) => state.threads[key] ?? emptyThread)
-}
-
-export function useCoachBusy(key: string) {
-	return useCoachBusyStore((state) => !!state[key])
-}
+	COACH_MOUNT,
+	coachConversationId,
+	type NavigateTarget,
+} from './protocol'
+import { addNote, clearNotes, pendingNotes } from './store'
 
 function useNavTarget(lang: string) {
 	const navigate = useNavigate()
 	return useCallback(
-		(target: NavTarget) => {
+		(target: NavigateTarget) => {
 			const id = target.id ?? ''
 			switch (target.to) {
 				case 'deck':
@@ -48,6 +50,11 @@ function useNavTarget(lang: string) {
 					return void navigate({ to: '/learn/$lang/review', params: { lang } })
 				case 'profile':
 					return void navigate({ to: '/profile' })
+				case 'requests':
+					return void navigate({
+						to: '/learn/$lang/requests',
+						params: { lang },
+					})
 				case 'phrase':
 					return void navigate({
 						to: '/learn/$lang/phrases/$id',
@@ -69,27 +76,117 @@ function useNavTarget(lang: string) {
 	)
 }
 
-export function useCoach(lang: string) {
-	const uid = useUserId()
+const bearer = async () => ({
+	authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ''}`,
+})
+
+export function useCoach(lang: string, uid: string, deck: DeckMeter) {
 	const { data: profile } = useProfile()
 	const translationLang = usePreferredTranslationLang(lang)
-	const navigate = useNavTarget(lang)
-	const key = threadKey(uid ?? 'anon', lang)
+	const navigateTo = useNavTarget(lang)
 	const learnerName = profile?.username ?? null
+	const conversationId = coachConversationId(uid)
+	// The page's own state is per language; the conversation spans them all.
+	const pageKey = `${uid}:${lang}`
 
-	const ctx = useMemo<ToolContext | null>(
-		() => (uid ? { key, lang, translationLang, uid, navigate } : null),
-		[key, lang, translationLang, uid, navigate]
+	// The SDK calls `headers` on every request and reconnect, so a refreshed
+	// Supabase token is picked up without a new client.
+	const client = useMemo(
+		() =>
+			createFlueClient({
+				url: new URL(`${COACH_MOUNT}/${conversationId}`, window.location.origin)
+					.href,
+				headers: bearer,
+			}),
+		[conversationId]
 	)
-
-	const send = useCallback(
-		(text: string) => {
-			if (ctx) void sendToCoach({ ctx, learnerName, text })
-		},
-		[ctx, learnerName]
+	const agent = useFlueAgent({ client })
+	const conversation = useMemo(
+		() => readConversation(agent.messages, lang),
+		[agent.messages, lang]
 	)
+	// Until the history loads, an empty conversation may only mean "not read
+	// yet", so the page must not greet the learner as new.
+	const ready = agent.historyReady
+	const started = agent.messages.length > 0
 
-	return { key, ctx, send, translationLang, learnerName }
+	// Read when the turn ends, not when it started: the learner may have added
+	// phrases from the page while the coach was working.
+	const deckStatuses = () =>
+		statusesFromCards(cardsCollection.toArray.filter((c) => c.lang === lang))
+
+	const addToDeck = async (phraseIds: Array<string>) => {
+		const statuses = deckStatuses()
+		const phrases = phraseIds.flatMap((id) => {
+			const status = statuses.get(id)
+			const phrase = phrasesFull.get(id)
+			return phrase &&
+				phrase.lang === lang &&
+				status !== 'active' &&
+				status !== 'learned'
+				? [phrase]
+				: []
+		})
+		if (!phrases.length)
+			return addNote(pageKey, 'those phrases were already in the deck')
+		await addPhrasesToDeck(lang, uid, phrases)
+		addNote(pageKey, `added ${phrases.length} phrases`)
+	}
+
+	// The agent cannot read the deck, so its searches do not leave out what the
+	// learner already has. The page tells it on the next message.
+	const noteOverlap = (shownIds: Array<string>) => {
+		if (!shownIds.length) return
+		const statuses = deckStatuses()
+		const inDeck = shownIds.filter((id) => statuses.has(id)).length
+		if (inDeck)
+			addNote(
+				pageKey,
+				inDeck === shownIds.length
+					? `all ${inDeck} phrases you just showed were already in the deck`
+					: `${inDeck} of the ${shownIds.length} phrases you just showed ${inDeck === 1 ? 'was' : 'were'} already in the deck`
+			)
+	}
+
+	const send = async (text: string) => {
+		const opening = started ? null : openingLine(learnerName, lang, deck.size)
+		const notes = pendingNotes(pageKey)
+		try {
+			const receipt = await agent.sendMessage(
+				composeMessage(text, {
+					context: { lang, translationLang, learnerName },
+					notes: notes.map((note) => note.text),
+					deck: deckLine(deck),
+					opening,
+				})
+			)
+			clearNotes(
+				pageKey,
+				notes.map((note) => note.id)
+			)
+			await client.wait(receipt)
+			// One turn is a handful of messages; the newest twenty hold it.
+			const { messages } = await client.history({ limit: 20 })
+			const actions = pageActions(messages, receipt.submissionId)
+			if (actions.add.length) await addToDeck(actions.add)
+			noteOverlap(actions.shown)
+			if (actions.navigate) navigateTo(actions.navigate)
+		} catch (err) {
+			console.error('coach: message failed', err)
+			toastError(err instanceof Error ? err.message : "The coach didn't answer")
+		}
+	}
+
+	return {
+		pageKey,
+		send,
+		translationLang,
+		learnerName,
+		started,
+		ready,
+		busy: agent.status === 'submitted' || agent.status === 'streaming',
+		...conversation,
+	}
 }
 
 function inOrder<T extends { id: string }>(

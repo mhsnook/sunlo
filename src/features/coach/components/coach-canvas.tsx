@@ -5,15 +5,15 @@ import {
 	Plus,
 	type LucideIcon,
 } from 'lucide-react'
+import { RequestForm } from '@/components/requests/request-form'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { addPhrasesToDeck } from '@/features/deck/mutations'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
-import { notePageAction } from '../engine'
+import type { CoachView } from '../conversation'
 import {
-	useCoachThread,
 	usePhrasesByIds,
 	usePlaylistsByIds,
 	useRequestsByIds,
@@ -21,10 +21,11 @@ import {
 } from '../hooks'
 import { playlistPhraseIds, translationFor, type DeckStatus } from '../library'
 import { DECK_TARGET } from '../protocol'
-import { pushView, updateThread, type CoachView } from '../store'
+import { addNote, openLocalView, showView, usePageState } from '../store'
 
 type Props = {
 	coachKey: string
+	coachViews: Array<CoachView>
 	lang: string
 	uid: string
 	translationLang: string
@@ -32,8 +33,13 @@ type Props = {
 }
 
 export function CoachCanvas(props: Props) {
-	const thread = useCoachThread(props.coachKey)
-	const view = thread.views.find((v) => v.id === thread.activeViewId) ?? null
+	const page = usePageState(props.coachKey)
+	const views = [...props.coachViews, ...page.localViews]
+	const view =
+		views.find((v) => v.id === page.activeViewId) ??
+		props.coachViews.at(-1) ??
+		page.localViews.at(-1) ??
+		null
 
 	return (
 		<div className="flex flex-col gap-6" data-testid="coach-canvas">
@@ -55,18 +61,16 @@ export function CoachCanvas(props: Props) {
 				<DeckMeter lang={props.lang} deck={props.deck} />
 			</header>
 
-			{thread.views.length > 1 && (
+			{views.length > 1 && (
 				<nav className="flex flex-wrap gap-2" aria-label="Earlier sets">
-					{thread.views.map((v) => (
+					{views.map((v) => (
 						<Button
 							key={v.id}
 							size="sm"
 							variant={v.id === view?.id ? 'soft' : 'ghost'}
 							data-testid="coach-view-tab"
 							data-key={v.id}
-							onClick={() =>
-								updateThread(props.coachKey, () => ({ activeViewId: v.id }))
-							}
+							onClick={() => showView(props.coachKey, v.id)}
 						>
 							{v.title}
 						</Button>
@@ -154,16 +158,46 @@ function ViewContent({
 	const requests = useRequestsByIds(view.requestIds)
 	const playlists = usePlaylistsByIds(view.playlistIds)
 
-	const openSet = (title: string, phraseIds: Array<string>, note: string) => {
-		pushView(coachKey, {
-			title,
-			subtitle: null,
-			phraseIds,
-			requestIds: [],
-			playlistIds: [],
-		})
-		notePageAction(coachKey, note)
-	}
+	const openSet = (
+		title: string,
+		ids: { phraseIds?: Array<string>; requestIds?: Array<string> },
+		note: string
+	) =>
+		openLocalView(
+			coachKey,
+			{
+				id: crypto.randomUUID(),
+				lang,
+				title,
+				subtitle: null,
+				phraseIds: ids.phraseIds ?? [],
+				requestIds: ids.requestIds ?? [],
+				playlistIds: [],
+				draftRequest: null,
+			},
+			note
+		)
+
+	if (view.draftRequest !== null)
+		return (
+			<div
+				className="bg-card max-w-xl rounded border p-4"
+				data-testid="coach-request-draft"
+			>
+				<RequestForm
+					lang={lang}
+					initialPrompt={view.draftRequest}
+					formTestId="coach-request-form"
+					onSuccess={(request) =>
+						openSet(
+							'Your request',
+							{ requestIds: [request.id] },
+							`posted the request “${request.prompt}”`
+						)
+					}
+				/>
+			</div>
+		)
 
 	const phraseGrid = (
 		<ul
@@ -182,7 +216,7 @@ function ViewContent({
 						addPhrasesToDeck(lang, uid, [
 							{ id: phrase.id, only_reverse: phrase.only_reverse },
 						]).then(
-							() => notePageAction(coachKey, `added “${phrase.text}”`),
+							() => addNote(coachKey, `added “${phrase.text}”`),
 							(err: unknown) => {
 								console.error('coach: add failed', err)
 								toastError(`Couldn't add “${phrase.text}”`)
@@ -229,7 +263,7 @@ function ViewContent({
 							onOpen={() =>
 								openSet(
 									request.prompt,
-									request.answerIds,
+									{ phraseIds: request.answerIds },
 									`opened the request “${request.prompt}”`
 								)
 							}
@@ -250,7 +284,7 @@ function ViewContent({
 							onOpen={() =>
 								openSet(
 									playlist.title,
-									playlistPhraseIds(playlist.id),
+									{ phraseIds: playlistPhraseIds(playlist.id) },
 									`opened the set “${playlist.title}”`
 								)
 							}
