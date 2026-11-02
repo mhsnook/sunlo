@@ -12,7 +12,6 @@ import {
 	roomNames,
 	roomOf,
 	type AdminChangeType,
-	type CharacterType,
 	type CharterEntryType,
 	type CommonKnowledgeType,
 	type CrewKey,
@@ -119,8 +118,8 @@ type Sitrep = Pick<DocumentSummaryType, 'id' | 'revision' | 'byName' | 'at'> & {
 	text: string
 }
 
-const characterText = (character: CharacterType | null) =>
-	`## Who you are\n\n${character?.text ?? 'You have not started yet.'}`
+const characterText = (character: string | null) =>
+	`## Who you are\n\n${character ?? 'You have not started yet.'}`
 
 // What the admin changed directly since the agent's last run, so it knows
 // why its workspace or its character looks different.

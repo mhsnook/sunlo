@@ -262,32 +262,6 @@ api.post(
 	}
 )
 
-// An officer's persona. A PUT saves the admin's own text; a DELETE restores
-// the one in code.
-api.put(
-	'/crew/agents/:agent/character',
-	json(
-		z.object({ text: z.string().trim().min(1).max(20_000) }),
-		'Send { text }'
-	),
-	async (c) => {
-		const agent = c.req.param('agent')
-		if (!isCrewKey(agent)) return c.json({ error: 'No crew member there' }, 404)
-		const ok = await (
-			await roomFor()
-		).setCharacter(agent, c.req.valid('json').text)
-		return ok
-			? c.json({ ok })
-			: c.json({ error: 'That seat has not started yet' }, 404)
-	}
-)
-
-api.delete('/crew/agents/:agent/character', async (c) => {
-	const agent = c.req.param('agent')
-	if (!isCrewKey(agent)) return c.json({ error: 'No crew member there' }, 404)
-	return c.json({ ok: await (await roomFor()).restoreCharacter(agent) })
-})
-
 const TodoText = z.string().trim().min(1).max(200)
 const TodoNote = z.string().trim().max(80)
 

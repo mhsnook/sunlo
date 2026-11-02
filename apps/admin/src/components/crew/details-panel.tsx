@@ -43,7 +43,7 @@ import {
 	type DetailsRoom,
 } from '~/lib/documents'
 import { dayLabel } from '~/lib/format'
-import { CharacterEditor } from './character-editor'
+import { CharacterView } from './character-view'
 import { CharterPanel, WeeklySettings } from './charter-panel'
 import { CrewCharterSection } from './common-knowledge-panel'
 import { DocumentView } from './document-view'
@@ -306,7 +306,7 @@ function MemberLog({ agent }: { agent: CrewKey }) {
 		<div className="space-y-5" data-testid="room-member" data-key={agent}>
 			<ProfileCard agent={agent} />
 			{workspace.character && (
-				<CharacterEditor agent={agent} character={workspace.character} />
+				<CharacterView agent={agent} character={workspace.character} />
 			)}
 			<Section title={`${name}'s to-dos`}>
 				{!workspace.todos.length && <Empty>Nothing on {name}'s list.</Empty>}
@@ -359,15 +359,15 @@ function OpenItems({
 					deleteIcon={<CheckCheck />}
 					quiet
 					className="px-4 py-2.5"
+					meta={
+						item.tag && (
+							<span className="text-muted-foreground ms-2 text-xs">
+								{item.tag}
+							</span>
+						)
+					}
 					testId="agent-open-item"
-				>
-					{item.title}
-					{item.tag && (
-						<span className="text-muted-foreground ms-2 text-xs">
-							{item.tag}
-						</span>
-					)}
-				</EditableEntry>
+				/>
 			))}
 		</ul>
 	)

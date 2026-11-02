@@ -107,13 +107,13 @@ function Entries({
 					onDelete={() => forget.mutateAsync(entry.id)}
 					deleteLabel="Delete this memory"
 					quiet
+					meta={
+						<span className="text-muted-foreground ms-2 text-xs">
+							{dayLabel(entry.at)}
+						</span>
+					}
 					testId="agent-memory-entry"
-				>
-					{entry.text}
-					<span className="text-muted-foreground ms-2 text-xs">
-						{dayLabel(entry.at)}
-					</span>
-				</EditableEntry>
+				/>
 			))}
 		</ul>
 	)

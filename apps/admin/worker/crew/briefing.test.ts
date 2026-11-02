@@ -409,7 +409,7 @@ describe('threadBriefingText', () => {
 		adminChanges: [{ what: 'deleted your memory: "Old plan"', at: '' }],
 		workspace: {
 			agent: 'product-1',
-			character: { text: 'You plan the product.', original: '', editedAt: '' },
+			character: 'You plan the product.',
 			todos: [
 				{
 					id: 4,
@@ -476,11 +476,7 @@ describe('threadBriefingText', () => {
 })
 
 describe("the character and the admin's changes", () => {
-	const character = {
-		text: 'You are careful.',
-		original: 'You are quick.',
-		editedAt: '2026-10-29T09:00:00Z',
-	}
+	const character = 'You are careful.'
 
 	it('starts the briefing with the text the agent is given', () => {
 		const text = briefingText(
@@ -489,7 +485,6 @@ describe("the character and the admin's changes", () => {
 			})
 		)
 		expect(text.startsWith('## Who you are\n\nYou are careful.')).toBe(true)
-		expect(text).not.toContain('You are quick.')
 	})
 
 	it('lists what the admin changed, and leaves the section out when nothing did', () => {

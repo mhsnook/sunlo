@@ -483,19 +483,6 @@ export const useAddMemory = (agent: CrewKey) =>
 		})
 	)
 
-export const useSetCharacter = (agent: CrewKey) =>
-	useWorkspaceChange(agent, (text: string) =>
-		adminFetch(`crew/agents/${agent}/character`, {
-			method: 'PUT',
-			json: { text },
-		})
-	)
-
-export const useRestoreCharacter = (agent: CrewKey) =>
-	useWorkspaceChange(agent, () =>
-		adminFetch(`crew/agents/${agent}/character`, { method: 'DELETE' })
-	)
-
 export const useAddTodo = (agent: CrewKey) =>
 	useWorkspaceChange(agent, (text: string) =>
 		adminFetch(`crew/agents/${agent}/todos`, {

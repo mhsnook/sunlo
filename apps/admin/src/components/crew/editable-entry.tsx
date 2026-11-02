@@ -12,17 +12,19 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
+import { CrewText } from './crew-parts'
 
 const fail = (error: Error) => toastError(error.message)
 
-// Text the admin can edit in a dialog or delete: a charter entry, a Common
-// Knowledge entry, or an agent's memory, to-do or open item.
+// Markdown the admin can edit in a dialog or delete: a charter entry, a
+// Common Knowledge entry, or an agent's memory, to-do or open item.
 export function EditableEntry({
 	id,
 	text,
 	label,
 	leading,
-	children,
+	meta,
+	textClassName,
 	busy,
 	onSave,
 	onDelete,
@@ -36,7 +38,9 @@ export function EditableEntry({
 	text: string
 	label: string
 	leading?: ReactNode
-	children: ReactNode
+	// Small print after the text, such as a date or a tag.
+	meta?: ReactNode
+	textClassName?: string
 	busy: boolean
 	onSave: (text: string) => Promise<unknown>
 	onDelete: () => Promise<unknown>
@@ -63,8 +67,19 @@ export function EditableEntry({
 			data-key={id}
 		>
 			{leading}
-			<span className="flex-1 whitespace-pre-wrap">
-				{children}
+			<div className="min-w-0 flex-1">
+				{/* `contents` keeps the Markdown's blocks as children of this div,
+				    so its last paragraph can be inline and the meta and buttons
+				    follow it on the same line. */}
+				<div
+					className={cn(
+						'contents [&>:has(+p:last-child)]:mb-2 [&>p:last-child]:inline',
+						textClassName
+					)}
+				>
+					<CrewText text={text} />
+				</div>
+				{meta}
 				{/* Trails the last line so the text wraps the full width; h-5 is
 				    the line's height, so a 32px button does not tallen it. */}
 				<span className="ms-1 inline-flex h-5 items-center gap-0.5 align-middle">
@@ -88,7 +103,7 @@ export function EditableEntry({
 						{deleteIcon}
 					</Button>
 				</span>
-			</span>
+			</div>
 			<Dialog
 				open={draft !== null}
 				onOpenChange={(open) => !open && setDraft(null)}

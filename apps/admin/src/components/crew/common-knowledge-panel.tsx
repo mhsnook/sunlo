@@ -48,9 +48,7 @@ export function CrewCharterSection() {
 								deleteLabel="Drop this entry"
 								className="bg-card rounded border p-3"
 								testId="common-knowledge-entry"
-							>
-								{entry.text}
-							</EditableEntry>
+							/>
 						))}
 					</ul>
 				)}

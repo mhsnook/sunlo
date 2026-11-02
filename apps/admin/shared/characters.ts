@@ -7,9 +7,9 @@ import {
 	type CrewKey,
 } from './crew'
 
-// Each officer's persona as the code writes it: who it is, how it works and
-// how it speaks. The admin can rewrite one in the room log, and the room then
-// briefs the agent with that text instead (worker/crew/room.ts, character).
+// Each officer's persona: who it is, how it works and how it speaks. It
+// lives only in code because it names the agent's tools, which change with
+// the code; the admin reads it in the room's details but cannot edit it.
 
 function command1() {
 	const me = displayName('command-1')

@@ -41,7 +41,6 @@ import {
 	type AgentStatusType,
 	type CardType,
 	type AdminChangeType,
-	type CharacterType,
 	type CharterEntryType,
 	type CommandType,
 	type CommonKnowledgeType,
@@ -508,13 +507,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null,
 				kept_at text
 			);
-			-- The admin's own text for an officer's persona; without a row, the
-			-- persona is the one in code (shared/characters.ts).
-			create table if not exists character (
-				agent text primary key,
-				text text not null,
-				at text not null
-			);
 			-- What the admin changed for an agent, until its next run reads it.
 			create table if not exists admin_change (
 				id integer primary key autoincrement,
@@ -669,6 +661,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.addSketchImageIds(),
 			() => this.addRunErrors(),
 			() => this.addGithubLines(),
+			() => this.dropCharacters(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -847,6 +840,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		if (!this.tableColumns('message').has('github')) {
 			this.sql`alter table message add column github text`
 		}
+	}
+
+	private dropCharacters() {
+		this.sql`drop table if exists character`
 	}
 
 	private renameAgentsToSeats() {
@@ -1744,7 +1741,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			limit 50`.map(toMessage)
 		return {
 			agent,
-			character: this.character(agent),
+			character: defaultCharacter(agent),
 			todos,
 			memory,
 			openItems,
@@ -1753,36 +1750,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	// ---- What the admin changes directly ------------------------------------
-
-	character(agent: CrewKey): CharacterType | null {
-		const original = defaultCharacter(agent)
-		if (original === null) return null
-		const row = this.sql<{ text: string; at: string }>`
-			select text, at from character where agent = ${agent}`[0]
-		return {
-			text: row?.text ?? original,
-			original,
-			editedAt: row?.at ?? null,
-		}
-	}
-
-	setCharacter(agent: CrewKey, text: string) {
-		if (defaultCharacter(agent) === null) return false
-		this.sql`
-			insert into character (agent, text, at) values (${agent}, ${text}, ${now()})
-			on conflict (agent) do update set text = excluded.text, at = excluded.at`
-		this.adminChanged(agent, 'rewrote your character ("Who you are")')
-		return true
-	}
-
-	restoreCharacter(agent: CrewKey) {
-		const deleted = this.sql`
-			delete from character where agent = ${agent} returning agent`
-		if (deleted.length) {
-			this.adminChanged(agent, 'restored your original character')
-		}
-		return true
-	}
 
 	addMemoryForAgent(agent: CrewKey, text: string) {
 		const id = this.saveMemory(agent, text)

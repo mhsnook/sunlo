@@ -72,9 +72,12 @@ The roster lives in `shared/crew.ts`: each room's key, and each officer's key, n
 
 In a room, what you write goes to the principal unless you @mention the associate. A crew member from another room is not woken there: the principal takes the request to the Common Room, where everyone can see it. When the principal and the associate talk a question through, you can watch and interject; they take at most 8 turns in a row before you speak.
 
-The **details** beside the thread (the Details button in the header) hold the room's documents, its charter and each member's profile card, character, to-dos, what is open with you, and memory. The Command room's details also hold the weekly settings and Data's playbook. You can change all of it there:
+The **details** beside the thread (the Details button in the header) hold the room's documents, its charter and each member's profile card, character, to-dos, what is open with you, and memory. The Command room's details also hold the weekly settings and Data's playbook.
 
-- **Character**: who the officer is and how it works, the persona its every run starts from. Edit it, or restore the original. The default text lives in code (`shared/characters.ts`); your version lives in the room (`character` table) and wins while it exists. An agent module cannot wait on the room, so the persona reaches the agent as the first section of its `<crew-context>`, "Who you are", not as its system prompt.
+The **character** is who the officer is and how it works, the persona its every run starts from. You can read it there, but not edit it: it names the agent's tools, so it changes with the code and lives only in `shared/characters.ts`. An agent module cannot wait on the room, so the persona reaches the agent as the first section of its `<crew-context>`, "Who you are", not as its system prompt.
+
+You can change everything else in the details. Charter entries, memories, to-dos and open items are Markdown, which the details render the way they render a message:
+
 - **Memory and to-dos**: add, edit, delete, and tick to-dos done.
 - **Open with you**: rename an item, or close it.
 - **Charter**: write an entry, which is kept at once, or edit and drop one.

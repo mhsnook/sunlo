@@ -88,15 +88,15 @@ function CharterEntry({ entry }: { entry: CharterEntryType }) {
 			onDelete={() => edit.mutateAsync({ id: entry.id, status: 'dropped' })}
 			deleteLabel="Drop this entry"
 			className="bg-card rounded border p-3"
+			meta={
+				entry.keptAt && (
+					<span className="text-muted-foreground ms-2 text-xs">
+						kept {dayLabel(entry.keptAt)}
+					</span>
+				)
+			}
 			testId="charter-entry"
-		>
-			{entry.text}
-			{entry.keptAt && (
-				<span className="text-muted-foreground ms-2 text-xs">
-					kept {dayLabel(entry.keptAt)}
-				</span>
-			)}
-		</EditableEntry>
+		/>
 	)
 }
 

@@ -136,23 +136,20 @@ export function TodoList({
 							onDelete={() => remove.mutateAsync(todo.id)}
 							deleteLabel="Delete this to-do"
 							quiet
-							testId="agent-todo"
-						>
-							<span
-								className={cn(
-									todo.done && 'text-muted-foreground line-through'
-								)}
-							>
-								{todo.text}
-							</span>
-							{(todo.note || todo.doneAt) && (
-								<span className="text-muted-foreground block text-xs">
-									{todo.done && todo.doneAt
-										? `Done ${dayLabel(todo.doneAt)}`
-										: todo.note}
-								</span>
+							textClassName={cn(
+								todo.done && 'text-muted-foreground *:line-through'
 							)}
-						</EditableEntry>
+							meta={
+								(todo.note || todo.doneAt) && (
+									<span className="text-muted-foreground block text-xs">
+										{todo.done && todo.doneAt
+											? `Done ${dayLabel(todo.doneAt)}`
+											: todo.note}
+									</span>
+								)
+							}
+							testId="agent-todo"
+						/>
 					))}
 				</ul>
 			)}
