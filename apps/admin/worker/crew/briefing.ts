@@ -4,6 +4,7 @@ import {
 	githubRef,
 	displayName,
 	documentHref,
+	isFlow,
 	meetingDue,
 	roomOfPlace,
 	principalOf,
@@ -19,11 +20,17 @@ import {
 	type DocumentSummaryType,
 	type GithubItemType,
 	type GithubLogType,
+	type SketchType,
 	type WeeklyType,
 	type WorkspaceType,
 	withImageLines,
 } from '../../shared/crew'
 import { clip } from './steps'
+
+const flowApproval = (steps: ReadonlyArray<SketchType>) => {
+	const approved = steps.filter((step) => step.status === 'approved').length
+	return `${approved} of ${steps.length} steps approved`
+}
 
 // Room times for the model: minutes are enough, and UTC is explicit.
 export const stamp = (iso: string) =>
@@ -61,7 +68,9 @@ export function timelineText(messages: Array<CrewMessageType>) {
 			const card = message.card
 				? message.answer
 					? ` [answered: ${message.answer.label}]`
-					: ` [waiting for an answer: ${message.card.actions.map((a) => a.label).join(' / ')}]`
+					: isFlow(message.card)
+						? ` [a flow: ${flowApproval(message.card.sketches ?? [])}]`
+						: ` [waiting for an answer: ${message.card.actions.map((a) => a.label).join(' / ')}]`
 				: ''
 			return `[${stamp(message.at)}] ${message.authorName}${note}${side}${view}${about}: ${withImageLines(message.body, message.images)}${card}`
 		})

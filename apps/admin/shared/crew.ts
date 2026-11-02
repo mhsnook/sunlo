@@ -438,16 +438,97 @@ export const MessageImageSchema = z.object({
 })
 export type MessageImageType = z.infer<typeof MessageImageSchema>
 
+// A redrawn version of a flow's step, from the card that offered it.
+export const SketchVersionSchema = z.object({
+	id: z.number(),
+	label: z.string(),
+	idea: z.string(),
+	messageId: z.string(),
+})
+export type SketchVersionType = z.infer<typeof SketchVersionSchema>
+
+// What the admin asked product-2 to do with one step of a flow: draw it
+// again, or expand it into a sub-flow. A redo's `reply` is the card of new
+// versions product-2 answered with; an expand's answer goes in `subflows`.
+export const StepRequestSchema = z.object({
+	note: z.string(),
+	// How many new versions to draw, on a redo.
+	count: z.number().int().optional(),
+	by: z.string(),
+	reply: z.string().optional(),
+})
+export type StepRequestType = z.infer<typeof StepRequestSchema>
+export const DEFAULT_REDO_VERSIONS = 2
+export const MAX_REDO_VERSIONS = 4
+
 // One of product-2's mockups: HTML it wrote, which the room keeps with the
-// picture the Worker took of it. `label` is its letter on the card.
+// picture the Worker took of it. `label` is its letter on an options card,
+// or its step number on a flow card. The optional fields belong to a flow's
+// steps.
 export const SketchSchema = z.object({
 	id: z.number(),
 	label: z.string(),
 	idea: z.string(),
 	frame: z.enum(['phone', 'desktop']),
+	// What the person does on this screen to reach the next one.
+	action: z.string().optional(),
+	// Shown to the admin only: nothing in the room waits on it.
+	status: z.literal('approved').optional(),
+	redo: StepRequestSchema.optional(),
+	expand: StepRequestSchema.optional(),
+	// The versions that replaced this step's picture, oldest first. The last
+	// one is the step's current picture.
+	versions: z.array(SketchVersionSchema).optional(),
+	// The flow cards that expand this step.
+	subflows: z.array(z.string()).optional(),
 })
 export type SketchType = z.infer<typeof SketchSchema>
-export const SKETCHES_PER_HOUR = 12
+export const SKETCHES_PER_HOUR = 24
+export const MAX_OPTIONS = 4
+export const MAX_FLOW_STEPS = 8
+
+// Where a sketches card came from when it answers one step of a flow: a
+// redo offers new versions of the step, and an expand is a sub-flow of it.
+export const SketchOriginSchema = z.object({
+	kind: z.enum(['redo', 'expand']),
+	messageId: z.string(),
+	step: z.number().int(),
+	title: z.string(),
+})
+export type SketchOriginType = z.infer<typeof SketchOriginSchema>
+
+// The admin's controls on a flow: one step, or (approve-all) every step.
+export const StepActionSchema = z.discriminatedUnion('action', [
+	z.object({ action: z.literal('approve') }),
+	z.object({ action: z.literal('unapprove') }),
+	z.object({ action: z.literal('approve-all') }),
+	z.object({
+		action: z.literal('redo'),
+		note: z.string().trim().max(2000).default(''),
+		count: z
+			.number()
+			.int()
+			.min(1)
+			.max(MAX_REDO_VERSIONS)
+			.default(DEFAULT_REDO_VERSIONS),
+	}),
+	z.object({
+		action: z.literal('expand'),
+		note: z.string().trim().max(2000).default(''),
+	}),
+])
+export type StepActionType = z.infer<typeof StepActionSchema>
+export type StepActionInputType = z.input<typeof StepActionSchema>
+
+// A flow's steps are numbered from 1; an options card's sketches are
+// lettered (optionLabel in worker/crew/picks.ts).
+export const stepLabel = (index: number) => String(index + 1)
+
+export const isFlow = (card: CardType | null | undefined) =>
+	card?.kind === 'sketches' && card.layout === 'flow'
+
+// The step's picture now: its newest version, or the sketch it began as.
+export const currentSketch = (step: SketchType) => step.versions?.at(-1) ?? step
 
 // ---- The painter ------------------------------------------------------------
 
@@ -568,8 +649,9 @@ export type PaintingType = z.infer<typeof PaintingSchema>
 // - In the Command room only: brief (the weekly brief) and report
 //   (command-2's pre-meeting report)
 // - github: a draft for GitHub (`draft`), which "File it" publishes
-// - sketches: product-2's mockups (`sketches`), one action for each, which
-//   picks it
+// - sketches: product-2's mockups (`sketches`). As options, one action for
+//   each, which picks it. As a flow, the screens in order, and one action
+//   that approves the whole flow
 // - paintings: the painter's paintings (`paintings`), one action for each
 //   that worked
 // - svgs: SVGs product-2 drew (`svgs`), with nothing to answer
@@ -596,6 +678,10 @@ export const CardSchema = z.object({
 	ref: z.number().nullable(),
 	draft: GithubDraftSchema.optional(),
 	sketches: z.array(SketchSchema).optional(),
+	// A sketches card without it shows options. Only a flow stores it now;
+	// cards from before keep 'options'.
+	layout: z.enum(['options', 'flow']).optional(),
+	from: SketchOriginSchema.optional(),
 	paintings: z.array(PaintingSchema).optional(),
 	svgs: z.array(SvgRefSchema).optional(),
 })
