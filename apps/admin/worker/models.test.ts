@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bindingModelId, crewProvider, withAnthropicCompat } from './models'
+import { bindingModelId, crewProvider, withAnthropicCatalog } from './models'
 
 describe('bindingModelId', () => {
 	it("writes a Claude version the way Cloudflare's binding names it", () => {
@@ -28,9 +28,9 @@ describe('bindingModelId', () => {
 	})
 })
 
-describe('withAnthropicCompat', () => {
+describe('withAnthropicCatalog', () => {
 	it("adds the Anthropic catalog's flags to claude-opus-5-5", () => {
-		const model = withAnthropicCompat({
+		const model = withAnthropicCatalog({
 			id: 'anthropic/claude-opus-5-5',
 			compat: { sendSessionAffinityHeaders: true },
 		})
@@ -44,9 +44,22 @@ describe('withAnthropicCompat', () => {
 		})
 	})
 
+	it('keeps thinking from being turned off, as the Anthropic catalog does', () => {
+		const model = withAnthropicCatalog({
+			id: 'anthropic/claude-opus-5-5',
+			thinkingLevelMap: { xhigh: 'xhigh', max: 'max' },
+		})
+		expect(model.thinkingLevelMap).toEqual({
+			xhigh: 'xhigh',
+			max: 'max',
+			off: null,
+			minimal: null,
+		})
+	})
+
 	it('leaves every other model as it is', () => {
 		const model = { id: 'anthropic/claude-haiku-4-5', compat: {} }
-		expect(withAnthropicCompat(model)).toBe(model)
+		expect(withAnthropicCatalog(model)).toBe(model)
 	})
 })
 
@@ -172,6 +185,31 @@ describe('crewProvider', () => {
 			'thinking-binding-controls-2026-08-01'
 		)
 		expect(run.options?.gateway).toEqual({ id: 'sunlo-admin' })
+	})
+
+	it('keeps thinking on, with block_binding, for a call with no reasoning level', async () => {
+		const runs: Array<Run> = []
+		const provider = crewProvider(fakeBinding(runs), 'sunlo-admin')
+		const model = provider
+			.getModels()
+			.find((entry) => entry.id === 'anthropic/claude-opus-5-5')
+		const context = {
+			messages: [
+				{ role: 'system', content: 'You are Keiko.' },
+				{ role: 'user', content: 'Summarize', timestamp: 1 },
+			],
+		}
+		await provider
+			.stream(
+				model!,
+				context as unknown as Parameters<typeof provider.stream>[1],
+				{}
+			)
+			.result()
+		expect(runs[0].inputs.thinking).toMatchObject({
+			type: 'adaptive',
+			block_binding: { prefix_mismatch_behavior: 'drop_block' },
+		})
 	})
 
 	it("keeps Flue's fallback for model ids outside the catalogs", () => {

@@ -12,26 +12,45 @@ const ANTHROPIC_VERSION = /^(anthropic\/claude-[a-z]+-\d+)-(\d+)$/
 export const bindingModelId = (id: string) =>
 	id.replace(ANTHROPIC_VERSION, '$1.$2')
 
-// The flags pi-ai's Anthropic catalog sets for the model and its AI Gateway
+// What pi-ai's Anthropic catalog sets for the model and its AI Gateway
 // catalog leaves out. Without `supportsMidConvoEffort`, pi-ai sends no
 // `block_binding`, and every run after a change to the agent's instructions
-// or tools fails on the thinking blocks already in its conversation.
-const ANTHROPIC_COMPAT: Partial<Record<string, Record<string, unknown>>> = {
+// or tools fails on the thinking blocks already in its conversation. Without
+// `off: null`, a call with no reasoning level turns thinking off, which
+// sends no `block_binding` either.
+const ANTHROPIC_CATALOG: Partial<
+	Record<
+		string,
+		{
+			compat: Record<string, unknown>
+			thinkingLevelMap: Record<string, string | null>
+		}
+	>
+> = {
 	'anthropic/claude-opus-5-5': {
-		supportsMidConvoEffort: true,
-		supportsMidConvoSystemMessages: true,
-		supportsMidConvoToolChanges: true,
-		forceAdaptiveThinking: true,
-		supportsTemperature: false,
+		compat: {
+			supportsMidConvoEffort: true,
+			supportsMidConvoSystemMessages: true,
+			supportsMidConvoToolChanges: true,
+			forceAdaptiveThinking: true,
+			supportsTemperature: false,
+		},
+		thinkingLevelMap: { off: null, minimal: null },
 	},
 }
 
-export function withAnthropicCompat<M extends { id: string; compat?: object }>(
-	model: M
-): M {
-	const compat = ANTHROPIC_COMPAT[model.id]
-	return compat
-		? Object.assign({}, model, { compat: { ...model.compat, ...compat } })
+export function withAnthropicCatalog<
+	M extends { id: string; compat?: object; thinkingLevelMap?: object },
+>(model: M): M {
+	const entry = ANTHROPIC_CATALOG[model.id]
+	return entry
+		? Object.assign({}, model, {
+				compat: { ...model.compat, ...entry.compat },
+				thinkingLevelMap: {
+					...model.thinkingLevelMap,
+					...entry.thinkingLevelMap,
+				},
+			})
 		: model
 }
 
@@ -51,10 +70,10 @@ export function crewProvider(ai: CloudflareAIBinding, gatewayId: string) {
 	// template that lets Flue resolve model ids outside the catalogs.
 	return {
 		...provider,
-		getModels: () => provider.getModels().map(withAnthropicCompat),
+		getModels: () => provider.getModels().map(withAnthropicCatalog),
 		getAllModels: () =>
 			(provider.getAllModels?.() ?? provider.getModels()).map(
-				withAnthropicCompat
+				withAnthropicCatalog
 			),
 	}
 }
