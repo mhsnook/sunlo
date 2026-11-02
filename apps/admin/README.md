@@ -209,7 +209,7 @@ Any agent can put components in its markdown as a fenced block whose language na
 
 - **The agents** are [Flue](https://flueframework.com) agents in `.flue/agents/`. Each agent's Flue identity is its key, set with its `agentName` static, and `@flue/vite` builds each one into a Durable Object in this Worker named after it (`FlueProduct1Agent`, bound as `FLUE_PRODUCT_1_AGENT`). Changing an identity is a `renamed_classes` migration in `wrangler.jsonc`, and it starts the agent's Flue conversation afresh, because Flue keys a conversation by the identity; memory and everything else in `CrewRoom` stays. `.flue/agents/use-crew-member.ts` holds what every agent shares: the model, the tools, and the context each run starts with.
 - **The room** is the `CrewRoom` Durable Object (`worker/crew/room.ts`), one instance named `crew` (`ROOM`). The production room holds real data, so a schema change is an in-place migration in its constructor that is safe to run twice, never a new instance name. It is an [Agents SDK](https://developers.cloudflare.com/agents/) `Agent` with no model. Its SQLite holds the Common Room and every subject's room, each agent's to-dos, memory and open items, the charter, and CLEF's decision log. It is not in Postgres, so no migration touches it. The app connects to it with `useAgent` at `/api/crew/live`, which reconnects on its own. The room's synced state holds each agent's status, the weekly cycle and each room's count of open cards, and its socket messages announce new messages and workspace changes. A WebSocket cannot carry headers, so the app sends the Supabase token as `?token=`, and `worker/api.ts` accepts a query token on that route only.
-- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: `product-1`'s daily run at 07:00 UTC, and `command-1`'s brief.
+- **The routes** are in `.flue/app.ts`, which adds `/api/crew/*` to the admin API from `worker/api.ts`. `.flue/cloudflare.ts` exports the room and runs the hourly cron: `product-1`'s daily run at 07:00 UTC, `command-1`'s brief, and the GitHub list's pruning and one backfill.
 
 ### How a message reaches an agent
 
@@ -246,9 +246,11 @@ Each room keeps named Markdown documents, which its officers and you write: the 
 
 A room's details list its documents, with the Situation Report pinned first. Open one to read it, edit it, or look through its revisions and restore an older one; a restore saves the old text as a new revision. Every save names the revision it started from, and the room refuses a save from anything but the current revision, so nobody overwrites a change they have not seen. An agent's briefing lists its room's documents with their revisions but not their text; it reads one with `read_document` when it needs it. The revision rules live in `worker/crew/documents.ts`, and the tables (`document`, `document_revision`) in `worker/crew/room.ts`.
 
+Anything written about a document links to it. The link is ordinary Markdown whose target is `doc:` and the document's id, as in `[the Roadmap](doc:3)`. An id never changes, so a link keeps working when two documents have similar names. Every agent's briefing prints the id beside each of its room's documents and asks for a link whenever it writes about one, and `read_document` and `write_document` return the link for any document an agent reads or starts. A link resolves against every room's documents, so it works in any room. The app resolves the id when it renders: hovering a link shows a card with the document's current name, room and latest revision, and a link with empty text, as in `[](doc:3)`, shows the current name. A message, a card, a side-thread reply or another document all render it. The link opens the document in the details beside the room that keeps it, except that the Situation Report, which every room lists, opens where you already are. An id no document answers to stays plain text, so a wrong id never becomes a dead link. The document the details show is the `doc` id in the URL, so a document has an address you can share and the back button closes it. The syntax lives in `shared/crew.ts` (`documentHref`, `documentIdInHref`), where each link goes in `src/lib/documents.ts`, and the rendering in `src/components/crew/crew-parts.tsx`, with the hover card in `src/components/crew/ref-card.tsx`.
+
 ### What an agent can do
 
-Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time, Common Knowledge, the Situation Report, the list of the room's documents, the cards in the agent's room, its workspace, and what is new in the Common Room and in its room since its last run. The Command room's members also get the charter and the weekly cycle. The tools:
+Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time, Common Knowledge, the Situation Report, the list of the room's documents, the cards in the agent's room, its workspace, and what is new in the Common Room and in its room since its last run. The Command room's members also get the charter and the weekly cycle, and the agents with GitHub tools get what is open on GitHub ("GitHub's running log"). The tools:
 
 - `activity_between`: signups, reviews and each reviewer, new decks, and library and chat counts for a window
 - `run_sql`: one SELECT, run as `admin_reader` with an 8-second timeout and at most 200 rows
@@ -264,6 +266,8 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 - Riker has `write_brief`, `start_meeting` (for a meeting the admin asks for outside the Command room) and `close_meeting`, Data has `note_playbook` and `file_report`, and Keiko has `look_at_screen`, `sketch_screens` and `read_sketch` ("Keiko's sketches", above), and `painter_styles`, `paint` and `draw_svg` ("Keiko's painter").
 
 Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k2.6` today) unless its seat has a setting of its own: `MODEL_COMMAND_2`, `MODEL_PRODUCT_1` (`@cf/moonshotai/kimi-k2.7-code`) and `MODEL_PRODUCT_2` (Claude Opus 5.5). They run through the Worker's `AI` binding, so no model API key is needed. Any Workers AI model that takes tools works, and changing the var is the only step. Flue retries a failed run at most 3 times, because every attempt is a paid model run.
+
+Every model call the admin Worker makes, for the agents, CLEF, the painter and voice, goes through the `sunlo-admin` AI Gateway (`AI_GATEWAY_ID`), so its logs, costs and limits stay apart from the app's `sunlo-app` gateway. The gateway has to exist in the Cloudflare dashboard: only `default` is created on demand. `.flue/app.ts` hands the id to Flue's provider, whose own default is `default`.
 
 ### GitHub: milestones and epics
 
@@ -310,6 +314,33 @@ To set it up, once:
 
 If the key is still in PKCS#1 format, `githubFor()` throws an error that names the fix.
 
+### GitHub's running log
+
+GitHub tells the Worker when an issue or a pull request changes on `mhsnook/sunlo`, through a repository webhook at `POST /api/public/github/webhook`.
+
+- **A line in the Product room** for each issue or pull request that opens, closes, merges or reopens, such as "#851 opened: Onboarding asks twice" or "PR #852 merged: Ask once", with a link to it. The lines go in the Product room, not the Common Room: `product-1` keeps the milestones and epics there, and a busy day on GitHub would bury the Common Room's conversation. A line has no routing and its author (`github`) is no agent, so CLEF does not run and no agent wakes. The agents' "since your last run" timelines and the room's count of turns between its officers take only the admin's and the crew's messages, so a burst of lines never pushes the conversation out or resets a turn count; the agents that need the lines read the list below instead.
+- **What is open now.** The room keeps every open issue and pull request, and those closed in the last 14 days (`github_item`): number, kind, title, link, labels, milestone, state, and when it was last updated and closed. Each delivery updates it, including changes that post no line, such as a new label, and an older delivery never overwrites a newer state. A webhook only reports changes, so the list starts with one backfill from GitHub's API: the first hourly cron with the GitHub App's secrets ("GitHub: milestones and epics", above) reads the open items and those closed in the last 14 days, and after that the room reads nothing from GitHub. A delivery that failed shows under the webhook's Recent Deliveries on GitHub, with a button to send it again. Without the App's secrets, the list holds only what deliveries brought.
+- **Who reads it.** The briefing of each agent with GitHub tools (`command-1` and `product-1`) lists the open pull requests, the open issues last updated first, and what closed or merged in the last 14 days, each list at most 15 items, with titles in quotes and cut to 100 characters. The Product room's details show the same, under "Open pull requests on GitHub".
+- **Untrusted text.** Anyone can open an issue on a public repository, so a title is never Markdown or a component block: the app shows it as plain text, and the briefing quotes it and tells the agent it is data. The Worker keeps a title to one line of at most 200 characters, without control or format characters, and keeps only links into the repository.
+- **The check.** The route needs no admin token: it is under `/api/public/`, and it verifies the `X-Hub-Signature-256` HMAC of the raw body with `GITHUB_WEBHOOK_SECRET` (`crypto.subtle.verify`, which compares in constant time). Without the secret it refuses every delivery with a 503. It answers a `ping`, takes `issues` and `pull_request` deliveries for `GITHUB_REPO`, and answers anything else with a 204. The room keeps each `X-GitHub-Delivery` id for 7 days, so a redelivery changes nothing.
+
+To set it up, once:
+
+1. Make a secret, and keep it for step 2:
+
+   ```bash
+   openssl rand -hex 32
+   ```
+
+2. On GitHub, open the repository's **Settings › Webhooks › Add webhook**. Set **Payload URL** to `https://admin.sunlo.app/api/public/github/webhook`, **Content type** to `application/json`, and **Secret** to the secret. Under **Which events would you like to trigger this webhook?**, choose **Let me select individual events**, tick **Issues** and **Pull requests**, and untick **Pushes**. Keep **Active** ticked, and add the webhook. GitHub sends a ping at once; **Recent Deliveries** should show it answered 200.
+3. Set the same secret on the Worker, from `apps/admin`:
+
+   ```bash
+   pnpm exec wrangler secret put GITHUB_WEBHOOK_SECRET
+   ```
+
+A preview runs no crons, and GitHub's webhook points at production only, so a preview's Product room gets no lines. Locally, put `GITHUB_WEBHOOK_SECRET=<any string>` in `.dev.vars`, and post a delivery signed with it to `/api/public/github/webhook` on the dev server.
+
 ## Commands
 
 Run these from the repo root:
@@ -327,7 +358,7 @@ There is no deploy command: Cloudflare deploys on a merge to `main`.
 
 ## Local development
 
-The Worker reads `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`; `IMAGE_URL_SECRET` is any string. The database connection is the Hyperdrive binding's `localConnectionString` in `wrangler.jsonc`, which the dev server uses in place of the production Hyperdrive config. It connects to local Supabase as `admin_reader` with the password `admin_reader`, and the migration creates that role with no password, so set one once:
+The Worker reads `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPABASE_URL` and `SUPABASE_ANON_KEY` come from `supabase status`; `IMAGE_URL_SECRET` and `GITHUB_WEBHOOK_SECRET` are any string. The database connection is the Hyperdrive binding's `localConnectionString` in `wrangler.jsonc`, which the dev server uses in place of the production Hyperdrive config. It connects to local Supabase as `admin_reader` with the password `admin_reader`, and the migration creates that role with no password, so set one once:
 
 ```bash
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "alter role admin_reader password 'admin_reader'"
@@ -355,8 +386,8 @@ Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admi
 
 The Worker reaches the database through [Hyperdrive](https://developers.cloudflare.com/hyperdrive/), bound as `HYPERDRIVE` in `wrangler.jsonc`. The Hyperdrive config holds the production connection string for `admin_reader`, so the Worker has no database secret of its own. Hyperdrive is required, not an optimisation: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs rather than failing. Hyperdrive makes the TLS connection on the Worker's behalf. If the database stops answering, every `/api` route returns a 500 after 15 seconds instead of hanging, and the Worker logs the reason.
 
-GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above). Signed image links need `IMAGE_URL_SECRET` ("Images", above).
+GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above). GitHub's webhook needs `GITHUB_WEBHOOK_SECRET` ("GitHub's running log", above). Signed image links need `IMAGE_URL_SECRET` ("Images", above).
 
-A pull request that touches only `apps/admin/` skips the `scenetest`, `bundle-size` and `prod-bundle-scan` jobs in `.github/workflows/test.yaml`, because those test the main app and take about twelve minutes; the `changes` job in that workflow decides, and `pr-checks` and `unit` still run. That is why the admin's test ids are registered in `apps/admin/TEST_IDS.md` rather than the main app's registry.
+A pull request that touches only `apps/admin/` skips the `scenetest` job in `.github/workflows/test.yaml`, because it tests the main app and takes about twelve minutes; the `changes` job in that workflow decides. The delta checks in `.github/workflows/pr-checks.yaml` still run, and they typecheck the admin app. That is why the admin's test ids are registered in `apps/admin/TEST_IDS.md` rather than the main app's registry.
 
 On Workers Builds, `vite.config.ts` sets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from `wrangler.jsonc`: `vars` on `main`, and `previews.vars` on any other branch. The app and the Worker therefore always point at the same Supabase project, and the dashboard needs no build variables. Do not deploy by hand: a local build reads the root `.env`, which points at local Supabase, and a local build with those two variables missing silently drops the Supabase SDK (`docs/deployment.md`, "Build Environment Footgun").

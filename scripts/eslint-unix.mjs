@@ -7,8 +7,8 @@
 //
 // ESLint 9 dropped its own unix formatter from core. Paths are relative to
 // the working directory, so two checkouts at different paths print the same
-// lines. If stdin holds no JSON, ESLint did not run: the script prints one
-// line that says so, so the lint delta shows the break instead of hiding it.
+// lines. If stdin holds no JSON, ESLint did not run, and the script exits 1
+// rather than printing an empty list that reads as zero issues.
 
 import { relative } from 'node:path'
 
@@ -19,10 +19,8 @@ let results
 try {
 	results = JSON.parse(input)
 } catch {
-	console.log(
-		'eslint:0:0: ESLint printed no JSON report [Error/eslint-did-not-run]'
-	)
-	process.exit(0)
+	console.error('eslint-unix: ESLint printed no JSON report')
+	process.exit(1)
 }
 
 for (const file of results) {

@@ -380,6 +380,56 @@ export const draftBody = (draft: GithubDraftType) =>
 	draft.type === 'milestone' ? draft.description : draft.body
 export type ActionType = z.infer<typeof ActionSchema>
 
+// The author of the lines the room posts for GitHub's webhook: not a crew
+// member and not an admin, so nothing it posts wakes anyone.
+export const GITHUB_AUTHOR = 'github'
+
+// An issue or pull request in the room's copy of what is open on GitHub,
+// and of what closed lately.
+export const GithubItemSchema = z.object({
+	number: z.number().int(),
+	kind: z.enum(['issue', 'pr']),
+	title: z.string(),
+	url: z.string(),
+	labels: z.array(z.string()),
+	milestone: z.string().nullable(),
+	state: z.enum(['open', 'closed', 'merged']),
+	updatedAt: z.string(),
+	closedAt: z.string().nullable(),
+})
+export type GithubItemType = z.infer<typeof GithubItemSchema>
+
+// One line in the Product room for an issue or a pull request that opened,
+// closed, merged or reopened on GitHub. The title is anyone's text on a
+// public repository: the app shows it as plain text only.
+export const GithubEventSchema = GithubItemSchema.pick({
+	kind: true,
+	number: true,
+	title: true,
+	url: true,
+}).extend({ action: z.enum(['opened', 'closed', 'merged', 'reopened']) })
+export type GithubEventType = z.infer<typeof GithubEventSchema>
+
+export const GithubLogSchema = z.object({
+	// Open items, then the ones closed in the last GITHUB_CLOSED_DAYS, each
+	// newest first.
+	items: z.array(GithubItemSchema),
+	// When the room filled its copy from GitHub's API, once.
+	checkedAt: z.string().nullable(),
+})
+export type GithubLogType = z.infer<typeof GithubLogSchema>
+
+// Closed items stay in the room's copy this long.
+export const GITHUB_CLOSED_DAYS = 14
+
+// "#851" or "PR #852".
+export const githubRef = (item: Pick<GithubItemType, 'kind' | 'number'>) =>
+	`${item.kind === 'pr' ? 'PR ' : ''}#${item.number}`
+
+// "#851 opened: …" or "PR #852 merged: …".
+export const githubEventLine = (event: GithubEventType) =>
+	`${githubRef(event)} ${event.action}: ${event.title}`
+
 // An image the room keeps (the `image` table), as a message carries it.
 export const MessageImageSchema = z.object({
 	id: z.number().int(),
@@ -669,7 +719,7 @@ export type PickChoice = z.infer<typeof PickChoiceSchema>
 export const CrewMessageSchema = z.object({
 	id: z.string(),
 	at: z.string(),
-	// A crew key for an agent, or "admin:<uid>".
+	// A crew key for an agent, "admin:<uid>", or GITHUB_AUTHOR.
 	author: z.string(),
 	authorName: z.string(),
 	// Empty when the message is only images.
@@ -713,6 +763,8 @@ export const CrewMessageSchema = z.object({
 			at: z.string(),
 		})
 		.nullable(),
+	// Set on the room's line for a GitHub event, whose author is GITHUB_AUTHOR.
+	github: GithubEventSchema.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -800,6 +852,16 @@ export const SITREP_MAX = 4000
 export const DOCUMENT_MAX = 40_000
 export const documentMax = (name: string) =>
 	name === SITREP ? SITREP_MAX : DOCUMENT_MAX
+
+// A link to a document is `[the Roadmap](doc:3)`. It names the id, not the
+// name, because two names can slug alike and an id never changes.
+export const documentHref = (id: number) => `doc:${id}`
+
+// The id a link target names, or null for an ordinary URL.
+export function documentIdInHref(href: string): number | null {
+	const match = /^doc:(\d+)$/i.exec(href)
+	return match ? Number(match[1]) : null
+}
 
 // A room's documents, as its room log lists them. Revision 0 is a document
 // nobody has written yet.
@@ -958,7 +1020,9 @@ export type RoomEvent =
 	| { type: 'command' }
 	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
-	| { type: 'document'; room: RoomKey; id: number }
+	| { type: 'document'; id: number }
 	| { type: 'painter-styles' }
+	// The room's copy of what is open on GitHub changed.
+	| { type: 'github' }
 	// A run started, took a step, or ended.
 	| { type: 'run'; run: RunType }

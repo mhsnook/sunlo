@@ -320,7 +320,11 @@ export function designTools(agent: CrewKey) {
 						}
 						try {
 							const result = await runPainter(
-								(model, input, options) => env.AI.run(model, input, options),
+								(model, input, options) =>
+									env.AI.run(model, input, {
+										...options,
+										gateway: { id: env.AI_GATEWAY_ID },
+									}),
 								style.model,
 								modelInput(style.model, {
 									prompt,

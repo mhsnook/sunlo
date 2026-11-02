@@ -18,20 +18,28 @@ const voices: Record<CrewKey, Speaker> = {
 // Push-to-talk clips are seconds long; this only stops a runaway upload.
 const MAX_AUDIO_BYTES = 20 * 1024 * 1024
 
-async function transcribe(ai: Ai, audio: ReadableStream, contentType: string) {
-	const result = await ai.run('@cf/deepgram/nova-3', {
-		audio: { body: audio, contentType },
-		smart_format: true,
-		punctuate: true,
-	})
+async function transcribe(
+	env: Env,
+	audio: ReadableStream,
+	contentType: string
+) {
+	const result = await env.AI.run(
+		'@cf/deepgram/nova-3',
+		{
+			audio: { body: audio, contentType },
+			smart_format: true,
+			punctuate: true,
+		},
+		{ gateway: { id: env.AI_GATEWAY_ID } }
+	)
 	return result.results?.channels?.[0]?.alternatives?.[0]?.transcript ?? ''
 }
 
-function speak(ai: Ai, text: string, agent: CrewKey) {
-	return ai.run(
+function speak(env: Env, text: string, agent: CrewKey) {
+	return env.AI.run(
 		'@cf/deepgram/aura-2-en',
 		{ text, speaker: voices[agent], encoding: 'mp3' },
-		{ returnRawResponse: true }
+		{ returnRawResponse: true, gateway: { id: env.AI_GATEWAY_ID } }
 	)
 }
 
@@ -48,7 +56,7 @@ export const voiceRoutes = new Hono<AppEnv>()
 			return c.json({ error: 'That recording is too long' }, 413)
 		}
 		return c.json({
-			text: await transcribe(c.env.AI, c.req.raw.body, contentType),
+			text: await transcribe(c.env, c.req.raw.body, contentType),
 		})
 	})
 	.post('/speak', async (c) => {
@@ -61,7 +69,7 @@ export const voiceRoutes = new Hono<AppEnv>()
 		if (!body.success) {
 			return c.json({ error: 'Send { text, agent }' }, 400)
 		}
-		const audio = await speak(c.env.AI, body.data.text, body.data.agent)
+		const audio = await speak(c.env, body.data.text, body.data.agent)
 		if (!audio.ok) {
 			return c.json({ error: 'The voice model failed' }, 502)
 		}

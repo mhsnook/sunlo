@@ -4,6 +4,7 @@ import {
 	crew,
 	crewKeys,
 	displayName,
+	documentHref,
 	resolveHandle,
 	principalOf,
 	handleOf,
@@ -272,7 +273,7 @@ Their answer comes back to you.`,
 
 	const readDocument = defineTool({
 		name: 'read_document',
-		description: `Read a room's document: its current Markdown and its revision. Leave out \`room\` for the ${room}'s own documents, which your <crew-context> lists.`,
+		description: `Read a room's document: its current Markdown, its revision, and the \`link\` target to write about it with. Leave out \`room\` for the ${room}'s own documents, which your <crew-context> lists.`,
 		input: v.object({
 			name: v.pipe(Text, v.maxLength(80)),
 			room: v.optional(v.picklist(roomKeys)),
@@ -287,6 +288,7 @@ Their answer comes back to you.`,
 			return {
 				output: {
 					name: document.name,
+					link: documentHref(document.id),
 					room: document.room,
 					revision: document.revision,
 					savedBy: document.byName,
@@ -320,7 +322,9 @@ Their answer comes back to you.`,
 				})
 			)
 			if (!saved.ok) throw new Error(saved.error)
-			return { output: { revision: saved.revision } }
+			return {
+				output: { revision: saved.revision, link: documentHref(saved.id) },
+			}
 		},
 	})
 

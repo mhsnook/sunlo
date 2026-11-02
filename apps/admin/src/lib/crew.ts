@@ -28,6 +28,7 @@ import {
 	CrewMessageSchema,
 	DocumentSchema,
 	DocumentSummarySchema,
+	GithubLogSchema,
 	MessageImageSchema,
 	PainterStyleSchema,
 	placeOf,
@@ -134,15 +135,14 @@ export const charterQuery = (room: RoomKey) =>
 		staleTime: Infinity,
 	})
 
-// A room's documents, without their text. The live socket keeps this and
-// the two document queries below current.
-export const documentsQuery = (room: RoomKey) =>
+// Every room's documents, without their text. One query for all of them,
+// because a `doc:` link in a message names a document in any room. The live
+// socket keeps this and the two document queries below current.
+export const documentsQuery = () =>
 	queryOptions({
-		queryKey: ['crew', 'documents', room],
+		queryKey: ['crew', 'documents'],
 		queryFn: async () =>
-			z
-				.array(DocumentSummarySchema)
-				.parse(await adminFetch(`crew/rooms/${room}/documents`)),
+			z.array(DocumentSummarySchema).parse(await adminFetch('crew/documents')),
 		staleTime: Infinity,
 	})
 
@@ -264,6 +264,15 @@ const SketchSourceSchema = z.object({
 	frame: z.enum(['phone', 'desktop']),
 })
 
+// What is open on GitHub, and what closed lately, as the room keeps it. The
+// live socket keeps this current.
+export const githubLogQuery = () =>
+	queryOptions({
+		queryKey: ['crew', 'github'],
+		queryFn: async () => GithubLogSchema.parse(await adminFetch('crew/github')),
+		staleTime: Infinity,
+	})
+
 // The painter's styles. The live socket keeps this current.
 export const painterStylesQuery = () =>
 	queryOptions({
@@ -375,14 +384,9 @@ export function useSaveDocument(document: DocumentSummaryType) {
 	})
 }
 
-const documentChanged = (
-	queryClient: QueryClient,
-	document: { room: RoomKey; id: number }
-) =>
+const documentChanged = (queryClient: QueryClient, document: { id: number }) =>
 	Promise.all([
-		queryClient.invalidateQueries({
-			queryKey: documentsQuery(document.room).queryKey,
-		}),
+		queryClient.invalidateQueries({ queryKey: documentsQuery().queryKey }),
 		queryClient.invalidateQueries({
 			queryKey: documentQuery(document.id).queryKey,
 		}),
@@ -643,6 +647,7 @@ const pendingMessage = (
 	parent: null,
 	thread: null,
 	pick: null,
+	github: null,
 })
 
 // A message someone else wrote after the admin last opened its timeline.
@@ -868,6 +873,7 @@ export function useCrewLive() {
 					['crew', 'documents'],
 					['crew', 'document'],
 					painterStylesQuery().queryKey,
+					githubLogQuery().queryKey,
 					runsQuery().queryKey,
 				]) {
 					void queryClient.invalidateQueries({ queryKey })
@@ -900,6 +906,11 @@ export function useCrewLive() {
 			if (event.type === 'painter-styles') {
 				void queryClient.invalidateQueries({
 					queryKey: painterStylesQuery().queryKey,
+				})
+			}
+			if (event.type === 'github') {
+				void queryClient.invalidateQueries({
+					queryKey: githubLogQuery().queryKey,
 				})
 			}
 			if (event.type === 'command') {
