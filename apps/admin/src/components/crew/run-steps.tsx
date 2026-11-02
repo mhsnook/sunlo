@@ -24,6 +24,7 @@ import {
 	type RunType,
 } from '../../../shared/crew'
 import { runsQuery } from '~/lib/crew'
+import { placeRuns, type RunParts } from '~/lib/run-parts'
 
 type Status = 'running' | 'error' | undefined
 
@@ -160,13 +161,32 @@ export function RunTrace({ run, who }: { run: RunType; who: string | null }) {
 // `agents` is who belongs in the room, not who the room counts as working:
 // an agent's side-thread run can end, and set it idle, while its main run
 // goes on.
-export function useLiveRuns(agents: ReadonlyArray<CrewKey>) {
+export function useRunParts(
+	messages: Array<CrewMessageType>,
+	agents: ReadonlyArray<CrewKey>
+): RunParts {
 	const { data: runs = [] } = useQuery(runsQuery())
-	return runs.filter(
-		(run) =>
-			run.outcome === 'working' &&
-			run.steps.length > 0 &&
-			agents.includes(run.agent)
+	return placeRuns(runs, messages, agents)
+}
+
+export function MessageRunParts({
+	parts,
+	message,
+}: {
+	parts: Array<RunType> | undefined
+	message: CrewMessageType
+}) {
+	if (!parts?.length) return null
+	return (
+		<div className="w-full min-w-0 space-y-1 px-1">
+			{parts.map((part) => (
+				<RunTrace
+					key={part.id}
+					run={part}
+					who={part.agent === message.author ? null : displayName(part.agent)}
+				/>
+			))}
+		</div>
 	)
 }
 
