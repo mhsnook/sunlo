@@ -96,11 +96,16 @@ import {
 } from './picks'
 import {
 	daysBefore,
+	githubDeploys,
 	githubItemOf,
 	githubItems,
+	liveCommit,
+	markGithubDeployLive,
 	pruneGithubLog,
 	removeGithubItem,
 	takeDelivery,
+	workersAwaitingLive,
+	writeGithubDeploy,
 	writeGithubItem,
 	type WebhookResult,
 } from './github-log'
@@ -611,6 +616,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			create table if not exists github_delivery (
 				id text primary key,
 				at text not null
+			);
+			-- Each Worker that Workers Builds built from a commit on main, kept
+			-- for GITHUB_DEPLOY_DAYS. live_at is when the Worker first answered
+			-- with this commit or a later one.
+			create table if not exists github_deploy (
+				worker text not null,
+				sha text not null,
+				ok integer not null,
+				built_at text not null,
+				live_at text,
+				url text not null,
+				primary key (worker, sha)
 			);
 			create table if not exists schema_version (version integer not null);
 		`
@@ -2772,12 +2789,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// routing, so it wakes nobody. False for a delivery the room has seen.
 	githubDelivery(
 		delivery: string,
-		result: Extract<WebhookResult, { kind: 'item' | 'remove' }>
+		result: Extract<WebhookResult, { kind: 'item' | 'remove' | 'deploy' }>
 	) {
 		const sql = this.sql.bind(this)
 		if (!takeDelivery(sql, delivery)) return false
 		if (result.kind === 'remove') {
 			removeGithubItem(sql, result.number)
+		} else if (result.kind === 'deploy') {
+			writeGithubDeploy(sql, result.deploy)
 		} else {
 			writeGithubItem(sql, result.item)
 			if (result.event) {
@@ -2800,8 +2819,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// reports changes, so the copy also starts with one backfill from GitHub's
 	// API: the open items and those closed in the last GITHUB_CLOSED_DAYS.
 	// After the first backfill that succeeds, this reads nothing from GitHub.
+	// It also asks the Workers about builds that are not live yet.
 	async tendGithubLog() {
 		pruneGithubLog(this.sql.bind(this))
+		await this.checkLiveDeploys()
 		const kv = this.ctx.storage.kv
 		if (kv.get(GITHUB_CHECKED_AT)) return false
 		const github = githubFor(this.env)
@@ -2822,9 +2843,30 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return true
 	}
 
+	// Asks each Worker with a build that is not live yet which commit it
+	// runs: one request per Worker, and none while every build is live.
+	// True when no build is left waiting.
+	async checkLiveDeploys() {
+		const sql = this.sql.bind(this)
+		const workers = workersAwaitingLive(sql)
+		const answers = await Promise.all(
+			workers.map(async (worker) => ({
+				worker,
+				commit: await liveCommit(this.env, worker),
+			}))
+		)
+		let changed = false
+		for (const { worker, commit } of answers) {
+			if (commit && markGithubDeployLive(sql, worker, commit)) changed = true
+		}
+		if (changed) this.push({ type: 'github' })
+		return workersAwaitingLive(sql).length === 0
+	}
+
 	githubLog(): GithubLogType {
 		return {
 			items: githubItems(this.sql.bind(this)),
+			deploys: githubDeploys(this.sql.bind(this)),
 			checkedAt: this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ?? null,
 		}
 	}

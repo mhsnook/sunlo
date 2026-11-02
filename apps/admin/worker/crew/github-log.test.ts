@@ -1,21 +1,31 @@
 import { createHmac } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { describe, expect, it } from 'vitest'
-import type { GithubItemType } from '../../shared/crew'
+import {
+	mergeTicksOf,
+	type GithubDeployType,
+	type GithubItemType,
+} from '../../shared/crew'
 import {
 	GITHUB_TITLE_MAX,
+	githubDeploys,
 	githubItemOf,
 	githubItems,
 	githubWebhook,
+	markGithubDeployLive,
 	plainLine,
 	pruneGithubLog,
 	takeDelivery,
 	verifyGithubSignature,
+	workersAwaitingLive,
+	writeGithubDeploy,
 	writeGithubItem,
 } from './github-log'
 import type { Sql } from './paintings'
 
 const REPO = 'mhsnook/sunlo'
+const SHA = '98467f96'.padEnd(40, '0')
+const LATER = 'ec69a766'.padEnd(40, '0')
 const encoder = new TextEncoder()
 const sign = (secret: string, body: string) =>
 	`sha256=${createHmac('sha256', secret).update(body).digest('hex')}`
@@ -97,6 +107,19 @@ const pull = (over: Record<string, unknown> = {}) => ({
 	...over,
 })
 
+const run = (over: Record<string, unknown> = {}) => ({
+	id: 124996813730,
+	name: 'Workers Builds: sunlo-admin',
+	head_sha: SHA,
+	status: 'completed',
+	conclusion: 'success',
+	completed_at: '2026-11-01T23:13:35Z',
+	html_url: `https://github.com/${REPO}/runs/124996813730`,
+	app: { slug: 'cloudflare-workers-and-pages' },
+	check_suite: { head_branch: 'main' },
+	...over,
+})
+
 const payload = (action: string, body: Record<string, unknown>) => ({
 	action,
 	repository: { full_name: REPO },
@@ -164,6 +187,7 @@ describe('githubWebhook', () => {
 					merged: true,
 					merged_at: '2026-10-31T09:00:00Z',
 					closed_at: '2026-10-31T09:00:00Z',
+					merge_commit_sha: SHA,
 				}),
 			}),
 			REPO
@@ -172,6 +196,7 @@ describe('githubWebhook', () => {
 			kind: 'pr',
 			action: 'merged',
 			number: 852,
+			sha: SHA,
 		})
 		expect(merged.kind === 'item' && merged.item.state).toBe('merged')
 		const closed = githubWebhook(
@@ -185,6 +210,7 @@ describe('githubWebhook', () => {
 			REPO
 		)
 		expect(closed.kind === 'item' && closed.event?.action).toBe('closed')
+		expect(closed.kind === 'item' && closed.event?.sha).toBeUndefined()
 		expect(closed.kind === 'item' && closed.item.state).toBe('closed')
 		const opened = githubWebhook(
 			'pull_request',
@@ -214,6 +240,55 @@ describe('githubWebhook', () => {
 			REPO
 		)
 		expect(synced.kind === 'item' && synced.event).toBeNull()
+	})
+
+	it('keeps a Workers Builds check run on main as a deploy', () => {
+		expect(
+			githubWebhook(
+				'check_run',
+				payload('completed', { check_run: run() }),
+				REPO
+			)
+		).toEqual({
+			kind: 'deploy',
+			deploy: {
+				worker: 'sunlo-admin',
+				sha: SHA,
+				ok: true,
+				builtAt: '2026-11-01T23:13:35Z',
+				url: `https://github.com/${REPO}/runs/124996813730`,
+			},
+		})
+		const failed = githubWebhook(
+			'check_run',
+			payload('completed', { check_run: run({ conclusion: 'failure' }) }),
+			REPO
+		)
+		expect(failed.kind === 'deploy' && failed.deploy.ok).toBe(false)
+	})
+
+	it('ignores every other check run', () => {
+		const others = [
+			payload('created', { check_run: run() }),
+			payload('completed', { check_run: run({ name: 'report' }) }),
+			payload('completed', {
+				check_run: run({ app: { slug: 'github-actions' } }),
+			}),
+			payload('completed', {
+				check_run: run({ check_suite: { head_branch: 'claude/x' } }),
+			}),
+			payload('completed', {
+				check_run: run({ status: 'in_progress', completed_at: null }),
+			}),
+			payload('completed', { check_run: run({ head_sha: 'not-a-sha' }) }),
+			{
+				...payload('completed', { check_run: run() }),
+				repository: { full_name: 'someone/else' },
+			},
+		]
+		for (const body of others) {
+			expect(githubWebhook('check_run', body, REPO)).toEqual({ kind: 'ignore' })
+		}
 	})
 
 	it('removes a deleted or transferred issue', () => {
@@ -321,18 +396,22 @@ function room() {
 			state text not null, updated_at text not null, closed_at text
 		);
 		create table github_delivery (id text primary key, at text not null);
+		create table github_deploy (
+			worker text not null, sha text not null, ok integer not null,
+			built_at text not null, live_at text, url text not null,
+			primary key (worker, sha)
+		);
 	`)
 	const sql: Sql = <T>(
 		strings: TemplateStringsArray,
 		...values: Array<string | number | boolean | null>
 	) =>
-		db
-			.prepare(strings.join('?'))
-			.all(
-				...values.map((value) =>
-					typeof value === 'boolean' ? Number(value) : value
-				)
-			) as Array<T>
+		db.prepare(strings.join('?')).all(
+			// The Durable Object's sql stores a boolean as the text "true".
+			...values.map((value) =>
+				typeof value === 'boolean' ? String(value) : value
+			)
+		) as Array<T>
 	return sql
 }
 
@@ -411,5 +490,98 @@ describe('the github_item table', () => {
 		writeGithubItem(sql, item({ number: 4, updatedAt: '2026-10-31T00:00:00Z' }))
 		expect(githubItems(sql, now).map((i) => i.number)).toEqual([4, 1, 2])
 		expect(githubItems(sql, now)[2].labels).toEqual([])
+	})
+})
+
+const deploy = (
+	over: Partial<Omit<GithubDeployType, 'liveAt'>> = {}
+): Omit<GithubDeployType, 'liveAt'> => ({
+	worker: 'sunlo-admin',
+	sha: SHA,
+	ok: true,
+	builtAt: '2026-11-01T23:13:35Z',
+	url: `https://github.com/${REPO}/runs/1`,
+	...over,
+})
+
+describe('the github_deploy table', () => {
+	const at = Date.parse('2026-11-01T23:20:00Z')
+
+	it('lets a re-run replace a build', () => {
+		const sql = room()
+		writeGithubDeploy(sql, deploy({ ok: false }))
+		writeGithubDeploy(sql, deploy({ builtAt: '2026-11-01T23:30:00Z' }))
+		writeGithubDeploy(
+			sql,
+			deploy({ ok: false, builtAt: '2026-11-01T23:00:00Z' })
+		)
+		expect(githubDeploys(sql)).toMatchObject([
+			{ ok: true, builtAt: '2026-11-01T23:30:00Z', liveAt: null },
+		])
+	})
+
+	it('marks a build live with every earlier build of that Worker', () => {
+		const sql = room()
+		writeGithubDeploy(sql, deploy({ ok: false }))
+		writeGithubDeploy(
+			sql,
+			deploy({ sha: LATER, builtAt: '2026-11-01T23:40:00Z' })
+		)
+		writeGithubDeploy(sql, deploy({ worker: 'sunlo' }))
+		expect(workersAwaitingLive(sql, at).toSorted()).toEqual([
+			'sunlo',
+			'sunlo-admin',
+		])
+		// The Worker still runs a commit the room has no build of.
+		expect(markGithubDeployLive(sql, 'sunlo-admin', 'f'.repeat(40), at)).toBe(
+			false
+		)
+		expect(markGithubDeployLive(sql, 'sunlo-admin', LATER, at)).toBe(true)
+		expect(markGithubDeployLive(sql, 'sunlo-admin', LATER, at)).toBe(false)
+		expect(workersAwaitingLive(sql, at)).toEqual(['sunlo'])
+		const live = githubDeploys(sql).filter((row) => row.liveAt)
+		expect(live.map((row) => [row.worker, row.sha])).toEqual([
+			['sunlo-admin', SHA],
+			['sunlo-admin', LATER],
+		])
+	})
+
+	it('stops asking a day after a build, and forgets it after 90 days', () => {
+		const sql = room()
+		writeGithubDeploy(sql, deploy())
+		expect(workersAwaitingLive(sql, at + 2 * 86_400_000)).toEqual([])
+		pruneGithubLog(sql, at + 89 * 86_400_000)
+		expect(githubDeploys(sql)).toHaveLength(1)
+		pruneGithubLog(sql, at + 91 * 86_400_000)
+		expect(githubDeploys(sql)).toEqual([])
+	})
+})
+
+describe('mergeTicksOf', () => {
+	const row = (over: Partial<GithubDeployType> = {}): GithubDeployType => ({
+		...deploy(),
+		liveAt: null,
+		...over,
+	})
+	const live = '2026-11-01T23:20:00Z'
+
+	it('goes from merged to built to live as every Worker catches up', () => {
+		expect(mergeTicksOf([])).toBe('merged')
+		expect(mergeTicksOf([row(), row({ worker: 'sunlo', liveAt: live })])).toBe(
+			'built'
+		)
+		expect(
+			mergeTicksOf([
+				row({ liveAt: live }),
+				row({ worker: 'sunlo', liveAt: live }),
+			])
+		).toBe('live')
+	})
+
+	it('shows a failed build until a later build of that Worker is live', () => {
+		expect(mergeTicksOf([row({ ok: false }), row({ worker: 'sunlo' })])).toBe(
+			'failed'
+		)
+		expect(mergeTicksOf([row({ ok: false, liveAt: live })])).toBe('live')
 	})
 })
