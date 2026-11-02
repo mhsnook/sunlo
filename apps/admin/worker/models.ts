@@ -54,6 +54,44 @@ export function withAnthropicCatalog<
 		: model
 }
 
+type BindingMessage = {
+	role?: unknown
+	content?: unknown
+	output_config?: { effort?: unknown }
+}
+
+// pi-ai marks each turn's effort with a system message that has no content.
+// The binding refuses one ("system content must contain at least one
+// block"), so the markers go and the last one's effort becomes the
+// request's own, as it was before `supportsMidConvoEffort`.
+export function withoutEffortMarkers(inputs: Record<string, unknown>) {
+	if (!Array.isArray(inputs.messages)) return inputs
+	const messages = inputs.messages as Array<BindingMessage>
+	let effort: unknown
+	const kept = messages.filter((message) => {
+		const marker =
+			message.role === 'system' &&
+			Array.isArray(message.content) &&
+			message.content.length === 0
+		if (marker && message.output_config?.effort !== undefined)
+			effort = message.output_config.effort
+		return !marker
+	})
+	if (kept.length === messages.length) return inputs
+	return {
+		...inputs,
+		messages: kept,
+		...(effort === undefined
+			? {}
+			: {
+					output_config: {
+						...(inputs.output_config as object | undefined),
+						effort,
+					},
+				}),
+	}
+}
+
 // The Workers AI provider every crew agent runs on, in place of the one
 // @flue/vite registers. Without the id rewrite, the binding refuses every
 // Claude call. Without `cacheRetention`, a Claude step pays full price for
@@ -61,7 +99,8 @@ export function withAnthropicCatalog<
 export function crewProvider(ai: CloudflareAIBinding, gatewayId: string) {
 	const provider = cloudflareBindingProvider({
 		binding: {
-			run: (id, inputs, options) => ai.run(bindingModelId(id), inputs, options),
+			run: (id, inputs, options) =>
+				ai.run(bindingModelId(id), withoutEffortMarkers(inputs), options),
 		},
 		cacheRetention: 'short',
 		gateway: { id: gatewayId },

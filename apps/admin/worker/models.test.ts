@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { bindingModelId, crewProvider, withAnthropicCatalog } from './models'
+import {
+	bindingModelId,
+	crewProvider,
+	withAnthropicCatalog,
+	withoutEffortMarkers,
+} from './models'
 
 describe('bindingModelId', () => {
 	it("writes a Claude version the way Cloudflare's binding names it", () => {
@@ -60,6 +65,47 @@ describe('withAnthropicCatalog', () => {
 	it('leaves every other model as it is', () => {
 		const model = { id: 'anthropic/claude-haiku-4-5', compat: {} }
 		expect(withAnthropicCatalog(model)).toBe(model)
+	})
+})
+
+describe('withoutEffortMarkers', () => {
+	const user = { role: 'user', content: 'Hi' }
+	const assistant = {
+		role: 'assistant',
+		content: [{ type: 'text', text: 'Hello' }],
+	}
+	const marker = (effort: string) => ({
+		role: 'system',
+		content: [],
+		output_config: { effort },
+	})
+
+	it("drops pi-ai's empty effort markers and keeps the last effort", () => {
+		expect(
+			withoutEffortMarkers({
+				messages: [user, marker('low'), assistant, user, marker('medium')],
+				output_config: { effort: 'high' },
+				thinking: { type: 'adaptive' },
+			})
+		).toEqual({
+			messages: [user, assistant, user],
+			output_config: { effort: 'medium' },
+			thinking: { type: 'adaptive' },
+		})
+	})
+
+	it('keeps a system message that has content, such as a tool change', () => {
+		const toolChange = {
+			role: 'system',
+			content: [{ type: 'tool_addition', tool: { type: 'tool_definition' } }],
+		}
+		const inputs = { messages: [user, toolChange, assistant] }
+		expect(withoutEffortMarkers(inputs)).toBe(inputs)
+	})
+
+	it('leaves a body without messages as it is', () => {
+		const inputs = { prompt: 'a lighthouse' }
+		expect(withoutEffortMarkers(inputs)).toBe(inputs)
 	})
 })
 
@@ -180,6 +226,19 @@ describe('crewProvider', () => {
 			block_binding: { prefix_mismatch_behavior: 'drop_block' },
 		})
 		expect(run.inputs).not.toHaveProperty('betas')
+		const messages = run.inputs.messages as Array<{
+			role: string
+			content: unknown
+		}>
+		expect(
+			messages.filter(
+				(message) =>
+					message.role === 'system' &&
+					Array.isArray(message.content) &&
+					message.content.length === 0
+			)
+		).toEqual([])
+		expect(run.inputs.output_config).toEqual({ effort: 'medium' })
 		const headers = run.options?.extraHeaders as Record<string, string>
 		expect(headers['anthropic-beta'].split(',')).toContain(
 			'thinking-binding-controls-2026-08-01'
