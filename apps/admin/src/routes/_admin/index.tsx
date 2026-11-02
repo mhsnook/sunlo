@@ -22,7 +22,7 @@ import {
 } from '~/lib/crew'
 import { CREW } from '~/lib/documents'
 import { AgentAvatar, WorkingMarker } from '~/components/crew/crew-parts'
-import { LiveRuns, useLiveRuns } from '~/components/crew/run-steps'
+import { LiveRuns, useRunParts } from '~/components/crew/run-steps'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 import { SidePanelSlot } from '~/components/crew/side-panel'
 import { DetailsPanel, useDetailsPanel } from '~/components/crew/details-panel'
@@ -60,8 +60,8 @@ function CrewRoomPage() {
 	// wide screen, since the room is where the admin comes for the overview.
 	const details = useDetailsPanel()
 	const working = crewKeys.filter((key) => isWorking(room.statuses[key]))
-	const liveRuns = useLiveRuns(crewKeys)
-	const liveSteps = liveRuns.reduce((sum, run) => sum + run.steps.length, 0)
+	const runs = useRunParts(room.messages, crewKeys)
+	const liveSteps = runs.live.reduce((sum, run) => sum + run.steps.length, 0)
 	const active = crewList.filter((member) => member.active).length
 	const myAuthor = adminAuthor(session.user.id)
 
@@ -97,12 +97,13 @@ function CrewRoomPage() {
 							messages={room.messages}
 							myAuthor={myAuthor}
 							newSince={newSince}
+							runs={runs}
 						/>
 					) : (
 						<EmptyRoom />
 					)}
 					<WorkingMarker agents={working} />
-					<LiveRuns runs={liveRuns} />
+					<LiveRuns runs={runs.live} />
 				</MessageScroller>
 				<RoomCompose myAuthor={myAuthor} />
 			</section>
