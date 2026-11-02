@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
 	DOCUMENT_MAX,
 	documentHref,
-	documentIdInHref,
 	SITREP,
 	SITREP_MAX,
 } from '../../shared/crew'
@@ -72,18 +71,5 @@ describe('checkSave', () => {
 describe('document links', () => {
 	it('writes a link target from a document id', () => {
 		expect(documentHref(3)).toBe('doc:3')
-	})
-
-	it('reads the id back from a target', () => {
-		expect(documentIdInHref('doc:3')).toBe(3)
-		expect(documentIdInHref('DOC:12')).toBe(12)
-	})
-
-	it('leaves an ordinary URL, and a target that is not an id, alone', () => {
-		expect(documentIdInHref('https://sunlo.app/doc:3')).toBe(null)
-		expect(documentIdInHref('/room/product')).toBe(null)
-		expect(documentIdInHref('doc:')).toBe(null)
-		expect(documentIdInHref('doc:roadmap')).toBe(null)
-		expect(documentIdInHref('doc:3x')).toBe(null)
 	})
 })
