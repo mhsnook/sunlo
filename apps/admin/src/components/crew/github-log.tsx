@@ -65,6 +65,9 @@ export function GithubLines({
 }) {
 	const { data: log } = useQuery(githubLogQuery())
 	const deploys = log?.deploys ?? []
+	// The room keeps builds only since deploysSince; an older line has
+	// nothing to tick.
+	const deploysSince = log?.deploysSince ?? ''
 	return (
 		<ul
 			className="text-muted-foreground space-y-1 text-xs"
@@ -94,12 +97,14 @@ export function GithubLines({
 							{event.title}
 						</span>
 						<span className="ms-auto shrink-0">{timeLabel(message.at)}</span>
-						{event.action === 'merged' && event.sha && (
-							<MergeTicks
-								mergedAt={message.at}
-								deploys={deploys.filter((deploy) => deploy.sha === event.sha)}
-							/>
-						)}
+						{event.action === 'merged' &&
+							event.sha &&
+							message.at >= deploysSince && (
+								<MergeTicks
+									mergedAt={message.at}
+									deploys={deploys.filter((deploy) => deploy.sha === event.sha)}
+								/>
+							)}
 					</li>
 				)
 			})}
@@ -125,14 +130,18 @@ const ticks: Record<
 	},
 }
 
+const outcomeLabels: Record<GithubDeployType['outcome'], string> = {
+	deployed: 'deployed',
+	failed: 'build failed',
+	cancelled: 'build cancelled',
+}
+
 const deployLine = (deploy: GithubDeployType) =>
 	[
-		deploy.ok
-			? `${deploy.worker} deployed ${timeLabel(deploy.builtAt)}`
-			: `${deploy.worker} build failed ${timeLabel(deploy.builtAt)}`,
+		`${deploy.worker} ${outcomeLabels[deploy.outcome]} ${timeLabel(deploy.builtAt)}`,
 		deploy.liveAt
 			? `live ${timeLabel(deploy.liveAt)}`
-			: deploy.ok
+			: deploy.outcome === 'deployed'
 				? 'not live yet'
 				: null,
 	]

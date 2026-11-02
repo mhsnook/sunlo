@@ -639,7 +639,11 @@ api.post('/public/github/webhook', async (c) => {
 	if (result.kind === 'ignore') return c.body(null, 204)
 	const room = await roomFor()
 	const taken = await room.githubDelivery(delivery, result)
-	if (taken && result.kind === 'deploy' && result.deploy.ok) {
+	if (
+		taken &&
+		result.kind === 'deploy' &&
+		result.deploy.outcome === 'deployed'
+	) {
 		c.executionCtx.waitUntil(seeDeployLive(room))
 	}
 	return c.json({ ok: true, duplicate: !taken })

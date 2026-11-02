@@ -20,6 +20,7 @@ export const MAX_WEBHOOK_BYTES = 1_000_000
 export const DELIVERY_DAYS = 7
 // waitUntil keeps a Worker for 30 seconds after its response.
 export const LIVE_RETRY_MS = 20_000
+const LIVE_FETCH_MS = 5_000
 
 // X-Hub-Signature-256 is "sha256=" and the hex HMAC-SHA256 of the raw body,
 // keyed with the webhook's secret. False without a secret, so a Worker with
@@ -156,11 +157,24 @@ export function githubDeployOf(
 	return {
 		worker,
 		sha: run.head_sha,
-		ok: run.conclusion === 'success',
+		outcome: outcomeOf(run.conclusion),
 		builtAt: run.completed_at,
 		url: run.html_url,
 	}
 }
+
+// A build that never finished, such as one a newer push replaced, is
+// cancelled, not failed.
+const CANCELLED = new Set(['cancelled', 'skipped', 'stale', 'neutral'])
+
+const outcomeOf = (
+	conclusion: string | null | undefined
+): GithubDeployType['outcome'] =>
+	conclusion === 'success'
+		? 'deployed'
+		: conclusion && CANCELLED.has(conclusion)
+			? 'cancelled'
+			: 'failed'
 
 export type WebhookResult =
 	| { kind: 'ping' }
@@ -307,39 +321,40 @@ export const githubItems = (sql: Sql, at = Date.now()) =>
 type GithubDeployRow = {
 	worker: string
 	sha: string
-	ok: number
+	outcome: GithubDeployType['outcome']
 	built_at: string
+	ran_at: string
 	live_at: string | null
 	url: string
 }
 
-// A re-run of a build replaces its first result.
+// A re-run of a build replaces its first result, but keeps its first
+// built_at: the order of builds is the order of their first runs.
 export function writeGithubDeploy(
 	sql: Sql,
 	deploy: Omit<GithubDeployType, 'liveAt'>
 ) {
 	sql`
-		insert into github_deploy (worker, sha, ok, built_at, url)
-		values (${deploy.worker}, ${deploy.sha}, ${Number(deploy.ok)}, ${deploy.builtAt}, ${deploy.url})
+		insert into github_deploy (worker, sha, outcome, built_at, ran_at, url)
+		values (${deploy.worker}, ${deploy.sha}, ${deploy.outcome}, ${deploy.builtAt}, ${deploy.builtAt}, ${deploy.url})
 		on conflict (worker, sha) do update set
-			ok = excluded.ok,
-			built_at = excluded.built_at,
+			outcome = excluded.outcome,
+			ran_at = excluded.ran_at,
 			url = excluded.url
-		where excluded.built_at >= github_deploy.built_at`
+		where excluded.ran_at >= github_deploy.ran_at`
 }
 
 // The Workers whose last day of builds holds one that is not live yet.
 export const workersAwaitingLive = (sql: Sql, at = Date.now()) =>
 	sql<{ worker: string }>`
 		select distinct worker from github_deploy
-		where ok = 1 and live_at is null and built_at >= ${daysBefore(at, 1)}`.map(
-		(row) => row.worker
-	)
+		where outcome = 'deployed' and live_at is null
+			and built_at >= ${daysBefore(at, 1)}`.map((row) => row.worker)
 
 // `worker` answers with `sha`: that build is live, and so is every build of
-// the Worker that finished before it, failed ones too, since the later build
-// carries their code. Nothing changes for a commit the room has no build of.
-// True when a build became live.
+// the Worker that first finished before it, failed and cancelled ones too,
+// since the later build carries their code. Nothing changes for a commit the
+// room has no build of. True when a build became live.
 export function markGithubDeployLive(
 	sql: Sql,
 	worker: string,
@@ -348,7 +363,8 @@ export function markGithubDeployLive(
 ) {
 	const built = sql<{ built_at: string }>`
 		select built_at from github_deploy
-		where worker = ${worker} and sha = ${sha} and ok = 1`[0]?.built_at
+		where worker = ${worker} and sha = ${sha} and outcome = 'deployed'`[0]
+		?.built_at
 	if (!built) return false
 	return (
 		sql<{ sha: string }>`
@@ -363,7 +379,7 @@ export const githubDeploys = (sql: Sql): Array<GithubDeployType> =>
 		select * from github_deploy order by built_at, worker`.map((row) => ({
 		worker: row.worker,
 		sha: row.sha,
-		ok: row.ok === 1,
+		outcome: row.outcome,
 		builtAt: row.built_at,
 		liveAt: row.live_at,
 		url: row.url,
@@ -385,6 +401,7 @@ export async function liveCommit(env: Env, worker: string) {
 				: worker === 'sunlo'
 					? await fetch(new URL('/version.json', env.SUNLO_URL), {
 							cache: 'no-store',
+							signal: AbortSignal.timeout(LIVE_FETCH_MS),
 						})
 					: null
 		if (!response?.ok) return null

@@ -254,17 +254,23 @@ describe('githubWebhook', () => {
 			deploy: {
 				worker: 'sunlo-admin',
 				sha: SHA,
-				ok: true,
+				outcome: 'deployed',
 				builtAt: '2026-11-01T23:13:35Z',
 				url: `https://github.com/${REPO}/runs/124996813730`,
 			},
 		})
-		const failed = githubWebhook(
-			'check_run',
-			payload('completed', { check_run: run({ conclusion: 'failure' }) }),
-			REPO
-		)
-		expect(failed.kind === 'deploy' && failed.deploy.ok).toBe(false)
+		const outcome = (conclusion: string) => {
+			const result = githubWebhook(
+				'check_run',
+				payload('completed', { check_run: run({ conclusion }) }),
+				REPO
+			)
+			return result.kind === 'deploy' ? result.deploy.outcome : null
+		}
+		expect(outcome('failure')).toBe('failed')
+		expect(outcome('timed_out')).toBe('failed')
+		expect(outcome('cancelled')).toBe('cancelled')
+		expect(outcome('skipped')).toBe('cancelled')
 	})
 
 	it('ignores every other check run', () => {
@@ -397,21 +403,16 @@ function room() {
 		);
 		create table github_delivery (id text primary key, at text not null);
 		create table github_deploy (
-			worker text not null, sha text not null, ok integer not null,
-			built_at text not null, live_at text, url text not null,
+			worker text not null, sha text not null, outcome text not null,
+			built_at text not null, ran_at text not null, live_at text,
+			url text not null,
 			primary key (worker, sha)
 		);
 	`)
 	const sql: Sql = <T>(
 		strings: TemplateStringsArray,
-		...values: Array<string | number | boolean | null>
-	) =>
-		db.prepare(strings.join('?')).all(
-			// The Durable Object's sql stores a boolean as the text "true".
-			...values.map((value) =>
-				typeof value === 'boolean' ? String(value) : value
-			)
-		) as Array<T>
+		...values: Array<string | number | null>
+	) => db.prepare(strings.join('?')).all(...values) as Array<T>
 	return sql
 }
 
@@ -498,7 +499,7 @@ const deploy = (
 ): Omit<GithubDeployType, 'liveAt'> => ({
 	worker: 'sunlo-admin',
 	sha: SHA,
-	ok: true,
+	outcome: 'deployed',
 	builtAt: '2026-11-01T23:13:35Z',
 	url: `https://github.com/${REPO}/runs/1`,
 	...over,
@@ -507,22 +508,41 @@ const deploy = (
 describe('the github_deploy table', () => {
 	const at = Date.parse('2026-11-01T23:20:00Z')
 
-	it('lets a re-run replace a build', () => {
+	it('lets a re-run replace a result, and keeps when the first run finished', () => {
 		const sql = room()
-		writeGithubDeploy(sql, deploy({ ok: false }))
+		writeGithubDeploy(sql, deploy({ outcome: 'failed' }))
 		writeGithubDeploy(sql, deploy({ builtAt: '2026-11-01T23:30:00Z' }))
+		// A delivery of the first run that arrives late.
 		writeGithubDeploy(
 			sql,
-			deploy({ ok: false, builtAt: '2026-11-01T23:00:00Z' })
+			deploy({ outcome: 'failed', builtAt: '2026-11-01T23:13:35Z' })
 		)
 		expect(githubDeploys(sql)).toMatchObject([
-			{ ok: true, builtAt: '2026-11-01T23:30:00Z', liveAt: null },
+			{ outcome: 'deployed', builtAt: '2026-11-01T23:13:35Z', liveAt: null },
+		])
+	})
+
+	it('does not let a re-run of an old commit pass for a newer build', () => {
+		const sql = room()
+		writeGithubDeploy(sql, deploy())
+		writeGithubDeploy(
+			sql,
+			deploy({ sha: LATER, builtAt: '2026-11-01T23:40:00Z' })
+		)
+		// The old commit's build runs again, after the newer build.
+		writeGithubDeploy(sql, deploy({ builtAt: '2026-11-01T23:50:00Z' }))
+		expect(markGithubDeployLive(sql, 'sunlo-admin', SHA, at)).toBe(true)
+		expect(
+			githubDeploys(sql).map((row) => [row.sha, row.liveAt !== null])
+		).toEqual([
+			[SHA, true],
+			[LATER, false],
 		])
 	})
 
 	it('marks a build live with every earlier build of that Worker', () => {
 		const sql = room()
-		writeGithubDeploy(sql, deploy({ ok: false }))
+		writeGithubDeploy(sql, deploy({ outcome: 'failed' }))
 		writeGithubDeploy(
 			sql,
 			deploy({ sha: LATER, builtAt: '2026-11-01T23:40:00Z' })
@@ -579,9 +599,20 @@ describe('mergeTicksOf', () => {
 	})
 
 	it('shows a failed build until a later build of that Worker is live', () => {
-		expect(mergeTicksOf([row({ ok: false }), row({ worker: 'sunlo' })])).toBe(
-			'failed'
+		expect(
+			mergeTicksOf([row({ outcome: 'failed' }), row({ worker: 'sunlo' })])
+		).toBe('failed')
+		expect(mergeTicksOf([row({ outcome: 'failed', liveAt: live })])).toBe(
+			'live'
 		)
-		expect(mergeTicksOf([row({ ok: false, liveAt: live })])).toBe('live')
+	})
+
+	it('waits on a later build for a cancelled one, without calling it failed', () => {
+		expect(
+			mergeTicksOf([row({ outcome: 'cancelled' }), row({ worker: 'sunlo' })])
+		).toBe('merged')
+		expect(mergeTicksOf([row({ outcome: 'cancelled', liveAt: live })])).toBe(
+			'live'
+		)
 	})
 })

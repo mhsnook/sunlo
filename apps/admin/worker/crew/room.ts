@@ -13,6 +13,7 @@ import {
 	githubEventLine,
 	GITHUB_AUTHOR,
 	GITHUB_CLOSED_DAYS,
+	GITHUB_DEPLOY_DAYS,
 	type GithubEventType,
 	type GithubLogType,
 	handleOf,
@@ -618,13 +619,16 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				at text not null
 			);
 			-- Each Worker that Workers Builds built from a commit on main, kept
-			-- for GITHUB_DEPLOY_DAYS. live_at is when the Worker first answered
-			-- with this commit or a later one.
+			-- for GITHUB_DEPLOY_DAYS. outcome is deployed, failed or cancelled.
+			-- built_at is when its first run finished, and ran_at its latest.
+			-- live_at is when the Worker first answered with this commit or a
+			-- later one.
 			create table if not exists github_deploy (
 				worker text not null,
 				sha text not null,
-				ok integer not null,
+				outcome text not null,
 				built_at text not null,
+				ran_at text not null,
 				live_at text,
 				url text not null,
 				primary key (worker, sha)
@@ -2867,6 +2871,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return {
 			items: githubItems(this.sql.bind(this)),
 			deploys: githubDeploys(this.sql.bind(this)),
+			deploysSince: daysBefore(Date.now(), GITHUB_DEPLOY_DAYS),
 			checkedAt: this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ?? null,
 		}
 	}
