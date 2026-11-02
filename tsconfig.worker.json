@@ -17,5 +17,10 @@
 		// `include`), not from @types/node.
 		"types": []
 	},
-	"include": ["worker", "src/types/supabase.ts", "src/lib/languages.ts"]
+	"include": [
+		"worker",
+		"src/types/supabase.ts",
+		"src/lib/languages.ts",
+		"src/features/coach/protocol.ts"
+	]
 }
