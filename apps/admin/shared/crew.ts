@@ -407,13 +407,53 @@ export const GithubEventSchema = GithubItemSchema.pick({
 	number: true,
 	title: true,
 	url: true,
-}).extend({ action: z.enum(['opened', 'closed', 'merged', 'reopened']) })
+}).extend({
+	action: z.enum(['opened', 'closed', 'merged', 'reopened']),
+	// A merged pull request's commit on main. Lines from before it was kept
+	// have none.
+	sha: z.string().optional(),
+})
 export type GithubEventType = z.infer<typeof GithubEventSchema>
+
+// One Worker that Workers Builds built from a commit on main, from its
+// GitHub check run. `builtAt` is when its first run finished: a re-run keeps
+// it, so a re-run of an old commit does not pass for a newer build. `liveAt`
+// is when the Worker first answered with this commit or a later one; a build
+// that failed or was cancelled gets it from a later build.
+export const GithubDeploySchema = z.object({
+	worker: z.string(),
+	sha: z.string(),
+	outcome: z.enum(['deployed', 'failed', 'cancelled']),
+	builtAt: z.string(),
+	liveAt: z.string().nullable(),
+	url: z.string(),
+})
+export type GithubDeployType = z.infer<typeof GithubDeploySchema>
+
+// A merged pull request's ticks: one when it merged, two once every Worker
+// built from its commit deployed, and blue once each Worker runs it. A build
+// that failed or was cancelled counts as live once a later build of that
+// Worker is; until then, a cancelled one waits on that later build.
+export type MergeTicksType = 'merged' | 'built' | 'live' | 'failed'
+
+export function mergeTicksOf(deploys: Array<GithubDeployType>): MergeTicksType {
+	const waiting = deploys.filter((deploy) => !deploy.liveAt)
+	if (!deploys.length) return 'merged'
+	if (waiting.some((deploy) => deploy.outcome === 'failed')) return 'failed'
+	if (!waiting.length) return 'live'
+	return waiting.every((deploy) => deploy.outcome === 'deployed')
+		? 'built'
+		: 'merged'
+}
 
 export const GithubLogSchema = z.object({
 	// Open items, then the ones closed in the last GITHUB_CLOSED_DAYS, each
 	// newest first.
 	items: z.array(GithubItemSchema),
+	// Builds of the last GITHUB_DEPLOY_DAYS, oldest first, and when that
+	// window starts.
+	deploys: z.array(GithubDeploySchema),
+	deploysSince: z.string(),
 	// When the room filled its copy from GitHub's API, once.
 	checkedAt: z.string().nullable(),
 })
@@ -421,6 +461,8 @@ export type GithubLogType = z.infer<typeof GithubLogSchema>
 
 // Closed items stay in the room's copy this long.
 export const GITHUB_CLOSED_DAYS = 14
+// A merged pull request's line shows its builds for this long.
+export const GITHUB_DEPLOY_DAYS = 90
 
 // "#851" or "PR #852".
 export const githubRef = (item: Pick<GithubItemType, 'kind' | 'number'>) =>

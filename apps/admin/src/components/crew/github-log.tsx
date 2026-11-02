@@ -1,18 +1,30 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import {
+	Check,
+	CheckCheck,
 	CircleCheck,
 	CircleDot,
 	GitMerge,
 	GitPullRequest,
 	GitPullRequestClosed,
 	type LucideIcon,
+	X,
 } from 'lucide-react'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import {
 	GITHUB_CLOSED_DAYS,
 	githubRef,
+	mergeTicksOf,
 	type CrewMessageType,
+	type GithubDeployType,
 	type GithubEventType,
 	type GithubItemType,
+	type MergeTicksType,
 } from '../../../shared/crew'
 import { githubLogQuery } from '~/lib/crew'
 import { dayLabel, timeLabel } from '~/lib/format'
@@ -51,6 +63,11 @@ export function GithubLines({
 }: {
 	messages: Array<CrewMessageType>
 }) {
+	const { data: log } = useQuery(githubLogQuery())
+	const deploys = log?.deploys ?? []
+	// The room keeps builds only since deploysSince; an older line has
+	// nothing to tick.
+	const deploysSince = log?.deploysSince ?? ''
 	return (
 		<ul
 			className="text-muted-foreground space-y-1 text-xs"
@@ -80,10 +97,91 @@ export function GithubLines({
 							{event.title}
 						</span>
 						<span className="ms-auto shrink-0">{timeLabel(message.at)}</span>
+						{event.action === 'merged' &&
+							event.sha &&
+							message.at >= deploysSince && (
+								<MergeTicks
+									mergedAt={message.at}
+									deploys={deploys.filter((deploy) => deploy.sha === event.sha)}
+								/>
+							)}
 					</li>
 				)
 			})}
 		</ul>
+	)
+}
+
+const ticks: Record<
+	MergeTicksType,
+	{ Icon: LucideIcon; className: string; label: string }
+> = {
+	merged: { Icon: Check, className: '', label: 'Merged' },
+	built: { Icon: CheckCheck, className: '', label: 'Merged and deployed' },
+	live: {
+		Icon: CheckCheck,
+		className: 'text-info-600',
+		label: 'Merged, deployed and live',
+	},
+	failed: {
+		Icon: X,
+		className: 'text-danger-600',
+		label: 'Merged, but a build failed',
+	},
+}
+
+const outcomeLabels: Record<GithubDeployType['outcome'], string> = {
+	deployed: 'deployed',
+	failed: 'build failed',
+	cancelled: 'build cancelled',
+}
+
+const deployLine = (deploy: GithubDeployType) =>
+	[
+		`${deploy.worker} ${outcomeLabels[deploy.outcome]} ${timeLabel(deploy.builtAt)}`,
+		deploy.liveAt
+			? `live ${timeLabel(deploy.liveAt)}`
+			: deploy.outcome === 'deployed'
+				? 'not live yet'
+				: null,
+	]
+		.filter(Boolean)
+		.join(' · ')
+
+// One tick when the pull request merged, two once Workers Builds deployed its
+// commit, and blue once each Worker answers with it. The tooltip has each step.
+function MergeTicks({
+	mergedAt,
+	deploys,
+}: {
+	mergedAt: string
+	deploys: Array<GithubDeployType>
+}) {
+	const state = mergeTicksOf(deploys)
+	const { Icon, className, label } = ticks[state]
+	return (
+		<Tooltip>
+			<TooltipTrigger
+				className={cn('shrink-0 rounded-2xl', className)}
+				aria-label={label}
+				data-testid="crew-github-ticks"
+				data-state={state}
+			>
+				<Icon className="size-3.5" aria-hidden />
+			</TooltipTrigger>
+			<TooltipContent>
+				<ul className="space-y-0.5">
+					<li>Merged {timeLabel(mergedAt)}</li>
+					{deploys.length ? (
+						deploys.map((deploy) => (
+							<li key={deploy.worker}>{deployLine(deploy)}</li>
+						))
+					) : (
+						<li>Waiting for Workers Builds</li>
+					)}
+				</ul>
+			</TooltipContent>
+		</Tooltip>
 	)
 }
 

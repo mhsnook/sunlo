@@ -1,3 +1,5 @@
+import process from 'node:process'
+import type { Plugin } from 'vite'
 import { defineConfig } from 'vitest/config'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
@@ -5,10 +7,27 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tailwindcss from '@tailwindcss/vite'
 import scenetest from '@scenetest/vite-plugin'
 
+// The admin app's crew room reads this file to see which commit is live.
+// Workers Builds sets WORKERS_CI_COMMIT_SHA.
+const versionFile: Plugin = {
+	name: 'sunlo-version-file',
+	apply: 'build',
+	generateBundle() {
+		this.emitFile({
+			type: 'asset',
+			fileName: 'version.json',
+			source: JSON.stringify({
+				commit: process.env.WORKERS_CI_COMMIT_SHA ?? null,
+			}),
+		})
+	},
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(() => {
 	return {
 		plugins: [
+			versionFile,
 			scenetest(),
 			tailwindcss(),
 			tanstackRouter({

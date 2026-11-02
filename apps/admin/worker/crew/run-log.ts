@@ -4,13 +4,8 @@ import {
 	type RunStepType,
 	type RunType,
 } from '../../shared/crew'
+import type { Sql } from './paintings'
 import { applyStep, RUNS_KEPT, type StepChange } from './steps'
-
-type SqlValue = string | number | boolean | null
-export type Sql = <T>(
-	strings: TemplateStringsArray,
-	...values: Array<SqlValue>
-) => Array<T>
 
 // One Flue submission of one agent: a run in its main conversation, or in
 // the side-thread that starts with `thread`.
