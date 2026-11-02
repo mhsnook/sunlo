@@ -1,6 +1,6 @@
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { FileCode, ImageIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { FileCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import type { CrewMessageType, SketchType } from '../../../shared/crew'
@@ -10,12 +10,17 @@ import {
 	GalleryCard,
 	GalleryTile,
 	PictureButtons,
+	SketchFrame,
+	SketchPicture,
 	TileCaption,
 	tileButtonClass,
 } from './gallery-card'
+import { OriginLine } from './flow-card'
+import { SketchViewer } from './sketch-viewer'
 
-// product-2's mockups, side by side. The admin goes with one through the
-// card's own actions, and takes any of them away as a picture or as HTML.
+// product-2's mockups as options, side by side. The admin goes with one
+// through the card's own actions, and takes any of them away as a picture
+// or as HTML. A flow's screens are a FlowCard instead.
 export function SketchesCard({
 	message,
 	sketches,
@@ -24,11 +29,16 @@ export function SketchesCard({
 	sketches: Array<SketchType>
 }) {
 	const picked = message.answer?.actionId
+	const origin = message.card?.from
+	const [viewing, setViewing] = useState<number | null>(null)
 	return (
 		<GalleryCard
 			message={message}
 			kind="sketches"
-			label="Sketches · go with one"
+			label={
+				message.card?.actions.length ? 'Sketches · go with one' : 'Sketches'
+			}
+			above={origin && <OriginLine origin={origin} />}
 			brief={[
 				message.card?.title,
 				message.body,
@@ -36,27 +46,44 @@ export function SketchesCard({
 			]}
 			wide
 		>
-			{sketches.map((sketch) => (
+			{sketches.map((sketch, index) => (
 				<Sketch
 					key={sketch.id}
 					sketch={sketch}
 					picked={picked === `sketch-${sketch.id}`}
+					onView={() => setViewing(index)}
 				/>
 			))}
+			<SketchViewer
+				screens={sketches.map((sketch) => ({
+					id: sketch.id,
+					title: `${sketch.label}. ${sketch.idea}`,
+				}))}
+				index={viewing}
+				onIndex={setViewing}
+			/>
 		</GalleryCard>
 	)
 }
 
-function Sketch({ sketch, picked }: { sketch: SketchType; picked: boolean }) {
+function Sketch({
+	sketch,
+	picked,
+	onView,
+}: {
+	sketch: SketchType
+	picked: boolean
+	onView: () => void
+}) {
 	const queryClient = useQueryClient()
-	const { data: image, isError } = useQuery(sketchImageQuery(sketch.id))
+	const { data: image } = useQuery(sketchImageQuery(sketch.id))
 
 	const copyBrief = () => {
 		queryClient
 			.fetchQuery(sketchQuery(sketch.id))
 			.then((source) =>
 				navigator.clipboard.writeText(
-					`Mockup ${source.label} (${source.frame}): ${source.idea}\n\n\`\`\`html\n${source.html}\n\`\`\``
+					`Mockup ${sketch.label} (${source.frame}): ${source.idea}\n\n\`\`\`html\n${source.html}\n\`\`\``
 				)
 			)
 			.then(
@@ -67,32 +94,18 @@ function Sketch({ sketch, picked }: { sketch: SketchType; picked: boolean }) {
 
 	return (
 		<GalleryTile picked={picked} testId="sketch" dataKey={sketch.id}>
-			<a
-				href={image?.url}
-				target="_blank"
-				rel="noreferrer"
-				className={cn(
-					'bg-muted flex items-center justify-center overflow-hidden rounded border',
-					sketch.frame === 'phone' ? 'aspect-390/844' : 'aspect-8/5'
-				)}
-				aria-label={`Open sketch ${sketch.label} full size`}
+			<SketchFrame
+				frame={sketch.frame}
+				viewLabel={`View sketch ${sketch.label} full size`}
+				onView={onView}
+				testId="sketch-open"
 			>
-				{image ? (
-					<img
-						src={image.url}
-						alt={`Sketch ${sketch.label}: ${sketch.idea}`}
-						className="h-full w-full object-cover object-top"
-						data-testid="sketch-image"
-					/>
-				) : (
-					<ImageIcon
-						className={cn(
-							'text-muted-foreground size-6',
-							!isError && 'animate-pulse'
-						)}
-					/>
-				)}
-			</a>
+				<SketchPicture
+					sketchId={sketch.id}
+					alt={`Sketch ${sketch.label}: ${sketch.idea}`}
+					testId="sketch-image"
+				/>
+			</SketchFrame>
 			<TileCaption picked={picked}>
 				<span className="font-semibold">{sketch.label}</span> {sketch.idea}
 			</TileCaption>

@@ -18,7 +18,8 @@ const BODY = {
 
 type RunFn = (
 	model: string,
-	input: { messages: Array<{ content: Array<unknown> }> }
+	input: { messages: Array<{ content: Array<unknown> }> },
+	options?: { gateway?: { id: string } }
 ) => Promise<unknown>
 
 function makeEnv(overrides: { limitOk?: boolean; content?: unknown } = {}) {
@@ -27,6 +28,7 @@ function makeEnv(overrides: { limitOk?: boolean; content?: unknown } = {}) {
 	})
 	const env = {
 		PHOTO_EXTRACT_MODEL: '@cf/google/gemma-4-26b-a4b-it',
+		AI_GATEWAY_ID: 'sunlo-app',
 		SUPABASE_URL: 'http://supabase.test',
 		SUPABASE_ANON_KEY: 'anon',
 		AI: { run },
@@ -126,8 +128,9 @@ describe('POST /extract-phrase', () => {
 				},
 			],
 		})
-		const [model, input] = run.mock.calls[0]
+		const [model, input, options] = run.mock.calls[0]
 		expect(model).toBe('@cf/google/gemma-4-26b-a4b-it')
+		expect(options).toEqual({ gateway: { id: 'sunlo-app' } })
 		expect(input.messages[0].content[1]).toEqual({
 			type: 'image_url',
 			image_url: { url: IMAGE },

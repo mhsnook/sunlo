@@ -61,20 +61,24 @@ export LC_ALL=C
 	cat "$OUT"/.typecheck-*.raw | grep ': error TS' | sort >"$OUT/typecheck.txt"
 ) &
 (
-	# `pnpm lint` is `oxlint . && eslint .`. Run them separately here: `&&`
-	# would skip eslint whenever oxlint found anything. Both lists end up as
-	# `file:line:col: message` lines and merge into one sorted list.
+	# `pnpm lint` is oxlint, then ESLint for the app, then ESLint for
+	# apps/admin. Run each one here: `&&` would skip the rest whenever one
+	# found anything. All lists end up as `file:line:col: message` lines and
+	# merge into one sorted list.
 	pnpm exec oxlint . -f unix >"$OUT/.oxlint.raw" 2>&1
 
 	# ESLint 9 has no unix formatter in core, so scripts/eslint-unix.mjs turns
 	# its JSON report into oxlint's line shape, with repo-root-relative paths.
-	# ESLint over this repo needs more than Node's default heap, which is about
-	# 2 GB on a 16 GB machine.
-	NODE_OPTIONS=--max-old-space-size=4096 pnpm exec eslint . -f json >"$OUT/.eslint.json"
-	node scripts/eslint-unix.mjs <"$OUT/.eslint.json" >"$OUT/.eslint.raw" ||
-		echo "lint: ESLint printed no JSON report" >>"$OUT/did-not-run.txt"
+	# Keep the app and apps/admin as two ESLint processes: one `eslint .` loads
+	# both TypeScript programs at once and runs out of Node's default heap.
+	pnpm exec eslint . --ignore-pattern apps/admin/ -f json >"$OUT/.eslint-app.json"
+	node scripts/eslint-unix.mjs <"$OUT/.eslint-app.json" >"$OUT/.eslint-app.raw" ||
+		echo "lint: ESLint printed no JSON report for the app" >>"$OUT/did-not-run.txt"
+	pnpm exec eslint apps/admin -f json >"$OUT/.eslint-admin.json"
+	node scripts/eslint-unix.mjs <"$OUT/.eslint-admin.json" >"$OUT/.eslint-admin.raw" ||
+		echo "lint: ESLint printed no JSON report for apps/admin" >>"$OUT/did-not-run.txt"
 
-	cat "$OUT/.oxlint.raw" "$OUT/.eslint.raw" |
+	cat "$OUT/.oxlint.raw" "$OUT/.eslint-app.raw" "$OUT/.eslint-admin.raw" |
 		grep -E '^[^:[:space:]][^:]*:[0-9]+:[0-9]+:' |
 		sort -u >"$OUT/lint.txt"
 ) &

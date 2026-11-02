@@ -96,6 +96,7 @@ export function setVoiceReplies(on: boolean) {
 // A queued reply starts loading here as soon as it is queued.
 const clips = new Map<string, Promise<Blob>>()
 const CLIPS_KEPT = 10
+const SPEECH_RATE = 1.25
 
 // `words` is the text already made speakable.
 function loadClip(id: string, words: string, agent: CrewKey) {
@@ -152,6 +153,7 @@ async function play({ id, clip }: { id: string; clip: Promise<Blob> }) {
 		// Stopped, or replaced by another message, while the clip loaded.
 		if (useVoice.getState().playing !== id) return
 		const audio = new Audio(URL.createObjectURL(blob))
+		audio.playbackRate = SPEECH_RATE
 		current = { audio, url: audio.src }
 		audio.addEventListener('ended', () => {
 			if (current?.audio === audio) playNext()

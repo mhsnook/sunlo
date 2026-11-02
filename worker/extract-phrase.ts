@@ -95,31 +95,34 @@ export function cleanPhrases(raw: unknown): Array<ExtractedPhrase> {
 }
 
 export async function extractPhrases(
-	ai: Ai,
-	model: Env['PHOTO_EXTRACT_MODEL'],
+	env: Pick<Env, 'AI' | 'PHOTO_EXTRACT_MODEL' | 'AI_GATEWAY_ID'>,
 	body: ExtractRequest
 ): Promise<Array<ExtractedPhrase>> {
-	const output = await ai.run(model, {
-		messages: [
-			{
-				role: 'user',
-				content: [
-					{ type: 'text', text: buildPrompt(body) },
-					{ type: 'image_url', image_url: { url: body.image } },
-				],
+	const output = await env.AI.run(
+		env.PHOTO_EXTRACT_MODEL,
+		{
+			messages: [
+				{
+					role: 'user',
+					content: [
+						{ type: 'text', text: buildPrompt(body) },
+						{ type: 'image_url', image_url: { url: body.image } },
+					],
+				},
+			],
+			response_format: {
+				type: 'json_schema',
+				json_schema: {
+					name: 'extracted_phrases',
+					schema: OUTPUT_SCHEMA,
+					strict: true,
+				},
 			},
-		],
-		response_format: {
-			type: 'json_schema',
-			json_schema: {
-				name: 'extracted_phrases',
-				schema: OUTPUT_SCHEMA,
-				strict: true,
-			},
+			chat_template_kwargs: { enable_thinking: false },
+			temperature: 0,
+			max_completion_tokens: 2048,
 		},
-		chat_template_kwargs: { enable_thinking: false },
-		temperature: 0,
-		max_completion_tokens: 2048,
-	})
+		{ gateway: { id: env.AI_GATEWAY_ID } }
+	)
 	return cleanPhrases(parseModelContent(output.choices[0]?.message?.content))
 }

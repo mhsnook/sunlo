@@ -22,12 +22,21 @@
 			"namespace_id": "1001",
 			"simple": { "limit": 10, "period": 60 },
 		},
+		{
+			// Per model step, and one learner message can take several steps.
+			"name": "COACH_LIMITER",
+			"namespace_id": "1002",
+			"simple": { "limit": 40, "period": 60 },
+		},
 	],
 	// Production values, all public. Workers Builds deploys these on a push
 	// to main; its VITE_SUPABASE_* build variables must match them.
 	// scripts/cf-preview.sh overrides the Supabase pair with --var.
 	"vars": {
 		"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+		"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+		// Must exist in the AI Gateway dashboard; only `default` is created on demand.
+		"AI_GATEWAY_ID": "sunlo-app",
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
 		"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
 	},
