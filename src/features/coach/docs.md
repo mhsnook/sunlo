@@ -18,6 +18,8 @@ The agent and the page split the work by what each can reach.
 
 - **The agent reads the public library.** `search_library`, `find_similar` and `list_tags` (`.flue/coach/library.ts`) query Supabase with the anon key. Search tries the `search` Edge Function, which ranks by meaning, and falls back to `search_by_trigram`, which ranks by spelling and needs no Workers AI.
 - **The page owns the learner's deck.** Flue keeps tokens out of agents, so the agent cannot write the learner's cards. `add_to_deck` and `navigate` only return what to do. After each message, `send` in `hooks.ts` waits for its submission to settle, reads that submission's tool outputs (`pageActions`), and adds the cards with `addPhrasesToDeck` under the learner's own session.
+- **The page tells the coach what overlaps the deck.** The agent's searches cannot leave out the learner's own phrases, because it cannot read the deck. After a turn that showed phrases, the page adds a note such as "3 of the 4 phrases you just showed were already in the deck" to the learner's next message, and the prompt tells the coach to offer a different search, a request or a friend. Filtering the search itself would need the agent to read the deck: a read-only, uid-scoped database role like the admin's `admin_reader`, which is a migration.
+- **The coach drafts requests on the page.** `draft_request` puts a `RequestForm` beside the chat, filled in with the coach's wording. The learner edits it and presses the button; nothing is posted for them. The chat stays open throughout.
 - **The page renders from the conversation.** `readConversation` (`conversation.ts`) turns Flue's messages into the chat log, the sets the coach showed (`show_on_page` outputs) and the suggested replies. A set holds only ids; the page draws each phrase, request and playlist from the local collections.
 
 `protocol.ts` holds what both sides share: the tool input schemas and descriptions (Valibot, as Flue requires), the output shapes the page reads, and the conversation id.
@@ -32,6 +34,16 @@ Each message to the agent is the learner's text with lines from the page before 
 - `[Page: you opened with: ...]`, on the first message only, carries the fixed greeting (`openingLine`) the page showed before any model call.
 
 `store.ts` keeps the page's own state for the session, per language: the pending notes, the sets the learner opened from a tile, and which set is on the page.
+
+## Limits
+
+- `Coach.durability` allows 3 attempts and 2 minutes per message, since every attempt is a paid model run.
+- `requireOwnConversation` refuses a message over 16 kB (413) or without a length (411), and counts messages against `COACH_LIMITER`.
+- Until the conversation's history loads, the chat shows "Loading your conversation…" and keeps the composer off, so a returning learner is never greeted as new.
+
+## What the coach can make the page do
+
+Every action needs the learner's own message in that turn, and acts in their session with their permissions: adding phrases to their deck, showing sets, drafting a request for them to post, and moving between a fixed list of in-app pages (`navigate`). It cannot post, delete or open anything outside Sunlo.
 
 ## The model
 

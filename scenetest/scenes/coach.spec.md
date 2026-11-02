@@ -49,3 +49,24 @@ learner:
 - click coach-send
 - seeText Adding
 - notSee coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12 coach-add-phrase
+
+# learner has the coach draft a request, then posts it from the page
+
+cleanup: supabase.from('phrase_request').delete().eq('requester_uid', '[learner.key]').eq('lang', '[team.lang_partial]').gte('created_at', '[testStart]')
+
+learner:
+
+- openTo /coach
+- typeInto email-input [self.email]
+- typeInto password-input [self.password]
+- click submit-button
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- typeInto coach-input "request: how do I say thank you for dinner"
+- click coach-send
+- see coach-request-draft
+- seeText I put a draft on the page
+- click coach-request-form submit-button
+- seeText posted the request

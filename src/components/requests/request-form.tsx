@@ -78,9 +78,12 @@ export function RequestForm({
 	onCancel,
 	formTestId = 'new-request-form',
 	rows,
+	initialPrompt,
 }: {
 	lang: string
 	requestId?: uuid
+	// Prefills a new request; an edit starts from the request's own prompt.
+	initialPrompt?: string
 	onSuccess?: (data: PhraseRequestType) => void
 	onCancel?: () => void
 	formTestId?: string
@@ -94,7 +97,7 @@ export function RequestForm({
 	const [submitError, setSubmitError] = useState<Error | null>(null)
 
 	const form = useAppForm({
-		defaultValues: { prompt: request?.prompt ?? '' },
+		defaultValues: { prompt: request?.prompt ?? initialPrompt ?? '' },
 		validators: { onChange: RequestPhraseFormSchema },
 		onSubmit: async ({ value, formApi }) => {
 			setSubmitError(null)

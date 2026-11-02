@@ -35,6 +35,17 @@ const tool = (name: string, output: unknown, id = name): Part =>
 
 const CONTEXT = { lang: 'kan', translationLang: 'eng', learnerName: 'Priya' }
 
+const read = (messages: Array<FlueConversationMessage>) =>
+	readConversation(messages, 'kan')
+
+const kanMessage = (said: string, lang = 'kan') =>
+	composeMessage(said, {
+		context: { ...CONTEXT, lang },
+		notes: [],
+		deck: '0 of 100 phrases',
+		opening: null,
+	})
+
 const SHOWN = {
 	lang: 'kan',
 	title: 'Tea',
@@ -73,7 +84,7 @@ describe('readConversation', () => {
 			deck: '8 of 100 phrases',
 			opening: 'Hi.',
 		})
-		const { log } = readConversation([message('m1', 'user', [text(body)])])
+		const { log } = read([message('m1', 'user', [text(body)])])
 		expect(log.map(({ kind, text }) => [kind, text])).toEqual([
 			['coach', 'Hi.'],
 			['action', 'added one'],
@@ -82,7 +93,7 @@ describe('readConversation', () => {
 	})
 
 	it('keeps a learner line that starts with a bracket', () => {
-		const { log } = readConversation([
+		const { log } = read([
 			message('m1', 'user', [text('[sic] how do I say this')]),
 		])
 		expect(log).toEqual([
@@ -91,8 +102,8 @@ describe('readConversation', () => {
 	})
 
 	it('turns show_on_page into a view and offers the last suggestions', () => {
-		const { views, suggestions, log } = readConversation([
-			message('m1', 'user', [text('tea')]),
+		const { views, suggestions, log } = read([
+			message('m1', 'user', [text(kanMessage('tea'))]),
 			message('m2', 'assistant', [
 				text('Here are two.'),
 				tool('show_on_page', SHOWN, 'call-1'),
@@ -108,6 +119,7 @@ describe('readConversation', () => {
 				phraseIds: ['p1', 'p2'],
 				requestIds: [],
 				playlistIds: [],
+				draftRequest: null,
 			},
 		])
 		expect(suggestions).toEqual(['Add them all'])
@@ -115,7 +127,7 @@ describe('readConversation', () => {
 	})
 
 	it('offers no suggestions once the learner has answered', () => {
-		const { suggestions } = readConversation([
+		const { suggestions } = read([
 			message('m1', 'assistant', [
 				tool('suggest_replies', { replies: ['Food'] }),
 			]),
@@ -124,15 +136,39 @@ describe('readConversation', () => {
 		expect(suggestions).toEqual([])
 	})
 
+	it("keeps another language's sets and suggestions off this page", () => {
+		const { views, suggestions, log } = read([
+			message('m1', 'user', [text(kanMessage('tea', 'hin'))]),
+			message('m2', 'assistant', [
+				tool('show_on_page', { ...SHOWN, lang: 'hin' }),
+				tool('suggest_replies', { replies: ['Add them all'] }),
+			]),
+		])
+		expect(views).toEqual([])
+		expect(suggestions).toEqual([])
+		expect(log.at(-1)?.text).toBe(
+			'Showing “Tea” · 2 phrases on your Hindi page'
+		)
+	})
+
+	it('turns draft_request into a request draft on the page', () => {
+		const { views } = read([
+			message('m1', 'assistant', [
+				tool('draft_request', { lang: 'kan', prompt: 'How do I say thanks?' }),
+			]),
+		])
+		expect(views).toMatchObject([{ draftRequest: 'How do I say thanks?' }])
+	})
+
 	it('ignores a tool output that does not match its shape', () => {
-		const { views } = readConversation([
+		const { views } = read([
 			message('m1', 'assistant', [tool('show_on_page', { title: 3 })]),
 		])
 		expect(views).toEqual([])
 	})
 
 	it('reports a failed turn', () => {
-		const { log } = readConversation([
+		const { log } = read([
 			message('m1', 'assistant', [], {
 				display: 'diagnostic',
 				settlement: { outcome: 'failed' },
@@ -165,6 +201,7 @@ describe('pageActions', () => {
 		]
 		expect(pageActions(messages, 'sub-2')).toEqual({
 			add: ['p1', 'p2'],
+			shown: [],
 			navigate: { to: 'review' },
 		})
 	})

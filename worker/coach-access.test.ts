@@ -19,8 +19,22 @@ function makeApp(limitOk = true) {
 	const env = { COACH_LIMITER: { limit } } as unknown as Env
 	return {
 		limit,
-		request: (path: string, method = 'GET') =>
-			app.request(`${COACH_MOUNT}/${path}`, { method }, env),
+		request: (
+			path: string,
+			method = 'GET',
+			body = '{"kind":"user","body":"hi"}'
+		) =>
+			app.request(
+				`${COACH_MOUNT}/${path}`,
+				method === 'POST'
+					? {
+							method,
+							body,
+							headers: { 'content-length': String(body.length) },
+						}
+					: { method },
+				env
+			),
 	}
 }
 
@@ -45,6 +59,18 @@ describe('requireOwnConversation', () => {
 		const res = await request(UID, 'POST')
 		expect(res.status).toBe(429)
 		expect(limit).toHaveBeenCalledWith({ key: UID })
+	})
+
+	it('refuses a message over the size cap before counting it', async () => {
+		const { request, limit } = makeApp()
+		const res = await request(UID, 'POST', 'x'.repeat(16_001))
+		expect(res.status).toBe(413)
+		expect(limit).not.toHaveBeenCalled()
+	})
+
+	it('lets a message of ordinary size through', async () => {
+		const res = await makeApp().request(UID, 'POST')
+		expect(res.status).toBe(200)
 	})
 
 	it('does not count an abort', async () => {

@@ -30,6 +30,7 @@ export function CoachPage({ lang, uid }: { lang: string; uid: string }) {
 					deckSize={deck.size}
 					log={coach.log}
 					suggestions={coach.suggestions}
+					ready={coach.ready}
 					started={coach.started}
 					busy={coach.busy}
 					send={(text) => void coach.send(text)}

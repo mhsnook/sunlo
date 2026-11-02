@@ -79,6 +79,14 @@ export function Coach() {
 		run: ({ data: input }) => ({ output: { replies: input.replies } }),
 	})
 	useTool({
+		name: 'draft_request',
+		description: coachToolDescriptions.draft_request,
+		input: coachToolInputs.draft_request,
+		run: ({ data: input }) => ({
+			output: { lang: page().lang, prompt: input.prompt },
+		}),
+	})
+	useTool({
 		name: 'navigate',
 		description: coachToolDescriptions.navigate,
 		input: coachToolInputs.navigate,
@@ -89,3 +97,6 @@ export function Coach() {
 }
 
 Coach.agentName = 'coach'
+// Every attempt is a paid model run. A turn that cannot finish in two
+// minutes or three attempts fails, and the learner can send again.
+Coach.durability = { maxAttempts: 3, timeoutMs: 120_000 }

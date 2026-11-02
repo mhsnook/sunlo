@@ -90,11 +90,22 @@ export const coachToolInputs = {
 			v.maxLength(4)
 		),
 	}),
+	draft_request: v.object({
+		prompt: v.pipe(
+			v.string(),
+			v.minLength(3),
+			v.maxLength(300),
+			v.description(
+				"The request in the learner's words, as they would post it: what they want to say, and when."
+			)
+		),
+	}),
 	navigate: v.object({
 		to: v.picklist([
 			'deck',
 			'review',
 			'profile',
+			'requests',
 			'phrase',
 			'playlist',
 			'request',
@@ -123,8 +134,10 @@ export const coachToolDescriptions: Record<CoachToolName, string> = {
 		'Add phrases to the learner\'s deck as flashcards. Only when the learner asked for it, in general or specific terms ("add them", "add the food ones"). The page adds them and reports back with the learner\'s next message.',
 	suggest_replies:
 		'Offer the learner up to 4 short replies as buttons under your message. Write them as the learner would say them, 1 to 5 words each.',
+	draft_request:
+		'Put a request ("How do I say ...?") on the page for the learner to post to the community, already written out. Use it when the library has nothing for what they want and they agree to ask. The learner can edit it, and nothing is posted until they press the button.',
 	navigate:
-		'Take the learner to another part of Sunlo, when they ask to go there. Leaves the coach.',
+		'Take the learner to another part of Sunlo, when they ask to go there. Leaves the coach. To ask the community for a phrase, use draft_request instead, which keeps the learner here.',
 }
 
 // What the page reads off a finished tool call. The agent returns these
@@ -145,6 +158,11 @@ export const SuggestRepliesOutputSchema = v.object({
 
 export const AddToDeckOutputSchema = v.object({
 	phrase_ids: v.array(v.string()),
+})
+
+export const DraftRequestOutputSchema = v.object({
+	lang: v.string(),
+	prompt: v.string(),
 })
 
 export const NavigateOutputSchema = coachToolInputs.navigate

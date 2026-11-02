@@ -76,6 +76,12 @@ function respondToResults(messages: Messages) {
 				}),
 			])
 		}
+		if (result.toolName === 'draft_request')
+			return reply([
+				fauxText(
+					'I put a draft on the page. Change anything you like, then post it.'
+				),
+			])
 		if (result.toolName === 'add_to_deck')
 			return reply([
 				fauxText(
@@ -98,6 +104,8 @@ function respondToLearner(messages: Messages, message: Message) {
 		.join(' ')
 		.trim()
 	const shown = lastShown(messages)
+	const asked = /^request:\s*(.+)$/i.exec(text)
+	if (asked) return reply([fauxToolCall('draft_request', { prompt: asked[1] })])
 	if (/\badd\b/i.test(text) && shown.length)
 		return reply([fauxToolCall('add_to_deck', { phrase_ids: shown })])
 	if (/more like/i.test(text) && shown.length)

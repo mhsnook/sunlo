@@ -5,6 +5,7 @@ import {
 	Plus,
 	type LucideIcon,
 } from 'lucide-react'
+import { RequestForm } from '@/components/requests/request-form'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -157,7 +158,11 @@ function ViewContent({
 	const requests = useRequestsByIds(view.requestIds)
 	const playlists = usePlaylistsByIds(view.playlistIds)
 
-	const openSet = (title: string, phraseIds: Array<string>, note: string) =>
+	const openSet = (
+		title: string,
+		ids: { phraseIds?: Array<string>; requestIds?: Array<string> },
+		note: string
+	) =>
 		openLocalView(
 			coachKey,
 			{
@@ -165,11 +170,33 @@ function ViewContent({
 				lang,
 				title,
 				subtitle: null,
-				phraseIds,
-				requestIds: [],
+				phraseIds: ids.phraseIds ?? [],
+				requestIds: ids.requestIds ?? [],
 				playlistIds: [],
+				draftRequest: null,
 			},
 			note
+		)
+
+	if (view.draftRequest !== null)
+		return (
+			<div
+				className="bg-card max-w-xl rounded border p-4"
+				data-testid="coach-request-draft"
+			>
+				<RequestForm
+					lang={lang}
+					initialPrompt={view.draftRequest}
+					formTestId="coach-request-form"
+					onSuccess={(request) =>
+						openSet(
+							'Your request',
+							{ requestIds: [request.id] },
+							`posted the request “${request.prompt}”`
+						)
+					}
+				/>
+			</div>
 		)
 
 	const phraseGrid = (
@@ -236,7 +263,7 @@ function ViewContent({
 							onOpen={() =>
 								openSet(
 									request.prompt,
-									request.answerIds,
+									{ phraseIds: request.answerIds },
 									`opened the request “${request.prompt}”`
 								)
 							}
@@ -257,7 +284,7 @@ function ViewContent({
 							onOpen={() =>
 								openSet(
 									playlist.title,
-									playlistPhraseIds(playlist.id),
+									{ phraseIds: playlistPhraseIds(playlist.id) },
 									`opened the set “${playlist.title}”`
 								)
 							}

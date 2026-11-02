@@ -20,6 +20,7 @@ type Props = {
 	deckSize: number
 	log: Array<CoachLogEntry>
 	suggestions: Array<string>
+	ready: boolean
 	started: boolean
 	busy: boolean
 	send: (text: string) => void
@@ -32,13 +33,14 @@ export function CoachChat({
 	deckSize,
 	log,
 	suggestions,
+	ready,
 	started,
 	busy,
 	send,
 }: Props) {
 	const [draft, setDraft] = useState('')
 	const { notes } = usePageState(coachKey)
-	const replies = started ? suggestions : OPENING_REPLIES
+	const replies = !ready ? [] : started ? suggestions : OPENING_REPLIES
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 p-4">
@@ -57,7 +59,14 @@ export function CoachChat({
 				className="min-h-0 flex-1"
 			>
 				<div className="flex flex-col gap-3 pe-1">
-					{started ? (
+					{!ready ? (
+						<p
+							className="text-muted-foreground text-sm"
+							data-testid="coach-loading"
+						>
+							Loading your conversation…
+						</p>
+					) : started ? (
 						log.map((entry) => <LogEntry key={entry.id} entry={entry} />)
 					) : (
 						<Bubble variant="soft" align="start">
@@ -104,7 +113,7 @@ export function CoachChat({
 					send(text)
 					setDraft('')
 				}}
-				busy={busy}
+				busy={busy || !ready}
 				placeholder="Tell your coach what you want to learn"
 				inputLabel="Message your coach"
 				inputTestId="coach-input"

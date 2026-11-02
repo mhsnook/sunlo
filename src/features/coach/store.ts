@@ -41,9 +41,13 @@ export const addNote = (key: string, note: string) =>
 		notes: [...page.notes, { id: crypto.randomUUID(), text: note }],
 	}))
 
-// Hands the pending notes to a message and starts following the coach again.
-export function takeNotes(key: string) {
-	const notes = (useCoachPageStore.getState()[key] ?? emptyPage).notes
-	update(key, () => ({ notes: [], activeViewId: null }))
-	return notes.map((note) => note.text)
-}
+export const pendingNotes = (key: string) =>
+	(useCoachPageStore.getState()[key] ?? emptyPage).notes
+
+// After the message carrying these notes was admitted. A note the learner
+// made while it was sending stays for the next message.
+export const clearNotes = (key: string, ids: Array<string>) =>
+	update(key, (page) => ({
+		notes: page.notes.filter((note) => !ids.includes(note.id)),
+		activeViewId: null,
+	}))

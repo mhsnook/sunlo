@@ -8,7 +8,6 @@ import { COACH_MOUNT } from '../src/features/coach/protocol'
 import { requireOwnConversation } from '../worker/coach-access'
 import worker from '../worker/index'
 import { Coach } from './agents/coach'
-import { mockCoachProvider } from './coach/mock'
 
 setProvider(
 	cloudflareBindingProvider({
@@ -16,7 +15,10 @@ setProvider(
 		gateway: { id: env.AI_GATEWAY_ID },
 	})
 )
-if (env.COACH_MODEL.startsWith('mock/')) setProvider(mockCoachProvider())
+// Imported only in mock mode, so the scripted model stays out of the code
+// a production Worker loads.
+if (env.COACH_MODEL.startsWith('mock/'))
+	setProvider((await import('./coach/mock')).mockCoachProvider())
 
 const app = new Hono<AppEnv>()
 

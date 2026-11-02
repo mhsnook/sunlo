@@ -313,18 +313,21 @@ export async function findSimilar(
 	}
 }
 
+// Counts the live tag links: not removed, on a phrase that is neither
+// archived nor a draft.
 export async function listTags(sb: Sb, lang: string) {
 	const { data } = await sb
-		.from('tag')
-		.select('name, phrase_tag(count)')
-		.eq('lang', lang)
+		.from('phrase_tag')
+		.select('tag!inner(name), phrase!inner(lang, archived, draft)')
+		.eq('deleted', false)
+		.eq('phrase.lang', lang)
+		.eq('phrase.archived', false)
+		.eq('phrase.draft', false)
 		.throwOnError()
-	return (data ?? [])
-		.map((tag) => ({
-			name: tag.name,
-			count:
-				(tag.phrase_tag as unknown as Array<{ count: number }>)[0]?.count ?? 0,
-		}))
-		.filter((tag) => tag.count > 0)
+	const counts = new Map<string, number>()
+	for (const row of data ?? [])
+		counts.set(row.tag.name, (counts.get(row.tag.name) ?? 0) + 1)
+	return [...counts]
+		.map(([name, count]) => ({ name, count }))
 		.toSorted((a, b) => b.count - a.count)
 }
