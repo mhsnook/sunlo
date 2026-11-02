@@ -243,6 +243,7 @@ function AuthorGroup({
 							<MessageRunParts
 								parts={runs.above.get(message.id)}
 								message={message}
+								place="above"
 							/>
 							{message.images.length > 0 && (
 								<MessageImages
@@ -285,6 +286,7 @@ function AuthorGroup({
 							<MessageRunParts
 								parts={runs.under.get(message.id)}
 								message={message}
+								place="under"
 							/>
 							{other && <OtherView original={message} other={other} />}
 							{message.thread && (
