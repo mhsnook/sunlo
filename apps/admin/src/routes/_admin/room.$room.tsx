@@ -28,7 +28,7 @@ import {
 	workspaceQuery,
 } from '~/lib/crew'
 import { RoomAvatar, WorkingMarker } from '~/components/crew/crew-parts'
-import { LiveRuns, useLiveRuns } from '~/components/crew/run-steps'
+import { LiveRuns, useRunParts } from '~/components/crew/run-steps'
 import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
 import { SidePanelSlot } from '~/components/crew/side-panel'
 import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
@@ -81,8 +81,8 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 	const details = useDetailsPanel()
 	const members = roomMembers(room)
 	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
-	const liveRuns = useLiveRuns(members)
-	const liveSteps = liveRuns.reduce((sum, run) => sum + run.steps.length, 0)
+	const runs = useRunParts(thread.messages, members)
+	const liveSteps = runs.live.reduce((sum, run) => sum + run.steps.length, 0)
 	const myAuthor = adminAuthor(session.user.id)
 
 	return (
@@ -118,12 +118,13 @@ function SubjectRoom({ room }: { room: RoomKey }) {
 							replies={thread.replies}
 							myAuthor={myAuthor}
 							newSince={newSince}
+							runs={runs}
 						/>
 					) : (
 						<EmptyThread room={room} />
 					)}
 					<WorkingMarker agents={working} />
-					<LiveRuns runs={liveRuns} />
+					<LiveRuns runs={runs.live} />
 				</MessageScroller>
 				<RoomThreadCompose
 					room={room}

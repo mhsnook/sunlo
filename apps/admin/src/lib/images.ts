@@ -67,7 +67,7 @@ export async function asPng(blob: Blob): Promise<Blob> {
 	}
 }
 
-function encode(
+export function encode(
 	bitmap: ImageBitmap,
 	width: number,
 	height: number,
@@ -116,3 +116,13 @@ export function uploadOnce<T>(upload: (blob: Blob) => Promise<T>) {
 		},
 	}
 }
+
+export const asDataUrl = (blob: Blob) =>
+	new Promise<string>((resolve, reject) => {
+		const reader = new FileReader()
+		reader.addEventListener('load', () => resolve(reader.result as string))
+		reader.addEventListener('error', () =>
+			reject(new Error('Could not read the image'))
+		)
+		reader.readAsDataURL(blob)
+	})

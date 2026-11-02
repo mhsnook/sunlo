@@ -12,6 +12,7 @@ import {
 	crewKeys,
 	GithubDraftSchema,
 	PickChoiceSchema,
+	StepActionSchema,
 	isCrewKey,
 	isRoomKey,
 	MAX_UPLOAD_BYTES,
@@ -24,6 +25,7 @@ import {
 import { restoreSummary } from '../worker/crew/documents'
 import {
 	githubWebhook,
+	LIVE_RETRY_MS,
 	MAX_WEBHOOK_BYTES,
 	verifyGithubSignature,
 } from '../worker/crew/github-log'
@@ -523,6 +525,32 @@ api.post(
 	}
 )
 
+api.post(
+	'/crew/messages/:id/steps/:step',
+	json(StepActionSchema, 'Send { action, note?, count? }'),
+	async (c) => {
+		const step = z.coerce.number().int().min(0).safeParse(c.req.param('step'))
+		if (!step.success) return c.json({ error: 'No such step' }, 404)
+		const result = await (
+			await roomFor()
+		).stepAction({
+			messageId: c.req.param('id'),
+			step: step.data,
+			action: c.req.valid('json'),
+			name: c.get('admin').name,
+		})
+		if (!result.ok) return c.json({ error: result.error }, result.status)
+		if (result.report) {
+			await deliver(
+				result.report.agent,
+				'crew.answer',
+				result.report.body
+			).catch(logFailedDelivery)
+		}
+		return c.json({ ok: true })
+	}
+)
+
 api.get('/crew/sketches/:id', numericId('No such sketch'), async (c) => {
 	const sketch = await (await roomFor()).sketch(c.req.valid('param').id)
 	return sketch ? c.json(sketch) : c.json({ error: 'No such sketch' }, 404)
@@ -637,9 +665,30 @@ api.post('/public/github/webhook', async (c) => {
 	)
 	if (result.kind === 'ping') return c.json({ ok: true })
 	if (result.kind === 'ignore') return c.body(null, 204)
-	const taken = await (await roomFor()).githubDelivery(delivery, result)
+	const room = await roomFor()
+	const taken = await room.githubDelivery(delivery, result)
+	if (
+		taken &&
+		result.kind === 'deploy' &&
+		result.deploy.outcome === 'deployed'
+	) {
+		c.executionCtx.waitUntil(seeDeployLive(room))
+	}
 	return c.json({ ok: true, duplicate: !taken })
 })
+
+// A build can report success a few seconds before its Worker serves the new
+// version everywhere, so a miss is asked once more. After that, the hourly
+// cron asks.
+async function seeDeployLive(room: Awaited<ReturnType<typeof roomFor>>) {
+	try {
+		if (await room.checkLiveDeploys()) return
+		await scheduler.wait(LIVE_RETRY_MS)
+		await room.checkLiveDeploys()
+	} catch (error) {
+		console.error('Could not check the live version', error)
+	}
+}
 
 // The room's copy of what is open on GitHub, for the Product room's details.
 api.get('/crew/github', async (c) => {

@@ -13,6 +13,7 @@ import {
 	githubEventLine,
 	GITHUB_AUTHOR,
 	GITHUB_CLOSED_DAYS,
+	GITHUB_DEPLOY_DAYS,
 	type GithubEventType,
 	type GithubLogType,
 	handleOf,
@@ -27,6 +28,9 @@ import {
 	placeOf,
 	threadPlace,
 	isThreadPlace,
+	currentSketch,
+	isFlow,
+	stepLabel,
 	type MessagePlaceType,
 	principalOf,
 	roomMembers,
@@ -60,7 +64,9 @@ import {
 	type RoomThreadType,
 	type RoutingType,
 	type RunType,
+	type SketchOriginType,
 	type SketchType,
+	type StepActionType,
 	type PainterStyleInputType,
 	type PainterStyleType,
 	type PaintingType,
@@ -96,15 +102,32 @@ import {
 } from './picks'
 import {
 	daysBefore,
+	githubDeploys,
 	githubItemOf,
 	githubItems,
+	liveCommit,
+	markGithubDeployLive,
 	pruneGithubLog,
 	removeGithubItem,
 	takeDelivery,
+	workersAwaitingLive,
+	writeGithubDeploy,
 	writeGithubItem,
 	type WebhookResult,
 } from './github-log'
 import { leftThisHour } from './hourly'
+import {
+	addSubflow,
+	approvalNote,
+	approveFlow,
+	findStep,
+	mixInCurrent,
+	pickVersion,
+	replyWithVersions,
+	requestStep,
+	setApproval,
+	stepRequestReport,
+} from './flows'
 import {
 	loadImage,
 	pruneImages,
@@ -611,6 +634,21 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			create table if not exists github_delivery (
 				id text primary key,
 				at text not null
+			);
+			-- Each Worker that Workers Builds built from a commit on main, kept
+			-- for GITHUB_DEPLOY_DAYS. outcome is deployed, failed or cancelled.
+			-- built_at is when its first run finished, and ran_at its latest.
+			-- live_at is when the Worker first answered with this commit or a
+			-- later one.
+			create table if not exists github_deploy (
+				worker text not null,
+				sha text not null,
+				outcome text not null,
+				built_at text not null,
+				ran_at text not null,
+				live_at text,
+				url text not null,
+				primary key (worker, sha)
 			);
 			create table if not exists schema_version (version integer not null);
 		`
@@ -1456,6 +1494,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			(s) => `sketch-${s.id}` === action.id
 		)
 		if (sketch) {
+			const from = message.card.from
+			const picked =
+				from?.kind === 'redo'
+					? this.pickForStep(from, sketch, message.id)
+					: null
 			return {
 				ok: true,
 				reports: sketchPickReports({
@@ -1463,6 +1506,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					title: subject,
 					sketch,
 					by: input.name,
+					step:
+						picked && from
+							? {
+									index: from.step,
+									flowTitle: from.title,
+									kept: picked.kept,
+								}
+							: undefined,
 				}),
 			}
 		}
@@ -1490,6 +1541,27 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			? `${input.name} dismissed your ${what}: ${subject}${input.feedback ? `\n\nTheir feedback: ${input.feedback}` : ''}`
 			: `${input.name} answered "${action.label}" to your ${what}: ${subject}`
 		return { ok: true, reports: [{ agent, body }] }
+	}
+
+	// The admin went with one of the versions a redo offered: it becomes the
+	// step's picture in the flow, unless it was the step's current picture.
+	// Null when the flow is gone.
+	private pickForStep(
+		from: SketchOriginType,
+		sketch: SketchType,
+		messageId: string
+	) {
+		const flow = this.messageById(from.messageId)
+		const steps = flow?.card?.sketches
+		const step = steps?.[from.step]
+		if (!flow || !steps || !step) return null
+		const kept = currentSketch(step).id === sketch.id
+		const { id, label, idea } = sketch
+		this.saveSteps(
+			flow,
+			pickVersion(steps, from.step, { id, label, idea, messageId }, messageId)
+		)
+		return { kept }
 	}
 
 	// ---- Agent runs ---------------------------------------------------------
@@ -1916,6 +1988,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		ref?: number
 		draft?: GithubDraftType
 		sketches?: Array<SketchType>
+		layout?: CardType['layout']
+		from?: SketchOriginType
 		paintings?: Array<PaintingType>
 		svgs?: Array<SvgRefType>
 	}) {
@@ -1931,6 +2005,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				ref: input.ref ?? null,
 				...(input.draft ? { draft: input.draft } : {}),
 				...(input.sketches ? { sketches: input.sketches } : {}),
+				...(input.layout ? { layout: input.layout } : {}),
+				...(input.from ? { from: input.from } : {}),
 				...(input.paintings ? { paintings: input.paintings } : {}),
 				...(input.svgs ? { svgs: input.svgs } : {}),
 			},
@@ -2013,21 +2089,32 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		)
 	}
 
-	// A card in the agent's room with its mockups, one action for each: the
-	// admin picks one with it.
+	// A card in the agent's room with its mockups. As options, one action
+	// for each, which picks it. As a flow, the screens in order, with one
+	// action that approves them all. `replaces` and `expands` name a flow's
+	// step by its current sketch: new versions of it, or a sub-flow of it.
 	postSketches(input: {
 		agent: CrewKey
 		title: string
 		body: string
 		frame: SketchType['frame']
+		layout: 'options' | 'flow'
+		replaces?: number
+		expands?: number
 		proposals: Array<{
 			idea: string
+			action?: string
 			html: string
 			image: Uint8Array
 			mimeType: string
 		}>
 	}):
-		| { ok: true; messageId: string; sketches: Array<SketchType> }
+		| {
+				ok: true
+				messageId: string
+				sketches: Array<SketchType>
+				note: string | null
+		  }
 		| {
 				ok: false
 				error: string
@@ -2039,9 +2126,26 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				error: `Nothing was posted: you can make ${left} more sketch${left === 1 ? '' : 'es'} this hour, out of ${SKETCHES_PER_HOUR}.`,
 			}
 		}
+		const target = input.replaces ?? input.expands
+		const source = target === undefined ? null : this.flowStepOf(target)
+		if (source && 'error' in source) return { ok: false, error: source.error }
+		const mode = !source
+			? null
+			: input.expands !== undefined
+				? 'expand'
+				: 'redo'
+		const flow = input.layout === 'flow'
+		// A redo's card holds the step's current picture too, at a random place
+		// among the new versions.
+		const currentAt =
+			mode === 'redo'
+				? Math.floor(Math.random() * (input.proposals.length + 1))
+				: -1
+		const cardIndex = (index: number) =>
+			currentAt !== -1 && index >= currentAt ? index + 1 : index
 		const at = now()
-		const sketches = input.proposals.map((proposal, index) => {
-			const label = optionLabel(index)
+		const drawn = input.proposals.map((proposal, index) => {
+			const label = flow ? stepLabel(index) : optionLabel(cardIndex(index))
 			const image = proposal.image.slice().buffer
 			// The sql template takes no bytes; storage.sql binds an ArrayBuffer
 			// as a blob.
@@ -2060,20 +2164,194 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 					at
 				)
 				.one()
-			return { id, label, idea: proposal.idea, frame: input.frame }
+			const sketch: SketchType = {
+				id,
+				label,
+				idea: proposal.idea,
+				frame: input.frame,
+			}
+			return flow && proposal.action
+				? { ...sketch, action: proposal.action }
+				: sketch
 		})
+		const step = source ? source.steps[source.index] : null
+		const current = step ? currentSketch(step) : null
+		const sketches =
+			mode === 'redo' && step && current
+				? mixInCurrent(
+						drawn,
+						{
+							id: current.id,
+							label: optionLabel(currentAt),
+							idea: current.idea,
+							frame: step.frame,
+						},
+						currentAt
+					)
+				: drawn
 		const messageId = this.bringToAdmin({
 			author: input.agent,
 			kind: 'sketches',
 			title: input.title,
 			body: input.body,
-			actions: sketches.map((sketch) => ({
-				id: `sketch-${sketch.id}`,
-				label: `Go with ${sketch.label}`,
-			})),
+			actions: flow
+				? []
+				: sketches.map((sketch) => ({
+						id: `sketch-${sketch.id}`,
+						label: `Go with ${sketch.label}`,
+					})),
 			sketches,
+			...(flow ? { layout: 'flow' as const } : {}),
+			...(source
+				? {
+						from: {
+							kind: mode === 'expand' ? 'expand' : 'redo',
+							messageId: source.message.id,
+							step: source.index,
+							title: source.message.card?.title ?? source.message.body,
+						},
+					}
+				: {}),
 		})
-		return { ok: true, messageId, sketches }
+		if (!source) return { ok: true, messageId, sketches, note: null }
+		if (mode === 'expand') {
+			this.saveSteps(
+				source.message,
+				addSubflow(source.steps, source.index, messageId)
+			)
+			return { ok: true, messageId, sketches, note: null }
+		}
+		this.saveSteps(
+			source.message,
+			replyWithVersions(
+				source.steps,
+				source.index,
+				messageId,
+				displayName(input.agent)
+			)
+		)
+		return {
+			ok: true,
+			messageId,
+			sketches,
+			note: `The room put the step's current picture on the card as ${optionLabel(currentAt)}. Do not say which one it is.`,
+		}
+	}
+
+	// Why `replaces` or `expands` cannot be posted, before any sketch is
+	// drawn; null when it can.
+	sketchTargetError(target: number) {
+		const source = this.flowStepOf(target)
+		return 'error' in source ? `Nothing was drawn: ${source.error}` : null
+	}
+
+	// The flow and the step that a sketch is the current picture of. A
+	// sketch posted as a redrawn version belongs to the flow its card
+	// answers.
+	private flowStepOf(sketchId: number):
+		| {
+				message: CrewMessageType
+				steps: Array<SketchType>
+				index: number
+		  }
+		| { error: string } {
+		const row = this.sql<MessageRow>`
+			select * from message
+			where card is not null and exists (
+				select 1 from json_each(message.card, '$.sketches') as s
+				where json_extract(s.value, '$.id') = ${sketchId}
+			)
+			limit 1`[0]
+		const posted = row ? toMessage(row) : null
+		const card = posted?.card
+		if (!posted || !card) return { error: `No sketch ${sketchId}.` }
+		const flow = isFlow(card)
+			? posted
+			: card.from?.kind === 'redo'
+				? this.messageById(card.from.messageId)
+				: null
+		if (!flow || !isFlow(flow.card) || !flow.card?.sketches) {
+			return {
+				error: `Sketch ${sketchId} is not a step of a flow. replaces and expands take the sketch id of a flow's step.`,
+			}
+		}
+		const index = findStep(flow.card.sketches, sketchId)
+		if (index === -1) {
+			return {
+				error: `Sketch ${sketchId} is no longer the picture of any step in "${flow.card.title}". Use the step's current sketch id.`,
+			}
+		}
+		return { message: flow, steps: flow.card.sketches, index }
+	}
+
+	private saveSteps(message: CrewMessageType, steps: Array<SketchType>) {
+		if (!message.card) return
+		const card = { ...message.card, sketches: steps }
+		this.sql`
+			update message set card = ${JSON.stringify(card)}
+			where id = ${message.id}`
+		this.push({ type: 'message', message: { ...message, card } })
+		this.openCardsChanged()
+	}
+
+	// The admin's controls on a flow. Approving is noted for the agent's next
+	// run; a redo or an expand wakes it.
+	stepAction(input: {
+		messageId: string
+		step: number
+		action: StepActionType
+		name: string
+	}):
+		| { ok: true; report: { agent: CrewKey; body: string } | null }
+		| { ok: false; status: 404; error: string } {
+		const message = this.messageById(input.messageId)
+		const steps = message?.card?.sketches
+		if (!message || !isFlow(message.card) || !steps) {
+			return { ok: false, status: 404, error: 'No flow with that id' }
+		}
+		const step = steps[input.step]
+		if (!step || !isCrewKey(message.author)) {
+			return { ok: false, status: 404, error: 'That flow has no such step' }
+		}
+		const agent = message.author
+		const title = message.card?.title ?? message.body
+		const { action } = input
+		if (action.action === 'approve-all') {
+			this.saveSteps(message, approveFlow(steps))
+			this.adminChanged(agent, approvalNote(title, { all: true }))
+			return { ok: true, report: null }
+		}
+		if (action.action === 'approve' || action.action === 'unapprove') {
+			const approved = action.action === 'approve'
+			this.saveSteps(message, setApproval(steps, input.step, approved))
+			this.adminChanged(
+				agent,
+				approvalNote(title, { index: input.step, step, approved })
+			)
+			return { ok: true, report: null }
+		}
+		const request = {
+			note: action.note,
+			...(action.action === 'redo' ? { count: action.count } : {}),
+			by: input.name,
+		}
+		this.saveSteps(
+			message,
+			requestStep(steps, input.step, action.action, request)
+		)
+		return {
+			ok: true,
+			report: {
+				agent,
+				body: stepRequestReport({
+					title,
+					index: input.step,
+					step,
+					kind: action.action,
+					request,
+				}),
+			},
+		}
 	}
 
 	sketch(id: number) {
@@ -2772,12 +3050,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// routing, so it wakes nobody. False for a delivery the room has seen.
 	githubDelivery(
 		delivery: string,
-		result: Extract<WebhookResult, { kind: 'item' | 'remove' }>
+		result: Extract<WebhookResult, { kind: 'item' | 'remove' | 'deploy' }>
 	) {
 		const sql = this.sql.bind(this)
 		if (!takeDelivery(sql, delivery)) return false
 		if (result.kind === 'remove') {
 			removeGithubItem(sql, result.number)
+		} else if (result.kind === 'deploy') {
+			writeGithubDeploy(sql, result.deploy)
 		} else {
 			writeGithubItem(sql, result.item)
 			if (result.event) {
@@ -2800,8 +3080,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// reports changes, so the copy also starts with one backfill from GitHub's
 	// API: the open items and those closed in the last GITHUB_CLOSED_DAYS.
 	// After the first backfill that succeeds, this reads nothing from GitHub.
+	// It also asks the Workers about builds that are not live yet.
 	async tendGithubLog() {
 		pruneGithubLog(this.sql.bind(this))
+		await this.checkLiveDeploys()
 		const kv = this.ctx.storage.kv
 		if (kv.get(GITHUB_CHECKED_AT)) return false
 		const github = githubFor(this.env)
@@ -2822,9 +3104,31 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return true
 	}
 
+	// Asks each Worker with a build that is not live yet which commit it
+	// runs: one request per Worker, and none while every build is live.
+	// True when no build is left waiting.
+	async checkLiveDeploys() {
+		const sql = this.sql.bind(this)
+		const workers = workersAwaitingLive(sql)
+		const answers = await Promise.all(
+			workers.map(async (worker) => ({
+				worker,
+				commit: await liveCommit(this.env, worker),
+			}))
+		)
+		let changed = false
+		for (const { worker, commit } of answers) {
+			if (commit && markGithubDeployLive(sql, worker, commit)) changed = true
+		}
+		if (changed) this.push({ type: 'github' })
+		return workersAwaitingLive(sql).length === 0
+	}
+
 	githubLog(): GithubLogType {
 		return {
 			items: githubItems(this.sql.bind(this)),
+			deploys: githubDeploys(this.sql.bind(this)),
+			deploysSince: daysBefore(Date.now(), GITHUB_DEPLOY_DAYS),
 			checkedAt: this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ?? null,
 		}
 	}
@@ -3158,7 +3462,16 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return this.sql<MessageRow>`
 			select * from message
 			where place = ${place} and card is not null and answer is null
-				and json_array_length(card, '$.actions') > 0
+				and (
+					json_array_length(card, '$.actions') > 0
+					or (
+						json_extract(card, '$.layout') = 'flow'
+						and exists (
+							select 1 from json_each(card, '$.sketches') as s
+							where json_extract(s.value, '$.status') is null
+						)
+					)
+				)
 			order by at`.map(toMessage)
 	}
 

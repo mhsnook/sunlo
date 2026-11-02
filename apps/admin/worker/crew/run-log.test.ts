@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { RunType } from '../../shared/crew'
-import { RunLog, type RunLogKey, type Sql } from './run-log'
+import type { Sql } from './paintings'
+import { RunLog, type RunLogKey } from './run-log'
 import { RUNS_KEPT, type StepChange } from './steps'
 
 type Database = {
@@ -57,7 +58,7 @@ beforeEach(() => {
 	clock = 0
 	const sql: Sql = <T>(
 		strings: TemplateStringsArray,
-		...values: Array<string | number | boolean | null>
+		...values: Array<string | number | null>
 	) => db.prepare(strings.join('?')).all(...values) as Array<T>
 	log = new RunLog(sql, (run) => pushed.push(run), tick)
 })

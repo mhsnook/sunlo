@@ -4,6 +4,7 @@ import { isBlockKind, openingLines } from '../../../shared/blocks'
 import { Block } from './blocks'
 import { GithubCard } from './github-card'
 import { PaintingsCard, SvgsCard } from './paintings-card'
+import { FlowCard } from './flow-card'
 import { SketchesCard } from './sketches-card'
 import { MermaidBlock } from './mermaid-block'
 import { remarkCrew } from './remark-crew'
@@ -17,6 +18,7 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	displayName,
 	isCrewKey,
+	isFlow,
 	type CardType,
 	type CrewKey,
 	type CrewMessageType,
@@ -357,6 +359,9 @@ export function RoomCard({ message }: { message: CrewMessageType }) {
 	if (!card) return null
 	if (card.kind === 'github' && card.draft) {
 		return <GithubCard message={message} draft={card.draft} />
+	}
+	if (isFlow(card) && card.sketches) {
+		return <FlowCard message={message} steps={card.sketches} />
 	}
 	if (card.kind === 'sketches' && card.sketches) {
 		return <SketchesCard message={message} sketches={card.sketches} />

@@ -1,6 +1,6 @@
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
@@ -61,8 +61,26 @@ function withPreviewBindings(flueConfig: (config: WorkerConfig) => void) {
 	}
 }
 
+// The crew room reads this file to see which commit is live (worker/crew/
+// github-log.ts, liveCommit). Workers Builds sets WORKERS_CI_COMMIT_SHA.
+const versionFile: Plugin = {
+	name: 'sunlo-version-file',
+	apply: 'build',
+	applyToEnvironment: (environment) => environment.name === 'client',
+	generateBundle() {
+		this.emitFile({
+			type: 'asset',
+			fileName: 'version.json',
+			source: JSON.stringify({
+				commit: process.env.WORKERS_CI_COMMIT_SHA ?? null,
+			}),
+		})
+	},
+}
+
 export default defineConfig({
 	plugins: [
+		versionFile,
 		flue({ providers: ['cloudflare'] }),
 		cloudflare({
 			config: withPreviewBindings(flueWorkerConfig()),
