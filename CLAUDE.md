@@ -45,6 +45,9 @@ docs:
 - task: "Working on the prototype phrasebook search at /chats — not the friend chat"
   load: "src/features/chat/docs.md"
 
+- task: "Working on the AI coach at /coach — its tools, turn loop, prompt or /api/coach"
+  load: "src/features/coach/docs.md"
+
 - task: "Changing database schema, migrations, seeds, or RLS"
   load: "docs/database.md"
 
@@ -68,7 +71,7 @@ supabase db reset       # apply migrations + seeds
 
 pnpm dev                # dev server at http://127.0.0.1:5173
 pnpm check              # typecheck with tsrs; `pnpm check:tsc` if tsrs has no binary for your OS
-pnpm lint               # oxlint then eslint
+pnpm lint               # oxlint, then eslint for the app and for apps/admin as two processes
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
 pnpm admin:dev          # admin app and its Worker (apps/admin), one Vite server at http://localhost:5174
@@ -117,6 +120,7 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 | `requests`      | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes                      | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
 | `social`        | FriendRequestAction, FriendSummary, ChatMessage           | friendRequestActions, chatMessages, friendSummaries + relationsFull (live) | useRelationFriends, useAllChats, useSocialRealtime                 |
 | `chat`          | ChatQuery, ChatTurn, ChatResultPhrase                     | (zustand store, no collection — prototype phrasebook search)               | useChatStore, useChatTurns, useChatSearch                          |
+| `coach`         | CoachMessage, CoachRequest, coachTools                    | (zustand store, persisted — chat transcript and the sets on the page)      | useCoach, useCoachThread, useDeckMeter                             |
 | `notifications` | Notification                                              | notifications                                                              | useNotifications, useUnreadCount, useMarkAsRead                    |
 | `playlists`     | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                                       | useOnePlaylist, useLangPlaylists                                   |
 | `feed`          | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature)                    | useFeedLang                                                        |
@@ -133,7 +137,7 @@ The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace p
 
 ## Cloudflare worker (`worker/`)
 
-One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs `worker/` for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR, against its Supabase preview branch if it has one and production otherwise. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
+One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs `worker/` for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today: photo extraction and the coach); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR, against its Supabase preview branch if it has one and production otherwise. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
 
 ## Routing (`src/routes/`)
 

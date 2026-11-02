@@ -236,12 +236,12 @@ export function resolveHandle(handle: string): CrewKey | null {
 
 // Every crew member the text @mentions, in roster order. The @ must start a
 // word, so the domain of an email address is not a mention.
+const MENTION = /(?<![\w.])@([a-z][a-z0-9-]*(?:['’][a-z0-9-]+)?)/gi
+const handlesIn = (text: string) =>
+	[...text.matchAll(MENTION)].map((match) => match[1].toLowerCase())
+
 export function mentionedCrew(text: string): Array<CrewKey> {
-	const named = new Set(
-		[...text.matchAll(/(?<![\w.])@([a-z][a-z0-9-]*(?:['’][a-z0-9-]+)?)/gi)].map(
-			(match) => resolveHandle(match[1])
-		)
-	)
+	const named = new Set(handlesIn(text).map(resolveHandle))
 	return crewKeys.filter((key) => named.has(key))
 }
 
@@ -249,8 +249,21 @@ export function mentionedCrew(text: string): Array<CrewKey> {
 // for it, and the next message that does wake someone carries it along.
 export const endsWithEllipsis = (text: string) => /(\.\.\.|…)\s*$/.test(text)
 
+// The handles that address the whole crew. No crew member's handle, key or
+// room may be one of these (roster.test.ts checks).
+export const EVERYONE_HANDLES = ['channel', 'crew', 'everyone', 'all'] as const
+
+const everyoneHandles: ReadonlySet<string> = new Set(EVERYONE_HANDLES)
+
+export const mentionsEveryone = (text: string) =>
+	handlesIn(text).some((handle) =>
+		everyoneHandles.has(handle.split(APOSTROPHE)[0])
+	)
+
 export const RoutingSchema = z.object({
-	kind: z.enum(['stack', 'room', 'route']),
+	// "route" and "everyone" both wake `agents`: "everyone" is a message to
+	// the whole crew, which wakes only the agents CLEF says it needs.
+	kind: z.enum(['stack', 'room', 'route', 'everyone']),
 	agents: z.array(z.enum(crewKeys)),
 	// Who decided: a fixed rule ("..." or an @mention), the CLEF model, or
 	// the admin, by changing the chip before sending.
@@ -258,25 +271,51 @@ export const RoutingSchema = z.object({
 })
 export type RoutingType = z.infer<typeof RoutingSchema>
 
-// Sends a message to the agents that have started. A planned agent cannot
-// wake yet, so a message only for it waits in the room.
-export function routeTo(
-	agents: Array<CrewKey>,
+// The started agents among `agents`, once each, in roster order. A planned
+// agent cannot wake yet.
+const activeAmong = (agents: ReadonlyArray<CrewKey>) =>
+	crewKeys.filter((key) => agents.includes(key) && crew[key].active)
+
+export const activeCrew = activeAmong(crewKeys)
+
+// A routing that wakes the started agents among `agents`. When none of them
+// can wake, the message waits in the room.
+function wakeRouting(
+	kind: 'route' | 'everyone',
+	agents: ReadonlyArray<CrewKey>,
 	by: RoutingType['by']
 ): RoutingType {
-	const active = agents.filter((key) => crew[key].active)
+	const active = activeAmong(agents)
 	return active.length
-		? { kind: 'route', agents: active, by }
+		? { kind, agents: active, by }
 		: { kind: 'room', agents: [], by }
 }
 
+export const routeTo = (
+	agents: ReadonlyArray<CrewKey>,
+	by: RoutingType['by']
+) => wakeRouting('route', agents, by)
+
+export const everyoneTo = (
+	agents: ReadonlyArray<CrewKey>,
+	by: RoutingType['by']
+) => wakeRouting('everyone', agents, by)
+
+const listFormat = new Intl.ListFormat('en', { type: 'conjunction' })
+
+// "Cmdr Riker, Data, and O'Brien".
+export const crewNames = (agents: ReadonlyArray<CrewKey>) =>
+	listFormat.format(agents.map(displayName))
+
 // The two fixed rules, checked before CLEF's model: a trailing "..." stacks,
-// and an @mention of someone in `among` routes. Null when neither applies.
+// and an @mention of someone in `among` routes. Null when neither applies,
+// and for an @everyone, whose agents the caller picks.
 export function fixedRouting(
 	text: string,
 	among: ReadonlyArray<CrewKey> = crewKeys
 ): RoutingType | null {
 	if (endsWithEllipsis(text)) return { kind: 'stack', agents: [], by: 'rule' }
+	if (mentionsEveryone(text)) return null
 	const mentioned = mentionedCrew(text).filter((key) => among.includes(key))
 	return mentioned.length ? routeTo(mentioned, 'rule') : null
 }
@@ -340,6 +379,56 @@ export const draftTitle = (draft: GithubDraftType) =>
 export const draftBody = (draft: GithubDraftType) =>
 	draft.type === 'milestone' ? draft.description : draft.body
 export type ActionType = z.infer<typeof ActionSchema>
+
+// The author of the lines the room posts for GitHub's webhook: not a crew
+// member and not an admin, so nothing it posts wakes anyone.
+export const GITHUB_AUTHOR = 'github'
+
+// An issue or pull request in the room's copy of what is open on GitHub,
+// and of what closed lately.
+export const GithubItemSchema = z.object({
+	number: z.number().int(),
+	kind: z.enum(['issue', 'pr']),
+	title: z.string(),
+	url: z.string(),
+	labels: z.array(z.string()),
+	milestone: z.string().nullable(),
+	state: z.enum(['open', 'closed', 'merged']),
+	updatedAt: z.string(),
+	closedAt: z.string().nullable(),
+})
+export type GithubItemType = z.infer<typeof GithubItemSchema>
+
+// One line in the Product room for an issue or a pull request that opened,
+// closed, merged or reopened on GitHub. The title is anyone's text on a
+// public repository: the app shows it as plain text only.
+export const GithubEventSchema = GithubItemSchema.pick({
+	kind: true,
+	number: true,
+	title: true,
+	url: true,
+}).extend({ action: z.enum(['opened', 'closed', 'merged', 'reopened']) })
+export type GithubEventType = z.infer<typeof GithubEventSchema>
+
+export const GithubLogSchema = z.object({
+	// Open items, then the ones closed in the last GITHUB_CLOSED_DAYS, each
+	// newest first.
+	items: z.array(GithubItemSchema),
+	// When the room filled its copy from GitHub's API, once.
+	checkedAt: z.string().nullable(),
+})
+export type GithubLogType = z.infer<typeof GithubLogSchema>
+
+// Closed items stay in the room's copy this long.
+export const GITHUB_CLOSED_DAYS = 14
+
+// "#851" or "PR #852".
+export const githubRef = (item: Pick<GithubItemType, 'kind' | 'number'>) =>
+	`${item.kind === 'pr' ? 'PR ' : ''}#${item.number}`
+
+// "#851 opened: …" or "PR #852 merged: …".
+export const githubEventLine = (event: GithubEventType) =>
+	`${githubRef(event)} ${event.action}: ${event.title}`
 
 // An image the room keeps (the `image` table), as a message carries it.
 export const MessageImageSchema = z.object({
@@ -544,7 +633,7 @@ export type PickChoice = z.infer<typeof PickChoiceSchema>
 export const CrewMessageSchema = z.object({
 	id: z.string(),
 	at: z.string(),
-	// A crew key for an agent, or "admin:<uid>".
+	// A crew key for an agent, "admin:<uid>", or GITHUB_AUTHOR.
 	author: z.string(),
 	authorName: z.string(),
 	// Empty when the message is only images.
@@ -588,6 +677,8 @@ export const CrewMessageSchema = z.object({
 			at: z.string(),
 		})
 		.nullable(),
+	// Set on the room's line for a GitHub event, whose author is GITHUB_AUTHOR.
+	github: GithubEventSchema.nullable(),
 })
 export type CrewMessageType = z.infer<typeof CrewMessageSchema>
 
@@ -675,6 +766,16 @@ export const SITREP_MAX = 4000
 export const DOCUMENT_MAX = 40_000
 export const documentMax = (name: string) =>
 	name === SITREP ? SITREP_MAX : DOCUMENT_MAX
+
+// A link to a document is `[the Roadmap](doc:3)`. It names the id, not the
+// name, because two names can slug alike and an id never changes.
+export const documentHref = (id: number) => `doc:${id}`
+
+// The id a link target names, or null for an ordinary URL.
+export function documentIdInHref(href: string): number | null {
+	const match = /^doc:(\d+)$/i.exec(href)
+	return match ? Number(match[1]) : null
+}
 
 // A room's documents, as its room log lists them. Revision 0 is a document
 // nobody has written yet.
@@ -818,6 +919,8 @@ export const RunSchema = z.object({
 	steps: z.array(RunStepSchema),
 	// Steps left out to keep the list short: the run took this many more.
 	dropped: z.number(),
+	// Why a failed run stopped, as Flue reported it.
+	error: z.string().nullable(),
 })
 export type RunType = z.infer<typeof RunSchema>
 
@@ -831,7 +934,9 @@ export type RoomEvent =
 	| { type: 'command' }
 	| { type: 'charter'; room: RoomKey }
 	| { type: 'common-knowledge' }
-	| { type: 'document'; room: RoomKey; id: number }
+	| { type: 'document'; id: number }
 	| { type: 'painter-styles' }
+	// The room's copy of what is open on GitHub changed.
+	| { type: 'github' }
 	// A run started, took a step, or ended.
 	| { type: 'run'; run: RunType }

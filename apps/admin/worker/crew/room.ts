@@ -6,8 +6,15 @@ import {
 	crewKeys,
 	displayName,
 	draftTitle,
+	activeCrew,
+	everyoneTo,
 	fixedRouting,
 	githubAccess,
+	githubEventLine,
+	GITHUB_AUTHOR,
+	GITHUB_CLOSED_DAYS,
+	type GithubEventType,
+	type GithubLogType,
 	handleOf,
 	routeTo,
 	isCrewKey,
@@ -16,6 +23,7 @@ import {
 	roomOfPlace,
 	meetingDue,
 	mentionedCrew,
+	mentionsEveryone,
 	placeOf,
 	threadPlace,
 	isThreadPlace,
@@ -69,7 +77,7 @@ import {
 } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
-import { checkSave, startingDocuments, type SaveCheck } from './documents'
+import { checkSave, startingDocuments, type SavedDocument } from './documents'
 import { openingLines } from '../../shared/blocks'
 import { defaultCharacter } from '../../shared/characters'
 import {
@@ -86,6 +94,16 @@ import {
 	pickReports,
 	sketchPickReports,
 } from './picks'
+import {
+	daysBefore,
+	githubItemOf,
+	githubItems,
+	pruneGithubLog,
+	removeGithubItem,
+	takeDelivery,
+	writeGithubItem,
+	type WebhookResult,
+} from './github-log'
 import { leftThisHour } from './hourly'
 import {
 	loadImage,
@@ -122,6 +140,8 @@ export type Wake = {
 	// that thread's own conversation, and the asker hears a reply in its
 	// main one.
 	thread?: { root: string; to: 'helper' | 'asker' }
+	// The other agents the same message woke, who answer alongside.
+	alsoTo?: Array<CrewKey>
 }
 
 type MessageRow = {
@@ -144,6 +164,8 @@ type MessageRow = {
 	thread_run_at: string | null
 	// JSON: Array<MessageImageType>.
 	images: string | null
+	// JSON: GithubEventType.
+	github: string | null
 }
 
 type CharterRow = {
@@ -255,6 +277,7 @@ const toMessage = (row: MessageRow): CrewMessageType => ({
 		row.thread_with && isCrewKey(row.thread_with)
 			? { with: row.thread_with, closedAt: row.thread_closed_at }
 			: null,
+	github: row.github ? (JSON.parse(row.github) as GithubEventType) : null,
 })
 
 const toDocumentSummary = (row: DocumentRow): DocumentSummaryType => ({
@@ -291,9 +314,16 @@ const toPainterStyle = (row: PainterStyleRow): PainterStyleType => ({
 	examples: JSON.parse(row.examples) as Array<MessageImageType>,
 })
 
+// For SQL that keeps only the crew's and the admin's messages.
+const CREW_KEYS = JSON.stringify(crewKeys)
+
 // Keys in the room's key-value storage.
 const PUBLIC_ORIGIN = 'public-origin'
 const PAINTER_STYLES_SEEDED = 'painter-styles-seeded'
+const GITHUB_CHECKED_AT = 'github-checked-at'
+// Pages of 100 read from GitHub's issue list in one check.
+const GITHUB_OPEN_PAGES = 10
+const GITHUB_RECENT_PAGES = 3
 
 // One instance, named ROOM, holds the Common Room and each subject's room,
 // each agent's workspace (to-dos, memory, open items), the charter, CLEF's
@@ -561,6 +591,27 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				dropped integer not null default 0
 			);
 			create index if not exists run_by_submission on run (agent, submission);
+			-- The room's copy of the repository's open issues and pull requests,
+			-- and of those closed in the last GITHUB_CLOSED_DAYS. GitHub's
+			-- webhook keeps it current, and the hourly cron checks it against
+			-- the API. labels is JSON: Array<string>.
+			create table if not exists github_item (
+				number integer primary key,
+				kind text not null,
+				title text not null,
+				url text not null,
+				labels text not null default '[]',
+				milestone text,
+				state text not null,
+				updated_at text not null,
+				closed_at text
+			);
+			-- Each webhook delivery's X-GitHub-Delivery, so a redelivery posts
+			-- nothing twice.
+			create table if not exists github_delivery (
+				id text primary key,
+				at text not null
+			);
 			create table if not exists schema_version (version integer not null);
 		`
 		const version =
@@ -578,6 +629,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			() => this.addEditRuns(),
 			() => this.indexThreadRuns(),
 			() => this.addSketchImageIds(),
+			() => this.addRunErrors(),
+			() => this.addGithubLines(),
 		]
 		if (version < migrations.length) {
 			for (const migrate of migrations.slice(version)) migrate()
@@ -746,6 +799,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		}
 	}
 
+	private addRunErrors() {
+		if (!this.tableColumns('run').has('error')) {
+			this.sql`alter table run add column error text`
+		}
+	}
+
+	private addGithubLines() {
+		if (!this.tableColumns('message').has('github')) {
+			this.sql`alter table message add column github text`
+		}
+	}
+
 	private renameAgentsToSeats() {
 		for (const [from, to] of Object.entries(OLD_AGENT_KEYS)) {
 			this.renameAgent(from, to)
@@ -848,10 +913,18 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// CLEF: a trailing "..." always stacks, an @mention always routes, and
 	// otherwise a small model decides between waking agents and leaving the
 	// message in the room. It learns from every correction the admin makes.
+	// An @everyone also wakes anyone it @mentions by name, whatever CLEF says.
 	async classify(text: string): Promise<RoutingType> {
 		const fixed = fixedRouting(text)
 		if (fixed) return fixed
-		const active = crewKeys.filter((key) => crew[key].active)
+		const everyone = mentionsEveryone(text)
+		const decided = await this.askClef(text, everyone)
+		return everyone
+			? everyoneTo([...decided.agents, ...mentionedCrew(text)], 'model')
+			: decided
+	}
+
+	private async askClef(text: string, everyone: boolean): Promise<RoutingType> {
 		// The admin's corrections, before and after sending, are the labels.
 		const examples = this.sql<{
 			text: string
@@ -867,14 +940,19 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				})
 			)
 		try {
-			const reply = await this.env.AI.run(this.env.CLEF_MODEL, {
-				messages: clefPrompt(text, active, examples),
-				max_tokens: 60,
-				temperature: 0,
-			})
+			const reply = await this.env.AI.run(
+				this.env.CLEF_MODEL,
+				{
+					messages: clefPrompt(text, activeCrew, examples, everyone),
+					max_tokens: 100,
+					temperature: 0,
+				},
+				{ gateway: { id: this.env.AI_GATEWAY_ID } }
+			)
 			return parseClefReply(
 				'response' in reply ? reply.response : undefined,
-				active
+				activeCrew,
+				everyone
 			)
 		} catch (error) {
 			console.error('CLEF could not classify a message', error)
@@ -900,8 +978,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const routing =
 			fixed ?? (input.routing ? sanitize(input.routing) : predicted)
 		const author = adminAuthor(input.uid)
-		const stacked =
-			routing.kind === 'route' ? this.stackedBodies(author, COMMON_ROOM) : []
+		const stacked = routing.agents.length
+			? this.stackedBodies(author, COMMON_ROOM)
+			: []
 		const message = this.insert({
 			author,
 			authorName: input.name,
@@ -914,14 +993,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		this.sql`insert into clef_decision (message_id, text, predicted, final, at)
 			values (${message.id}, ${text}, ${labelOf(predicted)}, ${labelOf(routing)}, ${message.at})`
 		const body = [...stacked, text].join('\n')
-		const wake = routing.agents.map(
-			(agent): Wake => ({
-				agent,
-				body,
-				messageId: message.id,
-				place: COMMON_ROOM,
-			})
-		)
+		const wake = wakesFor(routing, routing.agents, {
+			body,
+			messageId: message.id,
+			place: COMMON_ROOM,
+		})
 		return { message, wake }
 	}
 
@@ -940,9 +1016,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const author = adminAuthor(input.uid)
 		const routing =
 			fixedRouting(input.body, roomMembers(input.room)) ??
-			routeTo([principalOf(input.room)], 'rule')
-		const stacked =
-			routing.kind === 'route' ? this.stackedBodies(author, place) : []
+			(mentionsEveryone(input.body)
+				? everyoneTo(roomMembers(input.room), 'rule')
+				: routeTo([principalOf(input.room)], 'rule'))
+		const stacked = routing.agents.length
+			? this.stackedBodies(author, place)
+			: []
 		const message = this.insert({
 			author,
 			authorName: input.name,
@@ -955,9 +1034,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		const body = [...stacked, withImageLines(input.body, input.images)].join(
 			'\n'
 		)
-		const wake = routing.agents.map(
-			(agent): Wake => ({ agent, body, messageId: message.id, place })
-		)
+		const wake = wakesFor(routing, routing.agents, {
+			body,
+			messageId: message.id,
+			place,
+		})
 		return { message, wake }
 	}
 
@@ -996,16 +1077,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			where message_id = ${row.id}`
 		const message = { ...original, corrected }
 		this.push({ type: 'message', message })
-		const wake = corrected.agents
-			.filter((agent) => !woken.has(agent))
-			.map(
-				(agent): Wake => ({
-					agent,
-					body: withImageLines(original.body, original.images),
-					messageId: row.id,
-					place: COMMON_ROOM,
-				})
-			)
+		const wake = wakesFor(
+			corrected,
+			corrected.agents.filter((agent) => !woken.has(agent)),
+			{
+				body: withImageLines(original.body, original.images),
+				messageId: row.id,
+				place: COMMON_ROOM,
+			}
+		)
 		return { ok: true, message, wake }
 	}
 
@@ -1438,7 +1518,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			sitrep: this.sitrep(),
 			documents: this.documents(room),
 			github: githubAccess[agent]
-				? { access: githubAccess[agent], connected: githubConfigured(this.env) }
+				? {
+						access: githubAccess[agent],
+						connected: githubConfigured(this.env),
+						log: this.githubLog(),
+					}
 				: null,
 			workspace: this.workspace(agent),
 			charter: this.charter(room),
@@ -1522,10 +1606,14 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 
 	// Every submission settles, a completed one after finishRun or
 	// finishThreadRun.
-	settleRun(key: RunLogKey, outcome: 'completed' | 'failed' | 'aborted') {
+	settleRun(
+		key: RunLogKey,
+		outcome: 'completed' | 'failed' | 'aborted',
+		error: string | null = null
+	) {
 		const failed = outcome !== 'completed'
 		const trigger = key.thread ?? (failed ? this.runTrigger(key.agent) : null)
-		this.runLog.settle(key, failed ? 'failed' : 'done', trigger)
+		this.runLog.settle(key, failed ? 'failed' : 'done', trigger, error)
 		if (!failed) return
 		if (key.thread) this.failThreadRun(key.agent, key.thread)
 		else this.failRun(key.agent)
@@ -2501,10 +2589,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// ---- Room documents -----------------------------------------------------
 
 	documents(room: RoomKey): Array<DocumentSummaryType> {
-		return this.sql<IdRow>`
-			select id from document where room = ${room} order by id`.flatMap(
-			(row) => this.documentSummary(row.id) ?? []
-		)
+		return this.allDocuments().filter((doc) => doc.room === room)
+	}
+
+	allDocuments(): Array<DocumentSummaryType> {
+		return this.sql<DocumentRow>`
+			select document.id, document.room, document.name, document.revision,
+				document_revision.by_name, document_revision.at
+			from document
+			left join document_revision on document_revision.document = document.id
+				and document_revision.revision = document.revision
+			order by document.id`.map(toDocumentSummary)
 	}
 
 	document(id: number): DocumentType | null {
@@ -2561,7 +2656,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		baseRevision: number
 		summary: string
 		thread: RunKey
-	}): SaveCheck {
+	}): SavedDocument {
 		const room = roomOf(input.agent)
 		const existing = this.findDocument(room, input.name)
 		const name = existing?.name ?? input.name.trim()
@@ -2606,7 +2701,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		summary: string
 		by: string
 		byName: string
-	}): SaveCheck {
+	}): SavedDocument {
 		const document = this.documentSummary(input.id)
 		if (!document) {
 			return { ok: false, status: 404, error: 'No document with that id' }
@@ -2626,14 +2721,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	}
 
 	private documentSummary(id: number): DocumentSummaryType | null {
-		const row = this.sql<DocumentRow>`
-			select document.id, document.room, document.name, document.revision,
-				document_revision.by_name, document_revision.at
-			from document
-			left join document_revision on document_revision.document = document.id
-				and document_revision.revision = document.revision
-			where document.id = ${id}`[0]
-		return row ? toDocumentSummary(row) : null
+		return this.allDocuments().find((doc) => doc.id === id) ?? null
 	}
 
 	private saveRevision(input: {
@@ -2646,7 +2734,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		summary: string
 		by: string
 		byName: string
-	}): SaveCheck {
+	}): SavedDocument {
 		const text = input.text.trim()
 		const check = checkSave({
 			name: input.name,
@@ -2664,8 +2752,8 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			insert into document_revision (document, revision, text, summary, by, by_name, at)
 			values (${id}, ${check.revision}, ${text}, ${input.summary.trim()}, ${input.by}, ${input.byName}, ${now()})`
 		this.sql`update document set revision = ${check.revision} where id = ${id}`
-		this.push({ type: 'document', room: input.room, id })
-		return check
+		this.push({ type: 'document', id })
+		return { ...check, id }
 	}
 
 	private meetingStartedAt() {
@@ -2676,6 +2764,69 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				select started_at from meeting where brief_at = ${briefAt}`[0]
 				?.started_at ?? null
 		)
+	}
+
+	// ---- GitHub's log -------------------------------------------------------
+
+	// One verified webhook delivery. Its line in the Product room has no
+	// routing, so it wakes nobody. False for a delivery the room has seen.
+	githubDelivery(
+		delivery: string,
+		result: Extract<WebhookResult, { kind: 'item' | 'remove' }>
+	) {
+		const sql = this.sql.bind(this)
+		if (!takeDelivery(sql, delivery)) return false
+		if (result.kind === 'remove') {
+			removeGithubItem(sql, result.number)
+		} else {
+			writeGithubItem(sql, result.item)
+			if (result.event) {
+				this.insert({
+					author: GITHUB_AUTHOR,
+					authorName: 'GitHub',
+					body: githubEventLine(result.event),
+					routing: null,
+					card: null,
+					place: placeOf(roomOf('product-1')),
+					github: result.event,
+				})
+			}
+		}
+		this.push({ type: 'github' })
+		return true
+	}
+
+	// The hourly cron prunes the room's copy of GitHub. GitHub's webhook only
+	// reports changes, so the copy also starts with one backfill from GitHub's
+	// API: the open items and those closed in the last GITHUB_CLOSED_DAYS.
+	// After the first backfill that succeeds, this reads nothing from GitHub.
+	async tendGithubLog() {
+		pruneGithubLog(this.sql.bind(this))
+		const kv = this.ctx.storage.kv
+		if (kv.get(GITHUB_CHECKED_AT)) return false
+		const github = githubFor(this.env)
+		if (!github) return false
+		const started = now()
+		const since = daysBefore(Date.now(), GITHUB_CLOSED_DAYS)
+		const pages = await Promise.all([
+			github.issuePages({ state: 'open', pages: GITHUB_OPEN_PAGES }),
+			github.issuePages({ state: 'all', since, pages: GITHUB_RECENT_PAGES }),
+		])
+		const sql = this.sql.bind(this)
+		for (const data of pages.flatMap((page) => page.items)) {
+			const item = githubItemOf(data, this.env.GITHUB_REPO)
+			if (item) writeGithubItem(sql, item)
+		}
+		kv.put(GITHUB_CHECKED_AT, started)
+		this.push({ type: 'github' })
+		return true
+	}
+
+	githubLog(): GithubLogType {
+		return {
+			items: githubItems(this.sql.bind(this)),
+			checkedAt: this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ?? null,
+		}
 	}
 
 	// ---- Internals ----------------------------------------------------------
@@ -2726,6 +2877,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		otherViewOf?: string | null
 		parent?: string | null
 		threadWith?: CrewKey
+		github?: GithubEventType
 	}): CrewMessageType {
 		const row: MessageRow = {
 			id: `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
@@ -2746,10 +2898,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			thread_closed_at: null,
 			thread_run_at: null,
 			images: input.images?.length ? JSON.stringify(input.images) : null,
+			github: input.github ? JSON.stringify(input.github) : null,
 		}
 		this.sql`
-			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with, images)
-			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with}, ${row.images})`
+			insert into message (id, at, author, author_name, body, routing, card, answer, place, parent, receipt, other_view_of, thread_with, images, github)
+			values (${row.id}, ${row.at}, ${row.author}, ${row.author_name}, ${row.body}, ${row.routing}, ${row.card}, ${row.answer}, ${row.place}, ${row.parent}, ${row.receipt}, ${row.other_view_of}, ${row.thread_with}, ${row.images}, ${row.github})`
 		const message = toMessage(row)
 		const threadIn = row.parent ? this.messageById(row.parent)?.place : null
 		this.push(
@@ -2786,9 +2939,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return stacked
 	}
 
-	// A timeline's latest messages.
-	private latestRows(place: PlaceType, limit: number) {
-		return this.sql<MessageRow>`select * from (
+	// A timeline's latest messages. `speakers` keeps only the admin's and the
+	// crew's, leaving out lines such as GitHub's.
+	private latestRows(place: PlaceType, limit: number, speakers = false) {
+		return speakers
+			? this.sql<MessageRow>`select * from (
+					select * from message
+					where place = ${place}
+						and (author like 'admin:%' or author in (select value from json_each(${CREW_KEYS})))
+					order by at desc, id desc limit ${limit}
+				) order by at, id`
+			: this.sql<MessageRow>`select * from (
 					select * from message where place = ${place}
 					order by at desc, id desc limit ${limit}
 				) order by at, id`
@@ -2805,8 +2966,11 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return replies
 	}
 
-	// The messages in one timeline since the agent last finished a run there.
-	// The cursor moves when the run finishes.
+	// The messages the admin and the crew wrote in one timeline since the
+	// agent last finished a run there. The cursor moves when the run
+	// finishes. Lines such as GitHub's are left out: a burst of them would
+	// push the conversation out of the 60, and the agents that need them read
+	// the GitHub section of their briefing.
 	private unread(agent: CrewKey, place: PlaceType): UnreadTimeline {
 		const cursor = this.sql<{
 			at: string | null
@@ -2815,9 +2979,10 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			? this.sql<MessageRow>`select * from (
 							select * from message
 							where place = ${place} and at > ${cursor}
+								and (author like 'admin:%' or author in (select value from json_each(${CREW_KEYS})))
 							order by at desc limit 60
 						) order by at, id`
-			: this.latestRows(place, 30)
+			: this.latestRows(place, 30, true)
 		const last = rows.at(-1)?.at
 		if (last) {
 			this.sql`
@@ -3018,13 +3183,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 	// True while a room's principal and associate have spoken fewer than
 	// ROOM_TURNS times in a row in this timeline since the admin last wrote
 	// there.
-	// Receipts are not turns.
+	// Only the admin's and the crew's messages count, and receipts are not
+	// turns.
 	private roomTurnLeft(place: PlaceType) {
 		const recent = this.sql<{
 			author: string
 		}>`
 			select author from message
 			where place = ${place} and receipt = 0
+				and (author like 'admin:%' or author in (select value from json_each(${CREW_KEYS})))
 			order by at desc, id desc
 			limit ${ROOM_TURNS}`
 		return (
@@ -3038,9 +3205,23 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 }
 
 function sanitize(routing: RoutingType): RoutingType {
-	return routing.kind === 'route'
-		? routeTo(routing.agents, routing.by)
-		: { ...routing, agents: [] }
+	if (routing.kind === 'route') return routeTo(routing.agents, routing.by)
+	if (routing.kind === 'everyone') return everyoneTo(routing.agents, routing.by)
+	return { ...routing, agents: [] }
+}
+
+// `agents` may be fewer than `routing.agents`: a correction wakes only the
+// agents not woken before, but each hears of every agent the message names.
+function wakesFor(
+	routing: RoutingType,
+	agents: Array<CrewKey>,
+	wake: Pick<Wake, 'body' | 'messageId' | 'place'>
+): Array<Wake> {
+	return agents.map((agent) => ({
+		...wake,
+		agent,
+		alsoTo: routing.agents.filter((key) => key !== agent),
+	}))
 }
 
 // The part of a routing that CLEF decides, with agents in a fixed order, so

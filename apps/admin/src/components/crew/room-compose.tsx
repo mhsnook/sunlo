@@ -5,11 +5,16 @@ import {
 	MessageCircle,
 	Send,
 	Sparkles,
+	Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { toastError } from '@/components/ui/sonner'
-import { fixedRouting, type RoutingType } from '../../../shared/crew'
+import {
+	fixedRouting,
+	mentionsEveryone,
+	type RoutingType,
+} from '../../../shared/crew'
 import { usePostToRoom } from '~/lib/crew'
 import { VoiceControls } from './voice-controls'
 import { AttachImageButton, DraftImageStrip, useDraftImages } from './images'
@@ -67,12 +72,18 @@ export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 						<>
 							{routing.kind === 'route' ? (
 								<Send className="size-3" />
+							) : routing.kind === 'everyone' ? (
+								<Users className="size-3" />
 							) : routing.kind === 'room' ? (
 								<MessageCircle className="size-3" />
 							) : (
 								<Layers className="size-3" />
 							)}
 							{routingNote(routing)}
+						</>
+					) : mentionsEveryone(text) ? (
+						<>
+							<Users className="size-3" /> To everyone: CLEF picks who answers
 						</>
 					) : (
 						<>
@@ -94,8 +105,7 @@ export function RoomCompose({ myAuthor }: { myAuthor: string }) {
 				canSendEmpty={draftImages.images.length > 0}
 				topSlot={
 					<DraftImageStrip
-						images={draftImages.images}
-						adding={draftImages.adding}
+						slots={draftImages.slots}
 						onRemove={draftImages.remove}
 					/>
 				}

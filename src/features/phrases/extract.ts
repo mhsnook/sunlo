@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import supabase from '@/lib/supabase-client'
+import { postWorkerApi } from '@/lib/worker-api'
 import languages from '@/lib/languages'
 
 export const ExtractedPhraseSchema = z.object({
@@ -51,30 +51,17 @@ export async function extractPhrasesFromImage({
 }): Promise<Array<ExtractedPhraseType>> {
 	if (USE_MOCK) return mockExtract(lang, translationLang)
 
-	const { data } = await supabase.auth.getSession()
-	const res = await fetch('/api/extract-phrase', {
-		method: 'POST',
-		headers: {
-			'content-type': 'application/json',
-			authorization: `Bearer ${data.session?.access_token ?? ''}`,
-		},
-		body: JSON.stringify({
+	const body = await postWorkerApi(
+		'/api/extract-phrase',
+		{
 			image,
 			lang,
 			langName: languages[lang] ?? lang,
 			translationLang,
 			translationLangName: languages[translationLang] ?? translationLang,
-		}),
-	})
-	const body: unknown = await res.json().catch(() => null)
-	if (!res.ok) {
-		const reason = (body as { error?: unknown } | null)?.error
-		throw new Error(
-			typeof reason === 'string'
-				? reason
-				: `Photo reading failed (${res.status})`
-		)
-	}
+		},
+		'Photo reading failed'
+	)
 	return ExtractResponseSchema.parse(body).phrases
 }
 

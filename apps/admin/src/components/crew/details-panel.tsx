@@ -1,4 +1,5 @@
-import { Suspense, useState, type ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
 	useQuery,
 	useQueryClient,
@@ -21,11 +22,10 @@ import {
 	principalOf,
 	roomMembers,
 	roomNames,
-	SITREP,
+	roomOf,
 	type CrewKey,
 	type DocumentSummaryType,
 	type OpenItemType,
-	type RoomKey,
 } from '../../../shared/crew'
 import {
 	documentQuery,
@@ -36,6 +36,12 @@ import {
 	useEditOpenItem,
 	workspaceQuery,
 } from '~/lib/crew'
+import {
+	CREW,
+	documentLinkOptions,
+	roomDocuments,
+	type DetailsRoom,
+} from '~/lib/documents'
 import { dayLabel } from '~/lib/format'
 import { CharacterEditor } from './character-editor'
 import { CharterPanel, WeeklySettings } from './charter-panel'
@@ -43,15 +49,12 @@ import { CrewCharterSection } from './common-knowledge-panel'
 import { DocumentView } from './document-view'
 import { AgentAvatar, ChangeCard, RoomCard } from './crew-parts'
 import { EditableEntry } from './editable-entry'
+import { GithubLogSection } from './github-log'
 import { MemoryList } from './memory-list'
 import { OverviewSection } from './overview-panel'
 import { PainterStyles } from './painter-styles'
 import { Empty, Section, TodoList } from './workspace-parts'
-import { SidePanel } from './side-panel'
-
-// The Common Room, which is not a room in `roomKeys`.
-export const CREW = 'crew'
-export type DetailsRoom = RoomKey | typeof CREW
+import { SidePanel, useSidePanel } from './side-panel'
 
 const roomTitle = (room: DetailsRoom) =>
 	room === CREW ? 'the crew' : `the ${roomNames[room]}`
@@ -69,25 +72,11 @@ export function DetailsPanel({
 	room: DetailsRoom
 	onClose: () => void
 }) {
-	const { data: command } = useSuspenseQuery(documentsQuery('command'))
-	const { data: own } = useSuspenseQuery(
-		documentsQuery(room === CREW ? 'command' : room)
-	)
-	const sitrep = command.find((doc) => doc.name === SITREP)
-	const documents =
-		room === CREW
-			? sitrep
-				? [sitrep]
-				: []
-			: room === 'command'
-				? own.toSorted((a, b) =>
-						a.name === SITREP ? -1 : b.name === SITREP ? 1 : 0
-					)
-				: sitrep
-					? [sitrep, ...own]
-					: own
-	const [openId, setOpenId] = useState<number | null>(null)
-	const open = documents.find((doc) => doc.id === openId)
+	const { data: all } = useSuspenseQuery(documentsQuery())
+	const documents = roomDocuments(room, all)
+	const { doc } = useSearch({ from: '/_admin' })
+	const open = documents.find((item) => item.id === doc)
+	const closeDocument = useCloseDocument()
 	const members = room === CREW ? crewKeys : roomMembers(room)
 
 	if (open) {
@@ -105,7 +94,7 @@ export function DetailsPanel({
 						size="icon"
 						aria-label="Back to the details"
 						data-testid="document-back"
-						onClick={() => setOpenId(null)}
+						onClick={closeDocument}
 					>
 						<ArrowLeft />
 					</Button>
@@ -122,7 +111,7 @@ export function DetailsPanel({
 		{
 			key: 'documents',
 			title: 'Documents',
-			content: <DocumentList documents={documents} onOpen={setOpenId} />,
+			content: <DocumentList room={room} documents={documents} />,
 		},
 		{
 			key: 'charter',
@@ -150,6 +139,21 @@ export function DetailsPanel({
 		})),
 		...(room === CREW
 			? [{ key: 'overview', title: 'Overview', content: <OverviewSection /> }]
+			: []),
+		...(room === roomOf('product-1')
+			? [
+					{
+						key: 'github',
+						title: 'GitHub',
+						content: (
+							<Suspense
+								fallback={<Loader className="mx-auto my-6 opacity-50" />}
+							>
+								<GithubLogSection />
+							</Suspense>
+						),
+					},
+				]
 			: []),
 		...(room === crew['product-2'].room
 			? [
@@ -223,12 +227,41 @@ function DetailsSections({
 	)
 }
 
+// Whether the details panel shows beside a room, and how to open and close
+// it. A `doc` in the URL opens the panel on that document, so closing the
+// panel drops it as well.
+export function useDetailsPanel() {
+	const { doc } = useSearch({ from: '/_admin' })
+	const closeDocument = useCloseDocument()
+	const [panel, setPanel] = useSidePanel('details')
+	const open = panel !== null || !!doc
+	const close = () => {
+		setPanel(null)
+		if (doc) closeDocument()
+	}
+	return { open, close, toggle: () => (open ? close() : setPanel('details')) }
+}
+
+// Closing the document the URL names, which leaves the panel on its
+// sections.
+function useCloseDocument() {
+	const navigate = useNavigate()
+	return () =>
+		void navigate({
+			to: '.',
+			search: (prev: Record<string, unknown>) => {
+				const { doc: _, ...rest } = prev
+				return rest
+			},
+		})
+}
+
 function DocumentList({
+	room,
 	documents,
-	onOpen,
 }: {
+	room: DetailsRoom
 	documents: Array<DocumentSummaryType>
-	onOpen: (id: number) => void
 }) {
 	const queryClient = useQueryClient()
 	return (
@@ -237,15 +270,14 @@ function DocumentList({
 				<ul className="bg-card divide-y rounded border">
 					{documents.map((doc) => (
 						<li key={doc.id}>
-							<button
-								type="button"
+							<Link
+								{...documentLinkOptions(room, doc)}
 								className="hover:bg-muted flex w-full items-center gap-3 px-4 py-2.5 text-start text-sm"
 								data-testid="room-document"
 								data-key={doc.name}
 								onPointerEnter={() =>
 									void queryClient.prefetchQuery(documentQuery(doc.id))
 								}
-								onClick={() => onOpen(doc.id)}
 							>
 								<FileText className="text-muted-foreground size-4 shrink-0" />
 								<span className="me-auto">{doc.name}</span>
@@ -254,7 +286,7 @@ function DocumentList({
 										? `Revision ${doc.revision}, ${dayLabel(doc.at)}`
 										: 'Not written yet'}
 								</span>
-							</button>
+							</Link>
 						</li>
 					))}
 				</ul>

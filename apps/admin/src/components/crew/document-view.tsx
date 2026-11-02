@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { documentMax, type DocumentType } from '../../../shared/crew'
 import { documentQuery, revisionQuery, useSaveDocument } from '~/lib/crew'
 import { dayLabel } from '~/lib/format'
+import { documentStatus } from '~/lib/documents'
 import { CrewText } from './crew-parts'
 import { Empty } from './workspace-parts'
 
@@ -50,9 +51,7 @@ export function DocumentView({
 				<div className="me-auto min-w-0">
 					{showName && <h3 className="font-semibold">{document.name}</h3>}
 					<p className="text-muted-foreground text-xs">
-						{document.at
-							? `Revision ${document.revision} · ${document.byName}, ${dayLabel(document.at)}`
-							: 'Not written yet'}
+						{documentStatus(document)}
 					</p>
 				</div>
 				{mode.kind !== 'edit' && (
@@ -132,8 +131,12 @@ function DocumentEditor({
 }) {
 	const save = useSaveDocument(document)
 	// Someone saved while the admin was editing: the server refuses a save
-	// from the old revision, so the editor says so before they try.
-	const stale = document.revision !== mode.base
+	// from the old revision, so the editor says so before they try. This
+	// editor's own save brings a new revision too, through the socket or
+	// the refetch, before `onDone` closes it. A save that loses to another
+	// one fails, and then counts as stale.
+	const stale =
+		document.revision !== mode.base && !save.isPending && !save.isSuccess
 	const max = documentMax(document.name)
 	return (
 		<div className="space-y-2">

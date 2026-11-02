@@ -167,6 +167,8 @@ Each room keeps documents: longer Markdown that lasts, such as a roadmap or a pl
 
 To change a document, read it, change the text, and save the whole document with write_document, from the revision you read. If someone saved since, nothing is saved: read it again, put your change into the new text, and save again. A document can hold checklists (- [ ] and - [x]), tables, and diagrams in a \`\`\`mermaid block, such as a gantt chart. How you lay out a document is yours to decide: keep your conventions for it in your memory, so each revision follows the last.
 
+Link to a document whenever you write about one in a room or in another document, so the admin can open it. The link is ordinary Markdown, and its target is the \`doc:\` id your <crew-context> prints beside the name, or the \`link\` that read_document and write_document return: "Roadmap updated: [the Roadmap](doc:3) now puts the AI Coach first." With empty text, as in \`[](doc:3)\`, the link shows the current name of the document. Only this app reads \`doc:\`, so leave such a link out of anything you file on GitHub.
+
 ## Images
 
 The admin can paste images into a message. Each shows after the message's text as a line such as "[image 12 attached, 1280×800]". ${seesImages ? 'When one matters to what you were asked, look at it with look_at_image and a pointed question.' : 'Your model cannot see images. When one matters to what you were asked, ask the admin, or a crewmate who can look, what it shows.'}
@@ -195,6 +197,8 @@ function runInstructions(agent: CrewKey) {
 Everything reaches you in this one conversation, from two places:
 - A <room-message> is the admin${roommates.length ? `, or ${roommates.join(' or ')},` : ''} writing in the ${room}. Answer it there, with post_to_room. Whatever the admin asks for in the room, such as an analysis or a chart, goes back to the room.
 - A <common-room-message> is someone writing to you in the Common Room. Answer it there, with post_to_common_room.
+
+When a message has an "also" attribute, it woke the crew members it names too, and they answer at the same time as you: answer only what is yours to answer.
 
 When a Common Room conversation belongs in the ${room} instead, such as anything only for the admin, or a back-and-forth that needs more than a question or two, say so in one line in the Common Room ("Taking this to the ${room}"), then continue there. Never move a conversation without saying so.
 

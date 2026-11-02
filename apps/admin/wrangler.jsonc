@@ -89,10 +89,15 @@
 		"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
 		// product-2's model, through Workers AI with no API key. The id is
 		// pi-ai's, with dashes: Flue knows that one, and with it that the model
-		// takes images. Cloudflare's catalog writes it anthropic/claude-opus-5.5.
+		// takes images. The binding only takes anthropic/claude-opus-5.5, so
+		// .flue/app.ts rewrites the id on every call (worker/models.ts).
 		"MODEL_PRODUCT_2": "anthropic/claude-opus-5-5",
 		// The small model CLEF uses to decide whether a message wakes an agent.
 		"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
+		// Every model call goes through this AI Gateway, so the admin's usage
+		// stays apart from the app's (sunlo-app). It must exist in the
+		// dashboard; only `default` is created on demand.
+		"AI_GATEWAY_ID": "sunlo-admin",
 		// The repository the crew keeps milestones and epics on, once the GitHub
 		// App secrets are set: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
 		// GITHUB_APP_PRIVATE_KEY (README.md, "GitHub: milestones and epics").
@@ -115,6 +120,7 @@
 			"MODEL_PRODUCT_1": "@cf/moonshotai/kimi-k2.7-code",
 			"MODEL_PRODUCT_2": "anthropic/claude-opus-5-5",
 			"CLEF_MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8",
+			"AI_GATEWAY_ID": "sunlo-admin",
 			"GITHUB_REPO": "mhsnook/sunlo",
 			"SUNLO_URL": "https://sunlo.app",
 		},

@@ -17,6 +17,7 @@ import { hasBlocks } from '../../../shared/blocks'
 import {
 	COMMON_ROOM,
 	displayName,
+	GITHUB_AUTHOR,
 	isCrewKey,
 	roomNames,
 	roomOf,
@@ -31,6 +32,7 @@ import {
 	CrewText,
 } from './crew-parts'
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
+import { GithubLines } from './github-log'
 import { OtherView } from './other-view'
 import { MessageRuns } from './run-steps'
 import { SideThread } from './side-thread'
@@ -181,6 +183,14 @@ function AuthorGroup({
 	const mine = first.author === myAuthor
 	const agent = isCrewKey(first.author) ? first.author : null
 
+	if (first.author === GITHUB_AUTHOR) {
+		return (
+			<MessageGroup data-testid="crew-message-group" data-key={first.id}>
+				<GithubLines messages={messages} />
+			</MessageGroup>
+		)
+	}
+
 	return (
 		<MessageGroup data-testid="crew-message-group" data-key={first.id}>
 			{messages.map((message, index) => {
@@ -298,9 +308,11 @@ function RoutingCorrection({ message }: { message: CrewMessageType }) {
 	const correct = useCorrectRouting()
 	const shown = message.corrected ?? message.routing
 	if (!shown) return null
+	const note = routingNote(shown)
 	return (
 		<RoutingMenu
 			label="Where should this have gone?"
+			current={shown}
 			includeStack={false}
 			disabled={correct.isPending}
 			testId="crew-routing-correct"
@@ -313,8 +325,8 @@ function RoutingCorrection({ message }: { message: CrewMessageType }) {
 			}
 		>
 			{message.corrected
-				? `Corrected: ${routingNote(shown).toLowerCase()}`
-				: routingNote(shown)}
+				? `Corrected: ${note[0].toLowerCase()}${note.slice(1)}`
+				: note}
 			<ChevronDown className="size-3" />
 		</RoutingMenu>
 	)
