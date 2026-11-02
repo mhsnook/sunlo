@@ -113,9 +113,8 @@ const keepRefLinks = (url: string) =>
 
 // Agents write markdown, with GitHub's checklists and tables. @mentions
 // render bold, as in the design, a `doc:` link or a "#854" shows a card on
-// hover, and
-// a fenced block in a component's language (```chart, ```stats, ```table,
-// ```mermaid) renders as that component.
+// hover, and a fenced block in a component's language (```chart, ```stats,
+// ```table, ```mermaid) renders as that component.
 export function CrewText({ text }: { text: string }) {
 	return (
 		<Markdown

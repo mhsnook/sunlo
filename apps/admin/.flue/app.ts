@@ -81,9 +81,10 @@ api.get('/crew/room', async (c) => {
 	// The app loads this first, so the room learns the origin it is served
 	// on, which the painter's signed links need.
 	const room = await roomFor()
-	return c.json(
-		await room.snapshot(c.get('admin').uid, new URL(c.req.url).origin)
-	)
+	return c.json({
+		...(await room.snapshot(c.get('admin').uid, new URL(c.req.url).origin)),
+		githubRepo: c.env.GITHUB_REPO,
+	})
 })
 
 api.get('/crew/runs', async (c) => {

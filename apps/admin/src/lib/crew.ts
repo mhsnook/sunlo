@@ -74,11 +74,15 @@ export const roomIcons: Record<RoomKey, LucideIcon> = {
 	learnership: GraduationCap,
 }
 
+// The route adds the repository GitHub's log follows, which a "#854" links
+// into.
+const RoomResponseSchema = RoomSnapshotSchema.extend({ githubRepo: z.string() })
+
 export const roomQuery = () =>
 	queryOptions({
 		queryKey: ['crew', 'room'],
 		queryFn: async () =>
-			RoomSnapshotSchema.parse(await adminFetch('crew/room')),
+			RoomResponseSchema.parse(await adminFetch('crew/room')),
 		// The live socket keeps this current.
 		staleTime: Infinity,
 	})

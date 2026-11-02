@@ -416,8 +416,6 @@ export const GithubLogSchema = z.object({
 	items: z.array(GithubItemSchema),
 	// When the room filled its copy from GitHub's API, once.
 	checkedAt: z.string().nullable(),
-	// "mhsnook/sunlo": the repository the copy follows.
-	repo: z.string(),
 })
 export type GithubLogType = z.infer<typeof GithubLogSchema>
 
@@ -777,12 +775,6 @@ export const documentMax = (name: string) =>
 // A link to a document is `[the Roadmap](doc:3)`. It names the id, not the
 // name, because two names can slug alike and an id never changes.
 export const documentHref = (id: number) => `doc:${id}`
-
-// The id a link target names, or null for an ordinary URL.
-export function documentIdInHref(href: string): number | null {
-	const match = /^doc:(\d+)$/i.exec(href)
-	return match ? Number(match[1]) : null
-}
 
 // A room's documents, as its room log lists them. Revision 0 is a document
 // nobody has written yet.

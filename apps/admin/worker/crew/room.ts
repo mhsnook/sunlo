@@ -2822,7 +2822,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return {
 			items: githubItems(this.sql.bind(this)),
 			checkedAt: this.ctx.storage.kv.get<string>(GITHUB_CHECKED_AT) ?? null,
-			repo: this.env.GITHUB_REPO,
 		}
 	}
 

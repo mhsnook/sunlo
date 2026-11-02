@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import {
 	CircleCheck,
 	CircleDot,
@@ -7,6 +7,7 @@ import {
 	GitPullRequestClosed,
 	type LucideIcon,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
 	GITHUB_CLOSED_DAYS,
 	githubRef,
@@ -21,7 +22,7 @@ import { Empty, Section } from './workspace-parts'
 // Titles and labels are anyone's text on a public repository. Everything
 // here renders them as React text, never through CrewText's Markdown.
 
-export const githubIcons: Record<
+const icons: Record<
 	GithubItemType['kind'],
 	Record<GithubItemType['state'] | GithubEventType['action'], LucideIcon>
 > = {
@@ -42,7 +43,7 @@ export const githubIcons: Record<
 }
 
 // The server only keeps github.com links; this holds if one slips through.
-export const safeGithubUrl = (url: string) =>
+const safeUrl = (url: string) =>
 	url.startsWith('https://github.com/') ? url : undefined
 
 // The room's lines for GitHub events, in a timeline: one quiet line each.
@@ -59,7 +60,7 @@ export function GithubLines({
 			{messages.map((message) => {
 				const event = message.github
 				if (!event) return null
-				const Icon = githubIcons[event.kind][event.action]
+				const Icon = icons[event.kind][event.action]
 				return (
 					<li
 						key={message.id}
@@ -69,7 +70,7 @@ export function GithubLines({
 					>
 						<Icon className="size-3.5 shrink-0" aria-hidden />
 						<a
-							href={safeGithubUrl(event.url)}
+							href={safeUrl(event.url)}
 							target="_blank"
 							rel="noreferrer"
 							className="text-foreground shrink-0 font-medium hover:underline"
@@ -132,7 +133,7 @@ function ItemList({
 	return (
 		<ul className="bg-card divide-y rounded border text-sm">
 			{items.slice(0, LIST_MAX).map((item) => {
-				const Icon = githubIcons[item.kind][item.state]
+				const Icon = icons[item.kind][item.state]
 				return (
 					<li
 						key={item.number}
@@ -146,7 +147,7 @@ function ItemList({
 						/>
 						<div className="min-w-0">
 							<a
-								href={safeGithubUrl(item.url)}
+								href={safeUrl(item.url)}
 								target="_blank"
 								rel="noreferrer"
 								className="hover:underline"
@@ -156,14 +157,7 @@ function ItemList({
 								</span>
 								{item.title}
 							</a>
-							{(item.labels.length > 0 || item.milestone) && (
-								<p className="text-muted-foreground text-xs">
-									{[
-										...item.labels,
-										...(item.milestone ? [`milestone ${item.milestone}`] : []),
-									].join(' · ')}
-								</p>
-							)}
+							<GithubItemMeta item={item} />
 						</div>
 					</li>
 				)
@@ -174,5 +168,81 @@ function ItemList({
 				</li>
 			)}
 		</ul>
+	)
+}
+
+function GithubItemMeta({ item }: { item: GithubItemType }) {
+	if (!item.labels.length && !item.milestone) return null
+	return (
+		<p className="text-muted-foreground text-xs">
+			{[
+				...item.labels,
+				...(item.milestone ? [`milestone ${item.milestone}`] : []),
+			].join(' · ')}
+		</p>
+	)
+}
+
+// GitHub's colours: a closed issue was finished, a closed pull request was
+// turned down.
+const stateClasses: Record<
+	GithubItemType['kind'],
+	Record<GithubItemType['state'], string>
+> = {
+	issue: {
+		open: 'bg-success-100 text-success-800',
+		closed: 'bg-primary-100 text-primary-800',
+		merged: 'bg-primary-100 text-primary-800',
+	},
+	pr: {
+		open: 'bg-success-100 text-success-800',
+		closed: 'bg-danger-100 text-danger-800',
+		merged: 'bg-primary-100 text-primary-800',
+	},
+}
+
+// The hover card for a "#854" in an agent's text. It mounts only while the
+// card is open, so the log loads on the first hover, not with the page.
+export function GithubItemCard({
+	number,
+	repo,
+}: {
+	number: number
+	repo: string
+}) {
+	const { data: log, isPending } = useQuery(githubLogQuery())
+	if (isPending) return <p className="text-muted-foreground">Loading…</p>
+	const item = log?.items.find((entry) => entry.number === number)
+	if (!item) {
+		return (
+			<p className="text-muted-foreground">
+				{repo} #{number} is not in the room’s copy of GitHub, which keeps what
+				is open and what closed in the last {GITHUB_CLOSED_DAYS} days.
+			</p>
+		)
+	}
+	const Icon = icons[item.kind][item.state]
+	return (
+		<div className="space-y-2">
+			<div className="text-muted-foreground flex items-center gap-2 text-xs">
+				<span
+					className={cn(
+						'inline-flex items-center gap-1 rounded-2xl px-2 py-0.5 font-medium capitalize',
+						stateClasses[item.kind][item.state]
+					)}
+				>
+					<Icon className="size-3.5" aria-hidden />
+					{item.state}
+				</span>
+				<span className="truncate">
+					{repo} {githubRef(item)}
+				</span>
+				<span className="ms-auto shrink-0">
+					{dayLabel(item.closedAt ?? item.updatedAt)}
+				</span>
+			</div>
+			<p className="font-medium">{item.title}</p>
+			<GithubItemMeta item={item} />
+		</div>
 	)
 }

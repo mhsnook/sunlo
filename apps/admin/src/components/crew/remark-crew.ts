@@ -39,47 +39,40 @@ export function remarkCrew() {
 				},
 			}
 		})
-		visit(tree, 'text', (node, index, parent) => {
-			if (!parent || index === undefined) return
-			const parts = node.value.split(mention)
-			if (parts.length === 1) return
-			// split() with two groups yields [text, space, @name, text, ...].
-			const nodes: Array<PhrasingContent> = []
-			for (let i = 0; i < parts.length; i += 3) {
-				const text = parts[i] + (parts[i + 1] ?? '')
-				if (text) nodes.push({ type: 'text', value: text })
-				const name = parts[i + 2]
-				if (name) {
-					nodes.push({
-						type: 'strong',
-						children: [{ type: 'text', value: name }],
-					})
-				}
-			}
-			parent.children.splice(index, 1, ...nodes)
-			return [SKIP, index + nodes.length]
-		})
-		visit(tree, (node, index, parent) => {
-			// A link's own text keeps its target.
-			if (node.type === 'link' || node.type === 'linkReference') return SKIP
-			if (node.type !== 'text' || !parent || index === undefined) return
-			const parts = node.value.split(issueRef)
-			if (parts.length === 1) return
-			const nodes: Array<PhrasingContent> = []
-			for (let i = 0; i < parts.length; i += 3) {
-				const text = parts[i] + (parts[i + 1] ?? '')
-				if (text) nodes.push({ type: 'text', value: text })
-				const number = parts[i + 2]
-				if (number) {
-					nodes.push({
-						type: 'link',
-						url: githubHref(Number(number)),
-						children: [{ type: 'text', value: `#${number}` }],
-					})
-				}
-			}
-			;(parent.children as Array<PhrasingContent>).splice(index, 1, ...nodes)
-			return [SKIP, index + nodes.length]
-		})
+		splitText(tree, mention, (name) => ({
+			type: 'strong',
+			children: [{ type: 'text', value: name }],
+		}))
+		splitText(tree, issueRef, (number) => ({
+			type: 'link',
+			url: githubHref(Number(number)),
+			children: [{ type: 'text', value: `#${number}` }],
+		}))
 	}
+}
+
+// Replaces each match of `pattern` (two groups: the character before, then
+// the token) in prose with `build(token)`. A link's own text is left alone,
+// so it keeps its target and its look.
+function splitText(
+	tree: Root,
+	pattern: RegExp,
+	build: (token: string) => PhrasingContent
+) {
+	visit(tree, (node, index, parent) => {
+		if (node.type === 'link' || node.type === 'linkReference') return SKIP
+		if (node.type !== 'text' || !parent || index === undefined) return
+		const parts = node.value.split(pattern)
+		if (parts.length === 1) return
+		// split() with two groups yields [text, before, token, text, ...].
+		const nodes: Array<PhrasingContent> = []
+		for (let i = 0; i < parts.length; i += 3) {
+			const text = parts[i] + (parts[i + 1] ?? '')
+			if (text) nodes.push({ type: 'text', value: text })
+			const token = parts[i + 2]
+			if (token) nodes.push(build(token))
+		}
+		;(parent.children as Array<PhrasingContent>).splice(index, 1, ...nodes)
+		return [SKIP, index + nodes.length]
+	})
 }
