@@ -34,7 +34,7 @@ import {
 import { dayLabel, timeLabel, timeOrDay } from '~/lib/format'
 import { GithubLines } from './github-log'
 import { OtherView } from './other-view'
-import { MessageRuns } from './run-steps'
+import { MessageRunParts } from './run-steps'
 import { SideThread } from './side-thread'
 import { RoutingMenu, routingNote } from './routing-menu'
 import { SpeakableBubble } from './voice-controls'
@@ -46,6 +46,7 @@ import {
 	messageElementId,
 	useCorrectRouting,
 } from '~/lib/crew'
+import type { RunParts } from '~/lib/run-parts'
 
 type Group = { author: string; messages: Array<CrewMessageType> }
 
@@ -75,6 +76,7 @@ export function RoomTimeline({
 	replies = {},
 	myAuthor,
 	newSince,
+	runs,
 }: {
 	messages: Array<CrewMessageType>
 	// Side-thread replies, by the id of each thread's first message. They
@@ -84,6 +86,7 @@ export function RoomTimeline({
 	myAuthor: string
 	// Draw "New since …" before the first message from someone else after this.
 	newSince: string | null
+	runs: RunParts
 }) {
 	useReadOnArrival(
 		messages.flatMap((message) => {
@@ -139,6 +142,7 @@ export function RoomTimeline({
 									others={others}
 									threads={threads}
 									cardsByNote={cardsByNote}
+									runs={runs}
 								/>
 								{newSinceMarker}
 								<AuthorGroup
@@ -147,6 +151,7 @@ export function RoomTimeline({
 									others={others}
 									threads={threads}
 									cardsByNote={cardsByNote}
+									runs={runs}
 								/>
 							</>
 						) : (
@@ -158,6 +163,7 @@ export function RoomTimeline({
 									others={others}
 									threads={threads}
 									cardsByNote={cardsByNote}
+									runs={runs}
 								/>
 							</>
 						)}
@@ -174,6 +180,7 @@ function AuthorGroup({
 	others,
 	threads,
 	cardsByNote,
+	runs,
 }: {
 	messages: Array<CrewMessageType>
 	myAuthor: string
@@ -183,6 +190,7 @@ function AuthorGroup({
 	threads: Map<string, Array<CrewMessageType>>
 	// Cards, by the id of the note the admin wrote when answering each.
 	cardsByNote: Map<string, CrewMessageType>
+	runs: RunParts
 }) {
 	const first = messages[0]
 	const mine = first.author === myAuthor
@@ -238,6 +246,11 @@ function AuthorGroup({
 									<span>{timeLabel(message.at)}</span>
 								</MessageHeader>
 							)}
+							<MessageRunParts
+								parts={runs.above.get(message.id)}
+								message={message}
+								place="above"
+							/>
 							{message.images.length > 0 && (
 								<MessageImages
 									images={message.images}
@@ -276,7 +289,11 @@ function AuthorGroup({
 								</SpeakableBubble>
 							)}
 							{asksYou && <CardActions message={message} />}
-							<MessageRuns message={message} />
+							<MessageRunParts
+								parts={runs.under.get(message.id)}
+								message={message}
+								place="under"
+							/>
 							{other && <OtherView original={message} other={other} />}
 							{message.thread && (
 								<SideThread

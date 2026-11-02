@@ -24,6 +24,7 @@ import {
 	type RunType,
 } from '../../../shared/crew'
 import { runsQuery } from '~/lib/crew'
+import { placeRuns, type RunParts } from '~/lib/run-parts'
 
 type Status = 'running' | 'error' | undefined
 
@@ -97,7 +98,15 @@ function StepLine({
 // A run's steps under one summary line, as AI Elements' Chain of Thought
 // draws them: open while the run works, folded once it ends. `who` names
 // the agent when the line sits under someone else's message.
-export function RunTrace({ run, who }: { run: RunType; who: string | null }) {
+export function RunTrace({
+	run,
+	who,
+	place,
+}: {
+	run: RunType
+	who: string | null
+	place: 'above' | 'under' | 'live'
+}) {
 	const [open, setOpen] = useState<boolean>()
 	const running = run.outcome === 'working'
 	const count = run.steps.length + run.dropped
@@ -120,7 +129,12 @@ export function RunTrace({ run, who }: { run: RunType; who: string | null }) {
 		? `${who}${running ? ', ' : ' '}${summary}`
 		: summary.charAt(0).toUpperCase() + summary.slice(1)
 	return (
-		<Trace data-testid="run-steps" data-key={run.id} data-outcome={run.outcome}>
+		<Trace
+			data-testid="run-steps"
+			data-key={run.id}
+			data-place={place}
+			data-outcome={run.outcome}
+		>
 			<TraceCollapsible open={open ?? running} onOpenChange={setOpen}>
 				<TraceCollapsibleTrigger data-testid="run-steps-toggle">
 					<TraceLine status={status}>
@@ -157,16 +171,38 @@ export function RunTrace({ run, who }: { run: RunType; who: string | null }) {
 	)
 }
 
-// `agents` is who belongs in the room, not who the room counts as working:
-// an agent's side-thread run can end, and set it idle, while its main run
-// goes on.
-export function useLiveRuns(agents: ReadonlyArray<CrewKey>) {
+// `agents` limits only the live list. It is who belongs in the room, not who
+// the room counts as working: an agent's side-thread run can end, and set it
+// idle, while its main run goes on.
+export function useRunParts(
+	messages: Array<CrewMessageType>,
+	agents: ReadonlyArray<CrewKey>
+): RunParts {
 	const { data: runs = [] } = useQuery(runsQuery())
-	return runs.filter(
-		(run) =>
-			run.outcome === 'working' &&
-			run.steps.length > 0 &&
-			agents.includes(run.agent)
+	return placeRuns(runs, messages, agents)
+}
+
+export function MessageRunParts({
+	parts,
+	message,
+	place,
+}: {
+	parts: Array<RunType> | undefined
+	message: CrewMessageType
+	place: 'above' | 'under'
+}) {
+	if (!parts?.length) return null
+	return (
+		<div className="w-full min-w-0 space-y-1 px-1">
+			{parts.map((part) => (
+				<RunTrace
+					key={part.id}
+					run={part}
+					place={place}
+					who={part.agent === message.author ? null : displayName(part.agent)}
+				/>
+			))}
+		</div>
 	)
 }
 
@@ -181,6 +217,7 @@ export function LiveRuns({ runs }: { runs: Array<RunType> }) {
 				<RunTrace
 					key={run.id}
 					run={run}
+					place="live"
 					who={`${displayName(run.agent)}${run.thread ? ' in a side-thread' : ''}`}
 				/>
 			))}
@@ -206,6 +243,7 @@ export function MessageRuns({ message }: { message: CrewMessageType }) {
 				<RunTrace
 					key={run.id}
 					run={run}
+					place="under"
 					who={run.agent === message.author ? null : displayName(run.agent)}
 				/>
 			))}

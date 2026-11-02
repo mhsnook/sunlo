@@ -36,6 +36,17 @@ import type { RunKey } from '../../worker/crew/runs'
 
 export const CREW_DURABILITY = { maxAttempts: 3 }
 
+// Flue compacts when the context passes the model's window minus
+// `reserveTokens`, so this keeps a conversation near CONTEXT_BUDGET whatever
+// the model's window.
+export const CONTEXT_BUDGET = 240_000
+
+function compactionFor(contextWindow: number) {
+	return contextWindow > CONTEXT_BUDGET * 2
+		? { reserveTokens: contextWindow - CONTEXT_BUDGET }
+		: undefined
+}
+
 // Everything a crew agent shares: the model, the room and workspace tools,
 // the context it wakes up with, and, unless it opts out, the database tools.
 // `tools` makes the agent's own tools, for the run in `thread`.
@@ -51,10 +62,11 @@ export function useCrewMember(
 	} = {}
 ) {
 	const model = `cloudflare/${options.model ?? env.CREW_MODEL}`
-	useModel(model)
 	// The catalog Flue resolves the model from. For a model it lists as text
 	// only, or does not list, pi-ai sends a placeholder in place of an image.
-	const seesImages = resolveModel(model).input.includes('image')
+	const resolved = resolveModel(model)
+	useModel(model, { compaction: compactionFor(resolved.contextWindow) })
+	const seesImages = resolved.input.includes('image')
 	// A side-thread's conversation is created with its thread, and keeps it;
 	// the main conversation has none. Every tool that edits the workspace
 	// needs it, or the edit lands in the receipt of the agent's other run.
