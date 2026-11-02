@@ -1,102 +1,80 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { CoachMessage } from './protocol'
-import { compactTranscript } from './transcript'
+import type { CoachView } from './conversation'
 
-export type CoachLogEntry = {
-	id: string
-	kind: 'learner' | 'coach' | 'action' | 'error'
-	text: string
-}
-
-export type CoachView = {
-	id: string
-	title: string
-	subtitle: string | null
-	phraseIds: Array<string>
-	requestIds: Array<string>
-	playlistIds: Array<string>
-}
-
-export type CoachThread = {
-	// What the model sees. `log` is what the learner sees; the two diverge
-	// because tool calls and page notes never render as chat bubbles.
-	transcript: Array<CoachMessage>
-	log: Array<CoachLogEntry>
-	suggestions: Array<string>
-	views: Array<CoachView>
+// The page's own state. The conversation lives in the coach agent; this is
+// only what the learner did on this page that the agent has not seen yet.
+type PageState = {
+	// Sets the learner opened from a request or playlist tile.
+	localViews: Array<CoachView>
+	// null follows the newest set the coach showed.
 	activeViewId: string | null
-	// Things the learner did on the page since their last message. They ride
-	// along with the next message instead of waking the coach on every tap.
-	pageNotes: Array<string>
+	// Sent with the learner's next message, then cleared.
+	notes: Array<{ id: string; text: string }>
 }
 
-export const emptyThread: CoachThread = {
-	transcript: [],
-	log: [],
-	suggestions: [],
-	views: [],
-	activeViewId: null,
-	pageNotes: [],
+const emptyPage: PageState = { localViews: [], activeViewId: null, notes: [] }
+
+export const useCoachPageStore = create<Record<string, PageState>>()(() => ({}))
+
+export const usePageState = (key: string) =>
+	useCoachPageStore((state) => state[key] ?? emptyPage)
+
+function update(key: string, fn: (page: PageState) => Partial<PageState>) {
+	useCoachPageStore.setState((state) => {
+		const page = state[key] ?? emptyPage
+		return { [key]: { ...page, ...fn(page) } }
+	})
 }
 
-type CoachState = {
-	threads: Record<string, CoachThread>
-	reset: (key: string) => void
+export const showView = (key: string, id: string | null) =>
+	update(key, () => ({ activeViewId: id }))
+
+export const openLocalView = (key: string, view: CoachView, note: string) =>
+	update(key, (page) => ({
+		localViews: [...page.localViews, view],
+		activeViewId: view.id,
+		notes: [...page.notes, { id: crypto.randomUUID(), text: note }],
+	}))
+
+export const addNote = (key: string, note: string) =>
+	update(key, (page) => ({
+		notes: [...page.notes, { id: crypto.randomUUID(), text: note }],
+	}))
+
+// Hands the pending notes to a message and starts following the coach again.
+export function takeNotes(key: string) {
+	const notes = (useCoachPageStore.getState()[key] ?? emptyPage).notes
+	update(key, () => ({ notes: [], activeViewId: null }))
+	return notes.map((note) => note.text)
 }
 
-export const useCoachStore = create<CoachState>()(
-	persist(
-		(set) => ({
-			threads: {},
-			reset: (key) =>
-				set((state) => {
-					const { [key]: _gone, ...threads } = state.threads
-					return { threads }
-				}),
-		}),
-		{
-			name: 'sunlo-coach',
-			version: 1,
-			// persist rewrites localStorage on every change, several times a turn,
-			// so it stores the compacted transcript the model would see anyway.
-			partialize: (state) => ({
-				threads: Object.fromEntries(
-					Object.entries(state.threads).map(([key, thread]) => [
-						key,
-						{ ...thread, transcript: compactTranscript(thread.transcript) },
-					])
-				),
-			}),
-		}
-	)
+const newThread = () => crypto.randomUUID().replaceAll('-', '').slice(0, 12)
+
+// The current thread for each learner and language, on this device. A
+// device without one starts a new conversation.
+const useThreadStore = create<{ threads: Record<string, string> }>()(
+	persist(() => ({ threads: {} }), { name: 'sunlo-coach-threads', version: 1 })
 )
 
-// Kept out of the persisted store, so flipping it writes nothing to storage.
-export const useCoachBusyStore = create<Record<string, boolean>>()(() => ({}))
+const threadSlot = (uid: string, lang: string) => `${uid}:${lang}`
 
-export const threadKey = (uid: string, lang: string) => `${uid}:${lang}`
-
-export const getThread = (key: string) =>
-	useCoachStore.getState().threads[key] ?? emptyThread
-
-export const updateThread = (
-	key: string,
-	fn: (thread: CoachThread) => Partial<CoachThread>
-) =>
-	useCoachStore.setState((state) => {
-		const thread = state.threads[key] ?? emptyThread
-		return {
-			threads: { ...state.threads, [key]: { ...thread, ...fn(thread) } },
-		}
-	})
-
-export const logId = () => crypto.randomUUID()
-
-export function pushView(key: string, view: Omit<CoachView, 'id'>) {
-	const id = logId()
-	updateThread(key, (thread) => ({
-		views: [...thread.views, { id, ...view }],
-		activeViewId: id,
+// The /coach/$lang loader calls this, so the page always has a thread.
+export function ensureCoachThread(uid: string, lang: string) {
+	const slot = threadSlot(uid, lang)
+	if (useThreadStore.getState().threads[slot]) return
+	useThreadStore.setState((state) => ({
+		threads: { ...state.threads, [slot]: newThread() },
 	}))
 }
+
+export function useCoachThread(uid: string, lang: string) {
+	const thread = useThreadStore((state) => state.threads[threadSlot(uid, lang)])
+	if (!thread) throw new Error('The /coach/$lang loader did not start a thread')
+	return thread
+}
+
+export const startOver = (uid: string, lang: string) =>
+	useThreadStore.setState((state) => ({
+		threads: { ...state.threads, [threadSlot(uid, lang)]: newThread() },
+	}))

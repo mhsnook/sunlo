@@ -1,49 +1,56 @@
 # Sunlo worker
 
-One Cloudflare Worker serves the whole web app. Each deployed version holds the Vite build of the app (`dist/`) as static assets plus this folder's code, so an app and an API from different commits never run together. The config is the root `wrangler.jsonc`.
+One Cloudflare Worker serves the whole web app. Each deployed version holds the Vite build of the app (`dist/client`) as static assets plus the Worker (`dist/sunlo`), so an app and an API from different commits never run together. The config is the root `wrangler.jsonc`.
 
-The worker only runs for the paths in `run_worker_first`. Every other request is a static file, with `index.html` as the fallback for app routes.
+The Vite build makes both. `@flue/vite` and `@cloudflare/vite-plugin` (`vite.config.ts`) build the Worker from `.flue/app.ts`, which mounts the coach agent and then this folder's routes (`index.ts`). The Worker only runs for the paths in `run_worker_first`. Every other request is a static file, with `index.html` as the fallback for app routes.
 
-| Path       | Code                                      | Does                                                                                       |
-| ---------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `/api/*`   | `api.ts` (a [Hono](https://hono.dev) app) | The API. Today: `POST /api/extract-phrase` and `POST /api/coach`.                          |
-| `/learn/*` | `og.ts`                                   | Serves an HTML page with Open Graph tags to social crawlers, and the app to everyone else. |
+| Path                   | Code                                                 | Does                                                                                       |
+| ---------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `/api/coach/agent/:id` | `.flue/agents/coach.ts`, through Flue's agent router | The coach's conversations: send a message, read the conversation, stream it live.          |
+| `/api/*`               | `api.ts` (a [Hono](https://hono.dev) app)            | The API. Today: `POST /api/extract-phrase`.                                                |
+| `/learn/*`             | `og.ts`                                              | Serves an HTML page with Open Graph tags to social crawlers, and the app to everyone else. |
 
 `POST /api/extract-phrase` reads the text in one image with a Workers AI vision model and returns phrases with transliteration and translation. It uses the `AI` and `EXTRACT_LIMITER` bindings.
 
-`POST /api/coach` (`coach.ts`) runs one step of the AI coach: it sends the conversation to a Workers AI model with function calling (Gemma 4 26B) through the `AI` binding, with the coach's system prompt and tool definitions, and returns the reply. The browser runs the tools and calls again. It uses the `AI` and `COACH_LIMITER` bindings. The design is in `src/features/coach/docs.md`.
+The coach is a [Flue](https://flueframework.com) agent: one Durable Object per conversation (`FlueCoachAgent`), which keeps the conversation and runs the model and the library tools. Its design is in `src/features/coach/docs.md`.
 
 ## Auth
 
-Every `/api` route requires the `Authorization: Bearer <access token>` header from a signed-in Sunlo session. The worker checks it with `supabase.auth.getClaims()`, which verifies the signature against the project's JWKS, and requires `role = 'authenticated'`, so the public anon key is rejected. The app calls `/api` on its own origin, so the API has no CORS.
+Every `/api` route requires the `Authorization: Bearer <access token>` header from a signed-in Sunlo session (`requireUser` in `auth.ts`). The worker checks it with `supabase.auth.getClaims()`, which verifies the signature against the project's JWKS, and requires `role = 'authenticated'`, so the public anon key is rejected. The app calls `/api` on its own origin, so the API has no CORS.
+
+Flue's agent router has no auth of its own. `requireOwnConversation` (`coach-access.ts`) runs after `requireUser` on the coach's routes and refuses a conversation id whose uid is not the caller's.
 
 ## Configuration
 
-| Name                  | Kind    | Set in                                             | Purpose                                                       |
-| --------------------- | ------- | -------------------------------------------------- | ------------------------------------------------------------- |
-| `SUPABASE_URL`        | var     | `wrangler.jsonc`; `--var` on previews; `.dev.vars` | Project to verify tokens against and read previews from.      |
-| `SUPABASE_ANON_KEY`   | var     | `wrangler.jsonc`; `--var` on previews; `.dev.vars` | Public (publishable) key for the Supabase client.             |
-| `PHOTO_EXTRACT_MODEL` | var     | `wrangler.jsonc`                                   | Workers AI model id for `/api/extract-phrase`.                |
-| `EXTRACT_LIMITER`     | binding | `wrangler.jsonc`                                   | 10 requests per user per minute.                              |
-| `COACH_MODEL`         | var     | `wrangler.jsonc`                                   | Workers AI model id for `/api/coach`; needs function calling. |
-| `AI_GATEWAY_ID`       | var     | `wrangler.jsonc`                                   | AI Gateway every model call goes through (`sunlo-app`).       |
-| `COACH_LIMITER`       | binding | `wrangler.jsonc`                                   | 40 coach steps per user per minute.                           |
+| Name                  | Kind    | Set in                                      | Purpose                                                       |
+| --------------------- | ------- | ------------------------------------------- | ------------------------------------------------------------- |
+| `SUPABASE_URL`        | var     | `wrangler.jsonc`; `--var` on previews       | Project to verify tokens against and read previews from.      |
+| `SUPABASE_ANON_KEY`   | var     | `wrangler.jsonc`; `--var` on previews       | Public (publishable) key for the Supabase client.             |
+| `PHOTO_EXTRACT_MODEL` | var     | `wrangler.jsonc`                            | Workers AI model id for `/api/extract-phrase`.                |
+| `EXTRACT_LIMITER`     | binding | `wrangler.jsonc`                            | 10 requests per user per minute.                              |
+| `COACH_MODEL`         | var     | `wrangler.jsonc`; `mock/coach` in mock mode | Workers AI model id for the coach; needs function calling.    |
+| `AI_GATEWAY_ID`       | var     | `wrangler.jsonc`                            | AI Gateway every model call goes through (`sunlo-app`).       |
+| `COACH_LIMITER`       | binding | `wrangler.jsonc`                            | 20 messages to the coach per user per minute.                 |
+| `FLUE_COACH_AGENT`    | binding | generated by `@flue/vite`                   | The coach's Durable Object namespace. Never write it by hand. |
 
 `wrangler.jsonc` holds the production Supabase values. `scripts/cf-preview.sh` replaces them on a preview version with the values its Vite build used, so a preview's app and worker use the same Supabase project. They are vars, not secrets, because a preview version can need different values from production, and both are public.
 
-`VITE_PHOTO_EXTRACT_USE_MOCK=true` makes the app return canned results without calling the worker; `pnpm dev:local` and `pnpm build:test` set it.
+A new Flue agent also needs an entry in `wrangler.jsonc` `migrations`, which are append-only once deployed.
+
+`VITE_PHOTO_EXTRACT_USE_MOCK=true` makes the app return canned results without calling the worker. `VITE_COACH_USE_MOCK=true` runs the coach agent on the scripted model in `.flue/coach/mock.ts`. `pnpm dev:local` and `pnpm build:test` set both.
 
 ## Local development
 
 ```bash
-cp .dev.vars.example .dev.vars   # values from `supabase status`
-pnpm dev                         # the app, http://localhost:5173
-pnpm worker:dev                  # the worker, http://localhost:8787
+pnpm dev         # the app and the Worker, http://localhost:5173
+pnpm dev:local   # the same, with mocks and without remote bindings
 ```
 
-The Vite dev server proxies `/api` to `:8787`. The `AI` binding always runs remotely, so `pnpm worker:dev` needs `wrangler login`, or `CLOUDFLARE_API_TOKEN` in a non-interactive shell. To work on everything except the model call, run `pnpm exec wrangler dev --local`; requests that reach the model then fail.
+The Worker runs inside the Vite dev server, so the app calls `/api` on its own origin there too. In dev the Worker takes `SUPABASE_URL` and `SUPABASE_ANON_KEY` from the app's `VITE_SUPABASE_*` values, so it checks tokens against the project the app signs in to.
 
-`worker/worker-configuration.d.ts` is generated by `wrangler types` on `pnpm install` and is not committed. Run `pnpm install` again after changing `wrangler.jsonc`. Both commands set `CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false`, so wrangler ignores the root `.env`, which holds names the worker must not see.
+The `AI` binding always runs remotely, so `pnpm dev` needs `wrangler login`, or `CLOUDFLARE_API_TOKEN` in a non-interactive shell. `pnpm dev:local` sets `SUNLO_REMOTE_BINDINGS=false` and starts without it; requests that reach a real model then fail.
+
+`worker/worker-configuration.d.ts` is generated by `wrangler types` on `pnpm install` and is not committed. Run `pnpm install` again after changing `wrangler.jsonc`. Both the generator and `vite.config.ts` set `CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false`, so wrangler ignores the root `.env`, which holds names the worker must not see.
 
 ## Deploying
 

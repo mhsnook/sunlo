@@ -19,6 +19,7 @@
 	},
 	"include": [
 		"worker",
+		".flue/**/*.ts",
 		"src/types/supabase.ts",
 		"src/lib/languages.ts",
 		"src/features/coach/protocol.ts"

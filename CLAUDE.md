@@ -69,13 +69,13 @@ supabase db reset       # apply migrations + seeds
 # No Docker (e.g. Claude Code web)? Use scripts/db-native.sh to validate
 # migrations/seeds against a native Postgres — see docs/database.md.
 
-pnpm dev                # dev server at http://127.0.0.1:5173
+pnpm dev                # app + Worker (worker/, .flue/) at http://127.0.0.1:5173; real Workers AI needs `wrangler login`
+pnpm dev:local          # the same with mocks and no remote bindings (what CI runs)
 pnpm check              # typecheck with tsrs; `pnpm check:tsc` if tsrs has no binary for your OS
 pnpm lint               # oxlint then eslint
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
 pnpm admin:dev          # admin app and its Worker (apps/admin), one Vite server at http://localhost:5174
-pnpm worker:dev         # Cloudflare worker (worker/) at http://localhost:8787; Vite proxies /api to it
 
 pnpm run migrate        # create migration from local changes
 pnpm run types          # regenerate supabase TS types
@@ -87,7 +87,7 @@ pnpm run schema         # regenerate base.sql — review the diff carefully
 - **Migrations only reach `main` via a `next-<version>` → `main` release merge.** Two questions before opening a PR: (1) branch created from `next-<version>`? → PR into it, no matter what you touched. (2) PR touches a migration file? → PR into it. Otherwise → `main`. Full strategy: `docs/deployment.md`.
 - **CI pushes are usually rejected.** GitHub refuses a push that changes `.github/workflows/` from a Claude session, because its token lacks the `workflow` scope. So hand CI changes to the maintainer as a patch in the chat (`git format-patch origin/main`), and they push it.
 - **Follow-up work after a merge goes on a NEW branch name, never the merged one.** Once a branch's PR merges, that branch is done — reusing its name re-attaches to the closed PR and clutters the branch list. Branch fresh off the default (`git checkout -B <new-name> origin/main`) and push that. The `guard-merged-branch-push.sh` pre-push hook enforces this.
-- **Never `vite build` without a populated `.env`.** Missing `VITE_SUPABASE_*` vars don't fail the build — they silently tree-shake the entire Supabase SDK (~640 KB) out of the bundle. Dummy-but-truthy values are fine; sanity-check with `grep -l GoTrueClient dist/assets/*.js`. Details: `docs/deployment.md`.
+- **Never `vite build` without a populated `.env`.** Missing `VITE_SUPABASE_*` vars don't fail the build — they silently tree-shake the entire Supabase SDK (~640 KB) out of the bundle. Dummy-but-truthy values are fine; sanity-check with `grep -l GoTrueClient dist/client/assets/*.js`. Details: `docs/deployment.md`.
 - **`collection.utils.refetch()` is a full-table fetch.** Treat it like `useEffect`: a smell needing justification. Prefer `.select()` on the write / RPCs that return rows + `writeSyncedRow`/`writeSyncedRows`. If you're about to add one, stop and check with the human first.
 - **New tests are scenetest scenes** — markdown (`scenetest/scenes/*.spec.md`) by default, `test()` from `@scenetest/scenes` only when the flow needs Playwright mechanics markdown can't express. Never `@playwright/test`. Navigate by clicking, not by reloading (`openTo` is for the entry point only).
 - **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically.
@@ -120,7 +120,7 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 | `requests`      | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes                      | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
 | `social`        | FriendRequestAction, FriendSummary, ChatMessage           | friendRequestActions, chatMessages, friendSummaries + relationsFull (live) | useRelationFriends, useAllChats, useSocialRealtime                 |
 | `chat`          | ChatQuery, ChatTurn, ChatResultPhrase                     | (zustand store, no collection — prototype phrasebook search)               | useChatStore, useChatTurns, useChatSearch                          |
-| `coach`         | CoachMessage, CoachRequest, coachTools                    | (zustand store, persisted — chat transcript and the sets on the page)      | useCoach, useCoachThread, useDeckMeter                             |
+| `coach`         | coachToolInputs, CoachInitialData (Valibot, for Flue)     | (none — the conversation lives in the Flue agent; zustand for page state)  | useCoach, useDeckMeter, useCoachThread                             |
 | `notifications` | Notification                                              | notifications                                                              | useNotifications, useUnreadCount, useMarkAsRead                    |
 | `playlists`     | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                                       | useOnePlaylist, useLangPlaylists                                   |
 | `feed`          | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature)                    | useFeedLang                                                        |
@@ -137,7 +137,7 @@ The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace p
 
 ## Cloudflare worker (`worker/`)
 
-One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs `worker/` for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today: photo extraction and the coach); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR, against its Supabase preview branch if it has one and production otherwise. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
+One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `vite build` makes both (`dist/client`, `dist/sunlo`) through `@cloudflare/vite-plugin` and `@flue/vite`. The entry is `.flue/app.ts`: it mounts the coach, a [Flue](https://flueframework.com) agent with one Durable Object per conversation (`.flue/agents/coach.ts`), then `worker/index.ts` for the app's own routes. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today: photo extraction and the coach); every route requires a signed-in user's Supabase access token, which the app sends from `src/features/phrases/extract.ts` to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR, against its Supabase preview branch if it has one and production otherwise. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
 
 ## Routing (`src/routes/`)
 

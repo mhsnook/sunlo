@@ -7,5 +7,7 @@ export const Route = createLazyFileRoute('/coach/$lang')({
 
 function CoachLangRoute() {
 	const { lang } = Route.useParams()
-	return <CoachPage lang={lang} />
+	const { auth } = Route.useRouteContext()
+	// /coach redirects to /login before any child route loads without a user.
+	return <CoachPage lang={lang} uid={auth.userId!} />
 }

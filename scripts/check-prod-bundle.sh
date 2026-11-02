@@ -5,14 +5,14 @@
 # A correct `vite build` runs in production mode, so `import.meta.env.DEV`
 # is statically `false` and the dev-identity-switcher chunk (and its
 # hardcoded test credentials) is tree-shaken out entirely. If any of the
-# fingerprints below show up in dist/, the build ran in the wrong Vite
+# fingerprints below show up in dist/client/, the build ran in the wrong Vite
 # mode and dev tooling is about to ship to real users.
 #
 # Usage: ./scripts/check-prod-bundle.sh [dist-dir]
 
 set -euo pipefail
 
-DIST_DIR="${1:-dist}"
+DIST_DIR="${1:-dist/client}"
 
 if [ ! -d "$DIST_DIR" ]; then
 	echo "error: build output directory '$DIST_DIR' not found — run 'pnpm build' first" >&2

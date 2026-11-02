@@ -1,7 +1,8 @@
 # learner opens the coach, asks for phrases and adds one from the page
 
-// The coach runs on the scripted mock model (VITE_COACH_USE_MOCK), which
-// searches for whatever the learner types and shows the results on the page.
+// The coach agent runs on the scripted model in .flue/coach/mock.ts
+// (VITE_COACH_USE_MOCK): it searches for whatever the learner types and
+// shows the results on the page.
 
 cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_partial]').gte('created_at', '[testStart]')
 
@@ -46,6 +47,5 @@ learner:
 - see coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12
 - typeInto coach-input "add them all"
 - click coach-send
-- see coach-action
-- seeText Your deck is at
+- seeText Adding
 - notSee coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12 coach-add-phrase

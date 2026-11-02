@@ -1,14 +1,16 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "sunlo",
-	"main": "worker/index.ts",
+	// No "main": @flue/vite sets it to its generated Worker entry, which serves
+	// .flue/app.ts and exports one Durable Object class per agent.
 	"compatibility_date": "2026-10-01",
+	"compatibility_flags": ["nodejs_compat"],
 	// No custom domain yet: production serves at sunlo.<subdomain>.workers.dev.
 	// To move sunlo.app here, add
 	// "routes": [{ "pattern": "sunlo.app", "custom_domain": true }].
 	"preview_urls": true,
 	"assets": {
-		"directory": "./dist",
+		"directory": "./dist/client",
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application",
 		// Every other path is a static file and never runs the worker.
@@ -23,12 +25,14 @@
 			"simple": { "limit": 10, "period": 60 },
 		},
 		{
-			// Per model step, and one learner message can take several steps.
+			// Per message to the coach; the agent's own steps are not counted.
 			"name": "COACH_LIMITER",
 			"namespace_id": "1002",
-			"simple": { "limit": 40, "period": 60 },
+			"simple": { "limit": 20, "period": 60 },
 		},
 	],
+	// Append-only once deployed: a new Flue agent is a new entry.
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["FlueCoachAgent"] }],
 	// Production values, all public. Workers Builds deploys these on a push
 	// to main; its VITE_SUPABASE_* build variables must match them.
 	// scripts/cf-preview.sh overrides the Supabase pair with --var.

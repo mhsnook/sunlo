@@ -593,7 +593,7 @@ Prototype-only feature in `src/features/chat/`. Public route, no auth.
 
 ## Coach (`/coach`)
 
-The AI coach in `src/features/coach/`. Signed-in only; specs run it against the scripted mock model (`VITE_COACH_USE_MOCK`).
+The AI coach in `src/features/coach/`. Signed-in only; specs run the coach agent on its scripted model (`VITE_COACH_USE_MOCK`, `.flue/coach/mock.ts`).
 
 | Selector                | Attribute   | Component/Location            | Description                                        |
 | ----------------------- | ----------- | ----------------------------- | -------------------------------------------------- |
@@ -620,7 +620,7 @@ The AI coach in `src/features/coach/`. Signed-in only; specs run it against the 
 | `coach-suggestion`      | data-testid | Chat                          | One suggested reply; keyed by its text             |
 | `coach-input`           | data-testid | Chat compose bar              | Message textarea                                   |
 | `coach-send`            | data-testid | Chat compose bar              | Send button                                        |
-| `coach-reset`           | data-testid | Chat header                   | Starts the conversation over                       |
+| `coach-reset`           | data-testid | Chat header                   | Starts a new conversation ("Start over")           |
 
 ## Admin Phrase Management
 

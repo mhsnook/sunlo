@@ -3,3 +3,4 @@
 
 export { CoachPage } from './components/coach-page'
 export { preloadLibrary } from './library'
+export { ensureCoachThread } from './store'

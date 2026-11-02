@@ -32,13 +32,13 @@ case "$VITE_SUPABASE_URL" in
 esac
 
 pnpm build
-./scripts/check-prod-bundle.sh dist
+./scripts/check-prod-bundle.sh dist/client
 
-if ! grep -qlF "$VITE_SUPABASE_URL" dist/assets/*.js; then
+if ! grep -qlF "$VITE_SUPABASE_URL" dist/client/assets/*.js; then
 	echo "error: the bundle does not contain $VITE_SUPABASE_URL." >&2
 	exit 1
 fi
-if ! grep -ql GoTrueClient dist/assets/*.js; then
+if ! grep -ql GoTrueClient dist/client/assets/*.js; then
 	echo "error: the Supabase SDK is missing from the bundle." >&2
 	exit 1
 fi

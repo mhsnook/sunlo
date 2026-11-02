@@ -1,21 +1,23 @@
+import { Hono } from 'hono'
 import api from './api'
+import type { AppEnv } from './auth'
 import { crawlerPreview } from './og'
 import { supabaseFor } from './supabase'
 
-// One worker serves the web app's static files and /api, so every
-// deployed version carries an app and an API from the same commit.
-// It only runs for the paths in wrangler.jsonc `run_worker_first`.
-export default {
-	async fetch(request, env, ctx) {
-		const { pathname } = new URL(request.url)
-		if (pathname === '/api' || pathname.startsWith('/api/')) {
-			return api.fetch(request, env, ctx)
-		}
-		const preview = await crawlerPreview(
-			request,
-			() => supabaseFor(env),
-			env.SUPABASE_URL
-		)
-		return preview ?? env.ASSETS.fetch(request)
-	},
-} satisfies ExportedHandler<Env>
+// The app's own routes. .flue/app.ts is the Worker's entry: it mounts the
+// agents, then this. The Worker only runs for the paths in wrangler.jsonc
+// `run_worker_first`; every other request is a static file.
+const app = new Hono<AppEnv>()
+
+app.route('/', api)
+
+app.all('*', async (c) => {
+	const preview = await crawlerPreview(
+		c.req.raw,
+		() => supabaseFor(c.env),
+		c.env.SUPABASE_URL
+	)
+	return preview ?? c.env.ASSETS.fetch(c.req.raw)
+})
+
+export default app

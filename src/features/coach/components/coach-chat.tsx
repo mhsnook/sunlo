@@ -7,16 +7,24 @@ import { ComposeBar } from '@/components/ui/compose-bar'
 import { MessageScroller } from '@/components/ui/message-scroller'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
-import { OPENING_REPLIES, openingLine } from '../engine'
-import { useCoachBusy, useCoachThread } from '../hooks'
-import { useCoachStore, type CoachLogEntry } from '../store'
+import {
+	OPENING_REPLIES,
+	openingLine,
+	type CoachLogEntry,
+} from '../conversation'
+import { usePageState } from '../store'
 
 type Props = {
 	coachKey: string
 	lang: string
 	learnerName: string | null
 	deckSize: number
+	log: Array<CoachLogEntry>
+	suggestions: Array<string>
+	started: boolean
+	busy: boolean
 	send: (text: string) => void
+	startOver: () => void
 }
 
 export function CoachChat({
@@ -24,15 +32,16 @@ export function CoachChat({
 	lang,
 	learnerName,
 	deckSize,
+	log,
+	suggestions,
+	started,
+	busy,
 	send,
+	startOver,
 }: Props) {
-	const thread = useCoachThread(coachKey)
-	const busy = useCoachBusy(coachKey)
 	const [draft, setDraft] = useState('')
-	const reset = useCoachStore((s) => s.reset)
-
-	const started = thread.log.length > 0
-	const replies = started ? thread.suggestions : OPENING_REPLIES
+	const { notes } = usePageState(coachKey)
+	const replies = started ? suggestions : OPENING_REPLIES
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 p-4">
@@ -50,25 +59,28 @@ export function CoachChat({
 					aria-label="Start over"
 					data-testid="coach-reset"
 					disabled={busy || !started}
-					onClick={() => reset(coachKey)}
+					onClick={startOver}
 				>
 					<RotateCcw />
 				</Button>
 			</header>
 
 			<MessageScroller
-				dependency={thread.log.length + (busy ? 1 : 0)}
+				dependency={log.length + notes.length + (busy ? 1 : 0)}
 				data-testid="coach-log"
 				className="min-h-0 flex-1"
 			>
 				<div className="flex flex-col gap-3 pe-1">
 					{started ? (
-						thread.log.map((entry) => <LogEntry key={entry.id} entry={entry} />)
+						log.map((entry) => <LogEntry key={entry.id} entry={entry} />)
 					) : (
 						<Bubble variant="soft" align="start">
 							{openingLine(learnerName, lang, deckSize)}
 						</Bubble>
 					)}
+					{notes.map((note) => (
+						<LogEntry key={note.id} entry={{ ...note, kind: 'action' }} />
+					))}
 					{busy && (
 						<Bubble
 							variant="soft"

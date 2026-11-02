@@ -15,6 +15,7 @@ export default [
 			'worker/worker-configuration.d.ts',
 			'apps/admin/worker/worker-configuration.d.ts',
 			'apps/admin/.flue-vite/',
+			'.flue-vite/',
 		],
 	},
 	{
@@ -97,7 +98,7 @@ export default [
 		},
 	},
 	{
-		files: ['worker/**/*.ts'],
+		files: ['worker/**/*.ts', '.flue/**/*.ts'],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: 'module',
