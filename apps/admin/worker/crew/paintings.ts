@@ -9,10 +9,11 @@ import { leftThisHour } from './hourly'
 import { optionLabel } from './picks'
 
 // The room's `sql` template (the Agents SDK's), so the tests can run these
-// against node:sqlite.
+// against node:sqlite. It takes no boolean: the SDK stores one as the text
+// "true", which never equals 1, so bind Number(flag).
 export type Sql = <T>(
 	strings: TemplateStringsArray,
-	...values: Array<string | number | boolean | null>
+	...values: Array<string | number | null>
 ) => Array<T>
 
 export type PaintStyle = Pick<PainterStyleType, 'name' | 'model' | 'prompt'>

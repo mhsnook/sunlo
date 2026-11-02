@@ -24,6 +24,7 @@ import {
 import { restoreSummary } from '../worker/crew/documents'
 import {
 	githubWebhook,
+	LIVE_RETRY_MS,
 	MAX_WEBHOOK_BYTES,
 	verifyGithubSignature,
 } from '../worker/crew/github-log'
@@ -636,9 +637,30 @@ api.post('/public/github/webhook', async (c) => {
 	)
 	if (result.kind === 'ping') return c.json({ ok: true })
 	if (result.kind === 'ignore') return c.body(null, 204)
-	const taken = await (await roomFor()).githubDelivery(delivery, result)
+	const room = await roomFor()
+	const taken = await room.githubDelivery(delivery, result)
+	if (
+		taken &&
+		result.kind === 'deploy' &&
+		result.deploy.outcome === 'deployed'
+	) {
+		c.executionCtx.waitUntil(seeDeployLive(room))
+	}
 	return c.json({ ok: true, duplicate: !taken })
 })
+
+// A build can report success a few seconds before its Worker serves the new
+// version everywhere, so a miss is asked once more. After that, the hourly
+// cron asks.
+async function seeDeployLive(room: Awaited<ReturnType<typeof roomFor>>) {
+	try {
+		if (await room.checkLiveDeploys()) return
+		await scheduler.wait(LIVE_RETRY_MS)
+		await room.checkLiveDeploys()
+	} catch (error) {
+		console.error('Could not check the live version', error)
+	}
+}
 
 // The room's copy of what is open on GitHub, for the Product room's details.
 api.get('/crew/github', async (c) => {

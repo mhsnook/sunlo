@@ -28,15 +28,8 @@ function room() {
 	`)
 	const sql: Sql = <T>(
 		strings: TemplateStringsArray,
-		...values: Array<string | number | boolean | null>
-	) =>
-		db
-			.prepare(strings.join('?'))
-			.all(
-				...values.map((value) =>
-					typeof value === 'boolean' ? Number(value) : value
-				)
-			) as Array<T>
+		...values: Array<string | number | null>
+	) => db.prepare(strings.join('?')).all(...values) as Array<T>
 	return { db, sql }
 }
 
