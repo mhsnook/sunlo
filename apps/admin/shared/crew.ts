@@ -426,6 +426,11 @@ export const GITHUB_CLOSED_DAYS = 14
 export const githubRef = (item: Pick<GithubItemType, 'kind' | 'number'>) =>
 	`${item.kind === 'pr' ? 'PR ' : ''}#${item.number}`
 
+// GitHub sends /issues/<n> on to /pull/<n> for a pull request, so this
+// holds for a number the room's copy does not have.
+export const githubIssueUrl = (repo: string, number: number) =>
+	`https://github.com/${repo}/issues/${number}`
+
 // "#851 opened: …" or "PR #852 merged: …".
 export const githubEventLine = (event: GithubEventType) =>
 	`${githubRef(event)} ${event.action}: ${event.title}`
@@ -770,12 +775,6 @@ export const documentMax = (name: string) =>
 // A link to a document is `[the Roadmap](doc:3)`. It names the id, not the
 // name, because two names can slug alike and an id never changes.
 export const documentHref = (id: number) => `doc:${id}`
-
-// The id a link target names, or null for an ordinary URL.
-export function documentIdInHref(href: string): number | null {
-	const match = /^doc:(\d+)$/i.exec(href)
-	return match ? Number(match[1]) : null
-}
 
 // A room's documents, as its room log lists them. Revision 0 is a document
 // nobody has written yet.
