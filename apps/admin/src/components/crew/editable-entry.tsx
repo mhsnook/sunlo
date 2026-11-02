@@ -1,13 +1,19 @@
-import { type ReactNode, useState } from 'react'
-import { Check, Pencil, Trash2, X } from 'lucide-react'
+import { type ReactNode, useRef, useState } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { toastError } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
 
 const fail = (error: Error) => toastError(error.message)
 
-// Text the admin can edit in place or delete: a charter entry, a Common
+// Text the admin can edit in a dialog or delete: a charter entry, a Common
 // Knowledge entry, or an agent's memory, to-do or open item.
 export function EditableEntry({
 	id,
@@ -40,6 +46,7 @@ export function EditableEntry({
 	testId: string
 }) {
 	const [draft, setDraft] = useState<string | null>(null)
+	const field = useRef<HTMLTextAreaElement>(null)
 	const save = () =>
 		draft?.trim() && onSave(draft.trim()).then(() => setDraft(null), fail)
 	const buttonClass = cn(
@@ -54,69 +61,71 @@ export function EditableEntry({
 			data-key={id}
 		>
 			{leading}
-			{draft === null ? (
-				<span className="flex-1 whitespace-pre-wrap">
-					{children}
-					{/* Trails the last line so the text wraps the full width; h-5 is
-					    the line's height, so a 32px button does not tallen it. */}
-					<span className="ms-1 inline-flex h-5 items-center gap-0.5 align-middle">
-						<Button
-							variant="ghost"
-							size="icon"
-							aria-label={`Edit this ${label.toLowerCase()}`}
-							className={buttonClass}
-							onClick={() => setDraft(text)}
-						>
-							<Pencil />
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							aria-label={deleteLabel}
-							className={buttonClass}
-							disabled={busy}
-							onClick={() => void onDelete().catch(fail)}
-						>
-							{deleteIcon}
-						</Button>
-					</span>
+			<span className="flex-1 whitespace-pre-wrap">
+				{children}
+				{/* Trails the last line so the text wraps the full width; h-5 is
+				    the line's height, so a 32px button does not tallen it. */}
+				<span className="ms-1 inline-flex h-5 items-center gap-0.5 align-middle">
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label={`Edit this ${label.toLowerCase()}`}
+						className={buttonClass}
+						onClick={() => setDraft(text)}
+					>
+						<Pencil />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label={deleteLabel}
+						className={buttonClass}
+						disabled={busy}
+						onClick={() => void onDelete().catch(fail)}
+					>
+						{deleteIcon}
+					</Button>
 				</span>
-			) : (
-				<>
+			</span>
+			<Dialog
+				open={draft !== null}
+				onOpenChange={(open) => !open && setDraft(null)}
+			>
+				<DialogContent className="max-w-xl" initialFocus={field}>
+					<DialogHeader>
+						<DialogTitle>Edit {label.toLowerCase()}</DialogTitle>
+					</DialogHeader>
 					<Textarea
-						value={draft}
+						value={draft ?? ''}
 						onChange={(event) => setDraft(event.target.value)}
 						onKeyDown={(event) => {
-							if (event.key === 'Escape') setDraft(null)
 							if (event.key === 'Enter' && !event.shiftKey) {
 								event.preventDefault()
 								void save()
 							}
 						}}
-						className="min-h-10 flex-1"
-						rows={2}
+						className="min-h-48"
+						rows={8}
 						aria-label={label}
-						ref={(field) => field?.focus()}
+						ref={field}
+						onFocus={(event) => {
+							const end = event.target.value.length
+							event.target.setSelectionRange(end, end)
+						}}
 					/>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Save"
-						disabled={busy || !draft.trim()}
-						onClick={() => void save()}
-					>
-						<Check />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Cancel"
-						onClick={() => setDraft(null)}
-					>
-						<X />
-					</Button>
-				</>
-			)}
+					<div className="flex justify-end gap-2">
+						<Button variant="ghost" onClick={() => setDraft(null)}>
+							Cancel
+						</Button>
+						<Button
+							disabled={busy || !draft?.trim()}
+							onClick={() => void save()}
+						>
+							Save
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</li>
 	)
 }
