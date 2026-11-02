@@ -35,7 +35,7 @@ import {
 	coachConversationId,
 	type NavigateTarget,
 } from './protocol'
-import { addNote, takeNotes, useCoachThread } from './store'
+import { addNote, takeNotes } from './store'
 
 function useNavTarget(lang: string) {
 	const navigate = useNavigate()
@@ -79,24 +79,26 @@ export function useCoach(lang: string, uid: string, deck: DeckMeter) {
 	const translationLang = usePreferredTranslationLang(lang)
 	const navigateTo = useNavTarget(lang)
 	const learnerName = profile?.username ?? null
-	const thread = useCoachThread(uid, lang)
-	const key = coachConversationId(lang, uid, thread)
+	const conversationId = coachConversationId(uid)
+	// The page's own state is per language; the conversation spans them all.
+	const pageKey = `${uid}:${lang}`
 
 	// The SDK calls `headers` on every request and reconnect, so a refreshed
 	// Supabase token is picked up without a new client.
 	const client = useMemo(
 		() =>
 			createFlueClient({
-				url: new URL(`${COACH_MOUNT}/${key}`, window.location.origin).href,
+				url: new URL(`${COACH_MOUNT}/${conversationId}`, window.location.origin)
+					.href,
 				headers: bearer,
 			}),
-		[key]
+		[conversationId]
 	)
 	const agent = useFlueAgent({ client })
-	const conversation = useMemo(
-		() => readConversation(agent.messages),
-		[agent.messages]
-	)
+	const conversation = useMemo(() => {
+		const read = readConversation(agent.messages)
+		return { ...read, views: read.views.filter((view) => view.lang === lang) }
+	}, [agent.messages, lang])
 
 	const addToDeck = async (phraseIds: Array<string>) => {
 		const phrases = phraseIds
@@ -106,9 +108,9 @@ export function useCoach(lang: string, uid: string, deck: DeckMeter) {
 				return phrase && phrase.lang === lang ? [phrase] : []
 			})
 		if (!phrases.length)
-			return addNote(key, 'those phrases were already in the deck')
+			return addNote(pageKey, 'those phrases were already in the deck')
 		await addPhrasesToDeck(lang, uid, phrases)
-		addNote(key, `added ${phrases.length} phrases`)
+		addNote(pageKey, `added ${phrases.length} phrases`)
 	}
 
 	const send = async (text: string) => {
@@ -118,11 +120,11 @@ export function useCoach(lang: string, uid: string, deck: DeckMeter) {
 		try {
 			const receipt = await agent.sendMessage(
 				composeMessage(text, {
-					notes: takeNotes(key),
+					context: { lang, translationLang, learnerName },
+					notes: takeNotes(pageKey),
 					deck: deckLine(deck),
 					opening,
-				}),
-				{ initialData: { lang, translationLang, learnerName } }
+				})
 			)
 			await client.wait(receipt)
 			const { messages } = await client.history()
@@ -136,7 +138,7 @@ export function useCoach(lang: string, uid: string, deck: DeckMeter) {
 	}
 
 	return {
-		key,
+		pageKey,
 		send,
 		translationLang,
 		learnerName,

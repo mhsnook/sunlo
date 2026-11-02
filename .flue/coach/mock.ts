@@ -90,9 +90,11 @@ function respondToResults(messages: Messages) {
 }
 
 function respondToLearner(messages: Messages, message: Message) {
+	// The page's own lines ([Context: ...], [Page: ...], [Deck: ...]) are
+	// not the learner's words.
 	const text = textOf(message)
 		.split('\n')
-		.filter((line) => !line.startsWith('[Page:') && !line.startsWith('[Deck:'))
+		.filter((line) => !/^\[(Context|Page|Deck): /.test(line))
 		.join(' ')
 		.trim()
 	const shown = lastShown(messages)

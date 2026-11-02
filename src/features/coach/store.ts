@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { CoachView } from './conversation'
 
 // The page's own state. The conversation lives in the coach agent; this is
@@ -48,33 +47,3 @@ export function takeNotes(key: string) {
 	update(key, () => ({ notes: [], activeViewId: null }))
 	return notes.map((note) => note.text)
 }
-
-const newThread = () => crypto.randomUUID().replaceAll('-', '').slice(0, 12)
-
-// The current thread for each learner and language, on this device. A
-// device without one starts a new conversation.
-const useThreadStore = create<{ threads: Record<string, string> }>()(
-	persist(() => ({ threads: {} }), { name: 'sunlo-coach-threads', version: 1 })
-)
-
-const threadSlot = (uid: string, lang: string) => `${uid}:${lang}`
-
-// The /coach/$lang loader calls this, so the page always has a thread.
-export function ensureCoachThread(uid: string, lang: string) {
-	const slot = threadSlot(uid, lang)
-	if (useThreadStore.getState().threads[slot]) return
-	useThreadStore.setState((state) => ({
-		threads: { ...state.threads, [slot]: newThread() },
-	}))
-}
-
-export function useCoachThread(uid: string, lang: string) {
-	const thread = useThreadStore((state) => state.threads[threadSlot(uid, lang)])
-	if (!thread) throw new Error('The /coach/$lang loader did not start a thread')
-	return thread
-}
-
-export const startOver = (uid: string, lang: string) =>
-	useThreadStore.setState((state) => ({
-		threads: { ...state.threads, [threadSlot(uid, lang)]: newThread() },
-	}))

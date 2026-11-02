@@ -8,9 +8,9 @@ The route is signed-in only and sits outside `_user`, so it has none of the app'
 
 The coach is a [Flue](https://flueframework.com) agent, `.flue/agents/coach.ts`. Flue runs each conversation in its own Durable Object (`FlueCoachAgent`), which keeps the transcript, runs the model and the tools, and retries a turn that a deploy interrupts. `.flue/app.ts` mounts it at `/api/coach/agent/:id`, behind the Supabase token check and `requireOwnConversation` (`worker/coach-access.ts`).
 
-A conversation id is `<lang>-<uid>.<thread>` (`coachConversationId` in `protocol.ts`). The Worker refuses an id whose uid is not the caller's. The thread token lives in localStorage per learner and language; "Start over" replaces it, and the `/coach/$lang` loader creates one when there is none. A second device therefore starts its own conversation. Storing the thread server-side would fix that, and needs a migration.
+Each learner has one conversation, keyed on their uid (`coachConversationId` in `protocol.ts`), across every language they learn and every device they sign in on. The Worker refuses any id but the caller's own uid. Because one conversation spans languages, every message starts with a context line (`[Context: ...]`, see below) that says which language page is open; the agent reads it from the delivery (`useDelivery`) for its instructions and its tools, so the model never picks the language its tools search. Each set the coach shows carries its language, and a language's page shows only its own sets.
 
-The first message creates the conversation with `initialData` (`CoachInitialDataSchema`): the language, the learner's translation language and their name. The agent's instructions (`.flue/coach/prompt.ts`) are built from it.
+A visitor who has not signed up has no uid yet. The plan for them is Supabase anonymous sign-in: an anonymous user gets a real uid, and converting it to a full account later keeps the same uid, so the coach conversation carries over.
 
 ## Who does what
 
@@ -26,11 +26,12 @@ The agent and the page split the work by what each can reach.
 
 Each message to the agent is the learner's text with lines from the page before it (`composeMessage`):
 
+- `[Context: {...}]` is the open language, the learner's translation language and their name, as JSON (`formatCoachContext` and `parseCoachContext` in `protocol.ts`). The agent's instructions (`.flue/coach/prompt.ts`) and tools are built from it.
 - `[Page: ...]` notes what the learner did on the page since their last message, such as adding a phrase or opening a request. The chat shows these as notes.
 - `[Deck: ...]` summarises the deck: its size and its most common tags. Only the agent sees it, because the agent cannot read the deck.
 - `[Page: you opened with: ...]`, on the first message only, carries the fixed greeting (`openingLine`) the page showed before any model call.
 
-`store.ts` keeps the page's own state for the session: the pending notes, the sets the learner opened from a tile, and which set is on the page.
+`store.ts` keeps the page's own state for the session, per language: the pending notes, the sets the learner opened from a tile, and which set is on the page.
 
 ## The model
 
@@ -43,4 +44,4 @@ With `VITE_COACH_USE_MOCK=true` (set by `pnpm dev:local` and `pnpm build:test`),
 - `pnpm dev` runs the app and the Worker in one Vite server and calls the real model, which needs `wrangler login`.
 - `pnpm dev:local` runs the scripted model without a Cloudflare login.
 
-Reading a conversation that has no messages yet answers 404 (`stream_not_found`) until its first message creates it; the browser console shows that 404 on a fresh thread.
+Reading a conversation that has no messages yet answers 404 (`stream_not_found`) until its first message creates it; the browser console shows that 404 for a learner who has never talked to the coach. Local conversations live in `.wrangler/state`; stop the dev server before deleting it.

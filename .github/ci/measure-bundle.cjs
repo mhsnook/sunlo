@@ -56,10 +56,17 @@ function walk(dir) {
  * folded in — they are the part of the bundle a user may never fetch, and one
  * combined total hides the number that matters.
  *
- * Sunlo is a Vite SPA, so `dist/index.html` is the entry point and lists the
+ * Sunlo is a Vite SPA, so `index.html` is the entry point and lists the
  * entry script plus every `modulepreload` chunk.
  */
-function measure(dist) {
+function measure(buildDir) {
+	// The Cloudflare Vite plugin builds the app into dist/client, beside the
+	// Worker in dist/sunlo. A base tree from before that layout has the app in
+	// dist/ itself, so this reads whichever the tree has.
+	const clientDir = path.join(buildDir, 'client')
+	const dist = fs.existsSync(path.join(clientDir, 'index.html'))
+		? clientDir
+		: buildDir
 	const indexPath = path.join(dist, 'index.html')
 	if (!fs.existsSync(indexPath)) {
 		throw new Error(

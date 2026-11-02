@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { FlueConversationMessage } from '@flue/react'
 import { composeMessage, pageActions, readConversation } from './conversation'
+import { parseCoachContext } from './protocol'
 
 type Part = FlueConversationMessage['parts'][number]
 
@@ -32,7 +33,10 @@ const tool = (name: string, output: unknown, id = name): Part =>
 		output,
 	}) as Part
 
+const CONTEXT = { lang: 'kan', translationLang: 'eng', learnerName: 'Priya' }
+
 const SHOWN = {
+	lang: 'kan',
 	title: 'Tea',
 	subtitle: null,
 	phrase_ids: ['p1', 'p2'],
@@ -44,12 +48,14 @@ describe('composeMessage', () => {
 	it('puts the page lines before the learner text', () => {
 		expect(
 			composeMessage('tea please', {
+				context: CONTEXT,
 				notes: ['added “Ondu tea kodhe”'],
 				deck: '8 of 100 phrases',
 				opening: 'Hi. What brings you to Kannada?',
 			})
 		).toBe(
 			[
+				'[Context: {"lang":"kan","translationLang":"eng","learnerName":"Priya"}]',
 				'[Page: you opened with: Hi. What brings you to Kannada?]',
 				'[Page: added “Ondu tea kodhe”]',
 				'[Deck: 8 of 100 phrases]',
@@ -60,8 +66,9 @@ describe('composeMessage', () => {
 })
 
 describe('readConversation', () => {
-	it('shows the learner their words and the page notes, never the deck line', () => {
+	it('shows the learner their words and the page notes, never the context or deck lines', () => {
 		const body = composeMessage('tea', {
+			context: CONTEXT,
 			notes: ['added one'],
 			deck: '8 of 100 phrases',
 			opening: 'Hi.',
@@ -95,6 +102,7 @@ describe('readConversation', () => {
 		expect(views).toEqual([
 			{
 				id: 'call-1',
+				lang: 'kan',
 				title: 'Tea',
 				subtitle: null,
 				phraseIds: ['p1', 'p2'],
@@ -159,5 +167,18 @@ describe('pageActions', () => {
 			add: ['p1', 'p2'],
 			navigate: { to: 'review' },
 		})
+	})
+})
+
+describe('the context line', () => {
+	it('round-trips through a message', () => {
+		const body = composeMessage('hi', {
+			context: CONTEXT,
+			notes: [],
+			deck: '0 of 100 phrases',
+			opening: null,
+		})
+		expect(parseCoachContext(body)).toEqual(CONTEXT)
+		expect(parseCoachContext('no context here')).toBeNull()
 	})
 })

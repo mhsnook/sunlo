@@ -2,6 +2,9 @@ import type { FlueConversationMessage, FlueConversationPart } from '@flue/react'
 import * as v from 'valibot'
 import languages from '@/lib/languages'
 import {
+	CONTEXT_PREFIX,
+	formatCoachContext,
+	type CoachContext,
 	AddToDeckOutputSchema,
 	DECK_TARGET,
 	NavigateOutputSchema,
@@ -22,6 +25,7 @@ export type CoachLogEntry = {
 
 export type CoachView = {
 	id: string
+	lang: string
 	title: string
 	subtitle: string | null
 	phraseIds: Array<string>
@@ -30,7 +34,7 @@ export type CoachView = {
 }
 
 // Lines the page adds to a learner's message. The learner sees `[Page:`
-// lines as notes; `[Deck:` lines are for the coach only.
+// lines as notes; `[Deck:` and `[Context:` lines are for the coach only.
 const PAGE_PREFIX = '[Page: '
 const DECK_PREFIX = '[Deck: '
 // The fixed greeting the page showed before the first message, so the
@@ -38,7 +42,9 @@ const DECK_PREFIX = '[Deck: '
 const OPENING_PREFIX = '[Page: you opened with: '
 
 const isPageLine = (line: string) =>
-	line.startsWith(PAGE_PREFIX) || line.startsWith(DECK_PREFIX)
+	line.startsWith(PAGE_PREFIX) ||
+	line.startsWith(DECK_PREFIX) ||
+	line.startsWith(CONTEXT_PREFIX)
 
 type ToolPart = Extract<FlueConversationPart, { type: 'dynamic-tool' }>
 
@@ -57,6 +63,7 @@ function finished<S extends v.GenericSchema>(
 
 const viewFrom = (id: string, output: ShowOnPageOutput): CoachView => ({
 	id,
+	lang: output.lang,
 	title: output.title,
 	subtitle: output.subtitle,
 	phraseIds: output.phrase_ids,
@@ -154,9 +161,15 @@ export function pageActions(
 
 export function composeMessage(
 	text: string,
-	page: { notes: Array<string>; deck: string; opening: string | null }
+	page: {
+		context: CoachContext
+		notes: Array<string>
+		deck: string
+		opening: string | null
+	}
 ) {
 	return [
+		formatCoachContext(page.context),
 		...(page.opening ? [`${OPENING_PREFIX}${page.opening}]`] : []),
 		...page.notes.map((note) => `${PAGE_PREFIX}${note}]`),
 		`${DECK_PREFIX}${page.deck}]`,

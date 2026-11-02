@@ -26,30 +26,30 @@ function makeApp(limitOk = true) {
 
 describe('requireOwnConversation', () => {
 	it('lets a learner read their own conversation', async () => {
-		const res = await makeApp().request(`kan-${UID}.t1`)
+		const res = await makeApp().request(UID)
 		expect(res.status).toBe(200)
 	})
 
 	it("refuses another learner's conversation", async () => {
-		const res = await makeApp().request(`kan-${OTHER}.t1`, 'POST')
+		const res = await makeApp().request(OTHER, 'POST')
 		expect(res.status).toBe(403)
 	})
 
-	it('refuses an id it cannot parse', async () => {
-		const res = await makeApp().request(`${UID}`)
+	it('refuses an id that only contains the uid', async () => {
+		const res = await makeApp().request(`kan-${UID}`)
 		expect(res.status).toBe(403)
 	})
 
 	it('counts messages against the limit, and answers 429 over it', async () => {
 		const { request, limit } = makeApp(false)
-		const res = await request(`kan-${UID}.t1`, 'POST')
+		const res = await request(UID, 'POST')
 		expect(res.status).toBe(429)
 		expect(limit).toHaveBeenCalledWith({ key: UID })
 	})
 
 	it('does not count an abort', async () => {
 		const { request, limit } = makeApp(false)
-		const res = await request(`kan-${UID}.t1/abort`, 'POST')
+		const res = await request(`${UID}/abort`, 'POST')
 		expect(res.status).toBe(200)
 		expect(limit).not.toHaveBeenCalled()
 	})

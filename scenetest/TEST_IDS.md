@@ -620,7 +620,6 @@ The AI coach in `src/features/coach/`. Signed-in only; specs run the coach agent
 | `coach-suggestion`      | data-testid | Chat                          | One suggested reply; keyed by its text             |
 | `coach-input`           | data-testid | Chat compose bar              | Message textarea                                   |
 | `coach-send`            | data-testid | Chat compose bar              | Send button                                        |
-| `coach-reset`           | data-testid | Chat header                   | Starts a new conversation ("Start over")           |
 
 ## Admin Phrase Management
 

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { RotateCcw } from 'lucide-react'
 import { Bubble } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
 import { ComposeBar } from '@/components/ui/compose-bar'
@@ -24,7 +23,6 @@ type Props = {
 	started: boolean
 	busy: boolean
 	send: (text: string) => void
-	startOver: () => void
 }
 
 export function CoachChat({
@@ -37,7 +35,6 @@ export function CoachChat({
 	started,
 	busy,
 	send,
-	startOver,
 }: Props) {
 	const [draft, setDraft] = useState('')
 	const { notes } = usePageState(coachKey)
@@ -52,17 +49,6 @@ export function CoachChat({
 				<span className="text-muted-foreground text-sm">
 					Coach · {languages[lang] ?? lang}
 				</span>
-				<Button
-					variant="ghost"
-					size="icon"
-					title="Start over"
-					aria-label="Start over"
-					data-testid="coach-reset"
-					disabled={busy || !started}
-					onClick={startOver}
-				>
-					<RotateCcw />
-				</Button>
 			</header>
 
 			<MessageScroller

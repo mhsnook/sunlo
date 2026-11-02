@@ -1,18 +1,26 @@
 'use agent'
-import { useInitialData, useModel, useTool } from '@flue/runtime'
+import { useDelivery, useModel, useTool } from '@flue/runtime'
 import { env } from 'cloudflare:workers'
 import {
-	CoachInitialDataSchema,
 	coachToolDescriptions,
 	coachToolInputs,
-	type CoachInitialData,
+	parseCoachContext,
+	type CoachContext,
 } from '../../src/features/coach/protocol'
 import { supabaseFor } from '../../worker/supabase'
 import { findSimilar, listTags, searchLibrary } from '../coach/library'
 import { coachInstructions } from '../coach/prompt'
 
 export function Coach() {
-	const data = useInitialData<CoachInitialData>()
+	const delivery = useDelivery()
+	const context =
+		delivery.kind === 'user' ? parseCoachContext(delivery.body) : null
+	// Every message from the coach page carries its context line.
+	const page = (): CoachContext => {
+		if (!context)
+			throw new Error('The message did not say which language is open.')
+		return context
+	}
 	const sb = supabaseFor(env)
 	useModel(env.COACH_MODEL, { thinkingLevel: 'off' })
 
@@ -22,7 +30,7 @@ export function Coach() {
 		input: coachToolInputs.search_library,
 		annotations: { readOnlyHint: true },
 		run: async ({ data: search }) => ({
-			output: await searchLibrary(sb, data, search),
+			output: await searchLibrary(sb, page(), search),
 		}),
 	})
 	useTool({
@@ -31,7 +39,7 @@ export function Coach() {
 		input: coachToolInputs.find_similar,
 		annotations: { readOnlyHint: true },
 		run: async ({ data: input }) => ({
-			output: await findSimilar(sb, data, input.phrase_ids, input.limit),
+			output: await findSimilar(sb, page(), input.phrase_ids, input.limit),
 		}),
 	})
 	useTool({
@@ -39,7 +47,7 @@ export function Coach() {
 		description: coachToolDescriptions.list_tags,
 		input: coachToolInputs.list_tags,
 		annotations: { readOnlyHint: true },
-		run: async () => ({ output: { tags: await listTags(sb, data.lang) } }),
+		run: async () => ({ output: { tags: await listTags(sb, page().lang) } }),
 	})
 
 	// The page reads these outputs off the conversation and acts on them.
@@ -49,6 +57,7 @@ export function Coach() {
 		input: coachToolInputs.show_on_page,
 		run: ({ data: input }) => ({
 			output: {
+				lang: page().lang,
 				title: input.title,
 				subtitle: input.subtitle ?? null,
 				phrase_ids: input.phrase_ids,
@@ -76,8 +85,7 @@ export function Coach() {
 		run: ({ data: input }) => ({ output: input }),
 	})
 
-	return coachInstructions(data)
+	return coachInstructions(context)
 }
 
 Coach.agentName = 'coach'
-Coach.initialData = CoachInitialDataSchema

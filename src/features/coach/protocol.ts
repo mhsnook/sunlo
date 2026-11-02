@@ -9,27 +9,42 @@ export const DECK_TARGET = 100
 // Where .flue/app.ts mounts the coach agent's conversations.
 export const COACH_MOUNT = '/api/coach/agent'
 
-// A learner's coach conversation: their uid, the language, and a thread
-// token that "Start over" replaces. The Worker refuses an id whose uid is not
-// the caller's, so a learner can only reach their own conversations.
-export const coachConversationId = (
-	lang: string,
-	uid: string,
-	thread: string
-) => `${lang}-${uid}.${thread}`
+// One coach conversation per learner, keyed on their uid, across every
+// language they learn. The Worker refuses any other id, so a learner can
+// only reach their own.
+export const coachConversationId = (uid: string) => uid
 
-export function parseCoachConversationId(id: string) {
-	const match = /^([a-z]{3})-([0-9a-f-]{36})\.([a-z0-9]{1,32})$/.exec(id)
-	return match ? { lang: match[1], uid: match[2], thread: match[3] } : null
-}
+export const isUid = (id: string) => /^[0-9a-f-]{36}$/.test(id)
 
-export const CoachInitialDataSchema = v.object({
-	lang: v.pipe(v.string(), v.length(3)),
-	translationLang: v.pipe(v.string(), v.length(3)),
+// What the page is showing, sent as the first line of every message. The
+// agent reads it from the delivery (useDelivery), so the model never picks
+// the language its tools search.
+export const CoachContextSchema = v.object({
+	lang: v.pipe(v.string(), v.regex(/^[a-z]{3}$/)),
+	translationLang: v.pipe(v.string(), v.regex(/^[a-z]{3}$/)),
 	learnerName: v.nullable(v.pipe(v.string(), v.maxLength(80))),
 })
 
-export type CoachInitialData = v.InferOutput<typeof CoachInitialDataSchema>
+export type CoachContext = v.InferOutput<typeof CoachContextSchema>
+
+export const CONTEXT_PREFIX = '[Context: '
+
+export const formatCoachContext = (context: CoachContext) =>
+	`${CONTEXT_PREFIX}${JSON.stringify(context)}]`
+
+export function parseCoachContext(body: string): CoachContext | null {
+	const line = body.split('\n').find((l) => l.startsWith(CONTEXT_PREFIX))
+	if (!line) return null
+	try {
+		const parsed = v.safeParse(
+			CoachContextSchema,
+			JSON.parse(line.slice(CONTEXT_PREFIX.length, -1))
+		)
+		return parsed.success ? parsed.output : null
+	} catch {
+		return null
+	}
+}
 
 const Ids = (max: number) => v.pipe(v.array(v.string()), v.maxLength(max))
 const Limit = v.optional(
@@ -115,6 +130,8 @@ export const coachToolDescriptions: Record<CoachToolName, string> = {
 // What the page reads off a finished tool call. The agent returns these
 // shapes; the page parses them and ignores a call that does not match.
 export const ShowOnPageOutputSchema = v.object({
+	// The language the set is from, so each language's page shows its own.
+	lang: v.string(),
 	title: v.string(),
 	subtitle: v.nullable(v.string()),
 	phrase_ids: v.array(v.string()),

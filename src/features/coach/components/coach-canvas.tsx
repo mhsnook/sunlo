@@ -162,6 +162,7 @@ function ViewContent({
 			coachKey,
 			{
 				id: crypto.randomUUID(),
+				lang,
 				title,
 				subtitle: null,
 				phraseIds,
