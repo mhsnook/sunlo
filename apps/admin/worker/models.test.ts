@@ -68,18 +68,18 @@ describe('withAnthropicCatalog', () => {
 	})
 })
 
-describe('withoutEffortMarkers', () => {
-	const user = { role: 'user', content: 'Hi' }
-	const assistant = {
-		role: 'assistant',
-		content: [{ type: 'text', text: 'Hello' }],
-	}
-	const marker = (effort: string) => ({
-		role: 'system',
-		content: [],
-		output_config: { effort },
-	})
+const user = { role: 'user', content: 'Hi' }
+const assistant = {
+	role: 'assistant',
+	content: [{ type: 'text', text: 'Hello' }],
+}
+const marker = (effort: string) => ({
+	role: 'system',
+	content: [],
+	output_config: { effort },
+})
 
+describe('withoutEffortMarkers', () => {
 	it("drops pi-ai's empty effort markers and keeps the last effort", () => {
 		expect(
 			withoutEffortMarkers({
