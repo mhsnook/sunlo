@@ -11,6 +11,18 @@ importers:
       '@base-ui/react':
         specifier: ^1.3.0
         version: 1.3.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@earendil-works/pi-ai':
+        specifier: 1.4.0
+        version: 1.4.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)
+      '@flue/react':
+        specifier: ^2.3.0
+        version: 2.3.0(@flue/sdk@2.3.0)(react@19.2.3)
+      '@flue/runtime':
+        specifier: ^2.3.0
+        version: 2.3.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(typescript@6.0.3)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)
+      '@flue/sdk':
+        specifier: ^2.3.0
+        version: 2.3.0
       '@fontsource-variable/atkinson-hyperlegible-next':
         specifier: ^5.2.6
         version: 5.2.6
@@ -44,6 +56,9 @@ importers:
       '@tanstack/react-router':
         specifier: 1.170.4
         version: 1.170.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      agents:
+        specifier: ^0.30.1
+        version: 0.30.1(@ai-sdk/provider@4.0.34)(@babel/core@7.29.0)(@babel/runtime@7.28.6)(@earendil-works/pi-ai@1.4.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6))(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(ai@7.0.153(zod@4.3.6))(react@19.2.3)(rolldown@1.0.1)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.3.6)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -80,6 +95,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.3.0)
+      valibot:
+        specifier: ^1.5.0
+        version: 1.5.0(typescript@6.0.3)
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -93,9 +111,15 @@ importers:
       '@babel/core':
         specifier: ^7.29.0
         version: 7.29.0
+      '@cloudflare/vite-plugin':
+        specifier: ^1.65.0
+        version: 1.65.0(@types/node@25.8.0)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))(workerd@1.20261023.1)(wrangler@4.153.0(@cloudflare/workers-types@5.20261026.1)(@types/node@25.8.0))
       '@eslint/js':
         specifier: ^9.39.2
         version: 9.39.4
+      '@flue/vite':
+        specifier: ^2.3.0
+        version: 2.3.0(@aws-sdk/credential-provider-node@3.972.88)(@babel/core@7.29.0)(@babel/runtime@7.28.6)(@cloudflare/workers-types@5.20261026.1)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(ai@7.0.153(zod@4.3.6))(hono@4.13.13)(react@19.2.3)(rolldown@1.0.1)(typescript@6.0.3)(undici@7.30.1)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))(ws@8.22.0)(zod@4.3.6)
       '@prettier/plugin-oxc':
         specifier: ^0.1.3
         version: 0.1.4
@@ -217,8 +241,8 @@ importers:
         specifier: ^4.1.6
         version: 4.1.6(@opentelemetry/api@1.10.0)(@types/node@25.8.0)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       wrangler:
-        specifier: ^4.151.3
-        version: 4.151.3(@cloudflare/workers-types@5.20261026.1)(@types/node@25.8.0)
+        specifier: ^4.153.0
+        version: 4.153.0(@cloudflare/workers-types@5.20261026.1)(@types/node@25.8.0)
     optionalDependencies:
       supabase:
         specifier: ^2.122.0
@@ -761,6 +785,11 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
+  '@durable-streams/client@0.2.7':
+    resolution: {integrity: sha512-oxWbPEo8NO1Ruv9UgUVu3OswdE2z5ERhjccaujlpwe4tWuVd+Y/kdx+HtrkOnwN+bnRHTlxKYUNY8JTyrnhKew==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   '@earendil-works/pi-agent-core@1.4.0':
     resolution: {integrity: sha512-PoKY84SKUwnt7S5QBZaGUqfNO1kjP3KHpHUA9QpFTj4cOjaVWMYIcBPJ6FDRCdE8Zen9OSECQUd0uUfVgtSmgA==}
     engines: {node: '>=22.19.0'}
@@ -1163,9 +1192,18 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
+  '@flue/react@2.3.0':
+    resolution: {integrity: sha512-+QeOWhoyboc/pxbssxIv1ea/wdYVGLq9+0Ed0oWdVH5abzZEoVwfSuPIPZZCivZtFJVrPBuiHe0lVTcn4YNQ5A==}
+    peerDependencies:
+      '@flue/sdk': 2.3.0
+      react: '>=18'
+
   '@flue/runtime@2.3.0':
     resolution: {integrity: sha512-Sb3Dix9PArIzwr7lmAZCr2csU7OUMHsEhIqYKCiqgldyt33u23k59CNoD947MLXpBaWXAz6CEd/Xv1LLI0cHYg==}
     engines: {node: '>=22.19.0'}
+
+  '@flue/sdk@2.3.0':
+    resolution: {integrity: sha512-6rVUYjGu0ICogo/j5z8edsc8H7ZUJ7EEmEcJl/dVwhE6Ugjlwea+nToOjDHOm6fsWsvltOcd5wi3YUwKY6haVw==}
 
   '@flue/vite@2.3.0':
     resolution: {integrity: sha512-aLq1FVOm16NuFFENpNWBCzU+QmmdUF0y7Mj7dLn8Q+eZdkEZ3miyFoWtVZJ3W42jyGlyKI8NnGGxrFrW5Mvjvg==}
@@ -1400,6 +1438,9 @@ packages:
   '@mermaid-js/parser@2.0.1':
     resolution: {integrity: sha512-j37dj/h6p6pots1L7pLPPNuABEEu9WP4OYg9pW1g+nYG331j0+3canE9OagtYdytYvdSAMG+2fKU5cxep6LgjA==}
     engines: {node: '>=22.12.0'}
+
+  '@microsoft/fetch-event-source@2.0.1':
+    resolution: {integrity: sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==}
 
   '@modelcontextprotocol/client@2.0.0':
     resolution: {integrity: sha512-8f1OghQ2rjzIOfqgUCP+8GiUWqRs89njoWLNqAe8kWmDePv3s1fZXseej+QXemssEuuOvLLmLO/kqM3IQHtISw==}
@@ -2261,6 +2302,7 @@ packages:
   '@smithy/core@3.37.0':
     resolution: {integrity: sha512-97imTcCyiPd8k0e9+ts/Sp0W65Dn9Ti357J7M09Ov4tI8Q1JDJVFSoAJtjEVKqfHEr3Pdo2jfolqKCaaiszH0g==}
     engines: {node: '>=18.0.0'}
+    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.5.2':
     resolution: {integrity: sha512-A9uSdn72ozbRUSit0eib0TW7nXuNPlaeM0zcGkJ+nE6tFcSDbnmtwoxbTCFBukVQcszDAyvsd7+rTduPTXpygg==}
@@ -4611,10 +4653,6 @@ packages:
     resolution: {integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==}
     engines: {node: '>=18'}
 
-  miniflare@5.20261019.1-beta:
-    resolution: {integrity: sha512-1n7MN2UqZnPniyYAqNuV1YEAaja66ozKGVCc5ZTmYQhTubnoAwGLccwb+ZWYLOajuw3pOaJ70u//bZMuURlRew==}
-    engines: {node: '>=22.0.0'}
-
   miniflare@5.20261019.2-beta:
     resolution: {integrity: sha512-QNgCA/axizZ7kv7RV3nwbRoz+w4watBlwIsyXjwgYHw4eSw5BrR1F2152s3Kz+Bzy/YxjKFHrZl3LzBRbPgYoQ==}
     engines: {node: '>=22.0.0'}
@@ -5361,10 +5399,6 @@ packages:
     resolution: {integrity: sha512-GCvB3aoys96IuDFBMcTB46JOR6mdMtAToqwiW8JlWhsoh1mhHi/xn9ss/Dg7N555GiJyEt2qzoG/NHCwM6h1EA==}
     engines: {node: '>=18'}
 
-  tinyglobby@0.2.15:
-    resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
-    engines: {node: '>=12.0.0'}
-
   tinyglobby@0.2.16:
     resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
     engines: {node: '>=12.0.0'}
@@ -5690,16 +5724,6 @@ packages:
     resolution: {integrity: sha512-NeofJFyaYNpqKpFRJW3ApuonaerPd6/JWlfTtLDYf2A6ygqrDEFnYgEXmc0hhOxqnJsSM+kXJN6VebPojzRrsg==}
     engines: {node: '>=16'}
     hasBin: true
-
-  wrangler@4.151.3:
-    resolution: {integrity: sha512-mzPQLmkAhZUV7CdiAhE+hiIAJlS9xPL6vZe1B8oQFuWxFu7nmQnvHAVjcAcabwSGkXFXH9uspzXwHOFrfbQmqQ==}
-    engines: {node: '>=22.0.0'}
-    hasBin: true
-    peerDependencies:
-      '@cloudflare/workers-types': ^5.20261019.1
-    peerDependenciesMeta:
-      '@cloudflare/workers-types':
-        optional: true
 
   wrangler@4.153.0:
     resolution: {integrity: sha512-Hn1AowKzZao/729rMpdpxBZt/RaKQNJ4GtKtHQcOrwT+J/GIq0iwl680+dhJyO00iSsXaCkxoNcLg3yVIwIvyw==}
@@ -6327,12 +6351,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@cloudflare/unenv-preset@2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261019.1)':
-    dependencies:
-      unenv: 2.0.0-rc.24
-    optionalDependencies:
-      workerd: 1.20261019.1
-
   '@cloudflare/unenv-preset@2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261023.1)':
     dependencies:
       unenv: 2.0.0-rc.24
@@ -6388,6 +6406,10 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+
+  '@durable-streams/client@0.2.7':
+    dependencies:
+      '@microsoft/fetch-event-source': 2.0.1
 
   '@earendil-works/pi-agent-core@1.4.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)':
     dependencies:
@@ -6689,6 +6711,11 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
+  '@flue/react@2.3.0(@flue/sdk@2.3.0)(react@19.2.3)':
+    dependencies:
+      '@flue/sdk': 2.3.0
+      react: 19.2.3
+
   '@flue/runtime@2.3.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(typescript@6.0.3)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)':
     dependencies:
       '@earendil-works/pi-agent-core': 1.4.0(@aws-sdk/credential-provider-node@3.972.88)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(undici@7.30.1)(ws@8.22.0)(zod@4.3.6)
@@ -6713,6 +6740,10 @@ snapshots:
       - utf-8-validate
       - ws
       - zod
+
+  '@flue/sdk@2.3.0':
+    dependencies:
+      '@durable-streams/client': 0.2.7
 
   '@flue/vite@2.3.0(@aws-sdk/credential-provider-node@3.972.88)(@babel/core@7.29.0)(@babel/runtime@7.28.6)(@cloudflare/workers-types@5.20261026.1)(@modelcontextprotocol/sdk@1.32.1(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@smithy/signature-v4@5.7.4)(ai@7.0.153(zod@4.3.6))(hono@4.13.13)(react@19.2.3)(rolldown@1.0.1)(typescript@6.0.3)(undici@7.30.1)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))(ws@8.22.0)(zod@4.3.6)':
     dependencies:
@@ -6940,6 +6971,8 @@ snapshots:
   '@mermaid-js/parser@2.0.1':
     dependencies:
       '@chevrotain/types': 13.2.0
+
+  '@microsoft/fetch-event-source@2.0.1': {}
 
   '@modelcontextprotocol/client@2.0.0':
     dependencies:
@@ -8249,7 +8282,7 @@ snapshots:
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.8.5
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -10214,19 +10247,6 @@ snapshots:
 
   mimic-function@5.0.1: {}
 
-  miniflare@5.20261019.1-beta(@types/node@25.8.0):
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      sharp: 0.35.5(@types/node@25.8.0)
-      undici: 7.29.1
-      workerd: 1.20261019.1
-      ws: 8.21.0
-      youch: 4.1.0-beta.10
-    transitivePeerDependencies:
-      - '@types/node'
-      - bufferutil
-      - utf-8-validate
-
   miniflare@5.20261019.2-beta(@types/node@25.8.0):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
@@ -11119,11 +11139,6 @@ snapshots:
 
   tinyexec@1.3.1: {}
 
-  tinyglobby@0.2.15:
-    dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
-
   tinyglobby@0.2.16:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
@@ -11417,24 +11432,6 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20261023.1
       '@cloudflare/workerd-linux-arm64': 1.20261023.1
       '@cloudflare/workerd-windows-64': 1.20261023.1
-
-  wrangler@4.151.3(@cloudflare/workers-types@5.20261026.1)(@types/node@25.8.0):
-    dependencies:
-      '@cloudflare/kv-asset-handler': 0.5.0
-      '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261019.1)
-      blake3-wasm: 2.1.5
-      esbuild: 0.28.2
-      miniflare: 5.20261019.1-beta(@types/node@25.8.0)
-      path-to-regexp: 6.3.0
-      unenv: 2.0.0-rc.24
-      workerd: 1.20261019.1
-    optionalDependencies:
-      '@cloudflare/workers-types': 5.20261026.1
-      fsevents: 2.3.3
-    transitivePeerDependencies:
-      - '@types/node'
-      - bufferutil
-      - utf-8-validate
 
   wrangler@4.153.0(@cloudflare/workers-types@5.20261026.1)(@types/node@25.8.0):
     dependencies:

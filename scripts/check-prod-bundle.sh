@@ -7,7 +7,7 @@
 # A correct `vite build` runs in production mode, so `import.meta.env.DEV` is
 # statically `false` and the dev-identity-switcher chunk — along with its
 # hardcoded test credentials — is tree-shaken out entirely. If any of the
-# fingerprints below survive into dist/, the build ran in the wrong Vite mode
+# fingerprints below survive into dist/client/, the build ran in the wrong Vite mode
 # and dev tooling is about to ship to real users.
 #
 # scripts/cf-preview.sh runs this before every preview upload. The PR checks
@@ -17,7 +17,7 @@
 
 set -uo pipefail
 
-DIST="${1:-dist}"
+DIST="${1:-dist/client}"
 FRAGMENTS="${2:-}"
 [ -d "$DIST" ] || {
 	echo "error: build output directory '$DIST' not found — run 'pnpm build' first" >&2

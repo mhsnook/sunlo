@@ -1,170 +1,136 @@
-import * as z from 'zod'
+import * as v from 'valibot'
 
-// The contract between the coach page and `POST /api/coach`. The worker
-// imports this file too (tsconfig.worker.json), so it may import zod and
-// nothing else.
+// The contract between the coach page and the coach agent
+// (.flue/agents/coach.ts). The Worker imports this file too
+// (tsconfig.worker.json), so it may import valibot and nothing else.
 
 export const DECK_TARGET = 100
 
-// The API needs a user message before the coach's fixed opening line. The
-// learner never sees this one.
-export const KICKOFF_TEXT = '[Page: the learner opened the coach.]'
+// Where .flue/app.ts mounts the coach agent's conversations.
+export const COACH_MOUNT = '/api/coach/agent'
 
-const MAX_TEXT = 8000
-const MAX_TOOL_RESULT = 24_000
+// A learner's coach conversation: their uid, the language, and a thread
+// token that "Start over" replaces. The Worker refuses an id whose uid is not
+// the caller's, so a learner can only reach their own conversations.
+export const coachConversationId = (
+	lang: string,
+	uid: string,
+	thread: string
+) => `${lang}-${uid}.${thread}`
 
-export const TextBlockSchema = z.object({
-	type: z.literal('text'),
-	text: z.string().min(1).max(MAX_TEXT),
+export function parseCoachConversationId(id: string) {
+	const match = /^([a-z]{3})-([0-9a-f-]{36})\.([a-z0-9]{1,32})$/.exec(id)
+	return match ? { lang: match[1], uid: match[2], thread: match[3] } : null
+}
+
+export const CoachInitialDataSchema = v.object({
+	lang: v.pipe(v.string(), v.length(3)),
+	translationLang: v.pipe(v.string(), v.length(3)),
+	learnerName: v.nullable(v.pipe(v.string(), v.maxLength(80))),
 })
 
-export const ToolUseBlockSchema = z.object({
-	type: z.literal('tool_use'),
-	id: z.string().min(1).max(100),
-	name: z.string().min(1).max(64),
-	input: z.record(z.string(), z.unknown()),
-})
+export type CoachInitialData = v.InferOutput<typeof CoachInitialDataSchema>
 
-export const ToolResultBlockSchema = z.object({
-	type: z.literal('tool_result'),
-	tool_use_id: z.string().min(1).max(100),
-	content: z.string().max(MAX_TOOL_RESULT),
-	is_error: z.boolean().optional(),
-})
+const Ids = (max: number) => v.pipe(v.array(v.string()), v.maxLength(max))
+const Limit = v.optional(
+	v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(40))
+)
 
-export type TextBlock = z.infer<typeof TextBlockSchema>
-export type ToolUseBlock = z.infer<typeof ToolUseBlockSchema>
-export type ToolResultBlock = z.infer<typeof ToolResultBlockSchema>
-
-export const CoachMessageSchema = z.discriminatedUnion('role', [
-	z.object({
-		role: z.literal('user'),
-		content: z
-			.array(z.union([TextBlockSchema, ToolResultBlockSchema]))
-			.min(1)
-			.max(24),
+export const coachToolInputs = {
+	search_library: v.object({
+		query: v.optional(
+			v.pipe(
+				v.string(),
+				v.maxLength(200),
+				v.description('What the learner wants to say or talk about.')
+			)
+		),
+		tags: v.optional(
+			v.pipe(
+				Ids(10),
+				v.description('Only phrases with at least one of these tags.')
+			)
+		),
+		limit: Limit,
 	}),
-	z.object({
-		role: z.literal('assistant'),
-		content: z
-			.array(z.union([TextBlockSchema, ToolUseBlockSchema]))
-			.min(1)
-			.max(24),
+	find_similar: v.object({
+		phrase_ids: v.pipe(v.array(v.string()), v.minLength(1), v.maxLength(20)),
+		limit: Limit,
 	}),
-])
-
-export type CoachMessage = z.infer<typeof CoachMessageSchema>
-
-export const CoachRequestSchema = z.object({
-	lang: z.string().length(3),
-	translationLang: z.string().length(3),
-	learnerName: z.string().max(80).nullable(),
-	messages: z.array(CoachMessageSchema).min(1).max(160),
-})
-
-export type CoachRequest = z.infer<typeof CoachRequestSchema>
-
-export const CoachResponseSchema = z.object({
-	content: z.array(z.union([TextBlockSchema, ToolUseBlockSchema])),
-	stop_reason: z.string().nullable(),
-})
-
-export type CoachResponse = z.infer<typeof CoachResponseSchema>
-
-const PhraseIds = z.array(z.string()).max(60)
-const Limit = z.number().int().min(1).max(40).optional()
-
-// The page runs every tool, against the learner's own collections. The
-// worker only describes them to the model.
-export const coachTools = {
-	search_library: {
-		description:
-			"Search this language's public library. With `query`, finds phrases, requests and sets by meaning (works in English or the target language). With only `tags`, lists phrases carrying any of those tags. Results say which phrases are already in the learner's deck. Nothing shows on the page until you call show_on_page.",
-		input: z.object({
-			query: z
-				.string()
-				.max(200)
-				.optional()
-				.describe('What the learner wants to say or talk about.'),
-			tags: z
-				.array(z.string())
-				.max(10)
-				.optional()
-				.describe('Only phrases with at least one of these tags.'),
-			not_in_deck: z
-				.boolean()
-				.optional()
-				.describe("Leave out phrases already in the learner's deck."),
-			limit: Limit,
-		}),
-	},
-	find_similar: {
-		description:
-			'Look-alike search: phrases close in meaning to the given phrases. Use it to grow a set from phrases the learner liked or added.',
-		input: z.object({
-			phrase_ids: z.array(z.string()).min(1).max(20),
-			not_in_deck: z.boolean().optional(),
-			limit: Limit,
-		}),
-	},
-	list_tags: {
-		description:
-			"The tags used in this language's library, with how many phrases carry each one.",
-		input: z.object({}),
-	},
-	get_deck: {
-		description:
-			"The learner's deck for this language: how many phrases are in it, the tags they cover, and the most recently added phrases.",
-		input: z.object({}),
-	},
-	show_on_page: {
-		description:
-			'Put a set on the main page, beside the chat. This is how the learner sees phrases: they can read them and add or skip each one. Give the set a short title, like a chapter name. Call it whenever you have phrases worth looking at; the page keeps earlier sets one tap away. Nothing is added to the deck by showing it.',
-		input: z.object({
-			title: z.string().min(1).max(80),
-			subtitle: z.string().max(160).optional(),
-			phrase_ids: PhraseIds,
-			request_ids: z.array(z.string()).max(20).optional(),
-			playlist_ids: z.array(z.string()).max(20).optional(),
-		}),
-	},
-	add_to_deck: {
-		description:
-			'Add phrases to the learner\'s deck as flashcards. Only do this when the learner asked for it, in general or specific terms ("add them", "add the food ones"). Creates the deck if the learner has none for this language.',
-		input: z.object({ phrase_ids: z.array(z.string()).min(1).max(60) }),
-	},
-	suggest_replies: {
-		description:
-			'Offer the learner up to 4 short replies as buttons under your message. Write them as the learner would say them, 1 to 5 words each.',
-		input: z.object({
-			replies: z.array(z.string().min(1).max(40)).min(1).max(4),
-		}),
-	},
-	navigate: {
-		description:
-			'Take the learner to another part of Sunlo, when they ask to go there. Leaves the coach.',
-		input: z.object({
-			to: z.enum([
-				'deck',
-				'review',
-				'profile',
-				'phrase',
-				'playlist',
-				'request',
-			]),
-			id: z
-				.string()
-				.optional()
-				.describe('Required for phrase, playlist and request.'),
-		}),
-	},
+	list_tags: v.object({}),
+	show_on_page: v.object({
+		title: v.pipe(v.string(), v.minLength(1), v.maxLength(80)),
+		subtitle: v.optional(v.pipe(v.string(), v.maxLength(160))),
+		phrase_ids: Ids(60),
+		request_ids: v.optional(Ids(20)),
+		playlist_ids: v.optional(Ids(20)),
+	}),
+	add_to_deck: v.object({
+		phrase_ids: v.pipe(v.array(v.string()), v.minLength(1), v.maxLength(60)),
+	}),
+	suggest_replies: v.object({
+		replies: v.pipe(
+			v.array(v.pipe(v.string(), v.minLength(1), v.maxLength(40))),
+			v.minLength(1),
+			v.maxLength(4)
+		),
+	}),
+	navigate: v.object({
+		to: v.picklist([
+			'deck',
+			'review',
+			'profile',
+			'phrase',
+			'playlist',
+			'request',
+		]),
+		id: v.optional(
+			v.pipe(
+				v.string(),
+				v.description('Required for phrase, playlist and request.')
+			)
+		),
+	}),
 } as const
 
-export type CoachToolName = keyof typeof coachTools
+export type CoachToolName = keyof typeof coachToolInputs
 
-export const isCoachToolName = (name: string): name is CoachToolName =>
-	name in coachTools
+export const coachToolDescriptions: Record<CoachToolName, string> = {
+	search_library:
+		"Search this language's public library. With `query`, finds phrases, requests and sets by meaning or by spelling (English or the target language). With only `tags`, lists phrases carrying any of those tags. Nothing shows on the page until you call show_on_page.",
+	find_similar:
+		'Look-alike search: phrases close in meaning to the given phrases. Use it to grow a set from phrases the learner liked or added.',
+	list_tags:
+		"The tags used in this language's library, with how many phrases carry each one.",
+	show_on_page:
+		'Put a set on the page beside the chat. This is the only way the learner sees phrases: they can read them and add each one. Give the set a short title, like a chapter name. The page keeps earlier sets one tap away. Showing adds nothing to the deck.',
+	add_to_deck:
+		'Add phrases to the learner\'s deck as flashcards. Only when the learner asked for it, in general or specific terms ("add them", "add the food ones"). The page adds them and reports back with the learner\'s next message.',
+	suggest_replies:
+		'Offer the learner up to 4 short replies as buttons under your message. Write them as the learner would say them, 1 to 5 words each.',
+	navigate:
+		'Take the learner to another part of Sunlo, when they ask to go there. Leaves the coach.',
+}
 
-export type CoachToolInput<N extends CoachToolName> = z.infer<
-	(typeof coachTools)[N]['input']
->
+// What the page reads off a finished tool call. The agent returns these
+// shapes; the page parses them and ignores a call that does not match.
+export const ShowOnPageOutputSchema = v.object({
+	title: v.string(),
+	subtitle: v.nullable(v.string()),
+	phrase_ids: v.array(v.string()),
+	request_ids: v.array(v.string()),
+	playlist_ids: v.array(v.string()),
+})
+
+export const SuggestRepliesOutputSchema = v.object({
+	replies: v.array(v.string()),
+})
+
+export const AddToDeckOutputSchema = v.object({
+	phrase_ids: v.array(v.string()),
+})
+
+export const NavigateOutputSchema = coachToolInputs.navigate
+
+export type ShowOnPageOutput = v.InferOutput<typeof ShowOnPageOutputSchema>
+export type NavigateTarget = v.InferOutput<typeof NavigateOutputSchema>
