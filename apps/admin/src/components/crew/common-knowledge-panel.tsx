@@ -41,7 +41,7 @@ export function CrewCharterSection() {
 								key={entry.id}
 								id={entry.id}
 								text={entry.text}
-								label="Common Knowledge entry"
+								label="Crew charter entry"
 								busy={edit.isPending || forget.isPending}
 								onSave={(text) => edit.mutateAsync({ id: entry.id, text })}
 								onDelete={() => forget.mutateAsync(entry.id)}

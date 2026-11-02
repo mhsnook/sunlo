@@ -3,7 +3,9 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
@@ -91,7 +93,14 @@ export function EditableEntry({
 				open={draft !== null}
 				onOpenChange={(open) => !open && setDraft(null)}
 			>
-				<DialogContent className="max-w-xl" initialFocus={field}>
+				<DialogContent
+					className="max-w-xl"
+					initialFocus={() => {
+						const end = field.current?.value.length ?? 0
+						field.current?.setSelectionRange(end, end)
+						return field.current
+					}}
+				>
 					<DialogHeader>
 						<DialogTitle>Edit {label.toLowerCase()}</DialogTitle>
 					</DialogHeader>
@@ -108,22 +117,18 @@ export function EditableEntry({
 						rows={8}
 						aria-label={label}
 						ref={field}
-						onFocus={(event) => {
-							const end = event.target.value.length
-							event.target.setSelectionRange(end, end)
-						}}
 					/>
-					<div className="flex justify-end gap-2">
-						<Button variant="ghost" onClick={() => setDraft(null)}>
-							Cancel
-						</Button>
+					<DialogFooter className="flex-row justify-end gap-2">
+						<DialogClose asChild>
+							<Button variant="ghost">Cancel</Button>
+						</DialogClose>
 						<Button
 							disabled={busy || !draft?.trim()}
 							onClick={() => void save()}
 						>
 							Save
 						</Button>
-					</div>
+					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 		</li>
