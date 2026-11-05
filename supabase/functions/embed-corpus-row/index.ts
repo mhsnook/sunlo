@@ -27,6 +27,7 @@
 // Set in Supabase dashboard (deploy) and supabase/functions/.env (local):
 //   CLOUDFLARE_ACCOUNT_ID
 //   CLOUDFLARE_API_TOKEN
+//   AI_GATEWAY_ID (optional, defaults to sunlo-app)
 
 import { createClient } from '@supabase/supabase-js'
 import { normalize } from '../_shared/normalize.ts'
@@ -58,6 +59,7 @@ type CorpusRow = {
 
 const CF_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')
 const CF_API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN')
+const AI_GATEWAY_ID = Deno.env.get('AI_GATEWAY_ID') ?? 'sunlo-app'
 const HAS_WORKERS_AI = Boolean(CF_ACCOUNT_ID && CF_API_TOKEN)
 
 if (!HAS_WORKERS_AI) {
@@ -77,6 +79,7 @@ async function embedViaWorkersAI(text: string): Promise<number[]> {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${CF_API_TOKEN}`,
+			'cf-aig-gateway-id': AI_GATEWAY_ID,
 			'Content-Type': 'application/json',
 		},
 		body: JSON.stringify({ text: [text] }),

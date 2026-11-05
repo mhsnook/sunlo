@@ -144,12 +144,13 @@ pnpm tsx scripts/backfill-search-corpus.ts --normalize-only
 
 Required env vars:
 
-| Var                         | When               |
-| --------------------------- | ------------------ |
-| `VITE_SUPABASE_URL`         | always             |
-| `SUPABASE_SERVICE_ROLE_KEY` | always             |
-| `CLOUDFLARE_ACCOUNT_ID`     | full backfill only |
-| `CLOUDFLARE_API_TOKEN`      | full backfill only |
+| Var                         | When                                                                 |
+| --------------------------- | -------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`         | always                                                               |
+| `SUPABASE_SERVICE_ROLE_KEY` | always                                                               |
+| `CLOUDFLARE_ACCOUNT_ID`     | full backfill only                                                   |
+| `CLOUDFLARE_API_TOKEN`      | full backfill only                                                   |
+| `AI_GATEWAY_ID`             | optional: the AI Gateway for embedding calls, `sunlo-app` by default |
 
 `--normalize-only` updates `text` + `text_normalized` on existing rows
 and never calls Workers AI. Use it after tweaking
