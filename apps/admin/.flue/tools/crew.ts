@@ -24,7 +24,13 @@ import type { Wake } from '../../worker/crew/room'
 import type { RunKey } from '../../worker/crew/runs'
 import { toBase64 } from '../../worker/images'
 import { roomFor, wake } from '../crew'
-import { assertBlocks, Options, Text, toActions } from './posting'
+import {
+	answerFromAttached,
+	assertBlocks,
+	Options,
+	Text,
+	toActions,
+} from './posting'
 
 const Id = v.pipe(v.number(), v.integer())
 
@@ -256,7 +262,7 @@ Their answer comes back to you.`,
 			const image = await (await roomFor()).image(data.id)
 			if (!image) throw new Error(`No image ${data.id}.`)
 			const seen = await harness.prompt(
-				`This is image ${data.id} (${image.width}×${image.height}). Answer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
+				`This is image ${data.id} (${image.width}×${image.height}). ${answerFromAttached(1)}\n\nAnswer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
 				{
 					images: [
 						{
