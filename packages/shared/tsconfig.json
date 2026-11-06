@@ -1,6 +1,5 @@
 {
 	"compilerOptions": {
-		"composite": true,
 		"target": "es2022",
 		// No DOM, Node or Deno types: code here runs in the browser, the
 		// Worker and Supabase's Deno runtime, so it may use only what all
