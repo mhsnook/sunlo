@@ -49,12 +49,13 @@
 	// new var or binding goes in both places. vite.config.ts copies Flue's
 	// agent bindings in at build time, so never list them.
 	"previews": {
+		// No SUPABASE_URL or SUPABASE_ANON_KEY: cf-preview.sh always sets both
+		// with --var, and the preview workflow reads production's pair from
+		// this file with a grep that must find each name only once.
 		"vars": {
 			"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
 			"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
 			"AI_GATEWAY_ID": "sunlo-app",
-			"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
-			"SUPABASE_ANON_KEY": "sb_publishable_3Vu41i9KARrrirkDEZxDSA_COkuhNCf",
 		},
 		"ai": { "binding": "AI" },
 		// Their own namespaces, so preview traffic never counts against a
