@@ -50,7 +50,8 @@ name=$(printf '%s' "$branch" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+
 output=$(mktemp)
 trap 'rm -f "$output"' EXIT
 
-# --var replaces the values from the `previews` block in wrangler.jsonc.
+# The `previews` block in wrangler.jsonc leaves out the Supabase pair, so
+# a preview gets it only from these --var flags.
 WRANGLER_OUTPUT_FILE_PATH="$output" pnpm exec wrangler preview \
 	--name "$name" \
 	--var "SUPABASE_URL:$VITE_SUPABASE_URL" \
