@@ -36,6 +36,8 @@ import {
  * Use this anywhere you want the tags a phrase actually carries.
  */
 export const phraseTagLinksActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ link: phraseTagLinksCollection })
@@ -43,6 +45,8 @@ export const phraseTagLinksActive = createLiveQueryCollection({
 })
 
 export const phrasesComposed = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	id: 'phrases_composed',
 	query: (q) =>
 		q.from({ phrase: phrasesCollection }).select(({ phrase }) => ({
@@ -72,8 +76,6 @@ export const phrasesComposed = createLiveQueryCollection({
 		})),
 })
 
-phrasesComposed.createIndex((row) => row.id, { indexType: BasicIndex })
-
 /**
  * `phrasesComposed` with the archived rows dropped: an archived phrase, and
  * an archived translation on a phrase that is not archived.
@@ -84,6 +86,8 @@ phrasesComposed.createIndex((row) => row.id, { indexType: BasicIndex })
  * `archived` again — docs/mutations.md, "State the filter once".
  */
 export const phrasesFull = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	id: 'phrases_full',
 	// Without it, rows take the join's composite key and `.get(phraseId)` misses.
 	getKey: (row: { id: string }) => row.id,
@@ -114,8 +118,6 @@ export const phrasesFull = createLiveQueryCollection({
 				}
 			}),
 })
-
-phrasesFull.createIndex((row) => row.id, { indexType: BasicIndex })
 
 export interface PhraseProvenancePlaylist {
 	type: 'playlist'
