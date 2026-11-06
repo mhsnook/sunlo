@@ -1,0 +1,8 @@
+{
+	"name": "@sunlo/shared",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./normalize": "./src/normalize.ts"
+	}
+}

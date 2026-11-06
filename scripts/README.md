@@ -154,7 +154,7 @@ Required env vars:
 
 `--normalize-only` updates `text` + `text_normalized` on existing rows
 and never calls Workers AI. Use it after tweaking
-`src/features/chat/normalize.ts` when you don't want to burn embedding
+`packages/shared/src/normalize.ts` when you don't want to burn embedding
 credits re-vectorizing things that barely changed. Rows that don't yet
 exist in the corpus are skipped (run a full backfill first to seed
 them).

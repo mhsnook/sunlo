@@ -36,7 +36,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import postgres from 'postgres'
-import { normalize } from '../_shared/normalize.ts'
+import { normalize } from '@sunlo/shared/normalize'
 
 type SourceType = 'phrase' | 'translation' | 'request' | 'playlist'
 type EntityType = 'phrase' | 'request' | 'playlist'
