@@ -125,10 +125,7 @@ async function anchorMatches(
 	return (data ?? []) as Array<CorpusMatch>
 }
 
-/**
- * Entities ranked by similarity, without their text. The coach reads its
- * own columns, so it stops here; the app's search goes on to searchCorpus.
- */
+/** Entities ranked by similarity, best first, without their text. */
 export async function matchCorpus(
 	sb: Sb,
 	embed: EmbedFn,
