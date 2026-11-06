@@ -271,7 +271,6 @@ Their answer comes back to you.`,
 							mimeType: image.mimeType,
 						},
 					],
-					thinkingLevel: 'low',
 				}
 			)
 			return { output: { looked_at: `image ${data.id}`, seen: seen.text } }
