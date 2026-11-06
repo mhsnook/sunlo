@@ -33,6 +33,7 @@
 //   SUPABASE_SERVICE_ROLE_KEY
 //   CLOUDFLARE_ACCOUNT_ID         (only needed when embedding)
 //   CLOUDFLARE_API_TOKEN          (only needed when embedding)
+//   AI_GATEWAY_ID                 (optional, defaults to sunlo-app)
 
 import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
@@ -45,6 +46,7 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID
 const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN
+const AI_GATEWAY_ID = process.env.AI_GATEWAY_ID ?? 'sunlo-app'
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 	console.error('Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
@@ -86,6 +88,7 @@ async function embedBatch(texts: string[]): Promise<number[][]> {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${CF_API_TOKEN}`,
+			'cf-aig-gateway-id': AI_GATEWAY_ID,
 			'Content-Type': 'application/json',
 		},
 		body: JSON.stringify({ text: texts }),
