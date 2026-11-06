@@ -1,4 +1,10 @@
-import { and, createLiveQueryCollection, eq, toArray } from '@tanstack/db'
+import {
+	and,
+	BasicIndex,
+	createLiveQueryCollection,
+	eq,
+	toArray,
+} from '@tanstack/db'
 
 import { cardsCollection } from './collections'
 import { cardReviewsCollection } from '@/features/review/collections'
@@ -11,6 +17,8 @@ import { cardReviewsCollection } from '@/features/review/collections'
  * correlation matches direction as well as phrase.
  */
 export const cardsWithReviews = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	id: 'cards_with_reviews',
 	query: (q) =>
 		q.from({ card: cardsCollection }).select(({ card }) => ({
