@@ -30,6 +30,12 @@
 			"namespace_id": "1002",
 			"simple": { "limit": 20, "period": 60 },
 		},
+		{
+			// Search runs as the learner types, so this is per debounced query.
+			"name": "SEARCH_LIMITER",
+			"namespace_id": "1003",
+			"simple": { "limit": 120, "period": 60 },
+		},
 	],
 	// Append-only once deployed: a new Flue agent is a new entry.
 	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["FlueCoachAgent"] }],
@@ -70,6 +76,11 @@
 				"name": "COACH_LIMITER",
 				"namespace_id": "2002",
 				"simple": { "limit": 20, "period": 60 },
+			},
+			{
+				"name": "SEARCH_LIMITER",
+				"namespace_id": "2003",
+				"simple": { "limit": 120, "period": 60 },
 			},
 		],
 	},

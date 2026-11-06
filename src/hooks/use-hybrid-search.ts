@@ -48,7 +48,7 @@ export function combinedScore(semantic: number, trigram: number): number {
  * via combinedScore; subsequent trigram pages append in their original
  * order without re-blending.
  *
- * Graceful degradation: if the semantic Edge Function fails or
+ * Graceful degradation: if /api/search fails or
  * search_corpus is empty for embeddings, the merged list is still
  * usable from trigram alone (and vice versa).
  */
