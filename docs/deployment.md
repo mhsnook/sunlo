@@ -95,6 +95,25 @@ Workers Builds defaults to Node 24, which matches `engines`.
 
 3. Put that id in `apps/admin/wrangler.jsonc` under `hyperdrive[0].id` and merge it. Workers Builds binds the config on the next deploy.
 
+**The embedder's database connection.** The `embed-corpus-row` Edge Function writes `search_corpus` as `corpus_writer`, a role that the migration `20261106120000_corpus_writer_role.sql` creates without a password. It can read and write that one table and nothing else. The function reads the source rows with the anon key. Until the role has a password and the function has its connection string, every call is skipped: new and edited rows get no embedding, and archived rows keep their corpus entries. So do these steps right after the release that carries the migration merges:
+
+1. In the Supabase SQL editor, set the password: `alter role corpus_writer password '<a long random password>';`
+2. Save the transaction pooler URL as an Edge Function secret (Project Settings › Database › Connection string › Transaction pooler, port 6543), with the user `corpus_writer.<project-ref>`:
+
+   ```bash
+   supabase secrets set --project-ref <project-ref> CORPUS_WRITER_DB_URL="postgresql://corpus_writer.<project-ref>:<password>@<pooler-host>:6543/postgres"
+   ```
+
+3. Delete the old `search` Edge Function, which the Worker's `/api/search` replaced. Removing its folder from the repo may not undeploy it:
+
+   ```bash
+   supabase functions delete search --project-ref <project-ref>
+   ```
+
+4. Run `scripts/backfill-search-corpus.ts --skip-existing` against production, to embed any rows written between the release and step 2.
+
+Locally, run the same `alter role` with `scripts/db-native.sh psql` or `psql` against local Supabase. Then add `CORPUS_WRITER_DB_URL=postgresql://corpus_writer:<password>@supabase_db_sunlo-tanstack:5432/postgres` to `supabase/functions/.env`. That host is the database container's name, as the Edge Runtime container sees it. Preview branches get no password and no secret, so their embedder skips, as it already does without the Cloudflare keys.
+
 The connection string lives in the Hyperdrive config, so the Worker needs no secret and the Workers Builds dashboard holds no database value. If Hyperdrive cannot reach the direct host, the session pooler (port 5432, user `admin_reader.<project-ref>`) works in its place. Local development uses the binding's `localConnectionString` against local Supabase: `apps/admin/README.md`, "Local development".
 
 The crew agents run on Workers AI through the Worker's `AI` binding and need no secret of their own. Three optional secrets let the crew keep milestones and epics on GitHub as its own GitHub App; setup, including the previews' copy of the secrets, is in `apps/admin/README.md`, "GitHub: milestones and epics".
