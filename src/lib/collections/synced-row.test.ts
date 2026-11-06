@@ -19,16 +19,14 @@ const makeCollection = (rows: Array<Row> = []) =>
 	)
 
 describe('writeSyncedRow', () => {
-	it('drops the write when nothing has loaded the collection', () => {
+	it('drops the write when nothing has loaded the collection', async () => {
 		const collection = makeCollection()
-		// The raw write is what it protects against.
-		expect(() =>
-			collection.utils.writeUpsert({ id: 'a', name: 'Anya' })
-		).toThrow()
-		expect(() =>
-			writeSyncedRow(collection, { id: 'a', name: 'Anya' })
-		).not.toThrow()
+		await writeSyncedRow(collection, { id: 'a', name: 'Anya' })
+		expect(collection.status).toBe('idle')
 		expect(collection.size).toBe(0)
+		// The raw write is what it protects against: it starts the fetch.
+		await collection.utils.writeUpsert({ id: 'a', name: 'Anya' })
+		expect(collection.status).not.toBe('idle')
 	})
 
 	it('writes a new or changed row, and skips one we already hold', async () => {
@@ -36,13 +34,13 @@ describe('writeSyncedRow', () => {
 		await collection.preload()
 
 		const upsert = vi.spyOn(collection.utils, 'writeUpsert')
-		writeSyncedRow(collection, { id: 'a', name: 'Anya' })
+		await writeSyncedRow(collection, { id: 'a', name: 'Anya' })
 		expect(upsert).not.toHaveBeenCalled()
 
-		writeSyncedRow(collection, { id: 'a', name: 'Anya Petrov' })
+		await writeSyncedRow(collection, { id: 'a', name: 'Anya Petrov' })
 		expect(collection.get('a')?.name).toBe('Anya Petrov')
 
-		writeSyncedRow(collection, { id: 'b', name: 'Bo' })
+		await writeSyncedRow(collection, { id: 'b', name: 'Bo' })
 		expect(collection.get('b')?.name).toBe('Bo')
 	})
 
@@ -53,10 +51,14 @@ describe('writeSyncedRow', () => {
 		await collection.preload()
 
 		const upsert = vi.spyOn(collection.utils, 'writeUpsert')
-		writeSyncedRow(collection, { id: 'a', name: 'Anya', flags: { beta: true } })
+		await writeSyncedRow(collection, {
+			id: 'a',
+			name: 'Anya',
+			flags: { beta: true },
+		})
 		expect(upsert).not.toHaveBeenCalled()
 
-		writeSyncedRow(collection, {
+		await writeSyncedRow(collection, {
 			id: 'a',
 			name: 'Anya',
 			flags: { beta: false },
@@ -70,47 +72,32 @@ describe('writeSyncedRows', () => {
 		const collection = makeCollection([{ id: 'a', name: 'Anya' }])
 		await collection.preload()
 
-		const batch = vi.spyOn(collection.utils, 'writeBatch')
-		writeSyncedRows(collection, [
+		const upsert = vi.spyOn(collection.utils, 'writeUpsert')
+		await writeSyncedRows(collection, [
 			{ id: 'a', name: 'Anya' },
 			{ id: 'b', name: 'Bo' },
 			{ id: 'c', name: 'Cy' },
 		])
-		expect(batch).toHaveBeenCalledTimes(1)
+		expect(upsert).toHaveBeenCalledTimes(1)
+		expect(upsert).toHaveBeenCalledWith([
+			{ id: 'b', name: 'Bo' },
+			{ id: 'c', name: 'Cy' },
+		])
 		expect(collection.get('b')?.name).toBe('Bo')
 		expect(collection.get('c')?.name).toBe('Cy')
 
-		// One changed row does not need a batch, and no changed row does not
-		// need a write at all.
-		batch.mockClear()
-		const upsert = vi.spyOn(collection.utils, 'writeUpsert')
-		writeSyncedRows(collection, [
-			{ id: 'a', name: 'Anya' },
-			{ id: 'b', name: 'Bo Zhang' },
-		])
-		expect(batch).not.toHaveBeenCalled()
-		expect(upsert).toHaveBeenCalledTimes(1)
-		expect(collection.get('b')?.name).toBe('Bo Zhang')
-
 		upsert.mockClear()
-		writeSyncedRows(collection, [{ id: 'a', name: 'Anya' }])
+		await writeSyncedRows(collection, [{ id: 'a', name: 'Anya' }])
 		expect(upsert).not.toHaveBeenCalled()
 	})
 
-	it('drops the batch when nothing has loaded the collection', () => {
+	it('drops the batch when nothing has loaded the collection', async () => {
 		const collection = makeCollection()
-		// writeBatch opens its own sync context, so it throws on its own.
-		expect(() =>
-			collection.utils.writeBatch(() => {
-				collection.utils.writeUpsert({ id: 'a', name: 'Anya' })
-			})
-		).toThrow()
-		expect(() =>
-			writeSyncedRows(collection, [
-				{ id: 'a', name: 'Anya' },
-				{ id: 'b', name: 'Bo' },
-			])
-		).not.toThrow()
+		await writeSyncedRows(collection, [
+			{ id: 'a', name: 'Anya' },
+			{ id: 'b', name: 'Bo' },
+		])
+		expect(collection.status).toBe('idle')
 		expect(collection.size).toBe(0)
 	})
 })

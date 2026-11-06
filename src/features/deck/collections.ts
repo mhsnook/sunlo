@@ -50,8 +50,7 @@ export const decksCollection = createCollection(
 				),
 				{ submitted: langs, returned }
 			)
-			writeSyncedRows(decksCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(decksCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -72,10 +71,9 @@ export const decksCollection = createCollection(
 						rowMatches(changes, row),
 						{ submitted: changes, returned: row }
 					)
-					if (row) writeSyncedRow(decksCollection, DeckSchema.parse(row))
+					if (row) await writeSyncedRow(decksCollection, DeckSchema.parse(row))
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -107,8 +105,7 @@ export const cardsCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(cardsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(cardsCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -138,7 +135,7 @@ export const cardsCollection = createCollection(
 						)
 					// Write before throwing: a row that did match is the server's
 					// truth, and the rollback leaves the synced layer showing it.
-					writeSyncedRows(cardsCollection, rows)
+					await writeSyncedRows(cardsCollection, rows)
 					const missing = keys.filter(
 						(key) => !rows.some((row) => row.id === key)
 					)
@@ -148,7 +145,6 @@ export const cardsCollection = createCollection(
 						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )

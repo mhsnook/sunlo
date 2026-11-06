@@ -55,7 +55,7 @@ export function useCreateDeck() {
 
 	return (lang: string) => {
 		const tx = decksCollection.insert(optimisticNewDeck(lang, userId!))
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(`Created a new deck to learn ${languages[lang]}`),
 			(err: unknown) => {
 				console.error('Error creating deck:', err)
@@ -122,15 +122,17 @@ export async function addPhrasesToDeck(
 	try {
 		await Promise.all([
 			toInsert.length
-				? cardsCollection.insert(toInsert).isPersisted.promise
+				? cardsCollection.insert(toInsert).when('settled')
 				: undefined,
 			toActivate.length
-				? cardsCollection.update(toActivate, (drafts) => {
-						drafts.forEach((draft) => {
-							draft.status = 'active'
-							draft.updated_at = nowIso
+				? cardsCollection
+						.update(toActivate, (drafts) => {
+							drafts.forEach((draft) => {
+								draft.status = 'active'
+								draft.updated_at = nowIso
+							})
 						})
-					}).isPersisted.promise
+						.when('settled')
 				: undefined,
 		])
 	} catch (err) {

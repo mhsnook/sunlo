@@ -33,8 +33,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	const search = useSearch({ strict: false })
 
 	// Get the child comments
-	const { data: repliesData } = useLiveQuery(
-		(q) =>
+	const { data: repliesData } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ reply: commentsActive })
 				.where(({ reply }) => eq(reply.parent_comment_id, comment.id))
@@ -42,8 +42,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					eq(profile.uid, reply.uid)
 				)
 				.orderBy(({ reply }) => reply.created_at, 'asc'),
-		[comment.id]
-	)
+	})
 
 	const replies = repliesData ?? []
 

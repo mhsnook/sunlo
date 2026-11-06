@@ -58,12 +58,12 @@ const actions = createCollection<FriendRequestActionType>({
 		sync: ({ begin, write, commit, markReady }) => {
 			begin()
 			for (const row of LOG) write({ type: 'insert', value: row })
-			commit()
+			void commit()
 			markReady()
 			pushAction = (row) => {
 				begin()
 				write({ type: 'insert', value: row })
-				commit()
+				void commit()
 			}
 		},
 	},
@@ -80,7 +80,7 @@ const me = createCollection<{ uid: string }>({
 			loadProfile = () => {
 				begin()
 				write({ type: 'insert', value: { uid: ME } })
-				commit()
+				void commit()
 			}
 		},
 	},

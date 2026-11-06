@@ -88,7 +88,7 @@ function removePhrase(linkId: string) {
 	const tx = playlistPhraseLinksCollection.update(linkId, (draft) => {
 		draft.deleted = true
 	})
-	tx.isPersisted.promise.then(
+	tx.when('settled').then(
 		() => toastSuccess('Phrase removed from playlist'),
 		(err: unknown) => {
 			const message = err instanceof Error ? err.message : 'unknown error'
@@ -101,7 +101,7 @@ function updateHref(linkId: string, href: string) {
 	const tx = playlistPhraseLinksCollection.update(linkId, (d) => {
 		d.href = href || null
 	})
-	tx.isPersisted.promise.catch((err: unknown) => {
+	tx.when('settled').catch((err: unknown) => {
 		const message = err instanceof Error ? err.message : 'unknown error'
 		toastError(`Failed to update link: ${message}`)
 	})
@@ -139,7 +139,7 @@ export function ManagePlaylistPhrasesDialog({
 			href: null,
 			created_at: new Date().toISOString(),
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Phrase added to playlist'),
 			(err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'
@@ -165,7 +165,7 @@ export function ManagePlaylistPhrasesDialog({
 		const tx2 = playlistPhraseLinksCollection.update(targetLink.id, (d) => {
 			d.order = currentOrder
 		})
-		Promise.all([tx1.isPersisted.promise, tx2.isPersisted.promise]).catch(
+		Promise.all([tx1.when('settled'), tx2.when('settled')]).catch(
 			(err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'
 				toastError(`Failed to reorder: ${message}`)

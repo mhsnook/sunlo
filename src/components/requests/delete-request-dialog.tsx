@@ -29,7 +29,7 @@ export function DeleteRequestDialog({
 		const tx = phraseRequestsCollection.update(request.id, (draft) => {
 			draft.deleted = true
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => {
 				toastSuccess('Request deleted')
 				void navigate({

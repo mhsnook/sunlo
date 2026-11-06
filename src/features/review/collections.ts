@@ -52,8 +52,7 @@ export const cardReviewsCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(cardReviewsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(cardReviewsCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -72,10 +71,12 @@ export const cardReviewsCollection = createCollection(
 						{ submitted: changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(cardReviewsCollection, CardReviewSchema.parse(row))
+						await writeSyncedRow(
+							cardReviewsCollection,
+							CardReviewSchema.parse(row)
+						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -112,8 +113,7 @@ export const reviewSessionsCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(reviewSessionsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(reviewSessionsCollection, returned)
 		},
 	})
 )
@@ -151,8 +151,7 @@ export const reviewMilestonesCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(reviewMilestonesCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(reviewMilestonesCollection, returned)
 		},
 	})
 )

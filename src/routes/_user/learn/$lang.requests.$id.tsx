@@ -202,13 +202,12 @@ function AnswersOnlyToggle({ answersOnly }: { answersOnly: boolean }) {
 
 function AnswersOnlyView() {
 	const params = Route.useParams()
-	const { data: links, isLoading } = useLiveQuery(
-		(q) =>
+	const { data: links, isLoading } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ link: commentPhraseLinksActive })
 				.where(({ link }) => eq(link.request_id, params.id)),
-		[params.id]
-	)
+	})
 	if (isLoading) return <Loader />
 	const linksWithCommentsMap = mapArrays<CommentPhraseLinkType, 'phrase_id'>(
 		links,

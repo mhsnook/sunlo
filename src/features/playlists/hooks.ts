@@ -24,8 +24,8 @@ export function useAnyonesPlaylists(
 	uid: uuid,
 	lang?: string
 ): UseLiveQueryResult<PhrasePlaylistType[]> {
-	return useLiveQuery(
-		(q) => {
+	return useLiveQuery({
+		query: (q) => {
 			let query = q
 				.from({ list: phrasePlaylistsCollection })
 				.where(({ list }) => eq(list.uid, uid))
@@ -36,21 +36,19 @@ export function useAnyonesPlaylists(
 					.orderBy(({ list }) => list.created_at, 'desc')
 			)
 		},
-		[uid]
-	)
+	})
 }
 
 export function useLangPlaylists(
 	lang: string
 ): UseLiveQueryResult<PhrasePlaylistType[]> {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ list: phrasePlaylistsCollection })
 				.where(({ list }) => eq(list.lang, lang))
 				.orderBy(({ list }) => list.created_at, 'desc'),
-		[lang]
-	)
+	})
 }
 
 export function useMyPlaylists(): UseLiveQueryResult<PhrasePlaylistType[]> {
@@ -61,14 +59,13 @@ export function useMyPlaylists(): UseLiveQueryResult<PhrasePlaylistType[]> {
 export function useOnePlaylist(
 	id: uuid
 ): UseLiveQueryResult<PhrasePlaylistType> {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ list: phrasePlaylistsCollection })
 				.where(({ list }) => eq(list.id, id))
 				.findOne(),
-		[id]
-	)
+	})
 }
 
 export function useOnePlaylistPhrases(
@@ -76,8 +73,8 @@ export function useOnePlaylistPhrases(
 ): UseLiveQueryResult<
 	{ link: PlaylistPhraseLinkType; phrase: PhraseFullFullType }[]
 > {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ link: playlistPhraseLinksActive })
 				.join(
@@ -87,21 +84,19 @@ export function useOnePlaylistPhrases(
 				)
 				.where(({ link }) => eq(link.playlist_id, id))
 				.orderBy(({ link }) => link.order),
-		[id]
-	)
+	})
 }
 
 /** This user's upvote row for a playlist — see `useMyRequestUpvote`. */
 export const useMyPlaylistUpvote = (
 	playlistId: uuid
 ): PhrasePlaylistUpvoteType | undefined =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ upvote: phrasePlaylistUpvotesCollection })
 				.where(({ upvote }) => eq(upvote.playlist_id, playlistId)),
-		[playlistId]
-	).data?.[0]
+	}).data?.[0]
 
 /**
  * Live updates for one playlist, mounted by the playlist detail route: its

@@ -41,14 +41,13 @@ export const notificationsCollection = createCollection(
 								.in('id', keys)
 								.select()
 								.throwOnError()
-							writeSyncedRows(
+							await writeSyncedRows(
 								notificationsCollection,
 								(data ?? []).map((row) => NotificationSchema.parse(row))
 							)
 						}
 					)
 				)
-				return { refetch: false }
 			} catch (error) {
 				toastError('Could not update your notifications')
 				throw error

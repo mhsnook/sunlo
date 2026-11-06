@@ -65,8 +65,7 @@ export const phrasesCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			writeSyncedRows(phrasesCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(phrasesCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -88,14 +87,13 @@ export const phrasesCollection = createCollection(
 					// `phrase` row this update returns.
 					if (row) {
 						const current = phrasesCollection.get(m.original.id) ?? m.original
-						writeSyncedRow(
+						await writeSyncedRow(
 							phrasesCollection,
 							PhraseSchema.parse({ ...current, ...row })
 						)
 					}
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -136,8 +134,7 @@ export const phraseTranslationsCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			writeSyncedRows(phraseTranslationsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(phraseTranslationsCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -156,13 +153,12 @@ export const phraseTranslationsCollection = createCollection(
 						{ submitted: changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(
+						await writeSyncedRow(
 							phraseTranslationsCollection,
 							TranslationSchema.parse(row)
 						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -202,8 +198,7 @@ export const phraseTagLinksCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			writeSyncedRows(phraseTagLinksCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(phraseTagLinksCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -225,11 +220,10 @@ export const phraseTagLinksCollection = createCollection(
 							),
 							{ submitted: { changes, keys }, returned: rows }
 						)
-						writeSyncedRows(phraseTagLinksCollection, rows)
+						await writeSyncedRows(phraseTagLinksCollection, rows)
 					}
 				)
 			)
-			return { refetch: false }
 		},
 	})
 )

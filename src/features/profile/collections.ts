@@ -86,10 +86,12 @@ export const myProfileCollection = createCollection(
 						{ submitted: changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(myProfileCollection, MyProfileSchema.parse(row))
+						await writeSyncedRow(
+							myProfileCollection,
+							MyProfileSchema.parse(row)
+						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )

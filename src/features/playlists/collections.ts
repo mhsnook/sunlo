@@ -41,7 +41,7 @@ export const phrasePlaylistsCollection = createCollection(
 		defaultIndexType: BasicIndex,
 		// Delete is a soft delete (deleted: true) driven through onUpdate; the
 		// `deleted = false` filter in live queries hides the row. Call sites own
-		// the toast UX via tx.isPersisted.promise.
+		// the toast UX via tx.when('settled').
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
@@ -59,13 +59,12 @@ export const phrasePlaylistsCollection = createCollection(
 						{ submitted: changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(
+						await writeSyncedRow(
 							phrasePlaylistsCollection,
 							PhrasePlaylistSchema.parse(row)
 						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -108,8 +107,7 @@ export const playlistPhraseLinksCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			writeSyncedRows(playlistPhraseLinksCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(playlistPhraseLinksCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -128,13 +126,12 @@ export const playlistPhraseLinksCollection = createCollection(
 						{ submitted: changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(
+						await writeSyncedRow(
 							playlistPhraseLinksCollection,
 							PlaylistPhraseLinkSchema.parse(row)
 						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -182,8 +179,7 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.playlist_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			writeSyncedRows(phrasePlaylistUpvotesCollection, rows)
-			return { refetch: false }
+			await writeSyncedRows(phrasePlaylistUpvotesCollection, rows)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -205,11 +201,10 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 								),
 							{ submitted: { changes, keys }, returned: rows }
 						)
-						writeSyncedRows(phrasePlaylistUpvotesCollection, rows)
+						await writeSyncedRows(phrasePlaylistUpvotesCollection, rows)
 					}
 				)
 			)
-			return { refetch: false }
 		},
 	})
 )

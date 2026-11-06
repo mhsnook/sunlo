@@ -239,7 +239,7 @@ function EditablePhraseText({
 			draft.text = trimmed
 		})
 		setIsEditing(false)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Phrase text updated'),
 			(err: Error) => {
 				toastError('Failed to update phrase text')
@@ -312,7 +312,7 @@ function AdminTranslationRow({
 			draft.text = trimmed
 		})
 		setIsEditing(false)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Translation updated'),
 			(err: Error) => {
 				toastError('Failed to update translation')
@@ -326,7 +326,7 @@ function AdminTranslationRow({
 		const tx = phraseTranslationsCollection.update(translation.id, (draft) => {
 			draft.archived = !wasArchived
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() =>
 				toastSuccess(`Translation ${wasArchived ? 'restored' : 'archived'}`),
 			(err: Error) => {

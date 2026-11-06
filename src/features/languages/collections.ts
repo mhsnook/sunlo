@@ -60,8 +60,7 @@ export const langTagsCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			writeSyncedRows(langTagsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(langTagsCollection, returned)
 		},
 	})
 )

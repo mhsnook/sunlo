@@ -9,7 +9,7 @@ function setPhraseArchived(phraseId: uuid, archived: boolean) {
 	const tx = phrasesCollection.update(phraseId, (draft) => {
 		draft.archived = archived
 	})
-	tx.isPersisted.promise.then(
+	tx.when('settled').then(
 		() => toastSuccess(archived ? 'Phrase archived' : 'Phrase restored'),
 		(err: unknown) => {
 			toastError(

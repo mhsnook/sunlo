@@ -1,10 +1,9 @@
-export type SyncedCollection<T extends object, TKey extends string> = {
+export type SyncedCollection<T extends object, TKey extends string | number> = {
 	isReady: () => boolean
 	get: (key: TKey) => T | undefined
 	getKeyFromItem: (item: T) => TKey
 	utils: {
-		writeUpsert: (data: T) => void
-		writeBatch: (writes: () => void) => void
+		writeUpsert: (data: T | Array<T>) => Promise<void>
 	}
 }
 
@@ -12,12 +11,12 @@ export type SyncedCollection<T extends object, TKey extends string> = {
  * Write rows the server confirmed — a mutation's ack, or a realtime frame —
  * into a collection's synced layer. See docs/mutations.md.
  */
-export function writeSyncedRows<T extends object, TKey extends string>(
-	collection: SyncedCollection<T, TKey>,
-	rows: Array<T>
-): void {
-	// Dropped rather than thrown: a realtime callback has nowhere to put a
-	// throw, and the collection's first fetch reads the committed row anyway.
+export async function writeSyncedRows<
+	T extends object,
+	TKey extends string | number,
+>(collection: SyncedCollection<T, TKey>, rows: Array<T>): Promise<void> {
+	// Dropped rather than rejected: a realtime callback has nowhere to put a
+	// rejection, and the collection's first fetch reads the committed row anyway.
 	if (!collection.isReady()) return
 	// A row we already hold re-runs every live query over the collection for
 	// nothing.
@@ -26,23 +25,18 @@ export function writeSyncedRows<T extends object, TKey extends string>(
 		return !current || !sameRow(row, current)
 	})
 	if (changed.length === 0) return
-	if (changed.length === 1) {
-		collection.utils.writeUpsert(changed[0]!)
-		return
-	}
-	// One commit, not one per row: a commit copies the whole collection into
-	// the query cache and re-runs every live query over it.
-	collection.utils.writeBatch(() => {
-		for (const row of changed) collection.utils.writeUpsert(row)
-	})
+	// One array, not one call per row: each call is a commit, and a commit
+	// copies the whole collection into the query cache and re-runs every live
+	// query over it.
+	await collection.utils.writeUpsert(changed)
 }
 
 /** One row's worth of {@link writeSyncedRows}. */
-export function writeSyncedRow<T extends object, TKey extends string>(
+export function writeSyncedRow<T extends object, TKey extends string | number>(
 	collection: SyncedCollection<T, TKey>,
 	row: T
-): void {
-	writeSyncedRows(collection, [row])
+): Promise<void> {
+	return writeSyncedRows(collection, [row])
 }
 
 /**

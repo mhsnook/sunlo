@@ -93,7 +93,7 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 		const tx = myProfileCollection.update(profile.uid, (draft) => {
 			draft.font_preference = font_preference
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Font preference updated'),
 			(err) => {
 				toastError('Failed to update preference')
@@ -156,7 +156,7 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 		const tx = myProfileCollection.update(profile.uid, (draft) => {
 			draft.sound_enabled = sound_enabled
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Sound preference updated'),
 			(err) => {
 				toastError('Failed to update preference')
@@ -211,7 +211,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 		const tx = myProfileCollection.update(profile.uid, (draft) => {
 			draft.review_answer_mode = review_answer_mode
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Review answer mode updated'),
 			(err) => {
 				toastError('Failed to update review answer mode')

@@ -123,13 +123,12 @@ export function SetTile({
 	playlist: PhrasePlaylistType
 	lang: string
 }) {
-	const { data: links } = useLiveQuery(
-		(q) =>
+	const { data: links } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ link: playlistPhraseLinksActive })
 				.where(({ link }) => eq(link.playlist_id, playlist.id)),
-		[playlist.id]
-	)
+	})
 	const { data: deckPids } = useDeckPids(lang)
 
 	const phraseIds = links?.map((l) => l.phrase_id) ?? []
