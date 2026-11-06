@@ -3,7 +3,8 @@
 	"references": [
 		{ "path": "./tsconfig.app.json", "composite": true },
 		{ "path": "./tsconfig.node.json", "composite": true },
-		{ "path": "./tsconfig.worker.json" }
+		{ "path": "./tsconfig.worker.json" },
+		{ "path": "./packages/shared" }
 	],
 	"compilerOptions": {
 		"paths": {

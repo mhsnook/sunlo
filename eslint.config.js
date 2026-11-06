@@ -98,6 +98,21 @@ export default [
 		},
 	},
 	{
+		files: ['packages/shared/**/*.ts'],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: 'module',
+			parser: tseslint.parser,
+			parserOptions: { project: ['./packages/shared/tsconfig.json'] },
+		},
+		plugins: { '@typescript-eslint': tseslint.plugin },
+		rules: {
+			...js.configs.recommended.rules,
+			...tseslint.plugin.configs['recommended'].rules,
+			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
+		},
+	},
+	{
 		files: ['worker/**/*.ts', '.flue/**/*.ts'],
 		languageOptions: {
 			ecmaVersion: 2022,

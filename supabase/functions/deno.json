@@ -1,6 +1,7 @@
 {
 	"imports": {
 		"@supabase/supabase-js": "npm:@supabase/supabase-js@2.87.3",
-		"postgres": "npm:postgres@3.4.5"
+		"postgres": "npm:postgres@3.4.5",
+		"@sunlo/shared/normalize": "../../packages/shared/src/normalize.ts"
 	}
 }

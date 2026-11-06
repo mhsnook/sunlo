@@ -45,6 +45,7 @@
 		"@flue/sdk": "^2.3.0",
 		"@fontsource-variable/atkinson-hyperlegible-next": "^5.2.6",
 		"@fontsource/opendyslexic": "^5.2.5",
+		"@sunlo/shared": "workspace:*",
 		"@supabase/supabase-js": "^2.106.0",
 		"@tanstack/db": "^0.6.5",
 		"@tanstack/intent": "^0.0.29",
