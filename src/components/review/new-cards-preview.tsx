@@ -93,15 +93,14 @@ export function NewCardsPreview({
 
 	// Reviews from earlier sessions only. Today's reviews are excluded so that
 	// scoring a card does not drop it out of this list part-way through.
-	const { data: priorReviews } = useLiveQuery(
-		(q) =>
+	const { data: priorReviews } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
 					and(eq(review.lang, lang!), lt(review.day_session, dayString))
 				),
-		[lang, dayString]
-	)
+	})
 	const seenBefore = new Set<ManifestEntry>(
 		(priorReviews ?? []).map((r) => toManifestEntry(r.phrase_id, r.direction))
 	)

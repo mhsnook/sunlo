@@ -19,7 +19,7 @@ export function OnboardingNudge() {
 		const tx = myProfileCollection.update(profile.uid, (draft) => {
 			draft.flags = { ...draft.flags, [FLAG_NEEDS_ONBOARDING]: false }
 		})
-		tx.isPersisted.promise.catch((error: unknown) => {
+		tx.when('settled').catch((error: unknown) => {
 			console.log('Failed to dismiss onboarding nudge', error)
 		})
 	}

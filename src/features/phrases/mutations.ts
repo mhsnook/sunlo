@@ -135,7 +135,7 @@ export const createPhraseWithTranslation =
 			// Sync the confirmed rows into the collections. The action's
 			// optimistic state drops when mutationFn resolves, so we writeInsert
 			// the same values we just persisted to keep them past this tick.
-			phrasesCollection.utils.writeInsert({
+			await phrasesCollection.utils.writeInsert({
 				id: phraseId,
 				lang,
 				text,
@@ -148,7 +148,7 @@ export const createPhraseWithTranslation =
 				avg_stability: null,
 				count_learners: cards.length > 0 ? 1 : 0,
 			})
-			phraseTranslationsCollection.utils.writeInsert({
+			await phraseTranslationsCollection.utils.writeInsert({
 				id: translationId,
 				phrase_id: phraseId,
 				lang: translationLang,
@@ -159,7 +159,7 @@ export const createPhraseWithTranslation =
 				updated_at: now,
 			})
 			for (const c of cards) {
-				cardsCollection.utils.writeInsert({
+				await cardsCollection.utils.writeInsert({
 					id: c.id,
 					phrase_id: phraseId,
 					lang,
@@ -338,7 +338,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 		// drops at the end of mutationFn.
 		const now = new Date().toISOString()
 		for (const t of newTags) {
-			langTagsCollection.utils.writeInsert({
+			await langTagsCollection.utils.writeInsert({
 				id: t.id,
 				name: t.name,
 				lang,
@@ -347,7 +347,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 			})
 		}
 		for (const p of phrases) {
-			phrasesCollection.utils.writeInsert({
+			await phrasesCollection.utils.writeInsert({
 				id: p.phraseId,
 				lang,
 				text: p.text,
@@ -360,7 +360,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 				count_learners: p.cards.length > 0 ? 1 : 0,
 			})
 			for (const t of p.translations) {
-				phraseTranslationsCollection.utils.writeInsert({
+				await phraseTranslationsCollection.utils.writeInsert({
 					id: t.id,
 					phrase_id: p.phraseId,
 					lang: t.lang,
@@ -372,7 +372,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 				})
 			}
 			for (const c of p.cards) {
-				cardsCollection.utils.writeInsert({
+				await cardsCollection.utils.writeInsert({
 					id: c.id,
 					phrase_id: p.phraseId,
 					lang,
@@ -383,7 +383,7 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 					updated_at: now,
 				})
 			}
-			writeSyncedRows(
+			await writeSyncedRows(
 				phraseTagLinksCollection,
 				p.tagLinks.map((link) => ({
 					id: link.linkId,
@@ -413,7 +413,7 @@ export const confirmDraftPhrase = createOptimisticAction<{ phraseId: uuid }>({
 		// The RPC returns a `phrase` row; the columns `phrase_meta` computes
 		// come from the row we already hold.
 		const current = phrasesCollection.get(phraseId)
-		writeSyncedRow(
+		await writeSyncedRow(
 			phrasesCollection,
 			PhraseSchema.parse({ ...current, ...data })
 		)

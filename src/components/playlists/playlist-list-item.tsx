@@ -78,7 +78,7 @@ export function PlaylistItem({
 			href: null,
 			created_at: new Date().toISOString(),
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Phrase added to playlist'),
 			(err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'

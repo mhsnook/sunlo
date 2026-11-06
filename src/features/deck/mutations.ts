@@ -27,7 +27,7 @@ export function useCreateDeck() {
 
 	return (lang: string) => {
 		const tx = decksCollection.insert(optimisticNewDeck(lang, userId!))
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(`Created a new deck to learn ${languages[lang]}`),
 			(err: unknown) => {
 				console.error('Error creating deck:', err)
@@ -52,12 +52,13 @@ export async function addPhrasesToDeck(
 ): Promise<number> {
 	const deck = decksCollection.get(lang)
 	if (!deck) {
-		await decksCollection.insert(optimisticNewDeck(lang, uid)).isPersisted
-			.promise
+		await decksCollection.insert(optimisticNewDeck(lang, uid)).when('settled')
 	} else if (deck.archived) {
-		await decksCollection.update(lang, (draft) => {
-			draft.archived = false
-		}).isPersisted.promise
+		await decksCollection
+			.update(lang, (draft) => {
+				draft.archived = false
+			})
+			.when('settled')
 	}
 
 	const existing = new Map(
@@ -102,14 +103,16 @@ export async function addPhrasesToDeck(
 	try {
 		await Promise.all([
 			toInsert.length
-				? cardsCollection.insert(toInsert).isPersisted.promise
+				? cardsCollection.insert(toInsert).when('settled')
 				: undefined,
 			toActivate.length
-				? cardsCollection.update(toActivate, (drafts) => {
-						drafts.forEach((draft) => {
-							draft.status = 'active'
+				? cardsCollection
+						.update(toActivate, (drafts) => {
+							drafts.forEach((draft) => {
+								draft.status = 'active'
+							})
 						})
-					}).isPersisted.promise
+						.when('settled')
 				: undefined,
 		])
 	} catch (err) {

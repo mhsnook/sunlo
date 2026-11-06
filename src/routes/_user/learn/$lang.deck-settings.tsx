@@ -183,7 +183,7 @@ function DailyGoalSection({
 		const tx = decksCollection.update(lang, (draft) => {
 			draft.daily_review_goal = value
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Your daily review goal has been updated.'),
 			(error) => {
 				toastError(
@@ -288,7 +288,7 @@ function LearningGoalSection({
 		const tx = decksCollection.update(lang, (draft) => {
 			draft.learning_goal = value
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Your learning goal has been updated.'),
 			(error) => {
 				toastError(
@@ -345,7 +345,7 @@ function PreferredTranslationLanguageSection({
 		const tx = decksCollection.update(lang, (draft) => {
 			draft.preferred_translation_lang = next
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() =>
 				toastSuccess(
 					next
@@ -447,7 +447,7 @@ function ReviewAnswerModeSection({
 		const tx = decksCollection.update(lang, (draft) => {
 			draft.review_answer_mode = next
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() =>
 				toastSuccess(
 					next

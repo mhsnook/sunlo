@@ -49,8 +49,7 @@ export const decksCollection = createCollection(
 				),
 				{ submitted: langs, returned }
 			)
-			writeSyncedRows(decksCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(decksCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -71,10 +70,9 @@ export const decksCollection = createCollection(
 						rowMatches(changes, row),
 						{ submitted: changes, returned: row }
 					)
-					if (row) writeSyncedRow(decksCollection, DeckSchema.parse(row))
+					if (row) await writeSyncedRow(decksCollection, DeckSchema.parse(row))
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -106,8 +104,7 @@ export const cardsCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(cardsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(cardsCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -125,10 +122,9 @@ export const cardsCollection = createCollection(
 						rowMatches(changes, row),
 						{ submitted: changes, returned: row }
 					)
-					if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
+					if (row) await writeSyncedRow(cardsCollection, CardSchema.parse(row))
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )

@@ -139,16 +139,16 @@ const bulkAddMessages = createOptimisticAction<{
 		// state drops at the end of mutationFn.
 		for (const row of insertedRequests) {
 			const parsed = PhraseRequestSchema.parse(row)
-			phraseRequestsCollection.utils.writeInsert(parsed)
+			await phraseRequestsCollection.utils.writeInsert(parsed)
 			if (parsed.message_id) {
-				messagesCollection.utils.writeInsert({
+				await messagesCollection.utils.writeInsert({
 					id: parsed.message_id,
 					created_at: parsed.created_at,
 				})
 			}
 		}
 		for (const link of insertedLinks) {
-			messageTagLinksCollection.utils.writeInsert(
+			await messageTagLinksCollection.utils.writeInsert(
 				MessageTagLinkSchema.parse(link)
 			)
 		}
@@ -161,8 +161,8 @@ function AdminMessagesPage() {
 	const [activeTagSlug, setActiveTagSlug] = useState<string | null>(null)
 	const [selected, setSelected] = useState<Set<string>>(new Set())
 
-	const { data: rawRows, isLoading } = useLiveQuery(
-		(q) =>
+	const { data: rawRows, isLoading } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ msg: messagesCollection })
 				.join(
@@ -178,22 +178,19 @@ function AdminMessagesPage() {
 					lang: req.lang,
 					request_id: req.id,
 				})),
-		[]
-	)
+	})
 
-	const { data: allTags } = useLiveQuery(
-		(q) =>
+	const { data: allTags } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ tag: messageTagsCollection })
 				.where(({ tag }) => eq(tag.archived, false))
 				.orderBy(({ tag }) => tag.sort_order, 'asc'),
-		[]
-	)
+	})
 
-	const { data: allLinks } = useLiveQuery(
-		(q) => q.from({ link: messageTagLinksActive }),
-		[]
-	)
+	const { data: allLinks } = useLiveQuery({
+		query: (q) => q.from({ link: messageTagLinksActive }),
+	})
 
 	const tagsByMessage = useMemo(() => {
 		const tagBySlug = new Map(allTags?.map((t) => [t.slug, t]) ?? [])
@@ -415,7 +412,7 @@ function NewTagButton() {
 			sort_order: 999,
 			created_at: new Date().toISOString(),
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => {
 				toastSuccess(`Created tag "${cleanLabel}"`)
 				setSlug('')
@@ -489,14 +486,13 @@ function NewTagButton() {
 
 function EditTagsDialog({ tagCounts }: { tagCounts: Map<string, number> }) {
 	const [open, setOpen] = useState(false)
-	const { data: tagsIncludingArchived } = useLiveQuery(
-		(q) =>
+	const { data: tagsIncludingArchived } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ tag: messageTagsCollection })
 				.orderBy(({ tag }) => tag.archived, 'asc')
 				.orderBy(({ tag }) => tag.sort_order, 'asc'),
-		[]
-	)
+	})
 	const rows = tagsIncludingArchived ?? []
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -552,7 +548,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 			draft.label = trimmedLabel
 			draft.description = description.trim() || null
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => {
 				toastSuccess(`Updated ${tag.slug}`)
 				setIsEditing(false)
@@ -574,7 +570,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 		const tx = messageTagsCollection.update(tag.slug, (draft) => {
 			draft.archived = !tag.archived
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => {
 				toastSuccess(
 					tag.archived ? `Restored "${tag.slug}"` : `Archived "${tag.slug}"`
@@ -770,7 +766,7 @@ function BulkAddSection({
 		}
 		const requestIds = prompts.map(() => crypto.randomUUID())
 		const tx = bulkAddMessages({ requestIds, prompts, lang, userId, tagSlug })
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => {
 				toastSuccess(
 					`Added ${prompts.length} message${prompts.length === 1 ? '' : 's'}` +
@@ -913,7 +909,7 @@ function SelectionBar({
 	function bulkTag(tx: ReturnType<typeof attachMessageTag>, done: string) {
 		setTagPickerOpen(false)
 		if (!tx) return
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(done),
 			(err: unknown) => {
 				toastError('Failed to tag some messages')
@@ -1120,10 +1116,10 @@ function MessageRowItem({
 // One message at a time, from a badge's X. The selection bar above calls the
 // feature mutation directly and reports its own aggregate.
 function detachOneTag(messageId: string, tagSlug: string) {
-	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
-		(err: unknown) => {
+	detachMessageTag([messageId], tagSlug)
+		?.when('settled')
+		.catch((err: unknown) => {
 			toastError('Failed to remove tag')
 			console.error(err)
-		}
-	)
+		})
 }

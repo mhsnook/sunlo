@@ -647,7 +647,7 @@ function CardStatusActions({ row }: { row: PhraseRow }) {
 		const ids = row.cards.map((c) => c.id)
 		if (ids.length === 0) return
 		const tx = updateCardsStatus(ids, row.phrase_id, row.status, status)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(`Phrase status changed to "${status}"`),
 			(error) => {
 				console.log('Error', error)

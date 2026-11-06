@@ -50,14 +50,13 @@ export function AddTranslationsDialog({
 	const userId = useUserId()
 	// Not `phrase.translations`: this dialog restores archived translations,
 	// which `phrasesFull` drops.
-	const { data: translations } = useLiveQuery(
-		(q) =>
+	const { data: translations } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ translation: phraseTranslationsCollection })
 				.where(({ translation }) => eq(translation.phrase_id, phrase.id))
 				.orderBy(({ translation }) => translation.lang, 'asc'),
-		[phrase.id]
-	)
+	})
 	const preferredTranslationLang = usePreferredTranslationLang(phrase.lang)
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()
@@ -79,7 +78,7 @@ export function AddTranslationsDialog({
 		})
 		close()
 		form.reset()
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(`Translation added for ${phrase.text}`),
 			(err: Error) => {
 				toastError(err.message)
@@ -190,7 +189,7 @@ function TranslationListItem({ trans }: { trans: TranslationType }) {
 			draft.text = trimmed
 		})
 		setIsEditing(false)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Translation updated'),
 			(err: Error) => {
 				toastError(err.message)
@@ -204,7 +203,7 @@ function TranslationListItem({ trans }: { trans: TranslationType }) {
 		const tx = phraseTranslationsCollection.update(trans.id, (draft) => {
 			draft.archived = !wasArchived
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(`Translation ${wasArchived ? 'un' : ''}archived`),
 			(err: Error) => {
 				toastError(err.message)

@@ -50,14 +50,13 @@ export const useIncomingFriendRequests = (): UseLiveQueryResult<
 export const useOneRelation = (
 	uid: uuid
 ): UseLiveQueryResult<RelationsFullType> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ relation: relationsFull })
 				.where(({ relation }) => eq(relation.uid, uid))
 				.findOne(),
-		[uid]
-	)
+	})
 
 /** What each action tells the person who took it, once the server stores it. */
 export const FRIEND_ACTION_TOAST: Record<
@@ -132,7 +131,7 @@ export const useFriendRequestAction = (uid_for: uuid): FriendRequestAction => {
 			} satisfies FriendRequestActionType,
 			{ optimistic: false }
 		)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => {
 				// Report what the server settled on, not what we asked for: an
 				// invite to someone who already invited you is stored as an accept.
@@ -181,8 +180,9 @@ type ChatsMap = {
 
 export const useAllChats = (): UseLiveQueryResult<ChatsMap> => {
 	const userId = useUserId()
-	const initialQuery = useLiveQuery(
-		(q) =>
+	const initialQuery = useLiveQuery({
+		queryKey: ['all-chats', userId],
+		query: (q) =>
 			q
 				.from({ message: chatMessagesCollection })
 				.orderBy(({ message }) => message.created_at, 'asc')
@@ -194,8 +194,7 @@ export const useAllChats = (): UseLiveQueryResult<ChatsMap> => {
 							: message.sender_uid,
 					isByMe: message.sender_uid === userId,
 				})),
-		[userId]
-	)
+	})
 
 	return {
 		...initialQuery,
@@ -213,8 +212,9 @@ export const useOneFriendChat = (
 ): UseLiveQueryResult<ChatMessageRelType[]> => {
 	const userId = useUserId()
 
-	const result = useLiveQuery(
-		(q) =>
+	const result = useLiveQuery({
+		queryKey: ['one-friend-chat', uid, userId],
+		query: (q) =>
 			q
 				.from({ message: chatMessagesCollection })
 				// Use .fn.where() for custom JS filter since or(eq(), eq()) wasn't matching correctly
@@ -230,23 +230,21 @@ export const useOneFriendChat = (
 							: message.sender_uid,
 					isByMe: message.sender_uid === userId,
 				})),
-		[uid, userId]
-	)
+	})
 	return result
 }
 
 // Hook to get unread messages (messages sent to the current user that haven't been read)
 export const useUnreadMessages = (): UseLiveQueryResult<ChatMessageType[]> => {
 	const userId = useUserId()
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ message: chatMessagesCollection })
 				.where(({ message }) =>
 					and(eq(message.recipient_uid, userId), isNull(message.read_at))
 				),
-		[userId]
-	)
+	})
 }
 
 /** One canonical list for the chats sidebar: unique by uid, sorted unread-first. */
@@ -457,7 +455,7 @@ export const useSendToFriends = () => {
 			lang,
 			content,
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(SHARE_SUCCESS_TOAST[content.message_type]),
 			(error: unknown) => {
 				console.log(`Failed to send to friends:`, error, content)
@@ -491,7 +489,7 @@ export const useSocialRealtime = () => {
 					// `learner3 accepts a friend request` scene caught.
 					if (row.action_type === 'accept' && row.uid_for === userId)
 						toastSuccess('Friend request accepted')
-					writeSyncedRow(friendRequestActionsCollection, row)
+					void writeSyncedRow(friendRequestActionsCollection, row)
 				}
 			)
 			.subscribe()
@@ -512,7 +510,7 @@ export const useSocialRealtime = () => {
 					const row = ChatMessageSchema.parse(
 						payload.new as Tables<'chat_message'>
 					)
-					writeSyncedRow(chatMessagesCollection, row)
+					void writeSyncedRow(chatMessagesCollection, row)
 				}
 			)
 			.on(
@@ -526,7 +524,7 @@ export const useSocialRealtime = () => {
 					const row = ChatMessageSchema.parse(
 						payload.new as Tables<'chat_message'>
 					)
-					writeSyncedRow(chatMessagesCollection, row)
+					void writeSyncedRow(chatMessagesCollection, row)
 				}
 			)
 			.subscribe()

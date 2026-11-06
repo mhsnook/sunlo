@@ -48,7 +48,7 @@ export function UpdatePlaylistDialog({
 				draft.href = value.href || null
 				draft.cover_image_path = value.cover_image_path || null
 			})
-			tx.isPersisted.promise.then(
+			tx.when('settled').then(
 				() => toastSuccess('Playlist updated!'),
 				(err: unknown) => {
 					const message = err instanceof Error ? err.message : 'unknown error'

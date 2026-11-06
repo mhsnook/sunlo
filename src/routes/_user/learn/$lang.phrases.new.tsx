@@ -122,7 +122,7 @@ function AddPhraseTab() {
 					})
 				: decksCollection.insert(optimisticNewDeck(lang, userId))
 			try {
-				await deckTx.isPersisted.promise
+				await deckTx.when('settled')
 				didSetupDeck = true
 			} catch (err) {
 				const message = err instanceof Error ? err.message : String(err)
@@ -156,7 +156,7 @@ function AddPhraseTab() {
 			cards,
 		})
 		try {
-			await tx.isPersisted.promise
+			await tx.when('settled')
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err)
 			toastError(`There was an error submitting this new phrase: ${message}`)

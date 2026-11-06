@@ -101,15 +101,14 @@ export function useHybridSearch(langs: string[], query: string) {
 		return [...blended, ...tail]
 	}, [trigram.pages, trigram.byId, semantic.data, semantic.byId])
 
-	const phrasesQuery = useLiveQuery(
-		(q) => {
+	const phrasesQuery = useLiveQuery({
+		query: (q) => {
 			if (!matchingIds.length) return undefined
 			return q
 				.from({ phrase: phrasesFull })
 				.where(({ phrase }) => inArray(phrase.id, matchingIds))
 		},
-		[matchingIds.join(',')]
-	)
+	})
 
 	const results = useMemo((): Array<HybridSearchResult> => {
 		const phraseById = new Map(phrasesQuery.data?.map((p) => [p.id, p]) ?? [])

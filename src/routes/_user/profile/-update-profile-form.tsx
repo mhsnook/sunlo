@@ -40,7 +40,7 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 				draft.languages_known = value.languages_known
 			})
 			try {
-				await tx.isPersisted.promise
+				await tx.when('settled')
 				toastSuccess(`Successfully updated your profile`)
 				formApi.reset(value)
 			} catch (err) {

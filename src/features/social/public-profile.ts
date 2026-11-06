@@ -9,15 +9,14 @@ import { useLiveQuery } from '@tanstack/react-db'
 export const useSearchProfilesByUsername = (
 	query: string
 ): UseLiveQueryResult<PublicProfileType[]> => {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			!query.trim()
 				? undefined
 				: q
 						.from({ profile: publicProfilesCollection })
 						.where(({ profile }) => ilike(profile.username, `%${query}%`)),
-		[query]
-	)
+	})
 }
 
 export const useOnePublicProfile = (
@@ -25,8 +24,9 @@ export const useOnePublicProfile = (
 ): UseLiveQueryResult<
 	PublicProfileType & { relation: null | FriendSummaryType }
 > =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		queryKey: ['one-public-profile', uid],
+		query: (q) =>
 			q
 				.from({ profile: publicProfilesCollection })
 				.where(({ profile }) => eq(profile.uid, uid))
@@ -43,5 +43,4 @@ export const useOnePublicProfile = (
 								isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
 							},
 				})),
-		[uid]
-	)
+	})

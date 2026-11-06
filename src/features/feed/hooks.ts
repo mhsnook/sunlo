@@ -78,14 +78,13 @@ export function useFilteredFeedLang(
 
 // Get connected friend UIDs from the local collection
 export function useFriendUids() {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ friend: friendSummaries })
 				.where(({ friend }) => eq(friend.status, 'friends'))
 				.select(({ friend }) => ({ uid: friend.uid })),
-		[]
-	)
+	})
 }
 
 // Friends feed: shows activities from the user's connected friends

@@ -99,7 +99,7 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 		const now = new Date().toISOString()
 		for (const t of tags) {
 			if (t.isNew) {
-				langTagsCollection.utils.writeInsert({
+				await langTagsCollection.utils.writeInsert({
 					id: t.tagId,
 					name: t.name,
 					lang,
@@ -108,7 +108,7 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 				})
 			}
 		}
-		writeSyncedRows(phraseTagLinksCollection, confirmedLinks)
+		await writeSyncedRows(phraseTagLinksCollection, confirmedLinks)
 	},
 })
 
@@ -142,7 +142,7 @@ export function AddTags({
 		})
 		setOpen(false)
 		form.reset()
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Tags added!'),
 			(err: Error) => {
 				toastError(`Failed to add tags: ${err.message}`)
@@ -271,7 +271,7 @@ function RemovableTagBadge({ tag }: { tag: PhraseTagType }) {
 		const tx = phraseTagLinksCollection.update(tag.linkId, (draft) => {
 			draft.deleted = true
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(`Tag "${tag.name}" removed`),
 			(err: Error) => {
 				toastError('Failed to remove tag')

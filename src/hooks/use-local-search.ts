@@ -53,19 +53,32 @@ export function useLocalSearch(
 	const langSet = langs && langs.length > 0 ? new Set(langs) : null
 	const langsKey = langSet ? [...langSet].toSorted().join(',') : ''
 
-	const phrasesResult = useLiveQuery(
-		(q) => {
+	const phrasesResult = useLiveQuery({
+		queryKey: [
+			'local-search-phrases',
+			enabledNow,
+			types.phrases,
+			lowerQuery,
+			langsKey,
+		],
+		query: (q) => {
 			if (!enabledNow || !types.phrases) return undefined
 			return q.from({ phrase: phrasesFull }).fn.where(({ phrase }) => {
 				if (langSet && !langSet.has(phrase.lang)) return false
 				return phrase.searchableText.toLowerCase().includes(lowerQuery)
 			})
 		},
-		[enabledNow, types.phrases, lowerQuery, langsKey]
-	)
+	})
 
-	const playlistsResult = useLiveQuery(
-		(q) => {
+	const playlistsResult = useLiveQuery({
+		queryKey: [
+			'local-search-playlists',
+			enabledNow,
+			types.playlists,
+			lowerQuery,
+			langsKey,
+		],
+		query: (q) => {
 			if (!enabledNow || !types.playlists) return undefined
 			return q
 				.from({ playlist: phrasePlaylistsActive })
@@ -77,19 +90,24 @@ export function useLocalSearch(
 					return haystack.includes(lowerQuery)
 				})
 		},
-		[enabledNow, types.playlists, lowerQuery, langsKey]
-	)
+	})
 
-	const requestsResult = useLiveQuery(
-		(q) => {
+	const requestsResult = useLiveQuery({
+		queryKey: [
+			'local-search-requests',
+			enabledNow,
+			types.requests,
+			lowerQuery,
+			langsKey,
+		],
+		query: (q) => {
 			if (!enabledNow || !types.requests) return undefined
 			return q.from({ req: phraseRequestsActive }).fn.where(({ req }) => {
 				if (langSet && !langSet.has(req.lang)) return false
 				return req.prompt.toLowerCase().includes(lowerQuery)
 			})
 		},
-		[enabledNow, types.requests, lowerQuery, langsKey]
-	)
+	})
 
 	return useMemo(
 		() => ({

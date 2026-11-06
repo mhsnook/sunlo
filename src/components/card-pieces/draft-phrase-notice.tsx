@@ -44,7 +44,7 @@ export function DraftPhraseNotice({
 		setIsConfirming(true)
 		const tx = confirmDraftPhrase({ phraseId })
 		try {
-			await tx.isPersisted.promise
+			await tx.when('settled')
 			toastSuccess('Phrase confirmed')
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err)

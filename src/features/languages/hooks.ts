@@ -7,26 +7,23 @@ import { languagesCollection, langTagsCollection } from './collections'
 export const useLanguageMeta = (
 	lang: string
 ): UseLiveQueryResult<LanguageType> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ language: languagesCollection })
 				.where(({ language }) => eq(language.lang, lang))
 				.findOne(),
-		[lang]
-	)
+	})
 
 export const useLanguageTags = (
 	lang: string
 ): UseLiveQueryResult<LangTagType[]> => {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ langTag: langTagsCollection })
 				.where(({ langTag }) => eq(langTag.lang, lang)),
-
-		[lang]
-	)
+	})
 }
 
 /** All languages, no order applied. */
@@ -51,7 +48,7 @@ export const useLanguagesWithPhrases = (): UseLiveQueryResult<LanguageType[]> =>
 	useLiveQuery((q) =>
 		q
 			.from({ lang: languagesCollection })
-			.fn.where(({ lang }) => (lang.phrases_to_learn ?? 0) > 0)
+			.where(({ lang }) => gt(lang.phrases_to_learn, 0))
 			.orderBy(({ lang }) => lang.phrases_to_learn, 'desc')
 	)
 
@@ -63,15 +60,14 @@ export const useLanguagesWithPhrases = (): UseLiveQueryResult<LanguageType[]> =>
 export const useTopLanguages = (
 	limit: number
 ): UseLiveQueryResult<LanguageType[]> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ lang: languagesCollection })
 				.where(({ lang }) => gt(lang.display_order, 0))
 				.orderBy(({ lang }) => lang.display_order, 'asc')
 				.limit(limit),
-		[limit]
-	)
+	})
 
 /** All language tags across all languages. */
 export const useAllLangTags = (): UseLiveQueryResult<LangTagType[]> =>

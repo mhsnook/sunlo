@@ -202,13 +202,12 @@ function ReviewPageContent() {
 	// two most recent phase-1 reviews to decide whether to defer recall after
 	// consecutive failures, and the candidate set alone doesn't carry them.
 	// See src/features/review/docs.md.
-	const { data: reviewsForLang } = useLiveQuery(
-		(q) =>
+	const { data: reviewsForLang } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) => eq(review.lang, lang)),
-		[lang]
-	)
+	})
 
 	// Sets for O(1) lookups in filters below
 	const freshSet = new Set(freshCards)
@@ -374,13 +373,15 @@ function ReviewPageContent() {
 			// stats.count non-zero, which is what the redirect below keys on.
 			sessionJustCreatedRef.current = true
 
-			await reviewSessionsCollection.insert({
-				lang,
-				day_session: dayString,
-				uid: userId!,
-				created_at: new Date().toISOString(),
-				manifest: manifestEntries,
-			}).isPersisted.promise
+			await reviewSessionsCollection
+				.insert({
+					lang,
+					day_session: dayString,
+					uid: userId!,
+					created_at: new Date().toISOString(),
+					manifest: manifestEntries,
+				})
+				.when('settled')
 
 			return {
 				countCards: manifestEntries.length,
@@ -395,9 +396,9 @@ function ReviewPageContent() {
 			if (!data) throw new Error('No data returned from mutation')
 
 			// add new records to local db collections
-			data.newCards.forEach((c) => {
-				cardsCollection.utils.writeInsert(CardSchema.parse(c))
-			})
+			void cardsCollection.utils.writeInsert(
+				data.newCards.map((c) => CardSchema.parse(c))
+			)
 			// Open the append-only progress log. The session row is already
 			// persisted, so the milestone's FK is satisfied. Fire-and-forget.
 			insertMilestone({

@@ -201,31 +201,28 @@ function inOrder<T extends { id: string }>(
 }
 
 export function usePhrasesByIds(ids: Array<string>) {
-	const { data } = useLiveQuery(
-		(q) =>
+	const { data } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ phrase: phrasesFull })
 				.where(({ phrase }) => inArray(phrase.id, ids)),
-		[ids.join(',')]
-	)
+	})
 	return useMemo(() => inOrder(data, ids), [data, ids])
 }
 
 export function useRequestsByIds(ids: Array<string>) {
-	const { data: requests } = useLiveQuery(
-		(q) =>
+	const { data: requests } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ request: phraseRequestsActive })
 				.where(({ request }) => inArray(request.id, ids)),
-		[ids.join(',')]
-	)
-	const { data: links } = useLiveQuery(
-		(q) =>
+	})
+	const { data: links } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ link: commentPhraseLinksActive })
 				.where(({ link }) => inArray(link.request_id, ids)),
-		[ids.join(',')]
-	)
+	})
 	return useMemo(
 		() =>
 			// oxlint-disable-next-line no-map-spread -- the rows belong to the live query; mutating them would change its data
@@ -238,13 +235,12 @@ export function useRequestsByIds(ids: Array<string>) {
 }
 
 export function usePlaylistsByIds(ids: Array<string>) {
-	const { data } = useLiveQuery(
-		(q) =>
+	const { data } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ playlist: phrasePlaylistsActive })
 				.where(({ playlist }) => inArray(playlist.id, ids)),
-		[ids.join(',')]
-	)
+	})
 	return useMemo(() => inOrder(data, ids), [data, ids])
 }
 

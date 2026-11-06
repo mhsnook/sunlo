@@ -29,7 +29,7 @@ export function DeletePlaylistDialog({
 		const tx = phrasePlaylistsCollection.update(playlist.id, (draft) => {
 			draft.deleted = true
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => {
 				toastSuccess('Playlist deleted')
 				void navigate({

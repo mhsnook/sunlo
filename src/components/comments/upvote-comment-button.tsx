@@ -26,7 +26,7 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 						comment_id: comment.id,
 						deleted: false,
 					})
-			tx.isPersisted.promise.catch((err: unknown) => {
+			tx.when('settled').catch((err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'
 				toastError(`Failed to update upvote: ${message}`)
 			})

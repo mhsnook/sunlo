@@ -107,15 +107,13 @@ function NewPlaylistPageContent() {
 				playlistPhraseLinksCollection.preload(),
 				phrasePlaylistUpvotesCollection.preload(),
 			])
-			phrasePlaylistsCollection.utils.writeInsert(
+			await phrasePlaylistsCollection.utils.writeInsert(
 				PhrasePlaylistSchema.parse(data.playlist)
 			)
-			data.links.forEach((link) =>
-				playlistPhraseLinksCollection.utils.writeInsert(
-					PlaylistPhraseLinkSchema.parse(link)
-				)
+			await playlistPhraseLinksCollection.utils.writeInsert(
+				data.links.map((link) => PlaylistPhraseLinkSchema.parse(link))
 			)
-			phrasePlaylistUpvotesCollection.utils.writeInsert({
+			await phrasePlaylistUpvotesCollection.utils.writeInsert({
 				playlist_id: data.playlist.id,
 				deleted: false,
 			})

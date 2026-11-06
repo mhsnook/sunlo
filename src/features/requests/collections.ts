@@ -66,13 +66,12 @@ export const phraseRequestsCollection = createCollection(
 						{ submitted: m.changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(
+						await writeSyncedRow(
 							phraseRequestsCollection,
 							PhraseRequestSchema.parse(row)
 						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -120,8 +119,7 @@ export const phraseRequestUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.request_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			writeSyncedRows(phraseRequestUpvotesCollection, rows)
-			return { refetch: false }
+			await writeSyncedRows(phraseRequestUpvotesCollection, rows)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -141,11 +139,10 @@ export const phraseRequestUpvotesCollection = createCollection(
 								keys.every((key) => rows.some((row) => row.request_id === key)),
 							{ submitted: { changes, keys }, returned: rows }
 						)
-						writeSyncedRows(phraseRequestUpvotesCollection, rows)
+						await writeSyncedRows(phraseRequestUpvotesCollection, rows)
 					}
 				)
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -183,10 +180,12 @@ export const commentsCollection = createCollection(
 						{ submitted: m.changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(commentsCollection, RequestCommentSchema.parse(row))
+						await writeSyncedRow(
+							commentsCollection,
+							RequestCommentSchema.parse(row)
+						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -253,8 +252,7 @@ export const commentUpvotesCollection = createCollection(
 					ids.every((id) => rows.some((row) => row.comment_id === id)),
 				{ submitted: ids, returned: rows }
 			)
-			writeSyncedRows(commentUpvotesCollection, rows)
-			return { refetch: false }
+			await writeSyncedRows(commentUpvotesCollection, rows)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -274,11 +272,10 @@ export const commentUpvotesCollection = createCollection(
 								keys.every((key) => rows.some((row) => row.comment_id === key)),
 							{ submitted: { changes, keys }, returned: rows }
 						)
-						writeSyncedRows(commentUpvotesCollection, rows)
+						await writeSyncedRows(commentUpvotesCollection, rows)
 					}
 				)
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -334,8 +331,7 @@ export const messageTagsCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			writeSyncedRows(messageTagsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(messageTagsCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -355,10 +351,12 @@ export const messageTagsCollection = createCollection(
 							`Update on message_tag "${m.original.slug}" affected no rows (permission denied or row removed).`
 						)
 					}
-					writeSyncedRow(messageTagsCollection, MessageTagSchema.parse(data[0]))
+					await writeSyncedRow(
+						messageTagsCollection,
+						MessageTagSchema.parse(data[0])
+					)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -397,8 +395,7 @@ export const messageTagLinksCollection = createCollection(
 				allRowsMatch(submitted, returned),
 				{ submitted, returned }
 			)
-			writeSyncedRows(messageTagLinksCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(messageTagLinksCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -425,11 +422,10 @@ export const messageTagLinksCollection = createCollection(
 							),
 							{ submitted: { changes, keys }, returned: rows }
 						)
-						writeSyncedRows(messageTagLinksCollection, rows)
+						await writeSyncedRows(messageTagLinksCollection, rows)
 					}
 				)
 			)
-			return { refetch: false }
 		},
 	})
 )

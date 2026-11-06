@@ -75,7 +75,7 @@ export const useNotificationsRealtime = () => {
 					const row = NotificationSchema.parse(
 						payload.new as Tables<'notification'>
 					)
-					writeSyncedRow(notificationsCollection, row)
+					void writeSyncedRow(notificationsCollection, row)
 				}
 			)
 			.on(
@@ -90,7 +90,7 @@ export const useNotificationsRealtime = () => {
 					const row = NotificationSchema.parse(
 						payload.new as Tables<'notification'>
 					)
-					writeSyncedRow(notificationsCollection, row)
+					void writeSyncedRow(notificationsCollection, row)
 				}
 			)
 			.subscribe()

@@ -32,15 +32,14 @@ import {
 export const useRequestLinksPhraseIds = (
 	requestId: uuid
 ): UseLiveQueryResult<{ phrase_id: uuid }[]> => {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ link: commentPhraseLinksActive })
 				.where(({ link }) => eq(link.request_id, requestId))
 				.select(({ link }) => ({ phrase_id: link.phrase_id }))
 				.distinct(),
-		[requestId]
-	)
+	})
 }
 
 export const useRequestCounts = (
@@ -49,13 +48,12 @@ export const useRequestCounts = (
 	countComments: number | undefined
 	countLinks: number | undefined
 } => {
-	const countComments = useLiveQuery(
-		(q) =>
+	const countComments = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ comment: commentsActive })
 				.where(({ comment }) => eq(id, comment.request_id)),
-		[id]
-	).data?.length
+	}).data?.length
 	const countLinks = useRequestLinksPhraseIds(id).data?.length
 	return {
 		countComments,
@@ -73,8 +71,8 @@ export const useRequestCounts = (
 export const useRequestThread = (
 	requestId: uuid
 ): { comments: Array<RequestCommentType>; count: number } => {
-	const { data: threads } = useLiveQuery(
-		(q) =>
+	const { data: threads } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ comment: commentsCollection })
 				.where(({ comment }) =>
@@ -84,17 +82,15 @@ export const useRequestThread = (
 					)
 				)
 				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
-		[requestId]
-	)
-	const { data: replyParents } = useLiveQuery(
-		(q) =>
+	})
+	const { data: replyParents } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ reply: commentsActive })
 				.where(({ reply }) => eq(reply.request_id, requestId))
 				.select(({ reply }) => ({ parent_comment_id: reply.parent_comment_id }))
 				.distinct(),
-		[requestId]
-	)
+	})
 
 	return useMemo(() => {
 		const withReplies = new Set(
@@ -117,31 +113,29 @@ export const useRequestThread = (
 export const useRequest = (
 	id: uuid | undefined | null
 ): UseLiveQueryResult<PhraseRequestType> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			!id
 				? undefined
 				: q
 						.from({ req: phraseRequestsCollection })
 						.where(({ req }) => eq(req.id, id))
 						.findOne(),
-		[id]
-	)
+	})
 
 export function useAnyonesPhraseRequests(
 	uid: uuid,
 	lang?: string
 ): UseLiveQueryResult<PhraseRequestType[]> {
-	return useLiveQuery(
-		(q) => {
+	return useLiveQuery({
+		query: (q) => {
 			let query = q
 				.from({ request: phraseRequestsCollection })
 				.where(({ request }) => eq(request.requester_uid, uid))
 			if (lang) query = query.where(({ request }) => eq(request.lang, lang))
 			return query.orderBy(({ request }) => request.created_at, 'desc')
 		},
-		[lang, uid]
-	)
+	})
 }
 
 /**
@@ -153,28 +147,26 @@ export function useAnyonesPhraseRequests(
 export const useMyRequestUpvote = (
 	requestId: uuid
 ): PhraseRequestUpvoteType | undefined =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ upvote: phraseRequestUpvotesCollection })
 				.where(({ upvote }) => eq(upvote.request_id, requestId)),
-		[requestId]
-	).data?.[0]
+	}).data?.[0]
 
 /** Look up a single comment by ID. Returns undefined when no id is given. */
 export const useOneComment = (
 	commentId: uuid | undefined
 ): UseLiveQueryResult<RequestCommentType> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			!commentId
 				? undefined
 				: q
 						.from({ comment: commentsActive })
 						.where(({ comment }) => eq(comment.id, commentId))
 						.findOne(),
-		[commentId]
-	)
+	})
 
 /**
  * Comment-phrase-link rows for a single comment. Phrase hydration is the
@@ -185,27 +177,25 @@ export const useOneComment = (
 export const useCommentPhraseLinks = (
 	commentId: uuid | undefined | null
 ): UseLiveQueryResult<CommentPhraseLinkType[]> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			!commentId
 				? undefined
 				: q
 						.from({ link: commentPhraseLinksActive })
 						.where(({ link }) => eq(link.comment_id, commentId)),
-		[commentId]
-	)
+	})
 
 /** This user's upvote row for a comment — see {@link useMyRequestUpvote}. */
 export const useMyCommentUpvote = (
 	commentId: uuid
 ): CommentUpvoteType | undefined =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ upvote: commentUpvotesCollection })
 				.where(({ upvote }) => eq(upvote.comment_id, commentId)),
-		[commentId]
-	).data?.[0]
+	}).data?.[0]
 
 /**
  * A "set" of phrases derived from a request tag: every phrase contributed as
@@ -222,21 +212,18 @@ export type RequestTagSet = {
 
 export function useRequestTagSets(lang: string): RequestTagSet[] {
 	const { data: tags } = useMessageTags()
-	const { data: tagLinks } = useLiveQuery(
-		(q) => q.from({ link: messageTagLinksActive }),
-		[]
-	)
-	const { data: requests } = useLiveQuery(
-		(q) =>
+	const { data: tagLinks } = useLiveQuery({
+		query: (q) => q.from({ link: messageTagLinksActive }),
+	})
+	const { data: requests } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ request: phraseRequestsActive })
 				.where(({ request }) => eq(request.lang, lang)),
-		[lang]
-	)
-	const { data: phraseLinks } = useLiveQuery(
-		(q) => q.from({ link: commentPhraseLinksActive }),
-		[]
-	)
+	})
+	const { data: phraseLinks } = useLiveQuery({
+		query: (q) => q.from({ link: commentPhraseLinksActive }),
+	})
 
 	return useMemo(() => {
 		if (!tags?.length || !requests?.length) return []
@@ -295,18 +282,16 @@ export function useRequestsByMessageTag(lang: string): {
 	untagged: PhraseRequestType[]
 } {
 	const { data: tags } = useMessageTags()
-	const { data: tagLinks } = useLiveQuery(
-		(q) => q.from({ link: messageTagLinksActive }),
-		[]
-	)
-	const { data: requests } = useLiveQuery(
-		(q) =>
+	const { data: tagLinks } = useLiveQuery({
+		query: (q) => q.from({ link: messageTagLinksActive }),
+	})
+	const { data: requests } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ request: phraseRequestsActive })
 				.where(({ request }) => eq(request.lang, lang))
 				.orderBy(({ request }) => request.created_at, 'desc'),
-		[lang]
-	)
+	})
 
 	return useMemo(() => {
 		const reqs = requests ?? []
@@ -351,21 +336,20 @@ export function useRequestsByMessageTag(lang: string): {
 
 /** All active (non-archived) message tags, ordered by sort_order. */
 export const useMessageTags = () =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ tag: messageTagsCollection })
 				.where(({ tag }) => eq(tag.archived, false))
 				.orderBy(({ tag }) => tag.sort_order, 'asc'),
-		[]
-	)
+	})
 
 /** Active tags attached to a single message, ordered by sort_order. */
 export const useMessageTagsForMessage = (
 	messageId: uuid | undefined | null
 ): UseLiveQueryResult<MessageTagType[]> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			!messageId
 				? undefined
 				: q
@@ -379,8 +363,7 @@ export const useMessageTagsForMessage = (
 						.where(({ tag }) => eq(tag.archived, false))
 						.select(({ tag }) => tag)
 						.orderBy(({ tag }) => tag.sort_order, 'asc'),
-		[messageId]
-	)
+	})
 
 export function useAnyonesComments(
 	uid: uuid,
@@ -388,8 +371,8 @@ export function useAnyonesComments(
 ): UseLiveQueryResult<
 	{ comment: RequestCommentType; request: PhraseRequestType }[]
 > {
-	return useLiveQuery(
-		(q) => {
+	return useLiveQuery({
+		query: (q) => {
 			let query = q
 				.from({ comment: commentsActive })
 				.where(({ comment }) => eq(comment.uid, uid))
@@ -402,8 +385,7 @@ export function useAnyonesComments(
 
 			return query.orderBy(({ comment }) => comment.created_at, 'desc')
 		},
-		[lang, uid]
-	)
+	})
 }
 
 /**

@@ -177,12 +177,11 @@ function useCardStatusMutator(
 						undefined,
 						status
 					)
-					if (revertCount)
-						insertTx.isPersisted.promise.then(undefined, revertCount)
+					if (revertCount) insertTx.when('settled').then(undefined, revertCount)
 					return insertTx
 				})()
 
-		return tx.isPersisted.promise.then(
+		return tx.when('settled').then(
 			() => {
 				if (!options?.silent) {
 					toastSuccess(
@@ -411,12 +410,12 @@ function StartLearningDialog({
 				const tx = decksCollection.update(lang, (draft) => {
 					draft.archived = false
 				})
-				await tx.isPersisted.promise
+				await tx.when('settled')
 			} else {
 				// FK: user_card(uid, lang) → user_deck(uid, lang), so the deck must
 				// be persisted before onConfirmed() inserts the card.
 				const tx = decksCollection.insert(optimisticNewDeck(lang, userId!))
-				await tx.isPersisted.promise
+				await tx.when('settled')
 			}
 			deckReady = true
 			await onConfirmed()

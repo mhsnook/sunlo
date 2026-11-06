@@ -168,7 +168,7 @@ function NewReplyForm({
 					parentCommentId,
 					phraseLinks: [],
 				})
-				await tx.isPersisted.promise
+				await tx.when('settled')
 				void navigate({
 					to: '/learn/$lang/requests/$id',
 					params: { lang, id: requestId },
@@ -227,7 +227,7 @@ function EditReplyForm({
 					draft.content = value.content
 					draft.updated_at = new Date().toISOString()
 				})
-				await tx.isPersisted.promise
+				await tx.when('settled')
 				toastSuccess('Reply updated!')
 				onClose()
 			} catch (err) {

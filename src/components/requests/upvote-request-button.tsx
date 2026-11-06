@@ -26,7 +26,7 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 						request_id: request.id,
 						deleted: false,
 					})
-			tx.isPersisted.promise.then(
+			tx.when('settled').then(
 				() => toastSuccess(hasUpvoted ? 'Vote removed' : 'Vote added!'),
 				(err: unknown) => {
 					const message = err instanceof Error ? err.message : 'unknown error'

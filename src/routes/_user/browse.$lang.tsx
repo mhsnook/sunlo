@@ -138,14 +138,13 @@ function BrowseLanguagePage() {
 	const { data: allPhrases } = useLanguagePhrases(lang)
 	const { data: playlists } = useLangPlaylists(lang)
 	const tagSets = useRequestTagSets(lang)
-	const { data: requests } = useLiveQuery(
-		(q) =>
+	const { data: requests } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ request: phraseRequestsActive })
 				.where(({ request }) => eq(request.lang, lang))
 				.orderBy(({ request }) => request.created_at, 'desc'),
-		[lang]
-	)
+	})
 
 	const filteredPhrases = useMemo(
 		() =>

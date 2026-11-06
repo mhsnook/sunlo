@@ -5,7 +5,7 @@ import {
 	inArray,
 	toArray,
 } from '@tanstack/db'
-import { useLiveQuery } from '@tanstack/react-db'
+import { include, useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
@@ -151,36 +151,37 @@ export type PhraseProvenanceItem =
 export const usePhrasePlaylists = (
 	phraseId: uuid
 ): UseLiveQueryResult<PhraseProvenancePlaylist[]> => {
-	const parent = useLiveQuery(
-		(q) =>
+	const parent = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ phrase: phrasesCollection })
 				.where(({ phrase }) => eq(phrase.id, phraseId))
 				.select(({ phrase }) => ({
 					id: phrase.id,
-					playlists: q
-						.from({ link: playlistPhraseLinksActive })
-						.join(
-							{ playlist: phrasePlaylistsActive },
-							({ link, playlist }) => eq(link.playlist_id, playlist.id),
-							'inner'
-						)
-						.where(({ link }) => eq(link.phrase_id, phrase.id))
-						.select(({ playlist, link }) => ({
-							type: 'playlist' as const,
-							id: link.id,
-							playlistId: playlist.id,
-							title: playlist.title,
-							description: playlist.description,
-							href: link.href,
-							created_at: link.created_at,
-							uid: playlist.uid,
-						})),
+					playlists: include(
+						q
+							.from({ link: playlistPhraseLinksActive })
+							.join(
+								{ playlist: phrasePlaylistsActive },
+								({ link, playlist }) => eq(link.playlist_id, playlist.id),
+								'inner'
+							)
+							.where(({ link }) => eq(link.phrase_id, phrase.id))
+							.select(({ playlist, link }) => ({
+								type: 'playlist' as const,
+								id: link.id,
+								playlistId: playlist.id,
+								title: playlist.title,
+								description: playlist.description,
+								href: link.href,
+								created_at: link.created_at,
+								uid: playlist.uid,
+							}))
+					),
 				}))
 				.findOne(),
-		[phraseId]
-	)
-	return useLiveQuery(() => parent.data?.playlists, [parent.data?.playlists])
+	})
+	return useLiveQuery(() => parent.data?.playlists)
 }
 
 /**
@@ -190,40 +191,41 @@ export const usePhrasePlaylists = (
 export const usePhraseComments = (
 	phraseId: uuid
 ): UseLiveQueryResult<PhraseProvenanceComment[]> => {
-	const parent = useLiveQuery(
-		(q) =>
+	const parent = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ phrase: phrasesCollection })
 				.where(({ phrase }) => eq(phrase.id, phraseId))
 				.select(({ phrase }) => ({
 					id: phrase.id,
-					comments: q
-						.from({ link: commentPhraseLinksActive })
-						.join(
-							{ comment: commentsActive },
-							({ link, comment }) => eq(link.comment_id, comment.id),
-							'inner'
-						)
-						.join(
-							{ request: phraseRequestsActive },
-							({ comment, request }) => eq(comment.request_id, request.id),
-							'inner'
-						)
-						.where(({ link }) => eq(link.phrase_id, phrase.id))
-						.select(({ comment, request, link }) => ({
-							type: 'comment' as const,
-							id: link.id,
-							commentId: comment.id,
-							requestId: request.id,
-							prompt: request.prompt,
-							created_at: comment.created_at,
-							uid: comment.uid,
-						})),
+					comments: include(
+						q
+							.from({ link: commentPhraseLinksActive })
+							.join(
+								{ comment: commentsActive },
+								({ link, comment }) => eq(link.comment_id, comment.id),
+								'inner'
+							)
+							.join(
+								{ request: phraseRequestsActive },
+								({ comment, request }) => eq(comment.request_id, request.id),
+								'inner'
+							)
+							.where(({ link }) => eq(link.phrase_id, phrase.id))
+							.select(({ comment, request, link }) => ({
+								type: 'comment' as const,
+								id: link.id,
+								commentId: comment.id,
+								requestId: request.id,
+								prompt: request.prompt,
+								created_at: comment.created_at,
+								uid: comment.uid,
+							}))
+					),
 				}))
 				.findOne(),
-		[phraseId]
-	)
-	return useLiveQuery(() => parent.data?.comments, [parent.data?.comments])
+	})
+	return useLiveQuery(() => parent.data?.comments)
 }
 
 export interface RelatedCardSource {
@@ -250,8 +252,8 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 	const playlistIds = (playlists ?? []).map((p) => p.playlistId)
 	const requestIds = [...new Set((comments ?? []).map((c) => c.requestId))]
 
-	const { data: playlistSiblings } = useLiveQuery(
-		(q) =>
+	const { data: playlistSiblings } = useLiveQuery({
+		query: (q) =>
 			playlistIds.length === 0
 				? undefined
 				: q
@@ -267,11 +269,10 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 							playlistId: playlist.id,
 							title: playlist.title,
 						})),
-		[playlistIds.join(',')]
-	)
+	})
 
-	const { data: threadSiblings } = useLiveQuery(
-		(q) =>
+	const { data: threadSiblings } = useLiveQuery({
+		query: (q) =>
 			requestIds.length === 0
 				? undefined
 				: q
@@ -287,8 +288,7 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 							requestId: request.id,
 							prompt: request.prompt,
 						})),
-		[requestIds.join(',')]
-	)
+	})
 
 	const sourceMap = new Map<uuid, RelatedCardSource[]>()
 

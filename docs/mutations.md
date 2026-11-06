@@ -2,7 +2,7 @@
 
 ## Mutations Pattern
 
-**Standard:** define persistence on the collection itself via `onInsert / onUpdate` handlers (always soft delete or archive with row updates, because the realtime slicing and RLS are funny about deletes), then call `collection.insert / update` from components. The optimistic update lands in the same tick; throwing from the handler rolls it back automatically. Attach success/error UX to the returned `Transaction.isPersisted.promise`.
+**Standard:** define persistence on the collection itself via `onInsert / onUpdate` handlers (always soft delete or archive with row updates, because the realtime slicing and RLS are funny about deletes), then call `collection.insert / update` from components. The optimistic update lands in the same tick; throwing from the handler rolls it back automatically. Attach success/error UX to the returned transaction's `tx.when('settled')`.
 
 ```typescript
 // features/<domain>/collections.ts — persistence lives here
@@ -14,13 +14,12 @@ export const cardsCollection = createCollection(
 			const { data } = await supabase
 				.from('user_card')
 				.insert(rows) // one request, however many rows the transaction sent
-				.select() // ask for the rows back so we can skip the refetch
+				.select() // ask for the rows back so the handler can write them
 				.throwOnError()
-			writeSyncedRows(
+			await writeSyncedRows(
 				cardsCollection,
 				data?.map((row) => CardSchema.parse(row)) ?? []
 			)
-			return { refetch: false } // the rows are written back; skip the reload
 		},
 	})
 )
@@ -40,7 +39,7 @@ const addCard = (phrase: PhraseType, status: CardStatus) => {
 			updated_at: nowIso,
 		}))
 	)
-	tx.isPersisted.promise.then(
+	tx.when('settled').then(
 		() => toastSuccess(STATUS_TOAST_MESSAGES[status]),
 		(err) => {
 			toastError('Failed to add this card to your deck')
@@ -58,7 +57,7 @@ See `src/components/card-pieces/card-status-dropdown.tsx` for the call site this
 
 ### When the optimistic state is worse than waiting
 
-`collection.insert / update` take `{ optimistic: false }`. The handler still runs and the transaction still resolves through `isPersisted.promise`; the row just never enters the optimistic layer, so it appears when the handler writes the server's row back.
+`collection.insert / update` take `{ optimistic: false }`. The handler still runs and the transaction still resolves through `tx.when('settled')`; the row just never enters the optimistic layer, so it appears when the handler writes the server's row back.
 
 Reach for it when a rollback would be more confusing than a wait. Friend requests are the case in the app today: `validate_friend_request_action` rejects several transitions, and a relationship that reads "friends" for a moment and then reads "unconnected" again is a worse thing to show than a button that waits and then reports the error. `useFriendRequestAction` writes non-optimistically and holds its own `pendingAction` for the spinner.
 
@@ -69,11 +68,11 @@ This is the exception, not the default. Most writes are safe to show immediately
 - **Realtime sync handlers** writing supabase channel events into a collection (`writeSyncedRow(chatMessagesCollection, row)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations that write several collections in one server round-trip** (e.g. `create_comment_with_phrases`, which writes the comment, its phrases and the links together) — `createOptimisticAction` keeps the optimistic writes across those collections atomic.
 
-## Write the rows back, then skip the refetch
+## Write the rows back instead of refetching
 
-Returning all affected rows from the supabase API and writing them back to the collection with `writeSyncedRows` allows us to skip refetching the whole table after mutations (`{ refetch: false }`).
+A Query Collection does not reload its table when a handler returns. The handler asks the supabase API for every affected row with `.select()`, and awaits `writeSyncedRows` to write them into the collection. This keeps the collection current without a full-table fetch.
 
-A collection holds two layers. The optimistic layer carries your change from the moment you make it. The synced layer holds what the server last told us. When the transaction ends, the optimistic overlay drops and the user sees only the synced layer, so we have to write back the server's affected rows when we skip the refetch or else the UI will drop all traces of the newly mutated row.
+A collection holds two layers. The optimistic layer carries your change from the moment you make it. The synced layer holds what the server last told us. When the transaction ends, the optimistic overlay drops and the user sees only the synced layer, so the handler has to write back the server's affected rows before it returns, or else the UI drops all traces of the newly mutated row.
 
 Trust the server's row over your local copy. "The optimistic value already matches the server" is an assumption, not a fact — check it with `should()` rather than build on it.
 
@@ -193,8 +192,8 @@ The phrases domain uses two named collections instead of an `*Active` suffix, be
 
 - **Persistence lives on the collection** via `onInsert/onUpdate` handlers; call sites use `collection.insert / update` for optimistic local state
 - **Throw from the handler** to roll the optimistic state back
-- **Write the server's rows back before returning `{ refetch: false }`** — a handler that skips the refetch without writing the rows leaves the user looking at the pre-mutation row. See [Write the rows back, then skip the refetch](#write-the-rows-back-then-skip-the-refetch)
-- **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
+- **Await the write-back of the server's rows before the handler returns** — a handler that writes nothing back leaves the user looking at the pre-mutation row. See [Write the rows back instead of refetching](#write-the-rows-back-instead-of-refetching)
+- **Wire success/error toasts to `tx.when('settled')`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
 - **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
 - For a mutation that writes several collections in one round-trip, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
 
@@ -211,7 +210,7 @@ Both go away when persistence moves onto the collection. The call site becomes o
 
 ```typescript
 const tx = phrasesCollection.insert({ id: crypto.randomUUID(), ...values })
-tx.isPersisted.promise.then(
+tx.when('settled').then(
 	() => toastSuccess('Created!'),
 	(err) => {
 		toastError('Failed to create')
@@ -229,7 +228,7 @@ Forms use **TanStack Form** through the app's composed hook — `useAppForm` fro
 1. Define a Zod schema for validation and pass it to the form's `validators`
 2. Create the form with `useAppForm({ defaultValues, validators, onSubmit })`
 3. Build fields from the pre-wired components registered in `form-hook.ts` — `form.AppField` with `EmailInput` / `PasswordInput` / `TextInput` / `TextareaInput`, plus `FormAlert` and `SubmitButton` form components
-4. In `onSubmit`, call the collection mutation (`collection.insert/update`) and wire toasts to `tx.isPersisted.promise`
+4. In `onSubmit`, call the collection mutation (`collection.insert/update`) and wire toasts to `tx.when('settled')`
 5. Copy an existing form (e.g. `src/components/requests/request-form.tsx`, `src/components/login-card-body.tsx`) rather than wiring from scratch
 
 ## Sync postures — which tables sync how

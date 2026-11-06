@@ -147,7 +147,7 @@ function InlinePhraseForm({
 			cards,
 		})
 		try {
-			await tx.isPersisted.promise
+			await tx.when('settled')
 			invalidateFeed(lang)
 			toastSuccess(
 				cards.length

@@ -49,13 +49,12 @@ function SortIcon({
 function AdminRequestsIndex() {
 	const { lang } = Route.useParams()
 	const { isAdmin } = useAuth()
-	const { data: requests, isLoading } = useLiveQuery(
-		(q) =>
+	const { data: requests, isLoading } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ request: phraseRequestsCollection })
 				.where(({ request }) => eq(request.lang, lang)),
-		[lang]
-	)
+	})
 
 	const [search, setSearch] = useState('')
 	const [sortField, setSortField] = useState<SortField>('created')

@@ -103,7 +103,10 @@ export const deleteComment = createOptimisticAction<uuid>({
 				`Delete on request_comment ${commentId} affected no rows (permission denied or comment removed).`
 			)
 		}
-		writeSyncedRow(commentsCollection, RequestCommentSchema.parse(comment))
+		await writeSyncedRow(
+			commentsCollection,
+			RequestCommentSchema.parse(comment)
+		)
 
 		// `cascade_soft_delete_comment` flagged this comment's links; read them
 		// back rather than assume which ones it touched. The SELECT policy still
@@ -113,7 +116,7 @@ export const deleteComment = createOptimisticAction<uuid>({
 			.select()
 			.eq('comment_id', commentId)
 			.throwOnError()
-		writeSyncedRows(
+		await writeSyncedRows(
 			commentPhraseLinksCollection,
 			links?.map((row) => CommentPhraseLinkSchema.parse(row)) ?? []
 		)

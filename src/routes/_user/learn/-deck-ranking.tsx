@@ -31,13 +31,12 @@ export function useRecencyWeightedScores(): Record<string, number> {
 	const startDate = useSevenDayStartDate()
 	const today = todayString()
 
-	const query = useLiveQuery(
-		(q) =>
+	const query = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) => gte(review.day_session, startDate)),
-		[startDate]
-	)
+	})
 
 	return useMemo(() => {
 		const scores: Record<string, number> = {}
@@ -54,8 +53,8 @@ export function useRecencyWeightedScores(): Record<string, number> {
 /** Number of unique days (in the last 7) the user studied a specific lang. */
 export function useLangActiveDays(lang: string | undefined) {
 	const startDate = useSevenDayStartDate()
-	const query = useLiveQuery(
-		(q) =>
+	const query = useLiveQuery({
+		query: (q) =>
 			!lang
 				? undefined
 				: q
@@ -63,8 +62,7 @@ export function useLangActiveDays(lang: string | undefined) {
 						.where(({ day }) =>
 							and(eq(day.lang, lang), gte(day.day_session, startDate))
 						),
-		[lang, startDate]
-	)
+	})
 	return useMemo(() => {
 		const set = new Set<string>()
 		query.data?.forEach((d) => set.add(d.day_session))
