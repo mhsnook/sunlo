@@ -271,10 +271,6 @@ inspector_port = 8083
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 # entrypoint = "./functions/MY_FUNCTION_NAME/index.ts"
 
-[functions.search]
-enabled = true
-verify_jwt = true
-
 [functions.embed-corpus-row]
 enabled = true
 # Internal-only: called by Postgres triggers (via pg_net) on source-table

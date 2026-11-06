@@ -28,6 +28,25 @@
 	"ignorePatterns": ["dist/", "src-tauri/", "scripts/"],
 	"overrides": [
 		{
+			// packages/shared runs in every runtime: see its README.md.
+			"files": ["packages/shared/**/*.ts"],
+			"plugins": ["import"],
+			"rules": {
+				"import/extensions": ["error", "always", { "ignorePackages": true }],
+				"no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["*", "!./*"],
+								"message": "packages/shared imports only same-folder files: see packages/shared/README.md."
+							}
+						]
+					}
+				]
+			}
+		},
+		{
 			"files": [
 				"src/**/*.{ts,tsx}",
 				"vite.config.ts",
