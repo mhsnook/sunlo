@@ -30,6 +30,9 @@ type RunFn = (
 ) => Promise<unknown>
 
 function makeEnv(overrides: { limitOk?: boolean; content?: unknown } = {}) {
+	const searchLimit = vi
+		.fn()
+		.mockResolvedValue({ success: overrides.limitOk ?? true })
 	const run = vi.fn<RunFn>().mockResolvedValue({
 		choices: [{ message: { content: overrides.content ?? '{"phrases":[]}' } }],
 	})
@@ -42,11 +45,9 @@ function makeEnv(overrides: { limitOk?: boolean; content?: unknown } = {}) {
 		EXTRACT_LIMITER: {
 			limit: vi.fn().mockResolvedValue({ success: overrides.limitOk ?? true }),
 		},
-		SEARCH_LIMITER: {
-			limit: vi.fn().mockResolvedValue({ success: overrides.limitOk ?? true }),
-		},
+		SEARCH_LIMITER: { limit: searchLimit },
 	}
-	return { env: env as unknown as Env, run }
+	return { env: env as unknown as Env, run, searchLimit }
 }
 
 function post(
@@ -173,6 +174,44 @@ describe('POST /search', () => {
 		const { env } = makeEnv({ limitOk: false })
 		expect((await search(env)).status).toBe(429)
 		expect(searchCorpus).not.toHaveBeenCalled()
+	})
+
+	it('limits a signed-in user by their id', async () => {
+		searchCorpus.mockResolvedValue([])
+		const { env, searchLimit } = makeEnv()
+		expect((await search(env)).status).toBe(200)
+		expect(searchLimit).toHaveBeenCalledWith({ key: 'user-1' })
+	})
+
+	it('serves a signed-out visitor and limits them by IP', async () => {
+		searchCorpus.mockResolvedValue([])
+		const { env, searchLimit } = makeEnv()
+		const res = await app.request(
+			'/api/search',
+			{
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json',
+					'cf-connecting-ip': '203.0.113.7',
+				},
+				body: JSON.stringify(SEARCH),
+			},
+			env
+		)
+		expect(res.status).toBe(200)
+		expect(getClaims).not.toHaveBeenCalled()
+		expect(searchLimit).toHaveBeenCalledWith({ key: 'ip:203.0.113.7' })
+	})
+
+	it('treats the anon key as signed out', async () => {
+		searchCorpus.mockResolvedValue([])
+		getClaims.mockResolvedValue({
+			data: { claims: { role: 'anon' } },
+			error: null,
+		})
+		const { env, searchLimit } = makeEnv()
+		expect((await search(env)).status).toBe(200)
+		expect(searchLimit).toHaveBeenCalledWith({ key: 'ip:unknown' })
 	})
 
 	it('rejects a body that is not a search request', async () => {
