@@ -24,7 +24,13 @@ import type { Wake } from '../../worker/crew/room'
 import type { RunKey } from '../../worker/crew/runs'
 import { toBase64 } from '../../worker/images'
 import { roomFor, wake } from '../crew'
-import { assertBlocks, Options, Text, toActions } from './posting'
+import {
+	answerFromAttached,
+	assertBlocks,
+	Options,
+	Text,
+	toActions,
+} from './posting'
 
 const Id = v.pipe(v.number(), v.integer())
 
@@ -53,11 +59,6 @@ const defaultActions: Record<
 // own room, bringing the admin cards, side-threads, and keeping its
 // workspace. In a side-thread's own run (`thread`), reply_in_thread answers
 // that thread, and pass_note is left out.
-// A harness prompt runs with the agent's own instructions and tools, and
-// those instructions say to look at an image with look_at_image. Without
-// this, the model calls the tool again from inside it, which Flue refuses.
-export const ANSWER_FROM_ATTACHED = `The pictures are attached to this message, so you are looking at them now. Answer from what you see. Do not call look_at_image, look_at_screen or any other tool: they would only show you the same pictures again. If no picture reached you, say so plainly instead of guessing.`
-
 export function crewTools(
 	agent: CrewKey,
 	thread: RunKey,
@@ -261,7 +262,7 @@ Their answer comes back to you.`,
 			const image = await (await roomFor()).image(data.id)
 			if (!image) throw new Error(`No image ${data.id}.`)
 			const seen = await harness.prompt(
-				`This is image ${data.id} (${image.width}×${image.height}). ${ANSWER_FROM_ATTACHED}\n\nAnswer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
+				`This is image ${data.id} (${image.width}×${image.height}). ${answerFromAttached(1)}\n\nAnswer this question about it, plainly and specifically: ${data.question}\n\nQuote any text in it exactly where it matters. Say what is there; do not guess at what is out of frame.`,
 				{
 					images: [
 						{
@@ -270,6 +271,7 @@ Their answer comes back to you.`,
 							mimeType: image.mimeType,
 						},
 					],
+					thinkingLevel: 'low',
 				}
 			)
 			return { output: { looked_at: `image ${data.id}`, seen: seen.text } }

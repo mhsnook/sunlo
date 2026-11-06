@@ -29,8 +29,7 @@ import {
 } from '../../worker/painter'
 import { checkSvg, svgPage, svgViewport } from '../../worker/svg'
 import { roomFor } from '../crew'
-import { ANSWER_FROM_ATTACHED } from './crew'
-import { assertBlocks, Text } from './posting'
+import { answerFromAttached, assertBlocks, Text } from './posting'
 
 const Id = v.pipe(v.number(), v.integer())
 const FrameInput = v.picklist(['phone', 'desktop'])
@@ -97,7 +96,7 @@ export function designTools(agent: CrewKey) {
 				throw new Error('Give a url or a sketch to look at.')
 			}
 			const seen = await harness.prompt(
-				`These are screenshots of ${what}. ${ANSWER_FROM_ATTACHED}\n\nAnswer this question about them as a product designer would, plainly and specifically: ${data.question}\n\nThen note anything else a designer would flag: hierarchy, spacing, type, colour, contrast, and text that is cut off, overlapping or hard to read. Quote on-screen text exactly where it matters. Say what is there; do not guess at what is off screen.`,
+				`These are screenshots of ${what}. ${answerFromAttached(images.length)}\n\nAnswer this question about them as a product designer would, plainly and specifically: ${data.question}\n\nThen note anything else a designer would flag: hierarchy, spacing, type, colour, contrast, and text that is cut off, overlapping or hard to read. Quote on-screen text exactly where it matters. Say what is there; do not guess at what is off screen.`,
 				{ images }
 			)
 			return { output: { looked_at: what, seen: seen.text } }
