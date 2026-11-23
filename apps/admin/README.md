@@ -254,6 +254,7 @@ Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time
 
 - `activity_between`: signups, reviews and each reviewer, new decks, and library and chat counts for a window
 - `run_sql`: one SELECT, run as `admin_reader` with an 8-second timeout and at most 200 rows
+- `list_feedback` and `triage_feedback`: what people sent from the app's feedback page, and the crew's triage of it ("Feedback", below)
 - `post_to_common_room`: a message in the Common Room, optionally with 2 or 3 buttons
 - `post_to_room`: a message in the agent's own room
 - `bring_to_admin`: a card in the agent's own room
@@ -270,6 +271,15 @@ Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k
 Every model call the admin Worker makes, for the agents, CLEF, the painter and voice, goes through the `sunlo-admin` AI Gateway (`AI_GATEWAY_ID`), so its logs, costs and limits stay apart from the app's `sunlo-app` gateway. The gateway has to exist in the Cloudflare dashboard: only `default` is created on demand. `.flue/app.ts` hands the id to Flue's provider, whose own default is `default`.
 
 **Context size.** Every step of a run sends the agent's whole conversation, so the size of that conversation is the cost of each step. Workers AI caches the prompt (Flue sends `x-session-affinity`), and a cached token costs about a fifth as much. Flue compacts a conversation when it nears the model's window: it folds the older messages into a summary, written by the agent's own model, and keeps the latest 8,000 tokens as they are. That is about 242,000 tokens on Kimi, but about a million on DeepSeek (`command-2`) and Claude (`product-2`), so `useCrewMember` caps every conversation at about 240,000 tokens (`CONTEXT_BUDGET`) with Flue's `compaction` setting. Kimi keeps Flue's default. What an agent must keep past a summary belongs in its memory, which every briefing carries.
+
+### Feedback
+
+Anyone can send feedback from the app's `/feedback` page, signed in or not: a bug, a feature idea, or something missing from the library. Each send is a row of `public.feedback` (`supabase/migrations/20261123120000_add_feedback.sql`), which RLS lets anyone insert and only a signed-in sender read back. A signed-out sender can leave an email for a reply.
+
+- **Reading.** `list_feedback` reads the rows as `admin_reader`, newest first, at most 50, and by default only the ones the crew has not triaged. It never returns the sender's email, only whether they left one. Every agent with the database tools has it, which is everyone but Riker.
+- **Triage.** `triage_feedback` records an outcome for one item: filed (with the GitHub issue number), planned, duplicate, for the admin, not planned, or spam, with the room that owns it and a note. `admin_reader` cannot write, so the triage lives in the room's `feedback_triage` table, keyed by the row's id, and a later triage of the same item replaces the earlier one. Each triage appears in the run's receipt.
+- **Who triages.** Bugs and feature ideas belong to the Product room, and library needs to the Library room (`feedbackRoomOf` in `shared/feedback.ts`). Until Hoshi starts, O'Brien triages library needs too and keeps them in the Library room. O'Brien's daily run ends by reading new feedback.
+- **The Feedback page** (`/feedback`, linked beside Activity) lists what waits for triage, or everything, with each item's triage and, when the sender left one, a link to reply by email. It reads `GET /api/feedback` (`?open=1` for what waits), which joins the rows with the room's triage (`worker/feedback.ts`).
 
 ### GitHub: milestones and epics
 

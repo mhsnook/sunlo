@@ -264,6 +264,54 @@ export type Database = {
 				}
 				Relationships: []
 			}
+			feedback: {
+				Row: {
+					contact_email: string | null
+					created_at: string
+					id: string
+					kind: string
+					lang: string | null
+					message: string
+					page_url: string | null
+					uid: string | null
+				}
+				Insert: {
+					contact_email?: string | null
+					created_at?: string
+					id?: string
+					kind: string
+					lang?: string | null
+					message: string
+					page_url?: string | null
+					uid?: string | null
+				}
+				Update: {
+					contact_email?: string | null
+					created_at?: string
+					id?: string
+					kind?: string
+					lang?: string | null
+					message?: string
+					page_url?: string | null
+					uid?: string | null
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'feedback_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'feedback_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+				]
+			}
 			friend_request_action: {
 				Row: {
 					action_type:

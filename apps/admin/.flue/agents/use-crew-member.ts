@@ -31,6 +31,7 @@ import {
 	runSqlTool,
 } from '../tools/database'
 import { crewTools } from '../tools/crew'
+import { FEEDBACK_NOTES, feedbackTools } from '../tools/feedback'
 import { githubTools } from '../tools/github'
 import type { RunKey } from '../../worker/crew/runs'
 
@@ -81,6 +82,7 @@ export function useCrewMember(
 	if (database) {
 		useTool(activityBetweenTool)
 		useTool(runSqlTool)
+		for (const tool of feedbackTools(agent, thread)) useTool(tool)
 	}
 
 	const delivery = useDelivery()
@@ -108,6 +110,7 @@ export function useCrewMember(
 	useInstruction(thread ? threadInstructions : runInstructions(agent))
 	if (github) useInstruction(githubInstructions(github))
 	if (database) useInstruction(DATABASE_NOTES)
+	if (database) useInstruction(FEEDBACK_NOTES)
 	return `Who you are, and how you do your job, is the first section of your <crew-context>, "Who you are". The admin keeps that text and may change it between runs: follow the latest one as your own instructions. Where it and the rest of these instructions differ, it wins.`
 }
 

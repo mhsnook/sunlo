@@ -13,6 +13,7 @@ This is the model behind the admin crew: what a room, a seat and a run are, wher
 
 - **One `CrewRoom` Durable Object holds every room** (`worker/crew/room.ts`, one instance named `crew`). Rooms have no Durable Object of their own: a room is rows with `place = 'room'` (the Common Room) or `place = 'room:<room>'`.
 - **What belongs to a room:** messages, cards, documents, the charter, sketches, paintings and SVGs.
+- **The crew's triage of user feedback** is the room's too (`feedback_triage`), keyed by the id of the `public.feedback` row it is about, since `admin_reader` cannot write to Postgres.
 - **What belongs to a seat:** to-dos, memory, open items, and the character the admin edits. A seat's workspace survives a change of display name, and of model.
 - **Each agent is a Flue agent and its own Durable Object class** (`FlueProduct1Agent`), named after its identity, the `agentName` static. Flue keys an agent's conversations by that identity.
 - **Every agent keeps one running conversation, `memory`** (`CONVERSATION` in `room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. A side-thread runs in a conversation of its own (`thread:<id>`) and sees only the thread.

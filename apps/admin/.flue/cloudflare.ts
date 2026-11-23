@@ -16,7 +16,7 @@ export default {
 			await deliver(
 				'product-1',
 				'schedule',
-				'Your daily run. Check what happened since your last run, and post if something matters for the plan.',
+				'Your daily run. Check what happened since your last run, and post if something matters for the plan. Then read new feedback with list_feedback, and triage each item you can.',
 				attributes
 			)
 		}

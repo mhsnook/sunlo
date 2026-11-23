@@ -26,6 +26,9 @@ import {
 	verifyGithubSignature,
 } from '../worker/crew/github-log'
 import { createApi } from '../worker/api'
+import { withSql } from '../worker/db'
+import { feedbackRows, withTriage } from '../worker/feedback'
+import { feedbackKinds, type FeedbackListType } from '../shared/feedback'
 import { imageInfo, verifyImageLink } from '../worker/images'
 import { SVG_POLICY } from '../worker/svg'
 import { crewProvider } from '../worker/models'
@@ -71,6 +74,25 @@ api.get('/crew/room', async (c) => {
 		...(await room.snapshot(c.get('admin').uid, new URL(c.req.url).origin)),
 		githubRepo: c.env.GITHUB_REPO,
 	})
+})
+
+// ?open=1 lists only what the crew has not triaged yet.
+api.get('/feedback', async (c) => {
+	const kind = z.enum(feedbackKinds).safeParse(c.req.query('kind'))
+	const triage = await (await roomFor()).feedbackTriage()
+	const { rows, untriaged } = await withSql(c.env.HYPERDRIVE, 30_000, (sql) =>
+		feedbackRows(sql, {
+			kind: kind.success ? kind.data : null,
+			triaged: triage.map((t) => t.feedback_id),
+			untriagedOnly: c.req.query('open') === '1',
+			withEmail: true,
+			limit: 200,
+		})
+	)
+	return c.json({
+		items: withTriage(rows, triage),
+		untriaged,
+	} satisfies FeedbackListType)
 })
 
 api.get('/crew/runs', async (c) => {

@@ -123,6 +123,7 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 | `coach`         | coachToolInputs, CoachInitialData (Valibot, for Flue)     | (none — the conversation lives in the Flue agent; zustand for page state)  | useCoach, useDeckMeter, useCoachThread                             |
 | `notifications` | Notification                                              | notifications                                                              | useNotifications, useUnreadCount, useMarkAsRead                    |
 | `playlists`     | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                                       | useOnePlaylist, useLangPlaylists                                   |
+| `feedback`      | FeedbackForm, FeedbackKind                                | (none — insert-only; a signed-out sender cannot read the row back)         | useSendFeedback                                                    |
 | `feed`          | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature)                    | useFeedLang                                                        |
 
 **Imports**: consumer code (routes, components) imports from the barrel (`@/features/deck`); cross-domain wiring imports specific files (`@/features/deck/collections`); intra-feature imports are relative (`./schemas`). Always use the `@/` alias otherwise.

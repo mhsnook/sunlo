@@ -17,6 +17,16 @@ Register a new id here, not in the main app's registry.
 | `admin-metric-panel` + `data-key=<metric>` | Daily chart panel for one metric (e.g. `reviews`)       |
 | `admin-range-option` + `data-key=<days>`   | Date range link: 7, 14 or 30 days                       |
 
+## The Feedback page at `/feedback`
+
+| Selector                                | Purpose                                                         |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `admin-feedback-link`                   | Sidebar footer link to the Feedback page                        |
+| `admin-feedback-filter` + `data-key`    | Filter link: `waiting` (not triaged yet) or `all`               |
+| `admin-feedback-item` + `data-key=<id>` | One feedback item                                               |
+| `admin-feedback-triage`                 | The crew's triage of an item: outcome, issue, room, agent, note |
+| `admin-feedback-empty`                  | Shown when the list is empty                                    |
+
 ## The Common Room at `/`, and each subject's room at `/room/<room>`
 
 | Selector                                                                                                             | Purpose                                                                                                         |

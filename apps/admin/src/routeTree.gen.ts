@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AdminIndexRouteImport } from './routes/_admin/index'
+import { Route as AdminFeedbackRouteImport } from './routes/_admin/feedback'
 import { Route as AdminActivityRouteImport } from './routes/_admin/activity'
 import { Route as AdminRoomRoomRouteImport } from './routes/_admin/room.$room'
 
@@ -29,6 +30,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminActivityRoute = AdminActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -44,11 +50,13 @@ export interface FileRoutesByFullPath {
   '/': typeof AdminIndexRoute
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
+  '/feedback': typeof AdminFeedbackRoute
   '/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/activity': typeof AdminActivityRoute
+  '/feedback': typeof AdminFeedbackRoute
   '/': typeof AdminIndexRoute
   '/room/$room': typeof AdminRoomRoomRoute
 }
@@ -57,19 +65,21 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/_admin/activity': typeof AdminActivityRoute
+  '/_admin/feedback': typeof AdminFeedbackRoute
   '/_admin/': typeof AdminIndexRoute
   '/_admin/room/$room': typeof AdminRoomRoomRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/activity' | '/room/$room'
+  fullPaths: '/' | '/login' | '/activity' | '/feedback' | '/room/$room'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/activity' | '/' | '/room/$room'
+  to: '/login' | '/activity' | '/feedback' | '/' | '/room/$room'
   id:
     | '__root__'
     | '/_admin'
     | '/login'
     | '/_admin/activity'
+    | '/_admin/feedback'
     | '/_admin/'
     | '/_admin/room/$room'
   fileRoutesById: FileRoutesById
@@ -102,6 +112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/feedback': {
+      id: '/_admin/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/activity': {
       id: '/_admin/activity'
       path: '/activity'
@@ -121,12 +138,14 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminRoomRoomRoute: typeof AdminRoomRoomRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminActivityRoute: AdminActivityRoute,
+  AdminFeedbackRoute: AdminFeedbackRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminRoomRoomRoute: AdminRoomRoomRoute,
 }

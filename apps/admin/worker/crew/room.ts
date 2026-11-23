@@ -143,6 +143,7 @@ import { RunLog, type RunLogKey } from './run-log'
 import { mainRunPosted, settledStatus, type PostRow, type RunKey } from './runs'
 import type { StepChange } from './steps'
 import { planReply } from './threads'
+import type { FeedbackOutcome, FeedbackTriageType } from '../../shared/feedback'
 import { withSql } from '../db'
 
 // The room's one instance. Renaming it starts a fresh room and leaves the
@@ -649,6 +650,17 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				live_at text,
 				url text not null,
 				primary key (worker, sha)
+			);
+			-- The crew's triage of each row of public.feedback, keyed by the
+			-- row's uuid. A later triage of the same feedback replaces it.
+			create table if not exists feedback_triage (
+				feedback_id text primary key,
+				outcome text not null,
+				room text not null,
+				issue integer,
+				note text,
+				agent text not null,
+				at text not null
 			);
 			create table if not exists schema_version (version integer not null);
 		`
@@ -3389,6 +3401,38 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			where agent = ${agent} and run is ${thread} and at >= ${since}
 				and what like 'edited %'`[0]
 		return { drafts, edits }
+	}
+
+	feedbackTriage(): Array<FeedbackTriageType> {
+		return this.sql<FeedbackTriageType>`
+			select feedback_id, outcome, room, issue, note, agent, at
+			from feedback_triage`
+	}
+
+	triageFeedback(
+		agent: CrewKey,
+		input: {
+			feedbackId: string
+			outcome: FeedbackOutcome
+			room: RoomKey
+			issue: number | null
+			note: string | null
+		},
+		thread: RunKey
+	) {
+		this.sql`
+			insert into feedback_triage (feedback_id, outcome, room, issue, note, agent, at)
+			values (${input.feedbackId}, ${input.outcome}, ${input.room}, ${input.issue},
+				${input.note}, ${agent}, ${now()})
+			on conflict (feedback_id) do update set
+				outcome = excluded.outcome, room = excluded.room, issue = excluded.issue,
+				note = excluded.note, agent = excluded.agent, at = excluded.at`
+		const issue = input.issue ? ` (#${input.issue})` : ''
+		this.workspaceEdited(
+			agent,
+			`triaged feedback ${input.feedbackId.slice(0, 8)} as ${input.outcome}${issue}`,
+			thread
+		)
 	}
 
 	// An agent's own edit, in the workspace or on GitHub: it goes in the

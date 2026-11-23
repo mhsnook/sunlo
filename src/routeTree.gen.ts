@@ -24,6 +24,7 @@ import { Route as UserNotificationsRouteImport } from './routes/_user/notificati
 import { Route as UserLearnRouteImport } from './routes/_user/learn'
 import { Route as UserGettingStartedRouteImport } from './routes/_user/getting-started'
 import { Route as UserFriendsRouteImport } from './routes/_user/friends'
+import { Route as UserFeedbackRouteImport } from './routes/_user/feedback'
 import { Route as UserBrowseRouteImport } from './routes/_user/browse'
 import { Route as UserAcceptInviteRouteImport } from './routes/_user/accept-invite'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
@@ -241,6 +242,11 @@ const UserGettingStartedRoute = UserGettingStartedRouteImport.update({
 const UserFriendsRoute = UserFriendsRouteImport.update({
   id: '/friends',
   path: '/friends',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserFeedbackRoute = UserFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => UserRoute,
 } as any)
 const UserBrowseRoute = UserBrowseRouteImport.update({
@@ -611,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof AuthSignupRoute
   '/accept-invite': typeof UserAcceptInviteRoute
   '/browse': typeof UserBrowseRouteWithChildren
+  '/feedback': typeof UserFeedbackRoute
   '/friends': typeof UserFriendsRouteWithChildren
   '/getting-started': typeof UserGettingStartedRoute
   '/learn': typeof UserLearnRouteWithChildren
@@ -693,6 +700,7 @@ export interface FileRoutesByTo {
   '/set-new-password': typeof AuthSetNewPasswordRoute
   '/signup': typeof AuthSignupRoute
   '/accept-invite': typeof UserAcceptInviteRoute
+  '/feedback': typeof UserFeedbackRoute
   '/getting-started': typeof UserGettingStartedRoute
   '/notifications': typeof UserNotificationsRoute
   '/welcome': typeof UserWelcomeRoute
@@ -769,6 +777,7 @@ export interface FileRoutesById {
   '/_auth/signup': typeof AuthSignupRoute
   '/_user/accept-invite': typeof UserAcceptInviteRoute
   '/_user/browse': typeof UserBrowseRouteWithChildren
+  '/_user/feedback': typeof UserFeedbackRoute
   '/_user/friends': typeof UserFriendsRouteWithChildren
   '/_user/getting-started': typeof UserGettingStartedRoute
   '/_user/learn': typeof UserLearnRouteWithChildren
@@ -857,6 +866,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/accept-invite'
     | '/browse'
+    | '/feedback'
     | '/friends'
     | '/getting-started'
     | '/learn'
@@ -939,6 +949,7 @@ export interface FileRouteTypes {
     | '/set-new-password'
     | '/signup'
     | '/accept-invite'
+    | '/feedback'
     | '/getting-started'
     | '/notifications'
     | '/welcome'
@@ -1014,6 +1025,7 @@ export interface FileRouteTypes {
     | '/_auth/signup'
     | '/_user/accept-invite'
     | '/_user/browse'
+    | '/_user/feedback'
     | '/_user/friends'
     | '/_user/getting-started'
     | '/_user/learn'
@@ -1281,6 +1293,13 @@ declare module '@tanstack/react-router' {
       path: '/friends'
       fullPath: '/friends'
       preLoaderRoute: typeof UserFriendsRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/_user/feedback': {
+      id: '/_user/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof UserFeedbackRouteImport
       parentRoute: typeof UserRoute
     }
     '/_user/browse': {
@@ -1986,6 +2005,7 @@ const UserAdminLazyRouteWithChildren = UserAdminLazyRoute._addFileChildren(
 interface UserRouteChildren {
   UserAcceptInviteRoute: typeof UserAcceptInviteRoute
   UserBrowseRoute: typeof UserBrowseRouteWithChildren
+  UserFeedbackRoute: typeof UserFeedbackRoute
   UserFriendsRoute: typeof UserFriendsRouteWithChildren
   UserGettingStartedRoute: typeof UserGettingStartedRoute
   UserLearnRoute: typeof UserLearnRouteWithChildren
@@ -1999,6 +2019,7 @@ interface UserRouteChildren {
 const UserRouteChildren: UserRouteChildren = {
   UserAcceptInviteRoute: UserAcceptInviteRoute,
   UserBrowseRoute: UserBrowseRouteWithChildren,
+  UserFeedbackRoute: UserFeedbackRoute,
   UserFriendsRoute: UserFriendsRouteWithChildren,
   UserGettingStartedRoute: UserGettingStartedRoute,
   UserLearnRoute: UserLearnRouteWithChildren,
