@@ -67,6 +67,8 @@ export const myProfileCollection = createCollection(
 		},
 		getKey: (item: MyProfileType) => item.uid,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: MyProfileSchema,
 		onUpdate: async ({ transaction }) => {

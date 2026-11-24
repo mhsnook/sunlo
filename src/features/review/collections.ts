@@ -1,4 +1,4 @@
-import { createCollection } from '@tanstack/react-db'
+import { BasicIndex, createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	CardReviewSchema,
@@ -34,6 +34,8 @@ export const cardReviewsCollection = createCollection(
 		},
 		getKey: (item: CardReviewType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: CardReviewSchema,
 		// FSRS values + the client-generated id are computed in the review hook
@@ -96,6 +98,8 @@ export const reviewSessionsCollection = createCollection(
 		},
 		getKey: (item: ReviewSessionType) => `${item.day_session}--${item.lang}`,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: ReviewSessionSchema,
 		// A session is written once and never updated: the manifest is fixed, and
@@ -133,6 +137,8 @@ export const reviewMilestonesCollection = createCollection(
 		},
 		getKey: (item: ReviewMilestoneType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: ReviewMilestoneSchema,
 		// Append-only: the row (client-generated id + created_at) is built at the

@@ -52,6 +52,8 @@ export const createFriendSummaries = (
 ) => {
 	const latestPerPair = createLiveQueryCollection({
 		id: 'friend_pairs',
+		autoIndex: 'eager',
+		defaultIndexType: BTreeIndex,
 		gcTime: 20 * 60 * 1000,
 		query: (q) =>
 			q

@@ -1,4 +1,4 @@
-import { createCollection } from '@tanstack/react-db'
+import { BasicIndex, createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	LanguageSchema,
@@ -27,6 +27,8 @@ export const languagesCollection = createCollection(
 		getKey: (item: LanguageType) => item.lang,
 		schema: LanguageSchema,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 	})
 )
 
@@ -42,6 +44,8 @@ export const langTagsCollection = createCollection(
 		},
 		schema: LangTagSchema,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		onInsert: async ({ transaction }) => {
 			const submitted = transaction.mutations.map((m) => ({
 				id: m.modified.id,

@@ -151,6 +151,8 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 		},
 		getKey: (item: PhrasePlaylistUpvoteType) => item.playlist_id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		schema: PhrasePlaylistUpvoteSchema,
 		// One-per-user enforced by the (playlist_id, uid) PK; upvote_count kept by a
 		// DB trigger. Un-upvoting flips `deleted`, so the row stays in the

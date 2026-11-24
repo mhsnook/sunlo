@@ -1,4 +1,4 @@
-import { createCollection, BTreeIndex } from '@tanstack/react-db'
+import { BasicIndex, createCollection, BTreeIndex } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	FriendRequestActionSchema,
@@ -85,6 +85,8 @@ export const chatMessagesCollection = createCollection(
 		},
 		getKey: (item: ChatMessageType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: ChatMessageSchema,
 		// Every chat message the app writes lands here — see `useSendToFriends`.

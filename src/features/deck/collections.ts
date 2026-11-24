@@ -1,4 +1,4 @@
-import { createCollection } from '@tanstack/react-db'
+import { BasicIndex, createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { DeckSchema, type DeckType, CardSchema, type CardType } from './schemas'
 import { queryClient } from '@/lib/query-client'
@@ -30,6 +30,8 @@ export const decksCollection = createCollection(
 		},
 		getKey: (item: DeckType) => item.lang,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: DeckSchema,
 		onInsert: async ({ transaction }) => {
@@ -90,6 +92,8 @@ export const cardsCollection = createCollection(
 		},
 		getKey: (item: CardType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: CardSchema,
 		onInsert: async ({ transaction }) => {

@@ -91,6 +91,8 @@ export const phraseRequestUpvotesCollection = createCollection(
 		},
 		getKey: (item: PhraseRequestUpvoteType) => item.request_id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		schema: PhraseRequestUpvoteSchema,
 		// One-per-user enforced by the (request_id, uid) PK; upvote_count kept by a
 		// DB trigger. Un-upvoting flips `deleted`, so the row stays in the
@@ -225,6 +227,8 @@ export const commentUpvotesCollection = createCollection(
 		},
 		getKey: (item: CommentUpvoteType) => item.comment_id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		schema: CommentUpvoteSchema,
 		// One-per-user enforced by the (comment_id, uid) PK; upvote_count kept by a
 		// DB trigger. Un-upvoting flips `deleted`, so the row stays in the
@@ -291,6 +295,8 @@ export const messagesCollection = createCollection(
 		},
 		getKey: (item: MessageType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		schema: MessageSchema,
 	})
 )

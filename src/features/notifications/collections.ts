@@ -1,4 +1,4 @@
-import { createCollection } from '@tanstack/react-db'
+import { BasicIndex, createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { NotificationSchema, type NotificationType } from './schemas'
 import { toastError } from '@/components/ui/sonner'
@@ -25,6 +25,8 @@ export const notificationsCollection = createCollection(
 		},
 		getKey: (item: NotificationType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: NotificationSchema,
 		// Mark-all-as-read stamps one `read_at` across every unread row, so
