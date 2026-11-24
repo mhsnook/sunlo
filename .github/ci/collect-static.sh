@@ -56,6 +56,10 @@ export LC_ALL=C
 	typecheck main pnpm exec tsrs -b
 	typecheck admin pnpm exec tsrs --noEmit -p apps/admin/tsconfig.json
 	typecheck admin-worker pnpm exec tsrs --noEmit -p apps/admin/tsconfig.worker.json
+	# The base tree of the PR that adds packages/shared does not have it yet.
+	if [ -d packages/shared ]; then
+		typecheck shared pnpm exec tsrs --noEmit -p packages/shared/tsconfig.json
+	fi
 	# The grep drops the summary lines, which change with the error count and
 	# would diff as noise.
 	cat "$OUT"/.typecheck-*.raw | grep ': error TS' | sort >"$OUT/typecheck.txt"
