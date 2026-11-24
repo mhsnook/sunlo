@@ -49,21 +49,3 @@ select
 	insert on table "public"."feedback" to authenticated;
 
 grant all on table "public"."feedback" to service_role;
-
--- admin_reader sees only what counting needs. It also runs the SQL that
--- admin agents write themselves, and the message, the page and the email
--- are text from strangers. The admin reads those through their own session
--- and the policy below.
-revoke
-select
-	on table "public"."feedback"
-from
-	admin_reader;
-
-grant
-select
-	(id, created_at, uid, kind, lang) on table "public"."feedback" to admin_reader;
-
-create policy "Admins can read all feedback" on "public"."feedback" for
-select
-	to authenticated using (public.is_admin ());
