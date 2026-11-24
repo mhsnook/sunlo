@@ -3,9 +3,9 @@
 // Called by Postgres triggers (via pg_net) whenever a phrase /
 // phrase_translation / phrase_request / phrase_playlist / phrase_tag row
 // changes. Loads the source, computes the BGE-M3 embedding via Cloudflare
-// Workers AI, and upserts a row into search_corpus. If the source is no
-// longer visible (archived / deleted / missing), removes the
-// corresponding corpus row instead.
+// Workers AI, and upserts a row into search_corpus. A source that is no
+// longer visible (archived / deleted / missing) is skipped and its corpus
+// rows stay: the search RPCs leave out archived and deleted entities.
 //
 // The trigger fires async — it doesn't block the source-table write.
 // Eventual consistency: corpus lags source-table writes by ~hundreds of
@@ -19,18 +19,25 @@
 // PostgREST session, which always has role=authenticated because RLS
 // on the source tables blocks anon writes.
 //
+// It reads the source rows with the anon key, which sees exactly the
+// rows that belong in the corpus, and upserts search_corpus as
+// corpus_writer, a role that can insert and update that table and nothing
+// else.
+//
 // Required env vars (auto-injected by both `supabase functions serve` and
 // the deployed runtime):
 //   SUPABASE_URL
-//   SUPABASE_SERVICE_ROLE_KEY
+//   SUPABASE_ANON_KEY
 //
 // Set in Supabase dashboard (deploy) and supabase/functions/.env (local):
 //   CLOUDFLARE_ACCOUNT_ID
 //   CLOUDFLARE_API_TOKEN
+//   CORPUS_WRITER_DB_URL (the pooler URL, as corpus_writer)
 //   AI_GATEWAY_ID (optional, defaults to sunlo-app)
 
 import { createClient } from '@supabase/supabase-js'
-import { normalize } from '../_shared/normalize.ts'
+import postgres from 'postgres'
+import { normalize } from '@sunlo/shared/normalize'
 
 type SourceType = 'phrase' | 'translation' | 'request' | 'playlist'
 type EntityType = 'phrase' | 'request' | 'playlist'
@@ -60,18 +67,24 @@ type CorpusRow = {
 const CF_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')
 const CF_API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN')
 const AI_GATEWAY_ID = Deno.env.get('AI_GATEWAY_ID') ?? 'sunlo-app'
-const HAS_WORKERS_AI = Boolean(CF_ACCOUNT_ID && CF_API_TOKEN)
+const CORPUS_WRITER_DB_URL = Deno.env.get('CORPUS_WRITER_DB_URL')
+const CAN_EMBED = Boolean(CF_ACCOUNT_ID && CF_API_TOKEN && CORPUS_WRITER_DB_URL)
 
-if (!HAS_WORKERS_AI) {
+if (!CAN_EMBED) {
 	console.log(
-		'[embed-corpus-row] Workers AI keys not configured — embed-and-upsert path will no-op. Archive/delete cleanup still runs. Re-run scripts/backfill-search-corpus.ts to catch up the corpus once keys are available.'
+		'[embed-corpus-row] CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN or CORPUS_WRITER_DB_URL is not set — every call will no-op. Re-run scripts/backfill-search-corpus.ts to catch up the corpus once all three are set.'
 	)
 }
 
 const supabase = createClient(
 	Deno.env.get('SUPABASE_URL')!,
-	Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+	Deno.env.get('SUPABASE_ANON_KEY')!
 )
+
+// The transaction pooler cannot keep prepared statements between calls.
+const sql = CAN_EMBED
+	? postgres(CORPUS_WRITER_DB_URL!, { prepare: false, max: 1 })
+	: null
 
 async function embedViaWorkersAI(text: string): Promise<number[]> {
 	const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/@cf/baai/bge-m3`
@@ -96,6 +109,8 @@ async function embedViaWorkersAI(text: string): Promise<number[]> {
 function vectorToPgLiteral(vec: number[]): string {
 	return `[${vec.join(',')}]`
 }
+
+type Sql = NonNullable<typeof sql>
 
 // Loads the source row and returns the corpus shape, or null if the
 // source is no longer visible (archived / deleted / missing / empty
@@ -200,23 +215,30 @@ async function loadSource(
 	}
 }
 
-// When a phrase becomes invisible (archived), its TRANSLATIONS' corpus
-// rows orphan. They keep the parent phrase's id as entity_id, so a single
-// `delete where entity_id = <phrase_id>` cleans up the phrase row plus
-// all its translation rows in one shot.
-async function deleteCorpusRowsFor(
-	sourceType: SourceType,
-	sourceId: string
+async function upsertCorpusRow(
+	sql: Sql,
+	source: CorpusRow,
+	embedding: number[]
 ): Promise<void> {
-	if (sourceType === 'phrase') {
-		await supabase.from('search_corpus').delete().eq('entity_id', sourceId)
-	} else {
-		await supabase
-			.from('search_corpus')
-			.delete()
-			.eq('source_type', sourceType)
-			.eq('source_id', sourceId)
-	}
+	await sql`
+		insert into public.search_corpus (
+			source_type, source_id, entity_id, entity_type, entity_lang,
+			text_lang, text, text_normalized, embedding, vectorized_at
+		) values (
+			${source.source_type}, ${source.source_id}, ${source.entity_id},
+			${source.entity_type}, ${source.entity_lang}, ${source.text_lang},
+			${source.text}, ${source.text_normalized},
+			${vectorToPgLiteral(embedding)}::public.vector, ${source.updated_at}
+		)
+		on conflict (source_type, source_id) do update set
+			entity_id = excluded.entity_id,
+			entity_type = excluded.entity_type,
+			entity_lang = excluded.entity_lang,
+			text_lang = excluded.text_lang,
+			text = excluded.text,
+			text_normalized = excluded.text_normalized,
+			embedding = excluded.embedding,
+			vectorized_at = excluded.vectorized_at`
 }
 
 // Decodes the verify_jwt-validated bearer token's payload. The runtime
@@ -256,38 +278,24 @@ Deno.serve(async (req) => {
 		})
 	}
 
+	if (!sql) {
+		return new Response(JSON.stringify({ skipped: 'not-configured' }), {
+			status: 200,
+			headers: { 'Content-Type': 'application/json' },
+		})
+	}
+
 	try {
 		const source = await loadSource(payload.source_type, payload.source_id)
-
 		if (!source) {
-			await deleteCorpusRowsFor(payload.source_type, payload.source_id)
-			return new Response(JSON.stringify({ deleted: true }), {
-				status: 200,
-				headers: { 'Content-Type': 'application/json' },
-			})
-		}
-
-		if (!HAS_WORKERS_AI) {
-			// First-party-only mode. Trigger fired but we can't embed; new
-			// rows stay reachable only via trigram until the backfill
-			// catches them up. Existing corpus rows remain untouched.
-			return new Response(JSON.stringify({ skipped: 'no-workers-ai' }), {
+			return new Response(JSON.stringify({ skipped: 'not-live' }), {
 				status: 200,
 				headers: { 'Content-Type': 'application/json' },
 			})
 		}
 
 		const embedding = await embedViaWorkersAI(source.text_normalized)
-		const { updated_at, ...rest } = source
-		const { error } = await supabase.from('search_corpus').upsert(
-			{
-				...rest,
-				embedding: vectorToPgLiteral(embedding),
-				vectorized_at: updated_at,
-			},
-			{ onConflict: 'source_type,source_id' }
-		)
-		if (error) throw error
+		await upsertCorpusRow(sql, source, embedding)
 
 		return new Response(JSON.stringify({ upserted: true }), {
 			status: 200,

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import * as z from 'zod'
-import { normalize } from '../src/features/chat/normalize'
+import { normalize } from '@sunlo/shared/normalize'
 import type { Database } from '../src/types/supabase'
 
 type Sb = SupabaseClient<Database>
