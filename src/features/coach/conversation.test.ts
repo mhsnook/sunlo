@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { FlueConversationMessage } from '@flue/react'
-import { composeMessage, pageActions, readConversation } from './conversation'
+import {
+	composeMessage,
+	pageActions,
+	readConversation,
+	splitToolText,
+} from './conversation'
 import { parseCoachContext } from './protocol'
 
 type Part = FlueConversationMessage['parts'][number]
@@ -151,6 +156,34 @@ describe('readConversation', () => {
 		)
 	})
 
+	it('hides a tool call the coach wrote as text, and offers its replies', () => {
+		const { log, suggestions } = read([
+			message('m1', 'user', [text(kanMessage('ask for me'))]),
+			message('m2', 'assistant', [
+				text(
+					[
+						'Shall I take you to the requests page?',
+						'',
+						'suggest_replies: ["Yes, take me there", "Not now"]',
+					].join('\n')
+				),
+			]),
+		])
+		expect(log.at(-1)?.text).toBe('Shall I take you to the requests page?')
+		expect(suggestions).toEqual(['Yes, take me there', 'Not now'])
+	})
+
+	it('prefers the suggest_replies tool to replies written as text', () => {
+		const { suggestions } = read([
+			message('m1', 'user', [text(kanMessage('tea'))]),
+			message('m2', 'assistant', [
+				text('suggest_replies: ["Written"]'),
+				tool('suggest_replies', { replies: ['Called'] }),
+			]),
+		])
+		expect(suggestions).toEqual(['Called'])
+	})
+
 	it('turns draft_request into a request draft on the page', () => {
 		const { views } = read([
 			message('m1', 'assistant', [
@@ -175,6 +208,31 @@ describe('readConversation', () => {
 			}),
 		])
 		expect(log.map((entry) => entry.kind)).toEqual(['error'])
+	})
+})
+
+describe('splitToolText', () => {
+	it.each([
+		'navigate: {"to": "requests"}',
+		'`draft_request`({"prompt": "How do I say thanks?"})',
+		'**show_on_page**: ...',
+	])('hides %s', (line) => {
+		expect(splitToolText(`Here you go.\n${line}`)).toEqual({
+			said: 'Here you go.',
+			replies: null,
+		})
+	})
+
+	it('keeps prose that mentions a tool mid-line', () => {
+		const said = 'I can navigate: just say where.'
+		expect(splitToolText(said).said).toBe(said)
+	})
+
+	it('drops replies that do not parse', () => {
+		expect(splitToolText('suggest_replies: [Yes, No]')).toEqual({
+			said: '',
+			replies: null,
+		})
 	})
 })
 
