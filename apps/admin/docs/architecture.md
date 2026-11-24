@@ -13,7 +13,7 @@ This is the model behind the admin crew: what a room, a seat and a run are, wher
 
 - **One `CrewRoom` Durable Object holds every room** (`worker/crew/room.ts`, one instance named `crew`). Rooms have no Durable Object of their own: a room is rows with `place = 'room'` (the Common Room) or `place = 'room:<room>'`.
 - **What belongs to a room:** messages, cards, documents, the charter, sketches, paintings and SVGs.
-- **The crew's triage of user feedback** is the room's too (`feedback_triage`), keyed by the id of the `public.feedback` row it is about, since `admin_reader` cannot write to Postgres. A triage run has a conversation of its own each day (`triage:<date>`), and no tool in it reaches a room.
+- **The crew's triage of user feedback** is the room's too (`feedback_triage`), keyed by the id of the `public.feedback` row it is about, since `admin_reader` cannot write to Postgres. A triage run has a conversation of its own (`triage:<time>`), and no tool in it reaches a room.
 - **What belongs to a seat:** to-dos, memory, open items, and the character the admin edits. A seat's workspace survives a change of display name, and of model.
 - **Each agent is a Flue agent and its own Durable Object class** (`FlueProduct1Agent`), named after its identity, the `agentName` static. Flue keys an agent's conversations by that identity.
 - **Every agent keeps one running conversation, `memory`** (`CONVERSATION` in `room.ts`), which covers the Common Room and its own room. A message reaches it the same way from either place, so it never runs twice at once and keeps one memory of the day. A side-thread runs in a conversation of its own (`thread:<id>`) and sees only the thread.
@@ -41,7 +41,7 @@ The admin prefers to trust the agents over rules in code, and less structure whe
 - Cost and loop guards: wake and turn limits (`AGENT_WAKES_PER_HOUR`, `ROOM_TURNS`), retries, and hourly limits on sketches, paintings and SVGs.
 - What only the admin owns: keeping a charter entry, Common Knowledge, and filing to GitHub for the first time.
 - Output checks: a component block that does not parse is refused, and so is an SVG that could run script.
-- Keeping text that strangers write away from any run that can act: feedback is read only in a triage run with no tool that reaches a room or GitHub, and `run_sql` runs as `crew_reader`, which cannot read that text (README, "Feedback").
+- Keeping text that strangers write away from any run that can act: `admin_reader`, and so `run_sql`, cannot read a feedback message, and only a triage run with no tool that reaches a room or GitHub is given one (README, "Feedback").
 - Keeping personal data out of the public GitHub repository: every GitHub write is refused if it holds an email address, a user's id or a username.
 
 Everything else, such as the weekly meeting's ledger of directives or a document's layout, is in the agent's prompt or memory.

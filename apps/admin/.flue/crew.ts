@@ -30,12 +30,11 @@ const crewAgents = (): Partial<Record<CrewKey, Agent>> => ({
 // Each side-thread has a conversation of its own, so a favour stays out of
 // the helper's running memory. Its first dispatch creates it with this, as
 // initialData, which the agent reads with useInitialData for good.
-// A triage run has a conversation of its own each day, with no tool that
-// reaches a room or GitHub (useCrewMember).
+// A triage run has a conversation of its own, one per batch, with no tool
+// that reaches a room or GitHub (useCrewMember).
 export type ConversationData = { thread?: string; triage?: true }
 export const threadConversation = (root: string) => `thread:${root}`
-export const triageConversation = (at: Date) =>
-	`triage:${at.toISOString().slice(0, 10)}`
+export const triageConversation = (at: Date) => `triage:${at.toISOString()}`
 const threadOf = (conversation: string | undefined) =>
 	conversation?.startsWith('thread:') ? conversation.slice(7) : null
 
@@ -114,8 +113,12 @@ export async function wake(wakes: Array<Wake>, from: string) {
 	)
 }
 
-// Starts a feedback triage run, in the day's triage conversation.
-export async function startTriage(agent: CrewKey, at: Date) {
+// Starts a feedback triage run on `items`, which the admin's session read.
+export async function startTriage(
+	agent: CrewKey,
+	at: Date,
+	items: Array<unknown>
+) {
 	const target = crewAgents()[agent]
 	if (!target) return
 	await dispatch(target, {
@@ -125,7 +128,7 @@ export async function startTriage(agent: CrewKey, at: Date) {
 			kind: 'signal',
 			type: 'feedback.triage',
 			tagName: 'feedback-triage',
-			body: 'Triage the feedback that waits: read it with list_feedback, and record each decision with triage_feedback.',
+			body: `Triage each of these ${items.length} feedback items with triage_feedback.\n\n${JSON.stringify(items, null, 1)}`,
 		},
 	})
 }

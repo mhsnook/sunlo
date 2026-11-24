@@ -1,7 +1,7 @@
 -- Feedback that anyone sends from /feedback, signed in or not: a bug, a
 -- feature request, or something missing from the library. The admin crew
--- reads it as admin_reader and keeps its triage in the CrewRoom Durable
--- Object, so this table has no status column and nobody updates a row.
+-- keeps its triage in the CrewRoom Durable Object, so this table has no
+-- status column and nobody updates a row.
 create table "public"."feedback" (
 	"id" uuid not null default gen_random_uuid(),
 	"created_at" timestamp with time zone not null default now(),
@@ -50,8 +50,20 @@ select
 
 grant all on table "public"."feedback" to service_role;
 
--- The default privileges from 20261023120000_admin_reader_role.sql cover a
--- new table only when the same role creates it, so grant it here as well.
+-- admin_reader sees only what counting needs. It also runs the SQL that
+-- admin agents write themselves, and the message, the page and the email
+-- are text from strangers. The admin reads those through their own session
+-- and the policy below.
+revoke
+select
+	on table "public"."feedback"
+from
+	admin_reader;
+
 grant
 select
-	on table "public"."feedback" to admin_reader;
+	(id, created_at, uid, kind, lang) on table "public"."feedback" to admin_reader;
+
+create policy "Admins can read all feedback" on "public"."feedback" for
+select
+	to authenticated using (public.is_admin ());

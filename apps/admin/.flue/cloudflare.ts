@@ -1,5 +1,5 @@
 import { briefDue } from '../worker/crew/weekly'
-import { deliver, roomFor, startTriage } from './crew'
+import { deliver, roomFor } from './crew'
 
 export { CrewRoom } from '../worker/crew/room'
 
@@ -18,9 +18,6 @@ export default {
 				'schedule',
 				'Your daily run. Check what happened since your last run, and post if something matters for the plan.',
 				attributes
-			)
-			await startTriage('product-1', now).catch((error: unknown) =>
-				console.error('Could not start the feedback triage', error)
 			)
 		}
 		if (briefDue(now, await room.weekly())) {

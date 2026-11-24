@@ -65,8 +65,12 @@ function FeedbackPage() {
 function TriageButton({ disabled }: { disabled: boolean }) {
 	const triage = useMutation({
 		mutationFn: startTriage,
-		onSuccess: () =>
-			toastSuccess('Triage started. Refresh in a few minutes to see it.'),
+		onSuccess: (count) =>
+			toastSuccess(
+				count
+					? `O'Brien is triaging ${count} items. Refresh in a few minutes to see the results.`
+					: 'Nothing waits for triage.'
+			),
 		onError: (error) => toastError(error.message),
 	})
 	return (

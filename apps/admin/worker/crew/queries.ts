@@ -78,7 +78,7 @@ export async function activityBetween(sql: Sql, since: string, until: string) {
 
 export class QueryRejectedError extends Error {}
 
-// The agent writes this SQL. It runs as crew_reader, which is read-only at the server
+// The agent writes this SQL. admin_reader is read-only at the server
 // (default_transaction_read_only) and cannot see hidden columns, so this
 // only has to keep one query from running long or returning too much.
 export async function runReadOnlyQuery(sql: Sql, query: string) {

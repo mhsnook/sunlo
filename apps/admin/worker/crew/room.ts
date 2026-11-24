@@ -663,6 +663,12 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				agent text not null,
 				at text not null
 			);
+			-- Each feedback id the admin has handed to a triage run. Only these
+			-- can be triaged, so a made-up id is refused.
+			create table if not exists feedback_offer (
+				feedback_id text primary key,
+				at text not null
+			);
 			create table if not exists schema_version (version integer not null);
 		`
 		const version =
@@ -3418,6 +3424,15 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			from feedback_triage`
 	}
 
+	offerFeedback(ids: Array<string>) {
+		const at = now()
+		for (const id of ids) {
+			this.sql`
+				insert into feedback_offer (feedback_id, at) values (${id}, ${at})
+				on conflict (feedback_id) do update set at = excluded.at`
+		}
+	}
+
 	// No receipt and no workspaceEdited: both reach a room, and every briefing
 	// reads the rooms. A triage is read only on the admin's Feedback page.
 	triageFeedback(
@@ -3430,6 +3445,9 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			note: string | null
 		}
 	) {
+		const offered = this.sql`
+			select 1 from feedback_offer where feedback_id = ${input.feedbackId}`
+		if (!offered.length) return false
 		this.sql`
 			insert into feedback_triage (feedback_id, outcome, room, issue, note, agent, at)
 			values (${input.feedbackId}, ${input.outcome}, ${input.room}, ${input.issue},
@@ -3437,6 +3455,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			on conflict (feedback_id) do update set
 				outcome = excluded.outcome, room = excluded.room, issue = excluded.issue,
 				note = excluded.note, agent = excluded.agent, at = excluded.at`
+		return true
 	}
 
 	// An agent's own edit, in the workspace or on GitHub: it goes in the

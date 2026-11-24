@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { FeedbackListSchema } from '../../shared/feedback'
-import { adminFetch, adminRequest } from './api'
+import { z } from 'zod'
+import { adminFetch } from './api'
 
 export const feedbackQuery = (open: boolean) =>
 	queryOptions({
@@ -11,5 +12,7 @@ export const feedbackQuery = (open: boolean) =>
 			),
 	})
 
-export const startTriage = () =>
-	adminRequest('feedback/triage', { method: 'POST' })
+export const startTriage = async () =>
+	z
+		.object({ count: z.number() })
+		.parse(await adminFetch('feedback/triage', { method: 'POST' })).count

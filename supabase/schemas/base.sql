@@ -2484,6 +2484,10 @@ create policy "Admins can insert message tags" on "public"."message_tag" for ins
 with
 	check ("public"."is_admin" ());
 
+create policy "Admins can read all feedback" on "public"."feedback" for
+select
+	to "authenticated" using ("public"."is_admin" ());
+
 create policy "Admins can update message tag links" on "public"."message_tag_link"
 for update
 	to "authenticated" using ("public"."is_admin" ())
@@ -3235,8 +3239,6 @@ add table only "public"."user_review_session";
 
 grant usage on schema "admin" to "admin_reader";
 
-grant usage on schema "admin" to "crew_reader";
-
 revoke usage on schema "public"
 from
 	public;
@@ -3248,8 +3250,6 @@ grant usage on schema "public" to "authenticated";
 grant usage on schema "public" to "service_role";
 
 grant usage on schema "public" to "admin_reader";
-
-grant usage on schema "public" to "crew_reader";
 
 grant all on function "public"."gtrgm_in" ("cstring") to "postgres";
 
@@ -4676,10 +4676,6 @@ grant
 select
 	on table "admin"."user_account" to "admin_reader";
 
-grant
-select
-	on table "admin"."user_account" to "crew_reader";
-
 grant all on table "public"."admin_user" to "service_role";
 
 grant
@@ -4689,10 +4685,6 @@ select
 grant
 select
 	on table "public"."admin_user" to "admin_reader";
-
-grant
-select
-	on table "public"."admin_user" to "crew_reader";
 
 grant all on table "public"."chat_message" to "anon";
 
@@ -4706,23 +4698,11 @@ select
 
 grant
 select
-	("id") on table "public"."chat_message" to "crew_reader";
-
-grant
-select
 	("created_at") on table "public"."chat_message" to "admin_reader";
 
 grant
 select
-	("created_at") on table "public"."chat_message" to "crew_reader";
-
-grant
-select
 	("sender_uid") on table "public"."chat_message" to "admin_reader";
-
-grant
-select
-	("sender_uid") on table "public"."chat_message" to "crew_reader";
 
 grant all on table "public"."comment_phrase_link" to "anon";
 
@@ -4734,10 +4714,6 @@ grant
 select
 	on table "public"."comment_phrase_link" to "admin_reader";
 
-grant
-select
-	on table "public"."comment_phrase_link" to "crew_reader";
-
 grant all on table "public"."comment_upvote" to "anon";
 
 grant all on table "public"."comment_upvote" to "authenticated";
@@ -4747,10 +4723,6 @@ grant all on table "public"."comment_upvote" to "service_role";
 grant
 select
 	on table "public"."comment_upvote" to "admin_reader";
-
-grant
-select
-	on table "public"."comment_upvote" to "crew_reader";
 
 grant all on table "public"."db_meta" to "anon";
 
@@ -4769,11 +4741,23 @@ grant all on table "public"."feedback" to "service_role";
 
 grant
 select
-	on table "public"."feedback" to "admin_reader";
+	("id") on table "public"."feedback" to "admin_reader";
 
 grant
 select
-	("id", "created_at", "uid", "kind", "lang") on table "public"."feedback" to "crew_reader";
+	("created_at") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("uid") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("kind") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("lang") on table "public"."feedback" to "admin_reader";
 
 grant all on table "public"."phrase" to "anon";
 
@@ -4785,10 +4769,6 @@ grant
 select
 	on table "public"."phrase" to "admin_reader";
 
-grant
-select
-	on table "public"."phrase" to "crew_reader";
-
 grant all on table "public"."phrase_playlist" to "anon";
 
 grant all on table "public"."phrase_playlist" to "authenticated";
@@ -4798,10 +4778,6 @@ grant all on table "public"."phrase_playlist" to "service_role";
 grant
 select
 	on table "public"."phrase_playlist" to "admin_reader";
-
-grant
-select
-	on table "public"."phrase_playlist" to "crew_reader";
 
 grant all on table "public"."phrase_request" to "anon";
 
@@ -4813,10 +4789,6 @@ grant
 select
 	on table "public"."phrase_request" to "admin_reader";
 
-grant
-select
-	on table "public"."phrase_request" to "crew_reader";
-
 grant all on table "public"."user_card" to "anon";
 
 grant all on table "public"."user_card" to "authenticated";
@@ -4826,10 +4798,6 @@ grant all on table "public"."user_card" to "service_role";
 grant
 select
 	on table "public"."user_card" to "admin_reader";
-
-grant
-select
-	on table "public"."user_card" to "crew_reader";
 
 grant all on table "public"."user_card_review" to "authenticated";
 
@@ -4841,10 +4809,6 @@ grant
 select
 	on table "public"."user_card_review" to "admin_reader";
 
-grant
-select
-	on table "public"."user_card_review" to "crew_reader";
-
 grant all on table "public"."phrase_stats" to "anon";
 
 grant all on table "public"."phrase_stats" to "authenticated";
@@ -4854,10 +4818,6 @@ grant all on table "public"."phrase_stats" to "service_role";
 grant
 select
 	on table "public"."phrase_stats" to "admin_reader";
-
-grant
-select
-	on table "public"."phrase_stats" to "crew_reader";
 
 grant all on table "public"."playlist_phrase_link" to "anon";
 
@@ -4869,10 +4829,6 @@ grant
 select
 	on table "public"."playlist_phrase_link" to "admin_reader";
 
-grant
-select
-	on table "public"."playlist_phrase_link" to "crew_reader";
-
 grant all on table "public"."feed_activities" to "anon";
 
 grant all on table "public"."feed_activities" to "authenticated";
@@ -4882,10 +4838,6 @@ grant all on table "public"."feed_activities" to "service_role";
 grant
 select
 	on table "public"."feed_activities" to "admin_reader";
-
-grant
-select
-	on table "public"."feed_activities" to "crew_reader";
 
 grant all on table "public"."friend_request_action" to "anon";
 
@@ -4897,10 +4849,6 @@ grant
 select
 	on table "public"."friend_request_action" to "admin_reader";
 
-grant
-select
-	on table "public"."friend_request_action" to "crew_reader";
-
 grant all on table "public"."friend_summary" to "anon";
 
 grant all on table "public"."friend_summary" to "authenticated";
@@ -4910,10 +4858,6 @@ grant all on table "public"."friend_summary" to "service_role";
 grant
 select
 	on table "public"."friend_summary" to "admin_reader";
-
-grant
-select
-	on table "public"."friend_summary" to "crew_reader";
 
 grant all on table "public"."language" to "anon";
 
@@ -4925,10 +4869,6 @@ grant
 select
 	on table "public"."language" to "admin_reader";
 
-grant
-select
-	on table "public"."language" to "crew_reader";
-
 grant all on table "public"."message" to "anon";
 
 grant all on table "public"."message" to "authenticated";
@@ -4938,10 +4878,6 @@ grant all on table "public"."message" to "service_role";
 grant
 select
 	on table "public"."message" to "admin_reader";
-
-grant
-select
-	on table "public"."message" to "crew_reader";
 
 grant all on table "public"."message_tag" to "anon";
 
@@ -4953,10 +4889,6 @@ grant
 select
 	on table "public"."message_tag" to "admin_reader";
 
-grant
-select
-	on table "public"."message_tag" to "crew_reader";
-
 grant all on table "public"."message_tag_link" to "anon";
 
 grant all on table "public"."message_tag_link" to "authenticated";
@@ -4966,10 +4898,6 @@ grant all on table "public"."message_tag_link" to "service_role";
 grant
 select
 	on table "public"."message_tag_link" to "admin_reader";
-
-grant
-select
-	on table "public"."message_tag_link" to "crew_reader";
 
 grant all on table "public"."user_deck" to "anon";
 
@@ -4981,10 +4909,6 @@ grant
 select
 	on table "public"."user_deck" to "admin_reader";
 
-grant
-select
-	on table "public"."user_deck" to "crew_reader";
-
 grant all on table "public"."meta_language" to "anon";
 
 grant all on table "public"."meta_language" to "authenticated";
@@ -4994,10 +4918,6 @@ grant all on table "public"."meta_language" to "service_role";
 grant
 select
 	on table "public"."meta_language" to "admin_reader";
-
-grant
-select
-	on table "public"."meta_language" to "crew_reader";
 
 grant all on table "public"."notification" to "anon";
 
@@ -5011,15 +4931,7 @@ select
 
 grant
 select
-	("id") on table "public"."notification" to "crew_reader";
-
-grant
-select
 	("uid") on table "public"."notification" to "admin_reader";
-
-grant
-select
-	("uid") on table "public"."notification" to "crew_reader";
 
 grant
 select
@@ -5027,15 +4939,7 @@ select
 
 grant
 select
-	("type") on table "public"."notification" to "crew_reader";
-
-grant
-select
 	("created_at") on table "public"."notification" to "admin_reader";
-
-grant
-select
-	("created_at") on table "public"."notification" to "crew_reader";
 
 grant all on table "public"."phrase_tag" to "anon";
 
@@ -5047,10 +4951,6 @@ grant
 select
 	on table "public"."phrase_tag" to "admin_reader";
 
-grant
-select
-	on table "public"."phrase_tag" to "crew_reader";
-
 grant all on table "public"."tag" to "anon";
 
 grant all on table "public"."tag" to "authenticated";
@@ -5060,10 +4960,6 @@ grant all on table "public"."tag" to "service_role";
 grant
 select
 	on table "public"."tag" to "admin_reader";
-
-grant
-select
-	on table "public"."tag" to "crew_reader";
 
 grant all on table "public"."phrase_meta" to "anon";
 
@@ -5075,10 +4971,6 @@ grant
 select
 	on table "public"."phrase_meta" to "admin_reader";
 
-grant
-select
-	on table "public"."phrase_meta" to "crew_reader";
-
 grant all on table "public"."phrase_playlist_upvote" to "anon";
 
 grant all on table "public"."phrase_playlist_upvote" to "authenticated";
@@ -5088,10 +4980,6 @@ grant all on table "public"."phrase_playlist_upvote" to "service_role";
 grant
 select
 	on table "public"."phrase_playlist_upvote" to "admin_reader";
-
-grant
-select
-	on table "public"."phrase_playlist_upvote" to "crew_reader";
 
 grant all on table "public"."phrase_relation" to "anon";
 
@@ -5103,10 +4991,6 @@ grant
 select
 	on table "public"."phrase_relation" to "admin_reader";
 
-grant
-select
-	on table "public"."phrase_relation" to "crew_reader";
-
 grant all on table "public"."phrase_request_upvote" to "anon";
 
 grant all on table "public"."phrase_request_upvote" to "authenticated";
@@ -5116,10 +5000,6 @@ grant all on table "public"."phrase_request_upvote" to "service_role";
 grant
 select
 	on table "public"."phrase_request_upvote" to "admin_reader";
-
-grant
-select
-	on table "public"."phrase_request_upvote" to "crew_reader";
 
 grant all on table "public"."phrase_translation" to "anon";
 
@@ -5131,10 +5011,6 @@ grant
 select
 	on table "public"."phrase_translation" to "admin_reader";
 
-grant
-select
-	on table "public"."phrase_translation" to "crew_reader";
-
 grant all on table "public"."user_profile" to "anon";
 
 grant all on table "public"."user_profile" to "authenticated";
@@ -5144,10 +5020,6 @@ grant all on table "public"."user_profile" to "service_role";
 grant
 select
 	on table "public"."user_profile" to "admin_reader";
-
-grant
-select
-	on table "public"."user_profile" to "crew_reader";
 
 grant all on table "public"."public_profile" to "anon";
 
@@ -5159,10 +5031,6 @@ grant
 select
 	on table "public"."public_profile" to "admin_reader";
 
-grant
-select
-	on table "public"."public_profile" to "crew_reader";
-
 grant all on table "public"."request_comment" to "anon";
 
 grant all on table "public"."request_comment" to "authenticated";
@@ -5172,10 +5040,6 @@ grant all on table "public"."request_comment" to "service_role";
 grant
 select
 	on table "public"."request_comment" to "admin_reader";
-
-grant
-select
-	on table "public"."request_comment" to "crew_reader";
 
 grant all on table "public"."search_corpus" to "anon";
 
@@ -5187,10 +5051,6 @@ grant
 select
 	on table "public"."search_corpus" to "admin_reader";
 
-grant
-select
-	on table "public"."search_corpus" to "crew_reader";
-
 grant all on table "public"."search_text_index" to "anon";
 
 grant all on table "public"."search_text_index" to "authenticated";
@@ -5200,10 +5060,6 @@ grant all on table "public"."search_text_index" to "service_role";
 grant
 select
 	on table "public"."search_text_index" to "admin_reader";
-
-grant
-select
-	on table "public"."search_text_index" to "crew_reader";
 
 grant all on table "public"."user_client_event" to "anon";
 
@@ -5217,23 +5073,11 @@ select
 
 grant
 select
-	("id") on table "public"."user_client_event" to "crew_reader";
-
-grant
-select
 	("created_at") on table "public"."user_client_event" to "admin_reader";
 
 grant
 select
-	("created_at") on table "public"."user_client_event" to "crew_reader";
-
-grant
-select
 	("uid") on table "public"."user_client_event" to "admin_reader";
-
-grant
-select
-	("uid") on table "public"."user_client_event" to "crew_reader";
 
 grant all on table "public"."user_review_milestone" to "anon";
 
@@ -5245,10 +5089,6 @@ grant
 select
 	on table "public"."user_review_milestone" to "admin_reader";
 
-grant
-select
-	on table "public"."user_review_milestone" to "crew_reader";
-
 grant all on table "public"."user_review_session" to "anon";
 
 grant all on table "public"."user_review_session" to "authenticated";
@@ -5258,10 +5098,6 @@ grant all on table "public"."user_review_session" to "service_role";
 grant
 select
 	on table "public"."user_review_session" to "admin_reader";
-
-grant
-select
-	on table "public"."user_review_session" to "crew_reader";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";
@@ -5303,8 +5139,3 @@ alter default privileges for role "postgres" in schema "public"
 grant
 select
 	on tables to "admin_reader";
-
-alter default privileges for role "postgres" in schema "public"
-grant
-select
-	on tables to "crew_reader";
