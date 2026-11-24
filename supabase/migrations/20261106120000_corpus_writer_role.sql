@@ -16,13 +16,12 @@ end $$;
 
 grant usage on schema public to corpus_writer;
 
--- select is needed by `delete ... where` and `insert ... on conflict do update`.
+-- select is needed by `insert ... on conflict do update`.
 grant
 select
 ,
 	insert,
-update,
-delete on table public.search_corpus to corpus_writer;
+update on table public.search_corpus to corpus_writer;
 
 -- search_corpus has RLS, and its only other policy is the public read.
 create policy "corpus_writer_all" on public.search_corpus for all to corpus_writer using (true)

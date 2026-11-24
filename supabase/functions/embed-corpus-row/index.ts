@@ -3,9 +3,9 @@
 // Called by Postgres triggers (via pg_net) whenever a phrase /
 // phrase_translation / phrase_request / phrase_playlist / phrase_tag row
 // changes. Loads the source, computes the BGE-M3 embedding via Cloudflare
-// Workers AI, and upserts a row into search_corpus. If the source is no
-// longer visible (archived / deleted / missing), removes the
-// corresponding corpus row instead.
+// Workers AI, and upserts a row into search_corpus. A source that is no
+// longer visible (archived / deleted / missing) is skipped and its corpus
+// rows stay: the search RPCs leave out archived and deleted entities.
 //
 // The trigger fires async — it doesn't block the source-table write.
 // Eventual consistency: corpus lags source-table writes by ~hundreds of
@@ -20,8 +20,9 @@
 // on the source tables blocks anon writes.
 //
 // It reads the source rows with the anon key, which sees exactly the
-// rows that belong in the corpus, and writes search_corpus as
-// corpus_writer, a role that can write that table and nothing else.
+// rows that belong in the corpus, and upserts search_corpus as
+// corpus_writer, a role that can insert and update that table and nothing
+// else.
 //
 // Required env vars (auto-injected by both `supabase functions serve` and
 // the deployed runtime):
@@ -66,16 +67,12 @@ type CorpusRow = {
 const CF_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')
 const CF_API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN')
 const AI_GATEWAY_ID = Deno.env.get('AI_GATEWAY_ID') ?? 'sunlo-app'
-const HAS_WORKERS_AI = Boolean(CF_ACCOUNT_ID && CF_API_TOKEN)
 const CORPUS_WRITER_DB_URL = Deno.env.get('CORPUS_WRITER_DB_URL')
+const CAN_EMBED = Boolean(CF_ACCOUNT_ID && CF_API_TOKEN && CORPUS_WRITER_DB_URL)
 
-if (!CORPUS_WRITER_DB_URL) {
+if (!CAN_EMBED) {
 	console.log(
-		'[embed-corpus-row] CORPUS_WRITER_DB_URL not configured — every call will no-op, including archive/delete cleanup. Re-run scripts/backfill-search-corpus.ts to catch up the corpus once it is set.'
-	)
-} else if (!HAS_WORKERS_AI) {
-	console.log(
-		'[embed-corpus-row] Workers AI keys not configured — embed-and-upsert path will no-op. Archive/delete cleanup still runs. Re-run scripts/backfill-search-corpus.ts to catch up the corpus once keys are available.'
+		'[embed-corpus-row] CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN or CORPUS_WRITER_DB_URL is not set — every call will no-op. Re-run scripts/backfill-search-corpus.ts to catch up the corpus once all three are set.'
 	)
 }
 
@@ -85,8 +82,8 @@ const supabase = createClient(
 )
 
 // The transaction pooler cannot keep prepared statements between calls.
-const sql = CORPUS_WRITER_DB_URL
-	? postgres(CORPUS_WRITER_DB_URL, { prepare: false, max: 1 })
+const sql = CAN_EMBED
+	? postgres(CORPUS_WRITER_DB_URL!, { prepare: false, max: 1 })
 	: null
 
 async function embedViaWorkersAI(text: string): Promise<number[]> {
@@ -218,24 +215,6 @@ async function loadSource(
 	}
 }
 
-// When a phrase becomes invisible (archived), its TRANSLATIONS' corpus
-// rows orphan. They keep the parent phrase's id as entity_id, so a single
-// `delete where entity_id = <phrase_id>` cleans up the phrase row plus
-// all its translation rows in one shot.
-async function deleteCorpusRowsFor(
-	sql: Sql,
-	sourceType: SourceType,
-	sourceId: string
-): Promise<void> {
-	if (sourceType === 'phrase') {
-		await sql`delete from public.search_corpus where entity_id = ${sourceId}`
-	} else {
-		await sql`
-			delete from public.search_corpus
-			where source_type = ${sourceType} and source_id = ${sourceId}`
-	}
-}
-
 async function upsertCorpusRow(
 	sql: Sql,
 	source: CorpusRow,
@@ -300,7 +279,7 @@ Deno.serve(async (req) => {
 	}
 
 	if (!sql) {
-		return new Response(JSON.stringify({ skipped: 'no-corpus-writer' }), {
+		return new Response(JSON.stringify({ skipped: 'not-configured' }), {
 			status: 200,
 			headers: { 'Content-Type': 'application/json' },
 		})
@@ -308,20 +287,8 @@ Deno.serve(async (req) => {
 
 	try {
 		const source = await loadSource(payload.source_type, payload.source_id)
-
 		if (!source) {
-			await deleteCorpusRowsFor(sql, payload.source_type, payload.source_id)
-			return new Response(JSON.stringify({ deleted: true }), {
-				status: 200,
-				headers: { 'Content-Type': 'application/json' },
-			})
-		}
-
-		if (!HAS_WORKERS_AI) {
-			// First-party-only mode. Trigger fired but we can't embed; new
-			// rows stay reachable only via trigram until the backfill
-			// catches them up. Existing corpus rows remain untouched.
-			return new Response(JSON.stringify({ skipped: 'no-workers-ai' }), {
+			return new Response(JSON.stringify({ skipped: 'not-live' }), {
 				status: 200,
 				headers: { 'Content-Type': 'application/json' },
 			})
