@@ -23,7 +23,7 @@
 //   pnpm tsx scripts/backfill-search-corpus.ts --normalize-only
 //     Only updates text + text_normalized on existing rows. Skips
 //     Workers AI entirely. Use after tweaking
-//     src/features/chat/normalize.ts when you don't want to burn
+//     packages/shared/src/normalize.ts when you don't want to burn
 //     embedding credits re-vectorizing things that barely changed.
 //     Rows that don't yet exist are skipped (run a full or
 //     --skip-existing backfill first to seed them).
@@ -37,7 +37,7 @@
 
 import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
-import { normalize } from '../src/features/chat/normalize'
+import { normalize } from '@sunlo/shared/normalize'
 
 const NORMALIZE_ONLY = process.argv.includes('--normalize-only')
 const SKIP_EXISTING = process.argv.includes('--skip-existing')

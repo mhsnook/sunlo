@@ -1,11 +1,8 @@
-// Search queries and indexed text must normalize identically, or exact
-// matches miss. supabase/functions/_shared/normalize.ts is a hand-synced
-// copy: change both together.
-//
 // PHILOSOPHY: this layer is unconditional and language-agnostic enough to be
 // safe. Anything language-specific that could plausibly be wrong, debated,
-// or regional belongs in suggestions.ts (where the user sees and approves
-// the change), NOT here. Lean on BGE-M3 for cross-spelling matching.
+// or regional belongs in src/features/chat/suggestions.ts (where the user
+// sees and approves the change), NOT here. Lean on BGE-M3 for cross-spelling
+// matching.
 
 type LangRule = (input: string) => string
 

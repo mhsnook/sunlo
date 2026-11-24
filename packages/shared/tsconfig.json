@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "es2022",
+		// No DOM, Node or Deno types: code here runs in the browser, the
+		// Worker and Supabase's Deno runtime, so it may use only what all
+		// three share.
+		"lib": ["es2023"],
+		"types": [],
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"allowImportingTsExtensions": true,
+		"isolatedModules": true,
+		"moduleDetection": "force",
+		"noEmit": true,
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true
+	},
+	"include": ["src"]
+}
