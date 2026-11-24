@@ -41,6 +41,8 @@ The dashboard's numbers come from `worker/`, a [Hono](https://hono.dev) app that
 
 It reads `auth.users` only through the view `admin.user_account`, which exposes `id`, `email`, `created_at` and `last_sign_in_at`. The view exists because the role that runs migrations does not own `auth.users` and cannot grant on it; a view it owns reads the table on `admin_reader`'s behalf. The `admin` schema is not in PostgREST's exposed schemas, so the API never serves it.
 
+**`crew_reader` runs the agents' own SQL.** `run_sql` sends whatever SELECT an agent writes, so it connects as `crew_reader` (`supabase/migrations/20261124120000_add_crew_reader_role.sql`) through a Hyperdrive config of its own, bound as `CREW_SQL`. `crew_reader` reads what `admin_reader` reads, except the text that strangers write: on `feedback` it sees only `id`, `created_at`, `uid`, `kind` and `lang`. It is a separate login role with no membership in `admin_reader`, so a query cannot `set role` its way to the wider grants. The Worker's own queries, such as the stats, `activity_between` and `list_feedback`, choose their columns in code and keep running as `admin_reader`. Until `CREW_SQL` exists, `run_sql` refuses every query and never falls back to `admin_reader`.
+
 Writes, when the admin app gets them, go through the admin's own Supabase session and RLS, so the row history names a person. `admin_reader` never writes, and nothing here uses the service-role key.
 
 ## The crew
@@ -253,8 +255,7 @@ Anything written about a document links to it. The link is ordinary Markdown who
 Every run starts with a briefing that `worker/crew/briefing.ts` writes: the time, Common Knowledge, the Situation Report, the list of the room's documents, the cards in the agent's room, its workspace, and what is new in the Common Room and in its room since its last run. The Command room's members also get the charter and the weekly cycle, and the agents with GitHub tools get what is open on GitHub ("GitHub's running log"). The tools:
 
 - `activity_between`: signups, reviews and each reviewer, new decks, and library and chat counts for a window
-- `run_sql`: one SELECT, run as `admin_reader` with an 8-second timeout and at most 200 rows
-- `list_feedback` and `triage_feedback`: what people sent from the app's feedback page, and the crew's triage of it ("Feedback", below)
+- `run_sql`: one SELECT, run as `crew_reader` ("How data flows", above) with an 8-second timeout and at most 200 rows
 - `post_to_common_room`: a message in the Common Room, optionally with 2 or 3 buttons
 - `post_to_room`: a message in the agent's own room
 - `bring_to_admin`: a card in the agent's own room
@@ -276,10 +277,13 @@ Every model call the admin Worker makes, for the agents, CLEF, the painter and v
 
 Anyone can send feedback from the app's `/feedback` page, signed in or not: a bug, a feature idea, or something missing from the library. Each send is a row of `public.feedback` (`supabase/migrations/20261123120000_add_feedback.sql`), which RLS lets anyone insert and only a signed-in sender read back. A signed-out sender can leave an email for a reply.
 
-- **Reading.** `list_feedback` reads the rows as `admin_reader`, newest first, at most 50, and by default only the ones the crew has not triaged. It never returns the sender's email, only whether they left one. Every agent with the database tools has it, which is everyone but Riker.
-- **Triage.** `triage_feedback` records an outcome for one item: filed (with the GitHub issue number), planned, duplicate, for the admin, not planned, or spam, with the room that owns it and a note. `admin_reader` cannot write, so the triage lives in the room's `feedback_triage` table, keyed by the row's id, and a later triage of the same item replaces the earlier one. Each triage appears in the run's receipt.
-- **Who triages.** Bugs and feature ideas belong to the Product room, and library needs to the Library room (`feedbackRoomOf` in `shared/feedback.ts`). Until Hoshi starts, O'Brien triages library needs too and keeps them in the Library room. O'Brien's daily run ends by reading new feedback.
-- **The Feedback page** (`/feedback`, linked beside Activity) lists what waits for triage, or everything, with each item's triage and, when the sender left one, a link to reply by email. It reads `GET /api/feedback` (`?open=1` for what waits), which joins the rows with the room's triage (`worker/feedback.ts`).
+Feedback is the one place where a stranger writes straight to the crew, so it never reaches a conversation that can act. Triage happens in a run of its own, and nothing that run reads or writes reaches the rooms:
+
+- **The triage run.** Every day at 07:00 UTC, and when you click "Triage now" on the Feedback page, `startTriage` in `.flue/crew.ts` wakes O'Brien in that day's triage conversation (`triage:<date>`), apart from the `memory` conversation. `useTriageRun` in `.flue/agents/use-crew-member.ts` gives it only `list_feedback`, `triage_feedback` and the read-only GitHub tools. It cannot post, remember, write a document or change GitHub. Its `<crew-context>` holds only O'Brien's character and Common Knowledge (`triageBriefingText`), and nothing from any room.
+- **Reading.** `list_feedback` reads the rows as `admin_reader`, newest first, at most 50, by default only the untriaged ones. It never returns the sender's email, only whether they left one.
+- **Triage.** `triage_feedback` records an outcome for one item: filed (it matches an open issue, with its number), planned (it matches an open epic), duplicate, for the admin (it needs a new issue, a decision or a reply), not planned, or spam, with the room it belongs to and a note. The triage lives in the room's `feedback_triage` table, keyed by the row's id, and a later triage of the same item replaces the earlier one. It posts no receipt, because a receipt lands in a room.
+- **Everywhere else.** The other runs know feedback exists, and `run_sql` can count it by kind and language, but no other run can read a message, a page or an email. To act on an item, you tell an agent what it says.
+- **The Feedback page** (`/feedback`, linked beside Activity) lists what waits for triage, or everything, with each item's triage and, when the sender left one, a link to reply by email. It reads `GET /api/feedback` (`?open=1` for what waits), which joins the rows with the room's triage (`worker/feedback.ts`). "Triage now" calls `POST /api/feedback/triage`.
 
 ### GitHub: milestones and epics
 
@@ -378,6 +382,12 @@ The Worker reads `apps/admin/.dev.vars`, copied from `.dev.vars.example`. `SUPAB
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "alter role admin_reader password 'admin_reader'"
 ```
 
+`run_sql` connects as `crew_reader`, which the dev server reaches only once `wrangler.jsonc` has a `CREW_SQL` binding ("Deploying", below). Its local string is `postgresql://crew_reader:crew_reader@127.0.0.1:54322/postgres`, and the role needs its password set the same way:
+
+```bash
+psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "alter role crew_reader password 'crew_reader'"
+```
+
 Roles belong to the Postgres cluster, not the database, so the password survives a `supabase db reset` as long as the local Supabase containers do. If the Worker reports a failed sign-in after a reset, run the command again. Never put the password in a seed file: `[db.seed]` loads every file in `supabase/seeds/` into preview and production databases too.
 
 The `AI` binding always runs remotely, so the dev server needs `wrangler login` (or `CLOUDFLARE_API_TOKEN`), and agent runs and CLEF bill to that account. Without a login, start it with `ADMIN_REMOTE_BINDINGS=false pnpm admin:dev`. The room, the workspaces and the stats work. CLEF leaves every message in the room, and agent runs fail at the model call.
@@ -399,6 +409,8 @@ Workers Builds (Cloudflare's Git integration) builds and deploys the `sunlo-admi
 `wrangler.jsonc` serves `dist/client` as static assets with an SPA fallback and runs the Worker for `/api/*`, on the custom domain `admin.sunlo.app`. It has no `main`: `@flue/vite` generates the Worker entry, which serves `.flue/app.ts` and exports the room and agent Durable Objects. `vite build` also writes a redirect that points `wrangler deploy` at the built config, so the deploy command needs no flags. A new agent needs a new migration entry in `wrangler.jsonc`; never edit a deployed one. The `previews` block inherits nothing from the top level, so a new var or binding goes in both places. The custom domain needs the `sunlo.app` zone on the same Cloudflare account.
 
 The Worker reaches the database through [Hyperdrive](https://developers.cloudflare.com/hyperdrive/), bound as `HYPERDRIVE` in `wrangler.jsonc`. The Hyperdrive config holds the production connection string for `admin_reader`, so the Worker has no database secret of its own. Hyperdrive is required, not an optimisation: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs rather than failing. Hyperdrive makes the TLS connection on the Worker's behalf. If the database stops answering, every `/api` route returns a 500 after 15 seconds instead of hanging, and the Worker logs the reason.
+
+`run_sql` needs a second Hyperdrive config, for `crew_reader`. Set the role's password in the Supabase SQL editor (`alter role crew_reader password '…'`), create a Hyperdrive config with that role's connection string, the same way as the `admin_reader` one, and add it to `wrangler.jsonc` as `CREW_SQL`, at the top level with `"localConnectionString": "postgresql://crew_reader:crew_reader@127.0.0.1:54322/postgres"` and in `previews`. Until then, `run_sql` refuses every query.
 
 GitHub issue filing needs three optional secrets, set with `wrangler secret put` or in the dashboard: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID` and `GITHUB_APP_PRIVATE_KEY` ("GitHub: milestones and epics", above). GitHub's webhook needs `GITHUB_WEBHOOK_SECRET` ("GitHub's running log", above). Signed image links need `IMAGE_URL_SECRET` ("Images", above).
 

@@ -25,6 +25,7 @@ Register a new id here, not in the main app's registry.
 | `admin-feedback-filter` + `data-key`    | Filter link: `waiting` (not triaged yet) or `all`               |
 | `admin-feedback-item` + `data-key=<id>` | One feedback item                                               |
 | `admin-feedback-triage`                 | The crew's triage of an item: outcome, issue, room, agent, note |
+| `admin-feedback-triage-button`          | "Triage now": starts a triage run                               |
 | `admin-feedback-empty`                  | Shown when the list is empty                                    |
 
 ## The Common Room at `/`, and each subject's room at `/room/<room>`

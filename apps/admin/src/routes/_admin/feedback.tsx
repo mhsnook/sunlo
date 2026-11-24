@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query'
+import { Button } from '@/components/ui/button'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
 import languages from '@/lib/languages'
 import { displayName, isCrewKey, roomNames } from '../../../shared/crew'
@@ -8,7 +10,7 @@ import {
 	feedbackOutcomeLabels,
 	type FeedbackItemType,
 } from '../../../shared/feedback'
-import { feedbackQuery } from '~/lib/feedback'
+import { feedbackQuery, startTriage } from '~/lib/feedback'
 import { formatCount, timeOrDay } from '~/lib/format'
 import { CrewText } from '~/components/crew/crew-parts'
 import { RefLink } from '~/components/crew/ref-links'
@@ -39,6 +41,7 @@ function FeedbackPage() {
 						{formatCount(data.untriaged)} waiting for the crew to triage
 					</p>
 				</div>
+				<TriageButton disabled={data.untriaged === 0} />
 				<div className="flex gap-1 rounded-2xl border p-1 text-sm">
 					<FilterLink active={!all} all={false} label="Waiting" />
 					<FilterLink active={!!all} all label="All" />
@@ -56,6 +59,25 @@ function FeedbackPage() {
 				</ul>
 			)}
 		</div>
+	)
+}
+
+function TriageButton({ disabled }: { disabled: boolean }) {
+	const triage = useMutation({
+		mutationFn: startTriage,
+		onSuccess: () =>
+			toastSuccess('Triage started. Refresh in a few minutes to see it.'),
+		onError: (error) => toastError(error.message),
+	})
+	return (
+		<Button
+			variant="neutral"
+			disabled={disabled || triage.isPending}
+			onClick={() => triage.mutate()}
+			data-testid="admin-feedback-triage-button"
+		>
+			Triage now
+		</Button>
 	)
 }
 

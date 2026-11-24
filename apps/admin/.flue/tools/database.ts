@@ -28,6 +28,10 @@ export const activityBetweenTool = defineTool({
 	},
 })
 
+// CREW_SQL is declared in worker/env.d.ts, which types the global Env, not
+// the env that cloudflare:workers exports.
+const crewSqlOf = (workerEnv: Env) => workerEnv.CREW_SQL
+
 export const runSqlTool = defineTool({
 	name: 'run_sql',
 	description:
@@ -36,8 +40,16 @@ export const runSqlTool = defineTool({
 	annotations: { readOnlyHint: true },
 	timeoutMs: 30_000,
 	async run({ data }) {
+		// Never fall back to HYPERDRIVE: admin_reader can read what strangers
+		// write in feedback, and this runs whatever SQL the agent sends.
+		const crewSql = crewSqlOf(env)
+		if (!crewSql) {
+			throw new Error(
+				'run_sql is off until the admin sets up its database connection. Use activity_between, or ask the admin.'
+			)
+		}
 		try {
-			return await withSql(env.HYPERDRIVE, 20_000, (sql) =>
+			return await withSql(crewSql, 20_000, (sql) =>
 				runReadOnlyQuery(sql, data.query)
 			)
 		} catch (error) {
@@ -64,5 +76,5 @@ export const DATABASE_NOTES = `## The database (Postgres, read-only)
 - public.phrase_request: id, requester_uid, lang, prompt, created_at, deleted. public.request_comment: id, request_id, uid, content, created_at.
 - public.phrase_playlist: id, uid, title, lang, created_at, deleted.
 - public.chat_message: id, sender_uid, created_at. Message content is not readable.
-- public.feedback: id, kind ('bug' | 'feature' | 'library'), message, lang, page_url, uid (null when the sender was signed out), created_at. Use list_feedback rather than SQL to read it with the crew's triage, and never select contact_email.
+- public.feedback: id, kind ('bug' | 'feature' | 'library'), lang, uid (null when the sender was signed out), created_at. You can count feedback, but not read it: the rest of the table is hidden from run_sql.
 - public.language: lang, name.`

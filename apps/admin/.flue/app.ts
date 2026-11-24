@@ -32,7 +32,7 @@ import { feedbackKinds, type FeedbackListType } from '../shared/feedback'
 import { imageInfo, verifyImageLink } from '../worker/images'
 import { SVG_POLICY } from '../worker/svg'
 import { crewProvider } from '../worker/models'
-import { deliver, requestReport, roomFor, wake } from './crew'
+import { deliver, requestReport, roomFor, startTriage, wake } from './crew'
 
 setProvider(crewProvider(env.AI, env.AI_GATEWAY_ID))
 
@@ -93,6 +93,11 @@ api.get('/feedback', async (c) => {
 		items: withTriage(rows, triage),
 		untriaged,
 	} satisfies FeedbackListType)
+})
+
+api.post('/feedback/triage', async (c) => {
+	await startTriage('product-1', new Date())
+	return c.json({ ok: true })
 })
 
 api.get('/crew/runs', async (c) => {

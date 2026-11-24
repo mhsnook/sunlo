@@ -80,6 +80,7 @@ import {
 	threadBriefingText,
 	timelineText,
 	type UnreadTimeline,
+	triageBriefingText,
 } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
@@ -3403,12 +3404,22 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 		return { drafts, edits }
 	}
 
+	triageContext(agent: CrewKey) {
+		return triageBriefingText({
+			now: now(),
+			character: this.character(agent),
+			commonKnowledge: this.commonKnowledge(),
+		})
+	}
+
 	feedbackTriage(): Array<FeedbackTriageType> {
 		return this.sql<FeedbackTriageType>`
 			select feedback_id, outcome, room, issue, note, agent, at
 			from feedback_triage`
 	}
 
+	// No receipt and no workspaceEdited: both reach a room, and every briefing
+	// reads the rooms. A triage is read only on the admin's Feedback page.
 	triageFeedback(
 		agent: CrewKey,
 		input: {
@@ -3417,8 +3428,7 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			room: RoomKey
 			issue: number | null
 			note: string | null
-		},
-		thread: RunKey
+		}
 	) {
 		this.sql`
 			insert into feedback_triage (feedback_id, outcome, room, issue, note, agent, at)
@@ -3427,12 +3437,6 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			on conflict (feedback_id) do update set
 				outcome = excluded.outcome, room = excluded.room, issue = excluded.issue,
 				note = excluded.note, agent = excluded.agent, at = excluded.at`
-		const issue = input.issue ? ` (#${input.issue})` : ''
-		this.workspaceEdited(
-			agent,
-			`triaged feedback ${input.feedbackId.slice(0, 8)} as ${input.outcome}${issue}`,
-			thread
-		)
 	}
 
 	// An agent's own edit, in the workspace or on GitHub: it goes in the

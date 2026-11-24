@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { FeedbackListSchema } from '../../shared/feedback'
-import { adminFetch } from './api'
+import { adminFetch, adminRequest } from './api'
 
 export const feedbackQuery = (open: boolean) =>
 	queryOptions({
@@ -10,3 +10,6 @@ export const feedbackQuery = (open: boolean) =>
 				await adminFetch(open ? 'feedback?open=1' : 'feedback')
 			),
 	})
+
+export const startTriage = () =>
+	adminRequest('feedback/triage', { method: 'POST' })

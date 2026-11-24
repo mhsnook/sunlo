@@ -187,6 +187,21 @@ export function threadBriefingText(input: ThreadBriefingInput) {
 	].join('\n\n')
 }
 
+// The <crew-context> for a feedback triage run. It carries only what the
+// admin wrote, and nothing from any room: this run reads text that strangers
+// wrote, so nothing it sees may come from, or lead back into, the rooms.
+export function triageBriefingText(input: {
+	now: string
+	character: CharacterType | null
+	commonKnowledge: Array<CommonKnowledgeType>
+}) {
+	return [
+		characterText(input.character),
+		`It is now ${stamp(input.now)}.`,
+		commonKnowledgeText(input.commonKnowledge),
+	].join('\n\n')
+}
+
 function unreadText(name: string, timeline: UnreadTimeline) {
 	return [
 		timeline.since
