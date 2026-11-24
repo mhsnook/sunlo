@@ -7,6 +7,7 @@ import {
 	parseCoachContext,
 	type CoachContext,
 } from '../../src/features/coach/protocol'
+import { embedderFor } from '../../worker/search'
 import { supabaseFor } from '../../worker/supabase'
 import { findSimilar, listTags, searchLibrary } from '../coach/library'
 import { coachInstructions } from '../coach/prompt'
@@ -22,6 +23,7 @@ export function Coach() {
 		return context
 	}
 	const sb = supabaseFor(env)
+	const embed = embedderFor(env)
 	useModel(env.COACH_MODEL, { thinkingLevel: 'off' })
 
 	useTool({
@@ -30,7 +32,7 @@ export function Coach() {
 		input: coachToolInputs.search_library,
 		annotations: { readOnlyHint: true },
 		run: async ({ data: search }) => ({
-			output: await searchLibrary(sb, page(), search),
+			output: await searchLibrary(sb, embed, page(), search),
 		}),
 	})
 	useTool({
@@ -39,7 +41,13 @@ export function Coach() {
 		input: coachToolInputs.find_similar,
 		annotations: { readOnlyHint: true },
 		run: async ({ data: input }) => ({
-			output: await findSimilar(sb, page(), input.phrase_ids, input.limit),
+			output: await findSimilar(
+				sb,
+				embed,
+				page(),
+				input.phrase_ids,
+				input.limit
+			),
 		}),
 	})
 	useTool({

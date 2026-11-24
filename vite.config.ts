@@ -6,7 +6,7 @@ import babel from '@rolldown/plugin-babel'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tailwindcss from '@tailwindcss/vite'
 import scenetest from '@scenetest/vite-plugin'
-import { cloudflare } from '@cloudflare/vite-plugin'
+import { cloudflare, type WorkerConfig } from '@cloudflare/vite-plugin'
 import { flue, flueWorkerConfig } from '@flue/vite'
 
 // The root .env holds names the Worker must not see, such as the service
@@ -20,13 +20,34 @@ const isVitest = !!process.env.VITEST
 // The scripted coach, for scenetest and for running without Workers AI.
 const coachMock = process.env.VITE_COACH_USE_MOCK === 'true'
 
+// Flue adds a Durable Object binding per agent (FLUE_COACH_AGENT) to the
+// top-level config only, and `previews` inherits nothing, so without this a
+// preview's coach routes answer route_not_found.
+function withPreviewBindings(flueConfig: (config: WorkerConfig) => void) {
+	return (config: WorkerConfig) => {
+		flueConfig(config)
+		if (!config.previews) return
+		const own = config.previews.durable_objects?.bindings ?? []
+		const names = new Set(own.map((binding) => binding.name))
+		config.previews.durable_objects = {
+			...config.previews.durable_objects,
+			bindings: [
+				...own,
+				...(config.durable_objects?.bindings ?? []).filter(
+					(binding) => !names.has(binding.name)
+				),
+			],
+		}
+	}
+}
+
 // The Worker: Flue's agents, and worker/ for the app's own routes.
 function workerPlugins(
 	command: 'serve' | 'build',
 	appEnv: Record<string, string>
 ) {
 	const fluePlugin = flue({ providers: ['cloudflare'] })
-	const workerConfig = flueWorkerConfig()
+	const workerConfig = withPreviewBindings(flueWorkerConfig())
 	return [
 		fluePlugin,
 		cloudflare({

@@ -66,22 +66,22 @@ flowchart LR
   end
 
   subgraph CF["Cloudflare"]
+    Search["Worker: POST /api/search<br/>(query → embed → similarity)"]
     WA["Workers AI<br/>BGE-M3 embedder"]
   end
 
   subgraph SB["Supabase"]
     direction TB
     DB[("Postgres<br/>source tables<br/>+ search_text_index (MV)<br/>+ search_corpus (vectors)")]
-    Search["edge fn: search<br/>(query → embed → similarity)"]
     Embed["edge fn: embed-corpus-row<br/>(text → embed → upsert)"]
     DB -. "row triggers<br/>pg_net.http_post" .-> Embed
   end
 
   SPA -- "REST: source-table writes" --> DB
   SPA -- "RPC: search_phrases_smart<br/>(trigram, default)" --> DB
-  SPA -- "POST /functions/v1/search<br/>(semantic)" --> Search
+  SPA -- "POST /api/search<br/>(semantic)" --> Search
   Search -- "RPC: search_by_query / search_by_anchors" --> DB
-  Search -- "POST /ai/run/@cf/baai/bge-m3" --> WA
+  Search -- "AI binding: @cf/baai/bge-m3" --> WA
   Embed -- "POST /ai/run/@cf/baai/bge-m3" --> WA
   Embed -- "upsert search_corpus" --> DB
 ```
@@ -99,7 +99,7 @@ weight is.
 | **Populated by** | Statement-level triggers on each source table run `refresh materialized view concurrently search_text_index` in the same txn | Row-level triggers on each source table fire `pg_net.http_post` to the `embed-corpus-row` edge function, which calls Workers AI and upserts the result with `vectorized_at = source.updated_at` |
 | **Latency**      | Synchronous — always consistent the moment the source write returns                                                          | Async — embeddings lag source writes by hundreds of ms typically; a `BEFORE UPDATE` guard on `search_corpus` drops out-of-order completions at the row level                                    |
 | **Cost**         | Free (pure SQL)                                                                                                              | One Workers AI call per source-row write                                                                                                                                                        |
-| **Used by**      | `search_by_trigram` RPC, `useSmartSearch` hook (in-app search bar)                                                           | `search` edge function (also serves as a deterministic embedding cache via `getOrEmbed` — exact-match queries skip Workers AI)                                                                  |
+| **Used by**      | `search_by_trigram` RPC, `useSmartSearch` hook (in-app search bar)                                                           | `POST /api/search` in the Worker (also serves as a deterministic embedding cache — exact-match queries skip Workers AI)                                                                         |
 
 ### Write path (when a phrase changes)
 
@@ -123,22 +123,24 @@ until the next app-driven edit or a backfill run.
 - **In-app search bar (default)**: SPA → `search_phrases_smart` RPC →
   `search_by_trigram` over the materialized view. No edge function, no
   third party, no cost.
-- **`/search` and `/chats` semantic search**: SPA → `search` edge
-  function → Workers AI to embed the query → `search_by_query` RPC
-  (cosine over `search_corpus.embedding`) → results hydrated and
-  returned.
+- **`/search` and `/chats` semantic search**: SPA → the Worker's
+  `POST /api/search` (`worker/search.ts`) → Workers AI to embed the
+  query → `search_by_query` RPC (cosine over `search_corpus.embedding`)
+  → results hydrated and returned. The coach calls the same code
+  in-process.
 
 ### Modes
 
-| Mode                             | Trigger                                            | Trigram | Semantic search                                                                                                                                                                | Embed-on-write                                                                                                                                 |
-| -------------------------------- | -------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Production**                   | default                                            | live    | live                                                                                                                                                                           | live (row triggers fire on every write)                                                                                                        |
-| **Local with Cloudflare**        | local Supabase + keys in `supabase/functions/.env` | live    | live against local Supabase                                                                                                                                                    | live                                                                                                                                           |
-| **Local without Cloudflare**     | local Supabase, no Workers AI keys                 | live    | trigram-anchor fallback: top trigram hits feed into `search_by_anchors` over the seeded corpus vectors; exact-text queries still hit the corpus-vector cache and skip the call | trigger fires, edge fn no-ops on inserts/updates (delete cleanup still runs); new rows are trigram-only until a backfill catches the corpus up |
-| **Mock chat** (`pnpm dev:local`) | sets `VITE_CHAT_USE_MOCK=true`                     | live    | `/chats` UI uses canned data; `/search` works against whichever of the above modes the edge function is in                                                                     | n/a (no source writes happen on this path)                                                                                                     |
+| Mode                             | Trigger                                                                              | Trigram | Semantic search                                                                                                                                                                | Embed-on-write                                                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Production**                   | default                                                                              | live    | live                                                                                                                                                                           | live (row triggers fire on every write)                                                                                                        |
+| **Local with Cloudflare**        | local Supabase, `pnpm dev` after `wrangler login`, keys in `supabase/functions/.env` | live    | live against local Supabase                                                                                                                                                    | live                                                                                                                                           |
+| **Local without Cloudflare**     | local Supabase, `pnpm dev:local`, no Workers AI keys                                 | live    | trigram-anchor fallback: top trigram hits feed into `search_by_anchors` over the seeded corpus vectors; exact-text queries still hit the corpus-vector cache and skip the call | trigger fires, edge fn no-ops on inserts/updates (delete cleanup still runs); new rows are trigram-only until a backfill catches the corpus up |
+| **Mock chat** (`pnpm dev:local`) | sets `VITE_CHAT_USE_MOCK=true`                                                       | live    | `/chats` UI uses canned data; `/search` uses the trigram-anchor fallback, because `dev:local` runs the Worker without the AI binding                                           | n/a (no source writes happen on this path)                                                                                                     |
 
-The trigram-anchor fallback runs whenever the `search` edge function
-boots without `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN`. It also
+The trigram-anchor fallback runs whenever `/api/search` cannot embed the
+query: the Worker has no AI binding (`pnpm dev:local`) or the model call
+fails. It also
 doubles as a first-party-only deployment mode: ship the seed corpus, run
 without Workers AI, and `/search` still returns plausible-shaped results
 without any third-party dependency. The catch is that it's not really

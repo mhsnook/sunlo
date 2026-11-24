@@ -1,6 +1,6 @@
-// Pure-TS normalization, shared between the client (for the search query),
-// the Edge Function (for the same query, server-side), and the backfill
-// script (for indexed content). Same input → same output, so the three agree.
+// Search queries and indexed text must normalize identically, or exact
+// matches miss. supabase/functions/_shared/normalize.ts is a hand-synced
+// copy: change both together.
 //
 // PHILOSOPHY: this layer is unconditional and language-agnostic enough to be
 // safe. Anything language-specific that could plausibly be wrong, debated,

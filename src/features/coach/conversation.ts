@@ -7,6 +7,7 @@ import {
 	parseCoachContext,
 	type CoachContext,
 	AddToDeckOutputSchema,
+	coachToolInputs,
 	DECK_TARGET,
 	DraftRequestOutputSchema,
 	NavigateOutputSchema,
@@ -126,8 +127,8 @@ export function readConversation(
 					.trim()
 				if (said) log.push({ id, kind: 'learner', text: said })
 			} else if (part.type === 'text' && message.role === 'assistant') {
-				if (part.text.trim())
-					log.push({ id, kind: 'coach', text: part.text.trim() })
+				const { said } = splitToolText(part.text)
+				if (said) log.push({ id, kind: 'coach', text: said })
 			} else if (part.type === 'dynamic-tool') {
 				const view = viewOf(part)
 				if (!view) return
@@ -153,10 +154,54 @@ export function readConversation(
 					.map((part) =>
 						finished(part, 'suggest_replies', SuggestRepliesOutputSchema)
 					)
-					.findLast(Boolean)?.replies ?? [])
+					.findLast(Boolean)?.replies ?? repliesWrittenAsText(last))
 			: []
 
 	return { log, views, suggestions }
+}
+
+const TOOL_LINE = new RegExp(
+	`^\\W*(${Object.keys(coachToolInputs).join('|')})\\W*[:(]`
+)
+
+// A small model sometimes writes a tool call into its message instead of
+// making it ("suggest_replies: [...]"). The learner should not see that line,
+// and written-out reply suggestions still become buttons.
+export function splitToolText(text: string) {
+	const said: Array<string> = []
+	let replies: Array<string> | null = null
+	for (const line of text.split('\n')) {
+		const tool = TOOL_LINE.exec(line)?.[1]
+		if (!tool) {
+			said.push(line)
+			continue
+		}
+		if (tool === 'suggest_replies') replies = parseReplies(line) ?? replies
+	}
+	return { said: said.join('\n').trim(), replies }
+}
+
+function parseReplies(line: string) {
+	const list = line.slice(line.indexOf('['), line.lastIndexOf(']') + 1)
+	try {
+		const parsed = v.safeParse(
+			coachToolInputs.suggest_replies.entries.replies,
+			JSON.parse(list)
+		)
+		return parsed.success ? parsed.output : null
+	} catch {
+		return null
+	}
+}
+
+function repliesWrittenAsText(message: FlueConversationMessage) {
+	return (
+		message.parts
+			.flatMap((part) =>
+				part.type === 'text' ? [splitToolText(part.text).replies] : []
+			)
+			.findLast(Boolean) ?? []
+	)
 }
 
 function viewOf(part: ToolPart): CoachView | null {

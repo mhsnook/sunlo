@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/types/supabase'
+import { matchCorpus, type EmbedFn } from '../../worker/search'
 
 // The coach's reads. Everything here is public library data, read with the
 // anon key; the learner's deck stays on the page.
@@ -95,21 +96,21 @@ const idsOf = (
 	type: string
 ) => unique(rows.filter((r) => r.entity_type === type).map((r) => r.entity_id))
 
-// The search Edge Function embeds the query (Workers AI) and ranks by
-// meaning. It fails where it has no embedding credentials, such as a local
-// Supabase, so spelling search (trigram) backs it up.
-async function searchHits(sb: Sb, lang: string, query: string): Promise<Hits> {
-	const semantic = await sb.functions
-		.invoke<Array<{ entity_type: string; entity_id: string }>>('search', {
-			body: {
-				langs: [lang],
-				query: { kind: 'text', text: query },
-				excludeIds: [],
-				limit: SEARCH_POOL,
-			},
-		})
-		.then((r) => (r.error ? [] : (r.data ?? [])))
-		.catch(() => [])
+// Ranks by meaning (worker/search.ts). With no corpus vectors, such as a
+// fresh local Supabase, it finds nothing, so spelling search (trigram)
+// backs it up.
+async function searchHits(
+	sb: Sb,
+	embed: EmbedFn,
+	lang: string,
+	query: string
+): Promise<Hits> {
+	const semantic = await matchCorpus(sb, embed, {
+		langs: [lang],
+		query: { kind: 'text', text: query },
+		excludeIds: [],
+		limit: SEARCH_POOL,
+	}).catch(() => [])
 	if (semantic.length)
 		return {
 			method: 'meaning',
@@ -227,12 +228,13 @@ export async function playlistsById(
 
 export async function searchLibrary(
 	sb: Sb,
+	embed: EmbedFn,
 	input: { lang: string; translationLang: string },
 	search: { query?: string; tags?: Array<string>; limit?: number }
 ) {
 	const query = search.query?.trim()
 	const hits: Hits = query
-		? await searchHits(sb, input.lang, query)
+		? await searchHits(sb, embed, input.lang, query)
 		: search.tags?.length
 			? {
 					method: 'tags',
@@ -264,25 +266,21 @@ export async function searchLibrary(
 	}
 }
 
-// Look-alikes by meaning when the search Edge Function can embed, else by
+// Look-alikes by meaning when the anchors have corpus vectors, else by
 // shared tags.
 export async function findSimilar(
 	sb: Sb,
+	embed: EmbedFn,
 	input: { lang: string; translationLang: string },
 	anchors: Array<string>,
 	limit = 16
 ) {
-	const semantic = await sb.functions
-		.invoke<Array<{ entity_type: string; entity_id: string }>>('search', {
-			body: {
-				langs: [input.lang],
-				query: { kind: 'anchor', ids: anchors },
-				excludeIds: anchors,
-				limit: SEARCH_POOL,
-			},
-		})
-		.then((r) => (r.error ? [] : (r.data ?? [])))
-		.catch(() => [])
+	const semantic = await matchCorpus(sb, embed, {
+		langs: [input.lang],
+		query: { kind: 'anchor', ids: anchors },
+		excludeIds: anchors,
+		limit: SEARCH_POOL,
+	}).catch(() => [])
 	let ids = idsOf(semantic, 'phrase')
 	if (!ids.length) {
 		const { data } = await sb

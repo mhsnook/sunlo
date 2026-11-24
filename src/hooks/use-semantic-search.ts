@@ -1,20 +1,20 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
-import supabase from '@/lib/supabase-client'
+import { postWorkerApi } from '@/lib/worker-api'
 import { MIN_QUERY_LENGTH, type SearchEntityType } from '@/hooks/search-config'
 
-// One layer of the search stack: hits the `search` Edge Function and returns
-// raw entity results (phrases, requests, playlists). Composed by
-// `useHybridSearch` for the /search route and called directly by the chat
-// client (via runSemanticSearch in features/chat/api.ts).
+// One layer of the search stack: calls the Worker's /api/search
+// (worker/search.ts) and returns raw entity results (phrases, requests,
+// playlists). Composed by `useHybridSearch` for the /search route and called
+// directly by the chat client (via runSemanticSearch in features/chat/api.ts).
 //
 // Two query modes:
-//   - 'text'   — caller passes a string; edge function embeds it via
-//                Workers AI BGE-M3 (or hits the embedding cache) and runs
-//                cosine similarity against search_corpus.
-//   - 'anchor' — caller passes entity_ids; edge function averages their
-//                stored embeddings server-side. No Workers AI call.
+//   - 'text'   — caller passes a string; the Worker embeds it with BGE-M3
+//                (or hits the embedding cache) and runs cosine similarity
+//                against search_corpus.
+//   - 'anchor' — caller passes entity_ids; the Worker averages their stored
+//                embeddings in the database. No model call.
 
 export type SemanticResult = {
 	entity_type: SearchEntityType
@@ -40,7 +40,7 @@ const STALE_TIME_MS = 5 * 60 * 1000
 const EMPTY_RESULTS: Array<SemanticResult> = []
 
 /**
- * Plain async function — invokes the search Edge Function directly. Use for
+ * Plain async function — calls /api/search directly. Use for
  * imperative call sites (chat submit handlers, mutation onClick) where a
  * hook doesn't fit. For reactive search-as-you-type, use useSemanticSearch.
  */
@@ -50,16 +50,12 @@ export async function runSemanticSearch(
 	opts: SemanticSearchOpts = {}
 ): Promise<Array<SemanticResult>> {
 	const { excludeIds = [], limit = DEFAULT_LIMIT } = opts
-	const result = await supabase.functions.invoke<Array<SemanticResult>>(
-		'search',
-		{
-			body: { langs, query, excludeIds, limit },
-		}
+	const results = await postWorkerApi(
+		'/api/search',
+		{ langs, query, excludeIds, limit },
+		'Semantic search failed'
 	)
-	if (result.error) {
-		throw new Error(`semantic search failed: ${String(result.error)}`)
-	}
-	return result.data ?? []
+	return results as Array<SemanticResult>
 }
 
 /**
