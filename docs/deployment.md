@@ -97,7 +97,7 @@ Workers Builds defaults to Node 24, which matches `engines`.
 
 **The embedder's database connection.** The `embed-corpus-row` Edge Function writes `search_corpus` as `corpus_writer`, a role that the migration `20261106120000_corpus_writer_role.sql` creates without a password. It can read and write that one table and nothing else. The function reads the source rows with the anon key. Until the role has a password and the function has its connection string, every call is skipped: new and edited rows get no embedding, and archived rows keep their corpus entries. So do these steps right after the release that carries the migration merges:
 
-1. In the Supabase SQL editor, set the password: `alter role corpus_writer password '<a long random password>';`
+1. Make a password that is safe inside a URL, such as `openssl rand -hex 32` (base64 output has `/` and `+`, which break the connection string in step 2). In the Supabase SQL editor, set it: `alter role corpus_writer password '<password>';`
 2. Save the transaction pooler URL as an Edge Function secret (Project Settings › Database › Connection string › Transaction pooler, port 6543), with the user `corpus_writer.<project-ref>`:
 
    ```bash
