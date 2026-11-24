@@ -46,7 +46,9 @@ jobs:
           fi
 
   scenetest:
-    runs-on: ubuntu-latest
+    # Playwright 1.58 cannot install Chromium's system packages on Ubuntu
+    # 26.04, which ubuntu-latest became in November 2026.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     needs: changes
     if: needs.changes.outputs.app == 'true'
