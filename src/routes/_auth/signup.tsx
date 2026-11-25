@@ -37,7 +37,7 @@ export const Route = createFileRoute('/_auth/signup')({
 		return result.success ? result.data : {}
 	},
 	beforeLoad: ({ context: { auth } }) => {
-		if (auth.isAuth) {
+		if (auth.isAuth && !auth.isAnonymous) {
 			console.log(
 				`Issuing redirect from /signup to /learn because auth.isAuth is true`
 			)
@@ -63,7 +63,7 @@ type FormInputs = z.infer<typeof FormSchema>
 
 function SignUp() {
 	const { referrer } = Route.useSearch()
-	const { isAuth } = useAuth()
+	const { isAuth, isAnonymous } = useAuth()
 	const navigate = Route.useNavigate()
 
 	const signupMutation = useMutation({
@@ -113,7 +113,7 @@ function SignUp() {
 		},
 	})
 
-	if (isAuth) {
+	if (isAuth && !isAnonymous) {
 		console.log(
 			`Issuing redirect from Signup component to /getting-started because auth.isAuth has become true`
 		)

@@ -1083,6 +1083,10 @@ set
 declare
 	v_phrase public.phrase;
 begin
+	if (select (auth.jwt() ->> 'is_anonymous')::boolean) is true then
+		raise exception 'Sign up to confirm a draft phrase' using errcode = '42501';
+	end if;
+
 	select * into v_phrase from public.phrase where id = p_phrase_id and archived = false;
 	if not found then
 		raise exception 'Phrase % not found', p_phrase_id using errcode = 'P0002';

@@ -605,7 +605,7 @@ Prototype-only feature in `src/features/chat/`. Public route, no auth.
 
 ## Coach (`/coach`)
 
-The AI coach in `src/features/coach/`. Signed-in only; specs run the coach agent on its scripted model (`VITE_COACH_USE_MOCK`, `.flue/coach/mock.ts`).
+The AI coach in `src/features/coach/`. Open to visitors, whom the page signs in anonymously at their first message; specs run the coach agent on its scripted model (`VITE_COACH_USE_MOCK`, `.flue/coach/mock.ts`).
 
 | Selector                      | Attribute   | Component/Location            | Description                                                                 |
 | ----------------------------- | ----------- | ----------------------------- | --------------------------------------------------------------------------- |

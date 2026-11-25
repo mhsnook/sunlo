@@ -43,6 +43,64 @@ begin
 end;
 $$;
 
+-- Storage is public content too: only the avatars bucket takes uploads.
+create policy "Anonymous users cannot upload files" on "storage"."objects" as restrictive for insert to authenticated
+with
+	check (
+		(
+			select
+				(auth.jwt () ->> 'is_anonymous')::boolean
+		) is not true
+	);
+
+create policy "Anonymous users cannot replace files" on "storage"."objects" as restrictive
+for update
+	to authenticated using (
+		(
+			select
+				(auth.jwt () ->> 'is_anonymous')::boolean
+		) is not true
+	);
+
+-- confirm_draft_phrase is security definer, so the policies above do not
+-- reach it, and it trusts languages_known, which any user can set on their
+-- own profile. Unchanged except for the anonymous check.
+create or replace function "public"."confirm_draft_phrase" ("p_phrase_id" "uuid") returns "public"."phrase" language "plpgsql" security definer
+set
+	"search_path" to '' as $$
+declare
+	v_phrase public.phrase;
+begin
+	if (select (auth.jwt() ->> 'is_anonymous')::boolean) is true then
+		raise exception 'Sign up to confirm a draft phrase' using errcode = '42501';
+	end if;
+
+	select * into v_phrase from public.phrase where id = p_phrase_id and archived = false;
+	if not found then
+		raise exception 'Phrase % not found', p_phrase_id using errcode = 'P0002';
+	end if;
+
+	if not (
+		public.is_admin()
+		or exists (
+			select 1
+			from public.user_profile profile,
+				jsonb_array_elements(profile.languages_known) as known
+			where profile.uid = auth.uid()
+				and known ->> 'lang' = v_phrase.lang
+				and known ->> 'level' = 'fluent'
+		)
+	) then
+		raise exception 'Only fluent speakers of this language can confirm a draft phrase'
+			using errcode = '42501';
+	end if;
+
+	update public.phrase set draft = false where id = p_phrase_id
+	returning * into v_phrase;
+	return v_phrase;
+end;
+$$;
+
 -- 2. An anonymous user gets a profile when they sign in.
 --
 -- The app expects a user_profile row for every uid it signs in

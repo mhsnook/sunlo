@@ -19,7 +19,9 @@ An anonymous user is a real user with the `authenticated` role and the `is_anony
 - The trigger `on_anonymous_user_created` gives them a `user_profile` row at sign-in, like any other user.
 - They can write their own `user_` tables: deck, cards, reviews and profile.
 - A restrictive RLS policy, "Anonymous users cannot add public content", refuses their inserts into every other table: phrases, translations, tags, requests, comments, playlists, upvotes, friend requests and chat. The coach page shows a request draft as text for them (`coach-request-needs-account`), because the form would fail.
+- Two more guards cover what RLS on public tables does not reach: restrictive policies on `storage.objects` refuse their uploads, and `confirm_draft_phrase` (security definer) refuses them.
 - `feedback` stays open to them, as it is to signed-out visitors.
+- They can log in or sign up from `/login` and `/signup`, which redirect only a user who is signed in and not anonymous. Signing up there makes a new account; converting the anonymous one comes with the sign-up step.
 
 Converting to a full account keeps the uid, so the conversation and the deck carry over. Confirming the email fires `handle_new_user` again, and its `on conflict do nothing` keeps the profile. The sign-up step itself is not built yet.
 

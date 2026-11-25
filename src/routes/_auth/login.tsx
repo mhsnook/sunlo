@@ -20,10 +20,12 @@ export const Route = createFileRoute('/_auth/login')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function LoginForm() {
-	const { isAuth } = useAuth()
+	const { isAuth, isAnonymous } = useAuth()
 	const { redirectedFrom } = Route.useSearch()
 
-	if (isAuth)
+	// A visitor the coach signed in anonymously can still log in to an
+	// account they already have.
+	if (isAuth && !isAnonymous)
 		return <Navigate to={redirectedFrom || '/learn'} from={Route.fullPath} />
 
 	return (

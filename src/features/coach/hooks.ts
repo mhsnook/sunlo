@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { inArray, useLiveQuery } from '@tanstack/react-db'
 import { useFlueAgent } from '@flue/react'
@@ -117,14 +117,18 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	const client = useMemo(() => (uid ? coachClient(uid) : undefined), [uid])
 	const agent = useFlueAgent({ client })
 	const [joining, setJoining] = useState(false)
+	// State updates on the next render; a second send in the same frame must
+	// not sign the visitor in twice.
+	const joiningNow = useRef(false)
 	const conversation = useMemo(
 		() => readConversation(agent.messages, lang),
 		[agent.messages, lang]
 	)
 	// Until the history loads, an empty conversation may only mean "not read
 	// yet", so the page must not greet the learner as new. A visitor has no
-	// history to load.
-	const ready = !uid || agent.historyReady
+	// history to load, and while their first message goes out the new
+	// session's history is still on its way.
+	const ready = !uid || joining || agent.historyReady
 	const started = agent.messages.length > 0
 
 	// Read when the turn ends, not when it started: the learner may have added
@@ -170,6 +174,10 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	}
 
 	const send = async (text: string) => {
+		if (!uid) {
+			if (joiningNow.current) return
+			joiningNow.current = true
+		}
 		const opening = started ? null : openingLine(learnerName, lang, deck.size)
 		const notes = pendingNotes(pageKey)
 		const message = composeMessage(text, {
@@ -220,6 +228,7 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 			console.error('coach: message failed', err)
 			toastError(err instanceof Error ? err.message : "The coach didn't answer")
 		} finally {
+			joiningNow.current = false
 			setJoining(false)
 		}
 	}
