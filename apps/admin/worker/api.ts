@@ -11,6 +11,8 @@ export type AppEnv = {
 	Variables: {
 		// `name` is the admin's username, or their email when they have none.
 		admin: { uid: string; email: string; name: string }
+		// The admin's access token, for reads that go through their own RLS.
+		token: string
 	}
 }
 
@@ -78,6 +80,7 @@ export function createApi() {
 		}
 		const email = claims.email ?? claims.sub
 		c.set('admin', { uid: claims.sub, email, name: username ?? email })
+		c.set('token', token)
 		await next()
 	})
 

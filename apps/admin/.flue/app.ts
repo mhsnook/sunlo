@@ -26,10 +26,14 @@ import {
 	verifyGithubSignature,
 } from '../worker/crew/github-log'
 import { createApi } from '../worker/api'
+import { withSql } from '../worker/db'
+import { supabaseAs } from '../worker/supabase'
+import { feedbackMeta, feedbackTexts, joinFeedback } from '../worker/feedback'
+import { feedbackKinds, type FeedbackListType } from '../shared/feedback'
 import { imageInfo, verifyImageLink } from '../worker/images'
 import { SVG_POLICY } from '../worker/svg'
 import { crewProvider } from '../worker/models'
-import { deliver, requestReport, roomFor, wake } from './crew'
+import { deliver, requestReport, roomFor, startTriage, wake } from './crew'
 
 setProvider(crewProvider(env.AI, env.AI_GATEWAY_ID))
 
@@ -71,6 +75,76 @@ api.get('/crew/room', async (c) => {
 		...(await room.snapshot(c.get('admin').uid, new URL(c.req.url).origin)),
 		githubRepo: c.env.GITHUB_REPO,
 	})
+})
+
+// ?open=1 lists only what the crew has not triaged yet. The text of each
+// item comes through the admin's own session (worker/feedback.ts).
+api.get('/feedback', async (c) => {
+	const kind = z.enum(feedbackKinds).safeParse(c.req.query('kind'))
+	const triage = await (await roomFor()).feedbackTriage()
+	const { rows, untriaged } = await withSql(c.env.HYPERDRIVE, 30_000, (sql) =>
+		feedbackMeta(sql, {
+			kind: kind.success ? kind.data : null,
+			triaged: triage.map((t) => t.feedback_id),
+			untriagedOnly: c.req.query('open') === '1',
+			limit: 200,
+		})
+	)
+	const texts = await feedbackTexts(
+		supabaseAs(c.env, c.get('token')),
+		rows.map((row) => row.id)
+	)
+	return c.json({
+		items: joinFeedback(rows, texts, triage, { withEmail: true }),
+		untriaged,
+	} satisfies FeedbackListType)
+})
+
+// Hands the oldest untriaged items to a triage run. Only an admin's session
+// can read their text, which is why a person starts this and a cron cannot.
+const TRIAGE_BATCH = 30
+api.post('/feedback/triage', async (c) => {
+	const room = await roomFor()
+	const triage = await room.feedbackTriage()
+	const { rows } = await withSql(c.env.HYPERDRIVE, 30_000, (sql) =>
+		feedbackMeta(sql, {
+			kind: null,
+			triaged: triage.map((t) => t.feedback_id),
+			untriagedOnly: true,
+			limit: TRIAGE_BATCH,
+		})
+	)
+	if (!rows.length) return c.json({ count: 0 })
+	const texts = await feedbackTexts(
+		supabaseAs(c.env, c.get('token')),
+		rows.map((row) => row.id)
+	)
+	const items = joinFeedback(rows, texts, [], { withEmail: false }).map(
+		({
+			id,
+			created_at,
+			kind,
+			lang,
+			username,
+			signed_in,
+			page_url,
+			left_email,
+			message,
+		}) => ({
+			id,
+			created_at,
+			kind,
+			lang,
+			username,
+			signed_in,
+			page_url,
+			left_email,
+			message,
+		})
+	)
+	await room.offerFeedback(items.map((item) => item.id))
+	await startTriage('product-1', new Date(), items)
+	return c.json({ count: items.length })
 })
 
 api.get('/crew/runs', async (c) => {

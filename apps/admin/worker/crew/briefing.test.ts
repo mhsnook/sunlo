@@ -15,6 +15,7 @@ import {
 	threadBriefingText,
 	timelineText,
 	type BriefingInput,
+	triageBriefingText,
 } from './briefing'
 
 const message = (
@@ -537,5 +538,18 @@ describe('timelineText', () => {
 		expect(timelineText([card, note])).toContain(
 			'sam (a note on the card "Keep new learners"): Shorter titles, please'
 		)
+	})
+})
+
+describe('triageBriefingText', () => {
+	it('holds only what the admin wrote: the character and Common Knowledge', () => {
+		const text = triageBriefingText({
+			now: '2026-11-24T07:00:00.000Z',
+			character: { text: 'You are steady.', original: '', editedAt: null },
+			commonKnowledge: [{ id: 1, text: 'Call the admin Sam.', at: '' }],
+		})
+		expect(text).toContain('You are steady.')
+		expect(text).toContain('Call the admin Sam.')
+		expect(text).not.toMatch(/Common Room|Situation Report|since your last run/)
 	})
 })
