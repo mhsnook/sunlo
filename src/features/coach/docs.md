@@ -12,7 +12,7 @@ Each learner has one conversation, keyed on their uid (`coachConversationId` in 
 
 ## Visitors without an account
 
-A visitor has no uid, so the page shows the fixed greeting and the Flue hook stays dormant (no client). When they send their first message, `send` in `hooks.ts` holds it and opens a dialog (`guest-choice-dialog.tsx`): continue as a guest, log in, or create an account. Nothing is created until they choose. "Continue as guest" calls `supabase.auth.signInAnonymously()`. The auth context re-renders the page with the uid, the hook reads that uid's conversation (absent, 404), and then the held message goes out through the hook's `sendMessage`, which re-checks a conversation that was absent when it was first read. Sending it on a separate client instead would leave the hook showing an empty chat. `coach.$lang.lazy.tsx` reads `useAuth()` rather than the route context, which keeps the auth from when the route loaded.
+A visitor has no uid, so the page shows the fixed greeting and the Flue hook stays dormant (no client). In place of the composer, the chat offers them to continue as a guest, log in, or create an account (`guest-choice.tsx`). Nothing is created until they choose. "Continue as guest" calls `supabase.auth.signInAnonymously()`; the auth context re-renders the page with the uid, and the composer shows. Their first message goes through the hook's `sendMessage` like any learner's, which re-checks a conversation that did not exist when the hook first read it. `coach.$lang.lazy.tsx` reads `useAuth()` rather than the route context, which keeps the auth from when the route loaded.
 
 An anonymous user is a real user with the `authenticated` role and the `is_anonymous` JWT claim:
 

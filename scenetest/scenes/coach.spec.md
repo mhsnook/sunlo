@@ -73,9 +73,9 @@ learner:
 
 # a visitor talks to the coach without an account, and the coach starts their deck
 
-// The first message asks the visitor to log in or continue as a guest;
-// a guest is signed in anonymously. The deck is created when the coach saves
-// what they want to learn.
+// The chat asks the visitor to log in or continue as a guest before it takes
+// a message; a guest is signed in anonymously. The deck is created when the
+// coach saves what they want to learn.
 
 visitor:
 
@@ -85,10 +85,10 @@ visitor:
 - up
 - see coach-page
 - seeText What brings you to Kannada?
-- typeInto coach-input "I want to talk with my in-laws and I know a few greetings"
-- click coach-send
 - see coach-guest-choice
 - click coach-continue-as-guest
+- typeInto coach-input "I want to talk with my in-laws and I know a few greetings"
+- click coach-send
 - seeText I wrote that down
 - seeText saved what you want to learn on your deck
 - typeInto coach-input tea
@@ -107,8 +107,8 @@ visitor:
 - click coach-language-list [team.lang_partial] coach-language-link
 - up
 - see coach-page
+- click coach-continue-as-guest
 - typeInto coach-input "request: how do I say thank you for dinner"
 - click coach-send
-- click coach-continue-as-guest
 - see coach-request-needs-account
 - notSee coach-request-form

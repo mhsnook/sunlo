@@ -1,15 +1,8 @@
-import {
-	useCallback,
-	useEffect,
-	useEffectEvent,
-	useMemo,
-	useRef,
-	useState,
-} from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { inArray, useLiveQuery } from '@tanstack/react-db'
 import { useFlueAgent } from '@flue/react'
-import { createFlueClient, type FlueClient } from '@flue/sdk'
+import { createFlueClient } from '@flue/sdk'
 import { toastError } from '@/components/ui/sonner'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { addPhrasesToDeck, saveDeckIntention } from '@/features/deck/mutations'
@@ -94,8 +87,8 @@ async function signInAnonymously() {
 
 /**
  * The coach for one language page. A visitor without an account has no uid
- * and no conversation until their first message: `send` signs them in
- * anonymously, and the message goes out once the page has their uid.
+ * and no conversation: the chat offers them to log in or continue as a guest
+ * (`guest.join`, an anonymous sign-in) before they can send.
  */
 export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	const { data: profile } = useProfile()
@@ -121,18 +114,14 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 		[uid]
 	)
 	const agent = useFlueAgent({ client })
-	// A visitor's first message, held while they choose to log in or continue
-	// as a guest (choosing), then while the page signs them in (waiting).
-	const [choosing, setChoosing] = useState<string | null>(null)
-	const [waiting, setWaiting] = useState<string | null>(null)
-	const signingIn = useRef(false)
+	const [joining, setJoining] = useState(false)
 	const conversation = useMemo(
 		() => readConversation(agent.messages, lang),
 		[agent.messages, lang]
 	)
 	// Until the history loads, an empty conversation may only mean "not read
 	// yet", so the page must not greet the learner as new.
-	const ready = !uid || waiting !== null || agent.historyReady
+	const ready = !uid || agent.historyReady
 	const started = agent.messages.length > 0
 
 	// Read when the turn ends, not when it started: the learner may have added
@@ -173,7 +162,8 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 			)
 	}
 
-	const deliver = async (owner: string, flue: FlueClient, text: string) => {
+	const send = async (text: string) => {
+		if (!uid || !client) return
 		const opening = started ? null : openingLine(learnerName, lang, deck.size)
 		const notes = pendingNotes(pageKey)
 		try {
@@ -189,19 +179,19 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 				pageKey,
 				notes.map((note) => note.id)
 			)
-			await flue.wait(receipt)
+			await client.wait(receipt)
 			// One turn is a handful of messages; the newest twenty hold it.
-			const { messages } = await flue.history({ limit: 20 })
+			const { messages } = await client.history({ limit: 20 })
 			const actions = pageActions(messages, receipt.submissionId)
 			if (actions.intention) {
 				await saveDeckIntention(
 					actions.intention.lang,
-					owner,
+					uid,
 					actions.intention.intention
 				)
 				addNote(pageKey, 'saved what you want to learn on your deck')
 			}
-			if (actions.add.length) await addToDeck(owner, actions.add)
+			if (actions.add.length) await addToDeck(uid, actions.add)
 			noteOverlap(actions.shown)
 			if (actions.navigate) navigateTo(actions.navigate)
 		} catch (err) {
@@ -210,56 +200,29 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 		}
 	}
 
-	// Sent through the hook once it watches the new uid's conversation:
-	// sendMessage then re-checks a conversation that did not exist when the
-	// hook first read it, so the chat shows the turn.
-	const deliverWaiting = useEffectEvent(
-		(owner: string, flue: FlueClient, text: string) => {
-			setWaiting(null)
-			void deliver(owner, flue, text)
-		}
-	)
-	useEffect(() => {
-		if (uid && client && waiting !== null && agent.historyReady)
-			deliverWaiting(uid, client, waiting)
-	}, [uid, client, waiting, agent.historyReady])
-
-	const send = async (text: string) => {
-		if (uid && client) return deliver(uid, client, text)
-		setChoosing(text)
-	}
-
-	const continueAsGuest = async () => {
-		// A second click in the same frame must not sign the visitor in twice.
-		if (choosing === null || signingIn.current) return
-		signingIn.current = true
-		setWaiting(choosing)
-		setChoosing(null)
+	const joinAsGuest = async () => {
+		setJoining(true)
 		try {
 			await signInAnonymously()
 		} catch (err) {
-			setWaiting(null)
 			console.error('coach: anonymous sign-in failed', err)
-			toastError(err instanceof Error ? err.message : "The coach didn't answer")
+			toastError(
+				err instanceof Error ? err.message : "Couldn't start your coach"
+			)
 		} finally {
-			signingIn.current = false
+			setJoining(false)
 		}
 	}
 
 	return {
 		pageKey,
 		send,
-		choosing: choosing !== null,
-		continueAsGuest: () => void continueAsGuest(),
-		dismissChoice: () => setChoosing(null),
+		guest: uid ? null : { joining, join: () => void joinAsGuest() },
 		translationLang,
 		learnerName,
 		started,
 		ready,
-		busy:
-			waiting !== null ||
-			agent.status === 'submitted' ||
-			agent.status === 'streaming',
+		busy: agent.status === 'submitted' || agent.status === 'streaming',
 		...conversation,
 	}
 }

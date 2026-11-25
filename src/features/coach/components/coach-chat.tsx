@@ -12,6 +12,7 @@ import {
 	type CoachLogEntry,
 } from '../conversation'
 import { usePageState } from '../store'
+import { GuestChoice } from './guest-choice'
 
 type Props = {
 	coachKey: string
@@ -23,6 +24,9 @@ type Props = {
 	ready: boolean
 	started: boolean
 	busy: boolean
+	// Set for a visitor with no uid yet: the chat asks them to log in or
+	// continue as a guest before it takes a message.
+	guest: { joining: boolean; join: () => void } | null
 	send: (text: string) => void
 }
 
@@ -36,6 +40,7 @@ export function CoachChat({
 	ready,
 	started,
 	busy,
+	guest,
 	send,
 }: Props) {
 	const [draft, setDraft] = useState('')
@@ -89,7 +94,11 @@ export function CoachChat({
 				</div>
 			</MessageScroller>
 
-			{!busy && replies.length > 0 && (
+			{guest ? (
+				<GuestChoice joining={guest.joining} onGuest={guest.join} />
+			) : null}
+
+			{!guest && !busy && replies.length > 0 && (
 				<div className="flex flex-wrap gap-2" data-testid="coach-suggestions">
 					{replies.map((reply) => (
 						<Button
@@ -106,19 +115,21 @@ export function CoachChat({
 				</div>
 			)}
 
-			<ComposeBar
-				value={draft}
-				onValueChange={setDraft}
-				onSend={(text) => {
-					send(text)
-					setDraft('')
-				}}
-				busy={busy || !ready}
-				placeholder="Tell your coach what you want to learn"
-				inputLabel="Message your coach"
-				inputTestId="coach-input"
-				sendTestId="coach-send"
-			/>
+			{guest ? null : (
+				<ComposeBar
+					value={draft}
+					onValueChange={setDraft}
+					onSend={(text) => {
+						send(text)
+						setDraft('')
+					}}
+					busy={busy || !ready}
+					placeholder="Tell your coach what you want to learn"
+					inputLabel="Message your coach"
+					inputTestId="coach-input"
+					sendTestId="coach-send"
+				/>
+			)}
 		</div>
 	)
 }
