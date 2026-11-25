@@ -17,6 +17,10 @@
 		// /learn/* runs it so that crawlers get Open Graph tags.
 		"run_worker_first": ["/api/*", "/learn/*"],
 	},
+	// Keeps the Worker's logs, Durable Objects included, in the dashboard
+	// (Observability › Logs). An agent run that fails shows the client only
+	// "internal error"; the log under its submission id has the cause.
+	"observability": { "enabled": true },
 	"ai": { "binding": "AI", "remote": true },
 	"ratelimits": [
 		{
@@ -69,6 +73,7 @@
 			"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
 			"AI_GATEWAY_ID": "sunlo-app",
 		},
+		"observability": { "enabled": true },
 		"ai": { "binding": "AI" },
 		// Their own namespaces, so preview traffic never counts against a
 		// production user's limit.
