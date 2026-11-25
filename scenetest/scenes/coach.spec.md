@@ -8,7 +8,7 @@ cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang
 
 learner:
 
-- openTo /coach
+- openTo /login?redirectedFrom=/coach
 - typeInto email-input [self.email]
 - typeInto password-input [self.password]
 - click submit-button
@@ -34,7 +34,7 @@ cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang
 
 learner:
 
-- openTo /coach
+- openTo /login?redirectedFrom=/coach
 - typeInto email-input [self.email]
 - typeInto password-input [self.password]
 - click submit-button
@@ -56,7 +56,7 @@ cleanup: supabase.from('phrase_request').delete().eq('requester_uid', '[learner.
 
 learner:
 
-- openTo /coach
+- openTo /login?redirectedFrom=/coach
 - typeInto email-input [self.email]
 - typeInto password-input [self.password]
 - click submit-button
