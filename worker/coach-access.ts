@@ -7,7 +7,7 @@ import type { AppEnv } from './auth'
 const MAX_MESSAGE_BYTES = 16_000
 
 // Flue's router has no auth of its own: anyone who can reach a conversation
-// URL can read and write it. Runs after requireUser, and lets a learner reach
+// URL can read and write it. Runs after requireSession, and lets a learner reach
 // only their own conversation, whose id is their uid.
 export const requireOwnConversation: MiddlewareHandler<AppEnv> = async (
 	c,

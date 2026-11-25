@@ -46,7 +46,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			}
 			if (isIdentityChange && !nextUserId) setIsAdmin(false)
 
-			if (nextUserId && (isInitial || isIdentityChange)) {
+			if (
+				nextUserId &&
+				!session?.user.is_anonymous &&
+				(isInitial || isIdentityChange)
+			) {
 				// Defer out of the auth callback: the auth client holds an
 				// internal lock for its duration and a query fired inside it can
 				// go out unauthenticated. A macrotask hop releases the lock.
@@ -79,15 +83,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		}
 	}, [])
 
+	const isAuth = sessionState?.user.role === 'authenticated'
+	const isAnonymous = sessionState?.user.is_anonymous ?? false
 	const value = isLoaded
 		? ({
-				isAuth: sessionState?.user.role === 'authenticated',
+				isAuth,
 				userId: sessionState?.user.id ?? null,
 				userEmail: sessionState?.user.email ?? null,
 				userRole:
 					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 				isAdmin,
-				isAnonymous: sessionState?.user.is_anonymous ?? false,
+				isAnonymous,
+				hasAccount: isAuth && !isAnonymous,
 				isLoaded: true,
 				connectionError,
 			} as AuthLoaded)

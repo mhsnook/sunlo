@@ -3,7 +3,7 @@ import { cloudflareBindingProvider } from '@flue/runtime/cloudflare/workers-ai'
 import { createAgentRouter } from '@flue/runtime/routing'
 import { env } from 'cloudflare:workers'
 import { Hono } from 'hono'
-import { requireUser, type AppEnv } from '../worker/auth'
+import { requireSession, type AppEnv } from '../worker/auth'
 import { COACH_MOUNT } from '../src/features/coach/protocol'
 import { requireOwnConversation } from '../worker/coach-access'
 import worker from '../worker/index'
@@ -22,7 +22,7 @@ if (env.COACH_MODEL.startsWith('mock/'))
 
 const app = new Hono<AppEnv>()
 
-app.use(`${COACH_MOUNT}/*`, requireUser, requireOwnConversation)
+app.use(`${COACH_MOUNT}/*`, requireSession, requireOwnConversation)
 app.route(COACH_MOUNT, createAgentRouter(Coach))
 
 app.route('/', worker)

@@ -6,7 +6,7 @@ export type AppEnv = {
 	Variables: { uid: string; anonymous: boolean }
 }
 
-type SignedInUser = { uid: string; anonymous: boolean }
+type SignedInUser = AppEnv['Variables']
 
 /**
  * The signed-in user, or undefined for no token, a token that fails
@@ -31,10 +31,24 @@ export async function signedInUser(
 		: undefined
 }
 
-export const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
+/**
+ * A signed-in user, including one who signed in anonymously. Only the coach
+ * takes anonymous users; every other route uses requireUser.
+ */
+export const requireSession: MiddlewareHandler<AppEnv> = async (c, next) => {
 	const user = await signedInUser(c.env, c.req.header('authorization'))
 	if (!user) return c.json({ error: 'Sign in to use this' }, 401)
 	c.set('uid', user.uid)
 	c.set('anonymous', user.anonymous)
+	return next()
+}
+
+/** A signed-in user with an account. */
+export const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
+	const user = await signedInUser(c.env, c.req.header('authorization'))
+	if (!user) return c.json({ error: 'Sign in to use this' }, 401)
+	if (user.anonymous) return c.json({ error: 'Sign up to use this' }, 403)
+	c.set('uid', user.uid)
+	c.set('anonymous', false)
 	return next()
 }

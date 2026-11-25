@@ -37,8 +37,7 @@
 			"simple": { "limit": 120, "period": 60 },
 		},
 		{
-			// COACH_LIMITER for a visitor without an account. Anyone can make
-			// a new anonymous uid, so each gets less.
+			// COACH_LIMITER for an anonymous uid.
 			"name": "COACH_ANON_LIMITER",
 			"namespace_id": "1004",
 			"simple": { "limit": 5, "period": 60 },

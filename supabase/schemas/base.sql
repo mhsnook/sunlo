@@ -319,6 +319,12 @@ $$;
 
 alter function "public"."is_admin" () owner to "postgres";
 
+create or replace function "public"."is_anonymous" () returns boolean language "sql" stable as $$
+	select coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false);
+$$;
+
+alter function "public"."is_anonymous" () owner to "postgres";
+
 create or replace function "public"."notify_on_comment" () returns "trigger" language "plpgsql" security definer as $$
 declare
   v_requester_uid uuid;
@@ -1083,7 +1089,7 @@ set
 declare
 	v_phrase public.phrase;
 begin
-	if (select (auth.jwt() ->> 'is_anonymous')::boolean) is true then
+	if public.is_anonymous() then
 		raise exception 'Sign up to confirm a draft phrase' using errcode = '42501';
 	end if;
 
@@ -2538,10 +2544,10 @@ create policy "Anonymous users cannot add public content" on "public"."chat_mess
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2549,10 +2555,10 @@ create policy "Anonymous users cannot add public content" on "public"."comment_p
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2560,10 +2566,10 @@ create policy "Anonymous users cannot add public content" on "public"."comment_u
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2571,10 +2577,10 @@ create policy "Anonymous users cannot add public content" on "public"."friend_re
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2582,10 +2588,10 @@ create policy "Anonymous users cannot add public content" on "public"."message_t
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2593,10 +2599,10 @@ create policy "Anonymous users cannot add public content" on "public"."message_t
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2604,10 +2610,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase" a
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2615,10 +2621,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase_pl
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2626,10 +2632,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase_pl
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2637,10 +2643,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase_re
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2648,10 +2654,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase_re
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2659,10 +2665,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase_re
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2670,10 +2676,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase_ta
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2681,10 +2687,10 @@ create policy "Anonymous users cannot add public content" on "public"."phrase_tr
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2692,10 +2698,10 @@ create policy "Anonymous users cannot add public content" on "public"."playlist_
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2703,10 +2709,10 @@ create policy "Anonymous users cannot add public content" on "public"."request_c
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -2714,10 +2720,10 @@ create policy "Anonymous users cannot add public content" on "public"."tag" as r
 with
 	check (
 		(
-			(
+			not (
 				select
-					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
-			) is not true
+					"public"."is_anonymous" () as "is_anonymous"
+			)
 		)
 	);
 
@@ -4181,6 +4187,12 @@ grant all on function "public"."is_admin" () to "anon";
 grant all on function "public"."is_admin" () to "authenticated";
 
 grant all on function "public"."is_admin" () to "service_role";
+
+grant all on function "public"."is_anonymous" () to "anon";
+
+grant all on function "public"."is_anonymous" () to "authenticated";
+
+grant all on function "public"."is_anonymous" () to "service_role";
 
 grant all on function "public"."ivfflat_bit_support" ("internal") to "postgres";
 

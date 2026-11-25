@@ -10,6 +10,6 @@ function CoachLangRoute() {
 	const { lang } = Route.useParams()
 	// Not the route context: that keeps the auth from when the route loaded,
 	// and a visitor signs in on this page.
-	const { userId, isAnonymous } = useAuth()
-	return <CoachPage lang={lang} uid={userId} anonymous={isAnonymous} />
+	const { userId } = useAuth()
+	return <CoachPage lang={lang} uid={userId} />
 }

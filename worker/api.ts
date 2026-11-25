@@ -8,10 +8,6 @@ import { supabaseFor } from './supabase'
 const app = new Hono<AppEnv>().basePath('/api')
 
 app.post('/extract-phrase', requireUser, async (c) => {
-	// An anonymous user cannot add the phrases a photo finds (RLS refuses
-	// public content without an account), so the model run would be wasted.
-	if (c.get('anonymous'))
-		return c.json({ error: 'Sign up to add phrases from a photo' }, 403)
 	const { success } = await c.env.EXTRACT_LIMITER.limit({ key: c.get('uid') })
 	if (!success) {
 		return c.json({ error: 'Too many photos at once. Wait a minute.' }, 429)

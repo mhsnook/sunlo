@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { addPhrasesToDeck } from '@/features/deck/mutations'
+import { useAuth } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
 import type { CoachView } from '../conversation'
@@ -28,7 +29,6 @@ type Props = {
 	coachViews: Array<CoachView>
 	lang: string
 	uid: string | null
-	anonymous: boolean
 	translationLang: string
 	deck: DeckMeterData
 }
@@ -154,10 +154,10 @@ function ViewContent({
 	coachKey,
 	lang,
 	uid,
-	anonymous,
 	translationLang,
 	deck,
 }: Props & { view: CoachView; uid: string }) {
+	const { isAnonymous } = useAuth()
 	const phrases = usePhrasesByIds(view.phraseIds)
 	const requests = useRequestsByIds(view.requestIds)
 	const playlists = usePlaylistsByIds(view.playlistIds)
@@ -182,39 +182,34 @@ function ViewContent({
 			note
 		)
 
-	// RLS refuses a request from an anonymous user. Until the coach can offer
-	// sign-up, show the draft as text rather than a form that would fail.
-	if (view.draftRequest !== null && anonymous)
-		return (
-			<div
-				className="bg-card max-w-xl rounded border p-4"
-				data-testid="coach-request-needs-account"
-			>
-				<p className="text-muted-foreground text-sm">
-					Posting a request needs an account. Here is your draft:
-				</p>
-				<p className="mt-2 font-medium">{view.draftRequest}</p>
-			</div>
-		)
-
 	if (view.draftRequest !== null)
 		return (
 			<div
 				className="bg-card max-w-xl rounded border p-4"
 				data-testid="coach-request-draft"
 			>
-				<RequestForm
-					lang={lang}
-					initialPrompt={view.draftRequest}
-					formTestId="coach-request-form"
-					onSuccess={(request) =>
-						openSet(
-							'Your request',
-							{ requestIds: [request.id] },
-							`posted the request “${request.prompt}”`
-						)
-					}
-				/>
+				{/* RLS refuses a request from an anonymous user. */}
+				{isAnonymous ? (
+					<div data-testid="coach-request-needs-account">
+						<p className="text-muted-foreground text-sm">
+							Posting a request needs an account. Here is your draft:
+						</p>
+						<p className="mt-2 font-medium">{view.draftRequest}</p>
+					</div>
+				) : (
+					<RequestForm
+						lang={lang}
+						initialPrompt={view.draftRequest}
+						formTestId="coach-request-form"
+						onSuccess={(request) =>
+							openSet(
+								'Your request',
+								{ requestIds: [request.id] },
+								`posted the request “${request.prompt}”`
+							)
+						}
+					/>
+				)}
 			</div>
 		)
 

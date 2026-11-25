@@ -9,6 +9,11 @@
 -- theirs.
 -- 1. Public content needs a real account.
 --
+-- Not security definer: it reads only the caller's own JWT.
+create or replace function "public"."is_anonymous" () returns boolean language "sql" stable as $$
+	select coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false);
+$$;
+
 -- A restrictive policy is ANDed with every permissive INSERT policy on the
 -- table, so the permissive ones stay as they are. feedback is left out on
 -- purpose: a signed-out visitor can already send it.
@@ -36,7 +41,7 @@ begin
 		'tag'
 	] loop
 		execute format(
-			'create policy "Anonymous users cannot add public content" on public.%I as restrictive for insert to authenticated with check ((select (auth.jwt() ->> ''is_anonymous'')::boolean) is not true)',
+			'create policy "Anonymous users cannot add public content" on public.%I as restrictive for insert to authenticated with check (not (select public.is_anonymous()))',
 			t
 		);
 	end loop;
@@ -47,19 +52,19 @@ $$;
 create policy "Anonymous users cannot upload files" on "storage"."objects" as restrictive for insert to authenticated
 with
 	check (
-		(
+		not (
 			select
-				(auth.jwt () ->> 'is_anonymous')::boolean
-		) is not true
+				public.is_anonymous ()
+		)
 	);
 
 create policy "Anonymous users cannot replace files" on "storage"."objects" as restrictive
 for update
 	to authenticated using (
-		(
+		not (
 			select
-				(auth.jwt () ->> 'is_anonymous')::boolean
-		) is not true
+				public.is_anonymous ()
+		)
 	);
 
 -- confirm_draft_phrase is security definer, so the policies above do not
@@ -71,7 +76,7 @@ set
 declare
 	v_phrase public.phrase;
 begin
-	if (select (auth.jwt() ->> 'is_anonymous')::boolean) is true then
+	if public.is_anonymous() then
 		raise exception 'Sign up to confirm a draft phrase' using errcode = '42501';
 	end if;
 

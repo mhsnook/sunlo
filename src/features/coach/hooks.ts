@@ -80,16 +80,25 @@ const bearer = async () => ({
 	authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ''}`,
 })
 
-// The SDK calls `headers` on every request and reconnect, so a refreshed
-// Supabase token is picked up without a new client.
-const coachClient = (uid: string) =>
-	createFlueClient({
-		url: new URL(
-			`${COACH_MOUNT}/${coachConversationId(uid)}`,
-			window.location.origin
-		).href,
-		headers: bearer,
-	})
+const clients = new Map<string, FlueClient>()
+
+// One client per conversation: a visitor's first message goes out on the
+// client the hook then observes. The SDK calls `headers` on every request and
+// reconnect, so a refreshed Supabase token is picked up without a new client.
+function coachClient(uid: string): FlueClient {
+	let client = clients.get(uid)
+	if (!client) {
+		client = createFlueClient({
+			url: new URL(
+				`${COACH_MOUNT}/${coachConversationId(uid)}`,
+				window.location.origin
+			).href,
+			headers: bearer,
+		})
+		clients.set(uid, client)
+	}
+	return client
+}
 
 async function signInAnonymously(): Promise<string> {
 	const { data, error } = await supabase.auth.signInAnonymously()
@@ -117,17 +126,13 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	const client = useMemo(() => (uid ? coachClient(uid) : undefined), [uid])
 	const agent = useFlueAgent({ client })
 	const [joining, setJoining] = useState(false)
-	// State updates on the next render; a second send in the same frame must
-	// not sign the visitor in twice.
 	const joiningNow = useRef(false)
 	const conversation = useMemo(
 		() => readConversation(agent.messages, lang),
 		[agent.messages, lang]
 	)
 	// Until the history loads, an empty conversation may only mean "not read
-	// yet", so the page must not greet the learner as new. A visitor has no
-	// history to load, and while their first message goes out the new
-	// session's history is still on its way.
+	// yet", so the page must not greet the learner as new.
 	const ready = !uid || joining || agent.historyReady
 	const started = agent.messages.length > 0
 
@@ -175,8 +180,11 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 
 	const send = async (text: string) => {
 		if (!uid) {
+			// State updates on the next render; a second send in the same
+			// frame must not sign the visitor in twice.
 			if (joiningNow.current) return
 			joiningNow.current = true
+			setJoining(true)
 		}
 		const opening = started ? null : openingLine(learnerName, lang, deck.size)
 		const notes = pendingNotes(pageKey)
@@ -187,31 +195,21 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 			opening,
 		})
 		try {
-			let owner: string
-			let conversationClient: FlueClient
-			let receipt: Awaited<ReturnType<FlueClient['send']>>
-			if (uid && client) {
-				owner = uid
-				conversationClient = client
-				receipt = await agent.sendMessage(message)
-			} else {
-				// The hook has no client to send through until the new uid
-				// re-renders the page, so this one message goes out directly.
-				setJoining(true)
-				owner = await signInAnonymously()
-				conversationClient = coachClient(owner)
-				receipt = await conversationClient.send({
-					message: { kind: 'user', body: message },
-				})
-			}
+			const owner = uid ?? (await signInAnonymously())
+			const flue = coachClient(owner)
+			// Until the new uid re-renders the page, the hook has no client,
+			// so a visitor's first message goes out on the client directly.
+			const receipt = uid
+				? await agent.sendMessage(message)
+				: await flue.send({ message: { kind: 'user', body: message } })
 			clearNotes(
 				pageKey,
 				notes.map((note) => note.id)
 			)
 			const key = pageKeyFor(owner, lang)
-			await conversationClient.wait(receipt)
+			await flue.wait(receipt)
 			// One turn is a handful of messages; the newest twenty hold it.
-			const { messages } = await conversationClient.history({ limit: 20 })
+			const { messages } = await flue.history({ limit: 20 })
 			const actions = pageActions(messages, receipt.submissionId)
 			if (actions.intention) {
 				await saveDeckIntention(
