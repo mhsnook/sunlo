@@ -1951,6 +1951,7 @@ export type Database = {
 				Returns: Json
 			}
 			is_admin: { Args: never; Returns: boolean }
+			is_anonymous: { Args: never; Returns: boolean }
 			recount_all_upvotes: { Args: never; Returns: undefined }
 			refresh_meta_language: { Args: never; Returns: undefined }
 			search_by_anchors: {

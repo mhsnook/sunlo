@@ -39,13 +39,16 @@ export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function DeckSettingsPage() {
-	const isAuth = useIsAuthenticated()
+	const isAuth = useIsAuthenticated({ allowAnonymous: true })
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeck(lang)
 
 	if (!isAuth) {
 		return (
-			<RequireAuth message="You need to be logged in to manage deck settings.">
+			<RequireAuth
+				allowAnonymous
+				message="You need to be logged in to manage deck settings."
+			>
 				<div />
 			</RequireAuth>
 		)

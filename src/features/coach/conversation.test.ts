@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { FlueConversationMessage } from '@flue/react'
 import {
 	composeMessage,
+	deckLine,
 	pageActions,
 	readConversation,
 	splitToolText,
@@ -298,5 +299,21 @@ describe('the context line', () => {
 		})
 		expect(parseCoachContext(body)).toEqual(CONTEXT)
 		expect(parseCoachContext('no context here')).toBeNull()
+	})
+})
+
+describe('deckLine', () => {
+	const deck = { size: 8, tags: [{ name: 'food', count: 3 }] }
+
+	it('says when the deck has no intention yet', () => {
+		expect(deckLine(deck, null)).toBe(
+			'8 of 100 phrases; most tagged food (3); no intention saved yet'
+		)
+	})
+
+	it('carries the saved intention', () => {
+		expect(deckLine({ size: 0, tags: [] }, 'Talks with in-laws')).toBe(
+			'0 of 100 phrases; intention: Talks with in-laws'
+		)
 	})
 })

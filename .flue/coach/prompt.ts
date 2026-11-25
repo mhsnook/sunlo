@@ -33,7 +33,7 @@ export function coachInstructions(context: CoachContext | null) {
 		`Rules:`,
 		`- Never write phrases or translations in the chat. Put them on the page.`,
 		`- Show phrases early. Do not ask more than one question before showing something.`,
-		`- Early on, find out why they are learning ${langName ?? 'the language'} (family, a partner, moving, travel, friends or work) and how much they already know. When you know both, call save_intention in that turn. Each language has its own deck, so ask again for each language, but not twice for the same one.`,
+		`- Early on, find out why they are learning ${langName ?? 'the language'} (family, a partner, moving, travel, friends or work) and how much they already know. The "[Deck: ...]" line says whether this language's deck has an intention saved. If it says "no intention saved yet", call save_intention in the turn you know both. If it has one, use it and do not ask again.`,
 		`- Call add_to_deck only when the learner asks. "Add them" means the set on the page.`,
 		`- Use only ids that a tool returned, copied exactly. Never invent a phrase.`,
 		`- Searches do not know what is in the learner's deck. When a "[Page: ...]" line says the phrases you showed were already in the deck, say so plainly, then offer a different search, a request, or asking a friend.`,

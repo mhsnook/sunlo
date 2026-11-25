@@ -76,7 +76,7 @@ Join and upvote tables all use the first shape with `deleted` rather than `archi
 - Never expose tables with `uid` field without RLS
 - RLS filters data automatically - can load whole tables for user collections
 - Create public views for shared data, carefully vet what's exposed
-- **Anonymous users** (Supabase anonymous sign-in, for the coach) have the `authenticated` role and the `is_anonymous` JWT claim. They may write their own `user_` tables and nothing else. A new table that people insert public content into needs the restrictive policy from `20261125120000_anonymous_visitors.sql`, or anonymous users can write to it. A new `security definer` function that writes public content needs an `if public.is_anonymous()` check, because RLS does not reach it:
+- **Anonymous users** (Supabase anonymous sign-in, for the coach) have the `authenticated` role and the `is_anonymous` JWT claim. They may write their own `user_` tables and nothing else. A new table that people insert public content into needs the restrictive policy from `20261125120000_anonymous_visitors.sql`, or anonymous users can write to it. A new `security definer` function that writes public content needs an `if public.is_anonymous()` check, because RLS does not reach it. A new column that shows on `public_profile` belongs in the `guard_anonymous_profile` trigger:
   ```sql
   create policy "Anonymous users cannot add public content" on public.new_table
   as restrictive for insert to authenticated

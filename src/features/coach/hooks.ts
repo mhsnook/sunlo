@@ -11,7 +11,7 @@ import { inArray, useLiveQuery } from '@tanstack/react-db'
 import { useFlueAgent } from '@flue/react'
 import { createFlueClient, type FlueClient } from '@flue/sdk'
 import { toastError } from '@/components/ui/sonner'
-import { cardsCollection } from '@/features/deck/collections'
+import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { addPhrasesToDeck, saveDeckIntention } from '@/features/deck/mutations'
 import {
 	useDeckCards,
@@ -179,7 +179,7 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 				composeMessage(text, {
 					context: { lang, translationLang, learnerName },
 					notes: notes.map((note) => note.text),
-					deck: deckLine(deck),
+					deck: deckLine(deck, decksCollection.get(lang)?.intention ?? null),
 					opening,
 				})
 			)

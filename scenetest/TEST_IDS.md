@@ -188,6 +188,7 @@ natural wrapper element to label.
 | `back-to-decks-link`                     | data-testid | Sidebar                  | Link back to /learn                                                                                                |
 | `friends-section`                        | data-testid | Learn page               | Friends section container                                                                                          |
 | `profile-page`                           | data-testid | Profile route            | Profile page container                                                                                             |
+| `profile-needs-account`                  | data-testid | `profile/index.tsx`      | Create-account prompt shown to an anonymous user instead of the username and photo fields                          |
 | `update-profile-form`                    | data-testid | Profile route            | Edit-profile form (scope `username-input` / `submit-button`)                                                       |
 | `getting-started-page`                   | data-testid | Onboarding route         | Getting-started page container                                                                                     |
 | `profile-creation-form`                  | data-testid | Onboarding route         | Profile-setup form on /getting-started (scope `username-input` / `submit-button`)                                  |

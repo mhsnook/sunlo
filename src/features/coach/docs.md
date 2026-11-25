@@ -22,13 +22,15 @@ An anonymous user is a real user with the `authenticated` role and the `is_anony
 - Two more guards cover what RLS on public tables does not reach: restrictive policies on `storage.objects` refuse their uploads, and `confirm_draft_phrase` (security definer) refuses them.
 - `feedback` stays open to them, as it is to signed-out visitors.
 - In the Worker, only the coach's routes take them (`requireSession`). Every other `/api` route uses `requireUser`, which refuses an anonymous user with 403.
-- They can log in or sign up from `/login` and `/signup`, which redirect only a user who is signed in and not anonymous. Signing up there makes a new account; converting the anonymous one comes with the sign-up step.
+- A trigger, `guard_anonymous_profile`, refuses a change to their `username` or `avatar_path`, because both show on `public_profile`. `/profile` shows them a "Create account" prompt instead of those fields, and `/getting-started` sends them to `/signup`.
+- The app's auth gates (`AuthenticatedDialog`, `AuthenticatedDialogContent`, `RequireAuth`, `useRequireAuth`, `useIsAuthenticated`) require an account by default, so an anonymous user who reaches a public-write button or page sees the log-in and sign-up prompt. The gates for their own data (card status, review, deck settings, manage deck, add deck, notifications) pass `allowAnonymous`.
+- `/signup` converts them: for an anonymous user it calls `supabase.auth.updateUser({ email })`, which keeps the uid, so the deck and the conversation carry over. Supabase refuses a password until the email is verified, so the confirmation link goes to `/set-new-password`. Converting needs manual linking enabled in the Supabase project (`enable_manual_linking`). `/login` still works for them, and logs them in to their other account.
 
 Converting to a full account keeps the uid, so the conversation and the deck carry over. Confirming the email fires `handle_new_user` again, and its `on conflict do nothing` keeps the profile. The sign-up step itself is not built yet.
 
 ## The deck and the intention
 
-The deck is created when the coach knows what the learner wants: their goal and how much of the language they already know. The coach calls `save_intention`, and the page writes it to `user_deck.intention` with `saveDeckIntention`, creating or unarchiving the deck first. A signed-in learner's deck gets the same column the same way.
+The deck is created when the coach knows what the learner wants: their goal and how much of the language they already know. The coach calls `save_intention`, and the page writes it to `user_deck.intention` with `saveDeckIntention`, creating or unarchiving the deck first. A signed-in learner's deck gets the same column the same way. The `[Deck: ...]` line carries the open language's intention, or "no intention saved yet", so the coach asks once per language.
 
 ## Who does what
 

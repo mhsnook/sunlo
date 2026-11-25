@@ -289,6 +289,22 @@ $$;
 
 alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
 
+create or replace function "public"."guard_anonymous_profile" () returns "trigger" language "plpgsql" as $$
+begin
+	if public.is_anonymous()
+		and (
+			new.username is distinct from old.username
+			or new.avatar_path is distinct from old.avatar_path
+		)
+	then
+		raise exception 'Sign up to choose a username or a photo' using errcode = '42501';
+	end if;
+	return new;
+end;
+$$;
+
+alter function "public"."guard_anonymous_profile" () owner to "postgres";
+
 create or replace function "public"."guard_soft_delete_only" () returns "trigger" language "plpgsql" as $$
 begin
   if (to_jsonb(old) - 'deleted') is distinct from (to_jsonb(new) - 'deleted') then
@@ -2152,6 +2168,10 @@ after insert or delete or update of "text",
 "phrase_id" on "public"."phrase_translation" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('translation');
 
+create or replace trigger "guard_anonymous_profile"
+before update on "public"."user_profile" for each row
+execute function "public"."guard_anonymous_profile" ();
+
 create or replace trigger "guard_comment_phrase_link_update"
 before update on "public"."comment_phrase_link" for each row
 execute function "public"."guard_soft_delete_only" ();
@@ -3969,6 +3989,12 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "anon";
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "authenticated";
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
+
+grant all on function "public"."guard_anonymous_profile" () to "anon";
+
+grant all on function "public"."guard_anonymous_profile" () to "authenticated";
+
+grant all on function "public"."guard_anonymous_profile" () to "service_role";
 
 grant all on function "public"."guard_soft_delete_only" () to "anon";
 

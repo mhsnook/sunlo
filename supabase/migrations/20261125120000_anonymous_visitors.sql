@@ -118,6 +118,26 @@ create or replace trigger "on_anonymous_user_created"
 after insert on "auth"."users" for each row when (new."is_anonymous")
 execute function "public"."handle_new_user" ();
 
+-- A username and a photo show on public_profile, so they need an account.
+-- user_profile stays writable for the rest (flags, preferences, languages).
+create or replace function "public"."guard_anonymous_profile" () returns "trigger" language "plpgsql" as $$
+begin
+	if public.is_anonymous()
+		and (
+			new.username is distinct from old.username
+			or new.avatar_path is distinct from old.avatar_path
+		)
+	then
+		raise exception 'Sign up to choose a username or a photo' using errcode = '42501';
+	end if;
+	return new;
+end;
+$$;
+
+create or replace trigger "guard_anonymous_profile"
+before update on "public"."user_profile" for each row
+execute function "public"."guard_anonymous_profile" ();
+
 -- 3. What the learner told the coach they want from this language: their goal
 -- and how much they already know, in the coach's words.
 alter table "public"."user_deck"
