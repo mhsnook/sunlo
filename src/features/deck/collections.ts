@@ -32,12 +32,17 @@ export const decksCollection = createCollection(
 		startSync: false,
 		schema: DeckSchema,
 		onInsert: async ({ transaction }) => {
-			// The insert sends only `lang` — uid, created_at and every other
-			// column come back filled in by the server.
+			// The insert sends only `lang` and `intention` — uid, created_at
+			// and every other column come back filled in by the server.
 			const langs = transaction.mutations.map((m) => m.modified.lang)
 			const { data } = await supabase
 				.from('user_deck')
-				.insert(langs.map((lang) => ({ lang })))
+				.insert(
+					transaction.mutations.map(({ modified }) => ({
+						lang: modified.lang,
+						intention: modified.intention,
+					}))
+				)
 				.select()
 				.throwOnError()
 			const returned = data?.map((row) => DeckSchema.parse(row)) ?? []

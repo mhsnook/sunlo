@@ -261,6 +261,29 @@ describe('pageActions', () => {
 			add: ['p1', 'p2'],
 			shown: [],
 			navigate: { to: 'review' },
+			intention: undefined,
+		})
+	})
+
+	it('keeps the last intention the coach saved in the submission', () => {
+		const messages = [
+			message(
+				'm1',
+				'assistant',
+				[
+					tool('save_intention', { lang: 'kan', intention: 'First go' }, 'a'),
+					tool(
+						'save_intention',
+						{ lang: 'kan', intention: 'Talks with in-laws; knows hello' },
+						'b'
+					),
+				],
+				{ submissionId: 'sub-1' }
+			),
+		]
+		expect(pageActions(messages, 'sub-1').intention).toEqual({
+			lang: 'kan',
+			intention: 'Talks with in-laws; knows hello',
 		})
 	})
 })

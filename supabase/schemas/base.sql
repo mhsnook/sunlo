@@ -1038,6 +1038,7 @@ create table if not exists "public"."feedback" (
 	"lang" character varying,
 	"page_url" "text",
 	"contact_email" "text",
+	"source" "text" default 'person'::"text" not null,
 	constraint "feedback_contact_email_length" check (("char_length" ("contact_email") <= 320)),
 	constraint "feedback_kind_check" check (("kind" = any (array['bug'::"text", 'feature'::"text", 'library'::"text"]))),
 	constraint "feedback_lang_length" check (("char_length" (("lang")::"text") = 3)),
@@ -1047,7 +1048,8 @@ create table if not exists "public"."feedback" (
 			and ("char_length" ("btrim" ("message")) <= 4000)
 		)
 	),
-	constraint "feedback_page_url_length" check (("char_length" ("page_url") <= 2000))
+	constraint "feedback_page_url_length" check (("char_length" ("page_url") <= 2000)),
+	constraint "feedback_source_check" check (("source" = any (array['person'::"text", 'agent'::"text"])))
 );
 
 alter table "public"."feedback" owner to "postgres";
@@ -1446,7 +1448,9 @@ create table if not exists "public"."user_deck" (
 	"preferred_translation_lang" character varying(3) default null::character varying,
 	"review_answer_mode" "text",
 	"updated_at" timestamp with time zone default "now" () not null,
+	"intention" "text",
 	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20]))),
+	constraint "user_deck_intention_length" check (("char_length" ("intention") <= 1000)),
 	constraint "user_deck_review_answer_mode_check" check (
 		(
 			("review_answer_mode" is null)
@@ -1468,6 +1472,8 @@ comment on column "public"."user_deck"."created_at" is 'the moment the deck was 
 comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
 
 comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
+
+comment on column "public"."user_deck"."intention" is 'What the learner wants to learn and how much they already know, as the coach wrote it down';
 
 create materialized view "public"."meta_language" as
 with
@@ -2523,6 +2529,193 @@ for update
 	to "authenticated" using ("public"."is_admin" ())
 with
 	check ("public"."is_admin" ());
+
+create policy "Anonymous users cannot add public content" on "public"."chat_message" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."comment_phrase_link" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."comment_upvote" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."friend_request_action" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."message_tag" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."message_tag_link" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_playlist" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_playlist_upvote" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_relation" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_request" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_request_upvote" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_tag" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_translation" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."playlist_phrase_link" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."request_comment" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."tag" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					(("auth"."jwt" () ->> 'is_anonymous'::"text"))::boolean as "bool"
+			) is not true
+		)
+	);
 
 create policy "Anyone can send feedback as themselves" on "public"."feedback" for insert to "authenticated",
 "anon"
@@ -4758,6 +4951,10 @@ select
 grant
 select
 	("lang") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("source") on table "public"."feedback" to "admin_reader";
 
 grant all on table "public"."phrase" to "anon";
 

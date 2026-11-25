@@ -27,7 +27,8 @@ type Props = {
 	coachKey: string
 	coachViews: Array<CoachView>
 	lang: string
-	uid: string
+	uid: string | null
+	anonymous: boolean
 	translationLang: string
 	deck: DeckMeterData
 }
@@ -78,7 +79,9 @@ export function CoachCanvas(props: Props) {
 				</nav>
 			)}
 
-			{view ? <ViewContent key={view.id} view={view} {...props} /> : null}
+			{view && props.uid ? (
+				<ViewContent key={view.id} {...props} view={view} uid={props.uid} />
+			) : null}
 		</div>
 	)
 }
@@ -151,9 +154,10 @@ function ViewContent({
 	coachKey,
 	lang,
 	uid,
+	anonymous,
 	translationLang,
 	deck,
-}: Props & { view: CoachView }) {
+}: Props & { view: CoachView; uid: string }) {
 	const phrases = usePhrasesByIds(view.phraseIds)
 	const requests = useRequestsByIds(view.requestIds)
 	const playlists = usePlaylistsByIds(view.playlistIds)
@@ -176,6 +180,21 @@ function ViewContent({
 				draftRequest: null,
 			},
 			note
+		)
+
+	// RLS refuses a request from an anonymous user. Until the coach can offer
+	// sign-up, show the draft as text rather than a form that would fail.
+	if (view.draftRequest !== null && anonymous)
+		return (
+			<div
+				className="bg-card max-w-xl rounded border p-4"
+				data-testid="coach-request-needs-account"
+			>
+				<p className="text-muted-foreground text-sm">
+					Posting a request needs an account. Here is your draft:
+				</p>
+				<p className="mt-2 font-medium">{view.draftRequest}</p>
+			</div>
 		)
 
 	if (view.draftRequest !== null)

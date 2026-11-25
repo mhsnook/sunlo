@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { requireUser, signedInUid, type AppEnv } from './auth'
+import { requireUser, signedInUser, type AppEnv } from './auth'
 import { ExtractRequestSchema, extractPhrases } from './extract-phrase'
 import { SearchRequestSchema, embedderFor, searchCorpus } from './search'
 import { supabaseFor } from './supabase'
@@ -8,6 +8,10 @@ import { supabaseFor } from './supabase'
 const app = new Hono<AppEnv>().basePath('/api')
 
 app.post('/extract-phrase', requireUser, async (c) => {
+	// An anonymous user cannot add the phrases a photo finds (RLS refuses
+	// public content without an account), so the model run would be wasted.
+	if (c.get('anonymous'))
+		return c.json({ error: 'Sign up to add phrases from a photo' }, 403)
 	const { success } = await c.env.EXTRACT_LIMITER.limit({ key: c.get('uid') })
 	if (!success) {
 		return c.json({ error: 'Too many photos at once. Wait a minute.' }, 429)
@@ -32,8 +36,8 @@ app.post('/extract-phrase', requireUser, async (c) => {
 // No requireUser: the search page works signed out, as the _user layout
 // does, so a visitor's searches are limited by IP instead.
 app.post('/search', async (c) => {
-	const uid = await signedInUid(c.env, c.req.header('authorization'))
-	const key = uid ?? `ip:${c.req.header('cf-connecting-ip') ?? 'unknown'}`
+	const user = await signedInUser(c.env, c.req.header('authorization'))
+	const key = user?.uid ?? `ip:${c.req.header('cf-connecting-ip') ?? 'unknown'}`
 	const { success } = await c.env.SEARCH_LIMITER.limit({ key })
 	if (!success) {
 		return c.json({ error: 'Too many searches at once. Wait a minute.' }, 429)

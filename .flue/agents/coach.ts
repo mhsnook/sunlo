@@ -95,6 +95,14 @@ export function Coach() {
 		}),
 	})
 	useTool({
+		name: 'save_intention',
+		description: coachToolDescriptions.save_intention,
+		input: coachToolInputs.save_intention,
+		run: ({ data: input }) => ({
+			output: { lang: page().lang, intention: input.intention },
+		}),
+	})
+	useTool({
 		name: 'navigate',
 		description: coachToolDescriptions.navigate,
 		input: coachToolInputs.navigate,

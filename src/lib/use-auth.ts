@@ -9,6 +9,7 @@ export const emptyAuth = {
 	userEmail: null,
 	userRole: null,
 	isAdmin: false,
+	isAnonymous: false,
 	connectionError: null as Error | null,
 }
 
@@ -21,15 +22,20 @@ type AuthNotLoggedIn = {
 	userEmail: null
 	userRole: null
 	isAdmin: false
+	isAnonymous: false
 	connectionError: Error | null
 }
 type AuthLoggedIn = {
 	isLoaded: true
 	isAuth: true
 	userId: uuid
-	userEmail: string
+	// null for an anonymous user, who has no email until they sign up.
+	userEmail: string | null
 	userRole: RolesEnum
 	isAdmin: boolean
+	// Signed in with supabase.auth.signInAnonymously(): RLS lets them write
+	// their own user_ tables and nothing public.
+	isAnonymous: boolean
 	connectionError: Error | null
 }
 

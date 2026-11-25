@@ -87,6 +87,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				userRole:
 					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 				isAdmin,
+				isAnonymous: sessionState?.user.is_anonymous ?? false,
 				isLoaded: true,
 				connectionError,
 			} as AuthLoaded)

@@ -21,6 +21,27 @@ export function optimisticNewDeck(lang: string, uid: string): DeckType {
 	})
 }
 
+/**
+ * Writes what the learner told the coach they want from this language onto
+ * their deck, creating or unarchiving the deck first.
+ */
+export async function saveDeckIntention(
+	lang: string,
+	uid: string,
+	intention: string
+): Promise<void> {
+	const deck = decksCollection.get(lang)
+	if (!deck) {
+		await decksCollection.insert({ ...optimisticNewDeck(lang, uid), intention })
+			.isPersisted.promise
+		return
+	}
+	await decksCollection.update(lang, (draft) => {
+		draft.intention = intention
+		draft.archived = false
+	}).isPersisted.promise
+}
+
 export function useCreateDeck() {
 	const navigate = useNavigate()
 	const userId = useUserId()

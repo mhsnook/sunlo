@@ -20,7 +20,7 @@ The coach is a [Flue](https://flueframework.com) agent: one Durable Object per c
 
 Every `/api` route except `/api/search` requires the `Authorization: Bearer <access token>` header from a signed-in Sunlo session (`requireUser` in `auth.ts`). The worker checks it with `supabase.auth.getClaims()`, which verifies the signature against the project's JWKS, and requires `role = 'authenticated'`, so the public anon key is rejected. The app calls `/api` on its own origin, so the API has no CORS.
 
-`/api/search` is open to signed-out visitors, because the search page works without signing in. It reads the token with the same check (`signedInUid`) only to choose a rate-limit key: the user id when one is signed in, and the client IP (`cf-connecting-ip`) otherwise.
+`/api/search` is open to signed-out visitors, because the search page works without signing in. It reads the token with the same check (`signedInUser`) only to choose a rate-limit key: the user id when one is signed in, and the client IP (`cf-connecting-ip`) otherwise.
 
 Flue's agent router has no auth of its own. `requireOwnConversation` (`coach-access.ts`) runs after `requireUser` on the coach's routes and refuses a conversation id whose uid is not the caller's.
 

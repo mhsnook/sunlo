@@ -2,7 +2,7 @@
 
 The coach is a chat that builds a learner's deck with them. It renders at `/coach/$lang` as two halves: the page on the start side shows sets of phrases, requests and playlists, and the chat on the end side talks about them. The coach puts things on the page with a tool call, so the page is part of its reply. Issue #839 is the epic.
 
-The route is signed-in only and sits outside `_user`, so it has none of the app's chrome. `src/routes/coach.tsx` redirects a visitor to `/login` and loads the same user data `_user` loads.
+The route sits outside `_user`, so it has none of the app's chrome. It is open to visitors without an account; for a signed-in learner, `src/routes/coach.tsx` loads the same user data `_user` loads.
 
 ## The agent
 
@@ -10,7 +10,22 @@ The coach is a [Flue](https://flueframework.com) agent, `.flue/agents/coach.ts`.
 
 Each learner has one conversation, keyed on their uid (`coachConversationId` in `protocol.ts`), across every language they learn and every device they sign in on. The Worker refuses any id but the caller's own uid. Because one conversation spans languages, every message starts with a context line (`[Context: ...]`, see below) that says which language page is open; the agent reads it from the delivery (`useDelivery`) for its instructions and its tools, so the model never picks the language its tools search. Each set the coach shows carries its language, and a language's page shows only its own sets.
 
-A visitor who has not signed up has no uid yet. The plan for them is Supabase anonymous sign-in: an anonymous user gets a real uid, and converting it to a full account later keeps the same uid, so the coach conversation carries over.
+## Visitors without an account
+
+A visitor has no uid, so the page shows the fixed greeting and the Flue hook stays dormant (no client). When they send their first message, `send` in `hooks.ts` calls `supabase.auth.signInAnonymously()` and sends that message to the conversation for the new uid. The auth context then re-renders the page with the uid, and the hook loads the conversation. `coach.$lang.lazy.tsx` reads `useAuth()` rather than the route context, which keeps the auth from when the route loaded.
+
+An anonymous user is a real user with the `authenticated` role and the `is_anonymous` JWT claim:
+
+- The trigger `on_anonymous_user_created` gives them a `user_profile` row at sign-in, like any other user.
+- They can write their own `user_` tables: deck, cards, reviews and profile.
+- A restrictive RLS policy, "Anonymous users cannot add public content", refuses their inserts into every other table: phrases, translations, tags, requests, comments, playlists, upvotes, friend requests and chat. The coach page shows a request draft as text for them (`coach-request-needs-account`), because the form would fail.
+- `feedback` stays open to them, as it is to signed-out visitors.
+
+Converting to a full account keeps the uid, so the conversation and the deck carry over. Confirming the email fires `handle_new_user` again, and its `on conflict do nothing` keeps the profile. The sign-up step itself is not built yet.
+
+## The deck and the intention
+
+The deck is created when the coach knows what the learner wants: their goal and how much of the language they already know. The coach calls `save_intention`, and the page writes it to `user_deck.intention` with `saveDeckIntention`, creating or unarchiving the deck first. A signed-in learner's deck gets the same column the same way.
 
 ## Who does what
 
@@ -38,12 +53,12 @@ Each message to the agent is the learner's text with lines from the page before 
 ## Limits
 
 - `Coach.durability` allows 3 attempts and 2 minutes per message, since every attempt is a paid model run.
-- `requireOwnConversation` refuses a message over 16 kB (413) or without a length (411), and counts messages against `COACH_LIMITER`.
+- `requireOwnConversation` refuses a message over 16 kB (413) or without a length (411), and counts messages against `COACH_LIMITER` (20 a minute), or `COACH_ANON_LIMITER` (5 a minute) for an anonymous user. Anyone can make a new anonymous uid; Supabase caps anonymous sign-ins per IP address (30 an hour by default).
 - Until the conversation's history loads, the chat shows "Loading your conversation…" and keeps the composer off, so a returning learner is never greeted as new.
 
 ## What the coach can make the page do
 
-Every action needs the learner's own message in that turn, and acts in their session with their permissions: adding phrases to their deck, showing sets, drafting a request for them to post, and moving between a fixed list of in-app pages (`navigate`). It cannot post, delete or open anything outside Sunlo.
+Every action needs the learner's own message in that turn, and acts in their session with their permissions: adding phrases to their deck, saving their intention on it, showing sets, drafting a request for them to post, and moving between a fixed list of in-app pages (`navigate`). It cannot post, delete or open anything outside Sunlo.
 
 ## The model
 

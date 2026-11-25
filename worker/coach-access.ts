@@ -21,7 +21,10 @@ export const requireOwnConversation: MiddlewareHandler<AppEnv> = async (
 		if (!length) return c.json({ error: 'Send the message with a length' }, 411)
 		if (length > MAX_MESSAGE_BYTES)
 			return c.json({ error: 'That message is too long for the coach' }, 413)
-		const { success } = await c.env.COACH_LIMITER.limit({ key: c.get('uid') })
+		const limiter = c.get('anonymous')
+			? c.env.COACH_ANON_LIMITER
+			: c.env.COACH_LIMITER
+		const { success } = await limiter.limit({ key: c.get('uid') })
 		if (!success)
 			return c.json(
 				{ error: 'The coach needs a short break. Wait a minute.' },

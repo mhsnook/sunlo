@@ -11,6 +11,7 @@ import {
 	DECK_TARGET,
 	DraftRequestOutputSchema,
 	NavigateOutputSchema,
+	SaveIntentionOutputSchema,
 	ShowOnPageOutputSchema,
 	SuggestRepliesOutputSchema,
 	type NavigateTarget,
@@ -244,6 +245,11 @@ export function pageActions(
 		navigate: parts
 			.map((part) => finished(part, 'navigate', NavigateOutputSchema))
 			.findLast((target): target is NavigateTarget => !!target),
+		intention: parts
+			.map((part) =>
+				finished(part, 'save_intention', SaveIntentionOutputSchema)
+			)
+			.findLast((saved) => !!saved),
 	}
 }
 

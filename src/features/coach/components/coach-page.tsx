@@ -2,7 +2,15 @@ import { useCoach, useDeckMeter } from '../hooks'
 import { CoachCanvas } from './coach-canvas'
 import { CoachChat } from './coach-chat'
 
-export function CoachPage({ lang, uid }: { lang: string; uid: string }) {
+export function CoachPage({
+	lang,
+	uid,
+	anonymous,
+}: {
+	lang: string
+	uid: string | null
+	anonymous: boolean
+}) {
 	const deck = useDeckMeter(lang)
 	const coach = useCoach(lang, uid, deck)
 
@@ -18,6 +26,7 @@ export function CoachPage({ lang, uid }: { lang: string; uid: string }) {
 					coachViews={coach.views}
 					lang={lang}
 					uid={uid}
+					anonymous={anonymous}
 					translationLang={coach.translationLang}
 					deck={deck}
 				/>
