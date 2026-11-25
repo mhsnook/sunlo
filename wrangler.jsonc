@@ -73,7 +73,12 @@
 			"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
 			"AI_GATEWAY_ID": "sunlo-app",
 		},
-		"observability": { "enabled": true },
+		// Each preview keeps its own logs, under that preview's Observability
+		// tab; without "persist" they are not kept.
+		"observability": {
+			"enabled": true,
+			"logs": { "enabled": true, "invocation_logs": true, "persist": true },
+		},
 		"ai": { "binding": "AI" },
 		// Their own namespaces, so preview traffic never counts against a
 		// production user's limit.
