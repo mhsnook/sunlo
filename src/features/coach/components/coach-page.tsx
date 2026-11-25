@@ -1,6 +1,7 @@
 import { useCoach, useDeckMeter } from '../hooks'
 import { CoachCanvas } from './coach-canvas'
 import { CoachChat } from './coach-chat'
+import { GuestChoiceDialog } from './guest-choice-dialog'
 
 export function CoachPage({ lang, uid }: { lang: string; uid: string | null }) {
 	const deck = useDeckMeter(lang)
@@ -36,6 +37,11 @@ export function CoachPage({ lang, uid }: { lang: string; uid: string | null }) {
 					send={(text) => void coach.send(text)}
 				/>
 			</aside>
+			<GuestChoiceDialog
+				open={coach.choosing}
+				onGuest={coach.continueAsGuest}
+				onClose={coach.dismissChoice}
+			/>
 		</div>
 	)
 }

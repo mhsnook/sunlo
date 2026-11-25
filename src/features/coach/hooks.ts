@@ -121,7 +121,9 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 		[uid]
 	)
 	const agent = useFlueAgent({ client })
-	// A visitor's first message, held while the page signs them in.
+	// A visitor's first message, held while they choose to log in or continue
+	// as a guest (choosing), then while the page signs them in (waiting).
+	const [choosing, setChoosing] = useState<string | null>(null)
 	const [waiting, setWaiting] = useState<string | null>(null)
 	const signingIn = useRef(false)
 	const conversation = useMemo(
@@ -224,10 +226,15 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 
 	const send = async (text: string) => {
 		if (uid && client) return deliver(uid, client, text)
-		// A second send in the same frame must not sign the visitor in twice.
-		if (signingIn.current) return
+		setChoosing(text)
+	}
+
+	const continueAsGuest = async () => {
+		// A second click in the same frame must not sign the visitor in twice.
+		if (choosing === null || signingIn.current) return
 		signingIn.current = true
-		setWaiting(text)
+		setWaiting(choosing)
+		setChoosing(null)
 		try {
 			await signInAnonymously()
 		} catch (err) {
@@ -242,6 +249,9 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	return {
 		pageKey,
 		send,
+		choosing: choosing !== null,
+		continueAsGuest: () => void continueAsGuest(),
+		dismissChoice: () => setChoosing(null),
 		translationLang,
 		learnerName,
 		started,
