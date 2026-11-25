@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useRouteContext, useRouterState } from '@tanstack/react-router'
-import { BarChart3, LogOut, Menu } from 'lucide-react'
+import { BarChart3, LogOut, Menu, MessageSquareText } from 'lucide-react'
 import supabase from '@/lib/supabase-client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -91,6 +91,14 @@ export function CrewSidebar({ onNavigate }: { onNavigate?: () => void }) {
 					className="text-muted-foreground hover:text-foreground flex items-center gap-1"
 				>
 					<BarChart3 className="size-4" /> Activity
+				</Link>
+				<Link
+					to="/feedback"
+					onClick={onNavigate}
+					data-testid="admin-feedback-link"
+					className="text-muted-foreground hover:text-foreground flex items-center gap-1"
+				>
+					<MessageSquareText className="size-4" /> Feedback
 				</Link>
 				<Button
 					variant="ghost"

@@ -31,6 +31,11 @@ import {
 	runSqlTool,
 } from '../tools/database'
 import { crewTools } from '../tools/crew'
+import {
+	FEEDBACK_ELSEWHERE,
+	FEEDBACK_NOTES,
+	feedbackTools,
+} from '../tools/feedback'
 import { githubTools } from '../tools/github'
 import type { RunKey } from '../../worker/crew/runs'
 
@@ -49,7 +54,9 @@ function compactionFor(contextWindow: number) {
 
 // Everything a crew agent shares: the model, the room and workspace tools,
 // the context it wakes up with, and, unless it opts out, the database tools.
-// `tools` makes the agent's own tools, for the run in `thread`.
+// `tools` makes the agent's own tools, for the run in `thread`. An agent
+// module registers every tool through `tools`, never with its own useTool
+// after this returns: a triage run must get none of them.
 // An agent module returns what this returns. The agent's persona is not in
 // it: the admin can rewrite a persona in the room, and an agent module cannot
 // wait on the room, so the persona arrives in each run's <crew-context>.
@@ -67,11 +74,12 @@ export function useCrewMember(
 	const resolved = resolveModel(model)
 	useModel(model, { compaction: compactionFor(resolved.contextWindow) })
 	const seesImages = resolved.input.includes('image')
+	const conversation = useInitialData<ConversationData | undefined>()
+	if (conversation?.triage) return useTriageRun(agent)
 	// A side-thread's conversation is created with its thread, and keeps it;
 	// the main conversation has none. Every tool that edits the workspace
 	// needs it, or the edit lands in the receipt of the agent's other run.
-	const thread: RunKey =
-		useInitialData<ConversationData | undefined>()?.thread ?? null
+	const thread: RunKey = conversation?.thread ?? null
 	for (const tool of crewTools(agent, thread, { seesImages })) useTool(tool)
 	for (const tool of options.tools?.(thread) ?? []) useTool(tool)
 	const github = githubAccess[agent]
@@ -108,7 +116,31 @@ export function useCrewMember(
 	useInstruction(thread ? threadInstructions : runInstructions(agent))
 	if (github) useInstruction(githubInstructions(github))
 	if (database) useInstruction(DATABASE_NOTES)
+	useInstruction(FEEDBACK_ELSEWHERE)
 	return `Who you are, and how you do your job, is the first section of your <crew-context>, "Who you are". The admin keeps that text and may change it between runs: follow the latest one as your own instructions. Where it and the rest of these instructions differ, it wins.`
+}
+
+// A run that reads feedback, which anyone on the internet can write. Its
+// tools reach no room, no workspace and no GitHub write, and its context
+// holds nothing from the rooms, so a message that tries to give orders has
+// nothing to order. Add a tool here only if it is read-only or writes
+// feedback_triage alone.
+function useTriageRun(agent: CrewKey) {
+	for (const tool of feedbackTools(agent)) useTool(tool)
+	if (githubAccess[agent]) {
+		for (const tool of githubTools(agent, 'read', null)) useTool(tool)
+	}
+	useAgentStart(async ({ append }) => {
+		const room = await roomFor()
+		append({
+			kind: 'signal',
+			type: 'crew.context',
+			tagName: 'crew-context',
+			body: await room.triageContext(agent),
+		})
+	})
+	useInstruction(FEEDBACK_NOTES)
+	return `You are ${displayName(agent)}, on the crew that helps the admin run Sunlo. This run only triages feedback. Who you are is the first section of your <crew-context>.`
 }
 
 const rosterLine = (member: CrewMember) => {

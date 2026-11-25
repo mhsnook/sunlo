@@ -80,6 +80,7 @@ import {
 	threadBriefingText,
 	timelineText,
 	type UnreadTimeline,
+	triageBriefingText,
 } from './briefing'
 import { clefPrompt, parseClefReply, type ClefExample } from './clef'
 import { answeredEntry, CHARTER_ACTIONS, editedEntry } from './charter'
@@ -143,6 +144,7 @@ import { RunLog, type RunLogKey } from './run-log'
 import { mainRunPosted, settledStatus, type PostRow, type RunKey } from './runs'
 import type { StepChange } from './steps'
 import { planReply } from './threads'
+import type { FeedbackOutcome, FeedbackTriageType } from '../../shared/feedback'
 import { withSql } from '../db'
 
 // The room's one instance. Renaming it starts a fresh room and leaves the
@@ -649,6 +651,23 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 				live_at text,
 				url text not null,
 				primary key (worker, sha)
+			);
+			-- The crew's triage of each row of public.feedback, keyed by the
+			-- row's uuid. A later triage of the same feedback replaces it.
+			create table if not exists feedback_triage (
+				feedback_id text primary key,
+				outcome text not null,
+				room text not null,
+				issue integer,
+				note text,
+				agent text not null,
+				at text not null
+			);
+			-- Each feedback id the admin has handed to a triage run. Only these
+			-- can be triaged, so a made-up id is refused.
+			create table if not exists feedback_offer (
+				feedback_id text primary key,
+				at text not null
 			);
 			create table if not exists schema_version (version integer not null);
 		`
@@ -3389,6 +3408,54 @@ export class CrewRoom extends Agent<Env, RoomStateType> {
 			where agent = ${agent} and run is ${thread} and at >= ${since}
 				and what like 'edited %'`[0]
 		return { drafts, edits }
+	}
+
+	triageContext(agent: CrewKey) {
+		return triageBriefingText({
+			now: now(),
+			character: this.character(agent),
+			commonKnowledge: this.commonKnowledge(),
+		})
+	}
+
+	feedbackTriage(): Array<FeedbackTriageType> {
+		return this.sql<FeedbackTriageType>`
+			select feedback_id, outcome, room, issue, note, agent, at
+			from feedback_triage`
+	}
+
+	offerFeedback(ids: Array<string>) {
+		const at = now()
+		for (const id of ids) {
+			this.sql`
+				insert into feedback_offer (feedback_id, at) values (${id}, ${at})
+				on conflict (feedback_id) do update set at = excluded.at`
+		}
+	}
+
+	// No receipt and no workspaceEdited: both reach a room, and every briefing
+	// reads the rooms. A triage is read only on the admin's Feedback page.
+	triageFeedback(
+		agent: CrewKey,
+		input: {
+			feedbackId: string
+			outcome: FeedbackOutcome
+			room: RoomKey
+			issue: number | null
+			note: string | null
+		}
+	) {
+		const offered = this.sql`
+			select 1 from feedback_offer where feedback_id = ${input.feedbackId}`
+		if (!offered.length) return false
+		this.sql`
+			insert into feedback_triage (feedback_id, outcome, room, issue, note, agent, at)
+			values (${input.feedbackId}, ${input.outcome}, ${input.room}, ${input.issue},
+				${input.note}, ${agent}, ${now()})
+			on conflict (feedback_id) do update set
+				outcome = excluded.outcome, room = excluded.room, issue = excluded.issue,
+				note = excluded.note, agent = excluded.agent, at = excluded.at`
+		return true
 	}
 
 	// An agent's own edit, in the workspace or on GitHub: it goes in the

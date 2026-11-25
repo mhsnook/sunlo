@@ -64,4 +64,5 @@ export const DATABASE_NOTES = `## The database (Postgres, read-only)
 - public.phrase_request: id, requester_uid, lang, prompt, created_at, deleted. public.request_comment: id, request_id, uid, content, created_at.
 - public.phrase_playlist: id, uid, title, lang, created_at, deleted.
 - public.chat_message: id, sender_uid, created_at. Message content is not readable.
+- public.feedback: id, kind ('bug' | 'feature' | 'library'), lang, uid (null when the sender was signed out), created_at. You can count feedback but not read it: the rest of the table is hidden from you.
 - public.language: lang, name.`

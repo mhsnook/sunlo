@@ -1029,6 +1029,29 @@ create table if not exists "public"."db_meta" ("key" "text" not null, "value" "t
 
 alter table "public"."db_meta" owner to "postgres";
 
+create table if not exists "public"."feedback" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"uid" "uuid" default "auth"."uid" (),
+	"kind" "text" not null,
+	"message" "text" not null,
+	"lang" character varying,
+	"page_url" "text",
+	"contact_email" "text",
+	constraint "feedback_contact_email_length" check (("char_length" ("contact_email") <= 320)),
+	constraint "feedback_kind_check" check (("kind" = any (array['bug'::"text", 'feature'::"text", 'library'::"text"]))),
+	constraint "feedback_lang_length" check (("char_length" (("lang")::"text") = 3)),
+	constraint "feedback_message_length" check (
+		(
+			("char_length" ("btrim" ("message")) >= 1)
+			and ("char_length" ("btrim" ("message")) <= 4000)
+		)
+	),
+	constraint "feedback_page_url_length" check (("char_length" ("page_url") <= 2000))
+);
+
+alter table "public"."feedback" owner to "postgres";
+
 create table if not exists "public"."phrase" (
 	"text" "text" not null,
 	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
@@ -1881,6 +1904,9 @@ add constraint "comment_upvote_pkey" primary key ("comment_id", "uid");
 alter table only "public"."db_meta"
 add constraint "db_meta_pkey" primary key ("key");
 
+alter table only "public"."feedback"
+add constraint "feedback_pkey" primary key ("id");
+
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_pkey" primary key ("id");
 
@@ -1983,6 +2009,8 @@ create index "chat_message_sender_uid_recipient_uid_created_at_idx" on "public".
 create index "chat_message_unread_idx" on "public"."chat_message" using "btree" ("recipient_uid", "read_at")
 where
 	("read_at" is null);
+
+create index "feedback_created_at_idx" on "public"."feedback" using "btree" ("created_at" desc);
 
 create index "idx_comment_created_at" on "public"."request_comment" using "btree" ("parent_comment_id", "created_at");
 
@@ -2292,6 +2320,9 @@ add constraint "friend_request_action_uid_by_fkey" foreign key ("uid_by") refere
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_uid_for_fkey" foreign key ("uid_for") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
+alter table only "public"."feedback"
+add constraint "feedback_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete set null;
+
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_uid_less_fkey" foreign key ("uid_less") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
@@ -2453,6 +2484,10 @@ create policy "Admins can insert message tags" on "public"."message_tag" for ins
 with
 	check ("public"."is_admin" ());
 
+create policy "Admins can read all feedback" on "public"."feedback" for
+select
+	to "authenticated" using ("public"."is_admin" ());
+
 create policy "Admins can update message tag links" on "public"."message_tag_link"
 for update
 	to "authenticated" using ("public"."is_admin" ())
@@ -2488,6 +2523,11 @@ for update
 	to "authenticated" using ("public"."is_admin" ())
 with
 	check ("public"."is_admin" ());
+
+create policy "Anyone can send feedback as themselves" on "public"."feedback" for insert to "authenticated",
+"anon"
+with
+	check ((not ("uid" is distinct from "auth"."uid" ())));
 
 create policy "Authenticated users can add phrase relations" on "public"."phrase_relation" for insert to "authenticated"
 with
@@ -2955,6 +2995,10 @@ create policy "Users can read own notifications" on "public"."notification" for
 select
 	using (("uid" = "auth"."uid" ()));
 
+create policy "Users can read their own feedback" on "public"."feedback" for
+select
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
 create policy "Users can send messages to friends" on "public"."chat_message" for insert
 with
 	check (
@@ -3085,6 +3129,8 @@ alter table "public"."chat_message" enable row level security;
 alter table "public"."comment_phrase_link" enable row level security;
 
 alter table "public"."comment_upvote" enable row level security;
+
+alter table "public"."feedback" enable row level security;
 
 alter table "public"."friend_request_action" enable row level security;
 
@@ -4683,6 +4729,35 @@ grant all on table "public"."db_meta" to "anon";
 grant all on table "public"."db_meta" to "authenticated";
 
 grant all on table "public"."db_meta" to "service_role";
+
+grant insert on table "public"."feedback" to "anon";
+
+grant
+select
+,
+	insert on table "public"."feedback" to "authenticated";
+
+grant all on table "public"."feedback" to "service_role";
+
+grant
+select
+	("id") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("created_at") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("uid") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("kind") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("lang") on table "public"."feedback" to "admin_reader";
 
 grant all on table "public"."phrase" to "anon";
 

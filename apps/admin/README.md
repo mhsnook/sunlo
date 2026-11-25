@@ -31,13 +31,14 @@ The dashboard's numbers come from `worker/`, a [Hono](https://hono.dev) app that
 
 `admin_reader` has `bypassrls`, so it counts across every user's rows, and `default_transaction_read_only`, so it cannot write through any path. It reads every public table except these:
 
-| Table               | admin_reader sees                 | Hidden                                   |
-| ------------------- | --------------------------------- | ---------------------------------------- |
-| `chat_message`      | `id`, `sender_uid`, `created_at`  | the message, who received it, read state |
-| `notification`      | `id`, `uid`, `type`, `created_at` | who acted and on what                    |
-| `user_client_event` | `id`, `uid`, `created_at`         | error messages, context and URLs         |
-| `db_meta`           | nothing                           | everything                               |
-| `auth.*`            | nothing directly                  | passwords, tokens, identities            |
+| Table               | admin_reader sees                         | Hidden                                    |
+| ------------------- | ----------------------------------------- | ----------------------------------------- |
+| `chat_message`      | `id`, `sender_uid`, `created_at`          | the message, who received it, read state  |
+| `notification`      | `id`, `uid`, `type`, `created_at`         | who acted and on what                     |
+| `user_client_event` | `id`, `uid`, `created_at`                 | error messages, context and URLs          |
+| `feedback`          | `id`, `created_at`, `uid`, `kind`, `lang` | the message, the page and the reply email |
+| `db_meta`           | nothing                                   | everything                                |
+| `auth.*`            | nothing directly                          | passwords, tokens, identities             |
 
 It reads `auth.users` only through the view `admin.user_account`, which exposes `id`, `email`, `created_at` and `last_sign_in_at`. The view exists because the role that runs migrations does not own `auth.users` and cannot grant on it; a view it owns reads the table on `admin_reader`'s behalf. The `admin` schema is not in PostgREST's exposed schemas, so the API never serves it.
 
@@ -270,6 +271,21 @@ Every agent runs on the Workers AI model in `CREW_MODEL` (`@cf/moonshotai/kimi-k
 Every model call the admin Worker makes, for the agents, CLEF, the painter and voice, goes through the `sunlo-admin` AI Gateway (`AI_GATEWAY_ID`), so its logs, costs and limits stay apart from the app's `sunlo-app` gateway. The gateway has to exist in the Cloudflare dashboard: only `default` is created on demand. `.flue/app.ts` hands the id to Flue's provider, whose own default is `default`.
 
 **Context size.** Every step of a run sends the agent's whole conversation, so the size of that conversation is the cost of each step. Workers AI caches the prompt (Flue sends `x-session-affinity`), and a cached token costs about a fifth as much. Flue compacts a conversation when it nears the model's window: it folds the older messages into a summary, written by the agent's own model, and keeps the latest 8,000 tokens as they are. That is about 242,000 tokens on Kimi, but about a million on DeepSeek (`command-2`) and Claude (`product-2`), so `useCrewMember` caps every conversation at about 240,000 tokens (`CONTEXT_BUDGET`) with Flue's `compaction` setting. Kimi keeps Flue's default. What an agent must keep past a summary belongs in its memory, which every briefing carries.
+
+### Feedback
+
+Anyone can send feedback from the app's `/feedback` page, signed in or not: a bug, a feature idea, or something missing from the library. Each send is a row of `public.feedback` (`supabase/migrations/20261123120000_add_feedback.sql`), which RLS lets anyone insert and only a signed-in sender read back. A signed-out sender can leave an email for a reply.
+
+Feedback is the one place where a stranger writes straight to the crew, so its text never reaches a conversation that can act. Two guards hold that, both in the database and in code rather than in a prompt:
+
+- **`admin_reader` can't read the text.** It sees only `id`, `created_at`, `uid`, `kind` and `lang` of `feedback`, so `run_sql` can count feedback but never read a message, a page or an email. The admin reads those through their own session: the policy "Admins can read all feedback" lets `is_admin()` select every row, and the Worker's feedback routes call Supabase with the admin's token (`supabaseAs` in `worker/supabase.ts`).
+- **Triage runs apart.** "Triage now" on the Feedback page calls `POST /api/feedback/triage`, which reads the 30 oldest untriaged items through the admin's session and starts a triage run on them (`startTriage` in `.flue/crew.ts`). The run has a conversation of its own (`triage:<time>`), apart from O'Brien's `memory` conversation, and the items arrive in its `<feedback-triage>` message, without the senders' emails. `useTriageRun` in `.flue/agents/use-crew-member.ts` gives it only `triage_feedback` and the read-only GitHub tools, so it cannot post, remember, write a document or change GitHub. Its `<crew-context>` holds only O'Brien's character and Common Knowledge (`triageBriefingText`).
+
+Because only an admin's session can read the text, triage starts when you click, never on a schedule.
+
+- **Triage.** `triage_feedback` records an outcome for one item: filed (it matches an open issue, with its number), planned (it matches an open epic, with its number), duplicate, for the admin (it needs a new issue, a decision or a reply), not planned, or spam, with the room it belongs to and a note. It refuses an id that no triage run was given (`feedback_offer`). The triage lives in the room's `feedback_triage` table, keyed by the row's id, and a later triage of the same item replaces the earlier one. It posts no receipt, because a receipt lands in a room.
+- **Everywhere else.** The other runs know that feedback exists and can count it with `run_sql`. To act on an item, you tell an agent what it says.
+- **The Feedback page** (`/feedback`, linked beside Activity) lists what waits for triage, or everything, with each item's triage and, when the sender left one, a link to reply by email. It reads `GET /api/feedback` (`?open=1` for what waits), which takes the ids and counts from `admin_reader` and the text from the admin's session (`worker/feedback.ts`).
 
 ### GitHub: milestones and epics
 

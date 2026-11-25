@@ -489,6 +489,18 @@ bottom sheet on mobile.
 
 ---
 
+## Feedback (`/feedback`)
+
+| Selector                                    | Attribute   | Component/Location | Description                                                              |
+| ------------------------------------------- | ----------- | ------------------ | ------------------------------------------------------------------------ |
+| `sidebar-feedback-link`                     | data-testid | Sidebar footer     | Link to /feedback, with the current path as `?from=`                     |
+| `feedback-page`                             | data-testid | Feedback route     | Page container                                                           |
+| `feedback-form`                             | data-testid | Feedback route     | The form (scope `message-input`, `contact-email-input`, `submit-button`) |
+| `feedback-kind-options` + `data-key=<kind>` | data-testid | Feedback form      | Kind tiles: `bug`, `feature`, `library`                                  |
+| `contact-email-input`                       | data-testid | Feedback form      | Optional reply email, shown only when signed out                         |
+| `feedback-sent-message`                     | data-testid | Feedback route     | Confirmation after a send                                                |
+| `feedback-send-another-button`              | data-testid | Feedback route     | Resets the form for another send                                         |
+
 ## Toasts
 
 Toast selectors use `seeToast` in spec files, which waits for the
