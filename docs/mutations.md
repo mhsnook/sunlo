@@ -54,6 +54,8 @@ The component subscribes to the collection via `useLiveQuery`, so the card appea
 
 A handler that updates rather than inserts can only batch when every row takes the same column values — `groupUpdatesByChanges` finds those groups. Otherwise it sends one request per mutation inside a `Promise.all`.
 
+Batching also keeps rows that belong together consistent. Each request is one statement, and the server applies all of it or none of it. When two requests split one change and only the first succeeds, the handler throws. The client then rolls back both rows, but the server keeps the first write. Pass `groupUpdatesByChanges` a scope to keep such rows in one group. `cardsCollection` scopes by `uid` and `phrase_id`, so a phrase's forward and reverse cards change in one request.
+
 See `src/components/card-pieces/card-status-dropdown.tsx` for the call site this example is drawn from. See also the [TanStack DB optimistic-mutations skill](../node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md) for `createOptimisticAction` (multi-collection atomic mutations) and `createPacedMutations` (auto-save / debounce / throttle).
 
 ### When the optimistic state is worse than waiting
