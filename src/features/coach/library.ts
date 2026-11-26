@@ -1,5 +1,4 @@
 import { cardsCollection } from '@/features/deck/collections'
-import { cardReviewsCollection } from '@/features/review/collections'
 import { phrasesFull } from '@/features/phrases/live'
 import {
 	phrasePlaylistsActive,
@@ -23,8 +22,6 @@ export async function preloadLibrary() {
 		playlistPhraseLinksActive.preload(),
 		cardsCollection.preload(),
 	])
-	// Only the deck stack's stage reads reviews, so the page need not wait.
-	void cardReviewsCollection.preload()
 }
 
 export type DeckStatus = CardType['status'] | null
@@ -54,15 +51,19 @@ export const deckStatuses = (lang: string) =>
 		cardsCollection.toArray.filter((card) => card.lang === lang)
 	)
 
-// A phrase's age is its newest card's. Optimistic rows carry
-// toISOString() and synced rows Postgres's format, so compare times, not text.
+// A phrase's age is its newest card's, and a card reactivated from skipped
+// counts from its updated_at. Optimistic rows carry toISOString() (3 fraction
+// digits) and synced rows 6, so compare times, not text.
 export function activeIdsNewestFirst(
-	cards: Array<Pick<CardType, 'phrase_id' | 'created_at'>>,
+	cards: Array<Pick<CardType, 'phrase_id' | 'created_at' | 'updated_at'>>,
 	statuses: Map<string, DeckStatus>
 ) {
 	const newest = new Map<string, number>()
 	for (const card of cards) {
-		const time = Date.parse(card.created_at)
+		const time = Math.max(
+			Date.parse(card.created_at),
+			Date.parse(card.updated_at)
+		)
 		if ((newest.get(card.phrase_id) ?? 0) < time)
 			newest.set(card.phrase_id, time)
 	}

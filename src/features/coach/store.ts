@@ -9,7 +9,8 @@ type PageState = {
 	// null follows the newest set the coach showed.
 	activeViewId: string | null
 	// Sent with the learner's next message, then cleared. A busy note waits
-	// for its write to settle, so the coach never hears of an add that fails.
+	// for its write to settle, so the coach hears "added" or "couldn't add",
+	// never an add still in progress.
 	notes: Array<{ id: string; text: string; busy?: boolean }>
 }
 

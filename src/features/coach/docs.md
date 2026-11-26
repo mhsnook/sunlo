@@ -62,7 +62,7 @@ The page shows the open language's deck as a pile of cards, newest on top (`comp
 
 Every add goes through `dealIntoDeck` (`deal.ts`), from the coach's `add_to_deck` and from a tile's Add button alike:
 
-1. A busy note ("adding “Ondu tea kodhe”…") goes into the chat. `pendingNotes` leaves a busy note out of the next message, so the coach never hears of an add that then fails.
+1. A busy note ("adding “Ondu tea kodhe”…") goes into the chat. `pendingNotes` leaves a busy note out of the next message, so the coach hears "added" or "couldn't add", never an add still in progress.
 2. Ghost cards fly from the phrase's tile (or from the chat, if the tile is off screen) into the pile. A batch flies as at most twelve ghosts, staggered over about a second.
 3. The stack leaves a phrase that is still in the air out of its count and its pile (`inFlight`), so the count goes up as each ghost lands, and the pile bumps.
 4. When the write has landed and every ghost is in the pile, the note settles to "added … · deck at 24".

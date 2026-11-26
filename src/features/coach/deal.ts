@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { addPhrasesToDeck } from '@/features/deck/mutations'
+import { addPhrasesToDeck, ensureDeck } from '@/features/deck/mutations'
 import { activeIds, deckStatuses, type DeckStatus } from './library'
 import { settleNote, startNote } from './store'
 
@@ -156,12 +156,18 @@ export async function dealIntoDeck(
 	const what =
 		phrases.length === 1 ? `“${phrases[0].text}”` : `${phrases.length} phrases`
 	const noteId = startNote(pageKey, `adding ${what}…`)
-	const landed = launch(phrases, false)
+	let landed: Promise<void> | null = null
 	try {
+		// The cards are written right after the deck exists. Launching first
+		// would land a ghost before its card is in the deck.
+		await ensureDeck(lang, uid)
+		landed = launch(phrases, false)
 		await Promise.all([addPhrasesToDeck(lang, uid, phrases), landed])
 	} catch (err) {
-		ground(phrases.map((phrase) => phrase.id))
-		void launch(phrases, true)
+		if (landed) {
+			ground(phrases.map((phrase) => phrase.id))
+			void launch(phrases, true)
+		}
 		settleNote(pageKey, noteId, `couldn't add ${what}`)
 		throw err
 	}

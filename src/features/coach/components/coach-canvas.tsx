@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
 	Check,
 	ListMusic,
@@ -48,7 +49,7 @@ export function CoachCanvas(props: Props) {
 			className="flex flex-col gap-6 @2xl:flex-row-reverse @2xl:items-start"
 			data-testid="coach-canvas"
 		>
-			<DeckStack lang={props.lang} deck={props.deck} />
+			<DeckStack lang={props.lang} uid={props.uid} deck={props.deck} />
 			<div className="flex min-w-0 flex-1 flex-col gap-6">
 				<header className="flex flex-col gap-1">
 					<h1
@@ -167,14 +168,14 @@ function ViewContent({
 					tag={phrase.tags[0]?.name ?? null}
 					status={deck.statuses.get(phrase.id) ?? null}
 					phraseId={phrase.id}
-					onAdd={() => {
+					onAdd={() =>
 						dealIntoDeck(coachKey, lang, uid, [phrase]).catch(
 							(err: unknown) => {
 								console.error('coach: add failed', err)
 								toastError(`Couldn't add “${phrase.text}”`)
 							}
 						)
-					}}
+					}
 				/>
 			))}
 		</ul>
@@ -261,9 +262,11 @@ function PhraseTile({
 	tag: string | null
 	status: DeckStatus
 	phraseId: string
-	onAdd: () => void
+	onAdd: () => Promise<void>
 }) {
-	const inDeck = status === 'active'
+	// addPhrasesToDeck leaves a learned card as it is, so Add would do nothing.
+	const inDeck = status === 'active' || status === 'learned'
+	const [adding, setAdding] = useState(false)
 	return (
 		<li
 			data-testid="coach-phrase"
@@ -288,14 +291,19 @@ function PhraseTile({
 			</div>
 			{inDeck ? (
 				<span className="text-primary-700 flex items-center gap-1 text-sm font-medium">
-					<Check className="size-4" /> In deck
+					<Check className="size-4" />{' '}
+					{status === 'learned' ? 'Learned' : 'In deck'}
 				</span>
 			) : (
 				<Button
 					variant="soft"
 					size="sm"
 					data-testid="coach-add-phrase"
-					onClick={onAdd}
+					disabled={adding}
+					onClick={() => {
+						setAdding(true)
+						void onAdd().finally(() => setAdding(false))
+					}}
 				>
 					<Plus /> Add
 				</Button>

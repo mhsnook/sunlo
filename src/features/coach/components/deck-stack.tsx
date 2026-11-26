@@ -55,14 +55,23 @@ const STAGES: Record<
 	},
 }
 
-function useDeckStage(lang: string, deck: DeckMeter, size: number): Stage {
+function useDeckStage(
+	lang: string,
+	uid: string | null,
+	deck: DeckMeter,
+	size: number
+): Stage {
+	// Without a session the reviews collection would sync empty and stay
+	// ready, so it waits for a signed-in learner.
 	const { data: reviews } = useLiveQuery(
 		(q) =>
-			q
-				.from({ review: cardReviewsCollection })
-				.where(({ review }) => eq(review.lang, lang))
-				.select(({ review }) => ({ phrase_id: review.phrase_id })),
-		[lang]
+			uid
+				? q
+						.from({ review: cardReviewsCollection })
+						.where(({ review }) => eq(review.lang, lang))
+						.select(({ review }) => ({ phrase_id: review.phrase_id }))
+				: undefined,
+		[lang, uid]
 	)
 	const { data: deckRow } = useDeck(lang)
 	if (!reviews?.length) return size >= DECK_TARGET ? 'ready' : 'building'
@@ -77,14 +86,22 @@ function useDeckStage(lang: string, deck: DeckMeter, size: number): Stage {
  * the learner adds fly in from the page (`dealIntoDeck`), and the count only
  * goes up as each one lands.
  */
-export function DeckStack({ lang, deck }: { lang: string; deck: DeckMeter }) {
+export function DeckStack({
+	lang,
+	uid,
+	deck,
+}: {
+	lang: string
+	uid: string | null
+	deck: DeckMeter
+}) {
 	const flights = useFlights()
 	const flying = inFlight(flights, deck.statuses)
 	const shown = shownCount(deck.statuses, flights)
 	const top = deck.phrases
 		.filter((phrase) => !flying.has(phrase.id))
 		.slice(0, PILE_MAX)
-	const stage = useDeckStage(lang, deck, shown)
+	const stage = useDeckStage(lang, uid, deck, shown)
 	const pileRef = useRef<HTMLButtonElement>(null)
 	const slotRef = useRef<HTMLSpanElement>(null)
 	const [fanned, setFanned] = useState(false)
@@ -297,7 +314,7 @@ function Ghost({
 		>
 			<CardFace text={flight.text} tag={flight.tag} />
 			{flight.pids.length > 1 && (
-				<span className="bg-primary-600 absolute -end-2 -top-2 rounded-full px-1.5 text-xs font-bold text-white">
+				<span className="bg-primary-600 text-paper absolute -end-2 -top-2 rounded-full px-1.5 text-xs font-bold">
 					{flight.pids.length}
 				</span>
 			)}
