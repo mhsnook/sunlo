@@ -153,7 +153,7 @@ writeSyncedRow(collection, row) // writeSyncedRows(collection, rows) for many
 
 There is no helper for dropping a row, because nothing drops one — a removal sets a flag, and reaches the collection as an ordinary update. No collection configures an `onDelete` handler, so a stray `collection.delete()` throws `MissingDeleteHandlerError`. Which flag each table uses, and what a removed row still shows, is `docs/database.md`.
 
-Pass the whole row — the key comes from the collection's own `getKeyFromItem`. Prefer the plural form for a handler's ack, which usually has more than one row. The rest (upsert semantics, skipping a row already held, batching, and what happens on a collection that never loaded) is the function's business, not the caller's.
+Pass the whole row — the key comes from the collection's own `getKeyFromItem`. Prefer the plural form for a handler's ack, which usually has more than one row. The rest (upsert semantics, skipping a row already held, skipping an older version of a row, batching, and what happens on a collection that never loaded) is the function's business, not the caller's.
 
 One thing the caller does owe it: **preload a collection in the route loader wherever its rows are displayed or written.** A write to a collection nothing has loaded is dropped, and the row waits for the next fetch.
 
@@ -169,6 +169,8 @@ A new site outside those two is a sign the row should go through the collection.
 A realtime frame arrives after the database commits, so it carries the truth and is safe to write into the synced layer. But a collection that is only correct once the frame lands is wrong until then, and stays wrong whenever the socket is down. Make the handler correct on its own; let realtime cover the writes made by other clients and other devices.
 
 Bind frames with `bindRows(channel, table, filter, collection, parse)` from `src/lib/collections/realtime.ts`, which folds INSERT and UPDATE through `writeSyncedRow` (above). Which channel a binding belongs on is a posture decision — see [Sync postures](#sync-postures--which-tables-sync-how).
+
+**Frames can arrive out of order.** The ack for a later write often lands before the frames of an earlier one. `writeSyncedRows` skips a row whose `updated_at` is older than the one the synced layer holds, so a late frame cannot undo a newer write. It compares against the synced layer, not `collection.get()`, because the optimistic row carries the client's clock. A row with equal timestamps still writes, and so does a row from a table without `updated_at`. The check only works if the server bumps `updated_at` on every write: see `set_updated_at` in `docs/database.md`.
 
 **INSERT and UPDATE frames are RLS-scoped; DELETE frames are not.** Supabase tests each subscriber's policies against the new row, so an insert or update reaches you only if you could have fetched that row yourself. It cannot do the same for a delete, because the row is already gone by then. So every delete on a published table reaches every subscriber of that table, whoever owned the row.
 
