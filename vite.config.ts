@@ -108,10 +108,17 @@ export default defineConfig(({ command, mode }) => {
 		resolve: {
 			tsconfigPaths: true,
 		},
-		// The Cloudflare plugin builds the app into dist/client and the Worker
-		// into dist/sunlo. These options are for the browser bundle only.
+		// The Cloudflare plugin builds the app into dist/client (the `client`
+		// environment) and the Worker into dist/sunlo (the `sunlo` environment).
 		environments: {
+			// The dev server's dependency scan misses these imports, finds them on
+			// the first page load, and re-bundles; the browser then gets 504s for
+			// every chunk it already requested.
 			client: {
+				optimizeDeps: {
+					// Injected by the scenetest plugin, so no source file imports it.
+					include: ['@scenetest/checks/panel'],
+				},
 				build: {
 					chunkSizeWarningLimit: 750,
 					rollupOptions: {
@@ -143,6 +150,24 @@ export default defineConfig(({ command, mode }) => {
 							},
 						},
 					},
+				},
+			},
+			// Must match `name` in wrangler.jsonc, or this block silently does nothing.
+			sunlo: {
+				optimizeDeps: {
+					include: [
+						'@flue/runtime',
+						'@flue/runtime/internal',
+						'@flue/runtime/routing',
+						'@flue/runtime/cloudflare/internal',
+						'@flue/runtime/cloudflare/workers-ai',
+						'agents',
+						'hono',
+						'@supabase/supabase-js',
+						'valibot',
+						'zod',
+						'@earendil-works/pi-ai/providers/faux',
+					],
 				},
 			},
 		},
