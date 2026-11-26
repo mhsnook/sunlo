@@ -47,16 +47,19 @@ export function statusesFromCards(
 export const activeIds = (statuses: Map<string, DeckStatus>) =>
 	[...statuses].filter(([, s]) => s === 'active').map(([pid]) => pid)
 
-// A phrase's age is its newest card's.
+// A phrase's age is its newest card's. Optimistic rows carry
+// toISOString() and synced rows Postgres's format, so compare times, not text.
 export function activeIdsNewestFirst(
 	cards: Array<Pick<CardType, 'phrase_id' | 'status' | 'created_at'>>
 ) {
-	const newest = new Map<string, string>()
-	for (const card of cards)
-		if ((newest.get(card.phrase_id) ?? '') < card.created_at)
-			newest.set(card.phrase_id, card.created_at)
-	return activeIds(statusesFromCards(cards)).toSorted((a, b) =>
-		(newest.get(b) ?? '').localeCompare(newest.get(a) ?? '')
+	const newest = new Map<string, number>()
+	for (const card of cards) {
+		const time = Date.parse(card.created_at)
+		if ((newest.get(card.phrase_id) ?? 0) < time)
+			newest.set(card.phrase_id, time)
+	}
+	return activeIds(statusesFromCards(cards)).toSorted(
+		(a, b) => (newest.get(b) ?? 0) - (newest.get(a) ?? 0)
 	)
 }
 
