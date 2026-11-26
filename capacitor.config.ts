@@ -3,13 +3,9 @@ import type { CapacitorConfig } from '@capacitor/cli'
 const config: CapacitorConfig = {
 	appId: 'app.sunlo.mobile',
 	appName: 'Sunlo',
-	webDir: 'dist',
-	android: {
-		// The default `http` scheme makes the WebView origin http://localhost,
-		// which is not a secure context — navigator.clipboard and crypto.subtle
-		// both go undefined and the copy-link buttons fail silently.
-		androidScheme: 'https',
-	},
+	// Not dist/: the Cloudflare Vite plugin puts the Worker bundle there too,
+	// and the app's index.html is one level down.
+	webDir: 'dist/client',
 	ios: {
 		contentInset: 'always',
 	},

@@ -34,6 +34,10 @@ const configuredOrigin = import.meta.env.VITE_PUBLIC_ORIGIN as
 	| string
 	| undefined
 
+const configuredApiOrigin = import.meta.env.VITE_API_ORIGIN as
+	| string
+	| undefined
+
 const FALLBACK_ORIGIN = 'https://sunlo.app'
 
 /**
@@ -51,6 +55,21 @@ const FALLBACK_ORIGIN = 'https://sunlo.app'
 export const webOrigin = isNativeApp
 	? (configuredOrigin ?? FALLBACK_ORIGIN)
 	: (globalThis.location?.origin ?? configuredOrigin ?? FALLBACK_ORIGIN)
+
+/**
+ * The absolute URL of a Worker route such as `/api/search`.
+ *
+ * On the web the Worker shares the page's origin. The WebView has no Worker
+ * behind `https://localhost`, so a native build reads VITE_API_ORIGIN and falls
+ * back to `webOrigin`. Those two differ while Vercel still serves sunlo.app
+ * and the Worker lives on workers.dev.
+ */
+export function apiUrl(path: string): string {
+	const base = isNativeApp
+		? (configuredApiOrigin ?? webOrigin)
+		: window.location.origin
+	return new URL(path, base).href
+}
 
 export type ShareLinkData = {
 	title: string
