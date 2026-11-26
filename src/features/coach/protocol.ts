@@ -23,6 +23,8 @@ export const CoachContextSchema = v.object({
 	lang: v.pipe(v.string(), v.regex(/^[a-z]{3}$/)),
 	translationLang: v.pipe(v.string(), v.regex(/^[a-z]{3}$/)),
 	learnerName: v.nullable(v.pipe(v.string(), v.maxLength(80))),
+	// A guest is signed in anonymously and has no account yet.
+	guest: v.optional(v.boolean()),
 })
 
 export type CoachContext = v.InferOutput<typeof CoachContextSchema>
@@ -110,6 +112,7 @@ export const coachToolInputs = {
 			)
 		),
 	}),
+	offer_account: v.object({}),
 	navigate: v.object({
 		to: v.picklist([
 			'deck',
@@ -148,6 +151,8 @@ export const coachToolDescriptions: Record<CoachToolName, string> = {
 		'Put a request ("How do I say ...?") on the page for the learner to post to the community, already written out. Use it when the library has nothing for what they want and they agree to ask. The learner can edit it, and nothing is posted until they press the button.',
 	save_intention:
 		'Write down what the learner wants from this language and how much they already know, once they have told you both. The page saves it on their deck, and creates the deck if they have none. Call it again when what they want changes.',
+	offer_account:
+		'Only for a guest: put a button under your message that opens a short sign-up form (an email and a display name). An account keeps their deck and this conversation, and lets them review. They can skip it.',
 	navigate:
 		'Take the learner to another part of Sunlo, when they ask to go there. Leaves the coach. To ask the community for a phrase, use draft_request instead, which keeps the learner here.',
 }
@@ -181,6 +186,8 @@ export const SaveIntentionOutputSchema = v.object({
 	lang: v.string(),
 	intention: v.string(),
 })
+
+export const OfferAccountOutputSchema = v.object({ offered: v.literal(true) })
 
 export const NavigateOutputSchema = coachToolInputs.navigate
 

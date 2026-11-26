@@ -65,6 +65,7 @@ export function FeedComposer({ lang }: { lang: string }) {
 					data-testid="new-request-dialog"
 					authTitle="Post a Request"
 					authMessage="You need to sign in to post requests to the public feed."
+					guestLead="Posting to the activity feed needs an account."
 				>
 					<DialogHeader>
 						<DialogTitle>Post a Request</DialogTitle>

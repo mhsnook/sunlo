@@ -12,6 +12,8 @@ import { DECK_TARGET } from '../../src/features/coach/protocol'
 // VITE_COACH_USE_MOCK is set (vite.config.ts). It drives the real tools in a
 // fixed pattern: search for what the learner typed, show it, add on request.
 // "I want ..." saves the intention, and "request: ..." drafts a request.
+// "account" offers a guest an account; "review", "my deck" and "my profile"
+// navigate.
 
 type Messages = Parameters<FauxResponseFactory>[0]['messages']
 type Message = Messages[number]
@@ -82,6 +84,13 @@ function respondToResults(messages: Messages) {
 				fauxText('I wrote that down. What should we look at first?'),
 				fauxToolCall('suggest_replies', { replies: ['Greetings', 'Food'] }),
 			])
+		if (result.toolName === 'offer_account')
+			return reply([
+				fauxText('An account keeps your deck and this conversation.'),
+				fauxToolCall('suggest_replies', { replies: ['Skip for now'] }),
+			])
+		if (result.toolName === 'navigate')
+			return reply([fauxText('Taking you there.')])
 		if (result.toolName === 'draft_request')
 			return reply([
 				fauxText(
@@ -120,6 +129,14 @@ function respondToLearner(messages: Messages, message: Message) {
 		return reply([
 			fauxToolCall('find_similar', { phrase_ids: shown.slice(0, 10) }),
 		])
+	if (/\baccount\b/i.test(text))
+		return reply([fauxToolCall('offer_account', {})])
+	if (/\breview\b/i.test(text))
+		return reply([fauxToolCall('navigate', { to: 'review' })])
+	if (/\bmy deck\b/i.test(text))
+		return reply([fauxToolCall('navigate', { to: 'deck' })])
+	if (/\bmy profile\b/i.test(text))
+		return reply([fauxToolCall('navigate', { to: 'profile' })])
 	return reply([fauxToolCall('search_library', { query: text.toLowerCase() })])
 }
 

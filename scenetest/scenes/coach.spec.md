@@ -112,3 +112,73 @@ visitor:
 - click coach-send
 - see coach-request-needs-account
 - notSee coach-request-form
+
+# a guest asks the coach about an account and signs up from the chat
+
+// Converting keeps the guest's uid. Until the link is opened, the address
+// waits in new_email, so the cleanup matches both columns.
+
+cleanup: supabase.auth.admin.listUsers({ perPage: 1000 }).then(({ data }) => Promise.all(data.users.filter((user) => [user.email, user.new_email].includes('sunloapp+guest@gmail.com')).map((user) => supabase.auth.admin.deleteUser(user.id))))
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- click coach-continue-as-guest
+- typeInto coach-input "can I make an account"
+- click coach-send
+- seeText An account keeps your deck
+- click coach-create-account
+- see guest-signup-dialog
+- typeInto guest-signup-dialog email-input sunloapp+guest@gmail.com
+- typeInto guest-signup-dialog username-input GuestLearner
+- click guest-signup-dialog submit-button
+- see guest-signup-sent
+
+# the coach takes a guest to their deck, and the sign-up dialog opens there
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- click coach-continue-as-guest
+- typeInto coach-input "show me my deck"
+- click coach-send
+- see guest-signup-dialog
+- click guest-signup-skip
+- notSee guest-signup-dialog
+
+# a guest who asks to review is asked to sign up on the review page
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- click coach-continue-as-guest
+- typeInto coach-input "let's review"
+- click coach-send
+- see guest-signup-form
+- notSee guest-signup-dialog
+
+# a guest's profile page asks for their email first
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- click coach-continue-as-guest
+- typeInto coach-input "open my profile"
+- click coach-send
+- see profile-needs-account guest-signup-form

@@ -213,7 +213,10 @@ function AddPhraseTab() {
 	})
 
 	return (
-		<RequireAuth message="You need to be logged in to add new phrases.">
+		<RequireAuth
+			message="You need to be logged in to add new phrases."
+			guestLead="Adding a phrase to the public library needs an account."
+		>
 			<main data-testid="add-phrase-page" style={style}>
 				<Card>
 					<CardHeader>

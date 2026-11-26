@@ -21,6 +21,7 @@ import {
 	ListPlus,
 	Logs,
 	Mail,
+	MessageCircle,
 	TableProperties,
 	MessageCircleHeart,
 	MessageSquareQuote,
@@ -84,6 +85,14 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 			Icon: Compass,
 			link: {
 				to: '/browse',
+			},
+		},
+		'/coach': {
+			name: 'Coach',
+			title: 'Coach',
+			Icon: MessageCircle,
+			link: {
+				to: '/coach',
 			},
 		},
 		'/learn/add-deck': {

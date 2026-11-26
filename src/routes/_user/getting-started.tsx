@@ -12,6 +12,7 @@ import type { uuid } from '@/types/main'
 import {
 	FLAG_NEEDS_ONBOARDING,
 	LanguagesKnownSchema,
+	UsernameSchema,
 	type MyProfileType,
 } from '@/features/profile/schemas'
 import { useProfile } from '@/features/profile/hooks'
@@ -86,10 +87,7 @@ function GettingStartedPage() {
 }
 
 const formSchema = z.object({
-	username: z
-		.string()
-		.min(3, 'Username should be at least 3 characters')
-		.max(20, 'Username should be at most 20 characters'),
+	username: UsernameSchema,
 	languages_known: LanguagesKnownSchema,
 })
 

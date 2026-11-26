@@ -118,6 +118,7 @@ export function AddTranslationsDialog({
 			<AuthenticatedDialogContent
 				authTitle="Login to Add Translations"
 				authMessage="You need to be logged in to add translations to phrases."
+				guestLead="Adding a translation needs an account."
 				className="w-[92%] max-w-106"
 				data-testid="add-translations-dialog"
 			>

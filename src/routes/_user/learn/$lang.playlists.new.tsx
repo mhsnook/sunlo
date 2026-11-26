@@ -62,7 +62,10 @@ function NewPlaylistPage() {
 
 	if (!isAuth) {
 		return (
-			<RequireAuth message="You need to be logged in to create playlists.">
+			<RequireAuth
+				message="You need to be logged in to create playlists."
+				guestLead="Making a playlist needs an account."
+			>
 				<div />
 			</RequireAuth>
 		)

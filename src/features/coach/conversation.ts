@@ -11,6 +11,7 @@ import {
 	DECK_TARGET,
 	DraftRequestOutputSchema,
 	NavigateOutputSchema,
+	OfferAccountOutputSchema,
 	SaveIntentionOutputSchema,
 	ShowOnPageOutputSchema,
 	SuggestRepliesOutputSchema,
@@ -149,16 +150,21 @@ export function readConversation(
 	}
 
 	const last = messages.at(-1)
-	const suggestions =
-		last?.role === 'assistant' && turnLang === lang
-			? (toolParts(last)
-					.map((part) =>
-						finished(part, 'suggest_replies', SuggestRepliesOutputSchema)
-					)
-					.findLast(Boolean)?.replies ?? repliesWrittenAsText(last))
-			: []
+	const lastTurn = last?.role === 'assistant' && turnLang === lang ? last : null
+	const suggestions = lastTurn
+		? (toolParts(lastTurn)
+				.map((part) =>
+					finished(part, 'suggest_replies', SuggestRepliesOutputSchema)
+				)
+				.findLast(Boolean)?.replies ?? repliesWrittenAsText(lastTurn))
+		: []
+	const offersAccount = lastTurn
+		? toolParts(lastTurn).some((part) =>
+				finished(part, 'offer_account', OfferAccountOutputSchema)
+			)
+		: false
 
-	return { log, views, suggestions }
+	return { log, views, suggestions, offersAccount }
 }
 
 const TOOL_LINE = new RegExp(

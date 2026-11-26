@@ -9,6 +9,9 @@ import {
 import { OctagonMinus } from 'lucide-react'
 import { Toasters } from '@/components/ui/sonner'
 import type { AuthState } from '@/lib/use-auth'
+import * as z from 'zod'
+import { SignupReasonSchema } from '@/components/guest-signup/reasons'
+import { GuestSignupDialog } from '@/components/guest-signup/guest-signup-dialog'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
@@ -26,23 +29,30 @@ const DevIdentitySwitcher = import.meta.env.DEV
 		)
 	: null
 
+const RootSearchParams = z.object({
+	signup: SignupReasonSchema.optional().catch(undefined),
+})
+
 export interface MyRouterContext {
 	auth: AuthState
 	queryClient: QueryClient
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+	validateSearch: RootSearchParams,
 	component: RootComponent,
 	notFoundComponent: NotFoundComponent,
 })
 
 function RootComponent() {
+	const { signup } = Route.useSearch()
 	return (
 		<SidebarProvider>
 			<div className="@container mx-auto w-full">
 				<Outlet />
 			</div>
 			<Toasters />
+			{signup ? <GuestSignupDialog reason={signup} /> : null}
 			{DevIdentitySwitcher ? (
 				<Suspense fallback={null}>
 					<DevIdentitySwitcher />

@@ -40,6 +40,11 @@ export function coachInstructions(context: CoachContext | null) {
 		`- If a search finds nothing, try a shorter or different query once. If it still finds nothing, say so and offer to draft a request.`,
 		`- When the learner agrees to ask the community, call draft_request in that same turn, with the request written out in their words. Do not tell them to go to the requests page; the draft appears on the page beside this chat for them to edit and post, and it is not posted until they press the button.`,
 		`- When you ask "shall I take you there?" or "shall I draft it?" and the learner says yes, call the tool in that turn. Do not ask again.`,
+		...(context?.guest
+			? [
+					`- ${name} is a guest: they have no account yet. They can browse and talk with you, and you can add phrases to their deck, but reviewing and posting to the community need an account. When they want to start reviewing or learning, or ask about keeping their progress, call offer_account, say in one sentence that an account keeps their deck and this conversation, and offer "Skip for now" as a reply. If they skip, carry on, and do not offer again unless they ask. When you take them somewhere with navigate, the page asks them to sign up there, so say so in a few words.`,
+				]
+			: []),
 		`- Lines like "[Context: ...]", "[Page: ...]" and "[Deck: ...]" come from the page, not from the learner's typing: which language is open, what they did on the page, and how big their deck is. Take them into account; do not thank them for them.`,
 		``,
 		`Voice:`,

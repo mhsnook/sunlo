@@ -45,28 +45,32 @@ natural wrapper element to label.
 
 ## Authentication & Navigation
 
-| Selector                          | Attribute   | Component/Location     | Description                                                   |
-| --------------------------------- | ----------- | ---------------------- | ------------------------------------------------------------- |
-| `login-link`                      | data-testid | Sidebar                | Link to login page for logged-out users                       |
-| `login-form`                      | data-testid | Login page             | The login form container                                      |
-| `login-signup-link`               | data-testid | Login page             | "Create account" link to /signup                              |
-| `login-forgot-password-link`      | data-testid | Login page             | "Forgot password?" link to /forgot-password                   |
-| `login-error-invalid-credentials` | data-testid | Login page             | One-line error shown when the email/password don't match      |
-| `reset-link-invalid`              | data-testid | Set-new-password page  | Card shown when the recovery link is invalid or expired       |
-| `request-new-link`                | data-testid | Set-new-password page  | Link to /forgot-password from the invalid-link card           |
-| `forgot-password-form`            | data-testid | Forgot-password page   | Recovery-request form (scope `email-input` / `submit-button`) |
-| `password-reset-form`             | data-testid | Set-new-password page  | New-password form (scope `password-input` / `submit-button`)  |
-| `email-input`                     | data-testid | Form fields            | Email input                                                   |
-| `password-input`                  | data-testid | Form fields            | Password input                                                |
-| `submit-button`                   | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous)   |
-| `welcome-page`                    | data-testid | Welcome route          | Welcome page container                                        |
-| `community-norms-dialog`          | data-testid | Welcome page           | Community norms intro dialog                                  |
-| `affirm-community-norms-button`   | data-testid | Community norms dialog | Button to affirm norms                                        |
-| `sunlo-welcome-explainer`         | data-testid | Welcome page           | Welcome content after affirming                               |
-| `go-to-decks-link`                | data-testid | Welcome page           | Link to /learn                                                |
-| `sidebar-profile-settings-link`   | data-testid | Sidebar                | Avatar row that links to /profile (Profile & settings)        |
-| `sidebar-display-settings-link`   | data-testid | Sidebar                | Unauthenticated link to /profile (Display settings)           |
-| `profile-signout-button`          | data-testid | Profile page           | Sign out button at bottom of profile page                     |
+| Selector                          | Attribute   | Component/Location        | Description                                                                                                             |
+| --------------------------------- | ----------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `login-link`                      | data-testid | Sidebar                   | Link to login page for logged-out users                                                                                 |
+| `login-form`                      | data-testid | Login page                | The login form container                                                                                                |
+| `login-signup-link`               | data-testid | Login page                | "Create account" link to /signup                                                                                        |
+| `login-forgot-password-link`      | data-testid | Login page                | "Forgot password?" link to /forgot-password                                                                             |
+| `login-error-invalid-credentials` | data-testid | Login page                | One-line error shown when the email/password don't match                                                                |
+| `reset-link-invalid`              | data-testid | Set-new-password page     | Card shown when the recovery link is invalid or expired                                                                 |
+| `request-new-link`                | data-testid | Set-new-password page     | Link to /forgot-password from the invalid-link card                                                                     |
+| `forgot-password-form`            | data-testid | Forgot-password page      | Recovery-request form (scope `email-input` / `submit-button`)                                                           |
+| `password-reset-form`             | data-testid | Set-new-password page     | New-password form (scope `password-input` / `submit-button`)                                                            |
+| `email-input`                     | data-testid | Form fields               | Email input                                                                                                             |
+| `password-input`                  | data-testid | Form fields               | Password input                                                                                                          |
+| `submit-button`                   | data-testid | Form submit               | Generic submit button (scope by parent form when ambiguous)                                                             |
+| `welcome-page`                    | data-testid | Welcome route             | Welcome page container                                                                                                  |
+| `community-norms-dialog`          | data-testid | Welcome page              | Community norms intro dialog                                                                                            |
+| `affirm-community-norms-button`   | data-testid | Community norms dialog    | Button to affirm norms                                                                                                  |
+| `sunlo-welcome-explainer`         | data-testid | Welcome page              | Welcome content after affirming                                                                                         |
+| `go-to-decks-link`                | data-testid | Welcome page              | Link to /learn                                                                                                          |
+| `sidebar-profile-settings-link`   | data-testid | Sidebar                   | Avatar row that links to /profile (Profile & settings)                                                                  |
+| `sidebar-display-settings-link`   | data-testid | Sidebar                   | Unauthenticated link to /profile (Display settings)                                                                     |
+| `profile-signout-button`          | data-testid | Profile page              | Sign out button at bottom of profile page                                                                               |
+| `guest-signup-form`               | data-testid | `guest-signup-form.tsx`   | Email and display-name form that turns a guest into an account (scope `email-input`, `username-input`, `submit-button`) |
+| `guest-signup-dialog`             | data-testid | `guest-signup-dialog.tsx` | The sign-up dialog that `?signup=<reason>` opens for a guest on any page                                                |
+| `guest-signup-skip`               | data-testid | Guest sign-up dialog      | "Not now": closes the dialog                                                                                            |
+| `guest-signup-sent`               | data-testid | Guest sign-up form        | Shown once the confirmation link is sent                                                                                |
 
 ## Deck Management
 
@@ -188,7 +192,7 @@ natural wrapper element to label.
 | `back-to-decks-link`                     | data-testid | Sidebar                  | Link back to /learn                                                                                                |
 | `friends-section`                        | data-testid | Learn page               | Friends section container                                                                                          |
 | `profile-page`                           | data-testid | Profile route            | Profile page container                                                                                             |
-| `profile-needs-account`                  | data-testid | `profile/index.tsx`      | Create-account prompt shown to an anonymous user instead of the username and photo fields                          |
+| `profile-needs-account`                  | data-testid | `profile/index.tsx`      | Guest sign-up form shown to an anonymous user instead of the username and photo fields                             |
 | `update-profile-form`                    | data-testid | Profile route            | Edit-profile form (scope `username-input` / `submit-button`)                                                       |
 | `getting-started-page`                   | data-testid | Onboarding route         | Getting-started page container                                                                                     |
 | `profile-creation-form`                  | data-testid | Onboarding route         | Profile-setup form on /getting-started (scope `username-input` / `submit-button`)                                  |
@@ -608,37 +612,38 @@ Prototype-only feature in `src/features/chat/`. Public route, no auth.
 
 The AI coach in `src/features/coach/`. Open to visitors, whom the page signs in anonymously at their first message; specs run the coach agent on its scripted model (`VITE_COACH_USE_MOCK`, `.flue/coach/mock.ts`).
 
-| Selector                      | Attribute   | Component/Location            | Description                                                                           |
-| ----------------------------- | ----------- | ----------------------------- | ------------------------------------------------------------------------------------- |
-| `coach-index-page`            | data-testid | `routes/coach.index.lazy.tsx` | /coach language picker                                                                |
-| `coach-language-list`         | data-testid | Index page                    | Grid of language tiles; items keyed by `lang`                                         |
-| `coach-language-link`         | data-testid | Index page                    | Tile that routes to /coach/$lang                                                      |
-| `coach-page`                  | data-testid | `coach-page.tsx`              | The two-column coach screen, with `data-lang`                                         |
-| `coach-canvas`                | data-testid | `coach-canvas.tsx`            | The page half: sets the coach shows                                                   |
-| `coach-view-title`            | data-testid | Canvas header                 | Title of the set on the page                                                          |
-| `coach-view-tab`              | data-testid | Canvas                        | Button for an earlier set; keyed by view id                                           |
-| `coach-deck-meter`            | data-testid | Canvas header                 | Deck size out of 100, with `data-size`                                                |
-| `coach-phrases`               | data-testid | Canvas                        | Phrase grid; items keyed by phrase id                                                 |
-| `coach-phrase`                | data-testid | Canvas                        | One phrase tile, with `data-in-deck`                                                  |
-| `coach-add-phrase`            | data-testid | Phrase tile                   | Adds that phrase to the deck                                                          |
-| `coach-request`               | data-testid | Canvas, Requests tab          | Opens a request's answers as a set                                                    |
-| `coach-playlist`              | data-testid | Canvas, Sets tab              | Opens a playlist's phrases as a set                                                   |
-| `coach-request-draft`         | data-testid | Canvas                        | A request the coach drafted, shown as an editable form                                |
-| `coach-request-form`          | data-testid | Canvas, request draft         | The request form (scope `prompt-input` and `submit-button` by this)                   |
-| `coach-request-needs-account` | data-testid | Canvas                        | The coach's request draft as text, for an anonymous visitor who cannot post           |
-| `coach-guest-choice`          | data-testid | `guest-choice-dialog.tsx`     | Dialog on a visitor's first message: continue as a guest, log in or create an account |
-| `coach-continue-as-guest`     | data-testid | Guest choice dialog           | Signs the visitor in anonymously and sends their message                              |
-| `coach-loading`               | data-testid | Chat                          | Shown until the conversation's history loads                                          |
-| `coach-log`                   | data-testid | `coach-chat.tsx`              | The chat's scroll area                                                                |
-| `coach-message`               | data-testid | Chat                          | A coach message                                                                       |
-| `coach-learner-message`       | data-testid | Chat                          | A learner message                                                                     |
-| `coach-action`                | data-testid | Chat                          | A one-line note of something done (added, showing)                                    |
-| `coach-error`                 | data-testid | Chat                          | A one-line error from a failed turn                                                   |
-| `coach-thinking`              | data-testid | Chat                          | Shown while the coach works on a turn                                                 |
-| `coach-suggestions`           | data-testid | Chat                          | Row of suggested replies                                                              |
-| `coach-suggestion`            | data-testid | Chat                          | One suggested reply; keyed by its text                                                |
-| `coach-input`                 | data-testid | Chat compose bar              | Message textarea                                                                      |
-| `coach-send`                  | data-testid | Chat compose bar              | Send button                                                                           |
+| Selector                      | Attribute   | Component/Location            | Description                                                                              |
+| ----------------------------- | ----------- | ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `coach-index-page`            | data-testid | `routes/coach.index.lazy.tsx` | /coach language picker                                                                   |
+| `coach-language-list`         | data-testid | Index page                    | Grid of language tiles; items keyed by `lang`                                            |
+| `coach-language-link`         | data-testid | Index page                    | Tile that routes to /coach/$lang                                                         |
+| `coach-page`                  | data-testid | `coach-page.tsx`              | The two-column coach screen, with `data-lang`                                            |
+| `coach-canvas`                | data-testid | `coach-canvas.tsx`            | The page half: sets the coach shows                                                      |
+| `coach-view-title`            | data-testid | Canvas header                 | Title of the set on the page                                                             |
+| `coach-view-tab`              | data-testid | Canvas                        | Button for an earlier set; keyed by view id                                              |
+| `coach-deck-meter`            | data-testid | Canvas header                 | Deck size out of 100, with `data-size`                                                   |
+| `coach-phrases`               | data-testid | Canvas                        | Phrase grid; items keyed by phrase id                                                    |
+| `coach-phrase`                | data-testid | Canvas                        | One phrase tile, with `data-in-deck`                                                     |
+| `coach-add-phrase`            | data-testid | Phrase tile                   | Adds that phrase to the deck                                                             |
+| `coach-request`               | data-testid | Canvas, Requests tab          | Opens a request's answers as a set                                                       |
+| `coach-playlist`              | data-testid | Canvas, Sets tab              | Opens a playlist's phrases as a set                                                      |
+| `coach-request-draft`         | data-testid | Canvas                        | A request the coach drafted, shown as an editable form                                   |
+| `coach-request-form`          | data-testid | Canvas, request draft         | The request form (scope `prompt-input` and `submit-button` by this)                      |
+| `coach-request-needs-account` | data-testid | Canvas                        | The coach's request draft as text, for an anonymous visitor who cannot post              |
+| `coach-create-account`        | data-testid | Chat suggestions              | "Create my profile", after the coach offers a guest an account; opens the sign-up dialog |
+| `coach-guest-choice`          | data-testid | `guest-choice-dialog.tsx`     | Dialog on a visitor's first message: continue as a guest, log in or create an account    |
+| `coach-continue-as-guest`     | data-testid | Guest choice dialog           | Signs the visitor in anonymously and sends their message                                 |
+| `coach-loading`               | data-testid | Chat                          | Shown until the conversation's history loads                                             |
+| `coach-log`                   | data-testid | `coach-chat.tsx`              | The chat's scroll area                                                                   |
+| `coach-message`               | data-testid | Chat                          | A coach message                                                                          |
+| `coach-learner-message`       | data-testid | Chat                          | A learner message                                                                        |
+| `coach-action`                | data-testid | Chat                          | A one-line note of something done (added, showing)                                       |
+| `coach-error`                 | data-testid | Chat                          | A one-line error from a failed turn                                                      |
+| `coach-thinking`              | data-testid | Chat                          | Shown while the coach works on a turn                                                    |
+| `coach-suggestions`           | data-testid | Chat                          | Row of suggested replies                                                                 |
+| `coach-suggestion`            | data-testid | Chat                          | One suggested reply; keyed by its text                                                   |
+| `coach-input`                 | data-testid | Chat compose bar              | Message textarea                                                                         |
+| `coach-send`                  | data-testid | Chat compose bar              | Send button                                                                              |
 
 ## Admin Phrase Management
 

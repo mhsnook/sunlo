@@ -2,32 +2,33 @@ import { useNavigate } from '@tanstack/react-router'
 import { toastError } from '@/components/ui/sonner'
 
 import { useAuth } from '@/lib/use-auth'
-
-type AuthGateOptions = {
-	/** Let an anonymous user through: only for their own data, never public content */
-	allowAnonymous?: boolean
-}
+import {
+	useSetGuestSignup,
+	type SignupReason,
+} from '@/components/guest-signup/reasons'
 
 /**
  * Hook to require authentication for an action.
- * If not authenticated, shows a toast and redirects to login.
+ * If not authenticated, shows a toast and redirects to login; a guest gets the
+ * sign-up dialog instead.
  * @returns A function that wraps an action and checks for auth first.
  */
 export function useRequireAuth({
-	allowAnonymous = false,
-}: AuthGateOptions = {}) {
-	const { isAuth, hasAccount } = useAuth()
+	guestReason = 'public',
+}: { guestReason?: SignupReason } = {}) {
+	const { hasAccount, isAnonymous } = useAuth()
 	const navigate = useNavigate()
+	const setGuestSignup = useSetGuestSignup()
 
 	return (action: () => void, message = 'Please log in to continue') => {
-		if (!(allowAnonymous ? isAuth : hasAccount)) {
+		if (hasAccount) action()
+		else if (isAnonymous) setGuestSignup(guestReason)
+		else {
 			toastError(message)
 			void navigate({
 				to: '/login',
 				search: { redirectedFrom: window.location.href },
 			})
-		} else {
-			action()
 		}
 	}
 }
@@ -36,9 +37,6 @@ export function useRequireAuth({
  * Hook to check if the user is authenticated.
  * Useful for conditionally rendering auth-gated UI.
  */
-export function useIsAuthenticated({
-	allowAnonymous = false,
-}: AuthGateOptions = {}): boolean {
-	const { isAuth, hasAccount } = useAuth()
-	return allowAnonymous ? isAuth : hasAccount
+export function useIsAuthenticated(): boolean {
+	return useAuth().hasAccount
 }

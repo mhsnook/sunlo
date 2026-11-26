@@ -270,7 +270,10 @@ function BulkAddPhrasesPage() {
 	}
 
 	return (
-		<RequireAuth message="You need to be logged in to bulk add phrases.">
+		<RequireAuth
+			message="You need to be logged in to bulk add phrases."
+			guestLead="Adding phrases to the public library needs an account."
+		>
 			<main
 				data-testid="bulk-add-page"
 				style={style}

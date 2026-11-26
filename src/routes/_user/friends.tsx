@@ -22,7 +22,10 @@ export const Route = createFileRoute('/_user/friends')({
 
 function FriendsLayout() {
 	return (
-		<RequireAuth message="Log in to connect with friends, share phrases, and chat.">
+		<RequireAuth
+			message="Log in to connect with friends, share phrases, and chat."
+			guestLead="Adding friends and chatting with them needs an account."
+		>
 			<Outlet />
 		</RequireAuth>
 	)

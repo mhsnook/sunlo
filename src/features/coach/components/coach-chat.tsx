@@ -4,6 +4,7 @@ import { Bubble } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { MessageScroller } from '@/components/ui/message-scroller'
+import { useSetGuestSignup } from '@/components/guest-signup/reasons'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
 import {
@@ -21,6 +22,8 @@ type Props = {
 	deckSize: number
 	log: Array<CoachLogEntry>
 	suggestions: Array<string>
+	// The coach offered a guest an account in its last turn.
+	offersAccount: boolean
 	ready: boolean
 	started: boolean
 	busy: boolean
@@ -37,6 +40,7 @@ export function CoachChat({
 	deckSize,
 	log,
 	suggestions,
+	offersAccount,
 	ready,
 	started,
 	busy,
@@ -45,6 +49,7 @@ export function CoachChat({
 }: Props) {
 	const [draft, setDraft] = useState('')
 	const { notes } = usePageState(coachKey)
+	const setGuestSignup = useSetGuestSignup()
 	const replies = !ready ? [] : started ? suggestions : OPENING_REPLIES
 
 	return (
@@ -98,8 +103,17 @@ export function CoachChat({
 				<GuestChoice joining={guest.joining} onGuest={guest.join} />
 			) : null}
 
-			{!guest && !busy && replies.length > 0 && (
+			{!guest && !busy && (replies.length > 0 || offersAccount) && (
 				<div className="flex flex-wrap gap-2" data-testid="coach-suggestions">
+					{offersAccount ? (
+						<Button
+							size="sm"
+							data-testid="coach-create-account"
+							onClick={() => setGuestSignup('coach')}
+						>
+							Create my profile
+						</Button>
+					) : null}
 					{replies.map((reply) => (
 						<Button
 							key={reply}

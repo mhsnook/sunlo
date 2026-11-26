@@ -108,6 +108,12 @@ export function Coach() {
 		}),
 	})
 	useTool({
+		name: 'offer_account',
+		description: coachToolDescriptions.offer_account,
+		input: coachToolInputs.offer_account,
+		run: () => ({ output: { offered: page().guest === true } }),
+	})
+	useTool({
 		name: 'navigate',
 		description: coachToolDescriptions.navigate,
 		input: coachToolInputs.navigate,

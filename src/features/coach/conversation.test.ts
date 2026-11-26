@@ -142,6 +142,23 @@ describe('readConversation', () => {
 		expect(suggestions).toEqual([])
 	})
 
+	it('offers an account only from the last turn', () => {
+		const offered = [
+			message('m1', 'user', [text(kanMessage('I want to start reviewing'))]),
+			message('m2', 'assistant', [
+				tool('offer_account', { offered: true }),
+				tool('suggest_replies', { replies: ['Skip for now'] }),
+			]),
+		]
+		expect(read(offered).offersAccount).toBe(true)
+		expect(
+			read([
+				...offered,
+				message('m3', 'user', [text(kanMessage('Skip for now'))]),
+			]).offersAccount
+		).toBe(false)
+	})
+
 	it("keeps another language's sets and suggestions off this page", () => {
 		const { views, suggestions, log } = read([
 			message('m1', 'user', [text(kanMessage('tea', 'hin'))]),

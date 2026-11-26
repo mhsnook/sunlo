@@ -1,3 +1,4 @@
+import { signupLeads } from '@/components/guest-signup/reasons'
 import { CSSProperties, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
@@ -115,15 +116,15 @@ function getDueInfo(item: DueCheckable): {
 }
 
 function ManageDeckPage() {
-	const isAuth = useIsAuthenticated({ allowAnonymous: true })
+	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeck(lang)
 
 	if (!isAuth) {
 		return (
 			<RequireAuth
-				allowAnonymous
 				message="You need to be logged in to manage your deck."
+				guestLead={signupLeads.learn}
 			>
 				<div />
 			</RequireAuth>

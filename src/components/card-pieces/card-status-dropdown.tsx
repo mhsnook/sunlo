@@ -210,6 +210,7 @@ export function CardStatusDropdown({
 	className,
 }: CardStatusDropdownProps) {
 	const userId = useUserId()
+	const requireAuth = useRequireAuth({ guestReason: 'learn' })
 	const { data: deck } = useDeck(phrase.lang)
 	const { data: card } = useMyCard(phrase.id)
 
@@ -223,13 +224,14 @@ export function CardStatusDropdown({
 		null
 	)
 
-	const pickStatus = (status: LearningStatus) => {
-		if (needsDeckSetup) {
-			setPendingStatus(status)
-		} else {
-			void setCardStatus(status)
-		}
-	}
+	const pickStatus = (status: LearningStatus) =>
+		requireAuth(() => {
+			if (needsDeckSetup) {
+				setPendingStatus(status)
+			} else {
+				void setCardStatus(status)
+			}
+		})
 
 	// Dropdown items still show the full action context (incl. nodeck copy);
 	// the trigger only narrates the card's actual state — flat and consistent,
@@ -322,7 +324,7 @@ export function CardStatusHeart({
 }: {
 	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
-	const requireAuth = useRequireAuth({ allowAnonymous: true })
+	const requireAuth = useRequireAuth({ guestReason: 'learn' })
 	const { data: card } = useMyCard(phrase.id)
 	const { data: deck } = useDeck(phrase.lang)
 	const setCardStatus = useCardStatusMutator(phrase, card)

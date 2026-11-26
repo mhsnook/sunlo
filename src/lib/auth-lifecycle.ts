@@ -1,5 +1,7 @@
 import { failed } from '@scenetest/checks/react'
 import { queryClient } from '@/lib/query-client'
+import supabase from '@/lib/supabase-client'
+import { toastError } from '@/components/ui/sonner'
 import { myProfileCollection } from '@/features/profile/collections'
 import { decksCollection, cardsCollection } from '@/features/deck/collections'
 import { friendRequestActionsCollection } from '@/features/social/collections'
@@ -116,7 +118,38 @@ class AuthLifecycle {
 
 		void friendRequestActionsCollection.preload()
 		void cardsCollection.preload()
+		void claimGuestUsername(userId)
 	}
+}
+
+/**
+ * A guest picks a display name when they sign up (GuestSignupForm), but
+ * guard_anonymous_profile refuses it until they confirm their email, so it
+ * waits in their auth metadata. The first load as an account writes it once,
+ * then removes it from the metadata whether or not the write worked.
+ */
+let claimedFor: string | null = null
+
+async function claimGuestUsername(userId: string) {
+	if (claimedFor === userId) return
+	claimedFor = userId
+	const { data } = await supabase.auth.getSession()
+	const user = data.session?.user
+	const name: unknown = user?.user_metadata?.username
+	if (!user || user.id !== userId || user.is_anonymous) return
+	if (typeof name !== 'string' || !name) return
+	const { error } = await supabase.auth.updateUser({ data: { username: null } })
+	if (error) return
+	if (myProfileCollection.get(userId)?.username) return
+	const tx = myProfileCollection.update(userId, (draft) => {
+		draft.username = name
+		draft.updated_at = new Date().toISOString()
+	})
+	await tx.isPersisted.promise.catch(() => {
+		toastError(
+			`Someone took the name “${name}” before you confirmed your email. Choose another on your profile page.`
+		)
+	})
 }
 
 export const authLifecycle = new AuthLifecycle()

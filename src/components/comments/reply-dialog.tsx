@@ -82,6 +82,7 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 			<AuthenticatedDialogContent
 				authTitle="Login to Comment"
 				authMessage="You need to be logged in to join the conversation."
+				guestLead="Posting a public comment needs an account."
 				className="@container max-h-[90dvh] overflow-y-auto p-4 sm:p-6"
 				data-testid="reply-dialog"
 			>
