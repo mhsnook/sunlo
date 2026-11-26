@@ -273,6 +273,7 @@ export type Database = {
 					lang: string | null
 					message: string
 					page_url: string | null
+					source: string
 					uid: string | null
 				}
 				Insert: {
@@ -283,6 +284,7 @@ export type Database = {
 					lang?: string | null
 					message: string
 					page_url?: string | null
+					source?: string
 					uid?: string | null
 				}
 				Update: {
@@ -293,6 +295,7 @@ export type Database = {
 					lang?: string | null
 					message?: string
 					page_url?: string | null
+					source?: string
 					uid?: string | null
 				}
 				Relationships: [
@@ -1533,6 +1536,7 @@ export type Database = {
 					created_at: string
 					daily_review_goal: number
 					id: string
+					intention: string | null
 					lang: string
 					learning_goal: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang: string | null
@@ -1545,6 +1549,7 @@ export type Database = {
 					created_at?: string
 					daily_review_goal?: number
 					id?: string
+					intention?: string | null
 					lang: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang?: string | null
@@ -1557,6 +1562,7 @@ export type Database = {
 					created_at?: string
 					daily_review_goal?: number
 					id?: string
+					intention?: string | null
 					lang?: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang?: string | null
@@ -1945,6 +1951,7 @@ export type Database = {
 				Returns: Json
 			}
 			is_admin: { Args: never; Returns: boolean }
+			is_anonymous: { Args: never; Returns: boolean }
 			recount_all_upvotes: { Args: never; Returns: undefined }
 			refresh_meta_language: { Args: never; Returns: undefined }
 			search_by_anchors: {

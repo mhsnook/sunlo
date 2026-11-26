@@ -322,7 +322,7 @@ export function CardStatusHeart({
 }: {
 	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
-	const requireAuth = useRequireAuth()
+	const requireAuth = useRequireAuth({ allowAnonymous: true })
 	const { data: card } = useMyCard(phrase.id)
 	const { data: deck } = useDeck(phrase.lang)
 	const setCardStatus = useCardStatusMutator(phrase, card)

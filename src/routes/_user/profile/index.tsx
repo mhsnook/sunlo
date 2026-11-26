@@ -13,6 +13,7 @@ import AvatarSection from '@/routes/_user/profile/-avatar-section'
 import UserAuthCard from '@/routes/_user/profile/-user-auth-card'
 import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
+import { LoginSignupButtons } from '@/components/ui/authenticated-dialog'
 import { UpdateProfileForm } from './-update-profile-form'
 import { DisplayPreferences } from './-display-preferences'
 import supabase from '@/lib/supabase-client'
@@ -23,8 +24,11 @@ export const Route = createFileRoute('/_user/profile/')({
 })
 
 function ProfilePage() {
-	const { isAuth } = useAuth()
+	const { isAuth, hasAccount } = useAuth()
 	const { data: profile } = useProfile()
+	// An anonymous user has a profile row, but a username, a photo and login
+	// details need an account.
+	const editable = hasAccount ? profile : null
 
 	if (!isAuth) {
 		return (
@@ -49,16 +53,31 @@ function ProfilePage() {
 
 	return (
 		<main data-testid="profile-page" className="flex flex-col gap-6 px-px">
-			{profile ? <AvatarSection /> : null}
+			{editable ? <AvatarSection /> : null}
 
-			{profile ? (
+			{hasAccount ? null : (
+				<Card data-testid="profile-needs-account">
+					<CardHeader>
+						<CardTitle>Save your progress</CardTitle>
+						<CardDescription>
+							Create an account to keep your deck and choose a username and a
+							photo.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<LoginSignupButtons />
+					</CardContent>
+				</Card>
+			)}
+
+			{editable ? (
 				<Card>
 					<CardHeader>
 						<CardTitle>Edit Profile</CardTitle>
 						<CardDescription>Update your profile information</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<UpdateProfileForm profile={profile} />
+						<UpdateProfileForm profile={editable} />
 					</CardContent>
 				</Card>
 			) : null}
@@ -73,7 +92,7 @@ function ProfilePage() {
 				</CardContent>
 			</Card>
 
-			{profile ? (
+			{editable ? (
 				<Card>
 					<CardHeader>
 						<CardTitle>Login Credentials</CardTitle>

@@ -115,13 +115,16 @@ function getDueInfo(item: DueCheckable): {
 }
 
 function ManageDeckPage() {
-	const isAuth = useIsAuthenticated()
+	const isAuth = useIsAuthenticated({ allowAnonymous: true })
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeck(lang)
 
 	if (!isAuth) {
 		return (
-			<RequireAuth message="You need to be logged in to manage your deck.">
+			<RequireAuth
+				allowAnonymous
+				message="You need to be logged in to manage your deck."
+			>
 				<div />
 			</RequireAuth>
 		)

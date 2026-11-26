@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { addPhrasesToDeck } from '@/features/deck/mutations'
+import { useAuth } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
 import type { CoachView } from '../conversation'
@@ -27,7 +28,7 @@ type Props = {
 	coachKey: string
 	coachViews: Array<CoachView>
 	lang: string
-	uid: string
+	uid: string | null
 	translationLang: string
 	deck: DeckMeterData
 }
@@ -78,7 +79,9 @@ export function CoachCanvas(props: Props) {
 				</nav>
 			)}
 
-			{view ? <ViewContent key={view.id} view={view} {...props} /> : null}
+			{view && props.uid ? (
+				<ViewContent key={view.id} {...props} view={view} uid={props.uid} />
+			) : null}
 		</div>
 	)
 }
@@ -153,7 +156,8 @@ function ViewContent({
 	uid,
 	translationLang,
 	deck,
-}: Props & { view: CoachView }) {
+}: Props & { view: CoachView; uid: string }) {
+	const { isAnonymous } = useAuth()
 	const phrases = usePhrasesByIds(view.phraseIds)
 	const requests = useRequestsByIds(view.requestIds)
 	const playlists = usePlaylistsByIds(view.playlistIds)
@@ -184,18 +188,28 @@ function ViewContent({
 				className="bg-card max-w-xl rounded border p-4"
 				data-testid="coach-request-draft"
 			>
-				<RequestForm
-					lang={lang}
-					initialPrompt={view.draftRequest}
-					formTestId="coach-request-form"
-					onSuccess={(request) =>
-						openSet(
-							'Your request',
-							{ requestIds: [request.id] },
-							`posted the request “${request.prompt}”`
-						)
-					}
-				/>
+				{/* RLS refuses a request from an anonymous user. */}
+				{isAnonymous ? (
+					<div data-testid="coach-request-needs-account">
+						<p className="text-muted-foreground text-sm">
+							Posting a request needs an account. Here is your draft:
+						</p>
+						<p className="mt-2 font-medium">{view.draftRequest}</p>
+					</div>
+				) : (
+					<RequestForm
+						lang={lang}
+						initialPrompt={view.draftRequest}
+						formTestId="coach-request-form"
+						onSuccess={(request) =>
+							openSet(
+								'Your request',
+								{ requestIds: [request.id] },
+								`posted the request “${request.prompt}”`
+							)
+						}
+					/>
+				)}
 			</div>
 		)
 

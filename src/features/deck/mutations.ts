@@ -21,6 +21,34 @@ export function optimisticNewDeck(lang: string, uid: string): DeckType {
 	})
 }
 
+// A card needs its deck row, so writes to a deck create or unarchive it first.
+async function ensureDeck(lang: string, uid: string): Promise<void> {
+	const deck = decksCollection.get(lang)
+	if (!deck) {
+		await decksCollection.insert(optimisticNewDeck(lang, uid)).isPersisted
+			.promise
+	} else if (deck.archived) {
+		await decksCollection.update(lang, (draft) => {
+			draft.archived = false
+		}).isPersisted.promise
+	}
+}
+
+/**
+ * Writes what the learner told the coach they want from this language onto
+ * their deck, creating or unarchiving the deck first.
+ */
+export async function saveDeckIntention(
+	lang: string,
+	uid: string,
+	intention: string
+): Promise<void> {
+	await ensureDeck(lang, uid)
+	await decksCollection.update(lang, (draft) => {
+		draft.intention = intention
+	}).isPersisted.promise
+}
+
 export function useCreateDeck() {
 	const navigate = useNavigate()
 	const userId = useUserId()
@@ -50,15 +78,7 @@ export async function addPhrasesToDeck(
 	uid: string,
 	phrases: Array<{ id: string; only_reverse: boolean | null }>
 ): Promise<number> {
-	const deck = decksCollection.get(lang)
-	if (!deck) {
-		await decksCollection.insert(optimisticNewDeck(lang, uid)).isPersisted
-			.promise
-	} else if (deck.archived) {
-		await decksCollection.update(lang, (draft) => {
-			draft.archived = false
-		}).isPersisted.promise
-	}
+	await ensureDeck(lang, uid)
 
 	const existing = new Map(
 		cardsCollection.toArray

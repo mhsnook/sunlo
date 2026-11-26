@@ -21,6 +21,7 @@ export const DeckSchema = z.object({
 	learning_goal: LearningGoalEnumSchema,
 	preferred_translation_lang: LangSchema.nullable().default(null),
 	review_answer_mode: ReviewAnswerModeSchema.nullable().default(null),
+	intention: z.string().nullable().default(null),
 })
 
 export type DeckType = z.infer<typeof DeckSchema>

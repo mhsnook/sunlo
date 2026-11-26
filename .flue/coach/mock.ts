@@ -11,6 +11,7 @@ import { DECK_TARGET } from '../../src/features/coach/protocol'
 // A scripted stand-in for the model, registered as `mock/coach` when
 // VITE_COACH_USE_MOCK is set (vite.config.ts). It drives the real tools in a
 // fixed pattern: search for what the learner typed, show it, add on request.
+// "I want ..." saves the intention, and "request: ..." drafts a request.
 
 type Messages = Parameters<FauxResponseFactory>[0]['messages']
 type Message = Messages[number]
@@ -76,6 +77,11 @@ function respondToResults(messages: Messages) {
 				}),
 			])
 		}
+		if (result.toolName === 'save_intention')
+			return reply([
+				fauxText('I wrote that down. What should we look at first?'),
+				fauxToolCall('suggest_replies', { replies: ['Greetings', 'Food'] }),
+			])
 		if (result.toolName === 'draft_request')
 			return reply([
 				fauxText(
@@ -106,6 +112,8 @@ function respondToLearner(messages: Messages, message: Message) {
 	const shown = lastShown(messages)
 	const asked = /^request:\s*(.+)$/i.exec(text)
 	if (asked) return reply([fauxToolCall('draft_request', { prompt: asked[1] })])
+	if (/^i want\b/i.test(text))
+		return reply([fauxToolCall('save_intention', { intention: text })])
 	if (/\badd\b/i.test(text) && shown.length)
 		return reply([fauxToolCall('add_to_deck', { phrase_ids: shown })])
 	if (/more like/i.test(text) && shown.length)

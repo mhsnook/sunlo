@@ -289,6 +289,22 @@ $$;
 
 alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
 
+create or replace function "public"."guard_anonymous_profile" () returns "trigger" language "plpgsql" as $$
+begin
+	if public.is_anonymous()
+		and (
+			new.username is distinct from old.username
+			or new.avatar_path is distinct from old.avatar_path
+		)
+	then
+		raise exception 'Sign up to choose a username or a photo' using errcode = '42501';
+	end if;
+	return new;
+end;
+$$;
+
+alter function "public"."guard_anonymous_profile" () owner to "postgres";
+
 create or replace function "public"."guard_soft_delete_only" () returns "trigger" language "plpgsql" as $$
 begin
   if (to_jsonb(old) - 'deleted') is distinct from (to_jsonb(new) - 'deleted') then
@@ -318,6 +334,12 @@ create or replace function "public"."is_admin" () returns boolean language "sql"
 $$;
 
 alter function "public"."is_admin" () owner to "postgres";
+
+create or replace function "public"."is_anonymous" () returns boolean language "sql" stable as $$
+	select coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false);
+$$;
+
+alter function "public"."is_anonymous" () owner to "postgres";
 
 create or replace function "public"."notify_on_comment" () returns "trigger" language "plpgsql" security definer as $$
 declare
@@ -1038,6 +1060,7 @@ create table if not exists "public"."feedback" (
 	"lang" character varying,
 	"page_url" "text",
 	"contact_email" "text",
+	"source" "text" default 'person'::"text" not null,
 	constraint "feedback_contact_email_length" check (("char_length" ("contact_email") <= 320)),
 	constraint "feedback_kind_check" check (("kind" = any (array['bug'::"text", 'feature'::"text", 'library'::"text"]))),
 	constraint "feedback_lang_length" check (("char_length" (("lang")::"text") = 3)),
@@ -1047,7 +1070,8 @@ create table if not exists "public"."feedback" (
 			and ("char_length" ("btrim" ("message")) <= 4000)
 		)
 	),
-	constraint "feedback_page_url_length" check (("char_length" ("page_url") <= 2000))
+	constraint "feedback_page_url_length" check (("char_length" ("page_url") <= 2000)),
+	constraint "feedback_source_check" check (("source" = any (array['person'::"text", 'agent'::"text"])))
 );
 
 alter table "public"."feedback" owner to "postgres";
@@ -1081,6 +1105,10 @@ set
 declare
 	v_phrase public.phrase;
 begin
+	if public.is_anonymous() then
+		raise exception 'Sign up to confirm a draft phrase' using errcode = '42501';
+	end if;
+
 	select * into v_phrase from public.phrase where id = p_phrase_id and archived = false;
 	if not found then
 		raise exception 'Phrase % not found', p_phrase_id using errcode = 'P0002';
@@ -1446,7 +1474,9 @@ create table if not exists "public"."user_deck" (
 	"preferred_translation_lang" character varying(3) default null::character varying,
 	"review_answer_mode" "text",
 	"updated_at" timestamp with time zone default "now" () not null,
+	"intention" "text",
 	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20]))),
+	constraint "user_deck_intention_length" check (("char_length" ("intention") <= 1000)),
 	constraint "user_deck_review_answer_mode_check" check (
 		(
 			("review_answer_mode" is null)
@@ -1468,6 +1498,8 @@ comment on column "public"."user_deck"."created_at" is 'the moment the deck was 
 comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
 
 comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
+
+comment on column "public"."user_deck"."intention" is 'What the learner wants to learn and how much they already know, as the coach wrote it down';
 
 create materialized view "public"."meta_language" as
 with
@@ -2136,6 +2168,10 @@ after insert or delete or update of "text",
 "phrase_id" on "public"."phrase_translation" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('translation');
 
+create or replace trigger "guard_anonymous_profile"
+before update on "public"."user_profile" for each row
+execute function "public"."guard_anonymous_profile" ();
+
 create or replace trigger "guard_comment_phrase_link_update"
 before update on "public"."comment_phrase_link" for each row
 execute function "public"."guard_soft_delete_only" ();
@@ -2523,6 +2559,193 @@ for update
 	to "authenticated" using ("public"."is_admin" ())
 with
 	check ("public"."is_admin" ());
+
+create policy "Anonymous users cannot add public content" on "public"."chat_message" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."comment_phrase_link" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."comment_upvote" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."friend_request_action" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."message_tag" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."message_tag_link" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_playlist" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_playlist_upvote" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_relation" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_request" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_request_upvote" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_tag" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."phrase_translation" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."playlist_phrase_link" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."request_comment" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
+
+create policy "Anonymous users cannot add public content" on "public"."tag" as restrictive for insert to "authenticated"
+with
+	check (
+		(
+			not (
+				select
+					"public"."is_anonymous" () as "is_anonymous"
+			)
+		)
+	);
 
 create policy "Anyone can send feedback as themselves" on "public"."feedback" for insert to "authenticated",
 "anon"
@@ -3767,6 +3990,12 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "authen
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
 
+grant all on function "public"."guard_anonymous_profile" () to "anon";
+
+grant all on function "public"."guard_anonymous_profile" () to "authenticated";
+
+grant all on function "public"."guard_anonymous_profile" () to "service_role";
+
 grant all on function "public"."guard_soft_delete_only" () to "anon";
 
 grant all on function "public"."guard_soft_delete_only" () to "authenticated";
@@ -3984,6 +4213,12 @@ grant all on function "public"."is_admin" () to "anon";
 grant all on function "public"."is_admin" () to "authenticated";
 
 grant all on function "public"."is_admin" () to "service_role";
+
+grant all on function "public"."is_anonymous" () to "anon";
+
+grant all on function "public"."is_anonymous" () to "authenticated";
+
+grant all on function "public"."is_anonymous" () to "service_role";
 
 grant all on function "public"."ivfflat_bit_support" ("internal") to "postgres";
 
@@ -4758,6 +4993,10 @@ select
 grant
 select
 	("lang") on table "public"."feedback" to "admin_reader";
+
+grant
+select
+	("source") on table "public"."feedback" to "admin_reader";
 
 grant all on table "public"."phrase" to "anon";
 

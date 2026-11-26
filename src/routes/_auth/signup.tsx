@@ -37,9 +37,9 @@ export const Route = createFileRoute('/_auth/signup')({
 		return result.success ? result.data : {}
 	},
 	beforeLoad: ({ context: { auth } }) => {
-		if (auth.isAuth) {
+		if (auth.hasAccount) {
 			console.log(
-				`Issuing redirect from /signup to /learn because auth.isAuth is true`
+				`Issuing redirect from /signup to /learn because auth.hasAccount is true`
 			)
 			throw redirect({ to: '/learn' })
 		}
@@ -61,14 +61,27 @@ const FormSchema = z.object({
 
 type FormInputs = z.infer<typeof FormSchema>
 
+// An anonymous user chooses a password after confirming their email: Supabase
+// refuses a password on an anonymous user whose email is not verified.
+const AnonymousFormSchema = FormSchema.extend({ password: z.string() })
+
 function SignUp() {
 	const { referrer } = Route.useSearch()
-	const { isAuth } = useAuth()
+	const { hasAccount, isAnonymous } = useAuth()
 	const navigate = Route.useNavigate()
 
 	const signupMutation = useMutation({
 		mutationKey: ['signup'],
 		mutationFn: async ({ email, password, user_role }: FormInputs) => {
+			if (isAnonymous) {
+				// Keeps the uid, so the deck and the coach conversation carry over.
+				const { data, error } = await supabase.auth.updateUser(
+					{ email, data: { role: user_role || 'learner' } },
+					{ emailRedirectTo: `${window.location.origin}/set-new-password` }
+				)
+				if (error) throw error
+				return { user: data.user, wasLogin: false }
+			}
 			const { data, error } = await supabase.auth.signUp({
 				email,
 				password,
@@ -107,15 +120,15 @@ function SignUp() {
 			password: '',
 			user_role: 'learner',
 		} as FormInputs,
-		validators: { onChange: FormSchema },
+		validators: { onChange: isAnonymous ? AnonymousFormSchema : FormSchema },
 		onSubmit: async ({ value }) => {
 			await signupMutation.mutateAsync(value)
 		},
 	})
 
-	if (isAuth) {
+	if (hasAccount) {
 		console.log(
-			`Issuing redirect from Signup component to /getting-started because auth.isAuth has become true`
+			`Issuing redirect from Signup component to /getting-started because auth.hasAccount has become true`
 		)
 		return <Navigate to="/getting-started" from={Route.fullPath} />
 	}
@@ -135,7 +148,11 @@ function SignUp() {
 								Find the confirmation link in your email to activate your
 								account.
 							</p>
-							<p>You can close this window.</p>
+							{isAnonymous ? (
+								<p>The link takes you to choose your password.</p>
+							) : (
+								<p>You can close this window.</p>
+							)}
 						</Callout>
 					) : (
 						<form
@@ -152,11 +169,18 @@ function SignUp() {
 								<form.AppField name="email">
 									{(field) => <field.EmailInput />}
 								</form.AppField>
-								<form.AppField name="password">
-									{(field) => (
-										<field.PasswordInput autoComplete="new-password" />
-									)}
-								</form.AppField>
+								{isAnonymous ? (
+									<p className="text-muted-foreground text-sm">
+										Your deck and your coach conversation stay with you. You
+										choose a password after you confirm your email.
+									</p>
+								) : (
+									<form.AppField name="password">
+										{(field) => (
+											<field.PasswordInput autoComplete="new-password" />
+										)}
+									</form.AppField>
+								)}
 								<form.AppField name="user_role">
 									{() => <UserRoleField />}
 								</form.AppField>

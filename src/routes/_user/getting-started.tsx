@@ -39,6 +39,8 @@ export const Route = createFileRoute('/_user/getting-started')({
 		chromeless: true,
 	},
 	beforeLoad: ({ context }) => {
+		// Signing up converts an anonymous user, and keeps their deck.
+		if (context.auth.isAnonymous) throw redirect({ to: '/signup' })
 		if (!context.auth.isAuth) {
 			console.log(
 				'Issuing redirect to /login from /getting-started page bc not logged in'

@@ -17,6 +17,10 @@
 		// /learn/* runs it so that crawlers get Open Graph tags.
 		"run_worker_first": ["/api/*", "/learn/*"],
 	},
+	// Keeps the Worker's logs, Durable Objects included, in the dashboard
+	// (Observability › Logs). An agent run that fails shows the client only
+	// "internal error"; the log under its submission id has the cause.
+	"observability": { "enabled": true },
 	"ai": { "binding": "AI", "remote": true },
 	"ratelimits": [
 		{
@@ -36,6 +40,12 @@
 			"namespace_id": "1003",
 			"simple": { "limit": 120, "period": 60 },
 		},
+		{
+			// COACH_LIMITER for an anonymous uid.
+			"name": "COACH_ANON_LIMITER",
+			"namespace_id": "1004",
+			"simple": { "limit": 5, "period": 60 },
+		},
 	],
 	// Append-only once deployed: a new Flue agent is a new entry.
 	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["FlueCoachAgent"] }],
@@ -44,7 +54,7 @@
 	// scripts/cf-preview.sh overrides the Supabase pair with --var.
 	"vars": {
 		"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
-		"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+		"COACH_MODEL": "cloudflare/@cf/google/gemma-4-26b-a4b-it",
 		// Must exist in the AI Gateway dashboard; only `default` is created on demand.
 		"AI_GATEWAY_ID": "sunlo-app",
 		"SUPABASE_URL": "https://hepudeougzlgnuqvybrj.supabase.co",
@@ -60,8 +70,14 @@
 		// this file with a grep that must find each name only once.
 		"vars": {
 			"PHOTO_EXTRACT_MODEL": "@cf/google/gemma-4-26b-a4b-it",
-			"COACH_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+			"COACH_MODEL": "cloudflare/@cf/google/gemma-4-26b-a4b-it",
 			"AI_GATEWAY_ID": "sunlo-app",
+		},
+		// Each preview keeps its own logs, under that preview's Observability
+		// tab; without "persist" they are not kept.
+		"observability": {
+			"enabled": true,
+			"logs": { "enabled": true, "invocation_logs": true, "persist": true },
 		},
 		"ai": { "binding": "AI" },
 		// Their own namespaces, so preview traffic never counts against a
@@ -81,6 +97,11 @@
 				"name": "SEARCH_LIMITER",
 				"namespace_id": "2003",
 				"simple": { "limit": 120, "period": 60 },
+			},
+			{
+				"name": "COACH_ANON_LIMITER",
+				"namespace_id": "2004",
+				"simple": { "limit": 5, "period": 60 },
 			},
 		],
 	},

@@ -11,6 +11,8 @@ interface RequireAuthProps {
 	children: ReactNode
 	/** Message to show explaining why login is needed */
 	message?: string
+	/** Let an anonymous user through: only for their own data, never public content */
+	allowAnonymous?: boolean
 }
 
 /**
@@ -20,10 +22,11 @@ interface RequireAuthProps {
 export function RequireAuth({
 	children,
 	message = 'You need to be logged in to access this page.',
+	allowAnonymous = false,
 }: RequireAuthProps) {
-	const { isAuth } = useAuth()
+	const { isAuth, hasAccount } = useAuth()
 
-	if (isAuth) {
+	if (allowAnonymous ? isAuth : hasAccount) {
 		return <>{children}</>
 	}
 

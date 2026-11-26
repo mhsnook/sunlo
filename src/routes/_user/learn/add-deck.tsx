@@ -27,7 +27,10 @@ const TITLE = 'What language would you like to learn?'
 
 function NewDeckForm() {
 	return (
-		<RequireAuth message="You need to be logged in to create a new deck.">
+		<RequireAuth
+			allowAnonymous
+			message="You need to be logged in to create a new deck."
+		>
 			<NewDeckFormInner />
 		</RequireAuth>
 	)

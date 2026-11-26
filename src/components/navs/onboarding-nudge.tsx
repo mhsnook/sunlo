@@ -5,15 +5,18 @@ import { myProfileCollection } from '@/features/profile/collections'
 import { FLAG_NEEDS_ONBOARDING } from '@/features/profile/schemas'
 import { useSidebar } from '@/components/ui/sidebar'
 import { buttonVariants } from '@/components/ui/button'
+import { useAuth } from '@/lib/use-auth'
 
 // Soft pull toward /getting-started for users who have a profile row but
 // have not picked a username + languages yet. Replaces the old hard
 // redirect: nothing blocks the app, and the user can dismiss it.
 export function OnboardingNudge() {
 	const { data: profile } = useProfile()
+	const { hasAccount } = useAuth()
 	const { setClosedMobile, open } = useSidebar()
 
-	if (profile?.flags[FLAG_NEEDS_ONBOARDING] !== true) return null
+	// /getting-started sets a public username, which needs an account.
+	if (!hasAccount || profile?.flags[FLAG_NEEDS_ONBOARDING] !== true) return null
 
 	const dismiss = () => {
 		const tx = myProfileCollection.update(profile.uid, (draft) => {
