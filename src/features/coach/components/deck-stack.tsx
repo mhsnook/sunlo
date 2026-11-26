@@ -117,8 +117,9 @@ export function DeckStack({ lang, deck }: { lang: string; deck: DeckMeter }) {
 
 	return (
 		// The negative offsets match the scroll area's padding in coach-page.tsx,
-		// so tiles scrolling under the stack do not show above it.
-		<div className="bg-background sticky -top-4 z-10 -mt-4 shrink-0 pt-4 lg:-top-10 lg:-mt-10 lg:pt-10 @2xl:w-64">
+		// so tiles scrolling under the stack do not show above it. bg-neutral-50
+		// is the body colour (globals.css), which the page shows through.
+		<div className="sticky -top-4 z-10 -mt-4 shrink-0 bg-neutral-50 pt-4 lg:-top-10 lg:-mt-10 lg:pt-10 @2xl:w-64">
 			<section
 				className="bg-card flex items-center gap-4 rounded border p-3 shadow-sm @2xl:flex-col-reverse @2xl:items-stretch @2xl:p-4"
 				data-testid="coach-deck-meter"
