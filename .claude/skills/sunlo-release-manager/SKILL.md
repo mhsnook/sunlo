@@ -62,9 +62,9 @@ Report the lint warning count against the previous release's count rather than c
 Then the build, which has a footgun (`docs/deployment.md`, "Build Environment Footgun"):
 
 ```bash
-cp .env.example .env        # dummy-but-truthy VITE_SUPABASE_* values are enough
+cp .env.example .env        # its local-default VITE_SUPABASE_* values are enough
 pnpm build
-grep -l GoTrueClient dist/assets/*.js    # must match, or the SDK got tree-shaken out
+grep -l GoTrueClient dist/client/assets/*.js    # must match, or the SDK got tree-shaken out
 ```
 
 Do not proceed on a failing gate. A skipped gate goes in the hand-off, named.
