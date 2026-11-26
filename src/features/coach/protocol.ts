@@ -143,7 +143,7 @@ export const coachToolDescriptions: Record<CoachToolName, string> = {
 	add_to_deck:
 		'Add phrases to the learner\'s deck as flashcards. Only when the learner asked for it, in general or specific terms ("add them", "add the food ones"). The page adds them and reports back with the learner\'s next message.',
 	suggest_replies:
-		'Offer the learner up to 4 short replies as buttons under your message. Write them as the learner would say them, 1 to 5 words each.',
+		'Offer the learner up to 4 short replies as buttons under your message. Write them as the learner would say them, 1 to 5 words each. Call it last, after your message: it ends your turn.',
 	draft_request:
 		'Put a request ("How do I say ...?") on the page for the learner to post to the community, already written out. Use it when the library has nothing for what they want and they agree to ask. The learner can edit it, and nothing is posted until they press the button.',
 	save_intention:

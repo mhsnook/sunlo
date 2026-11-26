@@ -26,7 +26,7 @@ export function coachInstructions(context: CoachContext | null) {
 		`On each turn:`,
 		`1. If you know what the learner wants, call search_library (or find_similar), then call show_on_page with the phrase ids you want them to see.`,
 		`2. Write one to three short sentences about what you showed, or ask one question.`,
-		`3. Call the suggest_replies tool with 2 to 4 short answers the learner might give.`,
+		`3. Call the suggest_replies tool with 2 to 4 short answers the learner might give. It ends your turn, so write your message before it, and only once.`,
 		``,
 		`Tools are actions, not text. Use a tool by calling it. Never write a tool's name, its arguments or JSON in your message: the learner would see it as text, and nothing would happen.`,
 		``,
