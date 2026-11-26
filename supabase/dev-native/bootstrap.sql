@@ -6,13 +6,15 @@
 -- and the seed files assume already exists:
 --
 --   * the anon / authenticated / service_role / authenticator roles
---   * the auth, extensions, graphql, vault, net schemas
+--   * the auth, extensions, graphql, vault, net, storage schemas
 --   * auth.uid()/role()/email()/jwt() (return NULL here — RLS is effectively off,
 --     which is fine: we run as superuser for schema/migration/type/dump work)
 --   * GoTrue-shaped auth.users / auth.identities (superset of the columns the
 --     static seed-0-auth.sql touches) so the auth seed loads
 --   * net.http_post() and vault.decrypted_secrets stubs, because a couple of
 --     schema functions/triggers reference them
+--   * storage.buckets / storage.objects, because migrations add policies on
+--     storage.objects (the dump leaves the storage schema out of base.sql)
 --   * the supabase_realtime publication
 --
 -- This is NOT real auth. Do not use it to test RLS behaviour — use CI (Docker) or
@@ -42,6 +44,8 @@ create schema if not exists graphql authorization postgres;
 create schema if not exists vault authorization postgres;
 
 create schema if not exists net authorization postgres;
+
+create schema if not exists storage authorization postgres;
 
 -- auth.* helpers: read the request.jwt.* GUCs if a caller sets them, else NULL.
 create or replace function auth.uid () returns uuid language sql stable as $$
@@ -136,8 +140,33 @@ create table if not exists auth.identities (
 	id uuid default gen_random_uuid() primary key
 );
 
+-- Storage-shaped tables: the columns policies on storage.objects reference.
+create table if not exists storage.buckets (
+	id text primary key,
+	name text not null,
+	owner uuid,
+	public boolean default false,
+	created_at timestamptz default now(),
+	updated_at timestamptz default now()
+);
+
+create table if not exists storage.objects (
+	id uuid primary key default gen_random_uuid(),
+	bucket_id text references storage.buckets (id),
+	name text,
+	owner uuid,
+	owner_id text,
+	metadata jsonb,
+	created_at timestamptz default now(),
+	updated_at timestamptz default now(),
+	last_accessed_at timestamptz default now()
+);
+
+alter table storage.objects enable row level security;
+
 grant usage on schema auth,
-extensions to anon,
+extensions,
+storage to anon,
 authenticated,
 service_role;
 
