@@ -100,6 +100,16 @@ export const coachToolInputs = {
 			)
 		),
 	}),
+	save_intention: v.object({
+		intention: v.pipe(
+			v.string(),
+			v.minLength(3),
+			v.maxLength(1000),
+			v.description(
+				'One or two sentences in the third person: why they are learning, what they want to talk about, and how much of the language they already know.'
+			)
+		),
+	}),
 	navigate: v.object({
 		to: v.picklist([
 			'deck',
@@ -133,9 +143,11 @@ export const coachToolDescriptions: Record<CoachToolName, string> = {
 	add_to_deck:
 		'Add phrases to the learner\'s deck as flashcards. Only when the learner asked for it, in general or specific terms ("add them", "add the food ones"). The page adds them and reports back with the learner\'s next message.',
 	suggest_replies:
-		'Offer the learner up to 4 short replies as buttons under your message. Write them as the learner would say them, 1 to 5 words each.',
+		'Offer the learner up to 4 short replies as buttons under your message. Write them as the learner would say them, 1 to 5 words each. Call it last, after your message: it ends your turn.',
 	draft_request:
 		'Put a request ("How do I say ...?") on the page for the learner to post to the community, already written out. Use it when the library has nothing for what they want and they agree to ask. The learner can edit it, and nothing is posted until they press the button.',
+	save_intention:
+		'Write down what the learner wants from this language and how much they already know, once they have told you both. The page saves it on their deck, and creates the deck if they have none. Call it again when what they want changes.',
 	navigate:
 		'Take the learner to another part of Sunlo, when they ask to go there. Leaves the coach. To ask the community for a phrase, use draft_request instead, which keeps the learner here.',
 }
@@ -163,6 +175,11 @@ export const AddToDeckOutputSchema = v.object({
 export const DraftRequestOutputSchema = v.object({
 	lang: v.string(),
 	prompt: v.string(),
+})
+
+export const SaveIntentionOutputSchema = v.object({
+	lang: v.string(),
+	intention: v.string(),
 })
 
 export const NavigateOutputSchema = coachToolInputs.navigate

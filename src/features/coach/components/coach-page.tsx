@@ -2,7 +2,7 @@ import { useCoach, useDeckMeter } from '../hooks'
 import { CoachCanvas } from './coach-canvas'
 import { CoachChat } from './coach-chat'
 
-export function CoachPage({ lang, uid }: { lang: string; uid: string }) {
+export function CoachPage({ lang, uid }: { lang: string; uid: string | null }) {
 	const deck = useDeckMeter(lang)
 	const coach = useCoach(lang, uid, deck)
 
@@ -33,6 +33,7 @@ export function CoachPage({ lang, uid }: { lang: string; uid: string }) {
 					ready={coach.ready}
 					started={coach.started}
 					busy={coach.busy}
+					guest={coach.guest}
 					send={(text) => void coach.send(text)}
 				/>
 			</aside>

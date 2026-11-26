@@ -7,18 +7,24 @@ import { requireOwnConversation } from './coach-access'
 const UID = 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
 const OTHER = 'd4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8'
 
-function makeApp(limitOk = true) {
+function makeApp(limitOk = true, anonymous = false) {
 	const limit = vi.fn().mockResolvedValue({ success: limitOk })
+	const anonLimit = vi.fn().mockResolvedValue({ success: limitOk })
 	const app = new Hono<AppEnv>()
 	app.use('*', async (c, next) => {
 		c.set('uid', UID)
+		c.set('anonymous', anonymous)
 		return next()
 	})
 	app.use(`${COACH_MOUNT}/*`, requireOwnConversation)
 	app.all(`${COACH_MOUNT}/*`, (c) => c.text('agent'))
-	const env = { COACH_LIMITER: { limit } } as unknown as Env
+	const env = {
+		COACH_LIMITER: { limit },
+		COACH_ANON_LIMITER: { limit: anonLimit },
+	} as unknown as Env
 	return {
 		limit,
+		anonLimit,
 		request: (
 			path: string,
 			method = 'GET',
@@ -59,6 +65,14 @@ describe('requireOwnConversation', () => {
 		const res = await request(UID, 'POST')
 		expect(res.status).toBe(429)
 		expect(limit).toHaveBeenCalledWith({ key: UID })
+	})
+
+	it('counts an anonymous visitor against the anonymous limit', async () => {
+		const { request, limit, anonLimit } = makeApp(true, true)
+		const res = await request(UID, 'POST')
+		expect(res.status).toBe(200)
+		expect(anonLimit).toHaveBeenCalledWith({ key: UID })
+		expect(limit).not.toHaveBeenCalled()
 	})
 
 	it('refuses a message over the size cap before counting it', async () => {

@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { requireUser, signedInUid, type AppEnv } from './auth'
+import { requireUser, signedInUser, type AppEnv } from './auth'
 import { ExtractRequestSchema, extractPhrases } from './extract-phrase'
 import { SearchRequestSchema, embedderFor, searchCorpus } from './search'
 import { supabaseFor } from './supabase'
@@ -32,8 +32,8 @@ app.post('/extract-phrase', requireUser, async (c) => {
 // No requireUser: the search page works signed out, as the _user layout
 // does, so a visitor's searches are limited by IP instead.
 app.post('/search', async (c) => {
-	const uid = await signedInUid(c.env, c.req.header('authorization'))
-	const key = uid ?? `ip:${c.req.header('cf-connecting-ip') ?? 'unknown'}`
+	const user = await signedInUser(c.env, c.req.header('authorization'))
+	const key = user?.uid ?? `ip:${c.req.header('cf-connecting-ip') ?? 'unknown'}`
 	const { success } = await c.env.SEARCH_LIMITER.limit({ key })
 	if (!success) {
 		return c.json({ error: 'Too many searches at once. Wait a minute.' }, 429)

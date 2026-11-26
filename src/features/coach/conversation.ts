@@ -11,6 +11,7 @@ import {
 	DECK_TARGET,
 	DraftRequestOutputSchema,
 	NavigateOutputSchema,
+	SaveIntentionOutputSchema,
 	ShowOnPageOutputSchema,
 	SuggestRepliesOutputSchema,
 	type NavigateTarget,
@@ -244,6 +245,11 @@ export function pageActions(
 		navigate: parts
 			.map((part) => finished(part, 'navigate', NavigateOutputSchema))
 			.findLast((target): target is NavigateTarget => !!target),
+		intention: parts
+			.map((part) =>
+				finished(part, 'save_intention', SaveIntentionOutputSchema)
+			)
+			.findLast((saved) => !!saved),
 	}
 }
 
@@ -282,10 +288,17 @@ export function openingLine(
 	return `${hello} ${deck} What brings you to ${name}?`
 }
 
-export function deckLine(deck: {
-	size: number
-	tags: Array<{ name: string; count: number }>
-}) {
+export function deckLine(
+	deck: {
+		size: number
+		tags: Array<{ name: string; count: number }>
+	},
+	intention: string | null
+) {
 	const tags = deck.tags.map((t) => `${t.name} (${t.count})`).join(', ')
-	return `${deck.size} of ${DECK_TARGET} phrases${tags ? `; most tagged ${tags}` : ''}`
+	return [
+		`${deck.size} of ${DECK_TARGET} phrases`,
+		...(tags ? [`most tagged ${tags}`] : []),
+		intention ? `intention: ${intention}` : 'no intention saved yet',
+	].join('; ')
 }

@@ -40,6 +40,8 @@ interface AuthenticatedDialogProps {
 	/** Control open state externally */
 	open?: boolean
 	onOpenChange?: (open: boolean) => void
+	/** Let an anonymous user through: only for their own data, never public content */
+	allowAnonymous?: boolean
 }
 
 /**
@@ -53,8 +55,10 @@ export function AuthenticatedDialog({
 	authMessage = 'Please log in to continue.',
 	open: controlledOpen,
 	onOpenChange,
+	allowAnonymous = false,
 }: AuthenticatedDialogProps) {
-	const { isAuth } = useAuth()
+	const { isAuth, hasAccount } = useAuth()
+	const allowed = allowAnonymous ? isAuth : hasAccount
 	const [internalOpen, setInternalOpen] = useState(false)
 
 	const open = controlledOpen ?? internalOpen
@@ -63,7 +67,7 @@ export function AuthenticatedDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			{isAuth ? (
+			{allowed ? (
 				children
 			) : (
 				<DialogContent className="sm:max-w-106">
@@ -91,6 +95,8 @@ interface AuthenticatedDialogContentProps extends ComponentPropsWithoutRef<
 	authTitle?: string
 	/** Message explaining why login is needed */
 	authMessage?: string
+	/** Let an anonymous user through: only for their own data, never public content */
+	allowAnonymous?: boolean
 }
 
 /**
@@ -102,11 +108,12 @@ export function AuthenticatedDialogContent({
 	children,
 	authTitle = 'Login Required',
 	authMessage = 'Please log in to continue.',
+	allowAnonymous = false,
 	...rest
 }: AuthenticatedDialogContentProps) {
-	const { isAuth } = useAuth()
+	const { isAuth, hasAccount } = useAuth()
 
-	if (isAuth) {
+	if (allowAnonymous ? isAuth : hasAccount) {
 		return <DialogContent {...rest}>{children}</DialogContent>
 	}
 

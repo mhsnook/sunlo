@@ -122,6 +122,19 @@ describe('POST /extract-phrase', () => {
 		expect(run).not.toHaveBeenCalled()
 	})
 
+	it('refuses an anonymous user before the model runs', async () => {
+		getClaims.mockResolvedValue({
+			data: {
+				claims: { role: 'authenticated', sub: 'user-1', is_anonymous: true },
+			},
+			error: null,
+		})
+		const { env, run } = makeEnv()
+		const res = await post(env)
+		expect(res.status).toBe(403)
+		expect(run).not.toHaveBeenCalled()
+	})
+
 	it('rejects a body that is not an image data URL', async () => {
 		const { env } = makeEnv()
 		const res = await post(env, { ...BODY, image: 'https://example.com/a.jpg' })

@@ -84,7 +84,12 @@ export function Coach() {
 		name: 'suggest_replies',
 		description: coachToolDescriptions.suggest_replies,
 		input: coachToolInputs.suggest_replies,
-		run: ({ data: input }) => ({ output: { replies: input.replies } }),
+		// Ends the turn: a model called again after this tool repeats its
+		// message, and the chat would show it twice.
+		run: ({ data: input }) => ({
+			output: { replies: input.replies },
+			terminate: true,
+		}),
 	})
 	useTool({
 		name: 'draft_request',
@@ -92,6 +97,14 @@ export function Coach() {
 		input: coachToolInputs.draft_request,
 		run: ({ data: input }) => ({
 			output: { lang: page().lang, prompt: input.prompt },
+		}),
+	})
+	useTool({
+		name: 'save_intention',
+		description: coachToolDescriptions.save_intention,
+		input: coachToolInputs.save_intention,
+		run: ({ data: input }) => ({
+			output: { lang: page().lang, intention: input.intention },
 		}),
 	})
 	useTool({

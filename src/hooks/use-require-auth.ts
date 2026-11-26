@@ -3,17 +3,24 @@ import { toastError } from '@/components/ui/sonner'
 
 import { useAuth } from '@/lib/use-auth'
 
+type AuthGateOptions = {
+	/** Let an anonymous user through: only for their own data, never public content */
+	allowAnonymous?: boolean
+}
+
 /**
  * Hook to require authentication for an action.
  * If not authenticated, shows a toast and redirects to login.
  * @returns A function that wraps an action and checks for auth first.
  */
-export function useRequireAuth() {
-	const { isAuth } = useAuth()
+export function useRequireAuth({
+	allowAnonymous = false,
+}: AuthGateOptions = {}) {
+	const { isAuth, hasAccount } = useAuth()
 	const navigate = useNavigate()
 
 	return (action: () => void, message = 'Please log in to continue') => {
-		if (!isAuth) {
+		if (!(allowAnonymous ? isAuth : hasAccount)) {
 			toastError(message)
 			void navigate({
 				to: '/login',
@@ -29,7 +36,9 @@ export function useRequireAuth() {
  * Hook to check if the user is authenticated.
  * Useful for conditionally rendering auth-gated UI.
  */
-export function useIsAuthenticated(): boolean {
-	const { isAuth } = useAuth()
-	return isAuth
+export function useIsAuthenticated({
+	allowAnonymous = false,
+}: AuthGateOptions = {}): boolean {
+	const { isAuth, hasAccount } = useAuth()
+	return allowAnonymous ? isAuth : hasAccount
 }

@@ -8,7 +8,7 @@ cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang
 
 learner:
 
-- openTo /coach
+- openTo /login?redirectedFrom=/coach
 - typeInto email-input [self.email]
 - typeInto password-input [self.password]
 - click submit-button
@@ -34,7 +34,7 @@ cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang
 
 learner:
 
-- openTo /coach
+- openTo /login?redirectedFrom=/coach
 - typeInto email-input [self.email]
 - typeInto password-input [self.password]
 - click submit-button
@@ -56,7 +56,7 @@ cleanup: supabase.from('phrase_request').delete().eq('requester_uid', '[learner.
 
 learner:
 
-- openTo /coach
+- openTo /login?redirectedFrom=/coach
 - typeInto email-input [self.email]
 - typeInto password-input [self.password]
 - click submit-button
@@ -70,3 +70,45 @@ learner:
 - seeText I put a draft on the page
 - click coach-request-form submit-button
 - seeText posted the request
+
+# a visitor talks to the coach without an account, and the coach starts their deck
+
+// The chat asks the visitor to log in or continue as a guest before it takes
+// a message; a guest is signed in anonymously. The deck is created when the
+// coach saves what they want to learn.
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- seeText What brings you to Kannada?
+- see coach-guest-choice
+- click coach-continue-as-guest
+- typeInto coach-input "I want to talk with my in-laws and I know a few greetings"
+- click coach-send
+- seeText I wrote that down
+- seeText saved what you want to learn on your deck
+- typeInto coach-input tea
+- click coach-send
+- see coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12
+- click coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12 coach-add-phrase
+- seeText added “Ondu tea kodhe”
+- notSee coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12 coach-add-phrase
+
+# a visitor without an account sees the coach's request draft as text
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- click coach-continue-as-guest
+- typeInto coach-input "request: how do I say thank you for dinner"
+- click coach-send
+- see coach-request-needs-account
+- notSee coach-request-form

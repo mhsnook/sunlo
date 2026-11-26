@@ -82,12 +82,15 @@ export const Route = createFileRoute('/_user/learn/$lang/review/')({
 
 // Outer component handles auth check
 function ReviewPageSetup() {
-	const isAuth = useIsAuthenticated()
+	const isAuth = useIsAuthenticated({ allowAnonymous: true })
 
 	// Require auth for review
 	if (!isAuth) {
 		return (
-			<RequireAuth message="You need to be logged in to review your flashcards.">
+			<RequireAuth
+				allowAnonymous
+				message="You need to be logged in to review your flashcards."
+			>
 				<div />
 			</RequireAuth>
 		)
