@@ -1,12 +1,11 @@
-import { useEffectEvent } from 'react'
 import { ChevronLeft, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-import { useNavigate, useRouter, useMatches } from '@tanstack/react-router'
+import { useRouter, useMatches } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { useCanGoBack } from '@tanstack/react-router'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { useTitleBar } from '@/hooks/use-title-bar'
+import { useGoBack } from '@/hooks/use-go-back'
 
 export default function Navbar() {
 	const matches = useMatches()
@@ -31,33 +30,15 @@ export default function Navbar() {
 }
 
 function Title() {
-	const navigate = useNavigate()
-	const router = useRouter()
-	const canGoBack = useCanGoBack()
 	const titleBar = useTitleBar()
-
-	const onBackClick =
-		titleBar && 'onBackClick' in titleBar ? titleBar.onBackClick : null
-
-	const goBackOrToStringUrl = useEffectEvent(() => {
-		if (onBackClick)
-			void navigate({
-				to: onBackClick,
-			})
-		else if (canGoBack)
-			document.startViewTransition(() => router.history.back())
-		else
-			void navigate({
-				to: '..',
-			})
-	})
+	const { goBack } = useGoBack()
 
 	return (
 		<div className="flex flex-row items-center gap-4">
 			<Button
 				variant="ghost"
 				size="icon"
-				onClick={goBackOrToStringUrl}
+				onClick={goBack}
 				data-testid="navbar-back"
 			>
 				<ChevronLeft />

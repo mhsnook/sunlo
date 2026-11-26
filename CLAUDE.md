@@ -54,6 +54,8 @@ docs:
 - task: "Deciding whether a PR targets main or next-<version>; cutting a release; version bumps; production builds"
   load: "docs/deployment.md"
 
+- task: "Building or debugging the iOS/Android apps — Capacitor config, the native shell, share links, deep links, anything that differs inside the WebView"
+  load: "docs/mobile.md"
 - task: "Changing the admin crew — apps/admin/worker/crew, apps/admin/.flue, apps/admin/shared/crew.ts, CrewRoom migrations, new agents"
   load: "apps/admin/docs/architecture.md"
 

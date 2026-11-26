@@ -4,7 +4,7 @@ import { ExtractRequestSchema, extractPhrases } from './extract-phrase'
 import { SearchRequestSchema, embedderFor, searchCorpus } from './search'
 import { supabaseFor } from './supabase'
 
-// The web app calls these routes from its own origin, so they need no CORS.
+// CORS for the native app is set once in .flue/app.ts (worker/cors.ts).
 const app = new Hono<AppEnv>().basePath('/api')
 
 app.post('/extract-phrase', requireUser, async (c) => {

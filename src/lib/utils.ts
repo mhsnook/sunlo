@@ -4,6 +4,7 @@ import type { DeckType } from '@/features/deck/schemas'
 import { twMerge } from 'tailwind-merge'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
+import { copyText } from '@/lib/platform'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -197,26 +198,15 @@ export const sortDecksByActivity = (a: DeckActivity, b: DeckActivity) => {
 export const preventDefaultCallback = (e: { preventDefault: () => void }) =>
 	e.preventDefault()
 
-export function isNativeAppUserAgent() {
-	return (
-		('standalone' in window.navigator && window.navigator?.standalone) ||
-		window.matchMedia('(display-mode: standalone)').matches
-	)
-}
-
 export function copyLink(url?: string, fallback = true) {
-	if (!navigator?.clipboard) toastError('Failed to copy link')
-	if (!fallback && !url) {
-		throw new Error('No url to copy')
-	} else
-		navigator.clipboard
-			.writeText(url ?? window?.location?.href)
-			.then(() => {
-				toastSuccess('Link copied to clipboard')
-			})
-			.catch(() => {
-				toastError('Failed to copy link')
-			})
+	if (!fallback && !url) throw new Error('No url to copy')
+	void copyText(url ?? window.location.href)
+		.then(() => {
+			toastSuccess('Link copied to clipboard')
+		})
+		.catch(() => {
+			toastError('Failed to copy link')
+		})
 }
 
 export function removeSbTokens() {

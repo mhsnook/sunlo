@@ -37,6 +37,7 @@ import {
 	type NavigateTarget,
 } from './protocol'
 import { addNote, clearNotes, pendingNotes } from './store'
+import { apiUrl } from '@/lib/platform'
 
 function useNavTarget(lang: string) {
 	const navigate = useNavigate()
@@ -94,8 +95,7 @@ export function useCoach(lang: string, uid: string, deck: DeckMeter) {
 	const client = useMemo(
 		() =>
 			createFlueClient({
-				url: new URL(`${COACH_MOUNT}/${conversationId}`, window.location.origin)
-					.href,
+				url: apiUrl(`${COACH_MOUNT}/${conversationId}`),
 				headers: bearer,
 			}),
 		[conversationId]

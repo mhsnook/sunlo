@@ -1,3 +1,4 @@
+import { apiUrl } from '@/lib/platform'
 import supabase from '@/lib/supabase-client'
 
 /**
@@ -11,7 +12,7 @@ export async function postWorkerApi(
 	fallback: string
 ): Promise<unknown> {
 	const { data } = await supabase.auth.getSession()
-	const res = await fetch(path, {
+	const res = await fetch(apiUrl(path), {
 		method: 'POST',
 		headers: {
 			'content-type': 'application/json',

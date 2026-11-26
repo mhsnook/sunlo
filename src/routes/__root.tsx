@@ -13,6 +13,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
+import { useNativeBackButton } from '@/hooks/use-native-shell'
 import '@/types/route-static-data'
 
 // Dev-only identity switcher. The ternary collapses to null in production
@@ -37,6 +38,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootComponent() {
+	useNativeBackButton()
 	return (
 		<SidebarProvider>
 			<div className="@container mx-auto w-full">

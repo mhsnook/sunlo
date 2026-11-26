@@ -6,6 +6,7 @@ import { Hono } from 'hono'
 import { requireUser, type AppEnv } from '../worker/auth'
 import { COACH_MOUNT } from '../src/features/coach/protocol'
 import { requireOwnConversation } from '../worker/coach-access'
+import { nativeAppCors } from '../worker/cors'
 import worker from '../worker/index'
 import { Coach } from './agents/coach'
 
@@ -22,6 +23,9 @@ if (env.COACH_MODEL.startsWith('mock/'))
 
 const app = new Hono<AppEnv>()
 
+// Ahead of every /api route, so a preflight is answered before requireUser
+// rejects it for having no token.
+app.use('/api/*', nativeAppCors)
 app.use(`${COACH_MOUNT}/*`, requireUser, requireOwnConversation)
 app.route(COACH_MOUNT, createAgentRouter(Coach))
 
