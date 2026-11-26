@@ -11,7 +11,6 @@ import { Toasters } from '@/components/ui/sonner'
 import type { AuthState } from '@/lib/use-auth'
 import * as z from 'zod'
 import { SignupReasonSchema } from '@/components/guest-signup/reasons'
-import { GuestSignupDialog } from '@/components/guest-signup/guest-signup-dialog'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
@@ -28,6 +27,12 @@ const DevIdentitySwitcher = import.meta.env.DEV
 			}))
 		)
 	: null
+
+const GuestSignupDialog = lazy(() =>
+	import('@/components/guest-signup/guest-signup-dialog').then((m) => ({
+		default: m.GuestSignupDialog,
+	}))
+)
 
 const RootSearchParams = z.object({
 	signup: SignupReasonSchema.optional().catch(undefined),
@@ -52,7 +57,11 @@ function RootComponent() {
 				<Outlet />
 			</div>
 			<Toasters />
-			{signup ? <GuestSignupDialog reason={signup} /> : null}
+			{signup ? (
+				<Suspense fallback={null}>
+					<GuestSignupDialog reason={signup} />
+				</Suspense>
+			) : null}
 			{DevIdentitySwitcher ? (
 				<Suspense fallback={null}>
 					<DevIdentitySwitcher />

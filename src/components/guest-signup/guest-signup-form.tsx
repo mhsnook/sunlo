@@ -7,17 +7,14 @@ import { Button } from '@/components/ui/button'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { useAppForm } from '@/components/form'
 import supabase from '@/lib/supabase-client'
+import { UsernameSchema } from '@/features/profile/schemas'
 
 const GuestSignupSchema = z.object({
 	email: z
 		.string()
 		.min(1, `Email is required`)
 		.email(`Email is required to be a real email`),
-	username: z
-		.string()
-		.trim()
-		.min(3, 'Your name should be at least 3 characters')
-		.max(20, 'Your name should be at most 20 characters'),
+	username: z.string().trim().pipe(UsernameSchema),
 })
 
 type GuestSignupInputs = z.infer<typeof GuestSignupSchema>

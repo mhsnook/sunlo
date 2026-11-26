@@ -128,7 +128,11 @@ class AuthLifecycle {
  * waits in their auth metadata. The first load as an account writes it once,
  * then removes it from the metadata whether or not the write worked.
  */
+let claimedFor: string | null = null
+
 async function claimGuestUsername(userId: string) {
+	if (claimedFor === userId) return
+	claimedFor = userId
 	const { data } = await supabase.auth.getSession()
 	const user = data.session?.user
 	const name: unknown = user?.user_metadata?.username

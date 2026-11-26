@@ -11,7 +11,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { buttonVariants } from '@/components/ui/button'
-import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
+import { GuestSignupDialogContent } from '@/components/guest-signup/guest-signup-dialog'
 import { signupLeads } from '@/components/guest-signup/reasons'
 
 /** The Log-in / Create-account button pair shown on any auth-gated surface. */
@@ -47,15 +47,7 @@ function AuthPromptContent({
 	guestLead = signupLeads.public,
 }: AuthPromptProps) {
 	const { isAnonymous } = useAuth()
-	if (isAnonymous)
-		return (
-			<DialogContent className="sm:max-w-106">
-				<DialogHeader>
-					<DialogTitle>Create your account</DialogTitle>
-				</DialogHeader>
-				<GuestSignupForm lead={guestLead} />
-			</DialogContent>
-		)
+	if (isAnonymous) return <GuestSignupDialogContent lead={guestLead} />
 	return (
 		<DialogContent className="sm:max-w-106">
 			<DialogHeader>
@@ -79,8 +71,6 @@ interface AuthenticatedDialogProps extends AuthPromptProps {
 	/** Control open state externally */
 	open?: boolean
 	onOpenChange?: (open: boolean) => void
-	/** Let an anonymous user through: only for their own data, never public content */
-	allowAnonymous?: boolean
 }
 
 /**
@@ -92,11 +82,9 @@ export function AuthenticatedDialog({
 	trigger,
 	open: controlledOpen,
 	onOpenChange,
-	allowAnonymous = false,
 	...prompt
 }: AuthenticatedDialogProps) {
-	const { isAuth, hasAccount } = useAuth()
-	const allowed = allowAnonymous ? isAuth : hasAccount
+	const { hasAccount } = useAuth()
 	const [internalOpen, setInternalOpen] = useState(false)
 
 	const open = controlledOpen ?? internalOpen
@@ -105,16 +93,13 @@ export function AuthenticatedDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			{allowed ? children : <AuthPromptContent {...prompt} />}
+			{hasAccount ? children : <AuthPromptContent {...prompt} />}
 		</Dialog>
 	)
 }
 
 interface AuthenticatedDialogContentProps
-	extends ComponentPropsWithoutRef<typeof DialogContent>, AuthPromptProps {
-	/** Let an anonymous user through: only for their own data, never public content */
-	allowAnonymous?: boolean
-}
+	extends ComponentPropsWithoutRef<typeof DialogContent>, AuthPromptProps {}
 
 /**
  * DialogContent that shows login prompt when user is not authenticated.
@@ -126,20 +111,13 @@ export function AuthenticatedDialogContent({
 	authTitle,
 	authMessage,
 	guestLead,
-	allowAnonymous = false,
 	...rest
 }: AuthenticatedDialogContentProps) {
-	const { isAuth, hasAccount } = useAuth()
+	const { hasAccount } = useAuth()
 
-	if (allowAnonymous ? isAuth : hasAccount) {
+	if (hasAccount) {
 		return <DialogContent {...rest}>{children}</DialogContent>
 	}
 
-	return (
-		<AuthPromptContent
-			authTitle={authTitle}
-			authMessage={authMessage}
-			guestLead={guestLead}
-		/>
-	)
+	return <AuthPromptContent {...{ authTitle, authMessage, guestLead }} />
 }

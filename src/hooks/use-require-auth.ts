@@ -3,14 +3,9 @@ import { toastError } from '@/components/ui/sonner'
 
 import { useAuth } from '@/lib/use-auth'
 import {
-	useOpenGuestSignup,
+	useSetGuestSignup,
 	type SignupReason,
 } from '@/components/guest-signup/reasons'
-
-type AuthGateOptions = {
-	/** Let an anonymous user through: only for their own data, never public content */
-	allowAnonymous?: boolean
-}
 
 /**
  * Hook to require authentication for an action.
@@ -19,16 +14,15 @@ type AuthGateOptions = {
  * @returns A function that wraps an action and checks for auth first.
  */
 export function useRequireAuth({
-	allowAnonymous = false,
 	guestReason = 'public',
-}: AuthGateOptions & { guestReason?: SignupReason } = {}) {
-	const { isAuth, hasAccount, isAnonymous } = useAuth()
+}: { guestReason?: SignupReason } = {}) {
+	const { hasAccount, isAnonymous } = useAuth()
 	const navigate = useNavigate()
-	const openGuestSignup = useOpenGuestSignup()
+	const setGuestSignup = useSetGuestSignup()
 
 	return (action: () => void, message = 'Please log in to continue') => {
-		if (allowAnonymous ? isAuth : hasAccount) action()
-		else if (isAnonymous) openGuestSignup(guestReason)
+		if (hasAccount) action()
+		else if (isAnonymous) setGuestSignup(guestReason)
 		else {
 			toastError(message)
 			void navigate({
@@ -43,9 +37,6 @@ export function useRequireAuth({
  * Hook to check if the user is authenticated.
  * Useful for conditionally rendering auth-gated UI.
  */
-export function useIsAuthenticated({
-	allowAnonymous = false,
-}: AuthGateOptions = {}): boolean {
-	const { isAuth, hasAccount } = useAuth()
-	return allowAnonymous ? isAuth : hasAccount
+export function useIsAuthenticated(): boolean {
+	return useAuth().hasAccount
 }

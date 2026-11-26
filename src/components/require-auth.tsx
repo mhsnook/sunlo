@@ -29,15 +29,13 @@ export function RequireAuth({
 	allowAnonymous = false,
 	guestLead = signupLeads.public,
 }: RequireAuthProps) {
-	const { isAuth, hasAccount, isAnonymous } = useAuth()
+	const { isAuth, hasAccount } = useAuth()
 
 	if (allowAnonymous ? isAuth : hasAccount) {
 		return <>{children}</>
 	}
 
-	return (
-		<AuthGate message={message} guestLead={isAnonymous ? guestLead : null} />
-	)
+	return <AuthGate message={message} guestLead={guestLead} />
 }
 
 function AuthGate({
@@ -45,8 +43,9 @@ function AuthGate({
 	guestLead,
 }: {
 	message: string
-	guestLead: string | null
+	guestLead: string
 }) {
+	const { isAnonymous } = useAuth()
 	const navigate = useNavigate()
 	const router = useRouter()
 	const canGoBack = useCanGoBack()
@@ -73,11 +72,13 @@ function AuthGate({
 							<ChevronLeft />
 							<span className="sr-only">Go back</span>
 						</Button>
-						<span>{guestLead ? 'Create your account' : 'Login Required'}</span>
+						<span>
+							{isAnonymous ? 'Create your account' : 'Login Required'}
+						</span>
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-6">
-					{guestLead ? (
+					{isAnonymous ? (
 						<GuestSignupForm lead={guestLead} />
 					) : (
 						<>

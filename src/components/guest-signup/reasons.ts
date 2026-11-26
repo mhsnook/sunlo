@@ -13,9 +13,10 @@ export const signupLeads: Record<SignupReason, string> = {
 	coach: 'An account keeps your deck and your coach conversation.',
 }
 
-export function useOpenGuestSignup() {
+/** Opens the guest sign-up dialog for a reason, or closes it with `undefined`. */
+export function useSetGuestSignup() {
 	const navigate = useNavigate()
-	return (reason: SignupReason) =>
+	return (reason: SignupReason | undefined) =>
 		void navigate({
 			to: '.',
 			search: (prev) => ({ ...prev, signup: reason }),

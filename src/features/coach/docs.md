@@ -23,7 +23,7 @@ An anonymous user is a real user with the `authenticated` role and the `is_anony
 - `feedback` stays open to them, as it is to signed-out visitors.
 - In the Worker, only the coach's routes take them (`requireSession`). Every other `/api` route uses `requireUser`, which refuses an anonymous user with 403.
 - A trigger, `guard_anonymous_profile`, refuses a change to their `username` or `avatar_path`, because both show on `public_profile`. `/profile` shows them the sign-up form instead of those fields, and `/getting-started` sends them to `/signup`.
-- Outside the coach page, a guest can browse but not learn. The app's auth gates (`AuthenticatedDialog`, `AuthenticatedDialogContent`, `RequireAuth`, `useRequireAuth`, `useIsAuthenticated`) require an account by default; only notifications pass `allowAnonymous`. Review, deck settings, manage deck, add deck and the card-status menu all ask a guest to sign up. On the coach page, the coach still adds phrases to a guest's deck, and the deck carries over when they sign up.
+- Outside the coach page, a guest can browse but not learn. The app's auth gates (`AuthenticatedDialog`, `AuthenticatedDialogContent`, `RequireAuth`, `useRequireAuth`, `useIsAuthenticated`) require an account. Only `RequireAuth` still takes `allowAnonymous`, and only notifications pass it. Review, deck settings, manage deck, add deck and the card-status menu all ask a guest to sign up. On the coach page, the coach still adds phrases to a guest's deck, and the deck carries over when they sign up.
 
 ## Signing a guest up
 

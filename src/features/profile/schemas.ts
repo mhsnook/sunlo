@@ -30,6 +30,11 @@ export const PublicProfileSchema = z.object({
 
 export type PublicProfileType = z.infer<typeof PublicProfileSchema>
 
+export const UsernameSchema = z
+	.string()
+	.min(3, 'Username should be at least 3 characters')
+	.max(20, 'Username should be at most 20 characters')
+
 export const FontPreferenceSchema = z.enum(['default', 'dyslexic'])
 export type FontPreferenceType = z.infer<typeof FontPreferenceSchema>
 

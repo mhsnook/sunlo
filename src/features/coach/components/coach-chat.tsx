@@ -4,7 +4,7 @@ import { Bubble } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
 import { ComposeBar } from '@/components/ui/compose-bar'
 import { MessageScroller } from '@/components/ui/message-scroller'
-import { useOpenGuestSignup } from '@/components/guest-signup/reasons'
+import { useSetGuestSignup } from '@/components/guest-signup/reasons'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
 import {
@@ -49,7 +49,7 @@ export function CoachChat({
 }: Props) {
 	const [draft, setDraft] = useState('')
 	const { notes } = usePageState(coachKey)
-	const openGuestSignup = useOpenGuestSignup()
+	const setGuestSignup = useSetGuestSignup()
 	const replies = !ready ? [] : started ? suggestions : OPENING_REPLIES
 
 	return (
@@ -109,7 +109,7 @@ export function CoachChat({
 						<Button
 							size="sm"
 							data-testid="coach-create-account"
-							onClick={() => openGuestSignup('coach')}
+							onClick={() => setGuestSignup('coach')}
 						>
 							Create my profile
 						</Button>
