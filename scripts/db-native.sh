@@ -195,7 +195,7 @@ ensure_typegen() {
   log "installing ${TYPEGEN_PKG} (dockerless type generator) into ${TYPEGEN_DIR}"
   mkdir -p "${TYPEGEN_DIR}"
   printf '{ "name": "sunlo-typegen", "private": true, "type": "module" }\n' > "${TYPEGEN_DIR}/package.json"
-  ( cd "${TYPEGEN_DIR}" && pnpm add "${TYPEGEN_PKG}" >/dev/null 2>&1 ) || die "failed to install ${TYPEGEN_PKG}"
+  ( cd "${TYPEGEN_DIR}" && pnpm add --ignore-workspace "${TYPEGEN_PKG}" >/dev/null 2>&1 ) || die "failed to install ${TYPEGEN_PKG}"
 }
 
 cmd_types() {
