@@ -3389,6 +3389,10 @@ alter table "public"."request_comment" enable row level security;
 
 alter table "public"."search_corpus" enable row level security;
 
+create policy "corpus_writer_all" on "public"."search_corpus" to "corpus_writer" using (true)
+with
+	check (true);
+
 create policy "search_corpus_public_read" on "public"."search_corpus" for
 select
 	to "authenticated",
@@ -3473,6 +3477,8 @@ grant usage on schema "public" to "authenticated";
 grant usage on schema "public" to "service_role";
 
 grant usage on schema "public" to "admin_reader";
+
+grant usage on schema "public" to "corpus_writer";
 
 grant all on function "public"."gtrgm_in" ("cstring") to "postgres";
 
@@ -5289,6 +5295,12 @@ grant all on table "public"."search_corpus" to "service_role";
 grant
 select
 	on table "public"."search_corpus" to "admin_reader";
+
+grant
+select
+,
+	insert,
+update on table "public"."search_corpus" to "corpus_writer";
 
 grant all on table "public"."search_text_index" to "anon";
 
