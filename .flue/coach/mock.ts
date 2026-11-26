@@ -123,6 +123,12 @@ function respondToLearner(messages: Messages, message: Message) {
 	if (asked) return reply([fauxToolCall('draft_request', { prompt: asked[1] })])
 	if (/^i want\b/i.test(text))
 		return reply([fauxToolCall('save_intention', { intention: text })])
+	if (/\badd\b/i.test(text) && shown.length)
+		return reply([fauxToolCall('add_to_deck', { phrase_ids: shown })])
+	if (/more like/i.test(text) && shown.length)
+		return reply([
+			fauxToolCall('find_similar', { phrase_ids: shown.slice(0, 10) }),
+		])
 	if (/\baccount\b/i.test(text))
 		return reply([fauxToolCall('offer_account', {})])
 	if (/\breview\b/i.test(text))
@@ -131,12 +137,6 @@ function respondToLearner(messages: Messages, message: Message) {
 		return reply([fauxToolCall('navigate', { to: 'deck' })])
 	if (/\bmy profile\b/i.test(text))
 		return reply([fauxToolCall('navigate', { to: 'profile' })])
-	if (/\badd\b/i.test(text) && shown.length)
-		return reply([fauxToolCall('add_to_deck', { phrase_ids: shown })])
-	if (/more like/i.test(text) && shown.length)
-		return reply([
-			fauxToolCall('find_similar', { phrase_ids: shown.slice(0, 10) }),
-		])
 	return reply([fauxToolCall('search_library', { query: text.toLowerCase() })])
 }
 

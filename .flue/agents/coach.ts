@@ -111,7 +111,7 @@ export function Coach() {
 		name: 'offer_account',
 		description: coachToolDescriptions.offer_account,
 		input: coachToolInputs.offer_account,
-		run: () => ({ output: { offered: true } }),
+		run: () => ({ output: { offered: page().guest === true } }),
 	})
 	useTool({
 		name: 'navigate',

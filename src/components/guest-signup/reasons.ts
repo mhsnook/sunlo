@@ -19,5 +19,6 @@ export function useOpenGuestSignup() {
 		void navigate({
 			to: '.',
 			search: (prev) => ({ ...prev, signup: reason }),
+			replace: true,
 		})
 }

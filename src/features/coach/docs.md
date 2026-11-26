@@ -29,7 +29,7 @@ An anonymous user is a real user with the `authenticated` role and the `is_anony
 
 One form, `GuestSignupForm` (`src/components/guest-signup/`), turns a guest into an account: an email and a display name. It calls `supabase.auth.updateUser({ email, data: { username } })`, which keeps the uid, so the deck and the conversation carry over. Supabase refuses a password until the email is verified, so the confirmation link goes to `/set-new-password`. Converting needs manual linking enabled in the Supabase project (`enable_manual_linking`). `/login` still works for a guest, and logs them in to their other account.
 
-`guard_anonymous_profile` refuses the username until the email is confirmed, so the display name waits in the auth user's metadata. `claimGuestUsername` (`auth-lifecycle.ts`) writes it to `user_profile.username` on the first load as an account. If someone took the name in between, the write fails and `/getting-started` asks for one. Confirming the email fires `handle_new_user` again, and its `on conflict do nothing` keeps the profile.
+`guard_anonymous_profile` refuses the username until the email is confirmed, so the display name waits in the auth user's metadata. `claimGuestUsername` (`auth-lifecycle.ts`) writes it to `user_profile.username` on the first load as an account. It tries once and then removes the name from the metadata. If someone took the name in between, the write fails, and a toast asks the learner to choose another on their profile page. Confirming the email fires `handle_new_user` again, and its `on conflict do nothing` keeps the profile.
 
 The form shows up in four places:
 
