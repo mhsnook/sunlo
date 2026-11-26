@@ -1,0 +1,11 @@
+# Copy to .dev.vars for `pnpm admin:dev`. Values come from
+# `supabase status`. The database connection is the Hyperdrive binding's
+# localConnectionString in wrangler.jsonc, not a variable here.
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=
+# Signs the public links to images that image models fetch. Any long random
+# string, such as the output of `openssl rand -base64 32`.
+IMAGE_URL_SECRET=
+# Checks the signature on GitHub's webhook deliveries. Any string locally;
+# in production, the secret set on the repository's webhook.
+GITHUB_WEBHOOK_SECRET=

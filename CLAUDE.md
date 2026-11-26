@@ -45,6 +45,9 @@ docs:
 - task: "Working on the prototype phrasebook search at /chats — not the friend chat"
   load: "src/features/chat/docs.md"
 
+- task: "Working on the AI coach at /coach — its tools, turn loop, prompt or /api/coach"
+  load: "src/features/coach/docs.md"
+
 - task: "Changing database schema, migrations, seeds, or RLS"
   load: "docs/database.md"
 
@@ -53,6 +56,8 @@ docs:
 
 - task: "Building or debugging the iOS/Android apps — Capacitor config, the native shell, share links, deep links, anything that differs inside the WebView"
   load: "docs/mobile.md"
+- task: "Changing the admin crew — apps/admin/worker/crew, apps/admin/.flue, apps/admin/shared/crew.ts, CrewRoom migrations, new agents"
+  load: "apps/admin/docs/architecture.md"
 
 **Where a new doc goes:** `docs/*.md` holds cross-cutting concerns — the ones that apply wherever you are working. A doc about one domain lives beside its code as `src/features/<domain>/docs.md`, and a comment in that folder can point at it as `./docs.md`. Register either kind in the list above.
 
@@ -66,11 +71,13 @@ supabase db reset       # apply migrations + seeds
 # No Docker (e.g. Claude Code web)? Use scripts/db-native.sh to validate
 # migrations/seeds against a native Postgres — see docs/database.md.
 
-pnpm dev                # dev server at http://127.0.0.1:5173
-pnpm check              # typecheck
-pnpm lint               # oxlint then eslint
+pnpm dev                # app + Worker (worker/, .flue/) at http://127.0.0.1:5173; real Workers AI needs `wrangler login`
+pnpm dev:local          # the same with mocks and no remote bindings (what CI runs)
+pnpm check              # typecheck with tsrs; `pnpm check:tsc` if tsrs has no binary for your OS
+pnpm lint               # oxlint, then eslint for the app and for apps/admin as two processes
 pnpm format             # oxfmt for TS/JS/CSS/MD/JSON; prettier only for SQL
 pnpm scene [file]       # run scenetest specs (needs dev server + supabase running)
+pnpm admin:dev          # admin app and its Worker (apps/admin), one Vite server at http://localhost:5174
 
 pnpm run migrate        # create migration from local changes
 pnpm run types          # regenerate supabase TS types
@@ -80,8 +87,9 @@ pnpm run schema         # regenerate base.sql — review the diff carefully
 ## Hard rules
 
 - **Migrations only reach `main` via a `next-<version>` → `main` release merge.** Two questions before opening a PR: (1) branch created from `next-<version>`? → PR into it, no matter what you touched. (2) PR touches a migration file? → PR into it. Otherwise → `main`. Full strategy: `docs/deployment.md`.
+- **CI pushes are usually rejected.** GitHub refuses a push that changes `.github/workflows/` from a Claude session, because its token lacks the `workflow` scope. So hand CI changes to the maintainer as a patch in the chat (`git format-patch origin/main`), and they push it.
 - **Follow-up work after a merge goes on a NEW branch name, never the merged one.** Once a branch's PR merges, that branch is done — reusing its name re-attaches to the closed PR and clutters the branch list. Branch fresh off the default (`git checkout -B <new-name> origin/main`) and push that. The `guard-merged-branch-push.sh` pre-push hook enforces this.
-- **Never `vite build` without a populated `.env`.** Missing `VITE_SUPABASE_*` vars don't fail the build — they silently tree-shake the entire Supabase SDK (~640 KB) out of the bundle. Dummy-but-truthy values are fine; sanity-check with `grep -l GoTrueClient dist/assets/*.js`. Details: `docs/deployment.md`.
+- **Never `vite build` without a populated `.env`.** Missing `VITE_SUPABASE_*` vars don't fail the build — they silently tree-shake the entire Supabase SDK (~640 KB) out of the bundle. Dummy-but-truthy values are fine; sanity-check with `grep -l GoTrueClient dist/client/assets/*.js`. Details: `docs/deployment.md`.
 - **`collection.utils.refetch()` is a full-table fetch.** Treat it like `useEffect`: a smell needing justification. Prefer `.select()` on the write / RPCs that return rows + `writeSyncedRow`/`writeSyncedRows`. If you're about to add one, stop and check with the human first.
 - **New tests are scenetest scenes** — markdown (`scenetest/scenes/*.spec.md`) by default, `test()` from `@scenetest/scenes` only when the flow needs Playwright mechanics markdown can't express. Never `@playwright/test`. Navigate by clicking, not by reloading (`openTo` is for the entry point only).
 - **Format with oxfmt, never prettier** on TS/JS/CSS/MD/JSON (`npx oxfmt path/to/file.ts`); prettier is for SQL only. Tabs, not spaces. The pre-commit hook formats staged files automatically.
@@ -114,6 +122,7 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 | `requests`      | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes                      | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
 | `social`        | FriendRequestAction, FriendSummary, ChatMessage           | friendRequestActions, chatMessages, friendSummaries + relationsFull (live) | useRelationFriends, useAllChats, useSocialRealtime                 |
 | `chat`          | ChatQuery, ChatTurn, ChatResultPhrase                     | (zustand store, no collection — prototype phrasebook search)               | useChatStore, useChatTurns, useChatSearch                          |
+| `coach`         | coachToolInputs, CoachInitialData (Valibot, for Flue)     | (none — the conversation lives in the Flue agent; zustand for page state)  | useCoach, useDeckMeter, useCoachThread                             |
 | `notifications` | Notification                                              | notifications                                                              | useNotifications, useUnreadCount, useMarkAsRead                    |
 | `playlists`     | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                                       | useOnePlaylist, useLangPlaylists                                   |
 | `feed`          | FeedActivity                                              | (uses React Query — the one `useInfiniteQuery` feature)                    | useFeedLang                                                        |
@@ -124,9 +133,17 @@ Deep-module architecture: each domain owns `schemas.ts`, `collections.ts`, `hook
 
 **Cross-cutting lib** (`src/lib/`): `supabase-client.ts`, `query-client.ts`, `use-auth.ts` + `auth-lifecycle.ts` (clears user collections on sign-out, preloads profile on sign-in), `collections/` (local-cache, safe-write), `dayjs.ts`, `utils.ts`, `languages.ts`, `flags.ts`, `ui-prefs.ts`.
 
+## Admin app (`apps/admin/`)
+
+The team dashboard at `admin.sunlo.app` is its own Vite app and pnpm workspace package, deployed to Cloudflare by Workers Builds on every merge to `main` as the `sunlo-admin` Worker, which serves the static files and the API for `/api/*`. Its front page is the Common Room, where the admin works with AI agents built with [Flue](https://flueframework.com) in `apps/admin/.flue/`, which `@flue/vite` builds into the same Worker as one Durable Object per agent; each subject also has a room of its own at `/room/<room>`, such as the Command room, where Riker and Data help you make command decisions. The Common Room, the subject rooms and each agent's workspace live in the `CrewRoom` Durable Object in `apps/admin/worker/crew/`. It imports the main app's code through `@/` (which points at the root `src/`) and its own code through `~/`. The main app never imports from `apps/admin`, which keeps admin code out of the user-facing bundle. Admin reads are SQL in the Worker, run as `admin_reader`, a read-only Postgres role with `bypassrls` and column grants that hide message bodies; never add an RPC for an admin read. The Worker verifies the admin's Supabase token and checks `admin_user` itself. Writes (none yet) go through the admin's own session and RLS. Details: `apps/admin/README.md`.
+
+## Cloudflare worker (`worker/`)
+
+One Worker (config: root `wrangler.jsonc`) serves the Vite build as static assets and runs for `/api/*` and `/learn/*`, so each deployed version holds an app and an API from the same commit. `vite build` makes both (`dist/client`, `dist/sunlo`) through `@cloudflare/vite-plugin` and `@flue/vite`. The entry is `.flue/app.ts`: it mounts the coach, a [Flue](https://flueframework.com) agent with one Durable Object per conversation (`.flue/agents/coach.ts`), then `worker/index.ts` for the app's own routes. `/api` is a Hono app for endpoints that call Cloudflare bindings (Workers AI today: photo extraction, semantic search and the coach); every route but `/api/search` requires a signed-in user's Supabase access token, which the app sends through `postWorkerApi` (`src/lib/worker-api.ts`) to its own origin. `/learn/*` serves Open Graph tags to crawlers. Cloudflare's Git integration (Workers Builds) deploys `main`; `.github/workflows/cloudflare.yaml` runs `scripts/cf-preview.sh` to upload a preview per PR, against its Supabase preview branch if it has one and production otherwise. The worker may import plain modules and types from `src/`; `src/` never imports from `worker/`. Details: `worker/README.md`.
+
 ## Routing (`src/routes/`)
 
-TanStack Router, file-based: `_auth` = auth layout, `_user` = protected layout (auth required), `$lang` = dynamic 3-letter language code, dot notation nests paths (`$lang.review.go.tsx` → `/learn/$lang/review/go`), `.lazy` = lazy-loaded, `.index` = index route, `-`-prefixed files = co-located non-route components.
+TanStack Router, file-based: `_auth` = auth layout, `_user` = main layout, auth optional (a route that needs sign-in calls `useRequireAuth()`), `$lang` = dynamic 3-letter language code, dot notation nests paths (`$lang.review.go.tsx` → `/learn/$lang/review/go`), `.lazy` = lazy-loaded, `.index` = index route, `-`-prefixed files = co-located non-route components.
 
 Route context carries `{ auth, queryClient }` — access auth via `Route.useRouteContext()` → `auth.isAuth, auth.userId, auth.userEmail, auth.userRole`. Navbar title/icons are set with the `useTitleBar()` hook, not route context.
 
@@ -139,6 +156,6 @@ Route context carries `{ auth, queryClient }` — access auth via `Route.useRout
 - **Dates**: `todayString()` (`@/lib/utils`) uses a 4am cutoff, not midnight — some people study after midnight; `ago()` and friends from `@/lib/dayjs`.
 - **UI**: always use the generic components (`<Input>`, `<Textarea>`, `<Button>`); toasts via `toastSuccess()`/`toastError()` from `@/components/ui/sonner`; `cn()` for conditional classes; `start`/`end` not `left`/`right` (RTL); `rounded-2xl` for interactive elements, `rounded` for cards; standard Tailwind classes over arbitrary values. Colors are ordinary Tailwind shades on semantic palettes (`bg-primary-100`, `text-danger-800`, `hover:bg-primary-200`) — full system and button-variant roles in `docs/styling.md`.
 - **DB**: singular table names, uuid primary keys, `created_at timestamptz default now()`, RLS on every `uid` table — never expose one without it. Workflow and seed conventions in `docs/database.md`.
-- **Test selectors**: use semantic `data-testid`s (`affirm-community-norms-button`), `data-key` for list items; register new ids in `scenetest/TEST_IDS.md`.
+- **Test selectors**: use semantic `data-testid`s (`affirm-community-norms-button`), `data-key` for list items; register new ids in `scenetest/TEST_IDS.md`, or in `apps/admin/TEST_IDS.md` for the admin app, so an admin-only PR changes nothing outside `apps/admin/`.
 - **Realtime**: three sync postures — user tables stream on one long-lived `uid`-filtered channel (`useUserRealtime`); a detail route mounts a per-entity channel for its thread (`useRequestRealtime` / `usePlaylistRealtime` / `usePhraseRealtime`); Public Library content gets no realtime. Bind frames with `bindRows` (`src/lib/collections/realtime.ts`), which writes through `writeSyncedRow`. Full decision guide: `docs/mutations.md`.
 - **Other libs**: zustand v5 (review + chat stores), dayjs, recharts, sonner, lucide-react, ts-fsrs.

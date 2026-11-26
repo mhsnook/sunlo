@@ -268,3 +268,11 @@ values
 		false,
 		false
 	);
+
+--
+-- admin_user (1 row)
+--
+insert into
+	"public"."admin_user" ("uid", "created_at")
+values
+	('a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0', now() - interval '60 days');

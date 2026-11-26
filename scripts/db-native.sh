@@ -181,7 +181,7 @@ cmd_dump() {
   # inventory matches `supabase db dump`, but formatting/ordering differ — run the
   # repo's SQL formatter afterwards and review the diff (as the DB workflow already says).
   log "dumping schema via pg_dump -> ${out}"
-  "${PGBIN}/pg_dump" "${DB_URL}" --schema-only --schema=public --quote-all-identifiers --no-owner --no-privileges > "${out}"
+  "${PGBIN}/pg_dump" "${DB_URL}" --schema-only --schema=public --schema=admin --quote-all-identifiers --no-owner --no-privileges > "${out}"
   log "wrote ${out} — format it (prettier/oxfmt) and review the diff before committing"
 }
 

@@ -3,21 +3,14 @@ import { createStore } from 'zustand'
 import { useStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
-import type { ReviewStages } from './review-utils'
-
 const DEFAULT_PROPS = {
 	lang: '',
 	dayString: '',
 	countCards: -1,
-	stage: null as ReviewStages,
 	currentCardIndex: -1,
 }
 
 type ReviewActions = {
-	skipReviewUnreviewed: () => void
-	skipReviewAgains: () => void
-	gotoReviewUnreviewed: (i: number) => void
-	gotoReviewAgains: (i: number) => void
 	gotoIndex: (i: number) => void
 	gotoNext: () => void
 	gotoEnd: () => void
@@ -26,7 +19,6 @@ type ReviewActions = {
 		lang: string,
 		dayString: string,
 		countCards: number,
-		stage?: ReviewStages,
 		index?: number
 	) => void
 }
@@ -37,6 +29,14 @@ export type ReviewState = typeof DEFAULT_PROPS & {
 
 export type ReviewStore = ReturnType<typeof createReviewStore>
 
+/**
+ * The review cursor: the current card's index in today's manifest. Session
+ * state (the manifest, card reviews, and the stage) lives in the collections.
+ * The go route re-seeds the cursor from `stats.index` on mount and on every
+ * stage change. The persisted copy (localStorage, per browser) only tells the
+ * routing guards that a session was started here: `currentCardIndex` is -1
+ * until `init` runs.
+ */
 export function createReviewStore(lang: string, dayString: string) {
 	return createStore<ReviewState>()(
 		devtools(
@@ -46,19 +46,6 @@ export function createReviewStore(lang: string, dayString: string) {
 					lang,
 					dayString,
 					actions: {
-						skipReviewUnreviewed: () => set({ stage: 3 }),
-						skipReviewAgains: () => set({ stage: 5 }),
-
-						gotoReviewUnreviewed: (i: number) =>
-							set({
-								stage: 2,
-								currentCardIndex: i,
-							}),
-						gotoReviewAgains: (i: number) =>
-							set({
-								stage: 4,
-								currentCardIndex: i,
-							}),
 						gotoIndex: (i) => set({ currentCardIndex: i }),
 						gotoNext: () =>
 							set((state) => ({
@@ -77,7 +64,6 @@ export function createReviewStore(lang: string, dayString: string) {
 							lang: string,
 							dayString: string,
 							countCards: number,
-							stage: ReviewStages = 1,
 							index: number = 0
 						) =>
 							set((state) => {
@@ -87,12 +73,11 @@ export function createReviewStore(lang: string, dayString: string) {
 										'Mismatching language or dayString between params and current store state'
 									)
 								// ensure we only init once
-								if (state.stage !== null) return state
+								if (state.currentCardIndex !== -1) return state
 								return {
 									lang,
 									dayString,
 									countCards,
-									stage,
 									currentCardIndex: index,
 								}
 							}),
@@ -104,7 +89,6 @@ export function createReviewStore(lang: string, dayString: string) {
 						lang: state.lang,
 						dayString: state.dayString,
 						countCards: state.countCards,
-						stage: state.stage,
 						currentCardIndex: state.currentCardIndex,
 					}),
 				}
@@ -127,10 +111,6 @@ export const useReviewLang = (): string => {
 
 export const useReviewDayString = (): string => {
 	return useReviewStore((store) => store.dayString)
-}
-
-export const useReviewStage = (): ReviewStages => {
-	return useReviewStore((state) => state.stage)
 }
 
 export const useCardIndex = (): number => {

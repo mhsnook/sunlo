@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
+import { MessageScroller } from '@/components/ui/message-scroller'
 import { CartButton } from './cart-button'
 import { ChatInput } from './chat-input'
 import { ChatTurnView } from './chat-message'
@@ -16,11 +16,6 @@ type Props = {
 export function ChatPage({ languageLabel }: Props) {
 	const lang = useChatRouteLang()
 	const turns = useChatTurns()
-	const bottomRef = useRef<HTMLDivElement>(null)
-
-	useEffect(() => {
-		bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-	}, [turns])
 
 	return (
 		<div
@@ -50,22 +45,21 @@ export function ChatPage({ languageLabel }: Props) {
 				<CartButton />
 			</header>
 
-			<div
-				data-testid="chat-conversation"
-				className="flex flex-1 flex-col gap-6 overflow-y-auto pr-1"
-			>
-				{turns.length === 0 ? (
-					<div
-						data-testid="chat-empty-state"
-						className="text-muted-foreground my-8 text-center text-sm"
-					>
-						Try: <em>&ldquo;what do I say if I'm going to the store?&rdquo;</em>
-					</div>
-				) : (
-					turns.map((turn) => <ChatTurnView key={turn.id} turn={turn} />)
-				)}
-				<div ref={bottomRef} />
-			</div>
+			<MessageScroller dependency={turns} data-testid="chat-conversation">
+				<div className="flex flex-col gap-6 pe-1">
+					{turns.length === 0 ? (
+						<div
+							data-testid="chat-empty-state"
+							className="text-muted-foreground my-8 text-center text-sm"
+						>
+							Try:{' '}
+							<em>&ldquo;what do I say if I'm going to the store?&rdquo;</em>
+						</div>
+					) : (
+						turns.map((turn) => <ChatTurnView key={turn.id} turn={turn} />)
+					)}
+				</div>
+			</MessageScroller>
 
 			<SelectionBar />
 			<SuggestionStrip />

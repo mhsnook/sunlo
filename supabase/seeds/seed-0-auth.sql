@@ -1,4 +1,5 @@
--- Auth users and identities for all 10 test actors (team1 + team2).
+-- Auth users and identities for all 10 test actors (team1 + team2), plus
+-- one admin account for the admin app.
 --
 -- This file is static — auth.users is not a public table and cannot be
 -- dumped by dump-new-seeds.ts. Update it here if actors change.
@@ -16,6 +17,10 @@
 --   learner2  22dfa256-ef7b-41b0-b05a-d97afab8dd21  sunloapp+t2-1@gmail.com
 --   learner3  2a32f65e-a496-4afc-abd3-798d8e6d9ec5  sunloapp+t2-2@gmail.com
 --   new-user  2e4e5f6a-7b8c-4d0e-a1f2-b3c4d5e6f7a8  sunloapp+t2-new@gmail.com
+--
+-- Admin, listed in admin_user (seed-1-team-none.sql). Not a scene actor, so
+-- the actors above never see admin-only controls:
+--   admin     a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0  sunloapp+admin@gmail.com
 --
 -- All passwords are bcrypt of "password".
 -- ON CONFLICT DO NOTHING makes this safe to run via db-reseed (which does
@@ -221,6 +226,24 @@ values
 		false,
 		false,
 		false
+	),
+	-- admin (no team, no profile)
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0',
+		'authenticated',
+		'authenticated',
+		'sunloapp+admin@gmail.com',
+		'$2a$10$nbkbcyoLi.buagd2DyyT0u4kpYoV.VZh6fSqRWvNxmZkea0XUcybG',
+		now() - interval '60 days',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0", "email": "sunloapp+admin@gmail.com", "email_verified": true, "phone_verified": false}',
+		now() - interval '60 days',
+		now() - interval '60 days',
+		null,
+		false,
+		false,
+		false
 	)
 on conflict (id) do nothing;
 
@@ -247,7 +270,8 @@ where
 		'27ad846a-d55b-4035-8be2-dbcc70074f74',
 		'22dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'2a32f65e-a496-4afc-abd3-798d8e6d9ec5',
-		'2e4e5f6a-7b8c-4d0e-a1f2-b3c4d5e6f7a8'
+		'2e4e5f6a-7b8c-4d0e-a1f2-b3c4d5e6f7a8',
+		'a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0'
 	);
 
 insert into
@@ -354,6 +378,17 @@ values
 		now() - interval '1 hour',
 		now() - interval '1 hour',
 		'e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a222'
+	),
+	-- admin
+	(
+		'a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0',
+		'a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0',
+		'{"sub": "a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a0", "email": "sunloapp+admin@gmail.com", "email_verified": true, "phone_verified": false}',
+		'email',
+		null,
+		now() - interval '60 days',
+		now() - interval '60 days',
+		'a0a0a0a0-1d1d-4a0a-8a0a-a0a0a0a0a0a1'
 	)
 on conflict (id) do nothing;
 

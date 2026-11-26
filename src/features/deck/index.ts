@@ -42,7 +42,7 @@ export {
 } from './card-scheduling'
 
 // Mutations
-export { useCreateDeck, optimisticNewDeck } from './mutations'
+export { useCreateDeck, optimisticNewDeck, addPhrasesToDeck } from './mutations'
 
 // Utilities
 export { directionsForPhrase } from './card-directions'

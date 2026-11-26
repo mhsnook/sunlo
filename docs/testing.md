@@ -77,7 +77,7 @@ learner:
 
 **Custom macros** are defined in `scenetest/config.ts` via `defineMacro('name', [...steps])`. Use them as bare step names in specs.
 
-**Adding test IDs to components**: Use `data-testid` for unique elements, `data-key` for list items (on the item element, with `data-testid` on the container), and `data-name`+`data-key` for items without a wrapper. Register new IDs in `scenetest/TEST_IDS.md`.
+**Adding test IDs to components**: Use `data-testid` for unique elements, `data-key` for list items (on the item element, with `data-testid` on the container), and `data-name`+`data-key` for items without a wrapper. Register new IDs in `scenetest/TEST_IDS.md`. The admin app keeps its own registry at `apps/admin/TEST_IDS.md`, so a pull request that only touches the admin app stays inside `apps/admin/` and CI skips the main app's tests.
 
 ## Scene Navigation
 

@@ -48,6 +48,10 @@ import { ago } from '@/lib/dayjs'
 import { useCardScheduling } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { webOrigin } from '@/lib/platform'
+import {
+	DraftBadge,
+	DraftPhraseNotice,
+} from '@/components/card-pieces/draft-phrase-notice'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -86,6 +90,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						<div className="flex w-full flex-row items-start justify-between gap-2">
 							<div className="flex flex-row items-center gap-2">
 								<LangBadge lang={phrase.lang} />
+								{phrase.draft && <DraftBadge />}
 								{phrase.only_reverse && (
 									<Badge variant="outline" className="gap-1">
 										Recall only <Brain className="size-3" />
@@ -103,6 +108,9 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								&ldquo;{phrase.text}&rdquo;
 							</span>
 						</CardTitle>
+						{phrase.draft && (
+							<DraftPhraseNotice phraseId={pid} lang={phrase.lang} />
+						)}
 					</div>
 				</CardHeader>
 

@@ -26,7 +26,7 @@ import type { TablesUpdate } from '@/types/supabase'
 // We still read from the view because `count_learners`, `avg_difficulty`,
 // `avg_stability` are computed there.
 const PHRASE_META_COLUMNS =
-	'id, created_at, text, lang, added_by, only_reverse, archived, avg_difficulty, avg_stability, count_learners'
+	'id, created_at, text, lang, added_by, only_reverse, archived, draft, avg_difficulty, avg_stability, count_learners'
 
 export const phrasesCollection = createCollection(
 	queryCollectionOptions({
@@ -51,6 +51,7 @@ export const phrasesCollection = createCollection(
 				lang: m.modified.lang,
 				text: m.modified.text,
 				only_reverse: m.modified.only_reverse,
+				draft: m.modified.draft,
 				...(m.modified.added_by ? { added_by: m.modified.added_by } : {}),
 			}))
 			const { data } = await supabase

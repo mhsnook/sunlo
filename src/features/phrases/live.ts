@@ -85,6 +85,8 @@ phrasesComposed.createIndex((row) => row.id, { indexType: BasicIndex })
  */
 export const phrasesFull = createLiveQueryCollection({
 	id: 'phrases_full',
+	// Without it, rows take the join's composite key and `.get(phraseId)` misses.
+	getKey: (row: { id: string }) => row.id,
 	query: (q) =>
 		q
 			.from({ phrase: phrasesComposed })

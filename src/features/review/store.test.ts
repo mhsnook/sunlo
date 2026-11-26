@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
 	getIndexOfNextUnreviewedCard,
 	getIndexOfNextAgainCard,
+	getIndexOfNextValidCard,
+	resumeIndexForStage,
 	type ReviewsMap,
 } from '@/features/review/review-utils'
 import type { CardReviewType } from '@/features/review/schemas'
@@ -201,5 +203,41 @@ describe('getIndexOfNextAgainCard', () => {
 
 		const next = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
 		expect(next).toBe(manifest.length)
+	})
+})
+
+describe('getIndexOfNextValidCard', () => {
+	// P1:forward is unreviewed, P1:reverse was scored Again.
+	const manifest: Array<ManifestEntry> = [me(P1, 'forward'), me(P1, 'reverse')]
+	const reviewsMap: ReviewsMap = { [me(P1, 'reverse')]: stubReview(1) }
+
+	it('looks for unreviewed cards in the scoring stages (1-2)', () => {
+		expect(getIndexOfNextValidCard(1, manifest, reviewsMap, -1)).toBe(0)
+		expect(getIndexOfNextValidCard(2, manifest, reviewsMap, -1)).toBe(0)
+	})
+
+	it('looks for Again cards from stage 3 on', () => {
+		expect(getIndexOfNextValidCard(4, manifest, reviewsMap, -1)).toBe(1)
+	})
+})
+
+describe('resumeIndexForStage', () => {
+	const positions = { count: 10, firstUnreviewedIndex: 2, firstAgainIndex: 5 }
+
+	it('resumes the scoring stages at the first unreviewed card', () => {
+		expect(resumeIndexForStage(1, positions)).toBe(2)
+		expect(resumeIndexForStage(2, positions)).toBe(2)
+	})
+
+	it('resumes stage 3 at the end, so the Step 3 offer screen shows', () => {
+		expect(resumeIndexForStage(3, positions)).toBe(10)
+	})
+
+	it('resumes the again round at the first Again card', () => {
+		expect(resumeIndexForStage(4, positions)).toBe(5)
+	})
+
+	it('resumes a finished session at the end', () => {
+		expect(resumeIndexForStage(5, positions)).toBe(10)
 	})
 })

@@ -16,7 +16,7 @@ Zustand, in `store.ts`. No TanStack DB collection, because nothing here is persi
 
 `chatSearch` in `api.ts` is one of two implementations picked at module load:
 
-- `chatSearchLive` calls `runSemanticSearch()` from `@/hooks/use-semantic-search`, which invokes the **`search` Edge Function**. That is this module's only external service. It asks for phrase entities, passes `excludePids` so a phrase already in the cart is not offered twice, and takes the top 3.
+- `chatSearchLive` calls `runSemanticSearch()` from `@/hooks/use-semantic-search`, which calls the Worker's **`POST /api/search`** (`worker/search.ts`). That is this module's only external service. It asks for phrase entities, passes `excludePids` so a phrase already in the cart is not offered twice, and takes the top 3.
 - `chatSearchMock` returns canned phrases after a 350 ms delay.
 
 The mock is selected when `VITE_CHAT_USE_MOCK === 'true'` or `MODE === 'test'`, so scenetest specs run without a populated `search_corpus`.
@@ -27,7 +27,7 @@ Two things worth knowing before you edit either one. `SUPPORTED_LANGS` lists `sp
 
 This module consumes the search stack; it does not extend it. `runSemanticSearch` is the same primitive that `useHybridSearch` composes with `useTrigramSearch` for the main phrase search. Chat takes the semantic half alone, because a conversational query has no useful trigram overlap with the phrase it should return.
 
-Ranking, corpus shape, and the Edge Function contract are search's business. If a result looks wrong, look there first.
+Ranking, corpus shape, and the `/api/search` contract are search's business. If a result looks wrong, look there first.
 
 ## Normalization and suggestions
 

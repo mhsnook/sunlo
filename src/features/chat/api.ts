@@ -6,7 +6,7 @@ import type { ChatQueryType, ChatResultPhraseType } from './schemas'
 
 // Two implementations of `chatSearch` live here:
 //   - chatSearchMock — deterministic canned data, used by scenetest specs.
-//   - chatSearchLive — invokes the search Edge Function.
+//   - chatSearchLive — calls the Worker's /api/search.
 //
 // `chatSearch` defaults to the live function but falls back to the mock when
 // the env flag is set OR when running under the scenetest harness so the

@@ -11,10 +11,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CoachRouteImport } from './routes/coach'
 import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as UserRouteImport } from './routes/_user'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoachLangRouteImport } from './routes/coach.$lang'
 import { Route as UserWelcomeRouteImport } from './routes/_user/welcome'
 import { Route as UserSearchRouteImport } from './routes/_user/search'
 import { Route as UserProfileRouteImport } from './routes/_user/profile'
@@ -83,8 +85,10 @@ const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
 const FsrsLazyRouteImport = createFileRoute('/fsrs')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
 const ThemesIndexLazyRouteImport = createFileRoute('/themes/')()
+const CoachIndexLazyRouteImport = createFileRoute('/coach/')()
 const ChatsIndexLazyRouteImport = createFileRoute('/chats/')()
 const ThemesTypographyLazyRouteImport = createFileRoute('/themes/typography')()
+const ThemesChatLazyRouteImport = createFileRoute('/themes/chat')()
 const ChatsLangLazyRouteImport = createFileRoute('/chats/$lang')()
 const UserAdminLazyRouteImport = createFileRoute('/_user/admin')()
 const UserSearchIndexLazyRouteImport = createFileRoute('/_user/search/')()
@@ -139,6 +143,11 @@ const ComponentsLazyRoute = ComponentsLazyRouteImport.update({
   path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/components.lazy').then((d) => d.Route))
+const CoachRoute = CoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatsRoute = ChatsRouteImport.update({
   id: '/chats',
   path: '/chats',
@@ -162,6 +171,11 @@ const ThemesIndexLazyRoute = ThemesIndexLazyRouteImport.update({
   path: '/',
   getParentRoute: () => ThemesLazyRoute,
 } as any).lazy(() => import('./routes/themes.index.lazy').then((d) => d.Route))
+const CoachIndexLazyRoute = CoachIndexLazyRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CoachRoute,
+} as any).lazy(() => import('./routes/coach.index.lazy').then((d) => d.Route))
 const ChatsIndexLazyRoute = ChatsIndexLazyRouteImport.update({
   id: '/',
   path: '/',
@@ -174,6 +188,11 @@ const ThemesTypographyLazyRoute = ThemesTypographyLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/themes.typography.lazy').then((d) => d.Route),
 )
+const ThemesChatLazyRoute = ThemesChatLazyRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => ThemesLazyRoute,
+} as any).lazy(() => import('./routes/themes.chat.lazy').then((d) => d.Route))
 const ChatsLangLazyRoute = ChatsLangLazyRouteImport.update({
   id: '/$lang',
   path: '/$lang',
@@ -184,6 +203,11 @@ const UserAdminLazyRoute = UserAdminLazyRouteImport.update({
   path: '/admin',
   getParentRoute: () => UserRoute,
 } as any).lazy(() => import('./routes/_user/admin.lazy').then((d) => d.Route))
+const CoachLangRoute = CoachLangRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
+  getParentRoute: () => CoachRoute,
+} as any).lazy(() => import('./routes/coach.$lang.lazy').then((d) => d.Route))
 const UserWelcomeRoute = UserWelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -574,6 +598,7 @@ const UserFriendsChatsFriendUidRecommendRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chats': typeof ChatsRouteWithChildren
+  '/coach': typeof CoachRouteWithChildren
   '/components': typeof ComponentsLazyRoute
   '/fsrs': typeof FsrsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
@@ -593,10 +618,13 @@ export interface FileRoutesByFullPath {
   '/profile': typeof UserProfileRouteWithChildren
   '/search': typeof UserSearchRouteWithChildren
   '/welcome': typeof UserWelcomeRoute
+  '/coach/$lang': typeof CoachLangRoute
   '/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/chat': typeof ThemesChatLazyRoute
   '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
+  '/coach/': typeof CoachIndexLazyRoute
   '/themes/': typeof ThemesIndexLazyRoute
   '/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/admin/messages': typeof UserAdminMessagesRouteWithChildren
@@ -668,9 +696,12 @@ export interface FileRoutesByTo {
   '/getting-started': typeof UserGettingStartedRoute
   '/notifications': typeof UserNotificationsRoute
   '/welcome': typeof UserWelcomeRoute
+  '/coach/$lang': typeof CoachLangRoute
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/chat': typeof ThemesChatLazyRoute
   '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats': typeof ChatsIndexLazyRoute
+  '/coach': typeof CoachIndexLazyRoute
   '/themes': typeof ThemesIndexLazyRoute
   '/admin/routes': typeof UserAdminRoutesRoute
   '/browse/$lang': typeof UserBrowseLangRoute
@@ -725,6 +756,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_user': typeof UserRouteWithChildren
   '/chats': typeof ChatsRouteWithChildren
+  '/coach': typeof CoachRouteWithChildren
   '/components': typeof ComponentsLazyRoute
   '/fsrs': typeof FsrsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
@@ -744,10 +776,13 @@ export interface FileRoutesById {
   '/_user/profile': typeof UserProfileRouteWithChildren
   '/_user/search': typeof UserSearchRouteWithChildren
   '/_user/welcome': typeof UserWelcomeRoute
+  '/coach/$lang': typeof CoachLangRoute
   '/_user/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/chat': typeof ThemesChatLazyRoute
   '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
+  '/coach/': typeof CoachIndexLazyRoute
   '/themes/': typeof ThemesIndexLazyRoute
   '/_user/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/_user/admin/messages': typeof UserAdminMessagesRouteWithChildren
@@ -809,6 +844,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/chats'
+    | '/coach'
     | '/components'
     | '/fsrs'
     | '/microcopy'
@@ -828,10 +864,13 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/welcome'
+    | '/coach/$lang'
     | '/admin'
     | '/chats/$lang'
+    | '/themes/chat'
     | '/themes/typography'
     | '/chats/'
+    | '/coach/'
     | '/themes/'
     | '/admin/$lang'
     | '/admin/messages'
@@ -903,9 +942,12 @@ export interface FileRouteTypes {
     | '/getting-started'
     | '/notifications'
     | '/welcome'
+    | '/coach/$lang'
     | '/chats/$lang'
+    | '/themes/chat'
     | '/themes/typography'
     | '/chats'
+    | '/coach'
     | '/themes'
     | '/admin/routes'
     | '/browse/$lang'
@@ -959,6 +1001,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_user'
     | '/chats'
+    | '/coach'
     | '/components'
     | '/fsrs'
     | '/microcopy'
@@ -978,10 +1021,13 @@ export interface FileRouteTypes {
     | '/_user/profile'
     | '/_user/search'
     | '/_user/welcome'
+    | '/coach/$lang'
     | '/_user/admin'
     | '/chats/$lang'
+    | '/themes/chat'
     | '/themes/typography'
     | '/chats/'
+    | '/coach/'
     | '/themes/'
     | '/_user/admin/$lang'
     | '/_user/admin/messages'
@@ -1044,6 +1090,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   UserRoute: typeof UserRouteWithChildren
   ChatsRoute: typeof ChatsRouteWithChildren
+  CoachRoute: typeof CoachRouteWithChildren
   ComponentsLazyRoute: typeof ComponentsLazyRoute
   FsrsLazyRoute: typeof FsrsLazyRoute
   MicrocopyLazyRoute: typeof MicrocopyLazyRoute
@@ -1096,6 +1143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComponentsLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chats': {
       id: '/chats'
       path: '/chats'
@@ -1131,6 +1185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThemesIndexLazyRouteImport
       parentRoute: typeof ThemesLazyRoute
     }
+    '/coach/': {
+      id: '/coach/'
+      path: '/'
+      fullPath: '/coach/'
+      preLoaderRoute: typeof CoachIndexLazyRouteImport
+      parentRoute: typeof CoachRoute
+    }
     '/chats/': {
       id: '/chats/'
       path: '/'
@@ -1143,6 +1204,13 @@ declare module '@tanstack/react-router' {
       path: '/typography'
       fullPath: '/themes/typography'
       preLoaderRoute: typeof ThemesTypographyLazyRouteImport
+      parentRoute: typeof ThemesLazyRoute
+    }
+    '/themes/chat': {
+      id: '/themes/chat'
+      path: '/chat'
+      fullPath: '/themes/chat'
+      preLoaderRoute: typeof ThemesChatLazyRouteImport
       parentRoute: typeof ThemesLazyRoute
     }
     '/chats/$lang': {
@@ -1158,6 +1226,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof UserAdminLazyRouteImport
       parentRoute: typeof UserRoute
+    }
+    '/coach/$lang': {
+      id: '/coach/$lang'
+      path: '/$lang'
+      fullPath: '/coach/$lang'
+      preLoaderRoute: typeof CoachLangRouteImport
+      parentRoute: typeof CoachRoute
     }
     '/_user/welcome': {
       id: '/_user/welcome'
@@ -1948,12 +2023,26 @@ const ChatsRouteChildren: ChatsRouteChildren = {
 
 const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
 
+interface CoachRouteChildren {
+  CoachLangRoute: typeof CoachLangRoute
+  CoachIndexLazyRoute: typeof CoachIndexLazyRoute
+}
+
+const CoachRouteChildren: CoachRouteChildren = {
+  CoachLangRoute: CoachLangRoute,
+  CoachIndexLazyRoute: CoachIndexLazyRoute,
+}
+
+const CoachRouteWithChildren = CoachRoute._addFileChildren(CoachRouteChildren)
+
 interface ThemesLazyRouteChildren {
+  ThemesChatLazyRoute: typeof ThemesChatLazyRoute
   ThemesTypographyLazyRoute: typeof ThemesTypographyLazyRoute
   ThemesIndexLazyRoute: typeof ThemesIndexLazyRoute
 }
 
 const ThemesLazyRouteChildren: ThemesLazyRouteChildren = {
+  ThemesChatLazyRoute: ThemesChatLazyRoute,
   ThemesTypographyLazyRoute: ThemesTypographyLazyRoute,
   ThemesIndexLazyRoute: ThemesIndexLazyRoute,
 }
@@ -1967,6 +2056,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   UserRoute: UserRouteWithChildren,
   ChatsRoute: ChatsRouteWithChildren,
+  CoachRoute: CoachRouteWithChildren,
   ComponentsLazyRoute: ComponentsLazyRoute,
   FsrsLazyRoute: FsrsLazyRoute,
   MicrocopyLazyRoute: MicrocopyLazyRoute,

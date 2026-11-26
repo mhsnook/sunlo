@@ -1,0 +1,231 @@
+# Delta-reporting PR checks.
+#
+# Shape: one job per TREE, not one per check. The `tree` matrix installs and
+# builds the PR's tree and the base branch's tree once each, in parallel, then
+# runs every check that tree can answer. `report` fans in, diffs the two,
+# posts a single comment, and owns the pass/fail decision.
+#
+# The scenetest job stays in test.yaml: it needs a Supabase stack and a dev
+# server, and it answers a question about the head tree only. These jobs run on
+# every PR, including one that touches only apps/admin/: the admin app imports
+# the main app's code, and its typecheck is part of the static checks.
+
+name: PR checks
+
+# No `push` trigger. This workflow compares two trees, and a push has no base
+# to compare against.
+on:
+  pull_request:
+    # Version-named release branches (next-0.28, next-0.28.1) plus bare `next`
+    # and `main`. Globs are required here — Actions matches branch filters
+    # literally otherwise, so a plain `next` would silently skip CI on every
+    # `next-*` branch.
+    branches: [next, 'next-*', main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  # A cancelled run leaves its sticky comment describing an older commit, with
+  # no red X to explain why, so let a PR run finish.
+  cancel-in-progress: false
+
+jobs:
+  tree:
+    name: ${{ matrix.tree }} tree
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      # Both trees must report, or `report` has nothing to compare.
+      fail-fast: false
+      matrix:
+        tree: [head, base]
+    env:
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      # head: the merge ref, whose first parent is the base commit, so depth 2
+      # is enough for the touched-file diff below.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.tree == 'base' && github.base_ref || '' }}
+          fetch-depth: 2
+
+      # Everything here is part of the MEASUREMENT rather than part of the code.
+      # The scripts, because both trees must be measured by the same script, or
+      # a change to a script shows up as a change in the codebase. The lint,
+      # format and TypeScript configs, because a PR that turns a rule on would
+      # otherwise leave the base tree judged by the old rule, so every file that
+      # rule touches reads as newly broken and the PR cannot merge.
+      #
+      # `ls-tree` keeps only the paths head has, so one `git checkout` cannot
+      # fail as a whole over a file the PR deleted.
+      - name: Fetch the measurement from head
+        if: matrix.tree == 'base'
+        run: |
+          git fetch --no-tags --depth=1 origin "$HEAD_SHA"
+          mapfile -t paths < <(git ls-tree -r --name-only "$HEAD_SHA" -- \
+            .github/ci scripts/eslint-unix.mjs \
+            .oxlintrc.json eslint.config.js .oxfmtrc.json prettier.config.mjs .prettierignore \
+            tsconfig.json tsconfig.app.json tsconfig.node.json tsconfig.worker.json \
+            apps/admin/tsconfig.json apps/admin/tsconfig.worker.json)
+          git checkout "$HEAD_SHA" -- "${paths[@]}"
+          printf '%s\n' "${paths[@]}"
+
+      # pnpm/action-setup MUST come before setup-node: setup-node's
+      # `cache: pnpm` needs the pnpm binary to locate the store. No `version:`;
+      # the action reads `packageManager` from package.json.
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      # Written to $GITHUB_ENV before install and build, because Vite reads
+      # these at build time. Without them the Supabase client is constructed
+      # from undefined values and rolldown tree-shakes the SDK away, which makes
+      # the bundle measurement smaller and meaningless. Dummy but truthy.
+      - name: Set up dummy env for build
+        run: |
+          {
+            echo "VITE_SUPABASE_URL=http://127.0.0.1:54321"
+            echo "VITE_SUPABASE_ANON_KEY=dummy"
+          } >> "$GITHUB_ENV"
+
+      # When the install fails, every later step is measuring nothing. Skip them
+      # rather than filling the report with the consequences of one failure.
+      - name: Install
+        id: install
+        run: pnpm install --frozen-lockfile
+
+      # The formatter gate is scoped to the files this PR touches. Two-dot diff,
+      # because the merge ref already has base merged in, so base.sha..HEAD is
+      # exactly this PR's own changes. Switch to three-dot if the checkout ever
+      # pins `pull_request.head.sha`.
+      - name: List files this PR touches
+        if: ${{ matrix.tree == 'head' && !cancelled() && steps.install.outcome == 'success' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          mkdir -p /tmp/out/static
+          git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null ||
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git diff --name-only --diff-filter=d "$BASE_SHA" HEAD |
+            sort >/tmp/out/static/touched.txt
+          wc -l /tmp/out/static/touched.txt
+
+      # Runs BEFORE the build and never depends on it. A branch that fails to
+      # build is the branch that most needs to hear about its type errors.
+      - name: Static checks
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bash .github/ci/collect-static.sh /tmp/out/static
+
+      # `build:test` rather than `build`, so the measured bundle is the mock
+      # build: a bundle diff must not move because a real API key changed what
+      # rolldown could tree-shake. It is still a production-mode `vite build`,
+      # so `import.meta.env.DEV` is statically false, which the scan relies on.
+      #
+      # `continue-on-error` and `tee`: a failed build is a finding to report,
+      # not a reason to lose the comment.
+      - name: Build
+        id: build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        continue-on-error: true
+        # The default shell is `bash -e` with NO pipefail, so without this the
+        # step reports tee's exit status and a failed build records as success.
+        shell: bash
+        run: |
+          mkdir -p /tmp/out
+          pnpm build:test 2>&1 | tee /tmp/out/build.log
+
+      - name: Record the build outcome
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p /tmp/out
+          echo "${{ steps.build.outcome }}" >/tmp/out/build.outcome
+
+      - name: Measure bundle
+        if: ${{ steps.build.outcome == 'success' }}
+        run: node .github/ci/measure-bundle.cjs dist /tmp/out/bundle.json
+
+      - name: Scan build output for dev-only code
+        if: ${{ matrix.tree == 'head' && steps.build.outcome == 'success' }}
+        continue-on-error: true
+        run: bash scripts/check-prod-bundle.sh dist /tmp/out/fragments
+
+      - name: Unit tests
+        if: ${{ matrix.tree == 'head' && !cancelled() && steps.install.outcome == 'success' }}
+        continue-on-error: true
+        run: pnpm test:unit --reporter=json --outputFile=/tmp/test-results.json
+
+      - name: Render test fragment
+        if: ${{ matrix.tree == 'head' && !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          node -e "require('./.github/ci/render-tests.cjs')({
+            results: '/tmp/test-results.json', out: '/tmp/out/fragments'
+          })"
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: tree-${{ matrix.tree }}
+          path: /tmp/out/
+          retention-days: 1
+
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: tree
+    # `always()`, or a failing tree job cancels the report and the contributor
+    # sees a red X with no explanation.
+    if: ${{ always() }}
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/ci
+
+      - uses: actions/download-artifact@v8
+        with: { name: tree-head, path: /tmp/head }
+        continue-on-error: true
+      - uses: actions/download-artifact@v8
+        with: { name: tree-base, path: /tmp/base }
+        continue-on-error: true
+
+      - name: Render fragments
+        run: |
+          mkdir -p /tmp/fragments
+          cp -r /tmp/head/fragments/. /tmp/fragments/ 2>/dev/null || true
+          node -e "require('./.github/ci/render-build.cjs')({
+            head: '/tmp/head', base: '/tmp/base', out: '/tmp/fragments'
+          })"
+          node -e "require('./.github/ci/render-static.cjs')({
+            head: '/tmp/head/static', base: '/tmp/base/static', out: '/tmp/fragments'
+          })"
+          node -e "require('./.github/ci/render-bundle.cjs')({
+            head: '/tmp/head/bundle.json', base: '/tmp/base/bundle.json', out: '/tmp/fragments'
+          })"
+
+      - name: Post comment
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { assemble, publish } = require('./.github/ci/comment.cjs')
+            const body = assemble('/tmp/fragments', {
+              id: 'pr-checks',
+              title: '### PR checks',
+              header: `_Compared against \`${context.payload.pull_request.base.ref}\`._`,
+            })
+            // `### PR checks` matches only the old comment, which opened with
+            // the bare heading; this one opens with a hidden marker.
+            const result = await publish(github, context, {
+              id: 'pr-checks',
+              body,
+              retired: ['### PR checks', '### Main bundle size'],
+            })
+            core.info(JSON.stringify(result))
+
+      # `tee` puts the verdict on the run's summary page. `shell: bash` for
+      # pipefail, as on the build step: without it the step reports tee's exit
+      # status and the gate never fails.
+      - name: Gate
+        shell: bash
+        run: node .github/ci/gate.cjs /tmp/fragments | tee -a "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,160 @@
+import { useState } from 'react'
+import { createFileRoute, notFound } from '@tanstack/react-router'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { MessageScroller } from '@/components/ui/message-scroller'
+import {
+	adminAuthor,
+	associatesOf,
+	crew,
+	displayName,
+	handleOf,
+	isRoomKey,
+	placeOf,
+	principalOf,
+	roomMembers,
+	roomNames,
+	type RoomKey,
+} from '../../../shared/crew'
+import {
+	charterQuery,
+	commandQuery,
+	isWorking,
+	markSeen,
+	painterStylesQuery,
+	roomQuery,
+	threadQuery,
+	workspaceQuery,
+} from '~/lib/crew'
+import { RoomAvatar, WorkingMarker } from '~/components/crew/crew-parts'
+import { LiveRuns, useRunParts } from '~/components/crew/run-steps'
+import { MobileSidebarButton } from '~/components/crew/crew-sidebar'
+import { SidePanelSlot } from '~/components/crew/side-panel'
+import { RoomThreadCompose } from '~/components/crew/room-thread-compose'
+import { DetailsPanel, useDetailsPanel } from '~/components/crew/details-panel'
+import { RoomTimeline } from '~/components/crew/room-timeline'
+
+export const Route = createFileRoute('/_admin/room/$room')({
+	params: {
+		parse: ({ room }) => {
+			if (!isRoomKey(room)) throw notFound()
+			return { room }
+		},
+	},
+	loader: ({ context, params }) =>
+		Promise.all([
+			context.queryClient.ensureQueryData(threadQuery(params.room)),
+			context.queryClient.ensureQueryData(roomQuery()),
+			context.queryClient.ensureQueryData(charterQuery(params.room)),
+			...(params.room === 'command'
+				? [context.queryClient.ensureQueryData(commandQuery())]
+				: []),
+			...(params.room === crew['product-2'].room
+				? [context.queryClient.ensureQueryData(painterStylesQuery())]
+				: []),
+			...roomMembers(params.room).map((agent) =>
+				context.queryClient.ensureQueryData(workspaceQuery(agent))
+			),
+		]),
+	onEnter: ({ context, params }) =>
+		void markSeen(context.queryClient, placeOf(params.room), false),
+	onLeave: ({ context, params }) =>
+		void markSeen(context.queryClient, placeOf(params.room), true),
+	component: SubjectRoomPage,
+})
+
+function SubjectRoomPage() {
+	const { room } = Route.useParams()
+	// A new room is a new page: the "New since" line and the panel start over.
+	return <SubjectRoom key={room} room={room} />
+}
+
+// One subject's room: a thread with the officer who runs it, and anyone who
+// works there with them, where everything that needs the admin arrives as a
+// card.
+function SubjectRoom({ room }: { room: RoomKey }) {
+	const { session } = Route.useRouteContext()
+	const { data: thread } = useSuspenseQuery(threadQuery(room))
+	const { data: crewRoom } = useSuspenseQuery(roomQuery())
+	const [newSince] = useState(thread.seenAt)
+	const details = useDetailsPanel()
+	const members = roomMembers(room)
+	const working = members.filter((key) => isWorking(crewRoom.statuses[key]))
+	const runs = useRunParts(thread.messages, members)
+	const liveSteps = runs.live.reduce((sum, run) => sum + run.steps.length, 0)
+	const myAuthor = adminAuthor(session.user.id)
+
+	return (
+		<div className="flex h-full min-h-0">
+			<section className="@container flex min-w-0 flex-1 flex-col">
+				<header className="flex items-center gap-2 border-b px-4 py-3 @sm:gap-3">
+					<MobileSidebarButton />
+					<RoomAvatar room={room} />
+					<div className="me-auto min-w-0">
+						<h1 className="truncate leading-tight font-semibold">
+							{roomNames[room]}
+						</h1>
+						<p className="text-muted-foreground truncate text-xs">
+							{members.map(displayName).join(' and ')}
+						</p>
+					</div>
+					<Button
+						variant="ghost"
+						data-testid="details-button"
+						className="@max-sm:px-2.5"
+						aria-pressed={details.open}
+						onClick={details.toggle}
+					>
+						<Info /> <span className="@max-sm:sr-only">Details</span>
+					</Button>
+				</header>
+				<MessageScroller
+					dependency={thread.messages.length + working.length + liveSteps}
+				>
+					{thread.messages.length ? (
+						<RoomTimeline
+							messages={thread.messages}
+							replies={thread.replies}
+							myAuthor={myAuthor}
+							newSince={newSince}
+							runs={runs}
+						/>
+					) : (
+						<EmptyThread room={room} />
+					)}
+					<WorkingMarker agents={working} />
+					<LiveRuns runs={runs.live} />
+				</MessageScroller>
+				<RoomThreadCompose
+					room={room}
+					weekly={crewRoom.weekly}
+					myAuthor={myAuthor}
+				/>
+			</section>
+			{details.open && (
+				<SidePanelSlot>
+					<DetailsPanel room={room} onClose={details.close} />
+				</SidePanelSlot>
+			)}
+		</div>
+	)
+}
+
+function EmptyThread({ room }: { room: RoomKey }) {
+	const principal = principalOf(room)
+	const associates = associatesOf(room)
+	return (
+		<div className="mx-auto max-w-md space-y-3 px-4 pt-[15dvh] text-center">
+			<div className="flex justify-center">
+				<RoomAvatar room={room} size="lg" />
+			</div>
+			<h2 className="text-xl font-semibold">The {roomNames[room]}</h2>
+			<p className="text-muted-foreground text-sm">
+				{crew[principal].active
+					? `${displayName(principal)} answers what you write here${associates.length ? `; write ${associates.map((key) => `@${handleOf(key)}`).join(' or ')} to ask ${associates.map(displayName).join(' or ')}` : ''}. Anything that needs you arrives here as a card.`
+					: `${displayName(principal)} has not started yet. What you write here waits until they do.`}
+			</p>
+		</div>
+	)
+}

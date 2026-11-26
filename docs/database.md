@@ -59,6 +59,8 @@ header of `scripts/db-native.sh`.
 - **Every row gets an `id`**, join tables included, so client collection keys are uniform. Where a pair must be unique, say so with a partial unique index over the live rows: `unique (a_id, b_id) where deleted = false`.
 - **Tombstones**: if a removed row still holds active comments, blank its text and leave the row in place, public, so the replies keep a parent. `request_comment` is the only one today: `blank_removed_comment` clears `content`, and the UI hides the author. The `uid` column stays, because the UPDATE policy and the upvote joins key on it.
 
+- **Drafts**: `phrase.draft` marks content a machine wrote that no person has confirmed. The client sets it on insert. Only the `confirm_draft_phrase` RPC clears it, for admins and for users with the phrase's language at `fluent` in `languages_known`. The phrase UPDATE policy stays admin-only.
+
 ### The three soft-delete shapes in use
 
 | Shape                                                                    | Example                                          | Where                                                 |

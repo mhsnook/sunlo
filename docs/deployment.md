@@ -47,6 +47,81 @@ The point of the gate is that **migrations only ever reach `main` through a `nex
 - **Changelog has two modes**: a running "Recent changes" section for fast-track items, and named/versioned release entries (`v0.28`) for migration-track batches.
 - **Ship UI, architect the database.** UI changes should flow fast; schema changes deserve ceremony.
 
+## Cloudflare
+
+The web app runs on one Cloudflare Worker, `sunlo` (`wrangler.jsonc`, code in `worker/` and `.flue/`). `vite build` makes both halves of a version: the app in `dist/client` and the Worker in `dist/sunlo`, built by `@cloudflare/vite-plugin` with `@flue/vite`. So an app and an API from different commits never run together. The plugin also writes `.wrangler/deploy/config.json`, which points `wrangler deploy` and `wrangler preview` at the built Worker's config. Production and previews deploy through separate systems, so a broken preview setup cannot block a production deploy:
+
+| Event        | Deployed by                                                       | Supabase project                                                | Result                                                                                                                                                                                                             |
+| ------------ | ----------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Push to main | Workers Builds (Cloudflare's Git integration)                     | Production, from `wrangler.jsonc`                               | `wrangler deploy`: production serves the new version.                                                                                                                                                              |
+| Pull request | `.github/workflows/cloudflare.yaml` → `scripts/cf-preview.sh`     | That PR's Supabase preview branch, or production if it has none | `wrangler preview --name <branch>`: a [Worker Preview](https://developers.cloudflare.com/workers/previews/) at `<branch>-sunlo.<subdomain>.workers.dev`, with its own Durable Objects. Production never serves it. |
+| Push to main | Workers Builds, a second project for `sunlo-admin` (`apps/admin`) | Production, from its build variables                            | `wrangler deploy` of the admin app and its `/api` Worker at `admin.sunlo.app`.                                                                                                                                     |
+| Other branch | Workers Builds, the `sunlo-admin` project                         | Production                                                      | A Worker Preview at `<branch>-sunlo-admin.<subdomain>.workers.dev`, from the `previews` block.                                                                                                                     |
+
+The production Supabase URL and publishable key are in `wrangler.jsonc` `vars` (for the worker) and in the Workers Builds build variables (for Vite). Both are public. If one changes, change both.
+
+For a PR, the workflow waits for the `Supabase Preview` check, then picks the Supabase project from its conclusion:
+
+- **`success`:** the PR changed `supabase/`, so it has a preview branch. The workflow reads the branch's URL and publishable key with `supabase --experimental branches get <branch> -o env`.
+- **`skipped`:** the PR changed nothing under `supabase/`. The workflow reads the production URL and publishable key from `wrangler.jsonc` `vars`. The preview is a different app on production data, as the old Vercel previews were, so anything a tester writes there is real.
+- **Anything else** (the branch failed, or the check never finished in 15 minutes): no preview.
+
+`scripts/cf-preview.sh` passes the URL and key to the Vite build and to the worker (`--var` replaces the production values in that version). It refuses a local Supabase URL.
+
+### Setup
+
+**Workers Builds (production).** In the Cloudflare dashboard, connect the repo to each Worker:
+
+| Setting                                                                  | `sunlo`                                                                  | `sunlo-admin`                           |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------ | --------------------------------------- |
+| Production branch                                                        | `main`                                                                   | `main`                                  |
+| Root directory                                                           | `/`                                                                      | `apps/admin`                            |
+| Build command                                                            | `pnpm build`                                                             | `pnpm build`                            |
+| Deploy command                                                           | `npx wrangler deploy` (the default)                                      | `npx wrangler deploy` (the default)     |
+| Build variables                                                          | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, matching `wrangler.jsonc` | None: its build reads `wrangler.jsonc`  |
+| Secrets (Settings › Variables and Secrets)                               | None                                                                     | None; the database is Hyperdrive, below |
+| Settings › Build › Branch control › "Builds for non-production branches" | Off. The GitHub workflow makes previews.                                 | On. Each branch gets a Worker Preview.  |
+
+Workers Builds defaults to Node 24, which matches `engines`.
+
+**The admin Worker's database connection.** `sunlo-admin` reads the database as `admin_reader`, a read-only role that the migration `20261023120000_admin_reader_role.sql` creates without a password. The Worker connects through a Hyperdrive config, never to Supabase directly: Supabase signs its database certificates with its own CA, which a Worker's TLS socket cannot verify, and from Cloudflare's network that handshake hangs instead of failing. After the release that carries the migration merges, three steps by hand, once per database:
+
+1. In the Supabase SQL editor, set the password: `alter role admin_reader password '<a long random password>';`
+2. Create the Hyperdrive config from `apps/admin`, with the direct connection string (Project Settings › Database › Connection string › Direct connection, port 5432, user `admin_reader`) and that password. Hyperdrive checks the credentials before it saves them, and prints the config's id:
+
+   ```bash
+   npx wrangler hyperdrive create sunlo-prod-admin-reader --connection-string="postgresql://admin_reader:<password>@db.<project-ref>.supabase.co:5432/postgres"
+   ```
+
+3. Put that id in `apps/admin/wrangler.jsonc` under `hyperdrive[0].id` and merge it. Workers Builds binds the config on the next deploy.
+
+The connection string lives in the Hyperdrive config, so the Worker needs no secret and the Workers Builds dashboard holds no database value. If Hyperdrive cannot reach the direct host, the session pooler (port 5432, user `admin_reader.<project-ref>`) works in its place. Local development uses the binding's `localConnectionString` against local Supabase: `apps/admin/README.md`, "Local development".
+
+The crew agents run on Workers AI through the Worker's `AI` binding and need no secret of their own. Three optional secrets let the crew keep milestones and epics on GitHub as its own GitHub App; setup, including the previews' copy of the secrets, is in `apps/admin/README.md`, "GitHub: milestones and epics".
+
+**GitHub (previews).** The workflow is off until `CLOUDFLARE_ACCOUNT_ID` is set. In the GitHub repo settings:
+
+| Name                    | Kind     | Value                                                                |
+| ----------------------- | -------- | -------------------------------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID` | variable | The Cloudflare account that holds the `sunlo.app` zone.              |
+| `CLOUDFLARE_API_TOKEN`  | secret   | A token with the "Edit Cloudflare Workers" template on that account. |
+| `SUPABASE_PROJECT_ID`   | variable | Production project ref; the CLI looks up preview branches under it.  |
+| `SUPABASE_ACCESS_TOKEN` | secret   | A Supabase personal access token.                                    |
+
+Previews use `wrangler preview`, not `wrangler versions upload`, because Cloudflare makes no version URLs for a Worker with a Durable Object, and the coach is one. The `previews` block in `wrangler.jsonc` inherits nothing from the top level, so a new var or binding goes in both places; `vite.config.ts` copies Flue's agent bindings into it at build time.
+
+Add the preview hostnames to Supabase Auth's redirect allow-list (`additional_redirect_urls` in `supabase/config.toml`) as `https://*-sunlo.<account-subdomain>.workers.dev/**`. Use the account's own subdomain, not a wildcard: anyone can create a `*.workers.dev` host. `config.toml` reaches the preview branches only. Previews on production data need the same pattern in the production project's Auth settings (Dashboard › Authentication › URL Configuration), or sign-in links there redirect to the wrong host.
+
+Do not deploy either Worker to production by hand. A local build reads the root `.env`, which points at local Supabase.
+
+### Moving sunlo.app from Vercel
+
+Until the move, Vercel still serves `sunlo.app` and `middleware.ts` gives it the same Open Graph previews. To move:
+
+1. Check the Worker at `sunlo.<account-subdomain>.workers.dev`.
+2. Add `"routes": [{ "pattern": "sunlo.app", "custom_domain": true }]` to `wrangler.jsonc` and merge it to main.
+3. Disconnect the Vercel project, then delete `vercel.json` and `middleware.ts`.
+
 ## Build Environment Footgun
 
-**`.env` must be populated before any production build.** `src/lib/supabase-client.ts` throws when `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are unset. A `vite build` with those vars missing does **not** error — instead the guard constant-folds to `if (true) throw`, the `createClient()` call below it becomes dead code, and the bundler silently tree-shakes out the **entire `@supabase/*` SDK (~640 KB)**. The build "succeeds" but ships without Supabase, and any bundle-size measurement is off by roughly a third. Always build with `.env` populated — dummy-but-truthy `VITE_*` values are enough, the build never connects — and sanity-check that large expected dependencies actually appear in `dist/` (e.g. `grep -l GoTrueClient dist/assets/*.js`). The same applies to any tooling that builds the app, including bundle analyzers.
+**`.env` must be populated before any production build.** `src/lib/supabase-client.ts` throws when `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are unset. A `vite build` with those vars missing does **not** error — instead the guard constant-folds to `if (true) throw`, the `createClient()` call below it becomes dead code, and the bundler silently tree-shakes out the **entire `@supabase/*` SDK (~640 KB)**. The build "succeeds" but ships without Supabase, and any bundle-size measurement is off by roughly a third. Always build with `.env` populated — dummy-but-truthy `VITE_*` values are enough, the build never connects — and sanity-check that large expected dependencies actually appear in `dist/client/` (e.g. `grep -l GoTrueClient dist/client/assets/*.js`). The same applies to any tooling that builds the app, including bundle analyzers.

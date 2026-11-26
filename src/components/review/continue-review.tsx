@@ -76,7 +76,6 @@ export function ContinueReview({
 							lang,
 							dayString,
 							reviewStats.count,
-							reviewStats.stage,
 							reviewStats.index
 						)
 					}

@@ -17,9 +17,7 @@ import { playlistCoverUrlify } from '@/lib/hooks'
 import { Button } from '@/components/ui/button'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
-import { cardsCollection } from '@/features/deck/collections'
-import { type CardType } from '@/features/deck/schemas'
-import { directionsForPhrase } from '@/features/deck/card-directions'
+import { addPhrasesToDeck } from '@/features/deck'
 import { useDecks, useDeckCards, useMyCard } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
@@ -48,54 +46,12 @@ export function PlaylistItem({
 	const phrasesNotInDeck =
 		data?.filter((item) => !activeCardPhraseIds.has(item.phrase.id)) ?? []
 
-	// Add every not-yet-in-deck phrase's cards to the deck. Phrases with an
-	// existing (skipped) card get flipped back to active; the rest are inserted.
-	// `phrasesNotInDeck` already excludes active/learned, so those are left alone.
-	const addPhrasesToDeck = (
+	const addAllToDeck = (
 		phrases: Array<{ id: string; only_reverse: boolean | null }>
 	) => {
 		if (!userId) return
-		const nowIso = new Date().toISOString()
-		const existingByKey = new Map(
-			(langCards ?? []).map((c) => [`${c.phrase_id}:${c.direction}`, c])
-		)
-		const toInsert: Array<CardType> = []
-		const toActivate: Array<string> = []
-		for (const p of phrases) {
-			for (const direction of directionsForPhrase(p.only_reverse)) {
-				const existing = existingByKey.get(`${p.id}:${direction}`)
-				if (existing) {
-					if (existing.status !== 'active') toActivate.push(existing.id)
-				} else {
-					toInsert.push({
-						id: crypto.randomUUID(),
-						uid: userId,
-						phrase_id: p.id,
-						lang: playlist.lang,
-						status: 'active',
-						direction,
-						created_at: nowIso,
-						updated_at: nowIso,
-					})
-				}
-			}
-		}
-		const count = toInsert.length + toActivate.length
-		if (count === 0) return
-
-		const promises: Array<Promise<unknown>> = []
-		if (toInsert.length)
-			promises.push(cardsCollection.insert(toInsert).isPersisted.promise)
-		if (toActivate.length)
-			promises.push(
-				cardsCollection.update(toActivate, (drafts) => {
-					drafts.forEach((d) => {
-						d.status = 'active'
-					})
-				}).isPersisted.promise
-			)
-		Promise.all(promises).then(
-			() =>
+		addPhrasesToDeck(playlist.lang, userId, phrases).then(
+			(count) =>
 				toastSuccess(
 					`Added ${count} card${count === 1 ? '' : 's'} to your deck`
 				),
@@ -263,7 +219,7 @@ export function PlaylistItem({
 				<Button
 					variant="soft"
 					onClick={() =>
-						addPhrasesToDeck(
+						addAllToDeck(
 							phrasesNotInDeck.map((item) => ({
 								id: item.phrase.id,
 								only_reverse: item.phrase.only_reverse,
