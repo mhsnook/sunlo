@@ -696,6 +696,19 @@ alter function "public"."search_by_trigram" (
 	"cursor_id" "uuid"
 ) owner to "postgres";
 
+create or replace function "public"."set_updated_at" () returns "trigger" language "plpgsql" as $$
+begin
+	if tg_op = 'INSERT' then
+		new.updated_at := least(coalesce(new.updated_at, clock_timestamp()), clock_timestamp());
+	else
+		new.updated_at := clock_timestamp();
+	end if;
+	return new;
+end;
+$$;
+
+alter function "public"."set_updated_at" () owner to "postgres";
+
 create or replace function "public"."skip_stale_corpus_upsert" () returns "trigger" language "plpgsql" as $$
 begin
 	if tg_op = 'UPDATE' and new.vectorized_at < old.vectorized_at then
@@ -2265,6 +2278,18 @@ after insert or delete or update of "text",
 "archived",
 "phrase_id" on "public"."phrase_translation" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
+
+create or replace trigger "set_updated_at"
+before insert or update on "public"."request_comment" for each row
+execute function "public"."set_updated_at" ();
+
+create or replace trigger "set_updated_at"
+before insert or update on "public"."user_card" for each row
+execute function "public"."set_updated_at" ();
+
+create or replace trigger "set_updated_at"
+before insert or update on "public"."user_profile" for each row
+execute function "public"."set_updated_at" ();
 
 create or replace trigger "skip_stale_corpus_upsert"
 before update on "public"."search_corpus" for each row
@@ -4428,6 +4453,12 @@ grant all on function "public"."set_limit" (real) to "anon";
 grant all on function "public"."set_limit" (real) to "authenticated";
 
 grant all on function "public"."set_limit" (real) to "service_role";
+
+grant all on function "public"."set_updated_at" () to "anon";
+
+grant all on function "public"."set_updated_at" () to "authenticated";
+
+grant all on function "public"."set_updated_at" () to "service_role";
 
 grant all on function "public"."show_limit" () to "postgres";
 

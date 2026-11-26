@@ -2,6 +2,7 @@ export type SyncedCollection<T extends object, TKey extends string> = {
 	isReady: () => boolean
 	get: (key: TKey) => T | undefined
 	getKeyFromItem: (item: T) => TKey
+	_state: { syncedData: { get: (key: TKey) => T | undefined } }
 	utils: {
 		writeUpsert: (data: T) => void
 		writeBatch: (writes: () => void) => void
@@ -19,10 +20,14 @@ export function writeSyncedRows<T extends object, TKey extends string>(
 	// Dropped rather than thrown: a realtime callback has nowhere to put a
 	// throw, and the collection's first fetch reads the committed row anyway.
 	if (!collection.isReady()) return
-	// A row we already hold re-runs every live query over the collection for
-	// nothing.
 	const changed = rows.filter((row) => {
-		const current = collection.get(collection.getKeyFromItem(row))
+		const key = collection.getKeyFromItem(row)
+		// Against the synced layer, not `get()`: the optimistic row carries the
+		// client's clock, which can run ahead of the server's.
+		if (isOlder(row, syncedRow(collection, key))) return false
+		// A row we already hold re-runs every live query over the collection
+		// for nothing.
+		const current = collection.get(key)
 		return !current || !sameRow(row, current)
 	})
 	if (changed.length === 0) return
@@ -35,6 +40,20 @@ export function writeSyncedRows<T extends object, TKey extends string>(
 	collection.utils.writeBatch(() => {
 		for (const row of changed) collection.utils.writeUpsert(row)
 	})
+}
+
+/**
+ * The row the server last confirmed, without the optimistic layer that
+ * `collection.get()` puts on top.
+ */
+export function syncedRow<T extends object, TKey extends string>(
+	collection: SyncedCollection<T, TKey>,
+	key: TKey
+): T | undefined {
+	// TanStack DB has no public read of the synced layer; query-db-collection's
+	// own write utils read it this way.
+	// oxlint-disable-next-line no-underscore-dangle
+	return collection._state.syncedData.get(key)
 }
 
 /** One row's worth of {@link writeSyncedRows}. */
@@ -77,6 +96,29 @@ export function allRowsMatch(
 const fields = (value: object) => Object.entries(value)
 const read = (value: object, field: string) =>
 	(value as Record<string, unknown>)[field]
+
+/**
+ * Is `row` an earlier version than the one we hold? A realtime frame can
+ * arrive after the ack of a later write. Only rows that both carry
+ * `updated_at` can say; any other row writes.
+ */
+function isOlder(row: object, held: object | undefined): boolean {
+	const incoming = read(row, 'updated_at')
+	const current = held && read(held, 'updated_at')
+	if (typeof incoming !== 'string' || typeof current !== 'string') return false
+	return compareTimestamps(incoming, current) < 0
+}
+
+/** An unparseable timestamp compares equal, so its row still writes. */
+function compareTimestamps(a: string, b: string): number {
+	const millis = Date.parse(a) - Date.parse(b)
+	if (Number.isNaN(millis)) return 0
+	return millis || microseconds(a) - microseconds(b)
+}
+
+/** Postgres keeps the microseconds that `Date.parse` drops. */
+const microseconds = (timestamp: string) =>
+	Number(/\.\d{3}(\d{0,3})/.exec(timestamp)?.[1]?.padEnd(3, '0') ?? 0)
 
 /** Every field of `row`, timestamps included, against the row we hold. */
 const sameRow = (row: object, current: object) =>
