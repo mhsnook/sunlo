@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { cardsCollection } from '@/features/deck/collections'
 import { addPhrasesToDeck } from '@/features/deck/mutations'
-import { statusesFromCards, type DeckStatus } from './library'
+import { activeIds, deckStatuses, type DeckStatus } from './library'
 import { settleNote, startNote } from './store'
 
 export type DealtPhrase = {
@@ -25,29 +24,29 @@ export type Flight = {
 	from: { x: number; y: number }
 	delay: number
 	out: boolean
+	// Settles the dealIntoDeck call that launched it.
+	settle: () => void
 }
 
 export const FLIGHT_MS = 650
 const MAX_GHOSTS = 12
-export const STACK_SELECTOR = '[data-testid="coach-deck-stack"]'
+const noop = () => {}
+const STACK_SELECTOR = '[data-testid="coach-deck-stack"]'
 
 const useFlightStore = create<{ flights: Array<Flight> }>()(() => ({
 	flights: [],
 }))
 export const useFlights = () => useFlightStore((state) => state.flights)
 
-const landings = new Map<string, () => void>()
-
-export function land(id: string) {
+export function land(flight: Flight) {
 	useFlightStore.setState((state) => ({
-		flights: state.flights.filter((flight) => flight.id !== id),
+		flights: state.flights.filter((f) => f.id !== flight.id),
 	}))
-	landings.get(id)?.()
-	landings.delete(id)
+	flight.settle()
 }
 
 export function landAll() {
-	for (const id of landings.keys()) land(id)
+	for (const flight of useFlightStore.getState().flights) land(flight)
 }
 
 /**
@@ -66,7 +65,7 @@ export function inFlight(
 	)
 }
 
-const prefersReducedMotion = () =>
+export const prefersReducedMotion = () =>
 	window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function onScreen(el: Element | null) {
@@ -104,50 +103,42 @@ function launch(phrases: Array<DealtPhrase>, out: boolean): Promise<void> {
 		(_, i) => phrases.slice(i * size, (i + 1) * size)
 	)
 	const step = Math.min(90, 1000 / groups.length)
+	const landings: Array<Promise<void>> = []
 	const flights = groups.flatMap((group, i): Array<Flight> => {
 		const from = sourcePoint(group[0].id)
-		return from
-			? [
-					{
-						id: crypto.randomUUID(),
-						pids: group.map((phrase) => phrase.id),
-						text: group[0].text,
-						tag: group[0].tags[0]?.name ?? null,
-						from,
-						delay: Math.round(i * step),
-						out,
-					},
-				]
-			: []
+		if (!from) return []
+		let resolve = noop
+		landings.push(new Promise<void>((r) => (resolve = r)))
+		return [
+			{
+				id: crypto.randomUUID(),
+				pids: group.map((phrase) => phrase.id),
+				text: group[0].text,
+				tag: group[0].tags[0]?.name ?? null,
+				from,
+				delay: Math.round(i * step),
+				out,
+				settle: resolve,
+			},
+		]
 	})
-	const landed = Promise.all(
-		flights.map(
-			(flight) =>
-				new Promise<void>((resolve) => landings.set(flight.id, resolve))
-		)
-	)
 	useFlightStore.setState((state) => ({
 		flights: [...state.flights, ...flights],
 	}))
-	return landed.then(() => undefined)
+	return Promise.all(landings).then(() => undefined)
 }
 
 function ground(pids: Array<string>) {
 	const set = new Set(pids)
 	for (const flight of useFlightStore.getState().flights)
-		if (!flight.out && flight.pids.some((pid) => set.has(pid))) land(flight.id)
+		if (!flight.out && flight.pids.some((pid) => set.has(pid))) land(flight)
 }
 
-// What the stack shows: the deck less what is still in the air.
-function shownSize(lang: string) {
-	const statuses = statusesFromCards(
-		cardsCollection.toArray.filter((card) => card.lang === lang)
-	)
-	const flying = inFlight(useFlightStore.getState().flights, statuses)
-	return (
-		[...statuses.values()].filter((s) => s === 'active').length - flying.size
-	)
-}
+/** What the stack counts: the deck's active phrases less those in the air. */
+export const shownCount = (
+	statuses: Map<string, DeckStatus>,
+	flights: Array<Flight>
+) => activeIds(statuses).length - inFlight(flights, statuses).size
 
 /**
  * Adds phrases to the deck and shows them flying into the deck stack. The
@@ -174,5 +165,9 @@ export async function dealIntoDeck(
 		settleNote(pageKey, noteId, `couldn't add ${what}`)
 		throw err
 	}
-	settleNote(pageKey, noteId, `added ${what} · deck at ${shownSize(lang)}`)
+	settleNote(
+		pageKey,
+		noteId,
+		`added ${what} · deck at ${shownCount(deckStatuses(lang), useFlightStore.getState().flights)}`
+	)
 }

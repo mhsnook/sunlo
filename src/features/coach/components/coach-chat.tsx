@@ -84,11 +84,7 @@ export function CoachChat({
 						</Bubble>
 					)}
 					{notes.map((note) => (
-						<LogEntry
-							key={note.id}
-							entry={{ id: note.id, text: note.text, kind: 'action' }}
-							busy={note.busy}
-						/>
+						<LogEntry key={note.id} entry={{ ...note, kind: 'action' }} />
 					))}
 					{busy && (
 						<Bubble
@@ -152,13 +148,7 @@ export function CoachChat({
 	)
 }
 
-function LogEntry({
-	entry,
-	busy = false,
-}: {
-	entry: CoachLogEntry
-	busy?: boolean
-}) {
+function LogEntry({ entry }: { entry: CoachLogEntry }) {
 	switch (entry.kind) {
 		case 'learner':
 			return (
@@ -181,7 +171,7 @@ function LogEntry({
 			return (
 				<p
 					data-testid={`coach-${entry.kind}`}
-					data-busy={busy || undefined}
+					data-busy={entry.busy || undefined}
 					className={cn(
 						'flex items-center gap-2 text-xs',
 						entry.kind === 'error' ? 'text-danger-700' : 'text-muted-foreground'
@@ -192,7 +182,7 @@ function LogEntry({
 						className={cn(
 							'size-1.5 shrink-0 rounded-full',
 							entry.kind === 'error' ? 'bg-danger-500' : 'bg-primary-500',
-							busy && 'animate-pulse'
+							entry.busy && 'animate-pulse'
 						)}
 					/>
 					{entry.text}

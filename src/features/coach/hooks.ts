@@ -4,7 +4,7 @@ import { inArray, useLiveQuery } from '@tanstack/react-db'
 import { useFlueAgent } from '@flue/react'
 import { createFlueClient } from '@flue/sdk'
 import { toastError } from '@/components/ui/sonner'
-import { cardsCollection, decksCollection } from '@/features/deck/collections'
+import { decksCollection } from '@/features/deck/collections'
 import { saveDeckIntention } from '@/features/deck/mutations'
 import {
 	useDeckCards,
@@ -30,6 +30,7 @@ import { dealIntoDeck } from './deal'
 import {
 	activeIdsNewestFirst,
 	answerPhraseIds,
+	deckStatuses,
 	countTags,
 	statusesFromCards,
 } from './library'
@@ -137,13 +138,8 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	const ready = !uid || agent.historyReady
 	const started = agent.messages.length > 0
 
-	// Read when the turn ends, not when it started: the learner may have added
-	// phrases from the page while the coach was working.
-	const deckStatuses = () =>
-		statusesFromCards(cardsCollection.toArray.filter((c) => c.lang === lang))
-
 	const addToDeck = async (owner: string, phraseIds: Array<string>) => {
-		const statuses = deckStatuses()
+		const statuses = deckStatuses(lang)
 		const phrases = phraseIds.flatMap((id) => {
 			const status = statuses.get(id)
 			const phrase = phrasesFull.get(id)
@@ -163,7 +159,7 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	// learner already has. The page tells it on the next message.
 	const noteOverlap = (shownIds: Array<string>) => {
 		if (!shownIds.length) return
-		const statuses = deckStatuses()
+		const statuses = deckStatuses(lang)
 		const inDeck = shownIds.filter((id) => statuses.has(id)).length
 		if (inDeck)
 			addNote(
@@ -302,10 +298,13 @@ export function usePlaylistsByIds(ids: Array<string>) {
 export function useDeckMeter(lang: string) {
 	const { data: cards } = useDeckCards(lang)
 	const statuses = useMemo(() => statusesFromCards(cards ?? []), [cards])
-	const newest = useMemo(() => activeIdsNewestFirst(cards ?? []), [cards])
+	const newest = useMemo(
+		() => activeIdsNewestFirst(cards ?? [], statuses),
+		[cards, statuses]
+	)
 	const phrases = usePhrasesByIds(newest)
 	const tags = useMemo(() => countTags(phrases).slice(0, 3), [phrases])
-	return { size: newest.length, tags, statuses, newest }
+	return { size: newest.length, tags, statuses, phrases }
 }
 
 export type DeckMeter = ReturnType<typeof useDeckMeter>

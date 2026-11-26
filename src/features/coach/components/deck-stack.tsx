@@ -6,7 +6,9 @@ import {
 	type RefObject,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { useDeck, useDeckPids } from '@/features/deck/hooks'
+import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useDeck } from '@/features/deck/hooks'
+import { cardReviewsCollection } from '@/features/review/collections'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
 import {
@@ -14,10 +16,13 @@ import {
 	inFlight,
 	land,
 	landAll,
+	prefersReducedMotion,
+	shownCount,
 	useFlights,
 	type Flight,
 } from '../deal'
-import { usePhrasesByIds, type DeckMeter } from '../hooks'
+import type { DeckMeter } from '../hooks'
+import { activeIds } from '../library'
 import { DECK_TARGET } from '../protocol'
 import { TagDot } from './tag-dot'
 
@@ -46,16 +51,22 @@ const STAGES: Record<
 	},
 }
 
-function useDeckStage(lang: string, size: number): Stage {
-	const { data: pids } = useDeckPids(lang)
-	const { data: deck } = useDeck(lang)
-	if (!pids?.reviewed.length) return size >= DECK_TARGET ? 'ready' : 'building'
-	const enough = (deck?.daily_review_goal ?? 15) * FRESH_DAYS
-	return pids.unreviewed_active.length < enough ? 'hungry' : 'active'
+function useDeckStage(lang: string, deck: DeckMeter, size: number): Stage {
+	const { data: reviews } = useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) => eq(review.lang, lang))
+				.select(({ review }) => ({ phrase_id: review.phrase_id })),
+		[lang]
+	)
+	const { data: deckRow } = useDeck(lang)
+	if (!reviews?.length) return size >= DECK_TARGET ? 'ready' : 'building'
+	const reviewed = new Set(reviews.map((review) => review.phrase_id))
+	const fresh = activeIds(deck.statuses).filter((pid) => !reviewed.has(pid))
+	const enough = (deckRow?.daily_review_goal ?? 15) * FRESH_DAYS
+	return fresh.length < enough ? 'hungry' : 'active'
 }
-
-const reducedMotion = () =>
-	window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
  * The learner's deck as a pile of cards, newest on top. Cards the coach or
@@ -65,11 +76,11 @@ const reducedMotion = () =>
 export function DeckStack({ lang, deck }: { lang: string; deck: DeckMeter }) {
 	const flights = useFlights()
 	const flying = inFlight(flights, deck.statuses)
-	const shown = deck.size - flying.size
-	const top = usePhrasesByIds(
-		deck.newest.filter((pid) => !flying.has(pid)).slice(0, PILE_MAX)
-	)
-	const stage = useDeckStage(lang, shown)
+	const shown = shownCount(deck.statuses, flights)
+	const top = deck.phrases
+		.filter((phrase) => !flying.has(phrase.id))
+		.slice(0, PILE_MAX)
+	const stage = useDeckStage(lang, deck, shown)
 	const pileRef = useRef<HTMLButtonElement>(null)
 	const slotRef = useRef<HTMLSpanElement>(null)
 	const [fanned, setFanned] = useState(false)
@@ -81,7 +92,7 @@ export function DeckStack({ lang, deck }: { lang: string; deck: DeckMeter }) {
 		const before = lastShown.current
 		lastShown.current = shown
 		const pile = pileRef.current
-		if (!pile || before === shown || reducedMotion()) return
+		if (!pile || before === shown || prefersReducedMotion()) return
 		pile.animate(
 			shown > before
 				? [{ scale: 1 }, { scale: 1.06 }, { scale: 1 }]
@@ -241,7 +252,7 @@ function Ghost({
 	useLayoutEffect(() => {
 		const el = ref.current
 		const box = slot.current?.getBoundingClientRect()
-		if (!el || !box) return land(flight.id)
+		if (!el || !box) return land(flight)
 		el.style.width = `${box.width}px`
 		el.style.height = `${box.height}px`
 		const home = { x: box.left, y: box.top }
@@ -272,7 +283,7 @@ function Ghost({
 				fill: 'both',
 			}
 		)
-		const done = () => land(flight.id)
+		const done = () => land(flight)
 		animation.finished.then(done, () => undefined)
 		// A background tab can hold the animation; the note must still settle.
 		const fallback = setTimeout(done, flight.delay + FLIGHT_MS + 500)

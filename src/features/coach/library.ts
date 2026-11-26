@@ -47,10 +47,18 @@ export function statusesFromCards(
 export const activeIds = (statuses: Map<string, DeckStatus>) =>
 	[...statuses].filter(([, s]) => s === 'active').map(([pid]) => pid)
 
+// Read when it is needed, not when a turn started: the learner may have added
+// phrases from the page in between.
+export const deckStatuses = (lang: string) =>
+	statusesFromCards(
+		cardsCollection.toArray.filter((card) => card.lang === lang)
+	)
+
 // A phrase's age is its newest card's. Optimistic rows carry
 // toISOString() and synced rows Postgres's format, so compare times, not text.
 export function activeIdsNewestFirst(
-	cards: Array<Pick<CardType, 'phrase_id' | 'status' | 'created_at'>>
+	cards: Array<Pick<CardType, 'phrase_id' | 'created_at'>>,
+	statuses: Map<string, DeckStatus>
 ) {
 	const newest = new Map<string, number>()
 	for (const card of cards) {
@@ -58,7 +66,7 @@ export function activeIdsNewestFirst(
 		if ((newest.get(card.phrase_id) ?? 0) < time)
 			newest.set(card.phrase_id, time)
 	}
-	return activeIds(statusesFromCards(cards)).toSorted(
+	return activeIds(statuses).toSorted(
 		(a, b) => (newest.get(b) ?? 0) - (newest.get(a) ?? 0)
 	)
 }
