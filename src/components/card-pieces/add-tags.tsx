@@ -181,6 +181,7 @@ export function AddTags({
 			<AuthenticatedDialogContent
 				authTitle="Login to Edit Tags"
 				authMessage="You need to be logged in to add tags to phrases."
+				guestLead="Adding tags to a phrase needs an account."
 				className="sm:max-w-106"
 				data-testid="add-tags-dialog"
 			>

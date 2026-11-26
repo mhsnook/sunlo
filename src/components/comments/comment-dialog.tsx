@@ -150,6 +150,7 @@ export function CommentDialog({
 			<AuthenticatedDialogContent
 				authTitle="Login to Comment"
 				authMessage="You need to be logged in to join the conversation."
+				guestLead="Posting a public comment needs an account."
 				className="@container grid max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0"
 				data-testid="comment-dialog"
 			>

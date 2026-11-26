@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/lib/use-auth'
 import { LoginCardBody } from '@/components/login-card-body'
+import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
+import { signupLeads } from '@/components/guest-signup/reasons'
 
 interface RequireAuthProps {
 	children: ReactNode
@@ -13,6 +15,8 @@ interface RequireAuthProps {
 	message?: string
 	/** Let an anonymous user through: only for their own data, never public content */
 	allowAnonymous?: boolean
+	/** What a guest is trying to do, as one sentence, e.g. "Adding a friend needs an account." */
+	guestLead?: string
 }
 
 /**
@@ -23,17 +27,26 @@ export function RequireAuth({
 	children,
 	message = 'You need to be logged in to access this page.',
 	allowAnonymous = false,
+	guestLead = signupLeads.public,
 }: RequireAuthProps) {
-	const { isAuth, hasAccount } = useAuth()
+	const { isAuth, hasAccount, isAnonymous } = useAuth()
 
 	if (allowAnonymous ? isAuth : hasAccount) {
 		return <>{children}</>
 	}
 
-	return <AuthGate message={message} />
+	return (
+		<AuthGate message={message} guestLead={isAnonymous ? guestLead : null} />
+	)
 }
 
-function AuthGate({ message }: { message: string }) {
+function AuthGate({
+	message,
+	guestLead,
+}: {
+	message: string
+	guestLead: string | null
+}) {
 	const navigate = useNavigate()
 	const router = useRouter()
 	const canGoBack = useCanGoBack()
@@ -60,12 +73,18 @@ function AuthGate({ message }: { message: string }) {
 							<ChevronLeft />
 							<span className="sr-only">Go back</span>
 						</Button>
-						<span>Login Required</span>
+						<span>{guestLead ? 'Create your account' : 'Login Required'}</span>
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-6">
-					<p className="text-muted-foreground">{message}</p>
-					<LoginCardBody />
+					{guestLead ? (
+						<GuestSignupForm lead={guestLead} />
+					) : (
+						<>
+							<p className="text-muted-foreground">{message}</p>
+							<LoginCardBody />
+						</>
+					)}
 				</CardContent>
 			</Card>
 		</div>

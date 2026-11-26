@@ -1,3 +1,4 @@
+import { signupLeads } from '@/components/guest-signup/reasons'
 import { type CSSProperties } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
@@ -39,15 +40,15 @@ export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function DeckSettingsPage() {
-	const isAuth = useIsAuthenticated({ allowAnonymous: true })
+	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeck(lang)
 
 	if (!isAuth) {
 		return (
 			<RequireAuth
-				allowAnonymous
 				message="You need to be logged in to manage deck settings."
+				guestLead={signupLeads.learn}
 			>
 				<div />
 			</RequireAuth>

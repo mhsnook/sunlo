@@ -27,7 +27,10 @@ function NewRequestPage() {
 	// Require auth to create requests
 	if (!isAuth) {
 		return (
-			<RequireAuth message="You need to be logged in to create phrase requests.">
+			<RequireAuth
+				message="You need to be logged in to create phrase requests."
+				guestLead="Posting a request needs an account."
+			>
 				<div />
 			</RequireAuth>
 		)

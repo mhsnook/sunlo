@@ -18,6 +18,7 @@ import {
 	phraseRequestsActive,
 } from '@/features/requests/live'
 import supabase from '@/lib/supabase-client'
+import { useAuth } from '@/lib/use-auth'
 import {
 	composeMessage,
 	deckLine,
@@ -38,14 +39,20 @@ import {
 } from './protocol'
 import { addNote, clearNotes, pendingNotes } from './store'
 
-function useNavTarget(lang: string) {
+function useNavTarget(lang: string, guest: boolean) {
 	const navigate = useNavigate()
 	return useCallback(
 		(target: NavigateTarget) => {
 			const id = target.id ?? ''
+			// Review and profile show a guest the sign-up form themselves.
+			const search = guest ? { signup: 'coach' as const } : {}
 			switch (target.to) {
 				case 'deck':
-					return void navigate({ to: '/learn/$lang', params: { lang } })
+					return void navigate({
+						to: '/learn/$lang',
+						params: { lang },
+						search,
+					})
 				case 'review':
 					return void navigate({ to: '/learn/$lang/review', params: { lang } })
 				case 'profile':
@@ -54,25 +61,29 @@ function useNavTarget(lang: string) {
 					return void navigate({
 						to: '/learn/$lang/requests',
 						params: { lang },
+						search,
 					})
 				case 'phrase':
 					return void navigate({
 						to: '/learn/$lang/phrases/$id',
 						params: { lang, id },
+						search,
 					})
 				case 'playlist':
 					return void navigate({
 						to: '/learn/$lang/playlists/$playlistId',
 						params: { lang, playlistId: id },
+						search,
 					})
 				case 'request':
 					return void navigate({
 						to: '/learn/$lang/requests/$id',
 						params: { lang, id },
+						search,
 					})
 			}
 		},
-		[navigate, lang]
+		[navigate, lang, guest]
 	)
 }
 
@@ -92,8 +103,9 @@ async function signInAnonymously() {
  */
 export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	const { data: profile } = useProfile()
+	const { isAnonymous } = useAuth()
 	const translationLang = usePreferredTranslationLang(lang)
-	const navigateTo = useNavTarget(lang)
+	const navigateTo = useNavTarget(lang, isAnonymous)
 	const learnerName = profile?.username ?? null
 	// The page's own state is per language; the conversation spans them all.
 	const pageKey = `${uid ?? 'visitor'}:${lang}`
@@ -169,7 +181,7 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 		try {
 			const receipt = await agent.sendMessage(
 				composeMessage(text, {
-					context: { lang, translationLang, learnerName },
+					context: { lang, translationLang, learnerName, guest: isAnonymous },
 					notes: notes.map((note) => note.text),
 					deck: deckLine(deck, decksCollection.get(lang)?.intention ?? null),
 					opening,
@@ -224,6 +236,7 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 		ready,
 		busy: agent.status === 'submitted' || agent.status === 'streaming',
 		...conversation,
+		offersAccount: isAnonymous && conversation.offersAccount,
 	}
 }
 

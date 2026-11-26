@@ -22,11 +22,23 @@ An anonymous user is a real user with the `authenticated` role and the `is_anony
 - Two more guards cover what RLS on public tables does not reach: restrictive policies on `storage.objects` refuse their uploads, and `confirm_draft_phrase` (security definer) refuses them.
 - `feedback` stays open to them, as it is to signed-out visitors.
 - In the Worker, only the coach's routes take them (`requireSession`). Every other `/api` route uses `requireUser`, which refuses an anonymous user with 403.
-- A trigger, `guard_anonymous_profile`, refuses a change to their `username` or `avatar_path`, because both show on `public_profile`. `/profile` shows them a "Create account" prompt instead of those fields, and `/getting-started` sends them to `/signup`.
-- The app's auth gates (`AuthenticatedDialog`, `AuthenticatedDialogContent`, `RequireAuth`, `useRequireAuth`, `useIsAuthenticated`) require an account by default, so an anonymous user who reaches a public-write button or page sees the log-in and sign-up prompt. The gates for their own data (card status, review, deck settings, manage deck, add deck, notifications) pass `allowAnonymous`.
-- `/signup` converts them: for an anonymous user it calls `supabase.auth.updateUser({ email })`, which keeps the uid, so the deck and the conversation carry over. Supabase refuses a password until the email is verified, so the confirmation link goes to `/set-new-password`. Converting needs manual linking enabled in the Supabase project (`enable_manual_linking`). `/login` still works for them, and logs them in to their other account.
+- A trigger, `guard_anonymous_profile`, refuses a change to their `username` or `avatar_path`, because both show on `public_profile`. `/profile` shows them the sign-up form instead of those fields, and `/getting-started` sends them to `/signup`.
+- Outside the coach page, a guest can browse but not learn. The app's auth gates (`AuthenticatedDialog`, `AuthenticatedDialogContent`, `RequireAuth`, `useRequireAuth`, `useIsAuthenticated`) require an account by default; only notifications pass `allowAnonymous`. Review, deck settings, manage deck, add deck and the card-status menu all ask a guest to sign up. On the coach page, the coach still adds phrases to a guest's deck, and the deck carries over when they sign up.
 
-Converting to a full account keeps the uid, so the conversation and the deck carry over. Confirming the email fires `handle_new_user` again, and its `on conflict do nothing` keeps the profile. The sign-up step itself is not built yet.
+## Signing a guest up
+
+One form, `GuestSignupForm` (`src/components/guest-signup/`), turns a guest into an account: an email and a display name. It calls `supabase.auth.updateUser({ email, data: { username } })`, which keeps the uid, so the deck and the conversation carry over. Supabase refuses a password until the email is verified, so the confirmation link goes to `/set-new-password`. Converting needs manual linking enabled in the Supabase project (`enable_manual_linking`). `/login` still works for a guest, and logs them in to their other account.
+
+`guard_anonymous_profile` refuses the username until the email is confirmed, so the display name waits in the auth user's metadata. `claimGuestUsername` (`auth-lifecycle.ts`) writes it to `user_profile.username` on the first load as an account. If someone took the name in between, the write fails and `/getting-started` asks for one. Confirming the email fires `handle_new_user` again, and its `on conflict do nothing` keeps the profile.
+
+The form shows up in four places:
+
+- In an auth gate, in place of the log-in prompt. Each gate passes `guestLead`, a sentence that says what needs the account ("Posting a public comment needs an account.").
+- On `/signup` and at the top of `/profile`.
+- In `GuestSignupDialog`, which the root route opens on any page when the URL has `?signup=<reason>` (`SignupReasonSchema`). `useRequireAuth` opens it for a guest instead of sending them to `/login`.
+- From the coach, two ways. `offer_account` puts a "Create my profile" button beside the coach's suggested replies, and the button opens the dialog. When the coach uses `navigate`, the page adds `?signup=coach` for a guest, so the dialog opens on arrival. Review and profile are left out, because those pages show the form themselves.
+
+The `[Context: ...]` line carries `guest: true` for a guest, and the prompt tells the coach what a guest can do and when to offer an account.
 
 ## The deck and the intention
 
@@ -63,13 +75,13 @@ Each message to the agent is the learner's text with lines from the page before 
 
 ## What the coach can make the page do
 
-Every action needs the learner's own message in that turn, and acts in their session with their permissions: adding phrases to their deck, saving their intention on it, showing sets, drafting a request for them to post, and moving between a fixed list of in-app pages (`navigate`). It cannot post, delete or open anything outside Sunlo.
+Every action needs the learner's own message in that turn, and acts in their session with their permissions: adding phrases to their deck, saving their intention on it, showing sets, drafting a request for them to post, offering a guest an account, and moving between a fixed list of in-app pages (`navigate`). It cannot post, delete or open anything outside Sunlo.
 
 ## The model
 
 `COACH_MODEL` in `wrangler.jsonc` names the model: Gemma 4 26B (`cloudflare/@cf/google/gemma-4-26b-a4b-it`), chosen for cost and speed, with thinking off. Flue reads the part before the first `/` as the provider, so the id needs the `cloudflare/` prefix that `cloudflareBindingProvider` registers; without it every turn fails while the agent starts, as "internal error". It goes through the Workers AI binding and the `sunlo-app` AI Gateway (`cloudflareBindingProvider` in `.flue/app.ts`). The instructions spell out each turn as numbered steps, because smaller models follow steps more reliably than general guidance.
 
-With `VITE_COACH_USE_MOCK=true` (set by `pnpm dev:local` and `pnpm build:test`), `vite.config.ts` sets `COACH_MODEL` to `mock/coach`, and `.flue/app.ts` registers the scripted model in `.flue/coach/mock.ts` under that id. It searches for whatever the learner types, shows the results and adds them on request. Scenetest specs run against it.
+With `VITE_COACH_USE_MOCK=true` (set by `pnpm dev:local` and `pnpm build:test`), `vite.config.ts` sets `COACH_MODEL` to `mock/coach`, and `.flue/app.ts` registers the scripted model in `.flue/coach/mock.ts` under that id. It searches for whatever the learner types, shows the results and adds them on request. "account" offers an account, and "review", "my deck" and "my profile" navigate. Scenetest specs run against it.
 
 ## Running it locally
 

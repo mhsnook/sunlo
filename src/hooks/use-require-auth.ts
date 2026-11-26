@@ -2,6 +2,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { toastError } from '@/components/ui/sonner'
 
 import { useAuth } from '@/lib/use-auth'
+import {
+	useOpenGuestSignup,
+	type SignupReason,
+} from '@/components/guest-signup/reasons'
 
 type AuthGateOptions = {
 	/** Let an anonymous user through: only for their own data, never public content */
@@ -10,24 +14,27 @@ type AuthGateOptions = {
 
 /**
  * Hook to require authentication for an action.
- * If not authenticated, shows a toast and redirects to login.
+ * If not authenticated, shows a toast and redirects to login; a guest gets the
+ * sign-up dialog instead.
  * @returns A function that wraps an action and checks for auth first.
  */
 export function useRequireAuth({
 	allowAnonymous = false,
-}: AuthGateOptions = {}) {
-	const { isAuth, hasAccount } = useAuth()
+	guestReason = 'public',
+}: AuthGateOptions & { guestReason?: SignupReason } = {}) {
+	const { isAuth, hasAccount, isAnonymous } = useAuth()
 	const navigate = useNavigate()
+	const openGuestSignup = useOpenGuestSignup()
 
 	return (action: () => void, message = 'Please log in to continue') => {
-		if (!(allowAnonymous ? isAuth : hasAccount)) {
+		if (allowAnonymous ? isAuth : hasAccount) action()
+		else if (isAnonymous) openGuestSignup(guestReason)
+		else {
 			toastError(message)
 			void navigate({
 				to: '/login',
 				search: { redirectedFrom: window.location.href },
 			})
-		} else {
-			action()
 		}
 	}
 }

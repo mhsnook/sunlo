@@ -24,6 +24,8 @@ import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { UnderConstructionNotice } from '../-homepage/under-construction'
 import { useAppForm } from '@/components/form'
 import { UserRoleField } from './-user-role-field'
+import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
+import { signupLeads } from '@/components/guest-signup/reasons'
 
 const SearchSchema = z.object({
 	referrer: z.string().uuid().optional(),
@@ -61,27 +63,32 @@ const FormSchema = z.object({
 
 type FormInputs = z.infer<typeof FormSchema>
 
-// An anonymous user chooses a password after confirming their email: Supabase
-// refuses a password on an anonymous user whose email is not verified.
-const AnonymousFormSchema = FormSchema.extend({ password: z.string() })
-
 function SignUp() {
+	const { isAnonymous } = useAuth()
+	return isAnonymous ? <GuestSignUp /> : <AccountSignUp />
+}
+
+function GuestSignUp() {
+	return (
+		<Card className="mx-auto mt-[1cqh] w-full max-w-md p-[clamp(0.5rem,2cqw,2rem)]">
+			<CardHeader>
+				<CardTitle>Sign Up</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<GuestSignupForm lead={signupLeads.coach} />
+			</CardContent>
+		</Card>
+	)
+}
+
+function AccountSignUp() {
 	const { referrer } = Route.useSearch()
-	const { hasAccount, isAnonymous } = useAuth()
+	const { hasAccount } = useAuth()
 	const navigate = Route.useNavigate()
 
 	const signupMutation = useMutation({
 		mutationKey: ['signup'],
 		mutationFn: async ({ email, password, user_role }: FormInputs) => {
-			if (isAnonymous) {
-				// Keeps the uid, so the deck and the coach conversation carry over.
-				const { data, error } = await supabase.auth.updateUser(
-					{ email, data: { role: user_role || 'learner' } },
-					{ emailRedirectTo: `${window.location.origin}/set-new-password` }
-				)
-				if (error) throw error
-				return { user: data.user, wasLogin: false }
-			}
 			const { data, error } = await supabase.auth.signUp({
 				email,
 				password,
@@ -120,7 +127,7 @@ function SignUp() {
 			password: '',
 			user_role: 'learner',
 		} as FormInputs,
-		validators: { onChange: isAnonymous ? AnonymousFormSchema : FormSchema },
+		validators: { onChange: FormSchema },
 		onSubmit: async ({ value }) => {
 			await signupMutation.mutateAsync(value)
 		},
@@ -148,11 +155,7 @@ function SignUp() {
 								Find the confirmation link in your email to activate your
 								account.
 							</p>
-							{isAnonymous ? (
-								<p>The link takes you to choose your password.</p>
-							) : (
-								<p>You can close this window.</p>
-							)}
+							<p>You can close this window.</p>
 						</Callout>
 					) : (
 						<form
@@ -169,18 +172,11 @@ function SignUp() {
 								<form.AppField name="email">
 									{(field) => <field.EmailInput />}
 								</form.AppField>
-								{isAnonymous ? (
-									<p className="text-muted-foreground text-sm">
-										Your deck and your coach conversation stay with you. You
-										choose a password after you confirm your email.
-									</p>
-								) : (
-									<form.AppField name="password">
-										{(field) => (
-											<field.PasswordInput autoComplete="new-password" />
-										)}
-									</form.AppField>
-								)}
+								<form.AppField name="password">
+									{(field) => (
+										<field.PasswordInput autoComplete="new-password" />
+									)}
+								</form.AppField>
 								<form.AppField name="user_role">
 									{() => <UserRoleField />}
 								</form.AppField>

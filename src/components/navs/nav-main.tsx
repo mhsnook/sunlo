@@ -6,11 +6,12 @@ const mainMenu = makeLinks([
 	'/learn',
 	'/search',
 	'/browse',
+	'/coach',
 	'/notifications',
 	'/friends',
 	'/friends/chats',
 ])
-const mainMenuPublic = makeLinks(['/learn', '/search', '/browse'])
+const mainMenuPublic = makeLinks(['/learn', '/search', '/browse', '/coach'])
 
 export function NavMain() {
 	const { isAuth } = useAuth()

@@ -1,5 +1,6 @@
 import { failed } from '@scenetest/checks/react'
 import { queryClient } from '@/lib/query-client'
+import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import { decksCollection, cardsCollection } from '@/features/deck/collections'
 import { friendRequestActionsCollection } from '@/features/social/collections'
@@ -116,7 +117,30 @@ class AuthLifecycle {
 
 		void friendRequestActionsCollection.preload()
 		void cardsCollection.preload()
+		void claimGuestUsername(userId)
 	}
+}
+
+/**
+ * A guest picks a display name when they sign up (GuestSignupForm), but
+ * guard_anonymous_profile refuses it until they confirm their email, so it
+ * waits in their auth metadata. The first load as an account writes it. If
+ * someone took the name meanwhile, the write fails and /getting-started asks.
+ */
+async function claimGuestUsername(userId: string) {
+	const { data } = await supabase.auth.getSession()
+	const user = data.session?.user
+	const name: unknown = user?.user_metadata?.username
+	if (!user || user.id !== userId || user.is_anonymous) return
+	if (typeof name !== 'string' || !name) return
+	if (myProfileCollection.get(userId)?.username) return
+	const tx = myProfileCollection.update(userId, (draft) => {
+		draft.username = name
+		draft.updated_at = new Date().toISOString()
+	})
+	await tx.isPersisted.promise.catch((error: unknown) => {
+		console.warn('Could not save the name chosen at sign-up', error)
+	})
 }
 
 export const authLifecycle = new AuthLifecycle()

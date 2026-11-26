@@ -13,7 +13,8 @@ import AvatarSection from '@/routes/_user/profile/-avatar-section'
 import UserAuthCard from '@/routes/_user/profile/-user-auth-card'
 import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
-import { LoginSignupButtons } from '@/components/ui/authenticated-dialog'
+import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
+import { signupLeads } from '@/components/guest-signup/reasons'
 import { UpdateProfileForm } from './-update-profile-form'
 import { DisplayPreferences } from './-display-preferences'
 import supabase from '@/lib/supabase-client'
@@ -58,14 +59,14 @@ function ProfilePage() {
 			{hasAccount ? null : (
 				<Card data-testid="profile-needs-account">
 					<CardHeader>
-						<CardTitle>Save your progress</CardTitle>
+						<CardTitle>You haven't set up your profile yet</CardTitle>
 						<CardDescription>
-							Create an account to keep your deck and choose a username and a
-							photo.
+							Enter your email to begin. You choose a password after you confirm
+							it.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<LoginSignupButtons />
+						<GuestSignupForm lead={signupLeads.coach} />
 					</CardContent>
 				</Card>
 			)}

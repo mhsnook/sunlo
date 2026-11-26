@@ -24,6 +24,7 @@ import type { uuid } from '@/types/main'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { LoginSignupButtons } from '@/components/ui/authenticated-dialog'
+import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
 import { Loader } from '@/components/ui/loader'
 
 const EMPTY_UIDS: uuid[] = []
@@ -335,6 +336,16 @@ function PickerBody({
    Not-logged-in prompt (shown inside the same shell)
    ────────────────────────────────────────────────────────── */
 function AuthPrompt({ title, message }: { title: string; message: string }) {
+	const { isAnonymous } = useAuth()
+	if (isAnonymous)
+		return (
+			<div className="flex flex-col gap-4 p-6">
+				<h2 className="text-lg leading-none font-semibold tracking-tight">
+					Create your account
+				</h2>
+				<GuestSignupForm lead="Sending phrases to friends needs an account." />
+			</div>
+		)
 	return (
 		<div className="flex flex-col gap-4 p-6">
 			<div>
@@ -378,11 +389,11 @@ export function FriendPickerDialog({
 	 *  pulling from the user's live collections. */
 	friends?: RelationsFullType[]
 }) {
-	const { isAuth } = useAuth()
+	const { hasAccount } = useAuth()
 	const isMobile = useIsMobile()
 	// A static override (the /themes showcase) renders the picker without auth;
 	// otherwise gate on it.
-	const showPicker = friendsOverride ? true : isAuth
+	const showPicker = friendsOverride ? true : hasAccount
 	const [uids, setUids] = useState<uuid[]>(EMPTY_UIDS)
 	const [search, setSearch] = useState('')
 	const searchRef = useRef<HTMLInputElement>(null)
