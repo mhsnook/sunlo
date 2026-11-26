@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/lib/use-auth'
 import { LoginCardBody } from '@/components/login-card-body'
-import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
+import { LazyGuestSignupForm } from '@/components/guest-signup/lazy-guest-signup-form'
 import { signupLeads } from '@/components/guest-signup/reasons'
 
 interface RequireAuthProps {
@@ -79,7 +79,7 @@ function AuthGate({
 				</CardHeader>
 				<CardContent className="space-y-6">
 					{isAnonymous ? (
-						<GuestSignupForm lead={guestLead} />
+						<LazyGuestSignupForm lead={guestLead} />
 					) : (
 						<>
 							<p className="text-muted-foreground">{message}</p>

@@ -24,7 +24,7 @@ import type { uuid } from '@/types/main'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { LoginSignupButtons } from '@/components/ui/authenticated-dialog'
-import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
+import { LazyGuestSignupForm } from '@/components/guest-signup/lazy-guest-signup-form'
 import { Loader } from '@/components/ui/loader'
 
 const EMPTY_UIDS: uuid[] = []
@@ -343,7 +343,7 @@ function AuthPrompt({ title, message }: { title: string; message: string }) {
 				<h2 className="text-lg leading-none font-semibold tracking-tight">
 					Create your account
 				</h2>
-				<GuestSignupForm lead="Sending phrases to friends needs an account." />
+				<LazyGuestSignupForm lead="Sending phrases to friends needs an account." />
 			</div>
 		)
 	return (

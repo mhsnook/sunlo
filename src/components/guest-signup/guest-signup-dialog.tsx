@@ -5,7 +5,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/use-auth'
-import { GuestSignupForm } from './guest-signup-form'
+import { LazyGuestSignupForm } from './lazy-guest-signup-form'
 import { signupLeads, useSetGuestSignup, type SignupReason } from './reasons'
 
 export function GuestSignupDialogContent({
@@ -20,7 +20,7 @@ export function GuestSignupDialogContent({
 			<DialogHeader>
 				<DialogTitle>Create your account</DialogTitle>
 			</DialogHeader>
-			<GuestSignupForm lead={lead} onSkip={onSkip} />
+			<LazyGuestSignupForm lead={lead} onSkip={onSkip} />
 		</DialogContent>
 	)
 }
