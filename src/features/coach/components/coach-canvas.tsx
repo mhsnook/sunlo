@@ -9,7 +9,6 @@ import { RequestForm } from '@/components/requests/request-form'
 import { Button } from '@/components/ui/button'
 import { toastError } from '@/components/ui/sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { addPhrasesToDeck } from '@/features/deck/mutations'
 import { useAuth } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { cn } from '@/lib/utils'
@@ -21,8 +20,10 @@ import {
 	type DeckMeter as DeckMeterData,
 } from '../hooks'
 import { playlistPhraseIds, translationFor, type DeckStatus } from '../library'
-import { DECK_TARGET } from '../protocol'
-import { addNote, openLocalView, showView, usePageState } from '../store'
+import { dealIntoDeck } from '../deal'
+import { openLocalView, showView, usePageState } from '../store'
+import { DeckStack } from './deck-stack'
+import { TagDot } from './tag-dot'
 
 type Props = {
 	coachKey: string
@@ -43,9 +44,13 @@ export function CoachCanvas(props: Props) {
 		null
 
 	return (
-		<div className="flex flex-col gap-6" data-testid="coach-canvas">
-			<header className="flex flex-col-reverse items-start justify-between gap-4 @2xl:flex-row">
-				<div className="flex flex-col gap-1">
+		<div
+			className="flex flex-col gap-6 @2xl:flex-row-reverse @2xl:items-start"
+			data-testid="coach-canvas"
+		>
+			<DeckStack lang={props.lang} deck={props.deck} />
+			<div className="flex min-w-0 flex-1 flex-col gap-6">
+				<header className="flex flex-col gap-1">
 					<h1
 						className="text-3xl font-bold tracking-tight @2xl:text-4xl"
 						data-testid="coach-view-title"
@@ -58,94 +63,30 @@ export function CoachCanvas(props: Props) {
 								? `Chosen by your coach from the ${languages[props.lang]} library`
 								: 'Tell your coach why you are learning. Phrases they find for you show up here.')}
 					</p>
-				</div>
-				<DeckMeter lang={props.lang} deck={props.deck} />
-			</header>
+				</header>
 
-			{views.length > 1 && (
-				<nav className="flex flex-wrap gap-2" aria-label="Earlier sets">
-					{views.map((v) => (
-						<Button
-							key={v.id}
-							size="sm"
-							variant={v.id === view?.id ? 'soft' : 'ghost'}
-							data-testid="coach-view-tab"
-							data-key={v.id}
-							onClick={() => showView(props.coachKey, v.id)}
-						>
-							{v.title}
-						</Button>
-					))}
-				</nav>
-			)}
+				{views.length > 1 && (
+					<nav className="flex flex-wrap gap-2" aria-label="Earlier sets">
+						{views.map((v) => (
+							<Button
+								key={v.id}
+								size="sm"
+								variant={v.id === view?.id ? 'soft' : 'ghost'}
+								data-testid="coach-view-tab"
+								data-key={v.id}
+								onClick={() => showView(props.coachKey, v.id)}
+							>
+								{v.title}
+							</Button>
+						))}
+					</nav>
+				)}
 
-			{view && props.uid ? (
-				<ViewContent key={view.id} {...props} view={view} uid={props.uid} />
-			) : null}
-		</div>
-	)
-}
-
-function DeckMeter({ lang, deck }: { lang: string; deck: DeckMeterData }) {
-	const { size, tags } = deck
-	const percent = Math.min(100, Math.round((size / DECK_TARGET) * 100))
-	return (
-		<div
-			className="bg-card w-full shrink-0 rounded border p-4 shadow-sm @2xl:w-64"
-			data-testid="coach-deck-meter"
-			data-size={size}
-		>
-			<p className="text-muted-foreground text-sm">
-				Your {languages[lang] ?? lang} deck
-			</p>
-			<p className="text-2xl font-bold">
-				{size}
-				<span className="text-muted-foreground text-base font-normal">
-					{' '}
-					/ {DECK_TARGET}
-				</span>
-			</p>
-			<div className="bg-primary-100 mt-2 h-2 overflow-hidden rounded-full">
-				<div
-					className="bg-primary-600 h-full rounded-full transition-all"
-					style={{ width: `${percent}%` }}
-				/>
+				{view && props.uid ? (
+					<ViewContent key={view.id} {...props} view={view} uid={props.uid} />
+				) : null}
 			</div>
-			{tags.length > 0 && (
-				<ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-					{tags.map((tag) => (
-						<li key={tag.name} className="flex items-center gap-1">
-							<TagDot name={tag.name} />
-							{tag.count} {tag.name}
-						</li>
-					))}
-				</ul>
-			)}
 		</div>
-	)
-}
-
-// Stock colours, so a tag keeps its colour in both modes.
-const TAG_DOTS = [
-	'bg-amber-500',
-	'bg-rose-500',
-	'bg-teal-500',
-	'bg-sky-500',
-	'bg-violet-500',
-	'bg-lime-500',
-]
-
-function TagDot({ name }: { name: string }) {
-	let hash = 0
-	for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
-	return (
-		<span
-			aria-hidden
-			className={cn(
-				'size-2 shrink-0 rounded-full',
-				TAG_DOTS[hash % TAG_DOTS.length]
-			)}
-		/>
 	)
 }
 
@@ -227,10 +168,7 @@ function ViewContent({
 					status={deck.statuses.get(phrase.id) ?? null}
 					phraseId={phrase.id}
 					onAdd={() => {
-						addPhrasesToDeck(lang, uid, [
-							{ id: phrase.id, only_reverse: phrase.only_reverse },
-						]).then(
-							() => addNote(coachKey, `added “${phrase.text}”`),
+						dealIntoDeck(coachKey, lang, uid, [phrase]).catch(
 							(err: unknown) => {
 								console.error('coach: add failed', err)
 								toastError(`Couldn't add “${phrase.text}”`)

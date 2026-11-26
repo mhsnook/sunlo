@@ -5,7 +5,7 @@ import { useFlueAgent } from '@flue/react'
 import { createFlueClient } from '@flue/sdk'
 import { toastError } from '@/components/ui/sonner'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
-import { addPhrasesToDeck, saveDeckIntention } from '@/features/deck/mutations'
+import { saveDeckIntention } from '@/features/deck/mutations'
 import {
 	useDeckCards,
 	usePreferredTranslationLang,
@@ -26,8 +26,9 @@ import {
 	pageActions,
 	readConversation,
 } from './conversation'
+import { dealIntoDeck } from './deal'
 import {
-	activeIds,
+	activeIdsNewestFirst,
 	answerPhraseIds,
 	countTags,
 	statusesFromCards,
@@ -155,8 +156,7 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 		})
 		if (!phrases.length)
 			return addNote(pageKey, 'those phrases were already in the deck')
-		await addPhrasesToDeck(lang, owner, phrases)
-		addNote(pageKey, `added ${phrases.length} phrases`)
+		await dealIntoDeck(pageKey, lang, owner, phrases)
 	}
 
 	// The agent cannot read the deck, so its searches do not leave out what the
@@ -302,10 +302,10 @@ export function usePlaylistsByIds(ids: Array<string>) {
 export function useDeckMeter(lang: string) {
 	const { data: cards } = useDeckCards(lang)
 	const statuses = useMemo(() => statusesFromCards(cards ?? []), [cards])
-	const active = useMemo(() => activeIds(statuses), [statuses])
-	const phrases = usePhrasesByIds(active)
+	const newest = useMemo(() => activeIdsNewestFirst(cards ?? []), [cards])
+	const phrases = usePhrasesByIds(newest)
 	const tags = useMemo(() => countTags(phrases).slice(0, 3), [phrases])
-	return { size: active.length, tags, statuses }
+	return { size: newest.length, tags, statuses, newest }
 }
 
 export type DeckMeter = ReturnType<typeof useDeckMeter>

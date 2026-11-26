@@ -1,4 +1,5 @@
 import { cardsCollection } from '@/features/deck/collections'
+import { cardReviewsCollection } from '@/features/review/collections'
 import { phrasesFull } from '@/features/phrases/live'
 import {
 	phrasePlaylistsActive,
@@ -22,6 +23,8 @@ export async function preloadLibrary() {
 		playlistPhraseLinksActive.preload(),
 		cardsCollection.preload(),
 	])
+	// Only the deck stack's stage reads reviews, so the page need not wait.
+	void cardReviewsCollection.preload()
 }
 
 export type DeckStatus = CardType['status'] | null
@@ -43,6 +46,19 @@ export function statusesFromCards(
 
 export const activeIds = (statuses: Map<string, DeckStatus>) =>
 	[...statuses].filter(([, s]) => s === 'active').map(([pid]) => pid)
+
+// A phrase's age is its newest card's.
+export function activeIdsNewestFirst(
+	cards: Array<Pick<CardType, 'phrase_id' | 'status' | 'created_at'>>
+) {
+	const newest = new Map<string, string>()
+	for (const card of cards)
+		if ((newest.get(card.phrase_id) ?? '') < card.created_at)
+			newest.set(card.phrase_id, card.created_at)
+	return activeIds(statusesFromCards(cards)).toSorted((a, b) =>
+		(newest.get(b) ?? '').localeCompare(newest.get(a) ?? '')
+	)
+}
 
 export function countTags(phrases: Array<{ tags: Array<{ name: string }> }>) {
 	const counts = new Map<string, number>()

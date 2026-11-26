@@ -49,12 +49,25 @@ The deck is created when the coach knows what the learner wants: their goal and 
 The agent and the page split the work by what each can reach.
 
 - **The agent reads the public library.** `search_library`, `find_similar` and `list_tags` (`.flue/coach/library.ts`) query Supabase with the anon key. Search calls `matchCorpus` from `worker/search.ts` in-process, which ranks by meaning, and falls back to `search_by_trigram`, which ranks by spelling and needs no Workers AI.
-- **The page owns the learner's deck.** Flue keeps tokens out of agents, so the agent cannot write the learner's cards. `add_to_deck` and `navigate` only return what to do. After each message, `send` in `hooks.ts` waits for its submission to settle, reads that submission's tool outputs (`pageActions`), and adds the cards with `addPhrasesToDeck` under the learner's own session.
+- **The page owns the learner's deck.** Flue keeps tokens out of agents, so the agent cannot write the learner's cards. `add_to_deck` and `navigate` only return what to do. After each message, `send` in `hooks.ts` waits for its submission to settle, reads that submission's tool outputs (`pageActions`), and adds the cards with `dealIntoDeck` (see below) under the learner's own session.
 - **The page tells the coach what overlaps the deck.** The agent's searches cannot leave out the learner's own phrases, because it cannot read the deck. After a turn that showed phrases, the page adds a note such as "3 of the 4 phrases you just showed were already in the deck" to the learner's next message, and the prompt tells the coach to offer a different search, a request or a friend. Filtering the search itself would need the agent to read the deck: a read-only, uid-scoped database role like the admin's `admin_reader`, which is a migration.
 - **The coach drafts requests on the page.** `draft_request` puts a `RequestForm` beside the chat, filled in with the coach's wording. The learner edits it and presses the button; nothing is posted for them. The chat stays open throughout.
 - **The page renders from the conversation.** `readConversation` (`conversation.ts`) turns Flue's messages into the chat log, the sets the coach showed (`show_on_page` outputs) and the suggested replies. A set holds only ids; the page draws each phrase, request and playlist from the local collections.
 
 `protocol.ts` holds what both sides share: the tool input schemas and descriptions (Valibot, as Flue requires), the output shapes the page reads, and the conversation id.
+
+## The deck stack
+
+The page shows the open language's deck as a pile of cards, newest on top (`components/deck-stack.tsx`). It renders from `useDeckMeter`, the same live query over the cards collection that the `[Deck: ...]` line reads. The pile shows at most five cards, and pressing it fans them out. The count reads "24 / 100" below `DECK_TARGET` and the plain number after it, because a deck keeps growing. Under the count, a stage says where the deck is: "Ready to start" once it reaches the target, "Active" once the learner reviews, and "Needs more phrases" when fewer than three days of new cards are still unreviewed.
+
+Every add goes through `dealIntoDeck` (`deal.ts`), from the coach's `add_to_deck` and from a tile's Add button alike:
+
+1. A busy note ("adding “Ondu tea kodhe”…") goes into the chat. `pendingNotes` leaves a busy note out of the next message, so the coach never hears of an add that then fails.
+2. Ghost cards fly from the phrase's tile (or from the chat, if the tile is off screen) into the pile. A batch flies as at most twelve ghosts, staggered over about a second.
+3. The stack leaves a phrase that is still in the air out of its count and its pile (`inFlight`), so the count goes up as each ghost lands.
+4. When the write has landed and every ghost is in the pile, the note settles to "added … · deck at 24".
+
+If the write fails, the cards collection rolls the cards back, the ghosts fly back out, and the note says "couldn't add". With `prefers-reduced-motion`, nothing flies, and the count changes at once.
 
 ## What the page sends
 
