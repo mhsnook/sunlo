@@ -216,11 +216,11 @@ native shell. The whole stack ships unchanged, because a Capacitor app is this s
 in a system WebView.
 
 ```bash
-pnpm cap:sync            # vite build, then copy dist/ into both platforms
+pnpm cap:sync            # vite build, then copy dist/client into both platforms
 pnpm cap:android         # sync, then open the project in Android Studio
-pnpm cap:ios             # sync, then open the workspace in Xcode
+pnpm cap:ios             # sync, then open the project in Xcode
 ```
 
 The generated projects are checked in at `android/` and `ios/`. Neither is store-ready yet —
-app icons, deep-link domain association, and signing are still to do. See
-[docs/mobile.md](docs/mobile.md).
+app icons, deep-link domain association, and signing are still to do. To compile a device
+build and test it, see [docs/mobile.md](docs/mobile.md).

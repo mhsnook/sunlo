@@ -104,9 +104,10 @@ export function isShareCancelled(error: unknown): boolean {
 /**
  * Copies text, and rejects if it cannot.
  *
- * `navigator.clipboard` needs a secure context, which iOS does not grant the
- * WebView's `capacitor://` origin, so this falls back to a hidden textarea and
- * the deprecated `execCommand('copy')` — still the only path that works there.
+ * `navigator.clipboard` exists only in a secure context, so it is undefined
+ * when the dev server is opened on a phone through `vite --host` over http.
+ * There, and when the browser refuses a clipboard write, this falls back to a
+ * hidden textarea and the deprecated `execCommand('copy')`.
  */
 export async function copyText(text: string): Promise<void> {
 	if (navigator.clipboard) {
