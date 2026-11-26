@@ -1,5 +1,52 @@
 # Change Log
 
+## v0.36 - The AI Coach, Open to Guests; Feedback with Crew Triage; The Admin Crew
+
+_26 November, 2026_
+
+### Refactors
+
+- Semantic search moves from the `search` Edge Function to the Worker's `POST /api/search` #870 #872 #873. The embedder writes as its own `corpus_writer` role in place of the service-role key, and `normalize` moves into `packages/shared`.
+
+### Improvements
+
+- AI coach at `/coach` #857 #864 #874 #876, a Flue agent with one conversation per learner. A visitor can talk to it as a guest, and signing up later keeps their deck and their conversation.
+- Feedback form at `/feedback` #875, for learners and for signed-out visitors. The admin crew triages it from the admin app's Feedback page.
+
+### Also shipped to `main` since v0.35
+
+**The app**
+
+- #733 reads the review stage only from the milestone log, so a stage that another device advanced no longer gets lost. "Skip for today" in the again round no longer cycles forever.
+- Let a closed accordion panel close #843
+
+**CI and tooling**
+
+- PR previews with `wrangler preview` #871, on production data when a PR has no Supabase branch #836
+- One delta report for the test jobs #852
+- Cached Supabase images #835, and a registry fallback for the Supabase CLI #825
+- Fewer checks on admin-only changes #815, and a typecheck of the admin app #846
+- ESLint in two processes #859
+- Move the admin app's test ids into `apps/admin` #832
+
+### The admin app
+
+The admin app now has a crew: AI agents, built with Flue, that the admin works with.
+
+- The crew #804: agents with memory and a charter, in the Common Room and a room per subject, with side-threads between rooms
+- Keiko, the design associate, sketches screens and flows and paints images #830
+- Room documents in Markdown with Mermaid #817
+- Milestones, epics and a log of GitHub activity, kept by the Product room #821
+- Rooms that fit a phone, and an app that installs to the home screen #834
+- Model calls through the sunlo-admin AI Gateway #858, and database reads through Hyperdrive
+
+### Migrations
+
+- `20261106120000_corpus_writer_role.sql` — creates `corpus_writer`, the role the embedder writes the search corpus as. It can read and write that one table and nothing else.
+- `20261123120000_add_feedback.sql` — adds feedback, which anyone can send and only its sender can read back
+- `20261124120000_hide_feedback_text_from_admin_reader.sql` — hides feedback text from `admin_reader`, and lets admins read every row
+- `20261125120000_anonymous_visitors.sql` — limits anonymous users to their own learning data, so they cannot add public content, upload files or pick a username. It also lets a deck hold what the learner told the coach they want, and marks feedback with its source.
+
 ## v0.35 - Admin App; Phrases from a Photo; One Cloudflare Worker
 
 _22 October, 2026_
