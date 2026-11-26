@@ -3,9 +3,12 @@ packages:
   - apps/*
   - packages/*
 
-onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - esbuild
-  - supabase
-  - unrs-resolver
-  - workerd
+allowBuilds:
+  '@tailwindcss/oxide': true
+  esbuild: true
+  supabase: true
+  unrs-resolver: true
+  workerd: true
+  '@google/genai': false
+  core-js-pure: false
+  protobufjs: false
