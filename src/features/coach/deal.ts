@@ -65,7 +65,7 @@ export function inFlight(
 	)
 }
 
-export const prefersReducedMotion = () =>
+const prefersReducedMotion = () =>
 	window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function onScreen(el: Element | null) {

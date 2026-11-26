@@ -16,7 +16,6 @@ import {
 	inFlight,
 	land,
 	landAll,
-	prefersReducedMotion,
 	shownCount,
 	useFlights,
 	type Flight,
@@ -27,12 +26,17 @@ import { DECK_TARGET } from '../protocol'
 import { TagDot } from './tag-dot'
 
 const PILE_MAX = 5
-// The deck needs more phrases once fewer are fresh than this many days of
-// new cards.
-const FRESH_DAYS = 3
 // Hand-dealt, not machine-stacked: each card under the top one sits a little
 // askew.
 const TILTS = [0, -2.5, 1.5, -1, 2.5]
+const BUMP = [{ scale: 1 }, { scale: 1.06 }, { scale: 1 }]
+const SHAKE = [
+	{ translate: '0' },
+	{ translate: '-6px' },
+	{ translate: '6px' },
+	{ translate: '0' },
+]
+const PILE_MOTION = { duration: 240, easing: 'ease-out' }
 
 type Stage = 'building' | 'ready' | 'active' | 'hungry'
 
@@ -64,8 +68,8 @@ function useDeckStage(lang: string, deck: DeckMeter, size: number): Stage {
 	if (!reviews?.length) return size >= DECK_TARGET ? 'ready' : 'building'
 	const reviewed = new Set(reviews.map((review) => review.phrase_id))
 	const fresh = activeIds(deck.statuses).filter((pid) => !reviewed.has(pid))
-	const enough = (deckRow?.daily_review_goal ?? 15) * FRESH_DAYS
-	return fresh.length < enough ? 'hungry' : 'active'
+	// Less than one review session's worth of new cards is left.
+	return fresh.length < (deckRow?.daily_review_goal ?? 15) ? 'hungry' : 'active'
 }
 
 /**
@@ -84,27 +88,8 @@ export function DeckStack({ lang, deck }: { lang: string; deck: DeckMeter }) {
 	const pileRef = useRef<HTMLButtonElement>(null)
 	const slotRef = useRef<HTMLSpanElement>(null)
 	const [fanned, setFanned] = useState(false)
-	const lastShown = useRef(shown)
 
 	useEffect(() => landAll, [])
-
-	useEffect(() => {
-		const before = lastShown.current
-		lastShown.current = shown
-		const pile = pileRef.current
-		if (!pile || before === shown || prefersReducedMotion()) return
-		pile.animate(
-			shown > before
-				? [{ scale: 1 }, { scale: 1.06 }, { scale: 1 }]
-				: [
-						{ translate: '0' },
-						{ translate: '-6px' },
-						{ translate: '6px' },
-						{ translate: '0' },
-					],
-			{ duration: 240, easing: 'ease-out' }
-		)
-	}, [shown])
 
 	useEffect(() => {
 		if (!fanned) return
@@ -284,7 +269,13 @@ function Ghost({
 				fill: 'both',
 			}
 		)
-		const done = () => land(flight)
+		// The slot is a child of the pile button.
+		const pile = slot.current?.parentElement
+		if (flight.out && flight.delay === 0) pile?.animate(SHAKE, PILE_MOTION)
+		const done = () => {
+			if (!flight.out) pile?.animate(BUMP, PILE_MOTION)
+			land(flight)
+		}
 		animation.finished.then(done, () => undefined)
 		// A background tab can hold the animation; the note must still settle.
 		const fallback = setTimeout(done, flight.delay + FLIGHT_MS + 500)

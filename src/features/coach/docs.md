@@ -58,13 +58,13 @@ The agent and the page split the work by what each can reach.
 
 ## The deck stack
 
-The page shows the open language's deck as a pile of cards, newest on top (`components/deck-stack.tsx`). It renders from `useDeckMeter`, the same live query over the cards collection that the `[Deck: ...]` line reads. The pile shows at most five cards, and pressing it fans them out. The count reads "24 / 100" below `DECK_TARGET` and the plain number after it, because a deck keeps growing. Under the count, a stage says where the deck is: "Ready to start" once it reaches the target, "Active" once the learner reviews, and "Needs more phrases" when fewer than three days of new cards are still unreviewed.
+The page shows the open language's deck as a pile of cards, newest on top (`components/deck-stack.tsx`). It renders from `useDeckMeter`, the same live query over the cards collection that the `[Deck: ...]` line reads. The pile shows at most five cards, and pressing it fans them out. The count reads "24 / 100" below `DECK_TARGET` and the plain number after it, because a deck keeps growing. Under the count, a stage says where the deck is: "Ready to start" once it reaches the target, "Active" once the learner reviews, and "Needs more phrases" when fewer phrases are still unreviewed than one review session adds (the deck's `daily_review_goal`). The stage reads reviews live, so it changes as soon as a review ends.
 
 Every add goes through `dealIntoDeck` (`deal.ts`), from the coach's `add_to_deck` and from a tile's Add button alike:
 
 1. A busy note ("adding “Ondu tea kodhe”…") goes into the chat. `pendingNotes` leaves a busy note out of the next message, so the coach never hears of an add that then fails.
 2. Ghost cards fly from the phrase's tile (or from the chat, if the tile is off screen) into the pile. A batch flies as at most twelve ghosts, staggered over about a second.
-3. The stack leaves a phrase that is still in the air out of its count and its pile (`inFlight`), so the count goes up as each ghost lands.
+3. The stack leaves a phrase that is still in the air out of its count and its pile (`inFlight`), so the count goes up as each ghost lands, and the pile bumps.
 4. When the write has landed and every ghost is in the pile, the note settles to "added … · deck at 24".
 
 If the write fails, the cards collection rolls the cards back, the ghosts fly back out, and the note says "couldn't add". With `prefers-reduced-motion`, nothing flies, and the count changes at once.
