@@ -67,7 +67,7 @@ Every action needs the learner's own message in that turn, and acts in their ses
 
 ## The model
 
-`COACH_MODEL` in `wrangler.jsonc` names the model: Gemma 4 26B (`@cf/google/gemma-4-26b-a4b-it`), chosen for cost and speed, with thinking off. It goes through the Workers AI binding and the `sunlo-app` AI Gateway (`cloudflareBindingProvider` in `.flue/app.ts`). The instructions spell out each turn as numbered steps, because smaller models follow steps more reliably than general guidance.
+`COACH_MODEL` in `wrangler.jsonc` names the model: Gemma 4 26B (`cloudflare/@cf/google/gemma-4-26b-a4b-it`), chosen for cost and speed, with thinking off. Flue reads the part before the first `/` as the provider, so the id needs the `cloudflare/` prefix that `cloudflareBindingProvider` registers; without it every turn fails while the agent starts, as "internal error". It goes through the Workers AI binding and the `sunlo-app` AI Gateway (`cloudflareBindingProvider` in `.flue/app.ts`). The instructions spell out each turn as numbered steps, because smaller models follow steps more reliably than general guidance.
 
 With `VITE_COACH_USE_MOCK=true` (set by `pnpm dev:local` and `pnpm build:test`), `vite.config.ts` sets `COACH_MODEL` to `mock/coach`, and `.flue/app.ts` registers the scripted model in `.flue/coach/mock.ts` under that id. It searches for whatever the learner types, shows the results and adds them on request. Scenetest specs run against it.
 
