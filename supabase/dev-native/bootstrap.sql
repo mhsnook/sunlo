@@ -23,9 +23,10 @@ do $$ begin
   if not exists (select from pg_roles where rolname = 'authenticated') then create role authenticated nologin noinherit; end if;
   if not exists (select from pg_roles where rolname = 'service_role') then create role service_role nologin noinherit bypassrls; end if;
   if not exists (select from pg_roles where rolname = 'authenticator') then create role authenticator noinherit login; end if;
-  -- base.sql grants to admin_reader (the admin Worker's read-only role) but,
-  -- like every role, never creates it: the role migration does.
+  -- base.sql grants to admin_reader and corpus_writer but,
+  -- like every role, never creates them: their role migrations do.
   if not exists (select from pg_roles where rolname = 'admin_reader') then create role admin_reader login noinherit bypassrls; end if;
+  if not exists (select from pg_roles where rolname = 'corpus_writer') then create role corpus_writer login noinherit; end if;
 end $$;
 
 grant anon,
