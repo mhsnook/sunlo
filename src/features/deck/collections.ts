@@ -130,19 +130,22 @@ export const cardsCollection = createCollection(
 						.select()
 						.throwOnError()
 					const rows = data?.map((row) => CardSchema.parse(row)) ?? []
-					should(
-						`user_card update for phrase ${card.phrase_id} returned the cards it changed`,
-						rows.length === keys.length &&
-							rows.every((row) => keys.includes(row.id)),
-						{ submitted: { changes: submitted, keys }, returned: rows }
-					)
 					for (const row of rows)
 						should(
 							`user_card ${row.id} server row matches the submitted update`,
 							rowMatches(submitted, row),
 							{ submitted, returned: row }
 						)
+					// Write before throwing: a row that did match is the server's
+					// truth, and the rollback leaves the synced layer showing it.
 					writeSyncedRows(cardsCollection, rows)
+					const missing = keys.filter(
+						(key) => !rows.some((row) => row.id === key)
+					)
+					if (missing.length > 0)
+						throw new Error(
+							`user_card update matched no server row for ${missing.join(', ')}`
+						)
 				})
 			)
 			return { refetch: false }

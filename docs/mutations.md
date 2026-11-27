@@ -125,18 +125,18 @@ The old rule leaned on "our optimistic value matches the server." Several handle
 
 ```typescript
 const { data } = await supabase
-	.from('user_card')
+	.from('user_card_review')
 	.update(changes)
 	.eq('id', id)
 	.select()
 	.throwOnError()
 const row = data?.[0]
 should(
-	`user_card ${id} server row matches the submitted update`,
+	`user_card_review ${id} server row matches the submitted update`,
 	rowMatches(changes, row),
 	{ submitted: changes, returned: row }
 )
-if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
+if (row) writeSyncedRow(cardReviewsCollection, CardReviewSchema.parse(row))
 ```
 
 `rowMatches(submitted, row)` is that comparison: every field the handler submitted comes back unchanged on the server's row. A missing row passes (a soft delete may not be selectable back under RLS), and `created_at` / `updated_at` are the server's to set. `allRowsMatch(submitted, returned)` is the insert-handler form — one matching row back per row sent.
