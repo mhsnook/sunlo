@@ -54,6 +54,8 @@ The component subscribes to the collection via `useLiveQuery`, so the card appea
 
 A handler that updates rather than inserts can only batch when every row takes the same column values — `groupUpdatesByChanges` finds those groups. Otherwise it sends one request per mutation inside a `Promise.all`.
 
+Batching also keeps rows that belong together consistent. Each request is one statement, and the server applies all of it or none of it. When two requests split one change and only the first succeeds, the handler throws. The client then rolls back both rows, but the server keeps the first write. Pass `groupUpdatesByChanges` a scope to keep such rows in one group. `cardsCollection` scopes by `uid` and `phrase_id`, so a phrase's forward and reverse cards change in one request.
+
 See `src/components/card-pieces/card-status-dropdown.tsx` for the call site this example is drawn from. See also the [TanStack DB optimistic-mutations skill](../node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md) for `createOptimisticAction` (multi-collection atomic mutations) and `createPacedMutations` (auto-save / debounce / throttle).
 
 ### When the optimistic state is worse than waiting
@@ -123,18 +125,18 @@ The old rule leaned on "our optimistic value matches the server." Several handle
 
 ```typescript
 const { data } = await supabase
-	.from('user_card')
+	.from('user_card_review')
 	.update(changes)
 	.eq('id', id)
 	.select()
 	.throwOnError()
 const row = data?.[0]
 should(
-	`user_card ${id} server row matches the submitted update`,
+	`user_card_review ${id} server row matches the submitted update`,
 	rowMatches(changes, row),
 	{ submitted: changes, returned: row }
 )
-if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
+if (row) writeSyncedRow(cardReviewsCollection, CardReviewSchema.parse(row))
 ```
 
 `rowMatches(submitted, row)` is that comparison: every field the handler submitted comes back unchanged on the server's row. A missing row passes (a soft delete may not be selectable back under RLS), and `created_at` / `updated_at` are the server's to set. `allRowsMatch(submitted, returned)` is the insert-handler form — one matching row back per row sent.

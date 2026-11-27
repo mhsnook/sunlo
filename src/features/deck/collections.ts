@@ -9,6 +9,7 @@ import {
 	writeSyncedRow,
 	writeSyncedRows,
 } from '@/lib/collections/synced-row'
+import { groupUpdatesByChanges } from '@/lib/collections/group-updates'
 import { should } from '@scenetest/checks/react'
 import { sortDecksByCreation } from '@/lib/utils'
 import type { TablesUpdate } from '@/types/supabase'
@@ -111,21 +112,40 @@ export const cardsCollection = createCollection(
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map(async (m) => {
-					const changes = m.changes as TablesUpdate<'user_card'>
-					const { data } = await supabase
-						.from('user_card')
-						.update(changes)
-						.eq('id', m.original.id)
+				groupUpdatesByChanges(
+					transaction.mutations,
+					(m) => `${m.original.uid}:${m.original.phrase_id}`
+				).map(async ({ changes, keys, mutations }) => {
+					const submitted = changes as TablesUpdate<'user_card'>
+					const card = mutations[0]!.original
+					const request = supabase.from('user_card').update(submitted)
+					// A group of two holds both directions of the phrase, and
+					// `(uid, phrase_id, direction)` is unique, so this filter matches
+					// no card outside the transaction.
+					const { data } = await (
+						keys.length > 1
+							? request.eq('uid', card.uid).eq('phrase_id', card.phrase_id)
+							: request.eq('id', card.id)
+					)
 						.select()
 						.throwOnError()
-					const row = data?.[0]
-					should(
-						`user_card ${m.original.id} server row matches the submitted update`,
-						rowMatches(changes, row),
-						{ submitted: changes, returned: row }
+					const rows = data?.map((row) => CardSchema.parse(row)) ?? []
+					for (const row of rows)
+						should(
+							`user_card ${row.id} server row matches the submitted update`,
+							rowMatches(submitted, row),
+							{ submitted, returned: row }
+						)
+					// Write before throwing: a row that did match is the server's
+					// truth, and the rollback leaves the synced layer showing it.
+					writeSyncedRows(cardsCollection, rows)
+					const missing = keys.filter(
+						(key) => !rows.some((row) => row.id === key)
 					)
-					if (row) writeSyncedRow(cardsCollection, CardSchema.parse(row))
+					if (missing.length > 0)
+						throw new Error(
+							`user_card update matched no server row for ${missing.join(', ')}`
+						)
 				})
 			)
 			return { refetch: false }
