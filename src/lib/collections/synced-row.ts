@@ -1,6 +1,6 @@
 export type SyncedCollection<T extends object, TKey extends string | number> = {
 	isReady: () => boolean
-	get: (key: TKey) => T | undefined
+	base: { get: (key: TKey) => T | undefined }
 	getKeyFromItem: (item: T) => TKey
 	utils: {
 		writeUpsert: (data: T | Array<T>) => Promise<void>
@@ -19,9 +19,11 @@ export async function writeSyncedRows<
 	// rejection, and the collection's first fetch reads the committed row anyway.
 	if (!collection.isReady()) return
 	// A row we already hold re-runs every live query over the collection for
-	// nothing.
+	// nothing. Compared against `base`, not `get()`: inside a mutation handler
+	// get() returns the optimistic row, which already matches the server's, and
+	// skipping the write then reverts the row when the optimistic state drops.
 	const changed = rows.filter((row) => {
-		const current = collection.get(collection.getKeyFromItem(row))
+		const current = collection.base.get(collection.getKeyFromItem(row))
 		return !current || !sameRow(row, current)
 	})
 	if (changed.length === 0) return

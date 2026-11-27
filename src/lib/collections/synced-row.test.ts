@@ -65,6 +65,32 @@ describe('writeSyncedRow', () => {
 		})
 		expect(collection.get('a')?.flags).toEqual({ beta: false })
 	})
+
+	it("keeps a handler's write-back that matches the optimistic row", async () => {
+		let collection: ReturnType<typeof makeCollection>
+		collection = createCollection(
+			queryCollectionOptions({
+				id: `synced-row-test-${Math.random()}`,
+				queryKey: ['synced-row-test', Math.random()],
+				queryFn: () => Promise.resolve([{ id: 'a', name: 'Anya' }]),
+				getKey: (item: Row) => item.id,
+				queryClient: new QueryClient(),
+				startSync: false,
+				onUpdate: async ({ transaction }) => {
+					await writeSyncedRows(
+						collection,
+						transaction.mutations.map((m) => m.modified)
+					)
+				},
+			})
+		)
+		await collection.preload()
+		const tx = collection.update('a', (draft) => {
+			draft.name = 'Anya Petrov'
+		})
+		await tx.when('settled')
+		expect(collection.get('a')?.name).toBe('Anya Petrov')
+	})
 })
 
 describe('writeSyncedRows', () => {
