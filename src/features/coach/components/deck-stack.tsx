@@ -63,16 +63,15 @@ function useDeckStage(
 ): Stage {
 	// Without a session the reviews collection would sync empty and stay
 	// ready, so it waits for a signed-in learner.
-	const { data: reviews } = useLiveQuery(
-		(q) =>
+	const { data: reviews } = useLiveQuery({
+		query: (q) =>
 			uid
 				? q
 						.from({ review: cardReviewsCollection })
 						.where(({ review }) => eq(review.lang, lang))
 						.select(({ review }) => ({ phrase_id: review.phrase_id }))
 				: undefined,
-		[lang, uid]
-	)
+	})
 	const { data: deckRow } = useDeck(lang)
 	if (!reviews?.length) return size >= DECK_TARGET ? 'ready' : 'building'
 	const reviewed = new Set(reviews.map((review) => review.phrase_id))

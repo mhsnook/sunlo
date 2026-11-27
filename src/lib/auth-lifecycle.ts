@@ -16,23 +16,19 @@ import {
 
 /**
  * Force-reload a collection the shell needs before render. preload() loads a
- * cold or cleaned-up collection; but profile and decks are kept syncing
- * logged-out by their localStorage mirror, so they can be parked `ready` but
- * empty — preload() no-ops on `ready`, so cleanup()+preload() forces a fresh
- * sync. Safe because this runs in the _user loader before the shell mounts, so
- * no live query depends on the collection (the mirror's plain subscription
- * doesn't poison).
+ * cold collection; but profile and decks are kept syncing logged-out by their
+ * localStorage mirror, so they can be parked `ready` but empty, and preload()
+ * no-ops on `ready`. Not cleanup()+preload(): cleanup() rejects while a live
+ * query reads the collection, which the coach page has mounted when a visitor
+ * signs in.
  */
 const reloadFresh = async (c: {
 	size: number
 	preload: () => Promise<unknown>
-	cleanup: () => Promise<unknown>
+	reload: () => Promise<unknown>
 }): Promise<void> => {
 	await c.preload()
-	if (c.size === 0) {
-		await c.cleanup()
-		await c.preload()
-	}
+	if (c.size === 0) await c.reload()
 }
 
 /**
@@ -145,7 +141,7 @@ async function claimGuestUsername(userId: string) {
 		draft.username = name
 		draft.updated_at = new Date().toISOString()
 	})
-	await tx.isPersisted.promise.catch(() => {
+	await tx.when('settled').catch(() => {
 		toastError(
 			`Someone took the name “${name}” before you confirmed your email. Choose another on your profile page.`
 		)

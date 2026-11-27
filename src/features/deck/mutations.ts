@@ -25,12 +25,13 @@ export function optimisticNewDeck(lang: string, uid: string): DeckType {
 export async function ensureDeck(lang: string, uid: string): Promise<void> {
 	const deck = decksCollection.get(lang)
 	if (!deck) {
-		await decksCollection.insert(optimisticNewDeck(lang, uid)).isPersisted
-			.promise
+		await decksCollection.insert(optimisticNewDeck(lang, uid)).when('settled')
 	} else if (deck.archived) {
-		await decksCollection.update(lang, (draft) => {
-			draft.archived = false
-		}).isPersisted.promise
+		await decksCollection
+			.update(lang, (draft) => {
+				draft.archived = false
+			})
+			.when('settled')
 	}
 }
 
@@ -44,9 +45,11 @@ export async function saveDeckIntention(
 	intention: string
 ): Promise<void> {
 	await ensureDeck(lang, uid)
-	await decksCollection.update(lang, (draft) => {
-		draft.intention = intention
-	}).isPersisted.promise
+	await decksCollection
+		.update(lang, (draft) => {
+			draft.intention = intention
+		})
+		.when('settled')
 }
 
 export function useCreateDeck() {
