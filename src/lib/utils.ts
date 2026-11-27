@@ -205,7 +205,10 @@ export function isNativeAppUserAgent() {
 }
 
 export function copyLink(url?: string, fallback = true) {
-	if (!navigator?.clipboard) toastError('Failed to copy link')
+	if (!navigator?.clipboard) {
+		toastError('Failed to copy link')
+		return
+	}
 	if (!fallback && !url) {
 		throw new Error('No url to copy')
 	} else
