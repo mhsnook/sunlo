@@ -41,14 +41,15 @@ describe('createGuestNameClaim', () => {
 		expect(io.writeUsername).toHaveBeenCalledOnce()
 	})
 
-	it('waits for a name to arrive in the metadata', async () => {
+	it('checks an account without a pending name only once', async () => {
 		const { user, io, claim } = setup()
 		user.is_anonymous = false
 		user.user_metadata = {}
 		await claim(uid)
-		user.user_metadata = { username: 'GuestLearner' }
 		await claim(uid)
-		expect(io.writeUsername).toHaveBeenCalledOnce()
+		expect(io.currentUser).toHaveBeenCalledOnce()
+		expect(io.writeUsername).not.toHaveBeenCalled()
+		expect(io.clearPendingName).not.toHaveBeenCalled()
 	})
 
 	it('clears the pending name only after the write succeeds', async () => {

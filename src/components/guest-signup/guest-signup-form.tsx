@@ -7,7 +7,10 @@ import Callout from '@/components/ui/callout'
 import { Button } from '@/components/ui/button'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { useAppForm } from '@/components/form'
-import { UserRoleField } from '@/components/fields/user-role-field'
+import {
+	UserRoleField,
+	UserRoleSchema,
+} from '@/components/fields/user-role-field'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/use-auth'
 import { UsernameSchema } from '@/features/profile/schemas'
@@ -18,9 +21,7 @@ const GuestSignupSchema = z.object({
 		.min(1, `Email is required`)
 		.email(`Email is required to be a real email`),
 	username: z.string().trim().pipe(UsernameSchema),
-	user_role: z.enum(['learner', 'helper', 'both'], {
-		message: `Let us know how you'll use the app`,
-	}),
+	user_role: UserRoleSchema,
 })
 
 type GuestSignupInputs = z.infer<typeof GuestSignupSchema>
@@ -91,14 +92,22 @@ export function GuestSignupForm({
 		validators: { onChange: GuestSignupSchema },
 		onSubmit: async ({ value }) => {
 			await convert.mutateAsync(GuestSignupSchema.parse(value))
+			setSendingAgain(false)
 		},
 	})
 
-	const sentTo = convert.isSuccess
-		? (convert.data.new_email ?? convert.variables.email)
-		: sendingAgain
-			? null
-			: pendingEmail
+	const skipButton = onSkip ? (
+		<Button
+			type="button"
+			variant="neutral"
+			data-testid="guest-signup-skip"
+			onClick={onSkip}
+		>
+			Not now
+		</Button>
+	) : null
+
+	const sentTo = sendingAgain ? null : (convert.data?.new_email ?? pendingEmail)
 	if (sentTo)
 		return (
 			<div data-testid="guest-signup-sent" className="space-y-4">
@@ -114,24 +123,11 @@ export function GuestSignupForm({
 						type="button"
 						variant="neutral"
 						data-testid="guest-signup-send-again"
-						onClick={() => {
-							form.setFieldValue('email', sentTo)
-							convert.reset()
-							setSendingAgain(true)
-						}}
+						onClick={() => setSendingAgain(true)}
 					>
 						Send a new link
 					</Button>
-					{onSkip ? (
-						<Button
-							type="button"
-							variant="neutral"
-							data-testid="guest-signup-skip"
-							onClick={onSkip}
-						>
-							Not now
-						</Button>
-					) : null}
+					{skipButton}
 				</div>
 			</div>
 		)
@@ -183,16 +179,7 @@ export function GuestSignupForm({
 						Send the link
 					</form.SubmitButton>
 				</form.AppForm>
-				{onSkip ? (
-					<Button
-						type="button"
-						variant="neutral"
-						data-testid="guest-signup-skip"
-						onClick={onSkip}
-					>
-						Not now
-					</Button>
-				) : null}
+				{skipButton}
 			</div>
 			<form.AppForm>
 				<form.FormAlert

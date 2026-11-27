@@ -23,21 +23,16 @@ import { useAuth } from '@/lib/use-auth'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { UnderConstructionNotice } from '../-homepage/under-construction'
 import { useAppForm } from '@/components/form'
-import { UserRoleField } from '@/components/fields/user-role-field'
+import {
+	UserRoleField,
+	UserRoleSchema,
+} from '@/components/fields/user-role-field'
 import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
 import { signupLeads } from '@/components/guest-signup/reasons'
-
-const SearchSchema = z.object({
-	referrer: z.string().uuid().optional(),
-})
-
-type SignUpProps = z.infer<typeof SearchSchema>
+import { validateReferrerSearch } from './-referrer-search'
 
 export const Route = createFileRoute('/_auth/signup')({
-	validateSearch: (search: Record<string, unknown>): SignUpProps => {
-		const result = SearchSchema.safeParse(search)
-		return result.success ? result.data : {}
-	},
+	validateSearch: validateReferrerSearch,
 	beforeLoad: ({ context: { auth } }) => {
 		if (auth.hasAccount) {
 			console.log(
@@ -56,9 +51,7 @@ const FormSchema = z.object({
 		.min(1, `Email is required`)
 		.email(`Email is required to be a real email`),
 	password: z.string().min(8, 'Password should be 8 characters at least'),
-	user_role: z.enum(['learner', 'helper', 'both'], {
-		message: `Let us know how you'll use the app`,
-	}),
+	user_role: UserRoleSchema,
 })
 
 type FormInputs = z.infer<typeof FormSchema>

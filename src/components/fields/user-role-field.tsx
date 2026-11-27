@@ -1,4 +1,5 @@
 import { BookOpen, Handshake, LifeBuoy, type LucideIcon } from 'lucide-react'
+import * as z from 'zod'
 import { ChoiceTile } from '@/components/ui/choice-tile'
 import { useFieldContext } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
@@ -12,6 +13,10 @@ const options: ReadonlyArray<{
 	{ value: 'helper', label: 'Helping', Icon: LifeBuoy },
 	{ value: 'both', label: 'Both', Icon: Handshake },
 ]
+
+export const UserRoleSchema = z.enum(['learner', 'helper', 'both'], {
+	message: `Let us know how you'll use the app`,
+})
 
 export function UserRoleField() {
 	const field = useFieldContext<string>()

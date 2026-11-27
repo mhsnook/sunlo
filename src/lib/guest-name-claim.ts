@@ -34,11 +34,12 @@ export function createGuestNameClaim(io: GuestNameClaimIo) {
 		if (claimedFor === userId) return
 		const user = await io.currentUser()
 		if (!user || user.id !== userId || user.is_anonymous) return
-		const name = user.user_metadata?.username
-		if (typeof name !== 'string' || !name) return
 		// Two loaders can both pass the first check while currentUser() awaits.
 		if (claimedFor === userId) return
+		// An account never gains a pending name, so one check is enough.
 		claimedFor = userId
+		const name = user.user_metadata?.username
+		if (typeof name !== 'string' || !name) return
 
 		if (!io.profileUsername(userId)) {
 			try {

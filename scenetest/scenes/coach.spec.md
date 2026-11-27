@@ -119,10 +119,7 @@ visitor:
 
 # a guest asks the coach about an account and signs up from the chat
 
-// Converting keeps the guest's uid. Until the link is opened, the address
-// waits in new_email, so the cleanup matches both columns.
-
-cleanup: supabase.auth.admin.listUsers({ perPage: 1000 }).then(({ data }) => Promise.all(data.users.filter((user) => [user.email, user.new_email].includes('sunloapp+guest@gmail.com')).map((user) => supabase.auth.admin.deleteUser(user.id))))
+cleanup: deleteAuthUsers('sunloapp+guest@gmail.com')
 
 visitor:
 
@@ -145,7 +142,7 @@ visitor:
 
 # a guest who already asked for a link sees it again, not an empty form
 
-cleanup: supabase.auth.admin.listUsers({ perPage: 1000 }).then(({ data }) => Promise.all(data.users.filter((user) => [user.email, user.new_email].includes('sunloapp+guest-again@gmail.com')).map((user) => supabase.auth.admin.deleteUser(user.id))))
+cleanup: deleteAuthUsers('sunloapp+guest-again@gmail.com')
 
 visitor:
 
@@ -175,7 +172,7 @@ visitor:
 
 // The second openTo stands for the guest opening a friend's invite link.
 
-cleanup: supabase.auth.admin.listUsers({ perPage: 1000 }).then(({ data }) => Promise.all(data.users.filter((user) => [user.email, user.new_email].includes('sunloapp+guest-invited@gmail.com')).map((user) => supabase.auth.admin.deleteUser(user.id))))
+cleanup: deleteAuthUsers('sunloapp+guest-invited@gmail.com')
 
 visitor:
 

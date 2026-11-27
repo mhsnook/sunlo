@@ -49,3 +49,16 @@ export async function clearReviewSession(uid: string, lang: string) {
 		.eq('uid', uid)
 		.eq('lang', lang)
 }
+
+/**
+ * Delete every auth user with this address, in `email` or in `new_email`
+ * (a guest's address waits there until they open the link).
+ */
+export async function deleteAuthUsers(email: string) {
+	const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+	await Promise.all(
+		data.users
+			.filter((user) => user.email === email || user.new_email === email)
+			.map((user) => supabase.auth.admin.deleteUser(user.id))
+	)
+}
