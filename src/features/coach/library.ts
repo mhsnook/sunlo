@@ -44,6 +44,34 @@ export function statusesFromCards(
 export const activeIds = (statuses: Map<string, DeckStatus>) =>
 	[...statuses].filter(([, s]) => s === 'active').map(([pid]) => pid)
 
+// Read when it is needed, not when a turn started: the learner may have added
+// phrases from the page in between.
+export const deckStatuses = (lang: string) =>
+	statusesFromCards(
+		cardsCollection.toArray.filter((card) => card.lang === lang)
+	)
+
+// A phrase's age is its newest card's, and a card reactivated from skipped
+// counts from its updated_at. Optimistic rows carry toISOString() (3 fraction
+// digits) and synced rows 6, so compare times, not text.
+export function activeIdsNewestFirst(
+	cards: Array<Pick<CardType, 'phrase_id' | 'created_at' | 'updated_at'>>,
+	statuses: Map<string, DeckStatus>
+) {
+	const newest = new Map<string, number>()
+	for (const card of cards) {
+		const time = Math.max(
+			Date.parse(card.created_at),
+			Date.parse(card.updated_at)
+		)
+		if ((newest.get(card.phrase_id) ?? 0) < time)
+			newest.set(card.phrase_id, time)
+	}
+	return activeIds(statuses).toSorted(
+		(a, b) => (newest.get(b) ?? 0) - (newest.get(a) ?? 0)
+	)
+}
+
 export function countTags(phrases: Array<{ tags: Array<{ name: string }> }>) {
 	const counts = new Map<string, number>()
 	for (const p of phrases)

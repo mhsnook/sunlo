@@ -25,7 +25,9 @@ learner:
 - see coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12
 - seeText Showing
 - click coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12 coach-add-phrase
-- seeText added “Ondu tea kodhe”
+- seeText added “Ondu tea kodhe” · deck at
+- see coach-deck-stack 884b7e6d-5aa0-49ba-be42-e26d37e20f12
+- notSee coach-deck-flight
 - notSee coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12 coach-add-phrase
 
 # learner asks the coach to add the whole set
@@ -48,6 +50,8 @@ learner:
 - typeInto coach-input "add them all"
 - click coach-send
 - seeText Adding
+- seeText · deck at
+- notSee coach-deck-flight
 - notSee coach-phrases 884b7e6d-5aa0-49ba-be42-e26d37e20f12 coach-add-phrase
 
 # learner has the coach draft a request, then posts it from the page

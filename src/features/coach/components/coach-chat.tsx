@@ -171,6 +171,7 @@ function LogEntry({ entry }: { entry: CoachLogEntry }) {
 			return (
 				<p
 					data-testid={`coach-${entry.kind}`}
+					data-busy={entry.busy || undefined}
 					className={cn(
 						'flex items-center gap-2 text-xs',
 						entry.kind === 'error' ? 'text-danger-700' : 'text-muted-foreground'
@@ -180,7 +181,8 @@ function LogEntry({ entry }: { entry: CoachLogEntry }) {
 						aria-hidden
 						className={cn(
 							'size-1.5 shrink-0 rounded-full',
-							entry.kind === 'error' ? 'bg-danger-500' : 'bg-primary-500'
+							entry.kind === 'error' ? 'bg-danger-500' : 'bg-primary-500',
+							entry.busy && 'animate-pulse'
 						)}
 					/>
 					{entry.text}

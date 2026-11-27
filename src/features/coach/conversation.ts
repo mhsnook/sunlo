@@ -26,6 +26,8 @@ export type CoachLogEntry = {
 	id: string
 	kind: 'learner' | 'coach' | 'action' | 'error'
 	text: string
+	// An action note whose write has not settled yet.
+	busy?: boolean
 }
 
 export type CoachView = {

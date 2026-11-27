@@ -22,7 +22,7 @@ export function optimisticNewDeck(lang: string, uid: string): DeckType {
 }
 
 // A card needs its deck row, so writes to a deck create or unarchive it first.
-async function ensureDeck(lang: string, uid: string): Promise<void> {
+export async function ensureDeck(lang: string, uid: string): Promise<void> {
 	const deck = decksCollection.get(lang)
 	if (!deck) {
 		await decksCollection.insert(optimisticNewDeck(lang, uid)).isPersisted
@@ -128,6 +128,7 @@ export async function addPhrasesToDeck(
 				? cardsCollection.update(toActivate, (drafts) => {
 						drafts.forEach((draft) => {
 							draft.status = 'active'
+							draft.updated_at = nowIso
 						})
 					}).isPersisted.promise
 				: undefined,

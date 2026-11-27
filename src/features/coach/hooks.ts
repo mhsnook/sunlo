@@ -4,8 +4,8 @@ import { inArray, useLiveQuery } from '@tanstack/react-db'
 import { useFlueAgent } from '@flue/react'
 import { createFlueClient } from '@flue/sdk'
 import { toastError } from '@/components/ui/sonner'
-import { cardsCollection, decksCollection } from '@/features/deck/collections'
-import { addPhrasesToDeck, saveDeckIntention } from '@/features/deck/mutations'
+import { decksCollection } from '@/features/deck/collections'
+import { saveDeckIntention } from '@/features/deck/mutations'
 import {
 	useDeckCards,
 	usePreferredTranslationLang,
@@ -26,9 +26,11 @@ import {
 	pageActions,
 	readConversation,
 } from './conversation'
+import { dealIntoDeck } from './deal'
 import {
-	activeIds,
+	activeIdsNewestFirst,
 	answerPhraseIds,
+	deckStatuses,
 	countTags,
 	statusesFromCards,
 } from './library'
@@ -136,13 +138,8 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 	const ready = !uid || agent.historyReady
 	const started = agent.messages.length > 0
 
-	// Read when the turn ends, not when it started: the learner may have added
-	// phrases from the page while the coach was working.
-	const deckStatuses = () =>
-		statusesFromCards(cardsCollection.toArray.filter((c) => c.lang === lang))
-
 	const addToDeck = async (owner: string, phraseIds: Array<string>) => {
-		const statuses = deckStatuses()
+		const statuses = deckStatuses(lang)
 		const phrases = phraseIds.flatMap((id) => {
 			const status = statuses.get(id)
 			const phrase = phrasesFull.get(id)
@@ -155,15 +152,14 @@ export function useCoach(lang: string, uid: string | null, deck: DeckMeter) {
 		})
 		if (!phrases.length)
 			return addNote(pageKey, 'those phrases were already in the deck')
-		await addPhrasesToDeck(lang, owner, phrases)
-		addNote(pageKey, `added ${phrases.length} phrases`)
+		await dealIntoDeck(pageKey, lang, owner, phrases)
 	}
 
 	// The agent cannot read the deck, so its searches do not leave out what the
 	// learner already has. The page tells it on the next message.
 	const noteOverlap = (shownIds: Array<string>) => {
 		if (!shownIds.length) return
-		const statuses = deckStatuses()
+		const statuses = deckStatuses(lang)
 		const inDeck = shownIds.filter((id) => statuses.has(id)).length
 		if (inDeck)
 			addNote(
@@ -302,10 +298,13 @@ export function usePlaylistsByIds(ids: Array<string>) {
 export function useDeckMeter(lang: string) {
 	const { data: cards } = useDeckCards(lang)
 	const statuses = useMemo(() => statusesFromCards(cards ?? []), [cards])
-	const active = useMemo(() => activeIds(statuses), [statuses])
-	const phrases = usePhrasesByIds(active)
+	const newest = useMemo(
+		() => activeIdsNewestFirst(cards ?? [], statuses),
+		[cards, statuses]
+	)
+	const phrases = usePhrasesByIds(newest)
 	const tags = useMemo(() => countTags(phrases).slice(0, 3), [phrases])
-	return { size: active.length, tags, statuses }
+	return { size: newest.length, tags, statuses, phrases }
 }
 
 export type DeckMeter = ReturnType<typeof useDeckMeter>

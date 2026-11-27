@@ -8,8 +8,10 @@ type PageState = {
 	localViews: Array<CoachView>
 	// null follows the newest set the coach showed.
 	activeViewId: string | null
-	// Sent with the learner's next message, then cleared.
-	notes: Array<{ id: string; text: string }>
+	// Sent with the learner's next message, then cleared. A busy note waits
+	// for its write to settle, so the coach hears "added" or "couldn't add",
+	// never an add still in progress.
+	notes: Array<{ id: string; text: string; busy?: boolean }>
 }
 
 const emptyPage: PageState = { localViews: [], activeViewId: null, notes: [] }
@@ -41,8 +43,21 @@ export const addNote = (key: string, note: string) =>
 		notes: [...page.notes, { id: crypto.randomUUID(), text: note }],
 	}))
 
+export function startNote(key: string, text: string) {
+	const id = crypto.randomUUID()
+	update(key, (page) => ({ notes: [...page.notes, { id, text, busy: true }] }))
+	return id
+}
+
+export const settleNote = (key: string, id: string, text: string) =>
+	update(key, (page) => ({
+		notes: page.notes.map((note) => (note.id === id ? { id, text } : note)),
+	}))
+
 export const pendingNotes = (key: string) =>
-	(useCoachPageStore.getState()[key] ?? emptyPage).notes
+	(useCoachPageStore.getState()[key] ?? emptyPage).notes.filter(
+		(note) => !note.busy
+	)
 
 // After the message carrying these notes was admitted. A note the learner
 // made while it was sending stays for the next message.
