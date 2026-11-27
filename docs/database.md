@@ -111,6 +111,8 @@ The published soft-delete tables carry no `deleted` clause in their SELECT polic
 
 **This is an intermediate state, and #793 is the way out.** The four tables holding user-written text — `phrase`, `phrase_translation`, `phrase_request`, `phrase_playlist` — narrow their SELECT policies to hide a removed row's content, so none of them can publish, so **archiving one of them reaches nobody else's device.** A client that already holds the row keeps rendering it until the person reloads the app, and `refetchOnMount: false` in `src/lib/query-client.ts` means navigating does not count as a reload. The rule above is a workaround for that, not a design: it makes you pick between hiding the content and announcing the removal. #793 removes the choice — a trigger moves the content into a sidecar table on archive, so the row that streams is an empty husk, the policy can stay open, and one flag does the whole job.
 
+**A realtime-published table with `updated_at` needs a trigger that bumps it on every write.** The client orders realtime frames by `updated_at` (`docs/mutations.md`), so a column that only has a default makes every frame for a row look the same age. Attach `public.set_updated_at()` as `before insert or update`, as `user_card`, `request_comment` and `user_profile` do. `user_deck` and `user_card_review` have older per-table update triggers that do the same job on update.
+
 **A partial unique index only constrains the live rows.** `unique (a_id, b_id) where deleted = false` lets a removed link and its replacement coexist, so anyone can re-add a pair someone else removed. Two _live_ rows for the same pair are still rejected.
 
 **A full reset-and-regenerate is three commands**: `pnpm db-reset && pnpm types && pnpm schema`.
