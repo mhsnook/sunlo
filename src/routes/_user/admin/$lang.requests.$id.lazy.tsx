@@ -51,14 +51,13 @@ function AdminRequestDetail() {
 	const { lang, id } = Route.useParams()
 	const { isAdmin } = useAuth()
 	useRequestRealtime(id)
-	const { data: request, isLoading } = useLiveQuery(
-		(q) =>
+	const { data: request, isLoading } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ request: phraseRequestsCollection })
 				.where(({ request }) => eq(request.id, id))
 				.findOne(),
-		[id]
-	)
+	})
 
 	if (isLoading) return <Loader />
 
@@ -284,16 +283,15 @@ function RelatedRequestsSection({
 	messageId: uuid
 	currentRequestId: uuid
 }) {
-	const { data: siblings } = useLiveQuery(
-		(q) =>
+	const { data: siblings } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ req: phraseRequestsCollection })
 				.where(({ req }) =>
 					and(eq(req.message_id, messageId), not(eq(req.id, currentRequestId)))
 				)
 				.orderBy(({ req }) => req.created_at, 'desc'),
-		[messageId, currentRequestId]
-	)
+	})
 
 	if (!siblings || siblings.length === 0) return null
 
@@ -410,7 +408,7 @@ function EditableRequestPrompt({
 			draft.prompt = trimmed
 		})
 		setIsEditing(false)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Request updated'),
 			(error: unknown) => {
 				toastError('Failed to update request')
@@ -486,7 +484,7 @@ function ArchiveRequestButton({
 		const tx = phraseRequestsCollection.update(request.id, (draft) => {
 			draft.deleted = !wasDeleted
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(wasDeleted ? 'Request restored' : 'Request archived'),
 			(error: unknown) => {
 				toastError('Failed to update request')
@@ -517,19 +515,19 @@ function ArchiveRequestButton({
 // One message at a time, from a badge's X or a checkbox. The bulk selection
 // bar calls the feature mutations directly and reports its own aggregate.
 function addTag(messageId: uuid, tagSlug: string) {
-	attachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
-		(err: unknown) => {
+	attachMessageTag([messageId], tagSlug)
+		?.when('settled')
+		.catch((err: unknown) => {
 			toastError('Failed to add tag')
 			console.error(err)
-		}
-	)
+		})
 }
 
 function removeTag(messageId: uuid, tagSlug: string) {
-	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
-		(err: unknown) => {
+	detachMessageTag([messageId], tagSlug)
+		?.when('settled')
+		.catch((err: unknown) => {
 			toastError('Failed to remove tag')
 			console.error(err)
-		}
-	)
+		})
 }

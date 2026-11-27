@@ -32,23 +32,21 @@ export const Route = createLazyFileRoute('/_user/admin/messages/$id')({
 function AdminMessageDetail() {
 	const { id } = Route.useParams()
 	const { isAdmin } = useAuth()
-	const { data: message, isLoading } = useLiveQuery(
-		(q) =>
+	const { data: message, isLoading } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ msg: messagesCollection })
 				.where(({ msg }) => eq(msg.id, id))
 				.findOne(),
-		[id]
-	)
+	})
 	const { data: tags } = useMessageTagsForMessage(id)
-	const { data: requests } = useLiveQuery(
-		(q) =>
+	const { data: requests } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ req: phraseRequestsCollection })
 				.where(({ req }) => eq(req.message_id, id))
 				.orderBy(({ req }) => req.created_at, 'asc'),
-		[id]
-	)
+	})
 
 	if (isLoading) return <Loader />
 
@@ -218,19 +216,19 @@ function AddTagPopover({
 // One message at a time, from a badge's X or a checkbox. The bulk selection
 // bar calls the feature mutations directly and reports its own aggregate.
 function addTag(messageId: uuid, tagSlug: string) {
-	attachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
-		(err: unknown) => {
+	attachMessageTag([messageId], tagSlug)
+		?.when('settled')
+		.catch((err: unknown) => {
 			toastError('Failed to add tag')
 			console.error(err)
-		}
-	)
+		})
 }
 
 function removeTag(messageId: uuid, tagSlug: string) {
-	detachMessageTag([messageId], tagSlug)?.isPersisted.promise.catch(
-		(err: unknown) => {
+	detachMessageTag([messageId], tagSlug)
+		?.when('settled')
+		.catch((err: unknown) => {
 			toastError('Failed to remove tag')
 			console.error(err)
-		}
-	)
+		})
 }

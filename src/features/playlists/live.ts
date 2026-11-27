@@ -1,4 +1,4 @@
-import { createLiveQueryCollection, eq } from '@tanstack/db'
+import { BasicIndex, createLiveQueryCollection, eq } from '@tanstack/db'
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
@@ -9,6 +9,8 @@ import {
  * Use this anywhere you want the "live" set of playlists visible to users.
  */
 export const phrasePlaylistsActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ playlist: phrasePlaylistsCollection })
@@ -20,6 +22,8 @@ export const phrasePlaylistsActive = createLiveQueryCollection({
  * Use this anywhere you want the phrases a playlist actually holds.
  */
 export const playlistPhraseLinksActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ link: playlistPhraseLinksCollection })

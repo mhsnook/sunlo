@@ -25,12 +25,13 @@ export function optimisticNewDeck(lang: string, uid: string): DeckType {
 export async function ensureDeck(lang: string, uid: string): Promise<void> {
 	const deck = decksCollection.get(lang)
 	if (!deck) {
-		await decksCollection.insert(optimisticNewDeck(lang, uid)).isPersisted
-			.promise
+		await decksCollection.insert(optimisticNewDeck(lang, uid)).when('settled')
 	} else if (deck.archived) {
-		await decksCollection.update(lang, (draft) => {
-			draft.archived = false
-		}).isPersisted.promise
+		await decksCollection
+			.update(lang, (draft) => {
+				draft.archived = false
+			})
+			.when('settled')
 	}
 }
 
@@ -44,9 +45,11 @@ export async function saveDeckIntention(
 	intention: string
 ): Promise<void> {
 	await ensureDeck(lang, uid)
-	await decksCollection.update(lang, (draft) => {
-		draft.intention = intention
-	}).isPersisted.promise
+	await decksCollection
+		.update(lang, (draft) => {
+			draft.intention = intention
+		})
+		.when('settled')
 }
 
 export function useCreateDeck() {
@@ -55,7 +58,7 @@ export function useCreateDeck() {
 
 	return (lang: string) => {
 		const tx = decksCollection.insert(optimisticNewDeck(lang, userId!))
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(`Created a new deck to learn ${languages[lang]}`),
 			(err: unknown) => {
 				console.error('Error creating deck:', err)
@@ -122,15 +125,17 @@ export async function addPhrasesToDeck(
 	try {
 		await Promise.all([
 			toInsert.length
-				? cardsCollection.insert(toInsert).isPersisted.promise
+				? cardsCollection.insert(toInsert).when('settled')
 				: undefined,
 			toActivate.length
-				? cardsCollection.update(toActivate, (drafts) => {
-						drafts.forEach((draft) => {
-							draft.status = 'active'
-							draft.updated_at = nowIso
+				? cardsCollection
+						.update(toActivate, (drafts) => {
+							drafts.forEach((draft) => {
+								draft.status = 'active'
+								draft.updated_at = nowIso
+							})
 						})
-					}).isPersisted.promise
+						.when('settled')
 				: undefined,
 		])
 	} catch (err) {

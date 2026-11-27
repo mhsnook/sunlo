@@ -35,7 +35,7 @@ export function ArchiveDeckButton({
 			draft.archived = nextArchived
 		})
 		setOpen(false)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() =>
 				toastSuccess(
 					nextArchived

@@ -53,15 +53,14 @@ export const useDeckActivityChartData = (
 		.subtract(4, 'hour') // makes 4am the end of the day
 		.format('YYYY-MM-DD')
 
-	const query = useLiveQuery(
-		(q) =>
+	const query = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
 					and(eq(review.lang, lang), gte(review.day_session, startDate))
 				),
-		[lang, startDate]
-	)
+	})
 
 	return {
 		...query,
@@ -70,14 +69,13 @@ export const useDeckActivityChartData = (
 }
 
 export const useDeck = (lang: string): UseLiveQueryResult<DeckType> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ deck: decksCollection })
 				.where(({ deck }) => eq(deck.lang, lang))
 				.findOne(),
-		[lang]
-	)
+	})
 
 export const useDecks = (): UseLiveQueryResult<DeckType[]> => {
 	const query = useLiveQuery((q) => q.from({ deck: decksCollection }))
@@ -152,8 +150,8 @@ const useMostRecentReviewByLang = (): Record<string, string | null> => {
 }
 
 export const useDeckCardStats = (lang: string): DeckCardStats => {
-	const { data } = useLiveQuery(
-		(q) =>
+	const { data } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ card: cardsCollection })
 				.where(({ card }) => eq(card.lang, lang))
@@ -162,8 +160,7 @@ export const useDeckCardStats = (lang: string): DeckCardStats => {
 					status: card.status,
 					count: count(card.id),
 				})),
-		[lang]
-	)
+	})
 	const mostRecentByLang = useMostRecentReviewByLang()
 	const mostRecent = mostRecentByLang[lang] ?? null
 	return useMemo(
@@ -208,8 +205,8 @@ export const useDeckReviewCounts = (lang: string): DeckReviewCounts => {
 		.subtract(6, 'day')
 		.subtract(4, 'hour')
 		.format('YYYY-MM-DD')
-	const { data } = useLiveQuery(
-		(q) =>
+	const { data } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
@@ -220,8 +217,7 @@ export const useDeckReviewCounts = (lang: string): DeckReviewCounts => {
 					score: review.score,
 					count: count(review.id),
 				})),
-		[lang, cutoff]
-	)
+	})
 	return useMemo(() => {
 		let count_reviews_7d = 0
 		let count_reviews_7d_positive = 0
@@ -238,16 +234,15 @@ export type CardWithSibling = CardType & { sibling_id: string | null }
 export const useMyCard = (
 	phraseId: string | null | undefined
 ): UseLiveQueryResult<CardWithSibling> => {
-	const query = useLiveQuery(
-		(q) =>
+	const query = useLiveQuery({
+		query: (q) =>
 			!phraseId
 				? undefined
 				: q
 						.from({ card: cardsCollection })
 						.where(({ card }) => eq(card.phrase_id, phraseId))
 						.orderBy(({ card }) => card.direction, 'asc'),
-		[phraseId]
-	)
+	})
 	should(
 		'forward/reverse cards share status',
 		!query.data ||
@@ -273,8 +268,8 @@ export const useCardScheduling = (
 	phraseId: uuid | null | undefined,
 	direction: CardDirectionType = 'forward'
 ): CardScheduling | null => {
-	const { data } = useLiveQuery(
-		(q) =>
+	const { data } = useLiveQuery({
+		query: (q) =>
 			!phraseId
 				? undefined
 				: q
@@ -283,19 +278,17 @@ export const useCardScheduling = (
 							and(eq(card.phrase_id, phraseId), eq(card.direction, direction))
 						)
 						.findOne(),
-		[phraseId, direction]
-	)
+	})
 	return schedulingFromReviews(data?.reviews)
 }
 
 export const useDeckCards = (lang: string): UseLiveQueryResult<CardType[]> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ card: cardsCollection })
 				.where(({ card }) => eq(card.lang, lang)),
-		[lang]
-	)
+	})
 
 /** A card row with its review history; fold it with `schedulingFromReviews`. */
 export type CardWithReviews = CardType & {
@@ -309,13 +302,12 @@ export type CardWithReviews = CardType & {
 export const useDeckCardsWithReviews = (
 	lang: string
 ): UseLiveQueryResult<CardWithReviews[]> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ card: cardsWithReviews })
 				.where(({ card }) => eq(card.lang, lang)),
-		[lang]
-	) as UseLiveQueryResult<CardWithReviews[]>
+	}) as UseLiveQueryResult<CardWithReviews[]>
 
 export const useDeckRoutineStats = (lang: string) => {
 	const today = dayjs()
@@ -323,8 +315,8 @@ export const useDeckRoutineStats = (lang: string) => {
 	const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
 	const mondayString = mostRecentMonday.format('YYYY-MM-DD')
 
-	const query: UseLiveQueryResult<{ count: number }> = useLiveQuery(
-		(q) =>
+	const query: UseLiveQueryResult<{ count: number }> = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ day: reviewSessionsCollection })
 				.where(({ day }) =>
@@ -332,8 +324,7 @@ export const useDeckRoutineStats = (lang: string) => {
 				)
 				.select(({ day }) => ({ count: count(day.day_session) }))
 				.findOne(),
-		[lang, mondayString]
-	)
+	})
 
 	return {
 		...query,

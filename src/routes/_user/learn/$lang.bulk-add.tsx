@@ -171,7 +171,7 @@ function BulkAddPhrasesPage() {
 					})
 				: decksCollection.insert(optimisticNewDeck(lang, userId))
 			try {
-				await deckTx.isPersisted.promise
+				await deckTx.when('settled')
 				didSetupDeck = true
 			} catch (err) {
 				const message = err instanceof Error ? err.message : String(err)
@@ -233,7 +233,7 @@ function BulkAddPhrasesPage() {
 			phrases: actionPhrases,
 		})
 		try {
-			await tx.isPersisted.promise
+			await tx.when('settled')
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err)
 			toastError(`Error adding phrases: ${message}`)

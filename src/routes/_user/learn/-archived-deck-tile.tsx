@@ -30,7 +30,7 @@ export function ArchivedDeckTile({ deck }: { deck: DeckType }) {
 		const tx = decksCollection.update(deck.lang, (draft) => {
 			draft.archived = false
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('The deck has been re-activated!'),
 			(error) => {
 				console.log(error)

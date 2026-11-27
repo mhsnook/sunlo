@@ -119,7 +119,7 @@ function ProfileSetupForm({
 				draft.flags = { ...draft.flags, [FLAG_NEEDS_ONBOARDING]: false }
 			})
 			try {
-				await tx.isPersisted.promise
+				await tx.when('settled')
 				toastSuccess('Success!')
 				void navigate({ to: nextPage })
 			} catch (error) {

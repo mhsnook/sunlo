@@ -462,13 +462,13 @@ export const createComment = createOptimisticAction<CreateCommentInput>({
 			comment_phrase_links: CommentPhraseLinkType[]
 		}
 		const comment = RequestCommentSchema.parse(result.request_comment)
-		commentsCollection.utils.writeInsert(comment)
-		commentUpvotesCollection.utils.writeInsert({
+		await commentsCollection.utils.writeInsert(comment)
+		await commentUpvotesCollection.utils.writeInsert({
 			comment_id: comment.id,
 			deleted: false,
 		})
 		for (const link of result.comment_phrase_links) {
-			commentPhraseLinksCollection.utils.writeInsert(
+			await commentPhraseLinksCollection.utils.writeInsert(
 				CommentPhraseLinkSchema.parse(link)
 			)
 		}
@@ -528,7 +528,7 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 			.select()
 			.single()
 			.throwOnError()
-		commentsCollection.utils.writeUpdate(
+		await commentsCollection.utils.writeUpdate(
 			RequestCommentSchema.parse(updatedComment)
 		)
 
@@ -543,7 +543,7 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 				)
 				.select()
 				.throwOnError()
-			writeSyncedRows(
+			await writeSyncedRows(
 				commentPhraseLinksCollection,
 				removed?.map((row) => CommentPhraseLinkSchema.parse(row)) ?? []
 			)
@@ -562,7 +562,7 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 				.select()
 				.throwOnError()
 			for (const link of newLinks ?? []) {
-				commentPhraseLinksCollection.utils.writeInsert(
+				await commentPhraseLinksCollection.utils.writeInsert(
 					CommentPhraseLinkSchema.parse(link)
 				)
 			}
@@ -607,7 +607,7 @@ function NewCommentForm({
 					parentCommentId: null,
 					phraseLinks,
 				})
-				await tx.isPersisted.promise
+				await tx.when('settled')
 				toastSuccess('Comment posted!')
 				formApi.reset()
 				onClose()
@@ -714,7 +714,7 @@ function EditCommentForm({
 					linksToDelete,
 					linksToInsert,
 				})
-				await tx.isPersisted.promise
+				await tx.when('settled')
 				toastSuccess('Comment updated!')
 				onClose()
 			} catch (err) {

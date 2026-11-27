@@ -462,7 +462,7 @@ function ContextMenu({
 				d.status = status
 			})
 		})
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess(STATUS_TOAST_MESSAGES[status]),
 			(err) => {
 				toastError('Failed to update card status')

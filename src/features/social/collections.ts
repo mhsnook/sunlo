@@ -1,4 +1,4 @@
-import { createCollection, BTreeIndex } from '@tanstack/react-db'
+import { BasicIndex, createCollection, BTreeIndex } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	FriendRequestActionSchema,
@@ -65,8 +65,7 @@ export const friendRequestActionsCollection = createCollection(
 			// `writeSyncedRows` rather than a bare writeInsert: this row's own
 			// realtime frame can land first, in which case the key is already
 			// here and `writeInsert` would throw.
-			writeSyncedRows(friendRequestActionsCollection, rows)
-			return { refetch: false }
+			await writeSyncedRows(friendRequestActionsCollection, rows)
 		},
 	})
 )
@@ -86,6 +85,8 @@ export const chatMessagesCollection = createCollection(
 		},
 		getKey: (item: ChatMessageType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: ChatMessageSchema,
 		// Every chat message the app writes lands here — see `useSendToFriends`.
@@ -110,8 +111,7 @@ export const chatMessagesCollection = createCollection(
 			)
 			// Upsert, because this row's own realtime frame can land before the
 			// insert resolves.
-			writeSyncedRows(chatMessagesCollection, rows)
-			return { refetch: false }
+			await writeSyncedRows(chatMessagesCollection, rows)
 		},
 		// Read receipts stamp one `read_at` across every unread message from a
 		// friend, so grouping collapses the batch to a single request. The
@@ -127,14 +127,13 @@ export const chatMessagesCollection = createCollection(
 								.in('id', keys)
 								.select()
 								.throwOnError()
-							writeSyncedRows(
+							await writeSyncedRows(
 								chatMessagesCollection,
 								(data ?? []).map((row) => ChatMessageSchema.parse(row))
 							)
 						}
 					)
 				)
-				return { refetch: false }
 			} catch (error) {
 				toastError('Could not update your messages')
 				throw error

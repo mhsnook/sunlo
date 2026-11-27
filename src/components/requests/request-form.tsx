@@ -57,14 +57,14 @@ const createRequest = createOptimisticAction<CreateInput>({
 			.single()
 			.throwOnError()
 		const parsed = PhraseRequestSchema.parse(data)
-		phraseRequestsCollection.utils.writeInsert(parsed)
-		messagesCollection.utils.writeInsert({
+		await phraseRequestsCollection.utils.writeInsert(parsed)
+		await messagesCollection.utils.writeInsert({
 			id: parsed.message_id!,
 			created_at: parsed.created_at,
 		})
 		// The auto-upvote trigger created the upvote row server-side; the
 		// local schema is just { request_id }, no need to fetch it back.
-		phraseRequestUpvotesCollection.utils.writeInsert({
+		await phraseRequestUpvotesCollection.utils.writeInsert({
 			request_id: id,
 			deleted: false,
 		})
@@ -106,7 +106,7 @@ export function RequestForm({
 					const tx = phraseRequestsCollection.update(requestId, (draft) => {
 						draft.prompt = value.prompt
 					})
-					await tx.isPersisted.promise
+					await tx.when('settled')
 					const updated = phraseRequestsCollection.get(requestId)
 					toastSuccess('Request updated!')
 					if (updated) onSuccess?.(updated)
@@ -123,7 +123,7 @@ export function RequestForm({
 						lang,
 						userId: userId!,
 					})
-					await tx.isPersisted.promise
+					await tx.when('settled')
 					const created = phraseRequestsCollection.get(id)
 					invalidateFeed(lang)
 					toastSuccess('Your request has been posted!')

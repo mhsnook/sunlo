@@ -25,7 +25,7 @@ export function DeleteCommentDialog({
 	const removeComment = () => {
 		setOpen(false)
 		const tx = deleteComment(comment.id)
-		tx.isPersisted.promise.then(
+		tx.when('settled').then(
 			() => toastSuccess('Comment removed'),
 			(err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'

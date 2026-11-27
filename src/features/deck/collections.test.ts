@@ -90,7 +90,7 @@ beforeAll(async () => {
 		{ ...phrase.reverse },
 	])
 	await cardsCollection.preload()
-	cardsCollection.utils.writeInsert([unsaved.forward, unsaved.reverse])
+	await cardsCollection.utils.writeInsert([unsaved.forward, unsaved.reverse])
 })
 
 beforeEach(() => {
@@ -107,7 +107,7 @@ describe('cardsCollection.onUpdate', () => {
 				})
 			}
 		)
-		await tx.isPersisted.promise
+		await tx.when('settled')
 		expect(server.state.updates).toEqual([
 			{
 				changes: { status: 'learned' },
@@ -125,7 +125,7 @@ describe('cardsCollection.onUpdate', () => {
 		const tx = cardsCollection.update(single.forward.id, (draft) => {
 			draft.status = 'skipped'
 		})
-		await tx.isPersisted.promise
+		await tx.when('settled')
 		expect(server.state.updates).toEqual([
 			{
 				changes: { status: 'skipped' },
@@ -146,9 +146,7 @@ describe('cardsCollection.onUpdate', () => {
 				})
 			}
 		)
-		await expect(tx.isPersisted.promise).rejects.toThrow(
-			/matched no server row/
-		)
+		await expect(tx.when('settled')).rejects.toThrow(/matched no server row/)
 		expect(server.state.updates).toHaveLength(1)
 		expect(cardsCollection.get(unsaved.forward.id)?.status).toBe('active')
 		expect(cardsCollection.get(unsaved.reverse.id)?.status).toBe('active')

@@ -1,4 +1,10 @@
-import { concat, createLiveQueryCollection, eq, max } from '@tanstack/db'
+import {
+	BTreeIndex,
+	concat,
+	createLiveQueryCollection,
+	eq,
+	max,
+} from '@tanstack/db'
 import { STATUS_AFTER_ACTION, type FriendSummaryType } from './schemas'
 import type { friendRequestActionsCollection } from './collections'
 import type { myProfileCollection } from '@/features/profile/collections'
@@ -46,6 +52,8 @@ export const createFriendSummaries = (
 ) => {
 	const latestPerPair = createLiveQueryCollection({
 		id: 'friend_pairs',
+		autoIndex: 'eager',
+		defaultIndexType: BTreeIndex,
 		gcTime: 20 * 60 * 1000,
 		query: (q) =>
 			q
@@ -61,6 +69,8 @@ export const createFriendSummaries = (
 
 	return createLiveQueryCollection({
 		id: 'friend_summaries',
+		autoIndex: 'eager',
+		defaultIndexType: BTreeIndex,
 		query: (q) =>
 			q
 				.from({ latest: latestPerPair })

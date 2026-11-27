@@ -5,7 +5,7 @@ import {
 	inArray,
 	toArray,
 } from '@tanstack/db'
-import { useLiveQuery } from '@tanstack/react-db'
+import { include, useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
@@ -36,6 +36,8 @@ import {
  * Use this anywhere you want the tags a phrase actually carries.
  */
 export const phraseTagLinksActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ link: phraseTagLinksCollection })
@@ -43,6 +45,8 @@ export const phraseTagLinksActive = createLiveQueryCollection({
 })
 
 export const phrasesComposed = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	id: 'phrases_composed',
 	query: (q) =>
 		q.from({ phrase: phrasesCollection }).select(({ phrase }) => ({
@@ -72,8 +76,6 @@ export const phrasesComposed = createLiveQueryCollection({
 		})),
 })
 
-phrasesComposed.createIndex((row) => row.id, { indexType: BasicIndex })
-
 /**
  * `phrasesComposed` with the archived rows dropped: an archived phrase, and
  * an archived translation on a phrase that is not archived.
@@ -84,6 +86,8 @@ phrasesComposed.createIndex((row) => row.id, { indexType: BasicIndex })
  * `archived` again — docs/mutations.md, "State the filter once".
  */
 export const phrasesFull = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	id: 'phrases_full',
 	// Without it, rows take the join's composite key and `.get(phraseId)` misses.
 	getKey: (row: { id: string }) => row.id,
@@ -114,8 +118,6 @@ export const phrasesFull = createLiveQueryCollection({
 				}
 			}),
 })
-
-phrasesFull.createIndex((row) => row.id, { indexType: BasicIndex })
 
 export interface PhraseProvenancePlaylist {
 	type: 'playlist'
@@ -151,36 +153,37 @@ export type PhraseProvenanceItem =
 export const usePhrasePlaylists = (
 	phraseId: uuid
 ): UseLiveQueryResult<PhraseProvenancePlaylist[]> => {
-	const parent = useLiveQuery(
-		(q) =>
+	const parent = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ phrase: phrasesCollection })
 				.where(({ phrase }) => eq(phrase.id, phraseId))
 				.select(({ phrase }) => ({
 					id: phrase.id,
-					playlists: q
-						.from({ link: playlistPhraseLinksActive })
-						.join(
-							{ playlist: phrasePlaylistsActive },
-							({ link, playlist }) => eq(link.playlist_id, playlist.id),
-							'inner'
-						)
-						.where(({ link }) => eq(link.phrase_id, phrase.id))
-						.select(({ playlist, link }) => ({
-							type: 'playlist' as const,
-							id: link.id,
-							playlistId: playlist.id,
-							title: playlist.title,
-							description: playlist.description,
-							href: link.href,
-							created_at: link.created_at,
-							uid: playlist.uid,
-						})),
+					playlists: include(
+						q
+							.from({ link: playlistPhraseLinksActive })
+							.join(
+								{ playlist: phrasePlaylistsActive },
+								({ link, playlist }) => eq(link.playlist_id, playlist.id),
+								'inner'
+							)
+							.where(({ link }) => eq(link.phrase_id, phrase.id))
+							.select(({ playlist, link }) => ({
+								type: 'playlist' as const,
+								id: link.id,
+								playlistId: playlist.id,
+								title: playlist.title,
+								description: playlist.description,
+								href: link.href,
+								created_at: link.created_at,
+								uid: playlist.uid,
+							}))
+					),
 				}))
 				.findOne(),
-		[phraseId]
-	)
-	return useLiveQuery(() => parent.data?.playlists, [parent.data?.playlists])
+	})
+	return useLiveQuery(() => parent.data?.playlists)
 }
 
 /**
@@ -190,40 +193,41 @@ export const usePhrasePlaylists = (
 export const usePhraseComments = (
 	phraseId: uuid
 ): UseLiveQueryResult<PhraseProvenanceComment[]> => {
-	const parent = useLiveQuery(
-		(q) =>
+	const parent = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ phrase: phrasesCollection })
 				.where(({ phrase }) => eq(phrase.id, phraseId))
 				.select(({ phrase }) => ({
 					id: phrase.id,
-					comments: q
-						.from({ link: commentPhraseLinksActive })
-						.join(
-							{ comment: commentsActive },
-							({ link, comment }) => eq(link.comment_id, comment.id),
-							'inner'
-						)
-						.join(
-							{ request: phraseRequestsActive },
-							({ comment, request }) => eq(comment.request_id, request.id),
-							'inner'
-						)
-						.where(({ link }) => eq(link.phrase_id, phrase.id))
-						.select(({ comment, request, link }) => ({
-							type: 'comment' as const,
-							id: link.id,
-							commentId: comment.id,
-							requestId: request.id,
-							prompt: request.prompt,
-							created_at: comment.created_at,
-							uid: comment.uid,
-						})),
+					comments: include(
+						q
+							.from({ link: commentPhraseLinksActive })
+							.join(
+								{ comment: commentsActive },
+								({ link, comment }) => eq(link.comment_id, comment.id),
+								'inner'
+							)
+							.join(
+								{ request: phraseRequestsActive },
+								({ comment, request }) => eq(comment.request_id, request.id),
+								'inner'
+							)
+							.where(({ link }) => eq(link.phrase_id, phrase.id))
+							.select(({ comment, request, link }) => ({
+								type: 'comment' as const,
+								id: link.id,
+								commentId: comment.id,
+								requestId: request.id,
+								prompt: request.prompt,
+								created_at: comment.created_at,
+								uid: comment.uid,
+							}))
+					),
 				}))
 				.findOne(),
-		[phraseId]
-	)
-	return useLiveQuery(() => parent.data?.comments, [parent.data?.comments])
+	})
+	return useLiveQuery(() => parent.data?.comments)
 }
 
 export interface RelatedCardSource {
@@ -250,8 +254,8 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 	const playlistIds = (playlists ?? []).map((p) => p.playlistId)
 	const requestIds = [...new Set((comments ?? []).map((c) => c.requestId))]
 
-	const { data: playlistSiblings } = useLiveQuery(
-		(q) =>
+	const { data: playlistSiblings } = useLiveQuery({
+		query: (q) =>
 			playlistIds.length === 0
 				? undefined
 				: q
@@ -267,11 +271,10 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 							playlistId: playlist.id,
 							title: playlist.title,
 						})),
-		[playlistIds.join(',')]
-	)
+	})
 
-	const { data: threadSiblings } = useLiveQuery(
-		(q) =>
+	const { data: threadSiblings } = useLiveQuery({
+		query: (q) =>
 			requestIds.length === 0
 				? undefined
 				: q
@@ -287,8 +290,7 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 							requestId: request.id,
 							prompt: request.prompt,
 						})),
-		[requestIds.join(',')]
-	)
+	})
 
 	const sourceMap = new Map<uuid, RelatedCardSource[]>()
 

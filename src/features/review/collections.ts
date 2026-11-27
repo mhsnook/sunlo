@@ -1,4 +1,4 @@
-import { createCollection } from '@tanstack/react-db'
+import { BasicIndex, createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	CardReviewSchema,
@@ -34,6 +34,8 @@ export const cardReviewsCollection = createCollection(
 		},
 		getKey: (item: CardReviewType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: CardReviewSchema,
 		// FSRS values + the client-generated id are computed in the review hook
@@ -52,8 +54,7 @@ export const cardReviewsCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(cardReviewsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(cardReviewsCollection, returned)
 		},
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
@@ -72,10 +73,12 @@ export const cardReviewsCollection = createCollection(
 						{ submitted: changes, returned: row }
 					)
 					if (row)
-						writeSyncedRow(cardReviewsCollection, CardReviewSchema.parse(row))
+						await writeSyncedRow(
+							cardReviewsCollection,
+							CardReviewSchema.parse(row)
+						)
 				})
 			)
-			return { refetch: false }
 		},
 	})
 )
@@ -95,6 +98,8 @@ export const reviewSessionsCollection = createCollection(
 		},
 		getKey: (item: ReviewSessionType) => `${item.day_session}--${item.lang}`,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: ReviewSessionSchema,
 		// A session is written once and never updated: the manifest is fixed, and
@@ -112,8 +117,7 @@ export const reviewSessionsCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(reviewSessionsCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(reviewSessionsCollection, returned)
 		},
 	})
 )
@@ -133,6 +137,8 @@ export const reviewMilestonesCollection = createCollection(
 		},
 		getKey: (item: ReviewMilestoneType) => item.id,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 		startSync: false,
 		schema: ReviewMilestoneSchema,
 		// Append-only: the row (client-generated id + created_at) is built at the
@@ -151,8 +157,7 @@ export const reviewMilestonesCollection = createCollection(
 				allRowsMatch(rows, returned),
 				{ submitted: rows, returned }
 			)
-			writeSyncedRows(reviewMilestonesCollection, returned)
-			return { refetch: false }
+			await writeSyncedRows(reviewMilestonesCollection, returned)
 		},
 	})
 )

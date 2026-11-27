@@ -15,7 +15,7 @@ import { writeSyncedRow, type SyncedCollection } from './synced-row'
  * arrive as UPDATE frames; a hard delete waits for the next full fetch.
  * See docs/mutations.md.
  */
-export function bindRows<T extends object, TKey extends string>(
+export function bindRows<T extends object, TKey extends string | number>(
 	channel: RealtimeChannel,
 	table: string,
 	filter: string,
@@ -26,7 +26,7 @@ export function bindRows<T extends object, TKey extends string>(
 		// Ahead of the write's own check, so a route that never loaded this
 		// collection doesn't parse frames it will throw away.
 		if (!collection.isReady()) return
-		writeSyncedRow(collection, parse(payload.new))
+		void writeSyncedRow(collection, parse(payload.new))
 	}
 	return (['INSERT', 'UPDATE'] as const).reduce(
 		(ch, event) =>

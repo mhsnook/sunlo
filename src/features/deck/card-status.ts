@@ -28,7 +28,7 @@ export function updatePhraseLearnerCount(
 		)
 		return
 	}
-	phrasesCollection.utils.writeUpdate({
+	void phrasesCollection.utils.writeUpdate({
 		id: previous.id,
 		count_learners: Math.max(
 			(previous.count_learners ?? 0) -
@@ -37,13 +37,15 @@ export function updatePhraseLearnerCount(
 			0
 		),
 	})
-	return () => phrasesCollection.utils.writeUpdate(previous)
+	return () => {
+		void phrasesCollection.utils.writeUpdate(previous)
+	}
 }
 
 /**
  * Set a phrase's cards (both directions) to `toStatus` in one optimistic
  * transaction, keeping the denormalized count_learners in sync and reverting it
- * on rollback. Callers own the toast UX via the returned tx's isPersisted.promise.
+ * on rollback. Callers own the toast UX via the returned tx's `when('settled')`.
  */
 export function updateCardsStatus(
 	cardIds: Array<string>,
@@ -57,6 +59,6 @@ export function updateCardsStatus(
 		})
 	})
 	const revertCount = updatePhraseLearnerCount(phraseId, fromStatus, toStatus)
-	if (revertCount) tx.isPersisted.promise.then(undefined, revertCount)
+	if (revertCount) tx.when('settled').then(undefined, revertCount)
 	return tx
 }

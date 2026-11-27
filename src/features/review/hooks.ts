@@ -84,7 +84,7 @@ const buildReviewRow = (submitData: PostReviewInput): CardReviewType => {
 // onInsert persists it. Resolves once the write lands (or throws on failure,
 // rolling the optimistic row back).
 const appendReview = async (row: CardReviewType): Promise<CardReviewType> => {
-	await cardReviewsCollection.insert(row).isPersisted.promise
+	await cardReviewsCollection.insert(row).when('settled')
 	return row
 }
 
@@ -97,11 +97,13 @@ const correctReview = async (
 	lastSeenAt?: string
 ): Promise<CardReviewType> => {
 	const fsrs = calculateFSRS({ score, previousReview, lastSeenAt })
-	await cardReviewsCollection.update(existing.id, (draft) => {
-		draft.score = score
-		draft.difficulty = fsrs.difficulty
-		draft.stability = fsrs.stability
-	}).isPersisted.promise
+	await cardReviewsCollection
+		.update(existing.id, (draft) => {
+			draft.score = score
+			draft.difficulty = fsrs.difficulty
+			draft.stability = fsrs.stability
+		})
+		.when('settled')
 	return {
 		...existing,
 		score,
@@ -171,8 +173,8 @@ export function useReviewStage(
 	lang: string,
 	day_session: string
 ): ReviewStages | undefined {
-	const { data } = useLiveQuery(
-		(q) =>
+	const { data } = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ milestone: reviewMilestonesCollection })
 				.where(({ milestone }) =>
@@ -181,14 +183,13 @@ export function useReviewStage(
 				.orderBy(({ milestone }) => milestone.created_at, 'desc')
 				.limit(1)
 				.findOne(),
-		[lang, day_session]
-	)
+	})
 	return (data?.stage ?? undefined) as ReviewStages | undefined
 }
 
 export function useReviewsToday(lang: string, day_session: string) {
-	const reviewsQuery = useLiveQuery(
-		(q) =>
+	const reviewsQuery = useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
@@ -196,8 +197,7 @@ export function useReviewsToday(lang: string, day_session: string) {
 				)
 				// Order by created_at ASC so newest review wins per key
 				.orderBy(({ review }) => review.created_at, 'asc'),
-		[lang, day_session]
-	)
+	})
 	const reviewDayQuery = useReviewDay(lang, day_session)
 	// Stage now folds out of the append-only milestone log, not the session row.
 	const stage = useReviewStage(lang, day_session)
@@ -239,16 +239,15 @@ export function useReviewDay(
 	lang: string,
 	day_session: string
 ): UseLiveQueryResult<ReviewSessionType> {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ day: reviewSessionsCollection })
 				.where(({ day }) =>
 					and(eq(day.day_session, day_session), eq(day.lang, lang))
 				)
 				.findOne(),
-		[lang, day_session]
-	)
+	})
 }
 
 export function useOneReviewToday(
@@ -256,8 +255,8 @@ export function useOneReviewToday(
 	pid: uuid,
 	direction: CardDirectionType = 'forward'
 ): UseLiveQueryResult<CardReviewType> {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
@@ -270,8 +269,7 @@ export function useOneReviewToday(
 				.orderBy(({ review }) => review.created_at, 'desc')
 				.limit(1)
 				.findOne(),
-		[day_session, pid, direction]
-	)
+	})
 }
 
 /**
@@ -284,8 +282,8 @@ export function useLatestReviewForPhrase(
 	pid: uuid,
 	direction: CardDirectionType = 'forward'
 ): UseLiveQueryResult<CardReviewType> {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
@@ -298,8 +296,7 @@ export function useLatestReviewForPhrase(
 				.orderBy(({ review }) => review.created_at, 'desc')
 				.limit(1)
 				.findOne(),
-		[pid, direction]
-	)
+	})
 }
 
 /**
@@ -316,8 +313,8 @@ export function useChainPredecessorForPhrase(
 	direction: CardDirectionType,
 	day_session: string
 ): UseLiveQueryResult<CardReviewType> {
-	return useLiveQuery(
-		(q) =>
+	return useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
@@ -332,8 +329,7 @@ export function useChainPredecessorForPhrase(
 				.orderBy(({ review }) => review.created_at, 'desc')
 				.limit(1)
 				.findOne(),
-		[pid, direction, day_session]
-	)
+	})
 }
 
 export function useReviewMutation(
@@ -485,16 +481,15 @@ export const useOneCardReviews = (
 	pid: uuid,
 	direction: CardDirectionType = 'forward'
 ): UseLiveQueryResult<CardReviewType[]> =>
-	useLiveQuery(
-		(q) =>
+	useLiveQuery({
+		query: (q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
 					and(eq(review.phrase_id, pid), eq(review.direction, direction))
 				)
 				.orderBy(({ review }) => review.created_at, 'asc'),
-		[pid, direction]
-	)
+	})
 
 /**
  * Append a review-session milestone as an optimistic collection action. The

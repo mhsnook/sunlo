@@ -1,4 +1,4 @@
-import { createLiveQueryCollection, eq } from '@tanstack/db'
+import { BasicIndex, createLiveQueryCollection, eq } from '@tanstack/db'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
@@ -11,6 +11,8 @@ import {
  * Use this anywhere you want the "live" set of requests visible to users.
  */
 export const phraseRequestsActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ request: phraseRequestsCollection })
@@ -26,6 +28,8 @@ export const phraseRequestsActive = createLiveQueryCollection({
  * else, where a comment is only ever an item in a list, reads this.
  */
 export const commentsActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ comment: commentsCollection })
@@ -37,6 +41,8 @@ export const commentsActive = createLiveQueryCollection({
  * Use this anywhere you want the phrases a comment actually suggests.
  */
 export const commentPhraseLinksActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ link: commentPhraseLinksCollection })
@@ -48,6 +54,8 @@ export const commentPhraseLinksActive = createLiveQueryCollection({
  * Use this anywhere you want the tags a message actually carries.
  */
 export const messageTagLinksActive = createLiveQueryCollection({
+	autoIndex: 'eager',
+	defaultIndexType: BasicIndex,
 	query: (q) =>
 		q
 			.from({ link: messageTagLinksCollection })
