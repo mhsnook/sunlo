@@ -10,6 +10,7 @@
 import { test } from '@scenetest/scenes'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/types/supabase'
+import { deleteAuthUsers } from '../support/db'
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -19,36 +20,36 @@ const admin = createClient<Database>(SUPABASE_URL, SERVICE_KEY)
 const TEST_EMAIL = 'sunloapp+pwreset@gmail.com'
 const NEW_PASSWORD = 'a-freshly-chosen-password'
 
-async function deleteTestUser() {
-	const { data } = await admin.auth.admin.listUsers()
-	const existing = data.users.find((u) => u.email === TEST_EMAIL)
-	if (existing) await admin.auth.admin.deleteUser(existing.id)
-}
-
-test('a recovery link lets the user set a new password', async ({ actor }) => {
-	const user = await actor('visitor')
-
-	// Fresh throwaway user — drop any leftover from a failed prior run first.
-	await deleteTestUser()
+/**
+ * Creates a fresh throwaway user (dropping any leftover from a failed prior
+ * run first) and mints a recovery link the way the email flow would.
+ */
+async function recoveryLink(email: string, redirectPath: string) {
+	await deleteAuthUsers(email)
 	const { error: createError } = await admin.auth.admin.createUser({
-		email: TEST_EMAIL,
+		email,
 		password: 'the-password-being-reset',
 		email_confirm: true,
 	})
 	if (createError) throw createError
 
-	// Mint a recovery link the way the email flow would, then follow it.
 	const { data: link, error: linkError } = await admin.auth.admin.generateLink({
 		type: 'recovery',
-		email: TEST_EMAIL,
-		options: { redirectTo: 'http://localhost:5173/set-new-password' },
+		email,
+		options: { redirectTo: `http://localhost:5173${redirectPath}` },
 	})
 	if (linkError || !link.properties) {
 		throw linkError ?? new Error('generateLink returned no properties')
 	}
+	return link.properties.action_link
+}
+
+test('a recovery link lets the user set a new password', async ({ actor }) => {
+	const user = await actor('visitor')
+	const link = await recoveryLink(TEST_EMAIL, '/set-new-password')
 
 	await user
-		.openTo(link.properties.action_link)
+		.openTo(link)
 		.up()
 		.see('password-reset-form')
 		.typeInto('password-input', NEW_PASSWORD)
@@ -71,7 +72,42 @@ test('a recovery link lets the user set a new password', async ({ actor }) => {
 					throw new Error(`new password rejected at login: ${error.message}`)
 				}
 			} finally {
-				await deleteTestUser()
+				await deleteAuthUsers(TEST_EMAIL)
+			}
+		})
+})
+
+// A guest who signs up from a friend's invite gets a link to
+// /set-new-password?referrer=<friend>. After the password, they go on to
+// onboarding, which ends in a chat with that friend.
+test('a link with a referrer goes on to onboarding', async ({ actor }) => {
+	const email = 'sunloapp+pwreferrer@gmail.com'
+	const referrer = 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	const user = await actor('visitor')
+
+	const link = await recoveryLink(
+		email,
+		`/set-new-password?referrer=${referrer}`
+	)
+
+	await user
+		.openTo(link)
+		.up()
+		.see('password-reset-form')
+		.typeInto('password-input', NEW_PASSWORD)
+		.click('submit-button')
+		.up()
+		.click('password-reset-continue')
+		.up()
+		.see('getting-started-page')
+		.do(async (page) => {
+			try {
+				const url = new URL(page.url())
+				if (url.searchParams.get('referrer') !== referrer) {
+					throw new Error(`referrer lost on the way to ${page.url()}`)
+				}
+			} finally {
+				await deleteAuthUsers(email)
 			}
 		})
 })

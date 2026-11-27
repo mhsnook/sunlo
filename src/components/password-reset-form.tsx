@@ -16,7 +16,7 @@ const FormSchema = z.object({
 
 type FormInputs = z.infer<typeof FormSchema>
 
-export function PasswordResetForm() {
+export function PasswordResetForm({ referrer }: { referrer?: string }) {
 	const changeMutation = useMutation({
 		mutationKey: ['password-reset'],
 		mutationFn: async ({ password }: FormInputs) => {
@@ -47,9 +47,20 @@ export function PasswordResetForm() {
 					<p>Success!</p>
 					<p>You've changed your password.</p>
 					<p>
-						<Link to="/profile" className="s-link">
-							Return to your profile page.
-						</Link>
+						{referrer ? (
+							<Link
+								to="/getting-started"
+								search={{ referrer }}
+								className="s-link"
+								data-testid="password-reset-continue"
+							>
+								Continue to set up your profile.
+							</Link>
+						) : (
+							<Link to="/profile" className="s-link">
+								Return to your profile page.
+							</Link>
+						)}
 					</p>
 				</Callout>
 			) : (

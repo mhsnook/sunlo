@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
 import { defineConfig, defineMacro } from '@scenetest/scenes'
+import { deleteAuthUsers } from './support/db'
 
 defineMacro('login', [
 	'openTo /login',
@@ -53,5 +54,6 @@ export default defineConfig({
 	],
 	server: {
 		supabase: createClient(supabaseUrl, supabaseServiceKey),
+		deleteAuthUsers,
 	},
 })

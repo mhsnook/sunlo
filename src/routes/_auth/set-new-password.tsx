@@ -4,8 +4,10 @@ import { buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { PasswordResetForm } from '@/components/password-reset-form'
 import { useAuth } from '@/lib/use-auth'
+import { validateReferrerSearch } from './-referrer-search'
 
 export const Route = createFileRoute('/_auth/set-new-password')({
+	validateSearch: validateReferrerSearch,
 	component: SetNewPasswordPage,
 })
 
@@ -29,6 +31,7 @@ const cardClass =
 
 function SetNewPasswordPage() {
 	const { isLoaded, isAuth } = useAuth()
+	const { referrer } = Route.useSearch()
 
 	// A valid recovery link signs the user in (via the URL hash) before this
 	// page settles. Once auth has resolved with no session, the link never
@@ -83,7 +86,7 @@ function SetNewPasswordPage() {
 			<CardHeader>
 				<CardTitle>Set your new password</CardTitle>
 			</CardHeader>
-			<PasswordResetForm />
+			<PasswordResetForm referrer={referrer} />
 		</Card>
 	)
 }

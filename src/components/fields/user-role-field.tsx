@@ -1,4 +1,5 @@
 import { BookOpen, Handshake, LifeBuoy, type LucideIcon } from 'lucide-react'
+import * as z from 'zod'
 import { ChoiceTile } from '@/components/ui/choice-tile'
 import { useFieldContext } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
@@ -12,6 +13,10 @@ const options: ReadonlyArray<{
 	{ value: 'helper', label: 'Helping', Icon: LifeBuoy },
 	{ value: 'both', label: 'Both', Icon: Handshake },
 ]
+
+export const UserRoleSchema = z.enum(['learner', 'helper', 'both'], {
+	message: `Let us know how you'll use the app`,
+})
 
 export function UserRoleField() {
 	const field = useFieldContext<string>()
@@ -32,6 +37,7 @@ export function UserRoleField() {
 					// oxlint-disable-next-line jsx-a11y/interactive-supports-focus -- ChoiceTile renders a <button>, which is natively focusable
 					<ChoiceTile
 						key={v}
+						// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the tile is a styled <button>; a native radio <input> can't hold the icon and label
 						role="radio"
 						aria-checked={value === v}
 						selected={value === v}

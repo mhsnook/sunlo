@@ -119,10 +119,7 @@ visitor:
 
 # a guest asks the coach about an account and signs up from the chat
 
-// Converting keeps the guest's uid. Until the link is opened, the address
-// waits in new_email, so the cleanup matches both columns.
-
-cleanup: supabase.auth.admin.listUsers({ perPage: 1000 }).then(({ data }) => Promise.all(data.users.filter((user) => [user.email, user.new_email].includes('sunloapp+guest@gmail.com')).map((user) => supabase.auth.admin.deleteUser(user.id))))
+cleanup: deleteAuthUsers('sunloapp+guest@gmail.com')
 
 visitor:
 
@@ -137,9 +134,62 @@ visitor:
 - seeText An account keeps your deck
 - click coach-create-account
 - see guest-signup-dialog
+- notSee guest-signup-dialog user-role
 - typeInto guest-signup-dialog email-input sunloapp+guest@gmail.com
 - typeInto guest-signup-dialog username-input GuestLearner
 - click guest-signup-dialog submit-button
+- see guest-signup-sent
+
+# a guest who already asked for a link sees it again, not an empty form
+
+cleanup: deleteAuthUsers('sunloapp+guest-again@gmail.com')
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- click coach-continue-as-guest
+- typeInto coach-input "can I make an account"
+- click coach-send
+- seeText An account keeps your deck
+- click coach-create-account
+- typeInto guest-signup-dialog email-input sunloapp+guest-again@gmail.com
+- typeInto guest-signup-dialog username-input GuestAgain
+- click guest-signup-dialog submit-button
+- see guest-signup-dialog guest-signup-sent
+- click guest-signup-dialog guest-signup-skip
+- notSee guest-signup-dialog
+- click coach-create-account
+- see guest-signup-dialog guest-signup-sent
+- notSee guest-signup-dialog guest-signup-form
+- click guest-signup-dialog guest-signup-send-again
+- see guest-signup-dialog guest-signup-form
+
+# a guest who opens an invite link signs up on /signup, with the role picker
+
+// The second openTo stands for the guest opening a friend's invite link.
+
+cleanup: deleteAuthUsers('sunloapp+guest-invited@gmail.com')
+
+visitor:
+
+- openTo /coach
+- see coach-index-page
+- click coach-language-list [team.lang_partial] coach-language-link
+- up
+- see coach-page
+- click coach-continue-as-guest
+- see coach-input
+- up
+- openTo /signup?referrer=[friend.key]
+- see guest-signup-form
+- click guest-signup-form user-role helper
+- typeInto guest-signup-form email-input sunloapp+guest-invited@gmail.com
+- typeInto guest-signup-form username-input GuestInvited
+- click guest-signup-form submit-button
 - see guest-signup-sent
 
 # the coach takes a guest to their deck, and the sign-up dialog opens there
