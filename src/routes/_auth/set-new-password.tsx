@@ -1,11 +1,20 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import * as z from 'zod'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { PasswordResetForm } from '@/components/password-reset-form'
 import { useAuth } from '@/lib/use-auth'
 
+const SearchSchema = z.object({
+	referrer: z.string().uuid().optional(),
+})
+
 export const Route = createFileRoute('/_auth/set-new-password')({
+	validateSearch: (search: Record<string, unknown>) => {
+		const result = SearchSchema.safeParse(search)
+		return result.success ? result.data : {}
+	},
 	component: SetNewPasswordPage,
 })
 
@@ -29,6 +38,7 @@ const cardClass =
 
 function SetNewPasswordPage() {
 	const { isLoaded, isAuth } = useAuth()
+	const { referrer } = Route.useSearch()
 
 	// A valid recovery link signs the user in (via the URL hash) before this
 	// page settles. Once auth has resolved with no session, the link never
@@ -83,7 +93,7 @@ function SetNewPasswordPage() {
 			<CardHeader>
 				<CardTitle>Set your new password</CardTitle>
 			</CardHeader>
-			<PasswordResetForm />
+			<PasswordResetForm referrer={referrer} />
 		</Card>
 	)
 }

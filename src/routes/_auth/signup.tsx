@@ -23,7 +23,7 @@ import { useAuth } from '@/lib/use-auth'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { UnderConstructionNotice } from '../-homepage/under-construction'
 import { useAppForm } from '@/components/form'
-import { UserRoleField } from './-user-role-field'
+import { UserRoleField } from '@/components/fields/user-role-field'
 import { GuestSignupForm } from '@/components/guest-signup/guest-signup-form'
 import { signupLeads } from '@/components/guest-signup/reasons'
 
@@ -69,13 +69,14 @@ function SignUp() {
 }
 
 function GuestSignUp() {
+	const { referrer } = Route.useSearch()
 	return (
 		<Card className="mx-auto mt-[1cqh] w-full max-w-md p-[clamp(0.5rem,2cqw,2rem)]">
 			<CardHeader>
 				<CardTitle>Sign Up</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<GuestSignupForm lead={signupLeads.coach} />
+				<GuestSignupForm lead={signupLeads.coach} askRole referrer={referrer} />
 			</CardContent>
 		</Card>
 	)

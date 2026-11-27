@@ -1,12 +1,15 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { should } from '@scenetest/checks/react'
 import * as z from 'zod'
 
 import Callout from '@/components/ui/callout'
 import { Button } from '@/components/ui/button'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { useAppForm } from '@/components/form'
+import { UserRoleField } from '@/components/fields/user-role-field'
 import supabase from '@/lib/supabase-client'
+import { useAuth } from '@/lib/use-auth'
 import { UsernameSchema } from '@/features/profile/schemas'
 
 const GuestSignupSchema = z.object({
@@ -15,14 +18,20 @@ const GuestSignupSchema = z.object({
 		.min(1, `Email is required`)
 		.email(`Email is required to be a real email`),
 	username: z.string().trim().pipe(UsernameSchema),
+	user_role: z.enum(['learner', 'helper', 'both'], {
+		message: `Let us know how you'll use the app`,
+	}),
 })
 
 type GuestSignupInputs = z.infer<typeof GuestSignupSchema>
 
 // A guest's username change is refused until they confirm their email
 // (guard_anonymous_profile), so the name waits in the auth user's metadata.
-// claimGuestUsername in auth-lifecycle.ts writes it to the profile afterwards.
-async function convertGuest({ email, username }: GuestSignupInputs) {
+// createGuestNameClaim (guest-name-claim.ts) writes it to the profile afterwards.
+async function convertGuest(
+	{ email, username, user_role }: GuestSignupInputs,
+	referrer: string | undefined
+) {
 	const { data: taken } = await supabase
 		.from('public_profile')
 		.select('uid')
@@ -37,48 +46,80 @@ async function convertGuest({ email, username }: GuestSignupInputs) {
 	// Supabase refuses a password until the email is verified, so the
 	// confirmation link goes to the page that sets one.
 	const { data, error } = await supabase.auth.updateUser(
-		{ email, data: { role: 'learner', username } },
-		{ emailRedirectTo: `${window.location.origin}/set-new-password` }
+		{ email, data: { role: user_role, username } },
+		{
+			emailRedirectTo: `${window.location.origin}/set-new-password${referrer ? `?referrer=${referrer}` : ''}`,
+		}
 	)
 	if (error) throw error
+	should(
+		'guest sign-up saves the chosen role',
+		data.user.user_metadata.role === user_role,
+		{ submitted: user_role, returned: data.user.user_metadata.role }
+	)
 	return data.user
 }
 
 /**
  * Turns a guest (an anonymous user) into an account: an email and a display
  * name, then a confirmation link. Every place that asks a guest to sign up
- * renders this form.
+ * renders this form. Without `askRole` the account is a learner's.
  */
 export function GuestSignupForm({
 	lead,
 	onSkip,
+	askRole = false,
+	referrer,
 }: {
 	lead: ReactNode
 	onSkip?: () => void
+	askRole?: boolean
+	referrer?: string
 }) {
+	const { pendingEmail } = useAuth()
+	const [changingEmail, setChangingEmail] = useState(false)
 	const convert = useMutation({
 		mutationKey: ['convert-guest'],
-		mutationFn: convertGuest,
+		mutationFn: (value: GuestSignupInputs) => convertGuest(value, referrer),
 	})
 	const form = useAppForm({
-		defaultValues: { email: '', username: '' } as GuestSignupInputs,
+		defaultValues: {
+			email: '',
+			username: '',
+			user_role: 'learner',
+		} as GuestSignupInputs,
 		validators: { onChange: GuestSignupSchema },
 		onSubmit: async ({ value }) => {
 			await convert.mutateAsync(GuestSignupSchema.parse(value))
 		},
 	})
 
-	if (convert.isSuccess)
+	const sentTo = convert.isSuccess
+		? (convert.data.new_email ?? convert.variables.email)
+		: changingEmail
+			? null
+			: pendingEmail
+	if (sentTo)
 		return (
-			<div data-testid="guest-signup-sent">
+			<div data-testid="guest-signup-sent" className="space-y-4">
 				<Callout Icon={SuccessCheckmarkTrans}>
 					<p>Almost done!</p>
 					<p>
-						We sent a link to{' '}
-						{convert.data.new_email ?? convert.variables?.email}. Open it to
-						confirm your email and choose a password.
+						We sent a link to {sentTo}. Open it to confirm your email and choose
+						a password.
 					</p>
 				</Callout>
+				<Button
+					type="button"
+					variant="neutral"
+					data-testid="guest-signup-change-email"
+					onClick={() => {
+						convert.reset()
+						setChangingEmail(true)
+					}}
+				>
+					Use a different email
+				</Button>
 			</div>
 		)
 
@@ -114,6 +155,11 @@ export function GuestSignupForm({
 					/>
 				)}
 			</form.AppField>
+			{askRole ? (
+				<form.AppField name="user_role">
+					{() => <UserRoleField />}
+				</form.AppField>
+			) : null}
 			<p className="text-muted-foreground text-sm">
 				We'll send you a link to confirm your email. Your deck and your coach
 				conversation stay with you.

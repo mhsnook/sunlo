@@ -56,6 +56,7 @@ natural wrapper element to label.
 | `request-new-link`                | data-testid | Set-new-password page     | Link to /forgot-password from the invalid-link card                                                                     |
 | `forgot-password-form`            | data-testid | Forgot-password page      | Recovery-request form (scope `email-input` / `submit-button`)                                                           |
 | `password-reset-form`             | data-testid | Set-new-password page     | New-password form (scope `password-input` / `submit-button`)                                                            |
+| `password-reset-continue`         | data-testid | Set-new-password page     | After the password, goes on to onboarding with the `referrer`                                                           |
 | `email-input`                     | data-testid | Form fields               | Email input                                                                                                             |
 | `password-input`                  | data-testid | Form fields               | Password input                                                                                                          |
 | `submit-button`                   | data-testid | Form submit               | Generic submit button (scope by parent form when ambiguous)                                                             |
@@ -70,7 +71,8 @@ natural wrapper element to label.
 | `guest-signup-form`               | data-testid | `guest-signup-form.tsx`   | Email and display-name form that turns a guest into an account (scope `email-input`, `username-input`, `submit-button`) |
 | `guest-signup-dialog`             | data-testid | `guest-signup-dialog.tsx` | The sign-up dialog that `?signup=<reason>` opens for a guest on any page                                                |
 | `guest-signup-skip`               | data-testid | Guest sign-up dialog      | "Not now": closes the dialog                                                                                            |
-| `guest-signup-sent`               | data-testid | Guest sign-up form        | Shown once the confirmation link is sent                                                                                |
+| `guest-signup-sent`               | data-testid | Guest sign-up form        | Shown once the confirmation link is sent, and while the address waits for it                                            |
+| `guest-signup-change-email`       | data-testid | Guest sign-up form        | "Use a different email": shows the form again after a link was sent                                                     |
 
 ## Deck Management
 

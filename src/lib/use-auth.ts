@@ -11,6 +11,7 @@ export const emptyAuth = {
 	isAdmin: false,
 	isAnonymous: false,
 	hasAccount: false,
+	pendingEmail: null,
 	connectionError: null as Error | null,
 }
 
@@ -25,6 +26,7 @@ type AuthNotLoggedIn = {
 	isAdmin: false
 	isAnonymous: false
 	hasAccount: false
+	pendingEmail: null
 	connectionError: Error | null
 }
 type AuthLoggedIn = {
@@ -38,6 +40,8 @@ type AuthLoggedIn = {
 	isAnonymous: boolean
 	// isAuth is true for an anonymous user too; this is false for them.
 	hasAccount: boolean
+	// Supabase's `new_email`: an address whose confirmation link is not opened yet.
+	pendingEmail: string | null
 	connectionError: Error | null
 }
 

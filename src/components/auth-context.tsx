@@ -95,6 +95,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				isAdmin,
 				isAnonymous,
 				hasAccount: isAuth && !isAnonymous,
+				pendingEmail: sessionState?.user.new_email ?? null,
 				isLoaded: true,
 				connectionError,
 			} as AuthLoaded)
