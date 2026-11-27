@@ -37,6 +37,7 @@ export function UserRoleField() {
 					// oxlint-disable-next-line jsx-a11y/interactive-supports-focus -- ChoiceTile renders a <button>, which is natively focusable
 					<ChoiceTile
 						key={v}
+						// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- the tile is a styled <button>; a native radio <input> can't hold the icon and label
 						role="radio"
 						aria-checked={value === v}
 						selected={value === v}
