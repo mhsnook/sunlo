@@ -128,7 +128,7 @@ const claimGuestUsername = createGuestNameClaim({
 		(await supabase.auth.getSession()).data.session?.user ?? null,
 	profileUsername: (userId) => myProfileCollection.get(userId)?.username,
 	writeUsername: (userId, name) =>
-		myProfileCollection.update(userId, (draft) => {
+		myProfileCollection.update(userId, { optimistic: false }, (draft) => {
 			draft.username = name
 			draft.updated_at = new Date().toISOString()
 		}).isPersisted.promise,

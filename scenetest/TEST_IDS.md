@@ -70,9 +70,9 @@ natural wrapper element to label.
 | `profile-signout-button`          | data-testid | Profile page              | Sign out button at bottom of profile page                                                                               |
 | `guest-signup-form`               | data-testid | `guest-signup-form.tsx`   | Email and display-name form that turns a guest into an account (scope `email-input`, `username-input`, `submit-button`) |
 | `guest-signup-dialog`             | data-testid | `guest-signup-dialog.tsx` | The sign-up dialog that `?signup=<reason>` opens for a guest on any page                                                |
-| `guest-signup-skip`               | data-testid | Guest sign-up dialog      | "Not now": closes the dialog                                                                                            |
+| `guest-signup-skip`               | data-testid | Guest sign-up dialog      | "Not now": closes the dialog, from the form or from the sent view                                                       |
 | `guest-signup-sent`               | data-testid | Guest sign-up form        | Shown once the confirmation link is sent, and while the address waits for it                                            |
-| `guest-signup-change-email`       | data-testid | Guest sign-up form        | "Use a different email": shows the form again after a link was sent                                                     |
+| `guest-signup-send-again`         | data-testid | Guest sign-up form        | "Send a new link": shows the form again, with the pending address, after a link was sent                                |
 
 ## Deck Management
 

@@ -45,11 +45,11 @@ async function convertGuest(
 	// Keeps the uid, so the deck and the coach conversation carry over.
 	// Supabase refuses a password until the email is verified, so the
 	// confirmation link goes to the page that sets one.
+	const redirect = new URL('/set-new-password', window.location.origin)
+	if (referrer) redirect.searchParams.set('referrer', referrer)
 	const { data, error } = await supabase.auth.updateUser(
 		{ email, data: { role: user_role, username } },
-		{
-			emailRedirectTo: `${window.location.origin}/set-new-password${referrer ? `?referrer=${referrer}` : ''}`,
-		}
+		{ emailRedirectTo: redirect.href }
 	)
 	if (error) throw error
 	should(
@@ -77,14 +77,14 @@ export function GuestSignupForm({
 	referrer?: string
 }) {
 	const { pendingEmail } = useAuth()
-	const [changingEmail, setChangingEmail] = useState(false)
+	const [sendingAgain, setSendingAgain] = useState(false)
 	const convert = useMutation({
 		mutationKey: ['convert-guest'],
 		mutationFn: (value: GuestSignupInputs) => convertGuest(value, referrer),
 	})
 	const form = useAppForm({
 		defaultValues: {
-			email: '',
+			email: pendingEmail ?? '',
 			username: '',
 			user_role: 'learner',
 		} as GuestSignupInputs,
@@ -96,7 +96,7 @@ export function GuestSignupForm({
 
 	const sentTo = convert.isSuccess
 		? (convert.data.new_email ?? convert.variables.email)
-		: changingEmail
+		: sendingAgain
 			? null
 			: pendingEmail
 	if (sentTo)
@@ -109,17 +109,30 @@ export function GuestSignupForm({
 						a password.
 					</p>
 				</Callout>
-				<Button
-					type="button"
-					variant="neutral"
-					data-testid="guest-signup-change-email"
-					onClick={() => {
-						convert.reset()
-						setChangingEmail(true)
-					}}
-				>
-					Use a different email
-				</Button>
+				<div className="flex flex-row flex-wrap justify-between gap-2">
+					<Button
+						type="button"
+						variant="neutral"
+						data-testid="guest-signup-send-again"
+						onClick={() => {
+							form.setFieldValue('email', sentTo)
+							convert.reset()
+							setSendingAgain(true)
+						}}
+					>
+						Send a new link
+					</Button>
+					{onSkip ? (
+						<Button
+							type="button"
+							variant="neutral"
+							data-testid="guest-signup-skip"
+							onClick={onSkip}
+						>
+							Not now
+						</Button>
+					) : null}
+				</div>
 			</div>
 		)
 

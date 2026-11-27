@@ -163,12 +163,12 @@ visitor:
 - typeInto guest-signup-dialog username-input GuestAgain
 - click guest-signup-dialog submit-button
 - see guest-signup-dialog guest-signup-sent
-- click guest-signup-dialog close-dialog-button
+- click guest-signup-dialog guest-signup-skip
 - notSee guest-signup-dialog
 - click coach-create-account
 - see guest-signup-dialog guest-signup-sent
 - notSee guest-signup-dialog guest-signup-form
-- click guest-signup-dialog guest-signup-change-email
+- click guest-signup-dialog guest-signup-send-again
 - see guest-signup-dialog guest-signup-form
 
 # a guest who opens an invite link signs up on /signup, with the role picker
